@@ -30,8 +30,9 @@ public class FetchResource {
 	private CommitService commitService;
 
 	@Inject
-	public FetchResource(DatasetService datasetService) {
+	public FetchResource(DatasetService datasetService, CommitService commitService) {
 		this.datasetService = datasetService;
+		this.commitService = commitService;
 	}
 
 	@GET
@@ -61,7 +62,8 @@ public class FetchResource {
 		Map<String, DatasetIdentifier> identifiers = new HashMap<>();
 		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
 		for (CommitDescriptor commit : commits) {
-			for (FileReference reference : commitService.getModifiedFiles(repositoryId, commit.getId())) {
+			List<FileReference> references = commitService.getModifiedFiles(repositoryId, commit.getId());
+			for (FileReference reference : references) {
 				String key = reference.getType().name() + "_" + reference.getRefId();
 				DatasetIdentifier value = indexer.get(reference.getType(), reference.getRefId());
 				identifiers.put(key, value);
