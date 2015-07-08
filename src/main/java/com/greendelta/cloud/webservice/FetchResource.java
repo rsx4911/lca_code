@@ -85,18 +85,23 @@ public class FetchResource {
 		List<CommitDescriptor> commits = commitService.getCommitHistory(repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<String, String> data = new HashMap<>();
+		Map<ModelType, Map<String, String>> data = new HashMap<>();
 		for (CommitDescriptor commit : commits) {
 			for (FileReference reference : commitService.getModifiedFiles(repositoryId, commit.getId())) {
-				String key = reference.getType().name() + "_" + reference.getRefId();
+				Map<String, String> list = data.get(reference.getType());
+				if (list == null)
+					data.put(reference.getType(), list = new HashMap<>());
 				String value = datasetService.get(repositoryId, reference.getType(), reference.getRefId(),
 						commit.getId());
-				data.put(key, value);
+				list.put(reference.getRefId(), value);
 			}
 		}
 		if (data.size() == 0)
 			return Respond.noContent();
-		return Respond.ok(new ArrayList<>(data.values()));
+		Map<ModelType, List<String>> result = new HashMap<>();
+		for (ModelType type : data.keySet())
+			result.put(type, new ArrayList<>(data.get(type).values()));
+		return Respond.ok(result);
 	}
 
 	@GET
