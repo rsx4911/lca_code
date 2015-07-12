@@ -13,8 +13,11 @@ class RepositoryPaths {
 
 	RepositoryPaths(String path) {
 		repository = new File(path);
-		if (!repository.exists())
-			throw new RepositoryNotFoundException(path);
+		if (!repository.exists()) {
+			String[] split = path.split("/");
+			String id = Strings.concat(split[split.length - 2], "/", split[split.length - 1]);
+			throw new RepositoryNotFoundException(id);
+		}
 	}
 
 	static void create(File repository) {

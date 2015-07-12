@@ -9,6 +9,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
+import com.greendelta.cloud.error.RepositoryNotFoundException;
+import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.service.repository.RepositoryService;
 import com.greendelta.cloud.util.Strings;
 
@@ -16,10 +19,12 @@ import com.greendelta.cloud.util.Strings;
 public class RepositoryResource {
 
 	private RepositoryService repositoryService;
+	private UserService userService;
 
 	@Inject
-	public RepositoryResource(RepositoryService repositoryService) {
+	public RepositoryResource(RepositoryService repositoryService, UserService userService) {
 		this.repositoryService = repositoryService;
+		this.userService = userService;
 	}
 
 	@POST
@@ -36,8 +41,10 @@ public class RepositoryResource {
 	@Path("delete/{name}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response delete(@PathParam("name") String name) {
-		if (!repositoryService.exists(name))
-			return Respond.notFound(Strings.concat("Repository ", name, " doesn't exist"));
+		if (!repositoryService.exists(name)) {
+			User user = userService.getCurrentUser();
+			throw new RepositoryNotFoundException(Strings.concat(user.getName(), "/", name));
+		}
 		repositoryService.delete(name);
 		return Respond.ok();
 	}
