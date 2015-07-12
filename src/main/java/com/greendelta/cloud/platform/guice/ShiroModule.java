@@ -31,9 +31,8 @@ class ShiroModule extends ShiroWebModule {
 		bind(JpaRealm.class);
 		expose(JpaRealm.class);
 		expose(Subject.class);
-		// addFilterChain("/ws/public/**", ANON);
-		// addFilterChain("/**", USER);
-		addFilterChain("/**", ANON);
+		addFilterChain("/ws/public/**", ANON);
+		addFilterChain("/**", USER);
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}
 

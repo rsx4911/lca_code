@@ -23,11 +23,8 @@ public class UserService {
 
 	public User getCurrentUser() {
 		Subject subject = subjectProvider.get();
-		if (!subject.isAuthenticated()) {
-			User user = new User();
-			user.setName("greve");
-			return user; // TODO remove this, for development
-		}
+		if (!subject.isAuthenticated())
+			return null;
 		String name = subject.getPrincipal().toString();
 		return getForName(name);
 	}

@@ -65,7 +65,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
 		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext),
 				new JpaPersistModule(persistenceUnit), new JerseyModule(resourcePackages), new EhCacheModule(),
-				new PropertiesModule(), };
+				new PropertiesModule() };
 	}
 
 	private static final class Listeners {

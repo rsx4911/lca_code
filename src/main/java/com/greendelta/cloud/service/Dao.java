@@ -20,17 +20,18 @@ import com.google.inject.persist.Transactional;
 
 class Dao<T> {
 
-	@Inject
 	private Provider<EntityManager> entityManagerProvider;
-	@Inject
 	// used for getting detached objects (no cache, session, etc.)
 	private Provider<EntityManagerFactory> entityManagerFactoryProvider;
 	private Class<T> entityType;
 
 	@Inject
 	@SuppressWarnings("unchecked")
-	public Dao(TypeLiteral<T> type) {
-		entityType = (Class<T>) type.getRawType();
+	public Dao(TypeLiteral<T> type, Provider<EntityManager> entityManagerProvider,
+			Provider<EntityManagerFactory> entityManagerFactoryProvider) {
+		this.entityType = (Class<T>) type.getRawType();
+		this.entityManagerProvider = entityManagerProvider;
+		this.entityManagerFactoryProvider = entityManagerFactoryProvider;
 	}
 
 	public T get(long id) {

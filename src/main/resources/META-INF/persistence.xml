@@ -9,7 +9,6 @@
 			<property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver" />
 			<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/cloud" />
 			<property name="javax.persistence.jdbc.user" value="root" />
-			<property name="javax.persistence.jdbc.password" value="8RYbd2Ld" />
 			<property name="eclipselink.target-database" value="MySQL4" />
 			<property name="eclipselink.persistence-context.close-on-commit"
 				value="true" />
@@ -40,16 +39,14 @@
 		<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
 		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<properties>
-			<property name="eclipselink.target-database" value="Derby" />
-			<property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
-			<property name="javax.persistence.jdbc.url" value="jdbc:derby:memory:myDB;create=true" />
-			<property name="javax.persistence.jdbc.user" value="APP" />
-			<property name="javax.persistence.jdbc.password" value="APP" />
-			<property name="eclipselink.create-ddl-jdbc-file-name"
-				value="schema.sql" />
-			<property name="eclipselink.ddl-generation" value="drop-and-create-tables" />
-			<property name="eclipselink.ddl-generation.output-mode"
-				value="both" />
+			<property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver" />
+			<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/cloud_test" />
+			<property name="javax.persistence.jdbc.user" value="root" />
+			<property name="eclipselink.target-database" value="MySQL4" />
+			<property name="eclipselink.persistence-context.close-on-commit"
+				value="true" />
+			<property name="eclipselink.persistence-context.flush-mode"
+				value="commit" />
 		</properties>
 	</persistence-unit>
 </persistence>

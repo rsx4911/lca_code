@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexer;
 import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.FetchResponse;
 import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.service.repository.CommitService;
 import com.greendelta.cloud.service.repository.DatasetService;
@@ -98,9 +99,12 @@ public class FetchResource {
 		}
 		if (data.size() == 0)
 			return Respond.noContent();
-		Map<ModelType, List<String>> result = new HashMap<>();
+		Map<ModelType, List<String>> dataMap = new HashMap<>();
 		for (ModelType type : data.keySet())
-			result.put(type, new ArrayList<>(data.get(type).values()));
+			dataMap.put(type, new ArrayList<>(data.get(type).values()));
+		FetchResponse result = new FetchResponse();
+		result.setData(dataMap);
+		result.setLatestCommitId(commits.get(commits.size() - 1).getId());
 		return Respond.ok(result);
 	}
 
