@@ -27,9 +27,8 @@ public class DatasetServiceTest extends GuicyTest {
 	private final static String refId = "86567837-bb42-48f2-9c87-8b557e035646";
 	private final static long lastChange = 1431518323232l;
 	private final static String jsonData = "{\"id\": \"" + refId + "\", \"name\": \"test process\"}";
-	private final static String repositoryUser = "greve";
 	private final static String repositoryName = "test-repo";
-	private final static String repositoryId = repositoryUser + "/" + repositoryName;
+	private final static String repositoryId = USER + "/" + repositoryName;
 
 	@Inject
 	private RepositoryService repositoryService;

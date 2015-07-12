@@ -32,9 +32,8 @@ public class CommitServiceTest extends GuicyTest {
 	private final static String jsonData2 = "{\"id\": \"" + refId + "\", \"name\": \"test process changed\"}";
 	private final static String message = "This is a test commit";
 	private final static String message2 = "This is a second test commit";
-	private final static String repositoryUser = "greve";
 	private final static String repositoryName = "test-repo";
-	private final static String repositoryId = repositoryUser + "/" + repositoryName;
+	private final static String repositoryId = USER + "/" + repositoryName;
 
 	@Inject
 	private CommitService commitService;
