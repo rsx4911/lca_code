@@ -3,6 +3,8 @@ package com.greendelta.cloud.service.repository;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.After;
@@ -18,6 +20,7 @@ import com.google.inject.name.Named;
 import com.greendelta.cloud.model.data.CommitData;
 import com.greendelta.cloud.model.data.DatasetIdentifier;
 import com.greendelta.cloud.platform.guice.GuicyTest;
+import com.greendelta.cloud.webservice.SessionResource;
 
 public class DatasetServiceTest extends GuicyTest {
 
@@ -32,6 +35,9 @@ public class DatasetServiceTest extends GuicyTest {
 	private RepositoryService repositoryService;
 
 	@Inject
+	private SessionResource sessionResource;
+
+	@Inject
 	private DatasetService datasetService;
 
 	@Inject
@@ -40,6 +46,10 @@ public class DatasetServiceTest extends GuicyTest {
 
 	@Before
 	public void setup() {
+		Map<String, Object> formData = new HashMap<>();
+		formData.put("username", USER);
+		formData.put("password", PASS);
+		sessionResource.login(formData);
 		repositoryService.create(repositoryName);
 	}
 
@@ -76,6 +86,7 @@ public class DatasetServiceTest extends GuicyTest {
 	@After
 	public void cleanup() {
 		repositoryService.delete(repositoryName);
+		sessionResource.logout();
 	}
 
 }

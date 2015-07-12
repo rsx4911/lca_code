@@ -3,7 +3,9 @@ package com.greendelta.cloud.service.repository;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -20,6 +22,7 @@ import com.greendelta.cloud.model.data.CommitData;
 import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.model.data.DatasetIdentifier;
 import com.greendelta.cloud.platform.guice.GuicyTest;
+import com.greendelta.cloud.webservice.SessionResource;
 
 public class CommitServiceTest extends GuicyTest {
 
@@ -37,6 +40,9 @@ public class CommitServiceTest extends GuicyTest {
 	private CommitService commitService;
 
 	@Inject
+	private SessionResource sessionResource;
+
+	@Inject
 	private RepositoryService repositoryService;
 
 	@Inject
@@ -45,6 +51,10 @@ public class CommitServiceTest extends GuicyTest {
 
 	@Before
 	public void setup() {
+		Map<String, Object> formData = new HashMap<>();
+		formData.put("username", USER);
+		formData.put("password", PASS);
+		sessionResource.login(formData);
 		repositoryService.create(repositoryName);
 	}
 
@@ -83,10 +93,9 @@ public class CommitServiceTest extends GuicyTest {
 				+ commitId + ".json");
 		Assert.assertEquals("Datafile does not exist: ", true, file.exists());
 		Assert.assertEquals("Datafile is a directory: ", false, file.isDirectory());
-		String read = com.greendelta.cloud.util.Strings.concat((Object[]) Strings.readLines(new FileInputStream(
-				file)));
+		String read = com.greendelta.cloud.util.Strings.concat((Object[]) Strings.readLines(new FileInputStream(file)));
 		Assert.assertEquals("Json data is not correct: ", data.getJson(), read);
-		File commitFile = new File(repositoryPath + "/" + repositoryId + "/commits.json");
+		File commitFile = new File(repositoryPath + "/" + repositoryId + "/history.json");
 		Assert.assertEquals("Commitfile does not exist: ", true, commitFile.exists());
 		Assert.assertEquals("Commitfile is a directory: ", false, commitFile.isDirectory());
 		String[] readCommit = Strings.readLines(new FileInputStream(commitFile));
@@ -106,6 +115,7 @@ public class CommitServiceTest extends GuicyTest {
 	@After
 	public void cleanup() {
 		repositoryService.delete(repositoryName);
+		sessionResource.logout();
 	}
 
 }

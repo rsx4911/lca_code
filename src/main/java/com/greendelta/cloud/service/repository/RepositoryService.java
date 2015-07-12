@@ -21,8 +21,16 @@ public class RepositoryService {
 	}
 
 	public RepositoryPaths getForId(String id) {
+		if (!hasAccess(userService.getCurrentUser(), id))
+			return null;
 		String path = Strings.concat(repositoryRoot, "/", id);
 		return new RepositoryPaths(path);
+	}
+
+	private boolean hasAccess(User user, String id) {
+		String owner = id.split("/")[0];
+		String name = id.split("/")[1];
+		return true;
 	}
 
 	public boolean exists(String name) {

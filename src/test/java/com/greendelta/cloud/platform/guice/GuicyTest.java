@@ -21,8 +21,8 @@ import com.greendelta.cloud.platform.guice.util.StartupListener;
 
 public abstract class GuicyTest {
 
-	protected static final String USER = "testuser1";
-	protected static final String PASS = "testpassword1";
+	protected static final String USER = "greve";
+	protected static final String PASS = "BiNy13189";
 	private static Injector injector;
 	private static Injected injected;
 

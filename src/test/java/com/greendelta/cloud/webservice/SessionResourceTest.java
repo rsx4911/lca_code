@@ -3,7 +3,7 @@ package com.greendelta.cloud.webservice;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
@@ -12,7 +12,6 @@ import org.junit.Test;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.greendelta.cloud.error.ClientException.ErrorDescriptor;
 import com.greendelta.cloud.platform.guice.GuicyTest;
 
 public class SessionResourceTest extends GuicyTest {
@@ -26,7 +25,7 @@ public class SessionResourceTest extends GuicyTest {
 	@Test
 	public void login() {
 		Map<String, Object> formData = new HashMap<>();
-		formData.put("name", USER);
+		formData.put("username", USER);
 		formData.put("password", PASS);
 		resource.login(formData);
 		Subject subject = SecurityUtils.getSubject();
@@ -34,40 +33,28 @@ public class SessionResourceTest extends GuicyTest {
 		Assert.assertEquals(USER, subject.getPrincipal());
 	}
 
-	@Test(expected = WebApplicationException.class)
+	@Test
 	public void loginNotExistingUser() {
-		try {
-			Map<String, Object> formData = new HashMap<>();
-			formData.put("name", "not_existing");
-			formData.put("password", "12345");
-			resource.login(formData);
-		} catch (WebApplicationException e) {
-			Assert.assertEquals(ErrorDescriptor.class, e.getResponse().getEntity().getClass());
-			ErrorDescriptor error = (ErrorDescriptor) e.getResponse().getEntity();
-			Assert.assertEquals("Invalid credentials", error.getData());
-			throw e;
-		}
+		Map<String, Object> formData = new HashMap<>();
+		formData.put("username", "not_existing");
+		formData.put("password", "12345");
+		Response response = resource.login(formData);
+		Assert.assertEquals(401, response.getStatus());
 	}
 
-	@Test(expected = WebApplicationException.class)
+	@Test
 	public void loginWrongPassword() {
-		try {
-			Map<String, Object> formData = new HashMap<>();
-			formData.put("name", USER);
-			formData.put("password", "54321");
-			resource.login(formData);
-		} catch (WebApplicationException e) {
-			Assert.assertEquals(ErrorDescriptor.class, e.getResponse().getEntity().getClass());
-			ErrorDescriptor error = (ErrorDescriptor) e.getResponse().getEntity();
-			Assert.assertEquals("Invalid credentials", error.getData());
-			throw e;
-		}
+		Map<String, Object> formData = new HashMap<>();
+		formData.put("username", USER);
+		formData.put("password", "54321");
+		Response response = resource.login(formData);
+		Assert.assertEquals(401, response.getStatus());
 	}
 
 	@Test
 	public void logout() {
 		Map<String, Object> formData = new HashMap<>();
-		formData.put("name", USER);
+		formData.put("username", USER);
 		formData.put("password", PASS);
 		resource.login(formData);
 		resource.logout();
