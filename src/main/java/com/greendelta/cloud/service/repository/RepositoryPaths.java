@@ -47,6 +47,10 @@ class RepositoryPaths {
 		return new File(repository, "dataset_index");
 	}
 
+	File getSharedAccessFile() {
+		return new File(repository, "shared_access.txt");
+	}
+
 	File getDatasetDirectory(ModelType type, String refId) {
 		File modelDirectory = internalGetModelDirectory(repository, type);
 		return new File(modelDirectory, refId);
