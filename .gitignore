@@ -2,3 +2,6 @@
 /derby.log
 /dropDDL.jdbc
 /schema.sql
+/.settings/
+/.classpath
+/.project
