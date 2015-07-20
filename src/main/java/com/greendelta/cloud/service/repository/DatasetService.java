@@ -19,7 +19,7 @@ import com.greendelta.cloud.util.Strings;
 
 public class DatasetService {
 
-	private final static Logger log = LoggerFactory.getLogger(RepositoryPaths.class);
+	private final static Logger log = LoggerFactory.getLogger(Repository.class);
 	private final static Charset charset = Charset.forName("utf-8");
 
 	private RepositoryService repositoryService;
@@ -31,7 +31,7 @@ public class DatasetService {
 
 	void put(String repositoryId, String commitId, CommitData data) {
 		DatasetIdentifier identifier = data.getIdentifier();
-		RepositoryPaths repository = repositoryService.getForId(repositoryId);
+		Repository repository = repositoryService.getForId(repositoryId);
 		File datasetDirectory = repository.getDatasetDirectory(identifier.getType(), identifier.getRefId());
 		if (!datasetDirectory.exists())
 			datasetDirectory.mkdir();

@@ -14,17 +14,21 @@ import com.greendelta.cloud.error.RepositoryNotFoundException;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.service.repository.RepositoryService;
+import com.greendelta.cloud.service.repository.SharingService;
 import com.greendelta.cloud.util.Strings;
 
 @Path("repository")
 public class RepositoryResource {
 
 	private RepositoryService repositoryService;
+	private SharingService sharingService;
 	private UserService userService;
 
 	@Inject
-	public RepositoryResource(RepositoryService repositoryService, UserService userService) {
+	public RepositoryResource(RepositoryService repositoryService, SharingService sharingService,
+			UserService userService) {
 		this.repositoryService = repositoryService;
+		this.sharingService = sharingService;
 		this.userService = userService;
 	}
 
@@ -42,7 +46,7 @@ public class RepositoryResource {
 	@Path("share/{name}/{with}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response share(@PathParam("name") String name, @PathParam("with") String with) {
-		repositoryService.share(name, with);
+		sharingService.share(name, with);
 		return Respond.ok();
 	}
 
@@ -50,17 +54,17 @@ public class RepositoryResource {
 	@Path("unshare/{name}/{with}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response unshare(@PathParam("name") String name, @PathParam("with") String with) {
-		repositoryService.unshare(name, with);
+		sharingService.unshare(name, with);
 		return Respond.ok();
 	}
 
 	@GET
 	@Path("shared/{repositoryOwner}/{repositoryName}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response getSharedWithFor(@PathParam("repositoryOwner") String repositoryOwner,
+	public Response getAccessListForRepository(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName) {
 		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
-		return Respond.ok(repositoryService.getSharedWithFor(repositoryId));
+		return Respond.ok(sharingService.getAccessListForRepository(repositoryId));
 	}
 
 	@DELETE

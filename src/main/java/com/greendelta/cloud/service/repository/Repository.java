@@ -4,14 +4,15 @@ import java.io.File;
 
 import org.openlca.core.model.ModelType;
 
+import com.greendelta.cloud.error.InvalidRepositoryNameException;
 import com.greendelta.cloud.error.RepositoryNotFoundException;
 import com.greendelta.cloud.util.Strings;
 
-class RepositoryPaths {
+class Repository {
 
 	private final File repository;
 
-	RepositoryPaths(String path) {
+	Repository(String path) {
 		repository = new File(path);
 		if (!repository.exists()) {
 			String[] split = path.split("/");
@@ -26,6 +27,16 @@ class RepositoryPaths {
 			internalGetModelDirectory(repository, type).mkdir();
 		new File(repository, "dataset_index").mkdir();
 		new File(repository, "commit_index").mkdir();
+	}
+
+	static void checkIdForValidity(String id) {
+		if (!id.contains("/") || id.indexOf('/') != id.lastIndexOf('/'))
+			throw new InvalidRepositoryNameException(id);
+	}
+
+	static void checkNameForValidity(String name) {
+		if (name.contains("/"))
+			throw new InvalidRepositoryNameException(name);
 	}
 
 	File getDatasetFile(ModelType type, String refId, String commitId) {
