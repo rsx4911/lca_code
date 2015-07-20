@@ -22,6 +22,7 @@ public class RepositoryService {
 			SharingService sharingService) {
 		this.repositoryRoot = repositoryPath;
 		this.userService = userService;
+		this.sharingService = sharingService;
 	}
 
 	public Repository getForId(String id) {
@@ -48,6 +49,10 @@ public class RepositoryService {
 
 	public void delete(String name) {
 		Repository.checkNameForValidity(name);
+		User user = userService.getCurrentUser();
+		String id = Strings.concat(user.getName(), "/" + name);
+		for (String username : sharingService.getAccessListForRepository(id))
+			sharingService.unshareById(id, username);
 		Directories.delete(getPath(name));
 	}
 
