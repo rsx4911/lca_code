@@ -55,10 +55,12 @@ public class RepositoryResource {
 	}
 
 	@GET
-	@Path("shared/{name}")
+	@Path("shared/{repositoryOwner}/{repositoryName}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response getSharedWith(@PathParam("name") String name) {
-		return Respond.ok(repositoryService.getSharedWith(name));
+	public Response getSharedWithFor(@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName) {
+		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+		return Respond.ok(repositoryService.getSharedWithFor(repositoryId));
 	}
 
 	@DELETE
