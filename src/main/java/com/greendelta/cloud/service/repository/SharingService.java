@@ -55,11 +55,18 @@ public class SharingService {
 		removeFromList(id, userAccessFile);
 	}
 
+	private File getUserDir(String name) {
+		File userDir = new File(repositoryRoot, name);
+		if (!userDir.exists())
+			userDir.mkdir();
+		return userDir;
+	}
+
 	private File getUserAccessFile(String name) {
 		File userDir = new File(repositoryRoot, name);
 		if (!userDir.exists())
 			userDir.mkdir();
-		return new File(userDir, name);
+		return new File(userDir, "access.txt");
 	}
 
 	private String checkSharingInput(String name, String with) {
@@ -82,7 +89,12 @@ public class SharingService {
 		if (userService.getForName(username) == null)
 			throw new UserNotFoundException(username);
 		File userAccessFile = getUserAccessFile(username);
-		return Collections.unmodifiableSet(readList(userAccessFile));
+		Set<String> list = readList(userAccessFile);
+		File userDir = getUserDir(username);
+		for (File repository : userDir.listFiles())
+			if (repository.isDirectory())
+				list.add(Strings.concat(username, "/", repository.getName()));
+		return Collections.unmodifiableSet(list);
 	}
 
 	private Repository internalGetForId(String id) {
