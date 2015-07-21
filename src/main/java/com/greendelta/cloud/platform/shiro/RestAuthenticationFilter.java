@@ -13,9 +13,9 @@ public class RestAuthenticationFilter extends UserFilter {
 	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
 		try {
 			HttpServletResponse httpResponse = WebUtils.toHttp(response);
-			httpResponse.sendError(403);
+			httpResponse.reset();
+			httpResponse.setStatus(403);
 		} catch (ClassCastException ex) {
-			// Not a HTTP Servlet operation
 			return super.onAccessDenied(request, response);
 		}
 		return false;
