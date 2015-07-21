@@ -25,6 +25,30 @@ HTTP/1.1 200 OK
 ...
 ```
 
+## Create user (adminKey needed)
+```bash
+curl -X POST [server_address]/ws/user/create \
+	 -d '{"username":"foo","password":"bar", "adminKey": "KEY"}' \
+	 -H "Content-Type: application/json" \
+	 -b "JSESSIONID=FOOBAR" -i
+```
+```bash
+HTTP/1.1 201 CREATED
+...
+```
+
+## Delete user (adminKey needed)
+```bash
+curl -X DELETE [server_address]/ws/user/delete/USERNAME \
+	 -d '{"adminKey": "KEY"}' \
+	 -H "Content-Type: application/json" \
+	 -b "JSESSIONID=FOOBAR" -i
+```
+```bash
+HTTP/1.1 200 OK
+...
+```
+
 ## Create a new repository
 ```bash
 curl -X POST [server_address]/ws/repository/create/REPOSITORY_NAME \
