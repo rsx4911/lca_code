@@ -70,7 +70,7 @@ HTTP/1.1 200 OK
 curl -X GET [server_address]/ws/repository/shared/REPOSITORY_NAME \
 	 -b "JSESSIONID=FOOBAR" -i
 ```
-```
+```bash
 HTTP/1.1 200 OK
 ...
 ["user1","user2"]
@@ -91,6 +91,10 @@ HTTP/1.1 200 OK
 ```bash
 curl -X GET [server_address]/ws/repository/commit/request/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
 	 -b "JSESSIONID=FOOBAR" -i
+```
+```
+HTTP/1.1 200 OK
+...
 ```
 
 ## Commit data
