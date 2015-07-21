@@ -3,10 +3,23 @@
 ## Login
 Login with your credentials; use JSESSIONID cookie for further calls
 
-```
+```bash
 curl -X POST [server_address]/ws/public/login \
 	 -d '{"username":"foo","password":"bar"}' \
 	 -H "Content-Type: application/json" -i
+```
+### returns
+```bash
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Expires: 
+Last-Modified: 
+Pragma: 
+Cache-Control: no-cache
+Set-Cookie: JSESSIONID=8D184B7DFDA4751287BE363F7A1C9A04; Path=/; HttpOnly
+Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Tue, 21-Jul-2015 11:24:12 GMT
+Content-Length: 0
+Date: Wed, 22 Jul 2015 11:24:12 GMT
 ```
 
 ## Logout
