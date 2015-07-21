@@ -22,7 +22,7 @@ import com.greendelta.cloud.service.UserService;
 
 public abstract class GuicyTest {
 
-	protected static final String USER = "testuser";
+	protected static final String USER = "testuser1";
 	protected static final String PASS = "12345sechs";
 	private static Injector injector;
 	private static Injected injected;

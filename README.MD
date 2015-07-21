@@ -11,99 +11,93 @@ curl -X POST [server_address]/ws/public/login \
 ### returns
 ```bash
 HTTP/1.1 200 OK
-Server: Apache-Coyote/1.1
-Expires: 
-Last-Modified: 
-Pragma: 
-Cache-Control: no-cache
+...
 Set-Cookie: JSESSIONID=8D184B7DFDA4751287BE363F7A1C9A04; Path=/; HttpOnly
-Set-Cookie: rememberMe=deleteMe; Path=/; Max-Age=0; Expires=Tue, 21-Jul-2015 11:24:12 GMT
-Content-Length: 0
-Date: Wed, 22 Jul 2015 11:24:12 GMT
+...
 ```
 
 ## Logout
-```
+```bash
 curl -X POST [server_address]/ws/public/logout \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Create a new repository
-```
+```bash
 curl -X POST [server_address]/ws/repository/create/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
  
 ## Delete an existing repository
-```
+```bash
 curl -X DELETE [server_address]/ws/repository/delete/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Share an existing repository
-```
-curl -X POST [server_address]/ws/repository/share/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -v
+```bash
+curl -X POST [server_address]/ws/repository/share/REPOSITORY_NAME/WITH_USER \
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Cancel sharing of an existing repository
-```
-curl -X POST [server_address]/ws/repository/unshare/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -v
+```bash
+curl -X POST [server_address]/ws/repository/unshare/REPOSITORY_NAME/WITH_USER \
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## List users with access to repository
-```
+```bash
 curl -X GET [server_address]/ws/repository/shared/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## List repositories current user can access
-```
+```bash
 curl -X GET [server_address]/ws/user/shared \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Request a commit
-```
+```bash
 curl -X GET [server_address]/ws/repository/commit/request/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Commit data
-```
+```bash
 curl -X POST [server_address]/ws/repository/commit/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
 	 -d '{"message":"commit message text","data":[{"type":"ACTOR","refId":"","version":"1.2.1","lastChange":14983897636,"json":"{}"}]}' \
 	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Request a fetch
-```
+```bash
 curl -X GET [server_address]/ws/repository/fetch/request/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Fetch data
-```
+```bash
 curl -X GET [server_address]/ws/repository/fetch/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## List commit entries
-```
+```bash
 curl -X GET [server_address]/ws/repository/fetch/commits/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## List file references for a commit
-```
+```bash
 curl -X GET [server_address]/ws/repository/fetch/references/REPOSITORY_OWNER/REPOSITORY_NAME/COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
 
 ## Get data set content
-```
+```bash
 curl -X GET [server_address]/ws/repository/fetch/data/REPOSITORY_OWNER/REPOSITORY_NAME/TYPE/REF_ID/COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -v
+	 -b "JSESSIONID=FOOBAR" -i
 ```
