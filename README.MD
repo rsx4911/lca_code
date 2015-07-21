@@ -2,6 +2,7 @@
 
 ## Login
 Login with your credentials; use JSESSIONID cookie for further calls
+
 ```
 curl -X POST [server_address]/ws/public/login \
 	 -d '{"username":"foo","password":"bar"}' \
