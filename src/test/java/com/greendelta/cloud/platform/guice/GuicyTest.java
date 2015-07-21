@@ -22,7 +22,7 @@ import com.greendelta.cloud.platform.guice.util.StartupListener;
 public abstract class GuicyTest {
 
 	protected static final String USER = "greve";
-	protected static final String PASS = "BiNy13189";
+	protected static final String PASS = "12345sechs";
 	private static Injector injector;
 	private static Injected injected;
 
