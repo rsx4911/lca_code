@@ -47,7 +47,7 @@ public class UserService {
 		return value.getId();
 	}
 
-	public void createNewUser(String name, String password) {
+	public User createNewUser(String name, String password) {
 		User user = new User();
 		user.setId(getLastId() + 1);
 		user.setName(name);
@@ -60,7 +60,7 @@ public class UserService {
 		} catch (UnsupportedEncodingException e) {
 			log.error("Unexpected encoding exception", e);
 		}
-		dao.insert(user);
+		return dao.insert(user);
 	}
 
 	public void delete(long id) {

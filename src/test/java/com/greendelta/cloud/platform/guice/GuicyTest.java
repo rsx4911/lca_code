@@ -18,6 +18,7 @@ import com.google.inject.Provider;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.greendelta.cloud.platform.guice.util.StartupListener;
+import com.greendelta.cloud.service.UserService;
 
 public abstract class GuicyTest {
 
@@ -25,6 +26,7 @@ public abstract class GuicyTest {
 	protected static final String PASS = "12345sechs";
 	private static Injector injector;
 	private static Injected injected;
+	private long userId;
 
 	private static class Injected {
 		@Inject(optional = true)
@@ -32,6 +34,10 @@ public abstract class GuicyTest {
 
 		@Inject
 		private Provider<Subject> subjectProvider;
+
+		@Inject
+		private UserService userService;
+
 	}
 
 	static {
@@ -54,6 +60,7 @@ public abstract class GuicyTest {
 	@Before
 	public void before() {
 		injector.injectMembers(this);
+		userId = injected.userService.createNewUser(USER, PASS).getId();
 	}
 
 	@After
@@ -61,6 +68,7 @@ public abstract class GuicyTest {
 		Subject subject = injected.subjectProvider.get();
 		if (subject.isAuthenticated())
 			subject.logout();
+		injected.userService.delete(userId);
 	}
 
 	private static Module[] getModules() {
