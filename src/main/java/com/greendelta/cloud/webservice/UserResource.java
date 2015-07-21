@@ -54,7 +54,7 @@ public class UserResource {
 		if (service.getForName(username) != null)
 			return Respond.conflict("User already exists");
 		service.createNewUser(username, password);
-		return Respond.ok();
+		return Respond.created();
 	}
 
 	@DELETE
