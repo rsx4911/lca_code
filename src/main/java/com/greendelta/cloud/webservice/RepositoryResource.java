@@ -1,11 +1,11 @@
 package com.greendelta.cloud.webservice;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -34,7 +34,6 @@ public class RepositoryResource {
 
 	@POST
 	@Path("create/{name}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response create(@PathParam("name") String name) {
 		if (repositoryService.exists(name))
 			return Respond.conflict(Strings.concat("Repository ", name, " already exists"));
@@ -44,7 +43,6 @@ public class RepositoryResource {
 
 	@POST
 	@Path("share/{name}/{with}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response share(@PathParam("name") String name, @PathParam("with") String with) {
 		sharingService.share(name, with);
 		return Respond.ok();
@@ -52,7 +50,6 @@ public class RepositoryResource {
 
 	@POST
 	@Path("unshare/{name}/{with}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response unshare(@PathParam("name") String name, @PathParam("with") String with) {
 		sharingService.unshare(name, with);
 		return Respond.ok();
@@ -60,7 +57,7 @@ public class RepositoryResource {
 
 	@GET
 	@Path("shared/{repositoryOwner}/{repositoryName}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAccessListForRepository(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName) {
 		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
@@ -69,7 +66,6 @@ public class RepositoryResource {
 
 	@DELETE
 	@Path("delete/{name}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response delete(@PathParam("name") String name) {
 		checkRepositoryExists(name);
 		repositoryService.delete(name);

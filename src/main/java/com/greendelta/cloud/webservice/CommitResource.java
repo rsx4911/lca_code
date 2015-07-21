@@ -1,10 +1,10 @@
 package com.greendelta.cloud.webservice;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -26,7 +26,6 @@ public class CommitResource {
 
 	@GET
 	@Path("request/{repositoryOwner}/{repositoryName}/{latestCommitId}")
-	@Consumes(MediaType.APPLICATION_JSON)
 	public Response request(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId) {
 		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
@@ -46,7 +45,7 @@ public class CommitResource {
 
 	@POST
 	@Path("{repositoryOwner}/{repositoryName}/{latestCommitId}")
-	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response commit(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId,
 			Commit commit) {
