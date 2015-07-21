@@ -8,7 +8,6 @@ curl -X POST [server_address]/ws/public/login \
 	 -d '{"username":"foo","password":"bar"}' \
 	 -H "Content-Type: application/json" -i
 ```
-### returns
 ```bash
 HTTP/1.1 200 OK
 ...
@@ -21,11 +20,19 @@ Set-Cookie: JSESSIONID=8D184B7DFDA4751287BE363F7A1C9A04; Path=/; HttpOnly
 curl -X POST [server_address]/ws/public/logout \
 	 -b "JSESSIONID=FOOBAR" -i
 ```
+```bash
+HTTP/1.1 200 OK
+...
+```
 
 ## Create a new repository
 ```bash
 curl -X POST [server_address]/ws/repository/create/REPOSITORY_NAME \
 	 -b "JSESSIONID=FOOBAR" -i
+```
+```bash
+HTTP/1.1 201 CREATED
+...
 ```
  
 ## Delete an existing repository
@@ -33,11 +40,19 @@ curl -X POST [server_address]/ws/repository/create/REPOSITORY_NAME \
 curl -X DELETE [server_address]/ws/repository/delete/REPOSITORY_NAME \
 	 -b "JSESSIONID=FOOBAR" -i
 ```
+```bash
+HTTP/1.1 200 OK
+...
+```
 
 ## Share an existing repository
 ```bash
 curl -X POST [server_address]/ws/repository/share/REPOSITORY_NAME/WITH_USER \
 	 -b "JSESSIONID=FOOBAR" -i
+```
+```bash
+HTTP/1.1 200 OK
+...
 ```
 
 ## Cancel sharing of an existing repository
@@ -45,17 +60,31 @@ curl -X POST [server_address]/ws/repository/share/REPOSITORY_NAME/WITH_USER \
 curl -X POST [server_address]/ws/repository/unshare/REPOSITORY_NAME/WITH_USER \
 	 -b "JSESSIONID=FOOBAR" -i
 ```
+```bash
+HTTP/1.1 200 OK
+...
+```
 
 ## List users with access to repository
 ```bash
 curl -X GET [server_address]/ws/repository/shared/REPOSITORY_NAME \
 	 -b "JSESSIONID=FOOBAR" -i
 ```
+```
+HTTP/1.1 200 OK
+...
+["user1","user2"]
+```
 
 ## List repositories current user can access
 ```bash
 curl -X GET [server_address]/ws/user/shared \
 	 -b "JSESSIONID=FOOBAR" -i
+```
+```
+HTTP/1.1 200 OK
+...
+["username1/repository1","username2/repository2"]
 ```
 
 ## Request a commit
