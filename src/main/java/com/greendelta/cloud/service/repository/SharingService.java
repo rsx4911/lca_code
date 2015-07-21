@@ -79,10 +79,14 @@ public class SharingService {
 
 	public Set<String> getAccessListForRepository(String id) {
 		Repository.checkIdForValidity(id);
-		if (!hasAccess(userService.getCurrentUser(), id))
+		User user = userService.getCurrentUser();
+		if (!hasAccess(user, id))
 			throw new UnauthorizedRepositoryAccessException(id);
 		File repositoryAccessFile = internalGetForId(id).getSharedAccessFile();
-		return Collections.unmodifiableSet(readList(repositoryAccessFile));
+		Set<String> list = readList(repositoryAccessFile);
+		if (!list.contains(user.getName()))
+			list.add(user.getName());
+		return Collections.unmodifiableSet(list);
 	}
 
 	public Set<String> getAccessListForUser(String username) {
