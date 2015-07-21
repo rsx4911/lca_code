@@ -10,10 +10,12 @@ import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
 import com.greendelta.cloud.platform.shiro.JpaRealm;
+import com.greendelta.cloud.platform.shiro.RestAuthenticationFilter;
 import com.greendelta.cloud.util.Logs;
 
 class ShiroModule extends ShiroWebModule {
@@ -32,7 +34,7 @@ class ShiroModule extends ShiroWebModule {
 		expose(JpaRealm.class);
 		expose(Subject.class);
 		addFilterChain("/ws/public/**", ANON);
-		addFilterChain("/**", USER);
+		addFilterChain("/**", Key.get(RestAuthenticationFilter.class));
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
