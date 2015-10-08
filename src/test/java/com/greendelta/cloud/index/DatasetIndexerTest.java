@@ -14,12 +14,13 @@ import org.junit.Test;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.Version;
 
+import com.google.common.io.Files;
 import com.greendelta.cloud.model.data.DatasetIdentifier;
 import com.greendelta.cloud.util.Directories;
 
 public class DatasetIndexerTest {
 
-	private final static File DIRECTORY = new File("C:/Users/Besitzer/tests/indexer");
+	private final static File DIRECTORY = Files.createTempDir();
 
 	private DatasetIndexer indexer;
 
@@ -36,16 +37,12 @@ public class DatasetIndexerTest {
 		expected.setLastChange(Calendar.getInstance().getTimeInMillis());
 		expected.setVersion(new Version(1, 1, 1).toString());
 		indexer.index(expected);
-		DatasetIdentifier actual = indexer.get(ModelType.ACTOR, expected.getRefId());
+		DatasetIdentifier actual = indexer.get(ModelType.ACTOR,
+				expected.getRefId());
 		assertEquals(expected, actual);
 		List<DatasetIdentifier> all = indexer.getAll();
 		Assert.assertEquals(1, all.size());
 		assertEquals(expected, all.get(0));
-		indexer.delete(expected.getRefId());
-		all = indexer.getAll();
-		Assert.assertEquals(0, all.size());
-		actual = indexer.get(ModelType.ACTOR, expected.getRefId());
-		Assert.assertNull(actual);
 	}
 
 	@Test
@@ -63,7 +60,8 @@ public class DatasetIndexerTest {
 		Assert.assertEquals(amount, all.size());
 		DatasetIdentifier expected = identifiers.get(amount / 2);
 		time = Calendar.getInstance().getTimeInMillis();
-		DatasetIdentifier actual = indexer.get(ModelType.ACTOR, expected.getRefId());
+		DatasetIdentifier actual = indexer.get(ModelType.ACTOR,
+				expected.getRefId());
 		printSeconds("Retrieving document", time);
 		assertEquals(expected, actual);
 	}
@@ -73,7 +71,8 @@ public class DatasetIndexerTest {
 		System.out.println(task + " took " + milli + " ms");
 	}
 
-	private void assertEquals(DatasetIdentifier expected, DatasetIdentifier actual) {
+	private void assertEquals(DatasetIdentifier expected,
+			DatasetIdentifier actual) {
 		Assert.assertEquals(expected.getRefId(), actual.getRefId());
 		Assert.assertEquals(expected.getType(), actual.getType());
 		Assert.assertEquals(expected.getLastChange(), actual.getLastChange());

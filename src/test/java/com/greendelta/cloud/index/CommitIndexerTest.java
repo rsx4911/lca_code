@@ -12,19 +12,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openlca.core.model.ModelType;
 
+import com.google.common.io.Files;
 import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.util.Directories;
 
 public class CommitIndexerTest {
 
-	private final static File DIRECTORY = new File("/opt/test/indices/commit");
+	private final static File DIRECTORY = Files.createTempDir();
 
 	private CommitIndexer indexer;
 
 	@Before
 	public void before() throws IOException {
-		if (!DIRECTORY.exists())
-			DIRECTORY.mkdir();
 		indexer = new CommitIndexer(DIRECTORY);
 	}
 
