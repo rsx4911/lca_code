@@ -21,7 +21,8 @@ import com.greendelta.cloud.model.data.FileReference;
 
 public class CommitIndexer {
 
-	private final static Logger log = LoggerFactory.getLogger(CommitIndexer.class);
+	private final static Logger log = LoggerFactory
+			.getLogger(CommitIndexer.class);
 	private final Directory directory;
 
 	public CommitIndexer(File indexDirectory) {
@@ -63,7 +64,8 @@ public class CommitIndexer {
 	private List<FileReference> convert(Document document) {
 		try {
 			String json = document.get("fileReferences");
-			List<FileReference> references = IndexUtil.parseFileReferences(json);
+			List<FileReference> references = IndexUtil
+					.parseFileReferences(json);
 			return references;
 		} catch (IOException e) {
 			log.error("Error converting commit index document", e);
@@ -73,8 +75,8 @@ public class CommitIndexer {
 
 	private Document convert(String commitId, List<FileReference> fileReferences) {
 		Document document = new Document();
-		document.add(IndexUtil.toField("commitId", commitId));
-		document.add(IndexUtil.toField("fileReferences", fileReferences));
+		IndexUtil.addField(document, "commitId", commitId);
+		IndexUtil.addField(document, "fileReferences", fileReferences);
 		return document;
 	}
 

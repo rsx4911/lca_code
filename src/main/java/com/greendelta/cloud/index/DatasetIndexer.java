@@ -25,7 +25,8 @@ import com.greendelta.cloud.model.data.DatasetIdentifier;
 
 public class DatasetIndexer {
 
-	private final static Logger log = LoggerFactory.getLogger(DatasetIndexer.class);
+	private final static Logger log = LoggerFactory
+			.getLogger(DatasetIndexer.class);
 	private final Directory directory;
 
 	public DatasetIndexer(File indexDirectory) {
@@ -73,7 +74,8 @@ public class DatasetIndexer {
 	}
 
 	public DatasetIdentifier get(ModelType type, String refId) {
-		List<DatasetIdentifier> result = get(type, Collections.singletonList(refId));
+		List<DatasetIdentifier> result = get(type,
+				Collections.singletonList(refId));
 		if (result.isEmpty())
 			return null;
 		return result.get(0);
@@ -130,15 +132,26 @@ public class DatasetIndexer {
 		identifier.setType(ModelType.valueOf(document.get("type")));
 		identifier.setLastChange(Long.parseLong(document.get("lastChange")));
 		identifier.setVersion(document.get("version"));
+		identifier.setName(document.get("name"));
+		identifier.setCategoryRefId(document.get("categoryRefId"));
+		String categoryType = document.get("categoryType");
+		if (categoryType != null && !categoryType.isEmpty())
+			identifier.setCategoryType(ModelType.valueOf(categoryType));
 		return identifier;
 	}
 
 	private Document convert(DatasetIdentifier identifier) {
 		Document document = new Document();
-		document.add(IndexUtil.toField("refId", identifier.getRefId()));
-		document.add(IndexUtil.toField("type", identifier.getType().name()));
-		document.add(IndexUtil.toField("lastChange", identifier.getLastChange()));
-		document.add(IndexUtil.toField("version", identifier.getVersion()));
+		IndexUtil.addField(document, "refId", identifier.getRefId());
+		IndexUtil.addField(document, "type", identifier.getType().name());
+		IndexUtil.addField(document, "lastChange", identifier.getLastChange());
+		IndexUtil.addField(document, "version", identifier.getVersion());
+		IndexUtil.addField(document, "name", identifier.getName());
+		IndexUtil.addField(document, "categoryRefId",
+				identifier.getCategoryRefId());
+		if (identifier.getCategoryType() != null)
+			IndexUtil.addField(document, "categoryType", identifier
+					.getCategoryType().name());
 		return document;
 	}
 }

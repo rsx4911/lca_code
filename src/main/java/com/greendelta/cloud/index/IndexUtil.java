@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
@@ -28,20 +29,27 @@ class IndexUtil {
 	private final static Logger log = LoggerFactory.getLogger(IndexUtil.class);
 	private final static Gson mapper = new Gson();
 
-	public static IndexableField toField(String name, String value) {
-		return new StringField(name, value, Store.YES);
+	public static void addField(Document document, String name, String value) {
+		if (value == null)
+			return;
+		IndexableField field = new StringField(name, value, Store.YES);
+		document.add(field);
 	}
 
-	public static IndexableField toField(String name, long value) {
-		return new LongField(name, value, Store.YES);
+	public static void addField(Document document, String name, long value) {
+		IndexableField field = new LongField(name, value, Store.YES);
+		document.add(field);
 	}
 
-	public static IndexableField toField(String name, List<?> value) {
+	public static void addField(Document document, String name, List<?> value) {
+		if (value == null)
+			return;
 		String json = mapper.toJson(value);
-		return toField(name, json);
+		addField(document, name, json);
 	}
 
-	public static List<FileReference> parseFileReferences(String value) throws IOException {
+	public static List<FileReference> parseFileReferences(String value)
+			throws IOException {
 		return mapper.fromJson(value, new TypeToken<List<FileReference>>() {
 		}.getType());
 	}
