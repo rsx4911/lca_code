@@ -32,25 +32,32 @@ public class DatasetService {
 	void put(String repositoryId, String commitId, CommitData data) {
 		DatasetIdentifier identifier = data.getIdentifier();
 		Repository repository = repositoryService.getForId(repositoryId);
-		File datasetDirectory = repository.getDatasetDirectory(identifier.getType(), identifier.getRefId());
+		File datasetDirectory = repository.getDatasetDirectory(
+				identifier.getType(), identifier.getRefId());
 		if (!datasetDirectory.exists())
 			datasetDirectory.mkdir();
-		File datasetFile = repository.getDatasetFile(identifier.getType(), identifier.getRefId(), commitId);
+		File datasetFile = repository.getDatasetFile(identifier.getType(),
+				identifier.getRefId(), commitId);
 		put(data, datasetFile, getIndexer(repositoryId));
 	}
 
 	public DatasetIndexer getIndexer(String repositoryId) {
-		File indexDirectory = repositoryService.getForId(repositoryId).getCommitIndexDirectory();
+		File indexDirectory = repositoryService.getForId(repositoryId)
+				.getCommitIndexDirectory();
 		return new DatasetIndexer(indexDirectory);
 	}
 
-	public void streamIndex(String repositoryId, OutputStream stream) throws IOException {
-		File indexDirectory = repositoryService.getForId(repositoryId).getCommitIndexDirectory();
+	public void streamIndex(String repositoryId, OutputStream stream)
+			throws IOException {
+		File indexDirectory = repositoryService.getForId(repositoryId)
+				.getCommitIndexDirectory();
 		Directories.streamZipped(indexDirectory, stream);
 	}
 
-	public String get(String repositoryId, ModelType type, String refId, String commitId) {
-		File file = repositoryService.getForId(repositoryId).getDatasetFile(type, refId, commitId);
+	public String get(String repositoryId, ModelType type, String refId,
+			String commitId) {
+		File file = repositoryService.getForId(repositoryId).getDatasetFile(
+				type, refId, commitId);
 		return read(file);
 	}
 
@@ -60,12 +67,14 @@ public class DatasetService {
 		if (!file.exists())
 			return null;
 		if (file.length() == 0)
-			return null;
+			return "";
 		try {
 			byte[] jsonData = Files.readAllBytes(file.toPath());
 			return new String(jsonData, charset);
 		} catch (IOException e) {
-			log.error(Strings.concat("Error reading json data from file ", file.getAbsolutePath()), e);
+			log.error(
+					Strings.concat("Error reading json data from file ",
+							file.getAbsolutePath()), e);
 			return null;
 		}
 	}
@@ -73,15 +82,15 @@ public class DatasetService {
 	private void put(CommitData data, File file, DatasetIndexer indexer) {
 		try {
 			DatasetIdentifier identifier = data.getIdentifier();
-			if (data.getJson() == null) {
+			if (data.getJson() == null)
 				file.createNewFile();
-				indexer.delete(identifier.getRefId());
-			} else {
+			else
 				Files.write(file.toPath(), data.getJson().getBytes(charset));
-				indexer.index(identifier);
-			}
+			indexer.index(identifier);
 		} catch (IOException e) {
-			log.error(Strings.concat("Error writing json data to file ", file.getAbsolutePath()), e);
+			log.error(
+					Strings.concat("Error writing json data to file ",
+							file.getAbsolutePath()), e);
 		}
 	}
 

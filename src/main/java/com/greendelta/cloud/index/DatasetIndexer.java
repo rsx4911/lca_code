@@ -55,11 +55,7 @@ public class DatasetIndexer {
 		}
 	}
 
-	public void delete(String refId) {
-		delete(Collections.singletonList(refId));
-	}
-
-	public void delete(List<String> refIds) {
+	private void delete(List<String> refIds) {
 		IndexWriter writer = IndexUtil.getWriter(directory, false);
 		try {
 			for (String refId : refIds) {

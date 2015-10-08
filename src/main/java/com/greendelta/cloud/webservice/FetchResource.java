@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexer;
 import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.FetchData;
 import com.greendelta.cloud.model.data.FetchResponse;
 import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.service.repository.CommitService;
@@ -60,13 +61,16 @@ public class FetchResource {
 		List<CommitDescriptor> commits = commitService.getCommitHistory(repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<String, DatasetIdentifier> identifiers = new HashMap<>();
+		Map<String, FetchData> identifiers = new HashMap<>();
 		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
 		for (CommitDescriptor commit : commits) {
 			List<FileReference> references = commitService.getModifiedFiles(repositoryId, commit.getId());
 			for (FileReference reference : references) {
 				String key = reference.getType().name() + "_" + reference.getRefId();
-				DatasetIdentifier value = indexer.get(reference.getType(), reference.getRefId());
+				DatasetIdentifier identifier = indexer.get(reference.getType(), reference.getRefId());
+				FetchData value = new FetchData(identifier);
+				String data = datasetService.get(repositoryId, identifier.getType(), identifier.getRefId(), commit.getId());
+				value.setDeleted(data == null || data.isEmpty());
 				identifiers.put(key, value);
 			}
 		}
