@@ -1,6 +1,7 @@
 package com.greendelta.cloud.webservice;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,12 @@ public class FetchResource {
 			@PathParam("commitId") String commitId) {
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
+		if (commitId.equals("null"))
+			commitId = commitService.getLatestCommitId(repositoryId, type,
+					refId);
+		if (commitId == null)
+			return Respond.notFound(Strings.concat(type.name(), " ", refId,
+					" not found"));
 		String dataset = datasetService
 				.get(repositoryId, type, refId, commitId);
 		if (dataset == null)
@@ -74,21 +81,14 @@ public class FetchResource {
 		if (commits.size() == 0)
 			return Respond.noContent();
 		Map<String, FetchRequestData> descriptors = new HashMap<>();
-		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
 		for (CommitDescriptor commit : commits) {
 			List<FileReference> references = commitService.getModifiedFiles(
 					repositoryId, commit.getId());
 			for (FileReference reference : references) {
 				String key = reference.getType().name() + "_"
 						+ reference.getRefId();
-				DatasetDescriptor descriptor = indexer.get(reference.getType(),
-						reference.getRefId());
-				FetchRequestData value = new FetchRequestData(descriptor);
-				String data = datasetService.get(repositoryId,
-						descriptor.getType(), descriptor.getRefId(),
-						commit.getId());
-				value.setDeleted(data == null || data.isEmpty());
-				descriptors.put(key, value);
+				descriptors.put(key,
+						toRequestData(repositoryId, commit.getId(), reference));
 			}
 		}
 		if (descriptors.size() == 0)
@@ -151,13 +151,14 @@ public class FetchResource {
 				repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
+		Collections.reverse(commits);
 		return Respond.ok(commits);
 	}
 
 	@GET
 	@Path("references/{repositoryOwner}/{repositoryName}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getFileReferences(
+	public Response getReferences(
 			@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName,
 			@PathParam("commitId") String commitId) {
@@ -169,6 +170,34 @@ public class FetchResource {
 		if (files.size() == 0)
 			return Respond.notFound(Strings.concat("Commit with id ", commitId,
 					" not found"));
-		return Respond.ok(files);
+		List<FetchRequestData> descriptors = new ArrayList<>();
+		for (FileReference reference : files)
+			descriptors.add(toRequestData(repositoryId, commitId, reference));
+		return Respond.ok(descriptors);
 	}
+
+	private FetchRequestData toRequestData(String repositoryId,
+			String commitId, FileReference reference) {
+		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
+		DatasetDescriptor descriptor = indexer.get(reference.getType(),
+				reference.getRefId());
+		FetchRequestData value = new FetchRequestData(descriptor);
+		String data = datasetService.get(repositoryId, descriptor.getType(),
+				descriptor.getRefId(), commitId);
+		List<CommitDescriptor> previous = commitService
+				.getCommitHistoryForDataset(repositoryId, reference.getType(),
+						reference.getRefId(), commitId);
+		boolean wasAdded = previous.isEmpty();
+		if (!wasAdded) {
+			CommitDescriptor commit = previous.get(previous.size() - 1);
+			String previousData = datasetService
+					.get(repositoryId, descriptor.getType(),
+							descriptor.getRefId(), commit.getId());
+			wasAdded = previousData == null || previousData.isEmpty();
+		}
+		value.setDeleted(data == null || data.isEmpty());
+		value.setAdded(wasAdded);
+		return value;
+	}
+
 }

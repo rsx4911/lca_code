@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +99,35 @@ public class CommitService {
 		return history;
 	}
 
+	public List<CommitDescriptor> getCommitHistoryForDataset(String repositoryId, ModelType type, String refId) {
+		return getCommitHistoryForDataset(repositoryId, type, refId, null);
+	}
+
+	public List<CommitDescriptor> getCommitHistoryForDataset(String repositoryId, ModelType type, String refId, String beforeCommitId) {
+		List<CommitDescriptor> history = new ArrayList<>();
+		List<String> historyEntries = readCommitHistory(repositoryId);
+		for (String entry : historyEntries) {
+			if (entry.trim().isEmpty())
+				continue;
+			CommitDescriptor descriptor = CommitDescriptor.parse(entry);
+			if (descriptor.getId() == beforeCommitId)
+				break;
+			boolean found = false;
+			for (FileReference reference : getModifiedFiles(repositoryId,
+					descriptor.getId())) {
+				if (reference.getType() != type)
+					continue;
+				if (!reference.getRefId().equals(refId))
+					continue;
+				found = true;
+				break;
+			}
+			if (found)
+				history.add(descriptor);
+		}
+		return history;
+	}
+
 	public CommitDescriptor getLatestCommit(String repositoryId) {
 		List<CommitDescriptor> entries = getCommitHistory(repositoryId);
 		if (entries.isEmpty())
@@ -105,7 +135,15 @@ public class CommitService {
 		return entries.get(entries.size() - 1);
 	}
 
-	public List<FileReference> getModifiedFiles(String repositoryId, String commitId) {
+	public String getLatestCommitId(String repositoryId, ModelType type, String refId) {
+		List<CommitDescriptor> commits = getCommitHistoryForDataset(repositoryId, type, refId);
+		if (commits.isEmpty())
+			return null;
+		return commits.get(commits.size() - 1).getId();
+	}
+
+	public List<FileReference> getModifiedFiles(String repositoryId,
+			String commitId) {
 		return getIndexer(repositoryId).get(commitId);
 	}
 
