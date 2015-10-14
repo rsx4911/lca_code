@@ -26,9 +26,12 @@ public class CommitResource {
 
 	@GET
 	@Path("request/{repositoryOwner}/{repositoryName}/{latestCommitId}")
-	public Response request(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+	public Response request(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("latestCommitId") String latestCommitId) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
 		if (!isUpToDate(repositoryId, latestCommitId))
 			return Respond.conflict("User is out of sync");
 		return Respond.ok();
@@ -37,7 +40,8 @@ public class CommitResource {
 	private boolean isUpToDate(String repositoryId, String latestCommitId) {
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		CommitDescriptor latestCommit = commitService.getLatestCommit(repositoryId);
+		CommitDescriptor latestCommit = commitService
+				.getLatestCommit(repositoryId);
 		if (latestCommit == null)
 			return latestCommitId == null;
 		return latestCommit.getId().equals(latestCommitId);
@@ -46,10 +50,12 @@ public class CommitResource {
 	@POST
 	@Path("{repositoryOwner}/{repositoryName}/{latestCommitId}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response commit(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId,
-			Commit commit) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+	public Response commit(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("latestCommitId") String latestCommitId, Commit commit) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
 		if (!isUpToDate(repositoryId, latestCommitId))
 			return Respond.conflict("User is out of sync");
 		String commitId = commitService.push(repositoryId, commit);
