@@ -17,8 +17,9 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexer;
 import com.greendelta.cloud.model.data.CommitDescriptor;
-import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.model.data.FetchData;
+import com.greendelta.cloud.model.data.FetchRequestData;
 import com.greendelta.cloud.model.data.FetchResponse;
 import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.service.repository.CommitService;
@@ -32,7 +33,8 @@ public class FetchResource {
 	private CommitService commitService;
 
 	@Inject
-	public FetchResource(DatasetService datasetService, CommitService commitService) {
+	public FetchResource(DatasetService datasetService,
+			CommitService commitService) {
 		this.datasetService = datasetService;
 		this.commitService = commitService;
 	}
@@ -40,74 +42,96 @@ public class FetchResource {
 	@GET
 	@Path("data/{repositoryOwner}/{repositoryName}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getData(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("type") ModelType type,
-			@PathParam("refId") String refId, @PathParam("commitId") String commitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
-		String dataset = datasetService.get(repositoryId, type, refId, commitId);
+	public Response getData(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
+		String dataset = datasetService
+				.get(repositoryId, type, refId, commitId);
 		if (dataset == null)
-			return Respond.notFound(Strings.concat(type.name(), " ", refId, " not found for commit id ", commitId));
+			return Respond.notFound(Strings.concat(type.name(), " ", refId,
+					" not found for commit id ", commitId));
 		return Respond.ok(dataset);
 	}
 
 	@GET
 	@Path("request/{repositoryOwner}/{repositoryName}/{latestCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response request(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+	public Response request(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("latestCommitId") String latestCommitId) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommitHistory(repositoryId, latestCommitId);
+		List<CommitDescriptor> commits = commitService.getCommitHistory(
+				repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<String, FetchData> identifiers = new HashMap<>();
+		Map<String, FetchRequestData> descriptors = new HashMap<>();
 		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
 		for (CommitDescriptor commit : commits) {
-			List<FileReference> references = commitService.getModifiedFiles(repositoryId, commit.getId());
+			List<FileReference> references = commitService.getModifiedFiles(
+					repositoryId, commit.getId());
 			for (FileReference reference : references) {
-				String key = reference.getType().name() + "_" + reference.getRefId();
-				DatasetIdentifier identifier = indexer.get(reference.getType(), reference.getRefId());
-				FetchData value = new FetchData(identifier);
-				String data = datasetService.get(repositoryId, identifier.getType(), identifier.getRefId(), commit.getId());
+				String key = reference.getType().name() + "_"
+						+ reference.getRefId();
+				DatasetDescriptor descriptor = indexer.get(reference.getType(),
+						reference.getRefId());
+				FetchRequestData value = new FetchRequestData(descriptor);
+				String data = datasetService.get(repositoryId,
+						descriptor.getType(), descriptor.getRefId(),
+						commit.getId());
 				value.setDeleted(data == null || data.isEmpty());
-				identifiers.put(key, value);
+				descriptors.put(key, value);
 			}
 		}
-		if (identifiers.size() == 0)
+		if (descriptors.size() == 0)
 			return Respond.noContent();
-		return Respond.ok(new ArrayList<>(identifiers.values()));
+		return Respond.ok(new ArrayList<>(descriptors.values()));
 	}
 
 	@GET
 	@Path("{repositoryOwner}/{repositoryName}/{latestCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("latestCommitId") String latestCommitId) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommitHistory(repositoryId, latestCommitId);
+		List<CommitDescriptor> commits = commitService.getCommitHistory(
+				repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<ModelType, Map<String, String>> data = new HashMap<>();
+		Map<String, FetchData> descriptors = new HashMap<>();
+		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
 		for (CommitDescriptor commit : commits) {
-			for (FileReference reference : commitService.getModifiedFiles(repositoryId, commit.getId())) {
-				Map<String, String> list = data.get(reference.getType());
-				if (list == null)
-					data.put(reference.getType(), list = new HashMap<>());
-				String value = datasetService.get(repositoryId, reference.getType(), reference.getRefId(),
+			List<FileReference> references = commitService.getModifiedFiles(
+					repositoryId, commit.getId());
+			for (FileReference reference : references) {
+				String key = reference.getType().name() + "_"
+						+ reference.getRefId();
+				DatasetDescriptor descriptor = indexer.get(reference.getType(),
+						reference.getRefId());
+				FetchData value = new FetchData(descriptor);
+				String data = datasetService.get(repositoryId,
+						descriptor.getType(), descriptor.getRefId(),
 						commit.getId());
-				list.put(reference.getRefId(), value);
+				value.setJson(data);
+				descriptors.put(key, value);
 			}
 		}
-		if (data.size() == 0)
+		if (descriptors.size() == 0)
 			return Respond.noContent();
-		Map<ModelType, List<String>> dataMap = new HashMap<>();
-		for (ModelType type : data.keySet())
-			dataMap.put(type, new ArrayList<>(data.get(type).values()));
 		FetchResponse result = new FetchResponse();
-		result.setData(dataMap);
+		result.setData(new ArrayList<>(descriptors.values()));
 		result.setLatestCommitId(commits.get(commits.size() - 1).getId());
 		return Respond.ok(result);
 	}
@@ -115,12 +139,16 @@ public class FetchResource {
 	@GET
 	@Path("commits/{repositoryOwner}/{repositoryName}/{latestCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("latestCommitId") String latestCommitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+	public Response getCommitHistory(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("latestCommitId") String latestCommitId) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommitHistory(repositoryId, latestCommitId);
+		List<CommitDescriptor> commits = commitService.getCommitHistory(
+				repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		return Respond.ok(commits);
@@ -129,13 +157,18 @@ public class FetchResource {
 	@GET
 	@Path("references/{repositoryOwner}/{repositoryName}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getFileReferences(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName, @PathParam("commitId") String commitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
-		List<FileReference> files = commitService.getModifiedFiles(repositoryId, commitId);
+	public Response getFileReferences(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName,
+			@PathParam("commitId") String commitId) {
+		String repositoryId = Strings.concat(repositoryOwner, "/",
+				repositoryName);
+		List<FileReference> files = commitService.getModifiedFiles(
+				repositoryId, commitId);
 		// if size is 0, commit was not found (no commit without files)
 		if (files.size() == 0)
-			return Respond.notFound(Strings.concat("Commit with id ", commitId, " not found"));
+			return Respond.notFound(Strings.concat("Commit with id ", commitId,
+					" not found"));
 		return Respond.ok(files);
 	}
 }

@@ -21,7 +21,7 @@ import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.DatasetDescriptor;
 
 public class DatasetIndexer {
 
@@ -39,19 +39,19 @@ public class DatasetIndexer {
 		this.directory = directory;
 	}
 
-	public void index(DatasetIdentifier identifier) {
-		index(Collections.singletonList(identifier));
+	public void index(DatasetDescriptor descriptor) {
+		index(Collections.singletonList(descriptor));
 	}
 
-	public void index(Collection<DatasetIdentifier> identifiers) {
-		delete(getIds(identifiers));
+	public void index(Collection<DatasetDescriptor> descriptors) {
+		delete(getIds(descriptors));
 		IndexWriter writer = IndexUtil.getWriter(directory, false);
 		try {
-			for (DatasetIdentifier identifier : identifiers)
-				writer.addDocument(convert(identifier));
+			for (DatasetDescriptor descriptor : descriptors)
+				writer.addDocument(convert(descriptor));
 			writer.close();
 		} catch (IOException e) {
-			log.error("Error indexing dataset identifiers", e);
+			log.error("Error indexing dataset descriptors", e);
 		}
 	}
 
@@ -65,20 +65,20 @@ public class DatasetIndexer {
 			}
 			writer.close();
 		} catch (IOException e) {
-			log.error("Error deleting dataset identifier indices", e);
+			log.error("Error deleting dataset descriptors indices", e);
 		}
 	}
 
-	public DatasetIdentifier get(ModelType type, String refId) {
-		List<DatasetIdentifier> result = get(type,
+	public DatasetDescriptor get(ModelType type, String refId) {
+		List<DatasetDescriptor> result = get(type,
 				Collections.singletonList(refId));
 		if (result.isEmpty())
 			return null;
 		return result.get(0);
 	}
 
-	public List<DatasetIdentifier> get(ModelType type, List<String> refIds) {
-		List<DatasetIdentifier> identifiers = new ArrayList<>();
+	public List<DatasetDescriptor> get(ModelType type, List<String> refIds) {
+		List<DatasetDescriptor> descriptors = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return Collections.emptyList();
@@ -90,64 +90,66 @@ public class DatasetIndexer {
 				if (topDocs.totalHits == 0)
 					continue;
 				Document document = searcher.doc(topDocs.scoreDocs[0].doc);
-				identifiers.add(convert(document));
+				descriptors.add(convert(document));
 			}
-			return identifiers;
+			return descriptors;
 		} catch (IOException e) {
-			log.error("Error retrieving dataset identifiers", e);
+			log.error("Error retrieving dataset descriptors", e);
 			return Collections.emptyList();
 		}
 	}
 
-	public List<DatasetIdentifier> getAll() {
-		List<DatasetIdentifier> identifiers = new ArrayList<>();
+	public List<DatasetDescriptor> getAll() {
+		List<DatasetDescriptor> descriptors = new ArrayList<>();
 		IndexReader reader = IndexUtil.getReader(directory);
 		if (reader == null)
 			return Collections.emptyList();
 		try {
 			for (int i = 0; i < reader.maxDoc(); i++)
-				identifiers.add(convert(reader.document(i)));
+				descriptors.add(convert(reader.document(i)));
 			reader.close();
-			return identifiers;
+			return descriptors;
 		} catch (IOException e) {
-			log.error("Error retrieving all dataset identifiers", e);
+			log.error("Error retrieving all dataset descriptors", e);
 			return Collections.emptyList();
 		}
 	}
 
-	private List<String> getIds(Collection<DatasetIdentifier> identifiers) {
+	private List<String> getIds(Collection<DatasetDescriptor> descriptors) {
 		List<String> ids = new ArrayList<>();
-		for (DatasetIdentifier identifier : identifiers)
-			ids.add(identifier.getRefId());
+		for (DatasetDescriptor descriptor : descriptors)
+			ids.add(descriptor.getRefId());
 		return ids;
 	}
 
-	private DatasetIdentifier convert(Document document) {
-		DatasetIdentifier identifier = new DatasetIdentifier();
-		identifier.setRefId(document.get("refId"));
-		identifier.setType(ModelType.valueOf(document.get("type")));
-		identifier.setLastChange(Long.parseLong(document.get("lastChange")));
-		identifier.setVersion(document.get("version"));
-		identifier.setName(document.get("name"));
-		identifier.setCategoryRefId(document.get("categoryRefId"));
+	private DatasetDescriptor convert(Document document) {
+		DatasetDescriptor descriptor = new DatasetDescriptor();
+		descriptor.setRefId(document.get("refId"));
+		descriptor.setType(ModelType.valueOf(document.get("type")));
+		descriptor.setLastChange(Long.parseLong(document.get("lastChange")));
+		descriptor.setVersion(document.get("version"));
+		descriptor.setName(document.get("name"));
+		descriptor.setCategoryRefId(document.get("categoryRefId"));
 		String categoryType = document.get("categoryType");
 		if (categoryType != null && !categoryType.isEmpty())
-			identifier.setCategoryType(ModelType.valueOf(categoryType));
-		return identifier;
+			descriptor.setCategoryType(ModelType.valueOf(categoryType));
+		descriptor.setFullPath(document.get("fullPath"));
+		return descriptor;
 	}
 
-	private Document convert(DatasetIdentifier identifier) {
+	private Document convert(DatasetDescriptor descriptor) {
 		Document document = new Document();
-		IndexUtil.addField(document, "refId", identifier.getRefId());
-		IndexUtil.addField(document, "type", identifier.getType().name());
-		IndexUtil.addField(document, "lastChange", identifier.getLastChange());
-		IndexUtil.addField(document, "version", identifier.getVersion());
-		IndexUtil.addField(document, "name", identifier.getName());
+		IndexUtil.addField(document, "refId", descriptor.getRefId());
+		IndexUtil.addField(document, "type", descriptor.getType().name());
+		IndexUtil.addField(document, "lastChange", descriptor.getLastChange());
+		IndexUtil.addField(document, "version", descriptor.getVersion());
+		IndexUtil.addField(document, "name", descriptor.getName());
 		IndexUtil.addField(document, "categoryRefId",
-				identifier.getCategoryRefId());
-		if (identifier.getCategoryType() != null)
-			IndexUtil.addField(document, "categoryType", identifier
+				descriptor.getCategoryRefId());
+		if (descriptor.getCategoryType() != null)
+			IndexUtil.addField(document, "categoryType", descriptor
 					.getCategoryType().name());
+		IndexUtil.addField(document, "fullPath", descriptor.getFullPath());
 		return document;
 	}
 }

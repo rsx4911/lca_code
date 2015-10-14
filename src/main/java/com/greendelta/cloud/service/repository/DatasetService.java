@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexer;
 import com.greendelta.cloud.model.data.CommitData;
-import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.util.Directories;
 import com.greendelta.cloud.util.Strings;
 
@@ -30,14 +30,14 @@ public class DatasetService {
 	}
 
 	void put(String repositoryId, String commitId, CommitData data) {
-		DatasetIdentifier identifier = data.getIdentifier();
+		DatasetDescriptor descriptor = data.getDescriptor();
 		Repository repository = repositoryService.getForId(repositoryId);
 		File datasetDirectory = repository.getDatasetDirectory(
-				identifier.getType(), identifier.getRefId());
+				descriptor.getType(), descriptor.getRefId());
 		if (!datasetDirectory.exists())
 			datasetDirectory.mkdir();
-		File datasetFile = repository.getDatasetFile(identifier.getType(),
-				identifier.getRefId(), commitId);
+		File datasetFile = repository.getDatasetFile(descriptor.getType(),
+				descriptor.getRefId(), commitId);
 		put(data, datasetFile, getIndexer(repositoryId));
 	}
 
@@ -81,12 +81,12 @@ public class DatasetService {
 
 	private void put(CommitData data, File file, DatasetIndexer indexer) {
 		try {
-			DatasetIdentifier identifier = data.getIdentifier();
+			DatasetDescriptor descriptor = data.getDescriptor();
 			if (data.getJson() == null)
 				file.createNewFile();
 			else
 				Files.write(file.toPath(), data.getJson().getBytes(charset));
-			indexer.index(identifier);
+			indexer.index(descriptor);
 		} catch (IOException e) {
 			log.error(
 					Strings.concat("Error writing json data to file ",

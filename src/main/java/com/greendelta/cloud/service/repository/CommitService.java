@@ -70,8 +70,8 @@ public class CommitService {
 		List<FileReference> references = new ArrayList<>();
 		for (CommitData d : data) {
 			FileReference reference = new FileReference();
-			reference.setRefId(d.getIdentifier().getRefId());
-			reference.setType(d.getIdentifier().getType());
+			reference.setRefId(d.getDescriptor().getRefId());
+			reference.setType(d.getDescriptor().getType());
 			references.add(reference);
 		}
 		return references;

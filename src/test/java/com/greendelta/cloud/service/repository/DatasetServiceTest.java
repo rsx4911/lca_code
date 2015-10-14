@@ -18,7 +18,7 @@ import org.openlca.util.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.model.data.CommitData;
-import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.platform.guice.GuicyTest;
 import com.greendelta.cloud.webservice.SessionResource;
 
@@ -54,16 +54,16 @@ public class DatasetServiceTest extends GuicyTest {
 
 	@Test
 	public void test() throws IOException {
-		DatasetIdentifier identifier = new DatasetIdentifier();
-		identifier.setType(ModelType.PROCESS);
-		identifier.setVersion(new Version(1, 1, 1).toString());
-		identifier.setRefId(refId);
-		identifier.setLastChange(lastChange);
+		DatasetDescriptor descriptor = new DatasetDescriptor();
+		descriptor.setType(ModelType.PROCESS);
+		descriptor.setVersion(new Version(1, 1, 1).toString());
+		descriptor.setRefId(refId);
+		descriptor.setLastChange(lastChange);
 		// put
 		String commitId = UUID.randomUUID().toString();
 		CommitData data = new CommitData();
 		data.setJson(jsonData);
-		data.setIdentifier(identifier);
+		data.setDescriptor(descriptor);
 		datasetService.put(repositoryId, commitId, data);
 		File repository = new File(repositoryPath + "/" + repositoryId);
 		File file = new File(repository, "process");

@@ -20,7 +20,7 @@ import com.google.inject.name.Named;
 import com.greendelta.cloud.model.data.Commit;
 import com.greendelta.cloud.model.data.CommitData;
 import com.greendelta.cloud.model.data.CommitDescriptor;
-import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.platform.guice.GuicyTest;
 import com.greendelta.cloud.webservice.SessionResource;
 
@@ -60,24 +60,24 @@ public class CommitServiceTest extends GuicyTest {
 	@Test
 	public void commitTest() throws IOException {
 		CommitData data = new CommitData();
-		DatasetIdentifier id1 = new DatasetIdentifier();
+		DatasetDescriptor id1 = new DatasetDescriptor();
 		id1.setType(ModelType.PROCESS);
 		id1.setVersion(new Version(1, 1, 1).toString());
 		id1.setRefId(refId);
 		id1.setLastChange(lastChange);
-		data.setIdentifier(id1);
+		data.setDescriptor(id1);
 		data.setJson(jsonData);
 		pushAndAssert(data, message);
 		assertCommitHistory(data, 1);
 		CommitData data2 = new CommitData();
 
-		DatasetIdentifier id2 = new DatasetIdentifier();
-		id2 = new DatasetIdentifier();
+		DatasetDescriptor id2 = new DatasetDescriptor();
+		id2 = new DatasetDescriptor();
 		id2.setType(ModelType.PROCESS);
 		id2.setVersion(new Version(1, 1, 2).toString());
 		id2.setRefId(refId);
 		id2.setLastChange(lastChange + 1);
-		data2.setIdentifier(id2);
+		data2.setDescriptor(id2);
 		data2.setJson(jsonData2);
 		pushAndAssert(data2, message2);
 		assertCommitHistory(data, 2);
@@ -88,7 +88,7 @@ public class CommitServiceTest extends GuicyTest {
 		commit.setMessage(message);
 		commit.getData().add(data);
 		String commitId = commitService.push(repositoryId, commit);
-		File file = new File(repositoryPath + "/" + repositoryId + "/process/" + data.getIdentifier().getRefId() + "/"
+		File file = new File(repositoryPath + "/" + repositoryId + "/process/" + data.getDescriptor().getRefId() + "/"
 				+ commitId + ".json");
 		Assert.assertEquals("Datafile does not exist: ", true, file.exists());
 		Assert.assertEquals("Datafile is a directory: ", false, file.isDirectory());

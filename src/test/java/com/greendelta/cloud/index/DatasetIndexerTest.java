@@ -15,7 +15,7 @@ import org.openlca.core.model.ModelType;
 import org.openlca.core.model.Version;
 
 import com.google.common.io.Files;
-import com.greendelta.cloud.model.data.DatasetIdentifier;
+import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.util.Directories;
 
 public class DatasetIndexerTest {
@@ -31,16 +31,16 @@ public class DatasetIndexerTest {
 
 	@Test
 	public void testIndexing() throws IOException {
-		DatasetIdentifier expected = new DatasetIdentifier();
+		DatasetDescriptor expected = new DatasetDescriptor();
 		expected.setRefId(UUID.randomUUID().toString());
 		expected.setType(ModelType.ACTOR);
 		expected.setLastChange(Calendar.getInstance().getTimeInMillis());
 		expected.setVersion(new Version(1, 1, 1).toString());
 		indexer.index(expected);
-		DatasetIdentifier actual = indexer.get(ModelType.ACTOR,
+		DatasetDescriptor actual = indexer.get(ModelType.ACTOR,
 				expected.getRefId());
 		assertEquals(expected, actual);
-		List<DatasetIdentifier> all = indexer.getAll();
+		List<DatasetDescriptor> all = indexer.getAll();
 		Assert.assertEquals(1, all.size());
 		assertEquals(expected, all.get(0));
 	}
@@ -48,19 +48,19 @@ public class DatasetIndexerTest {
 	@Test
 	public void testMassIndexing() throws IOException {
 		int amount = 100000;
-		List<DatasetIdentifier> identifiers = new ArrayList<>();
+		List<DatasetDescriptor> descriptors = new ArrayList<>();
 		for (int i = 0; i < amount; i++)
-			identifiers.add(createIdentifier());
+			descriptors.add(createDescriptors());
 		long time = Calendar.getInstance().getTimeInMillis();
-		indexer.index(identifiers);
+		indexer.index(descriptors);
 		printSeconds("Indexing", time);
 		time = Calendar.getInstance().getTimeInMillis();
-		List<DatasetIdentifier> all = indexer.getAll();
+		List<DatasetDescriptor> all = indexer.getAll();
 		printSeconds("Retrieving all " + amount + " documents", time);
 		Assert.assertEquals(amount, all.size());
-		DatasetIdentifier expected = identifiers.get(amount / 2);
+		DatasetDescriptor expected = descriptors.get(amount / 2);
 		time = Calendar.getInstance().getTimeInMillis();
-		DatasetIdentifier actual = indexer.get(ModelType.ACTOR,
+		DatasetDescriptor actual = indexer.get(ModelType.ACTOR,
 				expected.getRefId());
 		printSeconds("Retrieving document", time);
 		assertEquals(expected, actual);
@@ -71,21 +71,21 @@ public class DatasetIndexerTest {
 		System.out.println(task + " took " + milli + " ms");
 	}
 
-	private void assertEquals(DatasetIdentifier expected,
-			DatasetIdentifier actual) {
+	private void assertEquals(DatasetDescriptor expected,
+			DatasetDescriptor actual) {
 		Assert.assertEquals(expected.getRefId(), actual.getRefId());
 		Assert.assertEquals(expected.getType(), actual.getType());
 		Assert.assertEquals(expected.getLastChange(), actual.getLastChange());
 		Assert.assertEquals(expected.getVersion(), actual.getVersion());
 	}
 
-	private DatasetIdentifier createIdentifier() {
-		DatasetIdentifier expected = new DatasetIdentifier();
-		expected.setRefId(UUID.randomUUID().toString());
-		expected.setType(ModelType.ACTOR);
-		expected.setLastChange(Calendar.getInstance().getTimeInMillis());
-		expected.setVersion(new Version(1, 1, 1).toString());
-		return expected;
+	private DatasetDescriptor createDescriptors() {
+		DatasetDescriptor descriptor = new DatasetDescriptor();
+		descriptor.setRefId(UUID.randomUUID().toString());
+		descriptor.setType(ModelType.ACTOR);
+		descriptor.setLastChange(Calendar.getInstance().getTimeInMillis());
+		descriptor.setVersion(new Version(1, 1, 1).toString());
+		return descriptor;
 	}
 
 	@After
