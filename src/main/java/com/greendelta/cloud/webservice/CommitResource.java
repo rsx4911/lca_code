@@ -1,5 +1,7 @@
 package com.greendelta.cloud.webservice;
 
+import java.io.InputStream;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -9,7 +11,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.model.data.Commit;
 import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.service.repository.CommitService;
 import com.greendelta.cloud.util.Strings;
@@ -53,12 +54,13 @@ public class CommitResource {
 	public Response commit(
 			@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName,
-			@PathParam("latestCommitId") String latestCommitId, Commit commit) {
+			@PathParam("latestCommitId") String latestCommitId,
+			InputStream commitData) {
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
 		if (!isUpToDate(repositoryId, latestCommitId))
 			return Respond.conflict("User is out of sync");
-		String commitId = commitService.push(repositoryId, commit);
+		String commitId = commitService.push(repositoryId, commitData);
 		return Respond.created(commitId);
 	}
 

@@ -15,7 +15,6 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,13 +73,6 @@ class IndexUtil {
 				log.error("Error creating commit index reader", e);
 			return null;
 		}
-	}
-
-	public static IndexSearcher getSearcher(Directory directory) {
-		IndexReader reader = getReader(directory);
-		if (reader == null)
-			return null;
-		return new IndexSearcher(reader);
 	}
 
 }

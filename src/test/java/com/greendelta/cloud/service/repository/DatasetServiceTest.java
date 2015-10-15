@@ -17,7 +17,6 @@ import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.greendelta.cloud.model.data.CommitData;
 import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.platform.guice.GuicyTest;
 import com.greendelta.cloud.webservice.SessionResource;
@@ -61,10 +60,7 @@ public class DatasetServiceTest extends GuicyTest {
 		descriptor.setLastChange(lastChange);
 		// put
 		String commitId = UUID.randomUUID().toString();
-		CommitData data = new CommitData();
-		data.setJson(jsonData);
-		data.setDescriptor(descriptor);
-		datasetService.put(repositoryId, commitId, data);
+		datasetService.put(repositoryId, commitId, descriptor, jsonData);
 		File repository = new File(repositoryPath + "/" + repositoryId);
 		File file = new File(repository, "process");
 		Assert.assertEquals("Process directory does not exist: ", true, file.exists());

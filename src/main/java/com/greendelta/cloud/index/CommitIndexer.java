@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
@@ -14,6 +15,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,14 +41,18 @@ public class CommitIndexer {
 		IndexWriter writer = IndexUtil.getWriter(directory, false);
 		try {
 			writer.addDocument(convert(commitId, fileReferences));
-			writer.close();
 		} catch (IOException e) {
 			log.error("Error indexing file references", e);
+		} finally {
+			IOUtils.closeWhileHandlingException(writer);
 		}
 	}
 
 	public List<FileReference> get(String commitId) {
-		IndexSearcher searcher = IndexUtil.getSearcher(directory);
+		IndexReader reader = IndexUtil.getReader(directory);
+		if (reader == null)
+			return Collections.emptyList();
+		IndexSearcher searcher = new IndexSearcher(reader);
 		Term term = new Term("commitId", commitId);
 		Query query = new TermQuery(term);
 		try {
@@ -58,6 +64,8 @@ public class CommitIndexer {
 		} catch (IOException e) {
 			log.error("Error retrieving file references", e);
 			return Collections.emptyList();
+		} finally {
+			IOUtils.closeWhileHandlingException(reader);
 		}
 	}
 

@@ -17,6 +17,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.IOUtils;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,10 @@ public class DatasetIndexer {
 		try {
 			for (DatasetDescriptor descriptor : descriptors)
 				writer.addDocument(convert(descriptor));
-			writer.close();
 		} catch (IOException e) {
 			log.error("Error indexing dataset descriptors", e);
+		} finally {
+			IOUtils.closeWhileHandlingException(writer);
 		}
 	}
 
@@ -63,9 +65,10 @@ public class DatasetIndexer {
 				Query query = new TermQuery(term);
 				writer.deleteDocuments(query);
 			}
-			writer.close();
 		} catch (IOException e) {
 			log.error("Error deleting dataset descriptors indices", e);
+		} finally {
+			IOUtils.closeWhileHandlingException(writer);
 		}
 	}
 
@@ -79,9 +82,10 @@ public class DatasetIndexer {
 
 	public List<DatasetDescriptor> get(ModelType type, List<String> refIds) {
 		List<DatasetDescriptor> descriptors = new ArrayList<>();
-		IndexSearcher searcher = IndexUtil.getSearcher(directory);
-		if (searcher == null)
+		IndexReader reader = IndexUtil.getReader(directory);
+		if (reader == null)
 			return Collections.emptyList();
+		IndexSearcher searcher = new IndexSearcher(reader);
 		try {
 			for (String refId : refIds) {
 				Term term = new Term("refId", refId);
@@ -96,6 +100,8 @@ public class DatasetIndexer {
 		} catch (IOException e) {
 			log.error("Error retrieving dataset descriptors", e);
 			return Collections.emptyList();
+		} finally {
+			IOUtils.closeWhileHandlingException(reader);
 		}
 	}
 
@@ -107,11 +113,12 @@ public class DatasetIndexer {
 		try {
 			for (int i = 0; i < reader.maxDoc(); i++)
 				descriptors.add(convert(reader.document(i)));
-			reader.close();
 			return descriptors;
 		} catch (IOException e) {
 			log.error("Error retrieving all dataset descriptors", e);
 			return Collections.emptyList();
+		} finally {
+			IOUtils.closeWhileHandlingException(reader);
 		}
 	}
 
