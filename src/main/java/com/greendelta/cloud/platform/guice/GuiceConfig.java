@@ -1,5 +1,6 @@
 package com.greendelta.cloud.platform.guice;
 
+import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -63,8 +64,13 @@ public class GuiceConfig extends GuiceServletContextListener {
 			PropertiesModule.setEnvironment(env);
 		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
 		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
+		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
+		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
+		Properties properties = new Properties();
+		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
+		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext),
-				new JpaPersistModule(persistenceUnit), new JerseyModule(resourcePackages), new EhCacheModule(),
+				jpaModule, new JerseyModule(resourcePackages), new EhCacheModule(),
 				new PropertiesModule() };
 	}
 
@@ -74,7 +80,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		private Set<ShutdownListener> shutdown;
 
 		@Inject(optional = true)
-		private Set<StartupListener> startup;
+		private Set<StartupListener> startup;		
 
 	}
 
