@@ -1,5 +1,9 @@
 package com.greendelta.cloud.webservice;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,21 +11,25 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.openlca.core.model.ModelType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.greendelta.cloud.api.data.FetchWriter;
 import com.greendelta.cloud.index.DatasetIndexer;
 import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.model.data.DatasetDescriptor;
-import com.greendelta.cloud.model.data.FetchData;
 import com.greendelta.cloud.model.data.FetchRequestData;
-import com.greendelta.cloud.model.data.FetchResponse;
 import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.service.repository.CommitService;
 import com.greendelta.cloud.service.repository.DatasetService;
@@ -30,6 +38,7 @@ import com.greendelta.cloud.util.Strings;
 @Path("repository/fetch")
 public class FetchResource {
 
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	private DatasetService datasetService;
 	private CommitService commitService;
 
@@ -96,12 +105,14 @@ public class FetchResource {
 		return Respond.ok(new ArrayList<>(descriptors.values()));
 	}
 
-	@GET
+	@POST
 	@Path("{repositoryOwner}/{repositoryName}/{latestCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName,
-			@PathParam("latestCommitId") String latestCommitId) {
+			@PathParam("latestCommitId") String latestCommitId, List<DatasetDescriptor> requested) {
+		if (requested.isEmpty())
+			return Respond.noContent();
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
 		if (latestCommitId.equals("null"))
@@ -110,30 +121,67 @@ public class FetchResource {
 				repositoryId, latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<String, FetchData> descriptors = new HashMap<>();
+		StreamingOutput data = prepareFetch(requested, commits, repositoryId);
+		if (data == null)
+			return Respond.noContent();
+		return Respond.ok(data);
+	}
+
+	private StreamingOutput prepareFetch(List<DatasetDescriptor> requested, List<CommitDescriptor> commits,
+			String repositoryId) {
+		FetchWriter writer = new FetchWriter(null);
+		Map<String, DescriptorAndCommitId> descriptors = getNewestVersions(
+				commits, repositoryId);
+		for (DescriptorAndCommitId value : descriptors.values()) {
+			DatasetDescriptor descriptor = value.descriptor;
+			String data = datasetService
+					.get(repositoryId, descriptor.getType(),
+							descriptor.getRefId(), value.commitId);
+			writer.put(descriptor, data);
+		}
+		writer.setCommitId(commits.get(commits.size() - 1).getId());
+		try {
+			writer.close();
+			return toStream(writer.getFile());
+		} catch (IOException e) {
+			log.error("Error closing fetch writer", e);
+			return null;
+		}
+	}
+
+	private Map<String, DescriptorAndCommitId> getNewestVersions(
+			List<CommitDescriptor> commits, String repositoryId) {
 		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
+		Map<String, DescriptorAndCommitId> descriptors = new HashMap<>();
+		// iterate over all commits, only latest version will "remain"
 		for (CommitDescriptor commit : commits) {
 			List<FileReference> references = commitService.getModifiedFiles(
 					repositoryId, commit.getId());
 			for (FileReference reference : references) {
-				String key = reference.getType().name() + "_"
-						+ reference.getRefId();
+				String key = toKey(reference);
 				DatasetDescriptor descriptor = indexer.get(reference.getType(),
 						reference.getRefId());
-				FetchData value = new FetchData(descriptor);
-				String data = datasetService.get(repositoryId,
-						descriptor.getType(), descriptor.getRefId(),
-						commit.getId());
-				value.setJson(data);
-				descriptors.put(key, value);
+				descriptors.put(key, new DescriptorAndCommitId(descriptor,
+						commit.getId()));
 			}
 		}
-		if (descriptors.size() == 0)
-			return Respond.noContent();
-		FetchResponse result = new FetchResponse();
-		result.setData(new ArrayList<>(descriptors.values()));
-		result.setLatestCommitId(commits.get(commits.size() - 1).getId());
-		return Respond.ok(result);
+		return descriptors;
+	}
+
+	private StreamingOutput toStream(File file) {
+		return new StreamingOutput() {
+
+			@Override
+			public void write(OutputStream output) throws IOException,
+					WebApplicationException {
+				Files.copy(file.toPath(), output);
+			}
+
+		};
+	}
+
+	private String toKey(FileReference reference) {
+		return reference.getType().name() + "_" + reference.getRefId();
 	}
 
 	@GET
@@ -198,6 +246,19 @@ public class FetchResource {
 		value.setDeleted(data == null || data.isEmpty());
 		value.setAdded(wasAdded);
 		return value;
+	}
+
+	private class DescriptorAndCommitId {
+
+		private DatasetDescriptor descriptor;
+		private String commitId;
+
+		private DescriptorAndCommitId(DatasetDescriptor descriptor,
+				String commitId) {
+			this.descriptor = descriptor;
+			this.commitId = commitId;
+		}
+
 	}
 
 }
