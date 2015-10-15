@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.api.CommitReader;
+import com.greendelta.cloud.api.data.CommitReader;
 import com.greendelta.cloud.index.CommitIndexer;
 import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.model.data.DatasetDescriptor;
