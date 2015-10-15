@@ -149,7 +149,7 @@ public class CommitService {
 			if (entry.trim().isEmpty())
 				continue;
 			CommitDescriptor descriptor = CommitDescriptor.parse(entry);
-			if (descriptor.getId() == beforeCommitId)
+			if (descriptor.getId().equals(beforeCommitId))
 				break;
 			boolean found = false;
 			for (FileReference reference : getModifiedFiles(repositoryId,
