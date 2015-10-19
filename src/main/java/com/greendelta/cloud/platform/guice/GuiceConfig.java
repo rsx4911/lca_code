@@ -1,8 +1,12 @@
 package com.greendelta.cloud.platform.guice;
 
+import java.io.File;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
@@ -18,15 +22,18 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.platform.guice.util.ShutdownListener;
 import com.greendelta.cloud.platform.guice.util.StartupListener;
+import com.greendelta.cloud.service.UserService;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
-	private static final Logger log = LoggerFactory.getLogger(GuiceConfig.class);
+	private static final Logger log = LoggerFactory
+			.getLogger(GuiceConfig.class);
 	private volatile Set<ShutdownListener> shutdownListeners;
 	private ServletContext servletContext;
-
+	
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		servletContext = servletContextEvent.getServletContext();
@@ -44,14 +51,32 @@ public class GuiceConfig extends GuiceServletContextListener {
 	@Override
 	protected Injector getInjector() {
 		Module[] modules = getModules();
-		log.debug("Creating guice injector with modules {}", Logs.collectClasses(modules));
+		log.debug("Creating guice injector with modules {}",
+				Logs.collectClasses(modules));
 		Injector injector = Guice.createInjector(modules);
-		Listeners listeners = injector.getInstance(Listeners.class);
-		this.shutdownListeners = listeners.shutdown;
-		runStartupListeners(listeners.startup);
+		Injections injected = injector.getInstance(Injections.class);
+		this.shutdownListeners = injected.shutdownListeners;
+		runStartupListeners(injected.startupListeners);
 		return injector;
 	}
 
+	private void createDatabase() {
+		String adminKey = PropertiesModule.getProperties().getProperty("admin.key");	
+		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
+		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
+		User user = new User();
+		user.setId(1);
+		user.setName("admin");
+		UserService.setHashAndSalt(user, adminKey);
+		Properties properties = new Properties();
+		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath + ";create=true");
+		properties.setProperty("eclipselink.ddl-generation", "drop-and-create-tables");
+		properties.setProperty("eclipselink.ddl-generation.output-mode", "database");
+		EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnit, properties);
+		EntityManager manager = factory.createEntityManager();
+		manager.persist(user);
+	}
+	
 	private void runStartupListeners(Set<StartupListener> listeners) {
 		if (listeners != null)
 			for (StartupListener listener : listeners)
@@ -67,6 +92,8 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
+		if (!new File(databasePath).exists()) 
+			createDatabase();
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext),
@@ -74,13 +101,13 @@ public class GuiceConfig extends GuiceServletContextListener {
 				new PropertiesModule() };
 	}
 
-	private static final class Listeners {
+	private static final class Injections {
 
 		@Inject(optional = true)
-		private Set<ShutdownListener> shutdown;
+		private Set<ShutdownListener> shutdownListeners;
 
 		@Inject(optional = true)
-		private Set<StartupListener> startup;		
+		private Set<StartupListener> startupListeners;
 
 	}
 
