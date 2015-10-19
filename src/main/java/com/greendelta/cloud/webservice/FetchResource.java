@@ -31,21 +31,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.index.DatasetIndexer;
-import com.greendelta.cloud.service.repository.CommitService;
-import com.greendelta.cloud.service.repository.DatasetService;
+import com.greendelta.cloud.service.CommitService;
 
 @Path("repository/fetch")
 public class FetchResource {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	private DatasetService datasetService;
 	private CommitService commitService;
 
 	@Inject
-	public FetchResource(DatasetService datasetService,
-			CommitService commitService) {
-		this.datasetService = datasetService;
+	public FetchResource(CommitService commitService) {
 		this.commitService = commitService;
 	}
 
@@ -60,14 +55,17 @@ public class FetchResource {
 			@PathParam("commitId") String commitId) {
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
-		if (commitId.equals("null"))
-			commitId = commitService.getLatestCommitId(repositoryId, type,
-					refId);
+		if (commitId.equals("null")) {
+			CommitDescriptor commit = commitService.getLatestCommitForDataset(
+					repositoryId, type, refId);
+			if (commit != null)
+				commitId = commit.getId();
+		}
 		if (commitId == null)
 			return Respond.notFound(Strings.concat(type.name(), " ", refId,
 					" not found"));
-		String dataset = datasetService
-				.get(repositoryId, type, refId, commitId);
+		String dataset = commitService.getData(repositoryId, type, refId,
+				commitId);
 		if (dataset == null)
 			return Respond.notFound(Strings.concat(type.name(), " ", refId,
 					" not found for commit id ", commitId));
@@ -85,24 +83,24 @@ public class FetchResource {
 				repositoryName);
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommitHistory(
-				repositoryId, latestCommitId);
+		List<CommitDescriptor> commits = commitService.getCommits(repositoryId,
+				latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<String, FetchRequestData> descriptors = new HashMap<>();
+		Map<String, FetchRequestData> result = new HashMap<>();
 		for (CommitDescriptor commit : commits) {
-			List<FileReference> references = commitService.getModifiedFiles(
-					repositoryId, commit.getId());
-			for (FileReference reference : references) {
-				String key = reference.getType().name() + "_"
-						+ reference.getRefId();
-				descriptors.put(key,
-						toRequestData(repositoryId, commit.getId(), reference));
+			List<DatasetDescriptor> descriptors = commitService
+					.getReferences(repositoryId, commit.getId());
+			for (DatasetDescriptor descriptor : descriptors) {
+				String key = descriptor.getType().name() + "_"
+						+ descriptor.getRefId();
+				result.put(key,
+						toRequestData(repositoryId, commit.getId(), descriptor));
 			}
 		}
-		if (descriptors.size() == 0)
+		if (result.size() == 0)
 			return Respond.noContent();
-		return Respond.ok(new ArrayList<>(descriptors.values()));
+		return Respond.ok(new ArrayList<>(result.values()));
 	}
 
 	@POST
@@ -110,15 +108,16 @@ public class FetchResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName,
-			@PathParam("latestCommitId") String latestCommitId, List<DatasetDescriptor> requested) {
+			@PathParam("latestCommitId") String latestCommitId,
+			List<DatasetDescriptor> requested) {
 		if (requested.isEmpty())
 			return Respond.noContent();
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommitHistory(
-				repositoryId, latestCommitId);
+		List<CommitDescriptor> commits = commitService.getCommits(repositoryId,
+				latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		StreamingOutput data = prepareFetch(requested, commits, repositoryId);
@@ -127,15 +126,15 @@ public class FetchResource {
 		return Respond.ok(data);
 	}
 
-	private StreamingOutput prepareFetch(List<DatasetDescriptor> requested, List<CommitDescriptor> commits,
-			String repositoryId) {
+	private StreamingOutput prepareFetch(List<DatasetDescriptor> requested,
+			List<CommitDescriptor> commits, String repositoryId) {
 		FetchWriter writer = new FetchWriter(null);
 		Map<String, DescriptorAndCommitId> descriptors = getNewestVersions(
 				commits, repositoryId);
 		for (DescriptorAndCommitId value : descriptors.values()) {
 			DatasetDescriptor descriptor = value.descriptor;
-			String data = datasetService
-					.get(repositoryId, descriptor.getType(),
+			String data = commitService
+					.getData(repositoryId, descriptor.getType(),
 							descriptor.getRefId(), value.commitId);
 			writer.put(descriptor, data);
 		}
@@ -151,21 +150,18 @@ public class FetchResource {
 
 	private Map<String, DescriptorAndCommitId> getNewestVersions(
 			List<CommitDescriptor> commits, String repositoryId) {
-		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
-		Map<String, DescriptorAndCommitId> descriptors = new HashMap<>();
+		Map<String, DescriptorAndCommitId> result = new HashMap<>();
 		// iterate over all commits, only latest version will "remain"
 		for (CommitDescriptor commit : commits) {
-			List<FileReference> references = commitService.getModifiedFiles(
-					repositoryId, commit.getId());
-			for (FileReference reference : references) {
-				String key = toKey(reference);
-				DatasetDescriptor descriptor = indexer.get(reference.getType(),
-						reference.getRefId());
-				descriptors.put(key, new DescriptorAndCommitId(descriptor,
-						commit.getId()));
+			List<DatasetDescriptor> descriptors = commitService
+					.getReferences(repositoryId, commit.getId());
+			for (DatasetDescriptor descriptor : descriptors) {
+				String key = toKey(descriptor);
+				result.put(key,
+						new DescriptorAndCommitId(descriptor, commit.getId()));
 			}
 		}
-		return descriptors;
+		return result;
 	}
 
 	private StreamingOutput toStream(File file) {
@@ -195,8 +191,8 @@ public class FetchResource {
 				repositoryName);
 		if (latestCommitId.equals("null"))
 			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommitHistory(
-				repositoryId, latestCommitId);
+		List<CommitDescriptor> commits = commitService.getCommits(repositoryId,
+				latestCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		Collections.reverse(commits);
@@ -212,34 +208,31 @@ public class FetchResource {
 			@PathParam("commitId") String commitId) {
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
-		List<FileReference> files = commitService.getModifiedFiles(
-				repositoryId, commitId);
+		List<DatasetDescriptor> descriptors = commitService
+				.getReferences(repositoryId, commitId);
 		// if size is 0, commit was not found (no commit without files)
-		if (files.size() == 0)
+		if (descriptors.size() == 0)
 			return Respond.notFound(Strings.concat("Commit with id ", commitId,
 					" not found"));
-		List<FetchRequestData> descriptors = new ArrayList<>();
-		for (FileReference reference : files)
-			descriptors.add(toRequestData(repositoryId, commitId, reference));
-		return Respond.ok(descriptors);
+		List<FetchRequestData> resultData = new ArrayList<>();
+		for (DatasetDescriptor descriptor : descriptors)
+			resultData.add(toRequestData(repositoryId, commitId, descriptor));
+		return Respond.ok(resultData);
 	}
 
 	private FetchRequestData toRequestData(String repositoryId,
-			String commitId, FileReference reference) {
-		DatasetIndexer indexer = datasetService.getIndexer(repositoryId);
-		DatasetDescriptor descriptor = indexer.get(reference.getType(),
-				reference.getRefId());
+			String commitId, DatasetDescriptor descriptor) {
 		FetchRequestData value = new FetchRequestData(descriptor);
-		String data = datasetService.get(repositoryId, descriptor.getType(),
+		String data = commitService.getData(repositoryId, descriptor.getType(),
 				descriptor.getRefId(), commitId);
-		List<CommitDescriptor> previous = commitService
-				.getCommitHistoryForDataset(repositoryId, reference.getType(),
-						reference.getRefId(), commitId);
+		List<CommitDescriptor> previous = commitService.getCommitsForDataset(
+				repositoryId, descriptor.getType(), descriptor.getRefId(),
+				commitId);
 		boolean wasAdded = previous.isEmpty();
 		if (!wasAdded) {
 			CommitDescriptor commit = previous.get(previous.size() - 1);
-			String previousData = datasetService
-					.get(repositoryId, descriptor.getType(),
+			String previousData = commitService
+					.getData(repositoryId, descriptor.getType(),
 							descriptor.getRefId(), commit.getId());
 			wasAdded = previousData == null || previousData.isEmpty();
 		}

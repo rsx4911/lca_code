@@ -17,8 +17,9 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.persist.Transactional;
+import com.greendelta.cloud.model.AbstractEntity;
 
-class Dao<T> {
+class Dao<T extends AbstractEntity> {
 
 	private Provider<EntityManager> entityManagerProvider;
 	// used for getting detached objects (no cache, session, etc.)
@@ -27,7 +28,8 @@ class Dao<T> {
 
 	@Inject
 	@SuppressWarnings("unchecked")
-	public Dao(TypeLiteral<T> type, Provider<EntityManager> entityManagerProvider,
+	public Dao(TypeLiteral<T> type,
+			Provider<EntityManager> entityManagerProvider,
 			Provider<EntityManagerFactory> entityManagerFactoryProvider) {
 		this.entityType = (Class<T>) type.getRawType();
 		this.entityManagerProvider = entityManagerProvider;
@@ -44,7 +46,8 @@ class Dao<T> {
 	public T getDetached(long id) {
 		if (id < 1)
 			return null;
-		EntityManager entityManager = entityManagerFactoryProvider.get().createEntityManager();
+		EntityManager entityManager = entityManagerFactoryProvider.get()
+				.createEntityManager();
 		try {
 			T o = entityManager.find(entityType, id);
 			return o;
@@ -69,7 +72,8 @@ class Dao<T> {
 		return query.getResultList();
 	}
 
-	public <RT> List<RT> getAttributes(String jpql, Map<String, ? extends Object> parameters, Class<RT> resultClass) {
+	public <RT> List<RT> getAttributes(String jpql,
+			Map<String, ? extends Object> parameters, Class<RT> resultClass) {
 		EntityManager em = createManager();
 		TypedQuery<RT> query = em.createQuery(jpql, resultClass);
 		if (parameters != null)
@@ -93,9 +97,11 @@ class Dao<T> {
 					jpql += " AND ";
 				Object value = parameter.getValue();
 				String comparator = "=";
-				if (value instanceof Collection || (value != null && value.getClass().isArray()))
+				if (value instanceof Collection
+						|| (value != null && value.getClass().isArray()))
 					comparator = "IN";
-				jpql += "o." + parameter.getKey() + " " + comparator + " :p" + ++count;
+				jpql += "o." + parameter.getKey() + " " + comparator + " :p"
+						+ ++count;
 				if (value != null && value.getClass().isArray()) {
 					Set<Object> values = new HashSet<>();
 					for (Object object : (Object[]) value)
@@ -143,7 +149,8 @@ class Dao<T> {
 	}
 
 	public long getCountForAttributes(Map<String, Object> parameters) {
-		String jpql = "SELECT count(o) FROM " + entityType.getSimpleName() + " o";
+		String jpql = "SELECT count(o) FROM " + entityType.getSimpleName()
+				+ " o";
 		if (parameters != null && parameters.size() > 0) {
 			jpql += " WHERE ";
 			int count = 0;
@@ -159,10 +166,19 @@ class Dao<T> {
 		return getCount(jpql, parameters);
 	}
 
+	private long getNewId() {
+		T value = getFirst("SELECT o FROM " + entityType.getSimpleName()
+				+ " o ORDER BY o.id DESC", Collections.emptyMap());
+		if (value == null)
+			return 1;
+		return value.getId() + 1;
+	}
+
 	@Transactional(rollbackOn = Exception.class)
 	public T insert(T entity) {
 		if (entity == null)
 			return null;
+		entity.setId(getNewId());
 		EntityManager em = createManager();
 		em.persist(entity);
 		return entity;

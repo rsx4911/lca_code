@@ -14,7 +14,7 @@ import org.openlca.cloud.model.data.CommitDescriptor;
 import org.openlca.cloud.util.Strings;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.service.repository.CommitService;
+import com.greendelta.cloud.service.CommitService;
 
 @Path("repository/commit")
 public class CommitResource {
@@ -61,7 +61,7 @@ public class CommitResource {
 				repositoryName);
 		if (!isUpToDate(repositoryId, latestCommitId))
 			return Respond.conflict("User is out of sync");
-		String commitId = commitService.push(repositoryId, commitData);
+		String commitId = commitService.put(repositoryId, commitData);
 		return Respond.created(commitId);
 	}
 

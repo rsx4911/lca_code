@@ -14,19 +14,19 @@ import org.openlca.cloud.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.AccessService;
+import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.service.repository.RepositoryService;
-import com.greendelta.cloud.service.repository.SharingService;
 
 @Path("repository")
 public class RepositoryResource {
 
 	private RepositoryService repositoryService;
-	private SharingService sharingService;
+	private AccessService sharingService;
 	private UserService userService;
 
 	@Inject
-	public RepositoryResource(RepositoryService repositoryService, SharingService sharingService,
+	public RepositoryResource(RepositoryService repositoryService, AccessService sharingService,
 			UserService userService) {
 		this.repositoryService = repositoryService;
 		this.sharingService = sharingService;

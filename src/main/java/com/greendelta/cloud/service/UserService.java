@@ -2,7 +2,7 @@ package com.greendelta.cloud.service;
 
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
-import java.util.Collections;
+import java.util.Random;
 
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
@@ -16,16 +16,15 @@ import com.greendelta.cloud.model.User;
 
 public class UserService {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final static Logger log = LoggerFactory.getLogger(UserService.class);
+	private final static Random random = new SecureRandom();
 	private Provider<Subject> subjectProvider;
 	private Dao<User> dao;
-	private SecureRandom random;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, SecureRandom random) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
-		this.random = random;
 	}
 
 	public User getForName(String name) {
@@ -40,17 +39,18 @@ public class UserService {
 		return getForName(name);
 	}
 
-	private long getLastId() {
-		User value = dao.getFirst("SELECT user FROM User user ORDER BY user.id DESC", Collections.emptyMap());
-		if (value == null)
-			return 0;
-		return value.getId();
-	}
-
 	public User createNewUser(String name, String password) {
 		User user = new User();
-		user.setId(getLastId() + 1);
 		user.setName(name);
+		setHashAndSalt(user, password);
+		return dao.insert(user);
+	}
+
+	public void delete(long id) {
+		dao.delete(id);
+	}
+	
+	public static void setHashAndSalt(User user, String password) {
 		try {
 			byte[] salt = new byte[8];
 			random.nextBytes(salt);
@@ -59,11 +59,7 @@ public class UserService {
 			user.setSalt(Hex.encodeToString(salt));
 		} catch (UnsupportedEncodingException e) {
 			log.error("Unexpected encoding exception", e);
-		}
-		return dao.insert(user);
+		}		
 	}
 
-	public void delete(long id) {
-		dao.delete(id);
-	}
 }

@@ -1,4 +1,4 @@
-package com.greendelta.cloud.service.repository;
+package com.greendelta.cloud.service;
 
 import java.io.File;
 
@@ -15,7 +15,8 @@ class Repository {
 		repository = new File(path);
 		if (!repository.exists()) {
 			String[] split = path.split("/");
-			String id = Strings.concat(split[split.length - 2], "/", split[split.length - 1]);
+			String id = Strings.concat(split[split.length - 2], "/",
+					split[split.length - 1]);
 			throw new RepositoryNotFoundException(id);
 		}
 	}
@@ -24,8 +25,8 @@ class Repository {
 		repository.mkdirs();
 		for (ModelType type : ModelType.values())
 			internalGetModelDirectory(repository, type).mkdir();
-		new File(repository, "dataset_index").mkdir();
-		new File(repository, "commit_index").mkdir();
+		File historyDirectory = internalGetCommitDirectory(repository);
+		historyDirectory.mkdir();
 	}
 
 	static void checkIdForValidity(String id) {
@@ -38,27 +39,21 @@ class Repository {
 			throw new InvalidRepositoryNameException(name);
 	}
 
+	File getCommitHistoryFile() {
+		File historyDirectory = internalGetCommitDirectory(repository);
+		return new File(historyDirectory, "history.txt");
+	}
+
+	File getCommitFile(String commitId) {
+		File historyDirectory = internalGetCommitDirectory(repository);
+		return new File(historyDirectory, commitId + ".txt");
+	}
+
 	File getDatasetFile(ModelType type, String refId, String commitId) {
 		File datasetDirectory = getDatasetDirectory(type, refId);
 		if (datasetDirectory == null)
 			return null;
 		return new File(datasetDirectory, Strings.concat(commitId, ".json"));
-	}
-
-	File getCommitHistoryFile() {
-		return new File(repository, "history.json");
-	}
-
-	File getCommitIndexDirectory() {
-		return new File(repository, "commit_index");
-	}
-
-	File getDatasetIndexDirectory() {
-		return new File(repository, "dataset_index");
-	}
-
-	File getSharedAccessFile() {
-		return new File(repository, "shared_access.txt");
 	}
 
 	File getDatasetDirectory(ModelType type, String refId) {
@@ -67,11 +62,16 @@ class Repository {
 	}
 
 	File getModelDirectory(ModelType type) {
+		return internalGetModelDirectory(repository, type);
+	}
+
+	private static File internalGetModelDirectory(File repository,
+			ModelType type) {
 		return new File(repository, type.name().toLowerCase());
 	}
 
-	private static File internalGetModelDirectory(File repository, ModelType type) {
-		return new File(repository, type.name().toLowerCase());
+	private static File internalGetCommitDirectory(File repository) {
+		return new File(repository, "history");
 	}
 
 }

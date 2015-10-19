@@ -19,20 +19,21 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.AccessService;
+import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.service.repository.RepositoryService;
-import com.greendelta.cloud.service.repository.SharingService;
 
 @Path("user")
 public class UserResource {
 
 	private UserService service;
-	private SharingService sharingService;
+	private AccessService sharingService;
 	private RepositoryService repositoryService;
 	private String adminKey;
 
 	@Inject
-	public UserResource(UserService service, SharingService sharingService, RepositoryService repositoryService,
+	public UserResource(UserService service, AccessService sharingService,
+			RepositoryService repositoryService,
 			@Named("admin.key") String adminKey) {
 		this.service = service;
 		this.sharingService = sharingService;
@@ -63,7 +64,8 @@ public class UserResource {
 	@DELETE
 	@Path("delete/{username}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response deleteUser(@PathParam("username") String username, Map<String, Object> data) {
+	public Response deleteUser(@PathParam("username") String username,
+			Map<String, Object> data) {
 		ObjectMap formMap = ObjectMap.fromMap(data);
 		String adminKey = formMap.getString("adminKey");
 		if (!this.adminKey.equals(adminKey))

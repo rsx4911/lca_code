@@ -1,7 +1,6 @@
-package com.greendelta.cloud.service.repository;
+package com.greendelta.cloud.service;
 
 import java.io.File;
-import java.util.Set;
 
 import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
 import org.openlca.cloud.util.Directories;
@@ -10,25 +9,24 @@ import org.openlca.cloud.util.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.model.User;
-import com.greendelta.cloud.service.UserService;
 
 public class RepositoryService {
 
 	private String repositoryRoot;
 	private UserService userService;
-	private SharingService sharingService;
+	private AccessService accessService;
 
 	@Inject
-	public RepositoryService(@Named("repository.path") String repositoryPath, UserService userService,
-			SharingService sharingService) {
+	public RepositoryService(@Named("repository.path") String repositoryPath,
+			UserService userService, AccessService accessService) {
 		this.repositoryRoot = repositoryPath;
 		this.userService = userService;
-		this.sharingService = sharingService;
+		this.accessService = accessService;
 	}
 
 	public Repository getForId(String id) {
 		Repository.checkIdForValidity(id);
-		if (!sharingService.hasAccess(userService.getCurrentUser(), id))
+		if (!accessService.hasAccess(userService.getCurrentUser().getName(), id))
 			throw new UnauthorizedRepositoryAccessException(id);
 		return internalGetForId(id);
 	}
@@ -52,8 +50,7 @@ public class RepositoryService {
 		Repository.checkNameForValidity(name);
 		User user = userService.getCurrentUser();
 		String id = Strings.concat(user.getName(), "/" + name);
-		for (String username : sharingService.getAccessListForRepository(id))
-			sharingService.unshareById(id, username);
+		accessService.unshareById(id);
 		Directories.delete(getPath(name));
 	}
 
@@ -61,15 +58,14 @@ public class RepositoryService {
 		File userDirectory = new File(repositoryRoot, user.getName());
 		if (!userDirectory.exists())
 			return;
-		Set<String> accessibleRepositories = sharingService.getAccessListForUser(user.getName());
-		for (String repository : accessibleRepositories)
-			sharingService.unshareById(repository, user.getName());
+		accessService.unshareByUser(user.getName());
 		Directories.delete(userDirectory);
 	}
 
 	private File getPath(String name) {
 		User user = userService.getCurrentUser();
-		String path = Strings.concat(repositoryRoot, "/", user.getName(), "/", name);
+		String path = Strings.concat(repositoryRoot, "/", user.getName(), "/",
+				name);
 		return new File(path);
 	}
 
