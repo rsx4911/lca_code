@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
+import com.greendelta.cloud.service.UserService;
 
 @Path("public")
 public class SessionResource {
@@ -26,12 +28,29 @@ public class SessionResource {
 	private final static Logger log = LoggerFactory.getLogger(SessionResource.class);
 
 	private Provider<Subject> subjectProvider;
+	private UserService userService;
+	private String adminKey;
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider) {
+	public SessionResource(Provider<Subject> subjectProvider, UserService userService, @Named("admin.key") String adminKey) {
 		this.subjectProvider = subjectProvider;
+		this.userService = userService;
+		this.adminKey = adminKey;
 	}
 
+	@POST
+	@Path("createadminuser")
+	public Response initializeDatabase(Map<String, Object> credentials) {
+		if (userService.getForName("admin") != null)
+			return Respond.conflict("Admin user already exists");
+		ObjectMap formMap = ObjectMap.fromMap(credentials);
+		String adminKey = formMap.getString("adminKey");
+		if (!this.adminKey.equals(adminKey))
+			return Respond.unauthorized();
+		userService.createNewUser("admin", adminKey);
+		return Respond.ok();
+	}
+	
 	@POST
 	@Path("login")
 	@Consumes(MediaType.APPLICATION_JSON)

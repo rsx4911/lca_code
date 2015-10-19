@@ -42,15 +42,6 @@ public class UserService {
 	public User createNewUser(String name, String password) {
 		User user = new User();
 		user.setName(name);
-		setHashAndSalt(user, password);
-		return dao.insert(user);
-	}
-
-	public void delete(long id) {
-		dao.delete(id);
-	}
-	
-	public static void setHashAndSalt(User user, String password) {
 		try {
 			byte[] salt = new byte[8];
 			random.nextBytes(salt);
@@ -60,6 +51,11 @@ public class UserService {
 		} catch (UnsupportedEncodingException e) {
 			log.error("Unexpected encoding exception", e);
 		}		
+		return dao.insert(user);
+	}
+
+	public void delete(long id) {
+		dao.delete(id);
 	}
 
 }

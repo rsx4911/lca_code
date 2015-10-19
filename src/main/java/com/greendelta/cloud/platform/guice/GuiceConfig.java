@@ -4,9 +4,6 @@ import java.io.File;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
@@ -22,10 +19,8 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
-import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.platform.guice.util.ShutdownListener;
 import com.greendelta.cloud.platform.guice.util.StartupListener;
-import com.greendelta.cloud.service.UserService;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
@@ -60,23 +55,6 @@ public class GuiceConfig extends GuiceServletContextListener {
 		return injector;
 	}
 
-	private void createDatabase() {
-		String adminKey = PropertiesModule.getProperties().getProperty("admin.key");	
-		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
-		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
-		User user = new User();
-		user.setId(1);
-		user.setName("admin");
-		UserService.setHashAndSalt(user, adminKey);
-		Properties properties = new Properties();
-		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath + ";create=true");
-		properties.setProperty("eclipselink.ddl-generation", "drop-and-create-tables");
-		properties.setProperty("eclipselink.ddl-generation.output-mode", "database");
-		EntityManagerFactory factory = Persistence.createEntityManagerFactory(persistenceUnit, properties);
-		EntityManager manager = factory.createEntityManager();
-		manager.persist(user);
-	}
-	
 	private void runStartupListeners(Set<StartupListener> listeners) {
 		if (listeners != null)
 			for (StartupListener listener : listeners)
@@ -92,9 +70,12 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
-		if (!new File(databasePath).exists()) 
-			createDatabase();
-		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
+		if (!new File(databasePath).exists()) {
+			properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath + ";create=true");
+			properties.setProperty("eclipselink.ddl-generation", "drop-and-create-tables");
+			properties.setProperty("eclipselink.ddl-generation.output-mode", "database");
+		} else
+			properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext),
 				jpaModule, new JerseyModule(resourcePackages), new EhCacheModule(),
