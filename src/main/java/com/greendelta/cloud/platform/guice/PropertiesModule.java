@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.openlca.cloud.util.Logs;
+import org.openlca.cloud.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import com.greendelta.cloud.util.Logs;
-import com.greendelta.cloud.util.Strings;
 
 class PropertiesModule extends AbstractModule {
 

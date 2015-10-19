@@ -10,10 +10,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.model.data.CommitDescriptor;
+import org.openlca.cloud.util.Strings;
+
 import com.google.inject.Inject;
-import com.greendelta.cloud.model.data.CommitDescriptor;
 import com.greendelta.cloud.service.repository.CommitService;
-import com.greendelta.cloud.util.Strings;
 
 @Path("repository/commit")
 public class CommitResource {

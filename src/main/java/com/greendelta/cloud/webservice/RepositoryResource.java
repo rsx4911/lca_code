@@ -9,13 +9,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.error.RepositoryNotFoundException;
+import org.openlca.cloud.util.Strings;
+
 import com.google.inject.Inject;
-import com.greendelta.cloud.error.RepositoryNotFoundException;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.service.repository.RepositoryService;
 import com.greendelta.cloud.service.repository.SharingService;
-import com.greendelta.cloud.util.Strings;
 
 @Path("repository")
 public class RepositoryResource {

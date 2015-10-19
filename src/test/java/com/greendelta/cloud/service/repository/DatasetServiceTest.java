@@ -11,13 +11,13 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlca.cloud.model.data.DatasetDescriptor;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.Version;
 import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.greendelta.cloud.model.data.DatasetDescriptor;
 import com.greendelta.cloud.platform.guice.GuicyTest;
 import com.greendelta.cloud.webservice.SessionResource;
 
@@ -71,7 +71,7 @@ public class DatasetServiceTest extends GuicyTest {
 		file = new File(file, commitId + ".json");
 		Assert.assertEquals("Datafile does not exist: ", true, file.exists());
 		Assert.assertEquals("Datafile is a directory: ", false, file.isDirectory());
-		String read = com.greendelta.cloud.util.Strings.concat((Object[]) Strings.readLines(new FileInputStream(file)));
+		String read = org.openlca.cloud.util.Strings.concat((Object[]) Strings.readLines(new FileInputStream(file)));
 		Assert.assertEquals("Json data is not correct: ", jsonData, read);
 		// get
 		read = datasetService.get(repositoryId, ModelType.PROCESS, refId, commitId);

@@ -20,20 +20,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.openlca.cloud.api.data.FetchWriter;
+import org.openlca.cloud.model.data.CommitDescriptor;
+import org.openlca.cloud.model.data.DatasetDescriptor;
+import org.openlca.cloud.model.data.FetchRequestData;
+import org.openlca.cloud.model.data.FileReference;
+import org.openlca.cloud.util.Strings;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.api.data.FetchWriter;
 import com.greendelta.cloud.index.DatasetIndexer;
-import com.greendelta.cloud.model.data.CommitDescriptor;
-import com.greendelta.cloud.model.data.DatasetDescriptor;
-import com.greendelta.cloud.model.data.FetchRequestData;
-import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.service.repository.CommitService;
 import com.greendelta.cloud.service.repository.DatasetService;
-import com.greendelta.cloud.util.Strings;
 
 @Path("repository/fetch")
 public class FetchResource {

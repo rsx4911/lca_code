@@ -16,12 +16,12 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.store.Directory;
+import org.openlca.cloud.model.data.FileReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.greendelta.cloud.model.data.FileReference;
 
 class IndexUtil {
 

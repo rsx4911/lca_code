@@ -11,12 +11,12 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlca.cloud.model.data.DatasetDescriptor;
+import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.Version;
 
 import com.google.common.io.Files;
-import com.greendelta.cloud.model.data.DatasetDescriptor;
-import com.greendelta.cloud.util.Directories;
 
 public class DatasetIndexerTest {
 

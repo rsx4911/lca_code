@@ -9,16 +9,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
+import org.openlca.cloud.error.UserNotFoundException;
+import org.openlca.cloud.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.greendelta.cloud.error.UnauthorizedRepositoryAccessException;
-import com.greendelta.cloud.error.UserNotFoundException;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.util.Strings;
 
 public class SharingService {
 

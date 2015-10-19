@@ -18,11 +18,10 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.IOUtils;
+import org.openlca.cloud.model.data.DatasetDescriptor;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.greendelta.cloud.model.data.DatasetDescriptor;
 
 public class DatasetIndexer {
 

@@ -1,13 +1,13 @@
 package com.greendelta.cloud.platform.guice;
 
 import org.apache.shiro.web.servlet.ShiroFilter;
+import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Singleton;
 import com.google.inject.persist.PersistFilter;
 import com.google.inject.servlet.ServletModule;
-import com.greendelta.cloud.util.Logs;
 
 class WebappModule extends ServletModule {
 

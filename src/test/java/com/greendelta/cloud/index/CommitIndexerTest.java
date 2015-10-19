@@ -10,11 +10,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlca.cloud.model.data.FileReference;
+import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.io.Files;
-import com.greendelta.cloud.model.data.FileReference;
-import com.greendelta.cloud.util.Directories;
 
 public class CommitIndexerTest {
 

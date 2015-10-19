@@ -3,8 +3,7 @@ package com.greendelta.cloud;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.greendelta.cloud.model.data.CommitDescriptor;
+import org.openlca.cloud.model.data.CommitDescriptor;
 
 public class CommitToStringTest {
 

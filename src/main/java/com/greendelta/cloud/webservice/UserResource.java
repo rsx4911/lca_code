@@ -12,15 +12,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.error.UserNotFoundException;
+import org.openlca.cloud.util.ObjectMap;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.greendelta.cloud.error.UserNotFoundException;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.service.repository.RepositoryService;
 import com.greendelta.cloud.service.repository.SharingService;
-import com.greendelta.cloud.util.ObjectMap;
 
 @Path("user")
 public class UserResource {

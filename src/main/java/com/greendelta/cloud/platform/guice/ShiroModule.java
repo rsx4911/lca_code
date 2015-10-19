@@ -7,6 +7,7 @@ import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.guice.web.ShiroWebModule;
 import org.apache.shiro.subject.Subject;
+import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,6 @@ import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
 import com.greendelta.cloud.platform.shiro.JpaRealm;
 import com.greendelta.cloud.platform.shiro.RestAuthenticationFilter;
-import com.greendelta.cloud.util.Logs;
 
 class ShiroModule extends ShiroWebModule {
 

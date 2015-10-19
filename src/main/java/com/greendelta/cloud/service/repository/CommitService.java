@@ -18,18 +18,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.openlca.cloud.api.data.CommitReader;
+import org.openlca.cloud.model.data.CommitDescriptor;
+import org.openlca.cloud.model.data.DatasetDescriptor;
+import org.openlca.cloud.model.data.FileReference;
+import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.api.data.CommitReader;
 import com.greendelta.cloud.index.CommitIndexer;
-import com.greendelta.cloud.model.data.CommitDescriptor;
-import com.greendelta.cloud.model.data.DatasetDescriptor;
-import com.greendelta.cloud.model.data.FileReference;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.util.Directories;
 
 public class CommitService {
 

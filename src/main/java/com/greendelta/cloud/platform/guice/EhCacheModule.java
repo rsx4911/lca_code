@@ -2,6 +2,7 @@ package com.greendelta.cloud.platform.guice;
 
 import net.sf.ehcache.CacheManager;
 
+import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.greendelta.cloud.platform.guice.util.BindUtils;
 import com.greendelta.cloud.platform.guice.util.ShutdownListener;
-import com.greendelta.cloud.util.Logs;
 
 class EhCacheModule extends AbstractModule {
 

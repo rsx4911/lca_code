@@ -6,15 +6,15 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 
+import org.openlca.cloud.model.data.DatasetDescriptor;
+import org.openlca.cloud.util.Directories;
+import org.openlca.cloud.util.Strings;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexer;
-import com.greendelta.cloud.model.data.DatasetDescriptor;
-import com.greendelta.cloud.util.Directories;
-import com.greendelta.cloud.util.Strings;
 
 public class DatasetService {
 

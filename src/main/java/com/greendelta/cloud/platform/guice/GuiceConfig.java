@@ -7,6 +7,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.apache.shiro.guice.aop.ShiroAopModule;
+import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,6 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.greendelta.cloud.platform.guice.util.ShutdownListener;
 import com.greendelta.cloud.platform.guice.util.StartupListener;
-import com.greendelta.cloud.util.Logs;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
