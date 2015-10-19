@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +63,7 @@ public class FetchResource {
 		if (commitId == null)
 			return Respond.notFound(Strings.concat(type.name(), " ", refId,
 					" not found"));
-		String dataset = commitService.getData(repositoryId, type, refId,
+		String dataset = commitService.getDataset(repositoryId, type, refId,
 				commitId);
 		if (dataset == null)
 			return Respond.notFound(Strings.concat(type.name(), " ", refId,
@@ -89,13 +88,14 @@ public class FetchResource {
 			return Respond.noContent();
 		Map<String, FetchRequestData> result = new HashMap<>();
 		for (CommitDescriptor commit : commits) {
-			List<DatasetDescriptor> descriptors = commitService
-					.getReferences(repositoryId, commit.getId());
+			List<DatasetDescriptor> descriptors = commitService.getReferences(
+					repositoryId, commit.getId());
 			for (DatasetDescriptor descriptor : descriptors) {
 				String key = descriptor.getType().name() + "_"
 						+ descriptor.getRefId();
-				result.put(key,
-						toRequestData(repositoryId, commit.getId(), descriptor));
+				FetchRequestData value = commitService.toRequestData(
+						repositoryId, commit.getId(), descriptor);
+				result.put(key, value);
 			}
 		}
 		if (result.size() == 0)
@@ -134,7 +134,7 @@ public class FetchResource {
 		for (DescriptorAndCommitId value : descriptors.values()) {
 			DatasetDescriptor descriptor = value.descriptor;
 			String data = commitService
-					.getData(repositoryId, descriptor.getType(),
+					.getDataset(repositoryId, descriptor.getType(),
 							descriptor.getRefId(), value.commitId);
 			writer.put(descriptor, data);
 		}
@@ -153,8 +153,8 @@ public class FetchResource {
 		Map<String, DescriptorAndCommitId> result = new HashMap<>();
 		// iterate over all commits, only latest version will "remain"
 		for (CommitDescriptor commit : commits) {
-			List<DatasetDescriptor> descriptors = commitService
-					.getReferences(repositoryId, commit.getId());
+			List<DatasetDescriptor> descriptors = commitService.getReferences(
+					repositoryId, commit.getId());
 			for (DatasetDescriptor descriptor : descriptors) {
 				String key = toKey(descriptor);
 				result.put(key,
@@ -178,67 +178,6 @@ public class FetchResource {
 
 	private String toKey(FileReference reference) {
 		return reference.getType().name() + "_" + reference.getRefId();
-	}
-
-	@GET
-	@Path("commits/{repositoryOwner}/{repositoryName}/{latestCommitId}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(
-			@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName,
-			@PathParam("latestCommitId") String latestCommitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/",
-				repositoryName);
-		if (latestCommitId.equals("null"))
-			latestCommitId = null;
-		List<CommitDescriptor> commits = commitService.getCommits(repositoryId,
-				latestCommitId);
-		if (commits.size() == 0)
-			return Respond.noContent();
-		Collections.reverse(commits);
-		return Respond.ok(commits);
-	}
-
-	@GET
-	@Path("references/{repositoryOwner}/{repositoryName}/{commitId}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getReferences(
-			@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName,
-			@PathParam("commitId") String commitId) {
-		String repositoryId = Strings.concat(repositoryOwner, "/",
-				repositoryName);
-		List<DatasetDescriptor> descriptors = commitService
-				.getReferences(repositoryId, commitId);
-		// if size is 0, commit was not found (no commit without files)
-		if (descriptors.size() == 0)
-			return Respond.notFound(Strings.concat("Commit with id ", commitId,
-					" not found"));
-		List<FetchRequestData> resultData = new ArrayList<>();
-		for (DatasetDescriptor descriptor : descriptors)
-			resultData.add(toRequestData(repositoryId, commitId, descriptor));
-		return Respond.ok(resultData);
-	}
-
-	private FetchRequestData toRequestData(String repositoryId,
-			String commitId, DatasetDescriptor descriptor) {
-		FetchRequestData value = new FetchRequestData(descriptor);
-		String data = commitService.getData(repositoryId, descriptor.getType(),
-				descriptor.getRefId(), commitId);
-		List<CommitDescriptor> previous = commitService.getCommitsForDataset(
-				repositoryId, descriptor.getType(), descriptor.getRefId(),
-				commitId);
-		boolean wasAdded = previous.isEmpty();
-		if (!wasAdded) {
-			CommitDescriptor commit = previous.get(previous.size() - 1);
-			String previousData = commitService
-					.getData(repositoryId, descriptor.getType(),
-							descriptor.getRefId(), commit.getId());
-			wasAdded = previousData == null || previousData.isEmpty();
-		}
-		value.setDeleted(data == null || data.isEmpty());
-		value.setAdded(wasAdded);
-		return value;
 	}
 
 	private class DescriptorAndCommitId {
