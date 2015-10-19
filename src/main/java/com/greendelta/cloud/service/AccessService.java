@@ -29,7 +29,8 @@ public class AccessService {
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.getName().equals(withUser))
 			return;
-		String fullId = Strings.concat(currentUser.getName(), "/", repositoryName);
+		String fullId = Strings.concat(currentUser.getName(), "/",
+				repositoryName);
 		User user = getUser(withUser);
 		if (get(user.getName(), fullId) != null)
 			return;
@@ -44,7 +45,8 @@ public class AccessService {
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.getName().equals(withUser))
 			return;
-		String fullId = Strings.concat(currentUser.getName(), "/", repositoryName);
+		String fullId = Strings.concat(currentUser.getName(), "/",
+				repositoryName);
 		User user = getUser(withUser);
 		Access access = get(user.getName(), fullId);
 		dao.delete(access);
@@ -84,6 +86,10 @@ public class AccessService {
 	}
 
 	boolean hasAccess(String username, String id) {
+		String owner = id.split("/")[0];
+		User currentUser = userService.getCurrentUser();
+		if (currentUser.getName().equals(owner))
+			return true;
 		return get(username, id) != null;
 	}
 
