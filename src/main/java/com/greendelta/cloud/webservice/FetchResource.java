@@ -110,8 +110,6 @@ public class FetchResource {
 			@PathParam("repositoryName") String repositoryName,
 			@PathParam("latestCommitId") String latestCommitId,
 			List<DatasetDescriptor> requested) {
-		if (requested.isEmpty())
-			return Respond.noContent();
 		String repositoryId = Strings.concat(repositoryOwner, "/",
 				repositoryName);
 		if (latestCommitId.equals("null"))
@@ -130,7 +128,7 @@ public class FetchResource {
 			List<CommitDescriptor> commits, String repositoryId) {
 		FetchWriter writer = new FetchWriter(null);
 		Map<String, DescriptorAndCommitId> descriptors = getNewestVersions(
-				commits, repositoryId);
+				commits, repositoryId, requested);
 		for (DescriptorAndCommitId value : descriptors.values()) {
 			DatasetDescriptor descriptor = value.descriptor;
 			String data = commitService
@@ -149,13 +147,16 @@ public class FetchResource {
 	}
 
 	private Map<String, DescriptorAndCommitId> getNewestVersions(
-			List<CommitDescriptor> commits, String repositoryId) {
+			List<CommitDescriptor> commits, String repositoryId,
+			List<DatasetDescriptor> requested) {
 		Map<String, DescriptorAndCommitId> result = new HashMap<>();
 		// iterate over all commits, only latest version will "remain"
 		for (CommitDescriptor commit : commits) {
 			List<DatasetDescriptor> descriptors = commitService.getReferences(
 					repositoryId, commit.getId());
 			for (DatasetDescriptor descriptor : descriptors) {
+				if (!requested.contains(descriptor))
+					continue;
 				String key = toKey(descriptor);
 				result.put(key,
 						new DescriptorAndCommitId(descriptor, commit.getId()));
