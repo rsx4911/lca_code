@@ -155,14 +155,15 @@ public class CommitService {
 		File historyFile = repositoryService.getForId(repositoryId)
 				.getCommitHistoryFile();
 		MutableBoolean reachedId = new MutableBoolean();
+		reachedId.value = afterCommitId == null;
 		return dataAccessor.readHistory(historyFile, (element) -> {
 			if (element.getId().equals(afterCommitId)) {
 				reachedId.value = true;
-				return false;
+				return true;
 			}
 			if (!reachedId.value)
-				return false;
-			return true;
+				return true;
+			return false;
 		});
 	}
 
@@ -182,16 +183,16 @@ public class CommitService {
 					if (element.getId().equals(beforeCommitId))
 						reachedId.value = true;
 					if (reachedId.value)
-						return false;
+						return true;
 					for (DatasetDescriptor dataset : getReferences(
 							repositoryId, element.getId())) {
 						if (dataset.getType() != type)
 							continue;
 						if (!dataset.getRefId().equals(refId))
 							continue;
-						return true;
+						return false;
 					}
-					return false;
+					return true;
 				});
 	}
 
