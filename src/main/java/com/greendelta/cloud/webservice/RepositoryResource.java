@@ -41,6 +41,12 @@ public class RepositoryResource {
 		repositoryService.create(name);
 		return Respond.created();
 	}
+	
+	@POST
+	@Path("exists/{name}")
+	public Response exists(@PathParam("name") String name) {
+		return Respond.ok(repositoryService.exists(name));
+	}
 
 	@POST
 	@Path("share/{name}/{with}")
