@@ -90,12 +90,13 @@ public class UserResource {
 	@GET
 	@Path("access/{repositoryOwner}/{repositoryName}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response hasAccess(
+	public Response checkAccess(
 			@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName) {
 		String repositoryId = org.openlca.cloud.util.Strings.concat(
 				repositoryOwner, "/", repositoryName);
 		User user = service.getCurrentUser();
+		repositoryService.getForId(repositoryId);
 		Set<String> haveAccess = sharingService
 				.getAccessListForRepository(repositoryId);
 		if (!haveAccess.contains(user.getName()))
