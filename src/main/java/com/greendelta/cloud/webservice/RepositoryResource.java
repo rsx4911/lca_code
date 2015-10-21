@@ -42,10 +42,11 @@ public class RepositoryResource {
 		return Respond.created();
 	}
 	
-	@POST
+	@GET
 	@Path("exists/{name}")
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response exists(@PathParam("name") String name) {
-		return Respond.ok(repositoryService.exists(name));
+		return Respond.ok(String.valueOf(repositoryService.exists(name)));
 	}
 
 	@POST
