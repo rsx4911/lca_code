@@ -1,6 +1,7 @@
 package com.greendelta.cloud.webservice;
 
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -84,6 +85,22 @@ public class UserResource {
 	public Response getAccessList() {
 		User user = service.getCurrentUser();
 		return Respond.ok(sharingService.getAccessListForUser(user.getName()));
+	}
+
+	@GET
+	@Path("access/{repositoryOwner}/{repositoryName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response hasAccess(
+			@PathParam("repositoryOwner") String repositoryOwner,
+			@PathParam("repositoryName") String repositoryName) {
+		String repositoryId = org.openlca.cloud.util.Strings.concat(
+				repositoryOwner, "/", repositoryName);
+		User user = service.getCurrentUser();
+		Set<String> haveAccess = sharingService
+				.getAccessListForRepository(repositoryId);
+		if (!haveAccess.contains(user.getName()))
+			return Respond.forbidden();
+		return Respond.ok();
 	}
 
 }

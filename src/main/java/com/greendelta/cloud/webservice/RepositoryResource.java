@@ -62,6 +62,7 @@ public class RepositoryResource {
 	public Response getAccessListForRepository(@PathParam("repositoryOwner") String repositoryOwner,
 			@PathParam("repositoryName") String repositoryName) {
 		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
+		repositoryService.getForId(repositoryId); // implicitly checks if repository exists
 		return Respond.ok(sharingService.getAccessListForRepository(repositoryId));
 	}
 
