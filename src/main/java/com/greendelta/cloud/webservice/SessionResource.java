@@ -41,12 +41,12 @@ public class SessionResource {
 	@POST
 	@Path("createadminuser")
 	public Response initializeDatabase(Map<String, Object> credentials) {
-		if (userService.getForName("admin") != null)
-			return Respond.conflict("Admin user already exists");
 		ObjectMap formMap = ObjectMap.fromMap(credentials);
 		String adminKey = formMap.getString("adminKey");
 		if (!this.adminKey.equals(adminKey))
 			return Respond.unauthorized();
+		if (userService.getForName("admin") != null)
+			return Respond.conflict("Admin user already exists");
 		userService.createNewUser("admin", adminKey);
 		return Respond.ok();
 	}
