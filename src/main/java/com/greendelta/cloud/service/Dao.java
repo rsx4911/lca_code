@@ -19,6 +19,8 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.persist.Transactional;
 import com.greendelta.cloud.model.AbstractEntity;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 class Dao<T extends AbstractEntity> {
 
 	private Provider<EntityManager> entityManagerProvider;
@@ -58,7 +60,7 @@ class Dao<T extends AbstractEntity> {
 
 	public List<T> getAll() {
 		EntityManager em = createManager();
-		String jpql = "SELECT o FROM " + entityType.getSimpleName() + (" o");
+		String jpql = concat("SELECT o FROM ", entityType.getSimpleName(), " o");
 		TypedQuery<T> query = em.createQuery(jpql, entityType);
 		return query.getResultList();
 	}
@@ -87,7 +89,7 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	public List<T> getForAttributes(Map<String, Object> parameters) {
-		String jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
+		String jpql = concat("SELECT o FROM ", entityType.getSimpleName(), " o");
 		if (parameters != null && parameters.size() > 0) {
 			jpql += " WHERE ";
 			int count = 0;
@@ -100,15 +102,14 @@ class Dao<T extends AbstractEntity> {
 				if (value instanceof Collection
 						|| (value != null && value.getClass().isArray()))
 					comparator = "IN";
-				jpql += "o." + parameter.getKey() + " " + comparator + " :p"
-						+ ++count;
+				jpql += concat("o.", parameter.getKey(), " ", comparator, " :p", ++count);
 				if (value != null && value.getClass().isArray()) {
 					Set<Object> values = new HashSet<>();
 					for (Object object : (Object[]) value)
 						values.add(object);
 					value = values;
 				}
-				internal.put("p" + count, value);
+				internal.put(concat("p", count), value);
 			}
 			parameters = internal;
 		}
@@ -149,8 +150,7 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	public long getCountForAttributes(Map<String, Object> parameters) {
-		String jpql = "SELECT count(o) FROM " + entityType.getSimpleName()
-				+ " o";
+		String jpql = concat("SELECT count(o) FROM ", entityType.getSimpleName(), " o");
 		if (parameters != null && parameters.size() > 0) {
 			jpql += " WHERE ";
 			int count = 0;
@@ -158,7 +158,7 @@ class Dao<T extends AbstractEntity> {
 			for (Entry<String, Object> parameter : parameters.entrySet()) {
 				if (count != 0)
 					jpql += " AND ";
-				jpql += "o." + parameter.getKey() + " = :p" + ++count;
+				jpql += concat("o.", parameter.getKey(), " = :p", ++count);
 				internal.put("p" + count, parameter.getValue());
 			}
 			parameters = internal;
@@ -167,8 +167,8 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	private long getNewId() {
-		T value = getFirst("SELECT o FROM " + entityType.getSimpleName()
-				+ " o ORDER BY o.id DESC", Collections.emptyMap());
+		String query = concat("SELECT o FROM ", entityType.getSimpleName(), " o ORDER BY o.id DESC");
+		T value = getFirst(query, Collections.emptyMap());
 		if (value == null)
 			return 1;
 		return value.getId() + 1;

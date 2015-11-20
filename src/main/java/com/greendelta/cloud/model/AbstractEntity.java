@@ -2,6 +2,8 @@ package com.greendelta.cloud.model;
 
 import javax.persistence.MappedSuperclass;
 
+import org.openlca.cloud.util.Strings;
+
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 @MappedSuperclass
@@ -39,7 +41,7 @@ public abstract class AbstractEntity {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + getId() + ")";
+		return Strings.concat(getClass().getSimpleName(), "(", getId(), ")");
 	}
 
 	@JsonAnySetter

@@ -70,12 +70,14 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
+		String url = org.openlca.cloud.util.Strings.concat("jdbc:derby:", databasePath);
 		if (!new File(databasePath).exists()) {
-			properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath + ";create=true");
+			url = org.openlca.cloud.util.Strings.concat(url, ";create=true");
+			properties.setProperty("javax.persistence.jdbc.url", url);
 			properties.setProperty("eclipselink.ddl-generation", "drop-and-create-tables");
 			properties.setProperty("eclipselink.ddl-generation.output-mode", "database");
 		} else
-			properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
+			properties.setProperty("javax.persistence.jdbc.url", url);
 		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext),
 				jpaModule, new JerseyModule(resourcePackages), new EhCacheModule(),
