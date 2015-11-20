@@ -91,8 +91,8 @@ public class FetchResource {
 			List<DatasetDescriptor> descriptors = commitService.getReferences(
 					repositoryId, commit.getId());
 			for (DatasetDescriptor descriptor : descriptors) {
-				String key = descriptor.getType().name() + "_"
-						+ descriptor.getRefId();
+				String key = Strings.concat(descriptor.getType().name(), "_",
+						descriptor.getRefId());
 				FetchRequestData value = commitService.toRequestData(
 						repositoryId, commit.getId(), descriptor);
 				result.put(key, value);
@@ -129,21 +129,26 @@ public class FetchResource {
 		FetchWriter writer = new FetchWriter(null);
 		Map<String, DescriptorAndCommitId> descriptors = getNewestVersions(
 				commits, repositoryId, requested);
-		for (DescriptorAndCommitId value : descriptors.values()) {
-			DatasetDescriptor descriptor = value.descriptor;
-			String data = commitService
-					.getDataset(repositoryId, descriptor.getType(),
-							descriptor.getRefId(), value.commitId);
-			writer.put(descriptor, data);
-		}
-		writer.setCommitId(commits.get(commits.size() - 1).getId());
 		try {
+			for (DescriptorAndCommitId value : descriptors.values())
+				put(writer, repositoryId, value);
+			writer.setCommitId(commits.get(commits.size() - 1).getId());
 			writer.close();
 			return toStream(writer.getFile());
 		} catch (IOException e) {
 			log.error("Error closing fetch writer", e);
 			return null;
 		}
+	}
+
+	private void put(FetchWriter writer, String repositoryId,
+			DescriptorAndCommitId value) throws IOException {
+		DatasetDescriptor descriptor = value.descriptor;
+		String data = commitService.getDataset(repositoryId,
+				descriptor.getType(), descriptor.getRefId(), value.commitId);
+		File binDir = commitService.getBinDir(repositoryId,
+				descriptor.getType(), descriptor.getRefId(), value.commitId);
+		writer.put(descriptor, data, binDir);
 	}
 
 	private Map<String, DescriptorAndCommitId> getNewestVersions(
@@ -178,7 +183,7 @@ public class FetchResource {
 	}
 
 	private String toKey(FileReference reference) {
-		return reference.getType().name() + "_" + reference.getRefId();
+		return Strings.concat(reference.getType().name(), "_", reference.getRefId());
 	}
 
 	private class DescriptorAndCommitId {

@@ -26,7 +26,8 @@ public class RepositoryService {
 
 	public Repository getForId(String id) {
 		Repository.checkIdForValidity(id);
-		if (!accessService.hasAccess(userService.getCurrentUser().getName(), id))
+		if (!accessService
+				.hasAccess(userService.getCurrentUser().getName(), id))
 			throw new UnauthorizedRepositoryAccessException(id);
 		return internalGetForId(id);
 	}
@@ -38,7 +39,7 @@ public class RepositoryService {
 
 	public boolean exists(String name) {
 		Repository.checkNameForValidity(name);
-		return getPath(name).exists();
+		return new File(getPath(name)).exists();
 	}
 
 	public void create(String name) {
@@ -48,10 +49,8 @@ public class RepositoryService {
 
 	public void delete(String name) {
 		Repository.checkNameForValidity(name);
-		User user = userService.getCurrentUser();
-		String id = Strings.concat(user.getName(), "/" + name);
-		accessService.unshareById(id);
-		Directories.delete(getPath(name));
+		accessService.unshareById(toId(name));
+		Directories.delete(new File(getPath(name)));
 	}
 
 	public void deleteAllFor(User user) {
@@ -62,11 +61,12 @@ public class RepositoryService {
 		Directories.delete(userDirectory);
 	}
 
-	private File getPath(String name) {
-		User user = userService.getCurrentUser();
-		String path = Strings.concat(repositoryRoot, "/", user.getName(), "/",
-				name);
-		return new File(path);
+	private String getPath(String name) {
+		return Strings.concat(repositoryRoot, "/", toId(name));
 	}
 
+	private String toId(String name) {
+		User user = userService.getCurrentUser();
+		return Strings.concat(user.getName(), "/", name);
+	}
 }

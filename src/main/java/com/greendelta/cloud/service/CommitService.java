@@ -53,9 +53,14 @@ public class CommitService {
 			reader = new CommitReader(zipFile);
 			String id = UUID.randomUUID().toString();
 			List<DatasetDescriptor> descriptors = reader.getDescriptors();
+			Repository repository = repositoryService.getForId(repositoryId);
 			for (DatasetDescriptor descriptor : descriptors) {
-				File file = getOrCreateDatasetfile(repositoryId, id, descriptor);
+				File file = repository.getDatasetFile(descriptor.getType(),
+						descriptor.getRefId(), id, true);
 				dataAccessor.writeDataset(file, reader.getData(descriptor));
+				File binDir = repository.getBinDir(descriptor.getType(),
+						descriptor.getRefId(), id, false);
+				reader.copyBinaries(descriptor, binDir);
 			}
 			String username = userService.getCurrentUser().getName();
 			long timestamp = Calendar.getInstance().getTimeInMillis();
@@ -65,7 +70,7 @@ public class CommitService {
 			descriptor.setUser(username);
 			descriptor.setTimestamp(timestamp);
 			File historyFile = repositoryService.getForId(repositoryId)
-					.getCommitHistoryFile();
+					.getHistoryFile(true);
 			dataAccessor.appendToHistory(historyFile, descriptor);
 			writeReferences(repositoryId, id, descriptors);
 			return id;
@@ -103,31 +108,26 @@ public class CommitService {
 		return value;
 	}
 
-	private File getOrCreateDatasetfile(String repositoryId, String commitId,
-			DatasetDescriptor descriptor) {
-		Repository repository = repositoryService.getForId(repositoryId);
-		File datasetDirectory = repository.getDatasetDirectory(
-				descriptor.getType(), descriptor.getRefId());
-		if (!datasetDirectory.exists())
-			datasetDirectory.mkdir();
-		return repository.getDatasetFile(descriptor.getType(),
-				descriptor.getRefId(), commitId);
-	}
-
 	private void writeReferences(String repositoryId, String commitId,
 			List<DatasetDescriptor> descriptors) throws IOException {
 		File commitFile = repositoryService.getForId(repositoryId)
-				.getCommitFile(commitId);
+				.getCommitFile(commitId, true);
 		String json = new Gson().toJson(descriptors);
 		Files.write(commitFile.toPath(), json.getBytes(),
-				StandardOpenOption.CREATE_NEW);
+				StandardOpenOption.CREATE);
 	}
 
 	public String getDataset(String repositoryId, ModelType type, String refId,
 			String commitId) {
 		File file = repositoryService.getForId(repositoryId).getDatasetFile(
-				type, refId, commitId);
+				type, refId, commitId, false);
 		return dataAccessor.readDataset(file);
+	}
+
+	public File getBinDir(String repositoryId, ModelType type, String refId,
+			String commitId) {
+		Repository repository = repositoryService.getForId(repositoryId);
+		return repository.getBinDir(type, refId, commitId, false);
 	}
 
 	public CommitDescriptor getLatestCommit(String repositoryId) {
@@ -153,7 +153,7 @@ public class CommitService {
 	public List<CommitDescriptor> getCommits(String repositoryId,
 			String afterCommitId) {
 		File historyFile = repositoryService.getForId(repositoryId)
-				.getCommitHistoryFile();
+				.getHistoryFile(false);
 		MutableBoolean reachedId = new MutableBoolean();
 		reachedId.value = afterCommitId == null;
 		return dataAccessor.readHistory(historyFile, (element) -> {
@@ -175,7 +175,7 @@ public class CommitService {
 	public List<CommitDescriptor> getCommitsForDataset(String repositoryId,
 			ModelType type, String refId, String beforeCommitId) {
 		File historyFile = repositoryService.getForId(repositoryId)
-				.getCommitHistoryFile();
+				.getHistoryFile(false);
 		MutableBoolean reachedId = new MutableBoolean();
 		return dataAccessor.readHistory(
 				historyFile,
@@ -199,7 +199,7 @@ public class CommitService {
 	public List<DatasetDescriptor> getReferences(String repositoryId,
 			String commitId) {
 		File commitFile = repositoryService.getForId(repositoryId)
-				.getCommitFile(commitId);
+				.getCommitFile(commitId, false);
 		try {
 			String json = new String(Files.readAllBytes(commitFile.toPath()),
 					charset);
