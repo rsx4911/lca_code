@@ -16,7 +16,8 @@ import com.greendelta.cloud.model.User;
 
 public class UserService {
 
-	private final static Logger log = LoggerFactory.getLogger(UserService.class);
+	private final static Logger log = LoggerFactory
+			.getLogger(UserService.class);
 	private final static Random random = new SecureRandom();
 	private Provider<Subject> subjectProvider;
 	private Dao<User> dao;
@@ -45,12 +46,13 @@ public class UserService {
 		try {
 			byte[] salt = new byte[8];
 			random.nextBytes(salt);
-			String hash = new Sha256Hash(password.getBytes("UTF-8"), salt, 50).toHex();
+			byte[] pass = password.getBytes("UTF-8");
+			String hash = new Sha256Hash(pass, salt, 50).toHex();
 			user.setHash(hash);
 			user.setSalt(Hex.encodeToString(salt));
 		} catch (UnsupportedEncodingException e) {
 			log.error("Unexpected encoding exception", e);
-		}		
+		}
 		return dao.insert(user);
 	}
 

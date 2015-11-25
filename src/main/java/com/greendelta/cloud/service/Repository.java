@@ -5,24 +5,26 @@ import java.io.IOException;
 
 import org.openlca.cloud.error.InvalidRepositoryNameException;
 import org.openlca.cloud.error.RepositoryNotFoundException;
-import org.openlca.cloud.util.Strings;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 class Repository {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	private final File repository;
+	private final File repo;
 
 	Repository(String path) {
-		repository = new File(path);
-		if (!repository.exists()) {
-			String[] split = path.split("/");
-			String id = Strings.concat(split[split.length - 2], "/",
-					split[split.length - 1]);
-			throw new RepositoryNotFoundException(id);
-		}
+		repo = new File(path);
+		if (repo.exists())
+			return;
+		String[] split = path.split("/");
+		String owner = split[split.length - 2];
+		String name = split[split.length - 1];
+		String id = concat(owner, "/", name);
+		throw new RepositoryNotFoundException(id);
 	}
 
 	static void create(String path) {
@@ -46,14 +48,14 @@ class Repository {
 
 	File getCommitFile(String commitId, boolean create) {
 		File historyDir = getHistoryDir(create);
-		String filename = Strings.concat(commitId, ".txt");
+		String filename = concat(commitId, ".txt");
 		return getFile(historyDir, filename, create);
 	}
 
 	File getDatasetFile(ModelType type, String refId, String commitId,
 			boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
-		String filename = Strings.concat(commitId, ".json");
+		String filename = concat(commitId, ".json");
 		return getFile(datasetDir, filename, create);
 	}
 
@@ -68,7 +70,7 @@ class Repository {
 	}
 
 	private File getModelDir(ModelType type, boolean create) {
-		return getDir(repository, type.name().toLowerCase(), create);
+		return getDir(repo, type.name().toLowerCase(), create);
 	}
 
 	private File getBinDir(ModelType type, String refId, boolean create) {
@@ -77,11 +79,11 @@ class Repository {
 	}
 
 	private File getBinDir(boolean create) {
-		return getDir(repository, "bin", create);
+		return getDir(repo, "bin", create);
 	}
 
 	private File getHistoryDir(boolean create) {
-		return getDir(repository, "history", true);
+		return getDir(repo, "history", true);
 	}
 
 	private File getFile(File dir, String name, boolean create) {
@@ -90,7 +92,8 @@ class Repository {
 			try {
 				file.createNewFile();
 			} catch (IOException e) {
-				String message = Strings.concat("Error creating file ", file.getAbsolutePath());
+				String path = file.getAbsolutePath();
+				String message = concat("Error creating file ", path);
 				log.error(message, e);
 			}
 		return file;

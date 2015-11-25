@@ -25,14 +25,16 @@ import com.greendelta.cloud.service.UserService;
 @Path("public")
 public class SessionResource {
 
-	private final static Logger log = LoggerFactory.getLogger(SessionResource.class);
+	private final static Logger log = LoggerFactory
+			.getLogger(SessionResource.class);
 
 	private Provider<Subject> subjectProvider;
 	private UserService userService;
 	private String adminKey;
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider, UserService userService, @Named("admin.key") String adminKey) {
+	public SessionResource(Provider<Subject> subjectProvider,
+			UserService userService, @Named("admin.key") String adminKey) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
 		this.adminKey = adminKey;
@@ -50,7 +52,7 @@ public class SessionResource {
 		userService.createNewUser("admin", adminKey);
 		return Respond.ok();
 	}
-	
+
 	@POST
 	@Path("login")
 	@Consumes(MediaType.APPLICATION_JSON)

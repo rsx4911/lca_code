@@ -11,10 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.openlca.cloud.model.data.CommitDescriptor;
-import org.openlca.cloud.util.Strings;
+import org.openlca.cloud.model.data.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.openlca.cloud.util.Strings.concat;
 
 class DataAccessor {
 
@@ -29,9 +30,9 @@ class DataAccessor {
 			else
 				Files.write(file.toPath(), data.getBytes(charset));
 		} catch (IOException e) {
-			log.error(
-					Strings.concat("Error writing json data to file ",
-							file.getAbsolutePath()), e);
+			String path = file.getAbsolutePath();
+			String message = concat("Error writing json data to file ", path);
+			log.error(message, e);
 		}
 	}
 
@@ -46,15 +47,15 @@ class DataAccessor {
 			byte[] jsonData = Files.readAllBytes(file.toPath());
 			return new String(jsonData, charset);
 		} catch (IOException e) {
-			log.error(
-					Strings.concat("Error reading json data from file ",
-							file.getAbsolutePath()), e);
+			String path = file.getAbsolutePath();
+			String message = concat("Error reading json data from file ", path);
+			log.error(message, e);
 			return null;
 		}
 	}
 
-	public List<CommitDescriptor> readHistory(File file,
-			Filter<CommitDescriptor> filter) {
+	public List<Commit> readHistory(File file,
+			Filter<Commit> filter) {
 		if (file == null)
 			return Collections.emptyList();
 		if (!file.exists())
@@ -63,25 +64,25 @@ class DataAccessor {
 			List<String> lines = Files.readAllLines(file.toPath());
 			if (lines.isEmpty())
 				return Collections.emptyList();
-			List<CommitDescriptor> descriptors = new ArrayList<>();
+			List<Commit> descriptors = new ArrayList<>();
 			for (String entry : lines) {
 				if (entry.trim().isEmpty())
 					continue;
-				CommitDescriptor descriptor = CommitDescriptor.parse(entry);
+				Commit descriptor = Commit.parse(entry);
 				if (!filter.filter(descriptor))
 					descriptors.add(descriptor);
 			}
 			return descriptors;
-
 		} catch (IOException e) {
 			log.error("Unexpected error appending to commit history", e);
 			return Collections.emptyList();
 		}
 	}
 
-	public void appendToHistory(File file, CommitDescriptor commit) {
-		try (PrintWriter out = new PrintWriter(new BufferedWriter(
-				new FileWriter(file, true)))) {
+	public void appendToHistory(File file, Commit commit) {
+		try (FileWriter fWriter = new FileWriter(file, true);
+				BufferedWriter writer = new BufferedWriter(fWriter);
+				PrintWriter out = new PrintWriter(writer)) {
 			out.println(commit.toString());
 		} catch (IOException e) {
 			log.error("Unexpected error appending to commit history", e);

@@ -10,82 +10,59 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.error.RepositoryNotFoundException;
-import org.openlca.cloud.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
-import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
+
+import static org.openlca.cloud.util.Strings.concat;
 
 @Path("repository")
 public class RepositoryResource {
 
-	private RepositoryService repositoryService;
-	private AccessService sharingService;
+	private RepositoryService repoService;
 	private UserService userService;
 
 	@Inject
-	public RepositoryResource(RepositoryService repositoryService, AccessService sharingService,
+	public RepositoryResource(RepositoryService repoService,
 			UserService userService) {
-		this.repositoryService = repositoryService;
-		this.sharingService = sharingService;
+		this.repoService = repoService;
 		this.userService = userService;
 	}
 
 	@POST
 	@Path("create/{name}")
 	public Response create(@PathParam("name") String name) {
-		if (repositoryService.exists(name))
-			return Respond.conflict(Strings.concat("Repository ", name, " already exists"));
-		repositoryService.create(name);
+		if (repoService.exists(name)) {
+			String message = concat("Repository ", name, " already exists");
+			return Respond.conflict(message);
+		}
+		repoService.create(name);
 		return Respond.created();
 	}
-	
+
 	@GET
 	@Path("exists/{name}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response exists(@PathParam("name") String name) {
-		return Respond.ok(String.valueOf(repositoryService.exists(name)));
-	}
-
-	@POST
-	@Path("share/{name}/{with}")
-	public Response share(@PathParam("name") String name, @PathParam("with") String with) {
-		sharingService.share(name, with);
-		return Respond.ok();
-	}
-
-	@POST
-	@Path("unshare/{name}/{with}")
-	public Response unshare(@PathParam("name") String name, @PathParam("with") String with) {
-		sharingService.unshare(name, with);
-		return Respond.ok();
-	}
-
-	@GET
-	@Path("shared/{repositoryOwner}/{repositoryName}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAccessListForRepository(@PathParam("repositoryOwner") String repositoryOwner,
-			@PathParam("repositoryName") String repositoryName) {
-		String repositoryId = Strings.concat(repositoryOwner, "/", repositoryName);
-		repositoryService.getForId(repositoryId); // implicitly checks if repository exists
-		return Respond.ok(sharingService.getAccessListForRepository(repositoryId));
+		return Respond.ok(String.valueOf(repoService.exists(name)));
 	}
 
 	@DELETE
 	@Path("delete/{name}")
 	public Response delete(@PathParam("name") String name) {
 		checkRepositoryExists(name);
-		repositoryService.delete(name);
+		repoService.delete(name);
 		return Respond.ok();
 	}
 
 	private void checkRepositoryExists(String name) {
-		if (repositoryService.exists(name))
+		if (repoService.exists(name))
 			return;
 		User user = userService.getCurrentUser();
-		throw new RepositoryNotFoundException(Strings.concat(user.getName(), "/", name));
+		String repoId = concat(user.getName(), "/", name);
+		throw new RepositoryNotFoundException(repoId);
 	}
 
 }

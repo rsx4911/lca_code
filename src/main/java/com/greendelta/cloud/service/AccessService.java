@@ -7,11 +7,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openlca.cloud.error.UserNotFoundException;
-import org.openlca.cloud.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.Access;
 import com.greendelta.cloud.model.User;
+
+import static org.openlca.cloud.util.Strings.concat;
 
 public class AccessService {
 
@@ -24,13 +25,12 @@ public class AccessService {
 		this.userService = userService;
 	}
 
-	public void share(String repositoryName, String withUser) {
-		Repository.checkNameForValidity(repositoryName);
+	public void share(String repoName, String withUser) {
+		Repository.checkNameForValidity(repoName);
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.getName().equals(withUser))
 			return;
-		String fullId = Strings.concat(currentUser.getName(), "/",
-				repositoryName);
+		String fullId = concat(currentUser.getName(), "/", repoName);
 		User user = getUser(withUser);
 		if (get(user.getName(), fullId) != null)
 			return;
@@ -40,20 +40,19 @@ public class AccessService {
 		dao.insert(access);
 	}
 
-	public void unshare(String repositoryName, String withUser) {
-		Repository.checkNameForValidity(repositoryName);
+	public void unshare(String repoName, String withUser) {
+		Repository.checkNameForValidity(repoName);
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.getName().equals(withUser))
 			return;
-		String fullId = Strings.concat(currentUser.getName(), "/",
-				repositoryName);
+		String fullId = concat(currentUser.getName(), "/", repoName);
 		User user = getUser(withUser);
 		Access access = get(user.getName(), fullId);
 		dao.delete(access);
 	}
 
 	void unshareById(String id) {
-		List<Access> accesses = dao.getForAttribute("repositoryId", id);
+		List<Access> accesses = dao.getForAttribute("repoId", id);
 		dao.delete(accesses);
 	}
 
@@ -70,7 +69,7 @@ public class AccessService {
 	}
 
 	public Set<String> getAccessListForRepository(String id) {
-		List<Access> accesses = dao.getForAttribute("repositoryId", id);
+		List<Access> accesses = dao.getForAttribute("repoId", id);
 		Set<String> users = new HashSet<>();
 		for (Access access : accesses)
 			users.add(access.getUser().getName());
@@ -95,7 +94,7 @@ public class AccessService {
 
 	private Access get(String username, String id) {
 		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("repositoryId", id);
+		attributes.put("repoId", id);
 		attributes.put("user.name", username);
 		return dao.getFirstForAttributes(attributes);
 	}

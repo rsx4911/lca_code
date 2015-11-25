@@ -3,77 +3,50 @@ package com.greendelta.cloud.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.openlca.cloud.api.data.CommitReader;
-import org.openlca.cloud.model.data.CommitDescriptor;
-import org.openlca.cloud.model.data.DatasetDescriptor;
-import org.openlca.cloud.model.data.FetchRequestData;
+import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 public class CommitService {
 
 	private final static Logger log = LoggerFactory
 			.getLogger(CommitService.class);
-	private final static Charset charset = Charset.forName("utf-8");
 	private final UserService userService;
-	private final RepositoryService repositoryService;
+	private final RepositoryService repoService;
 	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public CommitService(UserService userService,
-			RepositoryService repositoryService) {
+	public CommitService(UserService userService, RepositoryService repoService) {
 		this.userService = userService;
-		this.repositoryService = repositoryService;
+		this.repoService = repoService;
 	}
 
-	public String put(String repositoryId, InputStream data) {
+	public String put(String repoId, InputStream data) {
 		Path dir = null;
 		CommitReader reader = null;
 		try {
 			dir = Files.createTempDirectory("commitReader");
-			File zipFile = new File(dir.toFile(), "commit.zip");
-			Files.copy(data, zipFile.toPath(),
-					StandardCopyOption.REPLACE_EXISTING);
-			reader = new CommitReader(zipFile);
-			String id = UUID.randomUUID().toString();
-			List<DatasetDescriptor> descriptors = reader.getDescriptors();
-			Repository repository = repositoryService.getForId(repositoryId);
-			for (DatasetDescriptor descriptor : descriptors) {
-				File file = repository.getDatasetFile(descriptor.getType(),
-						descriptor.getRefId(), id, true);
-				dataAccessor.writeDataset(file, reader.getData(descriptor));
-				File binDir = repository.getBinDir(descriptor.getType(),
-						descriptor.getRefId(), id, false);
-				reader.copyBinaries(descriptor, binDir);
-			}
-			String username = userService.getCurrentUser().getName();
-			long timestamp = Calendar.getInstance().getTimeInMillis();
-			CommitDescriptor descriptor = new CommitDescriptor();
-			descriptor.setId(id);
-			descriptor.setMessage(reader.getCommitMessage());
-			descriptor.setUser(username);
-			descriptor.setTimestamp(timestamp);
-			File historyFile = repositoryService.getForId(repositoryId)
-					.getHistoryFile(true);
-			dataAccessor.appendToHistory(historyFile, descriptor);
-			writeReferences(repositoryId, id, descriptors);
-			return id;
+			File zip = new File(dir.toFile(), "commit.zip");
+			Files.copy(data, zip.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			reader = new CommitReader(zip);
+			String commitId = UUID.randomUUID().toString();
+			write(repoId, commitId, reader);
+			return commitId;
 		} catch (IOException e) {
 			log.error("Error reading commit data", e);
 			return null;
@@ -89,133 +62,46 @@ public class CommitService {
 		}
 	}
 
-	public FetchRequestData toRequestData(String repositoryId, String commitId,
-			DatasetDescriptor descriptor) {
-		FetchRequestData value = new FetchRequestData(descriptor);
-		String data = getDataset(repositoryId, descriptor.getType(),
-				descriptor.getRefId(), commitId);
-		List<CommitDescriptor> previous = getCommitsForDataset(repositoryId,
-				descriptor.getType(), descriptor.getRefId(), commitId);
-		boolean wasAdded = previous.isEmpty();
-		if (!wasAdded) {
-			CommitDescriptor commit = previous.get(previous.size() - 1);
-			String previousData = getDataset(repositoryId,
-					descriptor.getType(), descriptor.getRefId(), commit.getId());
-			wasAdded = previousData == null || previousData.isEmpty();
-		}
-		value.setDeleted(data == null || data.isEmpty());
-		value.setAdded(wasAdded);
-		return value;
+	private void write(String repoId, String commitId, CommitReader reader)
+			throws IOException {
+		Repository repo = repoService.getForId(repoId);
+		writeDatasets(repo, commitId, reader);
+		writeCommit(repo, commitId, reader);
+		writeReferences(repo, commitId, reader.getDescriptors());
 	}
 
-	private void writeReferences(String repositoryId, String commitId,
-			List<DatasetDescriptor> descriptors) throws IOException {
-		File commitFile = repositoryService.getForId(repositoryId)
-				.getCommitFile(commitId, true);
+	private void writeCommit(Repository repo, String commitId,
+			CommitReader reader) {
+		String username = userService.getCurrentUser().getName();
+		long timestamp = Calendar.getInstance().getTimeInMillis();
+		Commit descriptor = new Commit();
+		descriptor.setId(commitId);
+		descriptor.setMessage(reader.getCommitMessage());
+		descriptor.setUser(username);
+		descriptor.setTimestamp(timestamp);
+		File historyFile = repo.getHistoryFile(true);
+		dataAccessor.appendToHistory(historyFile, descriptor);
+	}
+
+	private void writeDatasets(Repository repo, String commitId,
+			CommitReader reader) throws IOException {
+		List<Dataset> descriptors = reader.getDescriptors();
+		for (Dataset descriptor : descriptors) {
+			ModelType type = descriptor.getType();
+			String refId = descriptor.getRefId();
+			File file = repo.getDatasetFile(type, refId, commitId, true);
+			String data = reader.getData(descriptor);
+			dataAccessor.writeDataset(file, data);
+			File binDir = repo.getBinDir(type, refId, commitId, false);
+			reader.copyBinaries(descriptor, binDir);
+		}
+	}
+
+	private void writeReferences(Repository repo, String commitId,
+			List<Dataset> descriptors) throws IOException {
+		File file = repo.getCommitFile(commitId, true);
 		String json = new Gson().toJson(descriptors);
-		Files.write(commitFile.toPath(), json.getBytes(),
-				StandardOpenOption.CREATE);
-	}
-
-	public String getDataset(String repositoryId, ModelType type, String refId,
-			String commitId) {
-		File file = repositoryService.getForId(repositoryId).getDatasetFile(
-				type, refId, commitId, false);
-		return dataAccessor.readDataset(file);
-	}
-
-	public File getBinDir(String repositoryId, ModelType type, String refId,
-			String commitId) {
-		Repository repository = repositoryService.getForId(repositoryId);
-		return repository.getBinDir(type, refId, commitId, false);
-	}
-
-	public CommitDescriptor getLatestCommit(String repositoryId) {
-		List<CommitDescriptor> commits = getCommits(repositoryId);
-		if (commits.isEmpty())
-			return null;
-		return commits.get(commits.size() - 1);
-	}
-
-	public CommitDescriptor getLatestCommitForDataset(String repositoryId,
-			ModelType type, String refId) {
-		List<CommitDescriptor> commits = getCommitsForDataset(repositoryId,
-				type, refId);
-		if (commits.isEmpty())
-			return null;
-		return commits.get(commits.size() - 1);
-	}
-
-	public List<CommitDescriptor> getCommits(String repositoryId) {
-		return getCommits(repositoryId, null);
-	}
-
-	public List<CommitDescriptor> getCommits(String repositoryId,
-			String afterCommitId) {
-		File historyFile = repositoryService.getForId(repositoryId)
-				.getHistoryFile(false);
-		MutableBoolean reachedId = new MutableBoolean();
-		reachedId.value = afterCommitId == null;
-		return dataAccessor.readHistory(historyFile, (element) -> {
-			if (element.getId().equals(afterCommitId)) {
-				reachedId.value = true;
-				return true;
-			}
-			if (!reachedId.value)
-				return true;
-			return false;
-		});
-	}
-
-	public List<CommitDescriptor> getCommitsForDataset(String repositoryId,
-			ModelType type, String refId) {
-		return getCommitsForDataset(repositoryId, type, refId, null);
-	}
-
-	public List<CommitDescriptor> getCommitsForDataset(String repositoryId,
-			ModelType type, String refId, String beforeCommitId) {
-		File historyFile = repositoryService.getForId(repositoryId)
-				.getHistoryFile(false);
-		MutableBoolean reachedId = new MutableBoolean();
-		return dataAccessor.readHistory(
-				historyFile,
-				(element) -> {
-					if (element.getId().equals(beforeCommitId))
-						reachedId.value = true;
-					if (reachedId.value)
-						return true;
-					for (DatasetDescriptor dataset : getReferences(
-							repositoryId, element.getId())) {
-						if (dataset.getType() != type)
-							continue;
-						if (!dataset.getRefId().equals(refId))
-							continue;
-						return false;
-					}
-					return true;
-				});
-	}
-
-	public List<DatasetDescriptor> getReferences(String repositoryId,
-			String commitId) {
-		File commitFile = repositoryService.getForId(repositoryId)
-				.getCommitFile(commitId, false);
-		try {
-			String json = new String(Files.readAllBytes(commitFile.toPath()),
-					charset);
-			return new Gson().fromJson(json,
-					new TypeToken<List<DatasetDescriptor>>() {
-					}.getType());
-		} catch (IOException e) {
-			log.error("Unexpected error while parsing commit history entry", e);
-			return Collections.emptyList();
-		}
-	}
-
-	private class MutableBoolean {
-
-		private boolean value;
-
+		Files.write(file.toPath(), json.getBytes(), StandardOpenOption.CREATE);
 	}
 
 }

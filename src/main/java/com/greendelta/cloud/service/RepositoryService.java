@@ -4,36 +4,37 @@ import java.io.File;
 
 import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
 import org.openlca.cloud.util.Directories;
-import org.openlca.cloud.util.Strings;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.model.User;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 public class RepositoryService {
 
-	private String repositoryRoot;
+	private String root;
 	private UserService userService;
 	private AccessService accessService;
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
 			UserService userService, AccessService accessService) {
-		this.repositoryRoot = repositoryPath;
+		this.root = repositoryPath;
 		this.userService = userService;
 		this.accessService = accessService;
 	}
 
 	public Repository getForId(String id) {
 		Repository.checkIdForValidity(id);
-		if (!accessService
-				.hasAccess(userService.getCurrentUser().getName(), id))
+		String currentUser = userService.getCurrentUser().getName();
+		if (!accessService.hasAccess(currentUser, id))
 			throw new UnauthorizedRepositoryAccessException(id);
 		return internalGetForId(id);
 	}
 
 	private Repository internalGetForId(String id) {
-		String path = Strings.concat(repositoryRoot, "/", id);
+		String path = concat(root, "/", id);
 		return new Repository(path);
 	}
 
@@ -54,7 +55,7 @@ public class RepositoryService {
 	}
 
 	public void deleteAllFor(User user) {
-		File userDirectory = new File(repositoryRoot, user.getName());
+		File userDirectory = new File(root, user.getName());
 		if (!userDirectory.exists())
 			return;
 		accessService.unshareByUser(user.getName());
@@ -62,11 +63,11 @@ public class RepositoryService {
 	}
 
 	private String getPath(String name) {
-		return Strings.concat(repositoryRoot, "/", toId(name));
+		return concat(root, "/", toId(name));
 	}
 
 	private String toId(String name) {
 		User user = userService.getCurrentUser();
-		return Strings.concat(user.getName(), "/", name);
+		return concat(user.getName(), "/", name);
 	}
 }
