@@ -64,7 +64,7 @@ public class FetchResource {
 			return Respond.notFound(message);
 		}
 		String dataset = fetchService.getDataset(repoId, type, refId, commitId);
-		if (dataset != null) {
+		if (dataset == null) {
 			String message = notFoundMessage(type, refId, commitId);
 			return Respond.notFound(message);
 		}
