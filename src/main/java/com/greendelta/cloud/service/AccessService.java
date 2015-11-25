@@ -52,7 +52,7 @@ public class AccessService {
 	}
 
 	void unshareById(String id) {
-		List<Access> accesses = dao.getForAttribute("repoId", id);
+		List<Access> accesses = dao.getForAttribute("repositoryId", id);
 		dao.delete(accesses);
 	}
 
@@ -69,7 +69,7 @@ public class AccessService {
 	}
 
 	public Set<String> getAccessListForRepository(String id) {
-		List<Access> accesses = dao.getForAttribute("repoId", id);
+		List<Access> accesses = dao.getForAttribute("repositoryId", id);
 		Set<String> users = new HashSet<>();
 		for (Access access : accesses)
 			users.add(access.getUser().getName());
@@ -94,7 +94,7 @@ public class AccessService {
 
 	private Access get(String username, String id) {
 		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("repoId", id);
+		attributes.put("repositoryId", id);
 		attributes.put("user.name", username);
 		return dao.getFirstForAttributes(attributes);
 	}
