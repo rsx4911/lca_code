@@ -74,33 +74,33 @@ public class CommitService {
 			CommitReader reader) {
 		String username = userService.getCurrentUser().getName();
 		long timestamp = Calendar.getInstance().getTimeInMillis();
-		Commit descriptor = new Commit();
-		descriptor.setId(commitId);
-		descriptor.setMessage(reader.getCommitMessage());
-		descriptor.setUser(username);
-		descriptor.setTimestamp(timestamp);
+		Commit commit = new Commit();
+		commit.setId(commitId);
+		commit.setMessage(reader.getCommitMessage());
+		commit.setUser(username);
+		commit.setTimestamp(timestamp);
 		File historyFile = repo.getHistoryFile(true);
-		dataAccessor.appendToHistory(historyFile, descriptor);
+		dataAccessor.appendToHistory(historyFile, commit);
 	}
 
 	private void writeDatasets(Repository repo, String commitId,
 			CommitReader reader) throws IOException {
-		List<Dataset> descriptors = reader.getDescriptors();
-		for (Dataset descriptor : descriptors) {
-			ModelType type = descriptor.getType();
-			String refId = descriptor.getRefId();
+		List<Dataset> datasets = reader.getDescriptors();
+		for (Dataset dataset : datasets) {
+			ModelType type = dataset.getType();
+			String refId = dataset.getRefId();
 			File file = repo.getDatasetFile(type, refId, commitId, true);
-			String data = reader.getData(descriptor);
+			String data = reader.getData(dataset);
 			dataAccessor.writeDataset(file, data);
 			File binDir = repo.getBinDir(type, refId, commitId, false);
-			reader.copyBinaries(descriptor, binDir);
+			reader.copyBinaries(dataset, binDir);
 		}
 	}
 
 	private void writeReferences(Repository repo, String commitId,
-			List<Dataset> descriptors) throws IOException {
+			List<Dataset> datasets) throws IOException {
 		File file = repo.getCommitFile(commitId, true);
-		String json = new Gson().toJson(descriptors);
+		String json = new Gson().toJson(datasets);
 		Files.write(file.toPath(), json.getBytes(), StandardOpenOption.CREATE);
 	}
 

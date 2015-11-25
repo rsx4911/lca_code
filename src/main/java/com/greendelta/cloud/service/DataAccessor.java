@@ -64,15 +64,15 @@ class DataAccessor {
 			List<String> lines = Files.readAllLines(file.toPath());
 			if (lines.isEmpty())
 				return Collections.emptyList();
-			List<Commit> descriptors = new ArrayList<>();
+			List<Commit> commits = new ArrayList<>();
 			for (String entry : lines) {
 				if (entry.trim().isEmpty())
 					continue;
-				Commit descriptor = Commit.parse(entry);
-				if (!filter.filter(descriptor))
-					descriptors.add(descriptor);
+				Commit commit = Commit.parse(entry);
+				if (!filter.filter(commit))
+					commits.add(commit);
 			}
-			return descriptors;
+			return commits;
 		} catch (IOException e) {
 			log.error("Unexpected error appending to commit history", e);
 			return Collections.emptyList();
