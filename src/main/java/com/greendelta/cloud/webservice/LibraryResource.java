@@ -32,6 +32,8 @@ public class LibraryResource {
 			if (library != null)
 				refIdToLibrary.put(refId, library);
 		}
+		if (refIdToLibrary.isEmpty())
+			return Respond.noContent();
 		return Respond.ok(refIdToLibrary);
 	}
 
