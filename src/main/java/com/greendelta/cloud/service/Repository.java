@@ -39,7 +39,10 @@ class Repository {
 
 	private void checkVersion(String path) {
 		try {
-			byte[] data = Files.toByteArray(new File(path, "context.json"));
+			File file = new File(path, "context.json");
+			if (!file.exists())
+				throw new UnsupportedSchemaException("null");
+			byte[] data = Files.toByteArray(file);
 			String json = new String(data, "utf-8");
 			JsonElement context = new Gson().fromJson(json, JsonElement.class);
 			String version = Schema.parseUri(context);
@@ -47,6 +50,7 @@ class Repository {
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {
 			log.error("Could not read context.json", e);
+			throw new UnsupportedSchemaException("null");
 		}
 	}
 
