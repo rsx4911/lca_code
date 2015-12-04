@@ -1,5 +1,7 @@
 package com.greendelta.cloud.webservice;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -15,8 +17,6 @@ import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
-
-import static org.openlca.cloud.util.Strings.concat;
 
 @Path("access")
 public class AccessResource {

@@ -1,25 +1,35 @@
 package com.greendelta.cloud.service;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 import java.io.File;
 import java.io.IOException;
 
 import org.openlca.cloud.error.InvalidRepositoryNameException;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Schema;
+import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.openlca.cloud.util.Strings.concat;
+import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 class Repository {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final static Logger log = LoggerFactory.getLogger(Repository.class);
 	private final File repo;
 
 	Repository(String path) {
 		repo = new File(path);
-		if (repo.exists())
+		if (repo.exists()) {
+			checkVersion(path);
 			return;
+		}
 		String[] split = path.split("/");
 		String owner = split[split.length - 2];
 		String name = split[split.length - 1];
@@ -27,8 +37,35 @@ class Repository {
 		throw new RepositoryNotFoundException(id);
 	}
 
+	private void checkVersion(String path) {
+		try {
+			byte[] data = Files.toByteArray(new File(path, "context.json"));
+			String json = new String(data, "utf-8");
+			JsonElement context = new Gson().fromJson(json, JsonElement.class);
+			String version = Schema.parseUri(context);
+			if (!Schema.isSupportedSchema(version))
+				throw new UnsupportedSchemaException(version);
+		} catch (Exception e) {
+			log.error("Could not read context.json", e);
+		}
+	}
+
 	static void create(String path) {
 		new File(path).mkdirs();
+		putJsonContext(path);
+	}
+
+	private static void putJsonContext(String path) {
+		JsonObject context = Context.write();
+		try {
+			File file = new File(path, "context.json");
+			file.createNewFile();
+			String json = new Gson().toJson(context);
+			byte[] data = json.getBytes("utf-8");
+			Files.write(data, file);
+		} catch (Exception e) {
+			log.error("Could not create context.json", e);
+		}
 	}
 
 	static void checkIdForValidity(String id) {

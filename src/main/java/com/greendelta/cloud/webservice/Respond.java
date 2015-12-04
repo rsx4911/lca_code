@@ -61,11 +61,11 @@ class Respond {
 		return status(Status.FORBIDDEN, entity);
 	}
 
-	private static Response status(Status status) {
+	static Response status(Status status) {
 		return Response.status(status).build();
 	}
 
-	private static Response status(Status status, Object entity) {
+	static Response status(Status status, Object entity) {
 		return Response.status(status).entity(entity).build();
 	}
 
