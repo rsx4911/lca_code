@@ -1,0 +1,18 @@
+mixin box(label, count)
+	- var lcLabel = label.toLowerCase()	
+	.box
+		h4 #{label}s
+		.count #{count}
+		hr
+		button.btn.btn-lg.btn-success(data-action='create-new-#{lcLabel}') Create new #{lcLabel}
+	.list-box
+		legend All #{lcLabel}s
+			input.form-control.input-sm.filter.pull-right(id='#{lcLabel}-filter' type='text' placeholder='filter')
+			.clear
+		div(id='#{lcLabel}s')
+
+div
+	+box('Project', projects)
+div
+	+box('User', users)
+.clear

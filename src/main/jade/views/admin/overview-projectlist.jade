@@ -1,0 +1,5 @@
+include ../mixins/paging.jade
+
+each project in projects
+	div: a.follow(href='/admin/project') 
++paging(page, pageCount)

@@ -1,0 +1,5 @@
+include ../mixins/paging.jade
+
+each user in users
+	div: a.follow(href='/admin/user/profile/#{user.username}') #{user.name}
++paging(page, pageCount)
