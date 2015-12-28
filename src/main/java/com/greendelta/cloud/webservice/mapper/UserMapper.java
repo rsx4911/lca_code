@@ -1,4 +1,4 @@
-package com.greendelta.cloud.webservice.client;
+package com.greendelta.cloud.webservice.mapper;
 
 import java.util.ArrayList;
 import java.util.List;

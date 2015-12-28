@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.google.inject.Inject;
 import com.greendelta.cloud.service.DataAccessor.Filter;
 
 public class HistoryService {
@@ -23,51 +22,44 @@ public class HistoryService {
 	private final static Logger log = LoggerFactory
 			.getLogger(HistoryService.class);
 	private final static Charset charset = Charset.forName("utf-8");
-	private final RepositoryService repoService;
 	private final DataAccessor dataAccessor = new DataAccessor();
 
-	@Inject
-	public HistoryService(RepositoryService repoService) {
-		this.repoService = repoService;
-	}
-
-	public Commit getLastCommit(String repoId) {
-		List<Commit> commits = getCommits(repoId);
+	public Commit getLastCommit(Repository repo) {
+		List<Commit> commits = getCommits(repo);
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
 	}
 
-	public Commit getLastCommit(String repoId, ModelType type, String refId) {
-		List<Commit> commits = getCommits(repoId, type, refId);
+	public Commit getLastCommit(Repository repo, ModelType type, String refId) {
+		List<Commit> commits = getCommits(repo, type, refId);
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
 	}
 
-	public List<Commit> getCommits(String repoId) {
-		return getCommits(repoId, null);
+	public List<Commit> getCommits(Repository repo) {
+		return getCommits(repo, null);
 	}
 
-	public List<Commit> getCommits(String repoId, String afterCommitId) {
-		File file = repoService.getForId(repoId).getHistoryFile(false);
+	public List<Commit> getCommits(Repository repo, String afterCommitId) {
+		File file = repo.getHistoryFile(false);
 		return dataAccessor.readHistory(file, new AfterCommitFilter(
 				afterCommitId));
 	}
 
-	public List<Commit> getCommits(String repoId, ModelType type, String refId) {
-		return getCommits(repoId, type, refId, null);
+	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
+		return getCommits(repo, type, refId, null);
 	}
 
-	public List<Commit> getCommits(String repoId, ModelType type, String refId,
-			String beforeCommitId) {
-		File historyFile = repoService.getForId(repoId).getHistoryFile(false);
+	public List<Commit> getCommits(Repository repo, ModelType type,
+			String refId, String beforeCommitId) {
+		File historyFile = repo.getHistoryFile(false);
 		return dataAccessor.readHistory(historyFile, new BeforeCommitFilter(
-				beforeCommitId, repoId, type, refId));
+				beforeCommitId, repo, type, refId));
 	}
 
-	public List<Dataset> getReferences(String repoId, String commitId) {
-		Repository repo = repoService.getForId(repoId);
+	public List<Dataset> getReferences(Repository repo, String commitId) {
 		File file = repo.getCommitFile(commitId, false);
 		try {
 			String json = new String(Files.readAllBytes(file.toPath()), charset);
@@ -103,15 +95,15 @@ public class HistoryService {
 	private class BeforeCommitFilter implements Filter<Commit> {
 
 		private final String commitId;
-		private final String repoId;
+		private final Repository repo;
 		private final ModelType type;
 		private final String refId;
 		private boolean reachedId;
 
-		private BeforeCommitFilter(String commitId, String repoId,
+		private BeforeCommitFilter(String commitId, Repository repo,
 				ModelType type, String refId) {
 			this.commitId = commitId;
-			this.repoId = repoId;
+			this.repo = repo;
 			this.type = type;
 			this.refId = refId;
 		}
@@ -124,7 +116,7 @@ public class HistoryService {
 				reachedId = true;
 				return true;
 			}
-			for (Dataset dataset : getReferences(repoId, element.id)) {
+			for (Dataset dataset : getReferences(repo, element.id)) {
 				if (dataset.type != type)
 					continue;
 				if (!dataset.refId.equals(refId))

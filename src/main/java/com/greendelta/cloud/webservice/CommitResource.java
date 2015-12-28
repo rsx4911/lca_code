@@ -13,55 +13,57 @@ import javax.ws.rs.core.Response;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.CommitService;
-
-import static org.openlca.cloud.util.Strings.concat;
+import com.greendelta.cloud.service.HistoryService;
+import com.greendelta.cloud.service.Repository;
+import com.greendelta.cloud.service.RepositoryService;
 
 @Path("commit")
 public class CommitResource {
 
-	private CommitService commitService;
+	private CommitService service;
+	private RepositoryService repoService;
 	private HistoryService historyService;
 
 	@Inject
-	public CommitResource(CommitService commitService,
+	public CommitResource(CommitService service, RepositoryService repoService,
 			HistoryService historyService) {
-		this.commitService = commitService;
+		this.service = service;
+		this.repoService = repoService;
 		this.historyService = historyService;
 	}
 
 	@GET
-	@Path("request/{repoOwner}/{repoName}/{lastCommitId}")
-	public Response request(@PathParam("repoOwner") String repoOwner,
-			@PathParam("repoName") String repoName,
+	@Path("request/{group}/{name}/{lastCommitId}")
+	public Response request(@PathParam("group") String group,
+			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId) {
-		String repoId = concat(repoOwner, "/", repoName);
-		if (!isUpToDate(repoId, lastCommitId))
+		Repository repo = repoService.get(group, name);
+		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
 		return Respond.ok();
 	}
 
-	private boolean isUpToDate(String repoId, String lastCommitId) {
+	private boolean isUpToDate(Repository repo, String lastCommitId) {
 		if (lastCommitId.equals("null"))
 			lastCommitId = null;
-		Commit lastCommit = historyService.getLastCommit(repoId);
+		Commit lastCommit = historyService.getLastCommit(repo);
 		if (lastCommit == null)
 			return lastCommitId == null;
 		return lastCommit.id.equals(lastCommitId);
 	}
 
 	@POST
-	@Path("{repoOwner}/{repoName}/{lastCommitId}")
+	@Path("{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response commit(@PathParam("repoOwner") String repoOwner,
-			@PathParam("repoName") String repoName,
+	public Response commit(@PathParam("group") String group,
+			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId,
 			InputStream commitData) {
-		String repoId = concat(repoOwner, "/", repoName);
-		if (!isUpToDate(repoId, lastCommitId))
+		Repository repo = repoService.get(group, name);
+		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
-		String commitId = commitService.put(repoId, commitData);
+		String commitId = service.put(repo, commitData);
 		return Respond.created(commitId);
 	}
 

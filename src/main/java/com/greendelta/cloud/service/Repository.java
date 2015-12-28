@@ -5,41 +5,47 @@ import static org.openlca.cloud.util.Strings.concat;
 import java.io.File;
 import java.io.IOException;
 
-import org.openlca.cloud.error.InvalidRepositoryNameException;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
-class Repository {
+public class Repository {
 
 	private final static Logger log = LoggerFactory.getLogger(Repository.class);
 	private final File repo;
+	public final String group;
+	public final String name;
 
-	Repository(String path) {
+	Repository(String root, String group, String name) {
+		this.group = group;
+		this.name = name;
+		String path = concat(root, "/", toId());
 		repo = new File(path);
 		if (repo.exists()) {
-			checkVersion(path);
+			checkVersion();
 			return;
 		}
-		String[] split = path.split("/");
-		String owner = split[split.length - 2];
-		String name = split[split.length - 1];
-		String id = concat(owner, "/", name);
-		throw new RepositoryNotFoundException(id);
+		throw new RepositoryNotFoundException(toId());
 	}
 
-	private void checkVersion(String path) {
+	public String toId() {
+		return toId(group, name);
+	}
+
+	public static String toId(String group, String name) {
+		return concat(group, "/", name);
+	}
+
+	private void checkVersion() {
 		try {
-			File file = new File(path, "context.json");
+			File file = new File(repo, "context.json");
 			if (!file.exists())
 				throw new UnsupportedSchemaException("null");
 			byte[] data = Files.toByteArray(file);
@@ -52,34 +58,6 @@ class Repository {
 			log.error("Could not read context.json", e);
 			throw new UnsupportedSchemaException("null");
 		}
-	}
-
-	static void create(String path) {
-		new File(path).mkdirs();
-		putJsonContext(path);
-	}
-
-	private static void putJsonContext(String path) {
-		JsonObject context = Context.write();
-		try {
-			File file = new File(path, "context.json");
-			file.createNewFile();
-			String json = new Gson().toJson(context);
-			byte[] data = json.getBytes("utf-8");
-			Files.write(data, file);
-		} catch (Exception e) {
-			log.error("Could not create context.json", e);
-		}
-	}
-
-	static void checkIdForValidity(String id) {
-		if (!id.contains("/") || id.indexOf('/') != id.lastIndexOf('/'))
-			throw new InvalidRepositoryNameException(id);
-	}
-
-	static void checkNameForValidity(String name) {
-		if (name.contains("/"))
-			throw new InvalidRepositoryNameException(name);
 	}
 
 	File getHistoryFile(boolean create) {

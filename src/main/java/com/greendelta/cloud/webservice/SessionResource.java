@@ -21,7 +21,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.webservice.client.UserMapper;
+import com.greendelta.cloud.webservice.mapper.UserMapper;
 
 @Path("public")
 public class SessionResource {

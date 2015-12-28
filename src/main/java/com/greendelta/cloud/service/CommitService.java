@@ -27,16 +27,14 @@ public class CommitService {
 	private final static Logger log = LoggerFactory
 			.getLogger(CommitService.class);
 	private final UserService userService;
-	private final RepositoryService repoService;
 	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public CommitService(UserService userService, RepositoryService repoService) {
+	public CommitService(UserService userService) {
 		this.userService = userService;
-		this.repoService = repoService;
 	}
 
-	public String put(String repoId, InputStream data) {
+	public String put(Repository repo, InputStream data) {
 		Path dir = null;
 		CommitReader reader = null;
 		try {
@@ -45,7 +43,7 @@ public class CommitService {
 			Files.copy(data, zip.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			reader = new CommitReader(zip);
 			String commitId = UUID.randomUUID().toString();
-			write(repoId, commitId, reader);
+			write(repo, commitId, reader);
 			return commitId;
 		} catch (IOException e) {
 			log.error("Error reading commit data", e);
@@ -62,9 +60,8 @@ public class CommitService {
 		}
 	}
 
-	private void write(String repoId, String commitId, CommitReader reader)
+	private void write(Repository repo, String commitId, CommitReader reader)
 			throws IOException {
-		Repository repo = repoService.getForId(repoId);
 		writeDatasets(repo, commitId, reader);
 		writeCommit(repo, commitId, reader);
 		writeReferences(repo, commitId, reader.getDescriptors());

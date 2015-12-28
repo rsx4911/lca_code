@@ -9,52 +9,63 @@ import java.util.List;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
 import org.openlca.cloud.util.Directories;
+import org.openlca.jsonld.output.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.model.User;
 
 public class RepositoryService {
 
+	private static final Logger log = LoggerFactory.getLogger(Repository.class);
+
 	private String root;
-	private UserService userService;
 	private AccessService accessService;
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
-			UserService userService, AccessService accessService) {
+			AccessService accessService) {
 		this.root = repositoryPath;
-		this.userService = userService;
 		this.accessService = accessService;
 	}
 
-	public Repository getForId(String id) {
-		Repository.checkIdForValidity(id);
-		String currentUser = userService.getCurrentUser().username;
-		if (!accessService.hasAccess(currentUser, id))
-			throw new UnauthorizedRepositoryAccessException(id);
-		return internalGetForId(id);
+	public Repository get(String group, String name) {
+		Repository repo = new Repository(root, group, name);
+		if (!accessService.hasAccess(repo))
+			throw new UnauthorizedRepositoryAccessException(repo.toId());
+		return repo;
 	}
 
-	private Repository internalGetForId(String id) {
-		String path = concat(root, "/", id);
-		return new Repository(path);
+	public boolean exists(String group, String name) {
+		return new File(getPath(group, name)).exists();
 	}
 
-	public boolean exists(String name) {
-		Repository.checkNameForValidity(name);
-		return new File(getPath(name)).exists();
+	public void create(String group, String name) {
+		new File(getPath(group, name)).mkdirs();
+		putJsonContext(group, name);
 	}
 
-	public void create(String name) {
-		Repository.checkNameForValidity(name);
-		Repository.create(getPath(name));
+	private void putJsonContext(String group, String name) {
+		JsonObject context = Context.write();
+		try {
+			File file = new File(getPath(group, name), "context.json");
+			file.createNewFile();
+			String json = new Gson().toJson(context);
+			byte[] data = json.getBytes("utf-8");
+			Files.write(data, file);
+		} catch (Exception e) {
+			log.error("Could not create context.json", e);
+		}
 	}
 
-	public void delete(String name) {
-		Repository.checkNameForValidity(name);
-		accessService.unshareById(toId(name));
-		Directories.delete(new File(getPath(name)));
+	public void delete(Repository repo) {
+		accessService.unshare(repo);
+		Directories.delete(new File(getPath(repo.group, repo.name)));
 	}
 
 	public void deleteAllFor(User user) {
@@ -68,20 +79,15 @@ public class RepositoryService {
 	@RequiresRoles("admin")
 	public List<String> getAll() {
 		File root = new File(this.root);
-		List<String> repos= new ArrayList<>();
+		List<String> repos = new ArrayList<>();
 		for (File group : root.listFiles())
 			for (File repo : group.listFiles())
-				repos.add(concat(group.getName(), "/", repo.getName()));
+				repos.add(Repository.toId(group.getName(), repo.getName()));
 		return repos;
 	}
 
-	private String getPath(String name) {
-		return concat(root, "/", toId(name));
+	private String getPath(String group, String name) {
+		return concat(root, "/", group, "/", name);
 	}
 
-	private String toId(String name) {
-		User user = userService.getCurrentUser();
-		return concat(user.username, "/", name);
-	}
-	
 }

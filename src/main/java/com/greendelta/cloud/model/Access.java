@@ -8,7 +8,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "users")
+@Table(name = "access")
 public class Access extends AbstractEntity {
 
 	@Id
@@ -19,8 +19,11 @@ public class Access extends AbstractEntity {
 	@JoinColumn(name = "f_user")
 	public User user;
 
-	@Column(name = "repository_id")
-	public String repositoryId;
+	@Column(name = "repository_group")
+	public String group;
+	
+	@Column(name = "repository_name")
+	public String repository;
 
 	@Override
 	public long getId() {

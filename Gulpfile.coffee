@@ -3,6 +3,7 @@ fs = require 'fs'
 runSequence = require 'run-sequence'
 gulp = require 'gulp'
 concat = require 'gulp-concat'
+clean = require 'gulp-clean'
 cssConcat = require 'gulp-concat-css'
 insert = require 'gulp-insert'
 minifyCss = require 'gulp-minify-css'
@@ -30,11 +31,15 @@ collect = (directory, finished) ->
 	return all
 
 gulp.task 'default', [], (callback) ->
-	runSequence 'jadeIndex', 'jadeLayouts', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
+	runSequence 'clearTemplates', 'jadeIndex', 'jadeLayouts', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
 	runSequence 'default', 'addTimestampToIndex', 'addTimestampToLogin', 'copyJQueryForLogin', 'jsBuild', callback
 
+gulp.task 'clearTemplates', () ->
+	gulp.src('./src/main/webapp/js/templates', {read: false})
+		.pipe clean()
+		
 gulp.task 'jadeIndex', () ->
 	gulp.src('./src/main/jade/*.jade')
 		.pipe($.jade 

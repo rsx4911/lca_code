@@ -1,7 +1,5 @@
 package com.greendelta.cloud.webservice;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -15,50 +13,50 @@ import javax.ws.rs.core.Response;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
+import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 
 @Path("access")
 public class AccessResource {
 
-	private AccessService accessService;
+	private AccessService service;
 	private RepositoryService repoService;
 	private UserService userService;
 
 	@Inject
-	public AccessResource(AccessService accessService,
-			RepositoryService repoService, UserService userService) {
-		this.accessService = accessService;
+	public AccessResource(AccessService service, RepositoryService repoService,
+			UserService userService) {
+		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 	}
 
 	@POST
-	@Path("share/{name}/{with}")
-	public Response share(@PathParam("name") String name,
-			@PathParam("with") String with) {
-		accessService.share(name, with);
+	@Path("share/{group}/{name}/{with}")
+	public Response share(@PathParam("group") String group,
+			@PathParam("name") String name, @PathParam("with") String with) {
+		Repository repo = repoService.get(group, name);
+		service.share(repo, with);
 		return Respond.ok();
 	}
 
 	@POST
-	@Path("unshare/{name}/{with}")
-	public Response unshare(@PathParam("name") String name,
-			@PathParam("with") String with) {
-		accessService.unshare(name, with);
+	@Path("unshare/{group}/{name}/{with}")
+	public Response unshare(@PathParam("group") String group,
+			@PathParam("name") String name, @PathParam("with") String with) {
+		Repository repo = repoService.get(group, name);
+		service.unshare(repo, with);
 		return Respond.ok();
 	}
 
 	@GET
-	@Path("shared/{repoOwner}/{repoName}")
+	@Path("shared/{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAccessListForRepository(
-			@PathParam("repoOwner") String repoOwner,
-			@PathParam("repoName") String repoName) {
-		String repoId = concat(repoOwner, "/", repoName);
-		// implicitly checks if repository exists and user has access
-		repoService.getForId(repoId);
-		return Respond.ok(accessService.getAccessListForRepository(repoId));
+			@PathParam("group") String group, @PathParam("name") String name) {
+		Repository repo = repoService.get(group, name);
+		return Respond.ok(service.getAccessListForRepository(repo));
 	}
 
 	@GET
@@ -66,19 +64,17 @@ public class AccessResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAccessList() {
 		User user = userService.getCurrentUser();
-		return Respond.ok(accessService.getAccessListForUser(user.username));
+		return Respond.ok(service.getAccessListForUser(user.username));
 	}
 
 	@GET
-	@Path("{repoOwner}/{repoName}")
+	@Path("{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response checkAccess(@PathParam("repoOwner") String repoOwner,
-			@PathParam("repoName") String repoName) {
-		String repoId = concat(repoOwner, "/", repoName);
+	public Response checkAccess(@PathParam("group") String group,
+			@PathParam("name") String name) {
 		User user = userService.getCurrentUser();
-		// implicitly checks if repository exists and user has access
-		repoService.getForId(repoId);
-		Set<String> access = accessService.getAccessListForRepository(repoId);
+		Repository repo = repoService.get(group, name);
+		Set<String> access = service.getAccessListForRepository(repo);
 		if (!access.contains(user.username))
 			return Respond.forbidden();
 		return Respond.ok();

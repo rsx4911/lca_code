@@ -25,7 +25,7 @@ import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.BeanUtils;
 import com.greendelta.cloud.webservice.Respond;
-import com.greendelta.cloud.webservice.client.UserMapper;
+import com.greendelta.cloud.webservice.mapper.UserMapper;
 
 @Path("admin/user")
 @Consumes(MediaType.APPLICATION_JSON)

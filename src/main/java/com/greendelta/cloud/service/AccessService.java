@@ -12,8 +12,6 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.model.Access;
 import com.greendelta.cloud.model.User;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 public class AccessService {
 
 	private Dao<Access> dao;
@@ -25,39 +23,36 @@ public class AccessService {
 		this.userService = userService;
 	}
 
-	public void share(String repoName, String withUser) {
-		Repository.checkNameForValidity(repoName);
+	public void share(Repository repo, String withUser) {
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.username.equals(withUser))
 			return;
-		String fullId = concat(currentUser.username, "/", repoName);
 		User user = getUser(withUser);
-		if (get(user.username, fullId) != null)
+		if (getFirst(repo, user.username) != null)
 			return;
 		Access access = new Access();
 		access.user = user;
-		access.repositoryId = fullId;
+		access.group = repo.group;
+		access.repository = repo.name;
 		dao.insert(access);
 	}
 
-	public void unshare(String repoName, String withUser) {
-		Repository.checkNameForValidity(repoName);
+	public void unshare(Repository repo, String withUser) {
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.username.equals(withUser))
 			return;
-		String fullId = concat(currentUser.username, "/", repoName);
 		User user = getUser(withUser);
-		Access access = get(user.username, fullId);
+		Access access = getFirst(repo, user.username);
 		dao.delete(access);
 	}
 
-	void unshareById(String id) {
-		List<Access> accesses = dao.getForAttribute("repositoryId", id);
+	void unshare(Repository repo) {
+		List<Access> accesses = getAll(repo, null);
 		dao.delete(accesses);
 	}
 
 	void unshareByUser(String username) {
-		List<Access> accesses = dao.getForAttribute("user.name", username);
+		List<Access> accesses = getAll(null, username);
 		dao.delete(accesses);
 	}
 
@@ -68,8 +63,8 @@ public class AccessService {
 		return user;
 	}
 
-	public Set<String> getAccessListForRepository(String id) {
-		List<Access> accesses = dao.getForAttribute("repositoryId", id);
+	public Set<String> getAccessListForRepository(Repository repo) {
+		List<Access> accesses = getAll(repo, null);
 		Set<String> users = new HashSet<>();
 		for (Access access : accesses)
 			users.add(access.user.username);
@@ -77,26 +72,36 @@ public class AccessService {
 	}
 
 	public Set<String> getAccessListForUser(String username) {
-		List<Access> accesses = dao.getForAttribute("user.name", username);
+		List<Access> accesses = getAll(null, username);
 		Set<String> repositories = new HashSet<>();
 		for (Access access : accesses)
-			repositories.add(access.repositoryId);
+			repositories.add(Repository.toId(access.group, access.repository));
 		return repositories;
 	}
 
-	boolean hasAccess(String username, String id) {
-		String owner = id.split("/")[0];
+	boolean hasAccess(Repository repo) {
 		User currentUser = userService.getCurrentUser();
-		if (currentUser.username.equals(owner))
+		if (currentUser.username.equals(repo.group))
 			return true;
-		return get(username, id) != null;
+		return getFirst(repo, currentUser.username) != null;
 	}
 
-	private Access get(String username, String id) {
-		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("repositoryId", id);
-		attributes.put("user.name", username);
-		return dao.getFirstForAttributes(attributes);
+	private Access getFirst(Repository repo, String username) {
+		List<Access> all = getAll(repo, username);
+		if (all == null || all.isEmpty())
+			return null;
+		return all.get(0);
+	}
+
+	private List<Access> getAll(Repository repo, String username) {
+		Map<String, Object> parameters = new HashMap<>();
+		if (repo != null) {
+			parameters.put("group", repo.group);
+			parameters.put("repository", repo.name);
+		}
+		if (username != null)
+			parameters.put("user.name", username);
+		return dao.getForAttributes(parameters);
 	}
 
 }

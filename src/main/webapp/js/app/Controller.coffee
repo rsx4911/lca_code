@@ -25,7 +25,7 @@ define([
 						{href: "#{prefix}/user/profile#{suffix}", imageSrc: '/images/profile.png', label: 'Profile'}
 					]
 					when 'dashboard' then return [
-						{href: "#{prefix}/dashboard/projects#{suffix}", imageSrc: '/images/projects.png', label: 'Projects'}
+						{href: "#{prefix}/dashboard/repositories#{suffix}", imageSrc: '/images/repositories.png', label: 'Repositories'}
 					]
 					when 'admin' then return [
 						{href: "#{prefix}/admin/overview#{suffix}", imageSrc: '/images/overview.png', label: 'Overview'}
@@ -46,9 +46,9 @@ define([
 				(@_ registerUserRoutes)()
 
 			registerRedirects = () ->
-				@router.registerRedirect 'defaultAction', '/dashboard/projects'
+				@router.registerRedirect 'defaultAction', '/dashboard/repositories'
 				@router.registerRedirect 'user', '/user/profile'
-				@router.registerRedirect 'dashboard', '/dashboard/projects'
+				@router.registerRedirect 'dashboard', '/dashboard/repositories'
 				@router.registerRedirect 'admin', '/admin/overview', 'admin'
 
 			registerAdminRoutes = () ->
@@ -76,9 +76,9 @@ define([
 					view: 'user/Profile'
 					title: 'User area'
 					nav: 'user'
-				@router.registerUserRoute 'dashboardProjects', -> @showView 
-					view: 'dashboard/Projects'
-					title: 'Projects' 
+				@router.registerUserRoute 'dashboardRepositories', -> @showView 
+					view: 'dashboard/Repositories'
+					title: 'Repositories' 
 					nav: 'dashboard'
 
 			# public

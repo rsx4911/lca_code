@@ -2,7 +2,7 @@ define
 	'user': 'user'
 	'user/profile': 'userProfile'
 	'dashboard': 'dashboard'
-	'dashboard/projects': 'dashboardProjects'
+	'dashboard/repositories': 'dashboardRepositories'
 	'admin': 'admin'
 	'admin/overview': 'adminOverview'
 	'admin/user/new': 'adminUserNew'

@@ -39,10 +39,10 @@ define([
 				@$('#users .paging a').on 'click', (event) => 
 					(@_ filterUsers) (event)
 
-			loadProjects = (callback) ->
-				page = @projectPage
-				filter = @projectFilter
-				@projects = []
+			loadRepositories = (callback) ->
+				page = @repositoryPage
+				filter = @repositoryFilter
+				@repositories = []
 				callback?.apply @, [0]
 
 			className: 'admin-overview two-columns'
@@ -55,17 +55,17 @@ define([
 			initialize: () ->
 				@userPage = 1
 				@userFilter = ''
-				@projectPage = 1
-				@projectFilter = ''
+				@repositoryPage = 1
+				@repositoryFilter = ''
 
 			render: (renderOptions) ->
-				(@_ loadProjects) (noOfProjects) =>
+				(@_ loadRepositories) (noOfRepositories) =>
 					(@_ loadUsers) (noOfUsers) =>
 						@$el.html template
 							users: noOfUsers
 							userPage: @userPage
-							projects: noOfProjects
-							projectPage: @projectPage
+							repositories: noOfRepositories
+							repositoryPage: @repositoryPage
 						(@_ appendUsers) noOfUsers
 						Renderer.render @, renderOptions
 

@@ -2,12 +2,12 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Renderer'
-				'templates/views/dashboard/projects'
+				'templates/views/dashboard/repositories'
 			]
 
 	(Backbone, Events, Renderer, template) ->
 
-		class DashboardProjects extends Backbone.View
+		class DashboardRepositories extends Backbone.View
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
