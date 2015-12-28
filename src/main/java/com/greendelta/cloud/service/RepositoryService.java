@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
 import org.openlca.cloud.util.Directories;
 import org.openlca.jsonld.output.Context;
@@ -26,12 +25,14 @@ public class RepositoryService {
 
 	private String root;
 	private AccessService accessService;
+	private UserService userService;
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
-			AccessService accessService) {
+			AccessService accessService, UserService userService) {
 		this.root = repositoryPath;
 		this.accessService = accessService;
+		this.userService = userService;
 	}
 
 	public Repository get(String group, String name) {
@@ -76,13 +77,44 @@ public class RepositoryService {
 		Directories.delete(userDirectory);
 	}
 
-	@RequiresRoles("admin")
-	public List<String> getAll() {
+	public long getCount(boolean adminArea) {
+		return getAll(adminArea).size();
+	}
+
+	public List<Repository> getAll(int page, String filter, boolean adminArea) {
+		List<Repository> accessible = getAll(adminArea);
+		List<Repository> filtered = new ArrayList<>();
+		if (filter == null || filter.isEmpty())
+			filtered = accessible;
+		else
+			for (Repository repo : accessible)
+				if (repo.toId().contains(filter))
+					filtered.add(repo);
+		List<Repository> paged = new ArrayList<>();
+		for (int i = 0; i < filtered.size(); i++)
+			if (i < ((page - 1) * 10))
+				continue;
+			else if (i > (page * 10))
+				break;
+			else
+				paged.add(filtered.get(i));
+		return paged;
+	}
+
+	private List<Repository> getAll(boolean adminArea) {
 		File root = new File(this.root);
-		List<String> repos = new ArrayList<>();
+		List<Repository> repos = new ArrayList<>();
+		User currentUser = userService.getCurrentUser();
+		boolean isAdmin = adminArea && currentUser.admin;
 		for (File group : root.listFiles())
-			for (File repo : group.listFiles())
-				repos.add(Repository.toId(group.getName(), repo.getName()));
+			for (File name : group.listFiles()) {
+				Repository repo = new Repository(this.root, group.getName(),
+						name.getName());
+				if (!isAdmin)
+					if (!accessService.hasAccess(repo))
+						continue;
+				repos.add(repo);
+			}
 		return repos;
 	}
 

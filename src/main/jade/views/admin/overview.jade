@@ -1,18 +1,19 @@
-mixin box(label, count)
+mixin box(label, plural, count)
 	- var lcLabel = label.toLowerCase()	
+	- var lcPlural = plural.toLowerCase()	
 	.box
-		h4 #{label}s
+		h4 #{plural}
 		.count #{count}
 		hr
 		button.btn.btn-lg.btn-success(data-action='create-new-#{lcLabel}') Create new #{lcLabel}
 	.list-box
-		legend All #{lcLabel}s
+		legend All #{lcPlural}
 			input.form-control.input-sm.filter.pull-right(id='#{lcLabel}-filter' type='text' placeholder='filter')
 			.clear
-		div(id='#{lcLabel}s')
+		div(id='#{lcPlural}')
 
 div
-	+box('Repository', repositories)
+	+box('Repository', 'Repositories', repositories)
 div
-	+box('User', users)
+	+box('User', 'Users', users)
 .clear

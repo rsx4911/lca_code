@@ -12,11 +12,8 @@ public class UserMapper {
 
 	public List<Map<String, Object>> map(List<User> users) {
 		List<Map<String, Object>> all = new ArrayList<>();
-		for (User user : users) {
-			ObjectMap map = ObjectMap.fromObject(user);
-			map.remove("hash", "salt", "avatar");
-			all.add(map);
-		}
+		for (User user : users) 
+			all.add(map(user));
 		return all;
 	}
 
