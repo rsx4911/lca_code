@@ -52,7 +52,7 @@ public class JpaRealm extends AuthorizingRealm {
 	}
 
 	private JpaAccount getAccount(String username) {
-		User user = userService.getForName(username);
+		User user = userService.getForUsername(username);
 		if (user == null)
 			return null;
 		return new JpaAccount(user, this);

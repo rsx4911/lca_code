@@ -1,8 +1,14 @@
 package com.greendelta.cloud.platform.guice;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -28,7 +34,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 			.getLogger(GuiceConfig.class);
 	private volatile Set<ShutdownListener> shutdownListeners;
 	private ServletContext servletContext;
-	
+
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		servletContext = servletContextEvent.getServletContext();
@@ -65,23 +71,49 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String env = System.getProperty("app.env");
 		if (!Strings.isNullOrEmpty(env))
 			PropertiesModule.setEnvironment(env);
-		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
-		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
-		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
+		String resourcePackages = PropertiesModule.getProperties().getProperty(
+				"jersey.resource.packages");
+		String persistenceUnit = PropertiesModule.getProperties().getProperty(
+				"persistence.unit");
+		String databasePath = PropertiesModule.getProperties().getProperty(
+				"database.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
-		String url = org.openlca.cloud.util.Strings.concat("jdbc:derby:", databasePath);
-		if (!new File(databasePath).exists()) {
-			url = org.openlca.cloud.util.Strings.concat(url, ";create=true");
-			properties.setProperty("javax.persistence.jdbc.url", url);
-			properties.setProperty("eclipselink.ddl-generation", "drop-and-create-tables");
-			properties.setProperty("eclipselink.ddl-generation.output-mode", "database");
-		} else
-			properties.setProperty("javax.persistence.jdbc.url", url);
+		String url = concat("jdbc:derby:", databasePath);
+		if (!new File(databasePath).exists())
+			copyDbTemplate(databasePath);
+		properties.setProperty("javax.persistence.jdbc.url", url);
 		jpaModule.properties(properties);
-		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext),
-				jpaModule, new JerseyModule(resourcePackages), new EhCacheModule(),
+		return new Module[] { new WebappModule(), new ShiroAopModule(),
+				new ShiroModule(servletContext), jpaModule,
+				new JerseyModule(resourcePackages), new EhCacheModule(),
 				new PropertiesModule() };
+	}
+
+	private void copyDbTemplate(String databasePath) {
+		try (ZipInputStream zis = new ZipInputStream(
+				GuiceConfig.class.getResourceAsStream("database.zip"))) {
+			ZipEntry next = null;
+			byte[] buffer = new byte[1024];
+			while ((next = zis.getNextEntry()) != null) {
+				String fileName = next.getName();
+				String path = concat(databasePath, File.separator, fileName);
+				File newFile = new File(path);
+				if (next.isDirectory()) {
+					newFile.mkdirs();
+					continue;
+				}
+				new File(newFile.getParent()).mkdirs();
+				FileOutputStream fos = new FileOutputStream(newFile);
+				int len;
+				while ((len = zis.read(buffer)) > 0)
+					fos.write(buffer, 0, len);
+				fos.close();
+			}
+			zis.close();
+		} catch (IOException e) {
+			log.error("Error extracting db template", e);
+		}
 	}
 
 	private static final class Injections {

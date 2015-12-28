@@ -1,0 +1,31 @@
+include views/mixins/forms.jade
+
+<!DOCTYPE html>
+html(lang='en')
+	head
+		title='LCA Cloud'
+		meta(http-equiv='expires' content='0')
+		meta(name='viewport' content='width=device-width, initial-scale=1')
+		meta(name='fragment' content='!')
+		link(rel='shortcut icon' type='image/x-icon' href='/favicon.ico')
+		link(rel='stylesheet' type='text/css' href='/css/styles.css')
+	body.login
+		header
+			.logo-container
+				img.logo(src='/images/logo.png')
+		#main-login
+			#login-container
+				form#login
+					+input('username', 'Username')
+					+input('password', 'Password', 'password')
+					button.btn.btn-primary.pull-right(type='submit') Login
+					.clear
+		script(src='/js/libs/jquery.js')
+		script.
+			$('#login').on('submit', function(event) {
+				var data = {username: $('#username').val(), password: $('#password').val()};
+				$.ajax({type: 'POST', url: '/ws/public/login', contentType: 'application/json', data: JSON.stringify(data), success: function(response) {
+					window.location.href = '/'
+				}});
+				return false;
+			});

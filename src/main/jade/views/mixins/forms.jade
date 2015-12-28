@@ -1,0 +1,81 @@
+mixin input(id, label, type, inline, required)
+	- var hidden = type === 'hidden'
+	- var clazz = hidden ? 'hidden ' : ''
+	if inline
+		- clazz += 'form-inline'
+	else
+		- clazz += 'form-group'
+	if hidden || !type
+		- type = 'text'
+	div(id='#{id}-group' class=clazz)
+		label.control-label(for='#{id}') #{label}
+			if required
+				sup *
+		input.form-control(id='#{id}' name='#{id}' type='#{type}')&attributes(attributes)
+		block
+
+mixin select(id, label, options, defaultSelection)
+	.form-group(id='#{id}-group')
+		label.control-label(for='#{id}') #{label}
+		select.form-control(id='#{id}' name='#{id}')&attributes(attributes)
+			each option in options
+				- var value = option;
+				- var label = option;
+				- if (Object.prototype.toString.call(option) === '[object Array]') {
+				- 	value = option[0];
+				- 	label = option[1];
+				- }
+				if defaultSelection === value
+					option(value='#{value}' selected) #{label}
+				else
+					option(value='#{value}') #{label}
+		block
+
+
+mixin checkbox(id, label)
+	.checkbox
+		label(for='#{id}')
+			input(id='#{id}' name='#{id}' type='checkbox')&attributes(attributes)
+			if label
+				| #{label}
+			else
+				block
+		if label
+			block
+
+mixin radio(group, id, label)
+	.radio
+		label(for='#{id}')
+			input(id='#{id}' name='#{group}' type='radio')&attributes(attributes)
+			if label
+				| #{label}
+			else
+				block
+		if label
+			block
+
+mixin radios(group, options)
+	.radio
+		each option in options
+			- var id = option;
+			- var label = option;
+			- if (Object.prototype.toString.call(option) === '[object Array]') {
+			- 	id = option[0];
+			- 	label = option[1];
+			- }
+			label(for='#{id}')
+				input(id='#{id}' name='#{group}' type='radio')&attributes(attributes)
+				| #{label}
+				| &nbsp;
+			block
+
+mixin textarea(id, label)
+	.form-group(id='#{id}-group')
+		label.control-label(for='#{id}') #{label}
+		textarea.form-control(id='#{id}' name='#{id}')&attributes(attributes)
+			block
+
+mixin fileReplacer(id, label, removeLabel)
+	+input(id, label, 'file')
+	if removeLabel
+		+checkbox('remove-' + id, removeLabel)

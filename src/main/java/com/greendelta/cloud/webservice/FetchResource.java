@@ -1,5 +1,7 @@
 package com.greendelta.cloud.webservice;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,10 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.FetchService;
-
-import static org.openlca.cloud.util.Strings.concat;
+import com.greendelta.cloud.service.HistoryService;
 
 @Path("fetch")
 public class FetchResource {
@@ -75,7 +75,7 @@ public class FetchResource {
 		Commit commit = historyService.getLastCommit(repoId, type, refId);
 		if (commit == null)
 			return null;
-		return commit.getId();
+		return commit.id;
 	}
 
 	private String notFoundMessage(ModelType type, String refId, String commitId) {
@@ -109,14 +109,13 @@ public class FetchResource {
 		// iterate over all commits, only latest version will "remain"
 		Map<String, FetchRequestData> result = new HashMap<>();
 		for (Commit commit : commits) {
-			List<Dataset> descriptors = getDatasets(repoId, commit.getId(),
-					null);
+			List<Dataset> descriptors = getDatasets(repoId, commit.id, null);
 			for (Dataset descriptor : descriptors) {
-				ModelType type = descriptor.getType();
-				String refId = descriptor.getRefId();
+				ModelType type = descriptor.type;
+				String refId = descriptor.refId;
 				String key = concat(type.name(), "_", refId);
 				FetchRequestData value = fetchService.toRequestData(repoId,
-						commit.getId(), descriptor);
+						commit.id, descriptor);
 				result.put(key, value);
 			}
 		}
@@ -172,7 +171,7 @@ public class FetchResource {
 		try {
 			for (DescriptorAndCommitId value : datasets.values())
 				put(writer, repoId, value);
-			writer.setCommitId(commits.get(commits.size() - 1).getId());
+			writer.setCommitId(commits.get(commits.size() - 1).id);
 			writer.close();
 			return toStream(writer.getFile());
 		} catch (IOException e) {
@@ -184,10 +183,10 @@ public class FetchResource {
 	private void put(FetchWriter writer, String repoId,
 			DescriptorAndCommitId value) throws IOException {
 		Dataset dataset = value.dataset;
-		String data = fetchService.getDataset(repoId, dataset.getType(),
-				dataset.getRefId(), value.commitId);
-		File binDir = fetchService.getBinDir(repoId, dataset.getType(),
-				dataset.getRefId(), value.commitId);
+		String data = fetchService.getDataset(repoId, dataset.type,
+				dataset.refId, value.commitId);
+		File binDir = fetchService.getBinDir(repoId, dataset.type,
+				dataset.refId, value.commitId);
 		writer.put(dataset, data, binDir);
 	}
 
@@ -196,12 +195,11 @@ public class FetchResource {
 		Map<String, DescriptorAndCommitId> result = new HashMap<>();
 		// iterate over all commits, only latest version will "remain"
 		for (Commit commit : commits) {
-			List<Dataset> datasets = getDatasets(repoId, commit.getId(),
-					requested);
+			List<Dataset> datasets = getDatasets(repoId, commit.id, requested);
 			for (Dataset dataset : datasets) {
 				String key = toKey(dataset);
 				DescriptorAndCommitId value = new DescriptorAndCommitId(
-						dataset, commit.getId());
+						dataset, commit.id);
 				result.put(key, value);
 			}
 		}
@@ -231,7 +229,7 @@ public class FetchResource {
 	}
 
 	private String toKey(FileReference reference) {
-		return concat(reference.getType().name(), "_", reference.getRefId());
+		return concat(reference.type.name(), "_", reference.refId);
 	}
 
 	private class DescriptorAndCommitId {

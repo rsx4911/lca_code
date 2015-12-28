@@ -28,26 +28,26 @@ public class AccessService {
 	public void share(String repoName, String withUser) {
 		Repository.checkNameForValidity(repoName);
 		User currentUser = userService.getCurrentUser();
-		if (currentUser.getName().equals(withUser))
+		if (currentUser.username.equals(withUser))
 			return;
-		String fullId = concat(currentUser.getName(), "/", repoName);
+		String fullId = concat(currentUser.username, "/", repoName);
 		User user = getUser(withUser);
-		if (get(user.getName(), fullId) != null)
+		if (get(user.username, fullId) != null)
 			return;
 		Access access = new Access();
-		access.setUser(user);
-		access.setRepositoryId(fullId);
+		access.user = user;
+		access.repositoryId = fullId;
 		dao.insert(access);
 	}
 
 	public void unshare(String repoName, String withUser) {
 		Repository.checkNameForValidity(repoName);
 		User currentUser = userService.getCurrentUser();
-		if (currentUser.getName().equals(withUser))
+		if (currentUser.username.equals(withUser))
 			return;
-		String fullId = concat(currentUser.getName(), "/", repoName);
+		String fullId = concat(currentUser.username, "/", repoName);
 		User user = getUser(withUser);
-		Access access = get(user.getName(), fullId);
+		Access access = get(user.username, fullId);
 		dao.delete(access);
 	}
 
@@ -62,7 +62,7 @@ public class AccessService {
 	}
 
 	private User getUser(String username) {
-		User user = userService.getForName(username);
+		User user = userService.getForUsername(username);
 		if (user == null)
 			throw new UserNotFoundException(username);
 		return user;
@@ -72,7 +72,7 @@ public class AccessService {
 		List<Access> accesses = dao.getForAttribute("repositoryId", id);
 		Set<String> users = new HashSet<>();
 		for (Access access : accesses)
-			users.add(access.getUser().getName());
+			users.add(access.user.username);
 		return users;
 	}
 
@@ -80,14 +80,14 @@ public class AccessService {
 		List<Access> accesses = dao.getForAttribute("user.name", username);
 		Set<String> repositories = new HashSet<>();
 		for (Access access : accesses)
-			repositories.add(access.getRepositoryId());
+			repositories.add(access.repositoryId);
 		return repositories;
 	}
 
 	boolean hasAccess(String username, String id) {
 		String owner = id.split("/")[0];
 		User currentUser = userService.getCurrentUser();
-		if (currentUser.getName().equals(owner))
+		if (currentUser.username.equals(owner))
 			return true;
 		return get(username, id) != null;
 	}

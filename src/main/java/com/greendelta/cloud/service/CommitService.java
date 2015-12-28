@@ -72,13 +72,13 @@ public class CommitService {
 
 	private void writeCommit(Repository repo, String commitId,
 			CommitReader reader) {
-		String username = userService.getCurrentUser().getName();
+		String username = userService.getCurrentUser().username;
 		long timestamp = Calendar.getInstance().getTimeInMillis();
 		Commit commit = new Commit();
-		commit.setId(commitId);
-		commit.setMessage(reader.getCommitMessage());
-		commit.setUser(username);
-		commit.setTimestamp(timestamp);
+		commit.id = commitId;
+		commit.message = reader.getCommitMessage();
+		commit.user = username;
+		commit.timestamp = timestamp;
 		File historyFile = repo.getHistoryFile(true);
 		dataAccessor.appendToHistory(historyFile, commit);
 	}
@@ -87,8 +87,8 @@ public class CommitService {
 			CommitReader reader) throws IOException {
 		List<Dataset> datasets = reader.getDescriptors();
 		for (Dataset dataset : datasets) {
-			ModelType type = dataset.getType();
-			String refId = dataset.getRefId();
+			ModelType type = dataset.type;
+			String refId = dataset.refId;
 			File file = repo.getDatasetFile(type, refId, commitId, true);
 			String data = reader.getData(dataset);
 			dataAccessor.writeDataset(file, data);

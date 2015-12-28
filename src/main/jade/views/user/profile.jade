@@ -1,0 +1,32 @@
+include ../mixins/forms.jade
+
+h4
+	if isOwnUser
+		| Profile
+	else if user.id
+		| Edit profile: #{user.name} 
+		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user' data-username=user.username) Delete
+	else
+		| New profile
+legend Account
+form#user
+	unless user.id
+		+input('username', 'Username*')
+	else
+		.form-group(id='username-group')
+			label.control-label Username
+			div #{user.username}
+	+input('name', 'Name*')
+	+input('email', 'Email*')
+button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
+	if user.id
+		| Save
+	else
+		| Create
+if user.id
+	legend Password
+	form#password
+		+input('password', 'Password', 'password')
+		+input('password2', 'Password (repeated)', 'password')
+	button.btn.btn-lg.btn-success.pull-right(data-action='save-password') Save
+.clear

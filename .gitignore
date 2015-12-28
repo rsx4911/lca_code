@@ -1,7 +1,14 @@
+/.classpath
+/.project
+/.settings/
+/bin/
+/node_modules/
 /target/
 /derby.log
 /dropDDL.jdbc
 /schema.sql
-/.settings/
-/.classpath
-/.project
+/src/main/webapp/index.html
+/src/main/webapp/login.html
+/src/main/webapp/css/main.css
+/src/main/webapp/js/templates
+/src/main/webapp/js/app/DynamicDependencies.coffee

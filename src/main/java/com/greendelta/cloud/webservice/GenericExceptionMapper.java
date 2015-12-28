@@ -7,6 +7,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.shiro.authz.AuthorizationException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +21,11 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	public Response toResponse(Throwable e) {
 		if (e instanceof WebApplicationException)
 			return ((WebApplicationException) e).getResponse();
-		if (e instanceof UnsupportedSchemaException) {
+		if (e instanceof UnsupportedSchemaException)
 			return Response.status(Status.NOT_ACCEPTABLE)
 					.entity(e.getMessage()).build();
-		}
+		if (e instanceof AuthorizationException)
+			return Response.status(Status.FORBIDDEN).build();
 		log.error("Unexpected error", e);
 		return Response.status(getStatus(e)).entity(getMessage(e))
 				.type(MediaType.APPLICATION_JSON).build();

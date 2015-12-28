@@ -12,6 +12,14 @@
     <filter-name>noCacheFilter</filter-name>
     <url-pattern>/ws/*</url-pattern>
   </filter-mapping>
+  <filter-mapping>
+    <filter-name>noCacheFilter</filter-name>
+    <url-pattern>/login.html</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>noCacheFilter</filter-name>
+    <url-pattern>/index.html</url-pattern>
+  </filter-mapping>
   <filter>
     <filter-name>guiceFilter</filter-name>
     <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>

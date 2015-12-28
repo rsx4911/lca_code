@@ -13,14 +13,26 @@ public class User extends AbstractEntity {
 	@Column(name = "id")
 	private long id;
 
+	@Column(name = "username")
+	public String username;
+
 	@Column(name = "name")
-	private String name;
+	public String name;
+
+	@Column(name = "email")
+	public String email;
 
 	@Column(name = "hash", length = 64)
-	private String hash;
+	public String hash;
 
 	@Column(name = "salt", length = 16)
-	private String salt;
+	public String salt;
+
+	@Column(name = "admin")
+	public boolean admin;
+
+	@Column(name = "avatar")
+	public byte[] avatar;
 
 	@Override
 	public long getId() {
@@ -30,30 +42,6 @@ public class User extends AbstractEntity {
 	@Override
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getHash() {
-		return hash;
-	}
-
-	public void setHash(String hash) {
-		this.hash = hash;
-	}
-
-	public String getSalt() {
-		return salt;
-	}
-
-	public void setSalt(String salt) {
-		this.salt = salt;
 	}
 
 }

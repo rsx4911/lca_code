@@ -1,0 +1,25 @@
+mixin paging(page, pageCount)
+	if pageCount > 1
+		.paging
+			- var startPage = 1;
+			- var endPage = 10;
+			if page > 4
+				- startPage = page - 4;
+				- endPage = page + 5;
+			if pageCount <= endPage
+				- endPage = pageCount;
+			if page > 1
+				span: a(href='#' data-page=1) <<
+				span: a(href='#' data-page=page-1) <
+			- var p = startPage
+			while p <= endPage
+				- var isActive = (p === page)
+				- var isFirstAfterActive = (p === page + 1)
+				if isActive
+					span #{p}
+				else
+					span(class=isFirstAfterActive?'indent':''): a(href='#' data-page=p) #{p}
+				- p++;
+			if page < pageCount
+				span: a(href='#' data-page=page+1) >
+				span: a(href='#' data-page=pageCount) >>

@@ -17,6 +17,7 @@ import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.platform.guice.util.StartupListener;
 import com.greendelta.cloud.service.UserService;
 
@@ -42,12 +43,14 @@ public abstract class GuicyTest {
 
 	static {
 		PropertiesModule.setEnvironment("test");
-		String filestorePath = PropertiesModule.getProperties().getProperty("filestore.path");
+		String filestorePath = PropertiesModule.getProperties().getProperty(
+				"filestore.path");
 		if (filestorePath != null)
 			new File(filestorePath).delete();
 		injector = Guice.createInjector(getModules());
 		injector.getInstance(PersistService.class).start();
-		SecurityUtils.setSecurityManager(injector.getInstance(WebSecurityManager.class));
+		SecurityUtils.setSecurityManager(injector
+				.getInstance(WebSecurityManager.class));
 		injected = new Injected();
 		injector.injectMembers(injected);
 		Injected listeners = new Injected();
@@ -60,7 +63,10 @@ public abstract class GuicyTest {
 	@Before
 	public void before() {
 		injector.injectMembers(this);
-		userId = injected.userService.createNewUser(USER, PASS).getId();
+		User user = new User();
+		user.username = USER;
+		injected.userService.setPassword(user, PASS);
+		userId = injected.userService.insert(user).getId();
 	}
 
 	@After
@@ -72,10 +78,13 @@ public abstract class GuicyTest {
 	}
 
 	private static Module[] getModules() {
-		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
-		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
-		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroTestModule(),
-				new JpaPersistModule(persistenceUnit), new JerseyModule(resourcePackages), new EhCacheModule(),
+		String resourcePackages = PropertiesModule.getProperties().getProperty(
+				"jersey.resource.packages");
+		String persistenceUnit = PropertiesModule.getProperties().getProperty(
+				"persistence.unit");
+		return new Module[] { new WebappModule(), new ShiroAopModule(),
+				new ShiroTestModule(), new JpaPersistModule(persistenceUnit),
+				new JerseyModule(resourcePackages), new EhCacheModule(),
 				new PropertiesModule() };
 	}
 

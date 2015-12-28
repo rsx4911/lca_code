@@ -93,7 +93,7 @@ public class HistoryService {
 		public boolean filter(Commit element) {
 			if (reachedId)
 				return false;
-			if (element.getId().equals(commitId))
+			if (element.id.equals(commitId))
 				reachedId = true;
 			return true;
 		}
@@ -120,14 +120,14 @@ public class HistoryService {
 		public boolean filter(Commit element) {
 			if (reachedId)
 				return true;
-			if (element.getId().equals(commitId)) {
+			if (element.id.equals(commitId)) {
 				reachedId = true;
 				return true;
 			}
-			for (Dataset dataset : getReferences(repoId, element.getId())) {
-				if (dataset.getType() != type)
+			for (Dataset dataset : getReferences(repoId, element.id)) {
+				if (dataset.type != type)
 					continue;
-				if (!dataset.getRefId().equals(refId))
+				if (!dataset.refId.equals(refId))
 					continue;
 				return false;
 			}

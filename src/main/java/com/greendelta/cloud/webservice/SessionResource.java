@@ -3,6 +3,7 @@ package com.greendelta.cloud.webservice;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
@@ -19,8 +20,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.webservice.client.UserMapper;
 
 @Path("public")
 public class SessionResource {
@@ -30,27 +31,12 @@ public class SessionResource {
 
 	private Provider<Subject> subjectProvider;
 	private UserService userService;
-	private String adminKey;
 
 	@Inject
 	public SessionResource(Provider<Subject> subjectProvider,
-			UserService userService, @Named("admin.key") String adminKey) {
+			UserService userService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
-		this.adminKey = adminKey;
-	}
-
-	@POST
-	@Path("createadminuser")
-	public Response initializeDatabase(Map<String, Object> credentials) {
-		ObjectMap formMap = ObjectMap.fromMap(credentials);
-		String adminKey = formMap.getString("adminKey");
-		if (!this.adminKey.equals(adminKey))
-			return Respond.unauthorized();
-		if (userService.getForName("admin") != null)
-			return Respond.conflict("Admin user already exists");
-		userService.createNewUser("admin", adminKey);
-		return Respond.ok();
 	}
 
 	@POST
@@ -90,6 +76,14 @@ public class SessionResource {
 		subject.logout();
 		log.info("User {} successfully logged out", principal);
 		return Respond.ok();
+	}
+
+	@GET
+	public Response getCurrentUser() {
+		Subject subject = subjectProvider.get();
+		if (!subject.isAuthenticated())
+			return Respond.conflict("Not logged in");
+		return Respond.ok(new UserMapper().map(userService.getCurrentUser()));
 	}
 
 }

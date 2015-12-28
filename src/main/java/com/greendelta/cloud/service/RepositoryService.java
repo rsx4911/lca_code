@@ -1,15 +1,18 @@
 package com.greendelta.cloud.service;
 
-import java.io.File;
+import static org.openlca.cloud.util.Strings.concat;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
 import org.openlca.cloud.util.Directories;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.model.User;
-
-import static org.openlca.cloud.util.Strings.concat;
 
 public class RepositoryService {
 
@@ -27,7 +30,7 @@ public class RepositoryService {
 
 	public Repository getForId(String id) {
 		Repository.checkIdForValidity(id);
-		String currentUser = userService.getCurrentUser().getName();
+		String currentUser = userService.getCurrentUser().username;
 		if (!accessService.hasAccess(currentUser, id))
 			throw new UnauthorizedRepositoryAccessException(id);
 		return internalGetForId(id);
@@ -55,11 +58,21 @@ public class RepositoryService {
 	}
 
 	public void deleteAllFor(User user) {
-		File userDirectory = new File(root, user.getName());
+		File userDirectory = new File(root, user.username);
 		if (!userDirectory.exists())
 			return;
-		accessService.unshareByUser(user.getName());
+		accessService.unshareByUser(user.username);
 		Directories.delete(userDirectory);
+	}
+
+	@RequiresRoles("admin")
+	public List<String> getAll() {
+		File root = new File(this.root);
+		List<String> repos= new ArrayList<>();
+		for (File group : root.listFiles())
+			for (File repo : group.listFiles())
+				repos.add(concat(group.getName(), "/", repo.getName()));
+		return repos;
 	}
 
 	private String getPath(String name) {
@@ -68,6 +81,7 @@ public class RepositoryService {
 
 	private String toId(String name) {
 		User user = userService.getCurrentUser();
-		return concat(user.getName(), "/", name);
+		return concat(user.username, "/", name);
 	}
+	
 }

@@ -1,5 +1,7 @@
 package com.greendelta.cloud.webservice;
 
+import static org.openlca.cloud.util.Strings.concat;
+
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -15,8 +17,6 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
-
-import static org.openlca.cloud.util.Strings.concat;
 
 @Path("repository")
 public class RepositoryResource {
@@ -61,7 +61,7 @@ public class RepositoryResource {
 		if (repoService.exists(name))
 			return;
 		User user = userService.getCurrentUser();
-		String repoId = concat(user.getName(), "/", name);
+		String repoId = concat(user.username, "/", name);
 		throw new RepositoryNotFoundException(repoId);
 	}
 

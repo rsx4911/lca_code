@@ -66,11 +66,20 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	public List<T> getAll(String jpql, Map<String, ? extends Object> parameters) {
+		return getAll(jpql, parameters, 0, 0);
+	}
+
+	public List<T> getAll(String jpql,
+			Map<String, ? extends Object> parameters, int start, int limit) {
 		EntityManager em = createManager();
 		TypedQuery<T> query = em.createQuery(jpql, entityType);
 		if (parameters != null)
 			for (String parameter : parameters.keySet())
 				query.setParameter(parameter, parameters.get(parameter));
+		if (start > 0)
+			query.setFirstResult(start - 1);
+		if (limit > 0)
+			query.setMaxResults(limit);
 		return query.getResultList();
 	}
 
@@ -102,7 +111,8 @@ class Dao<T extends AbstractEntity> {
 				if (value instanceof Collection
 						|| (value != null && value.getClass().isArray()))
 					comparator = "IN";
-				jpql += concat("o.", parameter.getKey(), " ", comparator, " :p", ++count);
+				jpql += concat("o.", parameter.getKey(), " ", comparator,
+						" :p", ++count);
 				if (value != null && value.getClass().isArray()) {
 					Set<Object> values = new HashSet<>();
 					for (Object object : (Object[]) value)
@@ -136,6 +146,10 @@ class Dao<T extends AbstractEntity> {
 			return list.get(0);
 	}
 
+	public long getCount() {
+		return getCountForAttributes(Collections.emptyMap());
+	}
+
 	public long getCount(String jpql, Map<String, ? extends Object> parameters) {
 		EntityManager em = createManager();
 		TypedQuery<Long> query = em.createQuery(jpql, Long.class);
@@ -150,8 +164,9 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	public long getCountForAttributes(Map<String, Object> parameters) {
-		String jpql = concat("SELECT count(o) FROM ", entityType.getSimpleName(), " o");
-		if (parameters != null && parameters.size() > 0) {
+		String jpql = concat("SELECT count(o) FROM ",
+				entityType.getSimpleName(), " o");
+		if (parameters.size() > 0) {
 			jpql += " WHERE ";
 			int count = 0;
 			Map<String, Object> internal = new HashMap<>();
@@ -167,7 +182,8 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	private long getNewId() {
-		String query = concat("SELECT o FROM ", entityType.getSimpleName(), " o ORDER BY o.id DESC");
+		String query = concat("SELECT o FROM ", entityType.getSimpleName(),
+				" o ORDER BY o.id DESC");
 		T value = getFirst(query, Collections.emptyMap());
 		if (value == null)
 			return 1;

@@ -1,0 +1,137 @@
+modalContent(contentWidth, contentHeight, hasTitle = true, hasFooter = true, supportMobile = true)
+		
+	$dialogWidth = contentWidth + 2
+	$dialogHeight = contentHeight
+	if hasTitle
+		$dialogHeight += 57
+	if hasFooter
+		$dialogHeight += 66
+	$transX = round(-1 * $dialogWidth * 0.5)
+	$transY = round(-1 * $dialogHeight * 0.5)
+
+	.modal-dialog
+		position fixed
+		top 50%
+		left 50%
+		transform translate($transX, $transY)
+		
+		@media(max-width 767px)
+			top 5%
+			left 5%
+			transform none !important
+
+	.modal-content, .modal-dialog
+		width $dialogWidth
+		height $dialogHeight
+		max-height $dialogHeight
+				
+	.modal-body			
+		overflow-y auto
+		if !supportMobile
+			overlow-x auto
+		width contentWidth
+		if hasFooter
+			height contentHeight
+			max-height contentHeight
+		else
+			height contentHeight - 5
+			max-height contentHeight - 5
+
+  if supportMobile
+		@media (max-width $dialogWidth + 50)
+			.modal-dialog
+				width 90%
+				margin-left 5%
+				margin-right 5%
+				left initial
+				transform translateY($transY)
+
+			.modal-content, .modal-body
+				width 100%
+	  
+		@media (max-height $dialogHeight + 50)
+			.modal-dialog
+				height 90% 
+				max-height 90% 
+				margin-top 0
+				margin-bottom 0
+				top 5%
+				transform translateX($transX)
+				overflow hidden
+
+			.modal-content
+				height 100% !important
+				overflow auto
+
+			.modal-body
+				overflow-y initial
+				height auto !important
+				width 100%
+								
+		@media (max-height $dialogHeight + 50) and (max-width $dialogWidth + 50)
+			.modal-dialog
+				transform initial
+
+.progress-indicator
+
+	.backdrop
+		position fixed
+		top 0
+		bottom 0
+		left 0
+		right 0
+		z-index 1100
+		background-color black
+		opacity .5
+
+	.loader
+		z-index	1110
+		background-color white 
+		position fixed
+		margin auto
+		left 0
+		right 0
+		top 0
+		bottom 0
+		border 1px solid rgba(0, 0, 0, 0.2)
+		border-radius 5px
+		box-shadow 0 5px 15px rgba(0, 0, 0, 0.5)
+		width 100px
+		height 100px
+		padding 17px	
+			
+		span 
+			line-height 10px
+			font-size 10px
+			position absolute
+			left 0
+			right 0
+			top 45px
+			bottom 45px
+			text-align center
+			z-index 1120
+			
+.modal-backdrop
+	position fixed
+	bottom 0
+	z-index 1039	
+
+.modal
+
+	.modal-header.empty
+		border-bottom 0
+				
+	&.large-layer
+		
+		modalContent(1000px, 600px, true, false)
+		
+	&.small-content
+		
+			.modal-dialog
+				position fixed
+				top 50%
+				left 50%
+				transform translate(-250px, -150px)
+
+				@media(max-width 767px)
+					top 5%

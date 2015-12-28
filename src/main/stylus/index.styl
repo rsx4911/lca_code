@@ -1,0 +1,93 @@
+html, body 
+	margin 0
+	padding 0
+	height 100%
+
+body 
+	font-family sans-serif
+	background-color rgb(234, 235, 236)
+	color rgb(84, 86, 91)
+
+	&.login
+		background-color initial
+
+header
+	width 100%
+	height 65px
+	background-color white
+
+	.logo-container
+		float left
+		padding-left 7px
+		height 65px
+		width 65px
+		background-color rgb(51, 60, 71)
+
+		@media(min-width 992px)
+			width 230px
+			padding-left 91px
+
+	
+		.logo
+			padding-top 8px
+					
+	.content-container
+		height 65px
+		float left
+		
+		.header-content
+			margin-left 30px
+			padding-top 13px
+	
+	#user-menu
+		float right
+		padding 18px 48px 18px 18px
+		
+		a
+			margin-left 20px
+
+		.glyphicon
+			color rgb(84, 86, 91)
+			font-size 20px
+
+ul
+	margin 0
+	padding 0
+	list-style none			
+
+#main
+	padding-top 65px
+	padding-left 65px    
+
+	@media(min-width 992px)
+		padding-left 230px    
+
+a, a:hover, a:visited, a:active, a:focus
+	color inherit
+
+a.no-link
+	text-decoration none
+	color inherit
+
+input.filter
+	width 200px
+	margin-bottom 5px
+
+.align-center
+	text-align center
+
+.align-right
+	text-align right
+
+.clear
+	clear both
+
+.paging 
+	padding-top 20px
+	text-align center
+
+	& > *
+		padding-right 3px
+		
+	a, a:hover, a:visited, a:active, a:focus 
+		color rgb(51, 122, 183)

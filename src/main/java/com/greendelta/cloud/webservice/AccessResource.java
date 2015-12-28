@@ -66,7 +66,7 @@ public class AccessResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAccessList() {
 		User user = userService.getCurrentUser();
-		return Respond.ok(accessService.getAccessListForUser(user.getName()));
+		return Respond.ok(accessService.getAccessListForUser(user.username));
 	}
 
 	@GET
@@ -79,7 +79,7 @@ public class AccessResource {
 		// implicitly checks if repository exists and user has access
 		repoService.getForId(repoId);
 		Set<String> access = accessService.getAccessListForRepository(repoId);
-		if (!access.contains(user.getName()))
+		if (!access.contains(user.username))
 			return Respond.forbidden();
 		return Respond.ok();
 	}

@@ -1,0 +1,10 @@
+define
+	'user': 'user'
+	'user/profile': 'userProfile'
+	'dashboard': 'dashboard'
+	'dashboard/projects': 'dashboardProjects'
+	'admin': 'admin'
+	'admin/overview': 'adminOverview'
+	'admin/user/new': 'adminUserNew'
+	'admin/user/profile/:username': 'adminUserEdit'
+	'*path': 'defaultAction'

@@ -48,7 +48,7 @@ public class CommitResource {
 		Commit lastCommit = historyService.getLastCommit(repoId);
 		if (lastCommit == null)
 			return lastCommitId == null;
-		return lastCommit.getId().equals(lastCommitId);
+		return lastCommit.id.equals(lastCommitId);
 	}
 
 	@POST

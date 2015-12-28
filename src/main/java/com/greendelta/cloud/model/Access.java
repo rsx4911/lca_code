@@ -17,11 +17,11 @@ public class Access extends AbstractEntity {
 
 	@OneToOne
 	@JoinColumn(name = "f_user")
-	private User user;
+	public User user;
 
 	@Column(name = "repository_id")
-	private String repositoryId;
-	
+	public String repositoryId;
+
 	@Override
 	public long getId() {
 		return id;
@@ -32,20 +32,4 @@ public class Access extends AbstractEntity {
 		this.id = id;
 	}
 
-	public User getUser() {
-		return user;
-	}
-	
-	public void setUser(User user) {
-		this.user = user;
-	}
-	
-	public String getRepositoryId() {
-		return repositoryId;
-	}
-	
-	public void setRepositoryId(String repositoryId) {
-		this.repositoryId = repositoryId;
-	}
-	
 }

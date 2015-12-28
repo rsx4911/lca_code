@@ -26,8 +26,8 @@ public class FetchService {
 	public FetchRequestData toRequestData(String repoId, String commitId,
 			Dataset dataset) {
 		FetchRequestData value = new FetchRequestData(dataset);
-		ModelType type = dataset.getType();
-		String refId = dataset.getRefId();
+		ModelType type = dataset.type;
+		String refId = dataset.refId;
 		value.setDeleted(wasDeleted(repoId, type, refId, commitId));
 		value.setAdded(wasAdded(repoId, type, refId, commitId));
 		return value;
@@ -48,7 +48,7 @@ public class FetchService {
 		if (previous.isEmpty())
 			return true;
 		Commit commit = previous.get(previous.size() - 1);
-		String previousData = getDataset(repoId, type, refId, commit.getId());
+		String previousData = getDataset(repoId, type, refId, commit.id);
 		if (previousData == null)
 			return true;
 		return previousData.isEmpty();

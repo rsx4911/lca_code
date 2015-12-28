@@ -16,11 +16,12 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
 import com.greendelta.cloud.platform.shiro.JpaRealm;
-import com.greendelta.cloud.platform.shiro.RestAuthenticationFilter;
+import com.greendelta.cloud.platform.shiro.AuthenticationFilter;
 
 class ShiroModule extends ShiroWebModule {
 
-	private static final Logger log = LoggerFactory.getLogger(ShiroModule.class);
+	private static final Logger log = LoggerFactory
+			.getLogger(ShiroModule.class);
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);
@@ -33,8 +34,15 @@ class ShiroModule extends ShiroWebModule {
 		bind(JpaRealm.class);
 		expose(JpaRealm.class);
 		expose(Subject.class);
+		addFilterChain("/login", ANON);
 		addFilterChain("/ws/public/**", ANON);
-		addFilterChain("/**", Key.get(RestAuthenticationFilter.class));
+		for (String sr : WebappModule.STATIC_RESOURCES)
+			if (sr.endsWith("/"))
+				addFilterChain("/" + sr + "/**", ANON);
+			else
+				addFilterChain("/" + sr, ANON);
+		addFilterChain("/**", Key.get(AuthenticationFilter.class));
+		addFilterChain("/ws/admin/**", ROLES, config(ROLES, "admin"));
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}
 

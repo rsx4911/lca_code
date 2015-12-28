@@ -1,0 +1,12 @@
+if items && items.length
+	ul
+		each item in items
+			li(class=item.href===path?'active':null)
+				a(href=item.href) 
+					img.nav-icon(src=item.imageSrc)
+					span.nav-label #{item.label}
+.profile-link
+	a(href='/user/profile')
+		img.avatar(src='/ws/users/avatar/#{username}')
+		span.username #{name}
+.clear

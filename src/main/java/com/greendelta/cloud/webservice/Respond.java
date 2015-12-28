@@ -3,69 +3,78 @@ package com.greendelta.cloud.webservice;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-class Respond {
+public class Respond {
 
-	static Response ok() {
+	public static Response ok() {
 		return status(Status.OK);
 	}
 
-	static Response ok(Object entity) {
+	public static Response ok(Object entity) {
 		return status(Status.OK, entity);
 	}
 
-	static Response conflict() {
+	public static Response badRequest() {
+		return status(Status.BAD_REQUEST);
+	}
+
+	public static Response badRequest(Object entity) {
+		return status(Status.BAD_REQUEST, entity);
+	}
+
+	
+	public static Response conflict() {
 		return status(Status.CONFLICT);
 	}
 
-	static Response conflict(Object entity) {
+	public static Response conflict(Object entity) {
 		return status(Status.CONFLICT, entity);
 	}
 
-	static Response notFound() {
+	public static Response notFound() {
 		return status(Status.NOT_FOUND);
 	}
 
-	static Response notFound(Object entity) {
+	public static Response notFound(Object entity) {
 		return status(Status.NOT_FOUND, entity);
 	}
 
-	static Response unauthorized() {
+	public static Response unauthorized() {
 		return status(Status.UNAUTHORIZED);
 	}
 
-	static Response unauthorized(Object entity) {
+	public static Response unauthorized(Object entity) {
 		return status(Status.UNAUTHORIZED, entity);
 	}
 
-	static Response created() {
+	public static Response created() {
 		return status(Status.CREATED);
 	}
 
-	static Response created(Object entity) {
+	public static Response created(Object entity) {
 		return status(Status.CREATED, entity);
 	}
 
-	static Response noContent() {
+	public static Response noContent() {
 		return status(Status.NO_CONTENT);
 	}
 
-	static Response noContent(Object entity) {
+	public static Response noContent(Object entity) {
 		return status(Status.NO_CONTENT, entity);
 	}
 
-	static Response forbidden() {
+	public static Response forbidden() {
 		return status(Status.FORBIDDEN);
 	}
 
-	static Response forbidden(Object entity) {
+	public static Response forbidden(Object entity) {
 		return status(Status.FORBIDDEN, entity);
 	}
 
-	static Response status(Status status) {
+	public static Response status(Status status) {
 		return Response.status(status).build();
 	}
 
-	static Response status(Status status, Object entity) {
+	public static Response status(Status status, Object entity) {
 		return Response.status(status).entity(entity).build();
 	}
 
