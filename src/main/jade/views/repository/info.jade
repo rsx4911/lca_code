@@ -1,0 +1,7 @@
+include ../mixins/forms.jade
+
+h4 Repository
+	if canDelete
+		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
++static('name', 'Name', repository.name)
++static('group', 'Group', repository.group)

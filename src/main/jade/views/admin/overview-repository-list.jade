@@ -1,5 +1,5 @@
 include ../mixins/paging.jade
 
-each repo in repositories
+each repo in data
 	div: a.follow(href='/admin/repository/#{repo.group}/#{repo.name}') #{repo.group}/#{repo.name}
 +paging(page, pageCount)

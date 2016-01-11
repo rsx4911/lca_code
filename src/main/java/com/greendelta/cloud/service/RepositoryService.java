@@ -3,8 +3,11 @@ package com.greendelta.cloud.service;
 import static org.openlca.cloud.util.Strings.concat;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
 import org.openlca.cloud.util.Directories;
@@ -16,13 +19,17 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.greendelta.cloud.index.DatasetIndex;
 import com.greendelta.cloud.model.User;
 
+@Singleton
 public class RepositoryService {
 
 	private static final Logger log = LoggerFactory.getLogger(Repository.class);
 
+	private final Map<String, DatasetIndex> indices = new HashMap<>();
 	private String root;
 	private AccessService accessService;
 	private UserService userService;
@@ -42,13 +49,23 @@ public class RepositoryService {
 		return repo;
 	}
 
+	public DatasetIndex getIndex(Repository repo) {
+		DatasetIndex index = indices.get(repo.toId());
+		if (index == null) {
+			index = new DatasetIndex(repo.getIndexDir());
+			indices.put(repo.toId(), index);
+		}
+		return index;
+	}
+
 	public boolean exists(String group, String name) {
 		return new File(getPath(group, name)).exists();
 	}
 
-	public void create(String group, String name) {
+	public Repository create(String group, String name) {
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
+		return get(group, name);
 	}
 
 	private void putJsonContext(String group, String name) {
@@ -81,7 +98,8 @@ public class RepositoryService {
 		return getAll(adminArea).size();
 	}
 
-	public List<Repository> getAll(int page, String filter, boolean adminArea) {
+	public PagedResult<Repository> getAll(int page, String filter,
+			boolean adminArea) {
 		List<Repository> accessible = getAll(adminArea);
 		List<Repository> filtered = new ArrayList<>();
 		if (filter == null || filter.isEmpty())
@@ -98,7 +116,8 @@ public class RepositoryService {
 				break;
 			else
 				paged.add(filtered.get(i));
-		return paged;
+		return new PagedResult<>(page, filter, accessible.size(),
+				filtered.size(), paged);
 	}
 
 	private List<Repository> getAll(boolean adminArea) {
@@ -120,6 +139,18 @@ public class RepositoryService {
 
 	private String getPath(String group, String name) {
 		return concat(root, "/", group, "/", name);
+	}
+
+	public byte[] getAvatar(String group, String name) {
+		File avatarFile = get(group, name).getAvatarFile();
+		if (!avatarFile.exists())
+			return null;
+		try {
+			return Files.toByteArray(avatarFile);
+		} catch (IOException e) {
+			log.error("Error reading repository avatar file", e);
+			return null;
+		}
 	}
 
 }

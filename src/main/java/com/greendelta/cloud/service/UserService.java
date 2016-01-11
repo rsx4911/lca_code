@@ -53,15 +53,28 @@ public class UserService {
 	}
 
 	@RequiresRoles("admin")
-	public List<User> getAll(int page, String filter) {
-		StringBuilder jpql = new StringBuilder("SELECT u FROM User u");
+	public PagedResult<User> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
-		if (!Strings.isNullOrEmpty(filter)) {
-			jpql.append(" WHERE LOWER(u.name) LIKE :name");
+		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", concat("%", filter.toLowerCase(), "%"));
-		}
+		long total = dao.getCount();
+		String query = createQuery(page, filter, true);
+		long subTotal = dao.getCount(query, parameters);
 		int start = 1 + (page - 1) * 10;
-		return dao.getAll(jpql.toString(), parameters, start, 10);
+		query = createQuery(page, filter, false);
+		List<User> data = dao.getAll(query, parameters, start, 10);
+		return new PagedResult<>(page, filter, total, subTotal, data);
+	}
+
+	private String createQuery(int page, String filter, boolean forCount) {
+		StringBuilder jpql = new StringBuilder();
+		if (forCount)
+			jpql.append("SELECT count(u) FROM User u");
+		else
+			jpql.append("SELECT u FROM User u");
+		if (!Strings.isNullOrEmpty(filter))
+			jpql.append(" WHERE LOWER(u.name) LIKE :name");
+		return jpql.toString();
 	}
 
 	public void setPassword(User user, String password) {

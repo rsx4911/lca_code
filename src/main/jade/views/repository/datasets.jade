@@ -1,0 +1,30 @@
+.filter-box
+	strong #{path}
+	button.btn.btn-success.pull-right(data-action='create-repository') 
+		span.glyphicon.glyphicon-download
+		| Download Zip
+	.clear
+table.table.table-browse
+	thead
+		tr
+			th Name
+			th Last change
+			th Commit
+	tbody
+		tr
+			td: a(href='#'): strong ..
+			td 
+			td
+		each entry in entries
+			tr
+				if isRoot
+					td: a(href='#{baseUrl}/#{entry}'): strong  #{getRootLabel(entry)}
+					td
+					td
+				else
+					if entry.type === 'CATEGORY'
+						td: a(href='#{baseUrl}/#{entry.refId}'): strong  #{entry.name}
+					else
+						td: a(href='#{datasetBaseUrl}/#{entry.refId}'): strong  #{entry.name}
+					td #{formatLastUpdate(entry.lastUpdate)}
+					td: a(href='/commit/#{entry.commitId}') #{entry.commitMessage}

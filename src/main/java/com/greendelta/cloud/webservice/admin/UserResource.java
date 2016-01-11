@@ -21,6 +21,7 @@ import org.openlca.cloud.util.ObjectMap;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.BeanUtils;
@@ -45,13 +46,16 @@ public class UserResource {
 	@Path("{username}")
 	public Response create(@PathParam("username") String username, User user) {
 		if (Strings.isNullOrEmpty(username))
-			return Respond.badRequest("Missing input: Username");
+			return Respond.invalid("username", "Missing input: Username");
+		if (username.length() < 4)
+			return Respond.invalid("username",
+					"Username must consist of at least 4 characters");
 		if (Strings.isNullOrEmpty(user.name))
-			return Respond.badRequest("Missing input: Name");
+			return Respond.invalid("name", "Missing input: Name");
 		if (Strings.isNullOrEmpty(user.email))
-			return Respond.badRequest("Missing input: Email");
+			return Respond.invalid("email", "Missing input: Email");
 		if (service.getForUsername(username) != null)
-			return Respond.conflict("User already exists");
+			return Respond.invalid("username", "User already exists");
 		String password = generatePassword();
 		service.setPassword(user, password);
 		user = service.insert(user);
@@ -65,9 +69,9 @@ public class UserResource {
 		if (fromDb == null)
 			return Respond.notFound();
 		if (Strings.isNullOrEmpty(user.name))
-			return Respond.badRequest("Missing input: Name");
+			return Respond.invalid("name", "Missing input: Name");
 		if (Strings.isNullOrEmpty(user.email))
-			return Respond.badRequest("Missing input: Email");
+			return Respond.invalid("email", "Missing input: Email");
 		BeanUtils.populateProperties(user, fromDb, "name", "email");
 		fromDb = service.update(fromDb);
 		return Respond.ok(new UserMapper().map(fromDb));
@@ -84,11 +88,11 @@ public class UserResource {
 			Map<String, Object> passwords) {
 		ObjectMap map = ObjectMap.fromMap(passwords);
 		String password = map.get("password");
-		String password2 = map.get("password");
+		String password2 = map.get("password2");
 		if (Strings.isNullOrEmpty(password))
-			return Respond.badRequest("Missing input: Password");
+			return Respond.invalid("password", "Missing input: Password");
 		if (!password.equals(password2))
-			return Respond.badRequest("Passwords are not equal");
+			return Respond.invalid("password2", "Passwords are not equal");
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound();
@@ -120,10 +124,7 @@ public class UserResource {
 	@GET
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter) {
-		Map<String, Object> result = new HashMap<>();
-		result.put("total", service.getCount());
-		result.put("data", new UserMapper().map(service.getAll(page, filter)));
-		return Respond.ok(result);
+		PagedResult<User> result = service.getAll(page, filter);
+		return Respond.ok(result.toClient(new UserMapper()::map));
 	}
-
 }

@@ -83,12 +83,20 @@ public class Repository {
 		return getDir(binDir, commitId, create);
 	}
 
+	File getIndexDir() {
+		return new File(repo, "ds_index");
+	}
+
+	File getAvatarFile() {
+		return new File(repo, "avatar");
+	}
+
 	private File getDatasetDir(ModelType type, String refId, boolean create) {
 		File modelDir = getModelDir(type, create);
 		return getDir(modelDir, refId, create);
 	}
 
-	private File getModelDir(ModelType type, boolean create) {
+	File getModelDir(ModelType type, boolean create) {
 		return getDir(repo, type.name().toLowerCase(), create);
 	}
 

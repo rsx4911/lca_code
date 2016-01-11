@@ -186,6 +186,20 @@
 			<version>1.7.12</version>
 		</dependency>
 
+		<!-- Indexing -->
+
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>5.2.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>5.2.1</version>
+		</dependency>
+
 		<!-- openLCA -->
 
 		<dependency>

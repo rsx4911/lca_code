@@ -1,20 +1,34 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Filter'
 				'cs!utils/Renderer'
+				'cs!app/Router'
 				'templates/views/dashboard/repositories'
+				'templates/views/dashboard/repositories-list'
 			]
 
-	(Backbone, Events, Renderer, template) ->
+	(Backbone, Events, Filter, Renderer, Router, template, listTemplate) ->
 
 		class DashboardRepositories extends Backbone.View
 
+			className: 'dashboard-repositories'
+
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
+				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
+
+			initialize: () ->
+				@filter = new Filter
+					container: '#repositories'
+					template: listTemplate
+					filterId: 'filter'
+					url: (page, filter) -> "/ws/repository?page=#{page}&filter=#{filter}"
 
 			render: (renderOptions) ->
 				@$el.html template()
 				Renderer.render @, renderOptions
+				@filter.init()
 
 			_: (callback) ->
 				() =>

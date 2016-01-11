@@ -81,6 +81,8 @@ public class AccessService {
 
 	boolean hasAccess(Repository repo) {
 		User currentUser = userService.getCurrentUser();
+		if (currentUser.admin)
+			return true;
 		if (currentUser.username.equals(repo.group))
 			return true;
 		return getFirst(repo, currentUser.username) != null;

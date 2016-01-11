@@ -1,32 +1,32 @@
 include ../mixins/forms.jade
 
 h4
-	if isOwnUser
+	if !adminArea
 		| Profile
 	else if user.id
-		| Edit profile: #{user.name} 
-		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user' data-username=user.username) Delete
+		| Profile: #{user.name} 
+		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 	else
 		| New profile
 legend Account
 form#user
+	#user-general-message-group.alert(role='alert'): span.message
 	unless user.id
 		+input('username', 'Username*')
 	else
-		.form-group(id='username-group')
-			label.control-label Username
-			div #{user.username}
+		+static('username', 'Username', user.username)
 	+input('name', 'Name*')
 	+input('email', 'Email*')
-button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
-	if user.id
-		| Save
-	else
-		| Create
+	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
+		if user.id
+			| Save
+		else
+			| Create
 if user.id
 	legend Password
 	form#password
+		#password-general-message-group.alert(role='alert'): span.message
 		+input('password', 'Password', 'password')
 		+input('password2', 'Password (repeated)', 'password')
-	button.btn.btn-lg.btn-success.pull-right(data-action='save-password') Save
+		button.btn.btn-lg.btn-success.pull-right(data-action='save-password') Save
 .clear

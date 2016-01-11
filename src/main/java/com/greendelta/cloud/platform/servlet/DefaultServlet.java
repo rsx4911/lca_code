@@ -7,12 +7,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Strings;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.greendelta.cloud.platform.guice.util.CloudSession;
 
 @Singleton
 public class DefaultServlet extends HttpServlet {
 
 	private static final long serialVersionUID = -7021790186597193927L;
+
+	@Inject
+	private Provider<CloudSession> sessionProvider;
 
 	@Override
 	protected void doGet(HttpServletRequest request,
@@ -21,8 +28,14 @@ public class DefaultServlet extends HttpServlet {
 				.endsWith("/login");
 		if (isLoginUrl)
 			forward("/login.html", request, response);
-		else
-			forward("/index.html", request, response);
+		else {
+			String redirectUrl = sessionProvider.get().redirectUrl;
+			if (!Strings.isNullOrEmpty(redirectUrl)) {
+				sessionProvider.get().redirectUrl = null;
+				response.sendRedirect(redirectUrl);
+			} else
+				forward("/index.html", request, response);
+		}
 	}
 
 	private void forward(String path, HttpServletRequest request,

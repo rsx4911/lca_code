@@ -1,5 +1,8 @@
 package com.greendelta.cloud.webservice;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -78,4 +81,11 @@ public class Respond {
 		return Response.status(status).entity(entity).build();
 	}
 
+	public static Response invalid(String field, String message) {
+		Map<String, String> error = new HashMap<>();
+		error.put("field", field);
+		error.put("message", message);
+		return badRequest(error);
+	}
+	
 }

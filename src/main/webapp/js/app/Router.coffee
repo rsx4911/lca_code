@@ -19,6 +19,13 @@ define([
 					return @navigate ''
 				callback.apply context, args
 
+			rewriteIfNecessary = (route) ->
+				fragment = @routeRewrites[route]
+				if fragment and Backbone.history.fragment isnt fragment
+					@router.navigate fragment,
+						trigger: false
+						replace: true
+
 			# public
 
 			constructor: Router
@@ -26,20 +33,21 @@ define([
 			initialize: () ->
 				AppRouter = Backbone.Router.extend
 					routes: Routes
+				@routeRewrites = {}
 				@router = new AppRouter
 
-			registerRedirect: (route, url, restrictedTo) ->
-				wrappedCallback = () =>
-					(@_ checkAccess) route, (=> @navigate url), @, restrictedTo
-				@router.on "route:#{route}", wrappedCallback
+			registerRouteRewrite: (route, fragment) ->
+				@routeRewrites[route] = fragment
 
 			registerUserRoute: (route, callback) ->
 				wrappedCallback = () =>
+					(@_ rewriteIfNecessary) route
 					(@_ checkAccess) route, callback, @routeContext, null, arguments 
 				@router.on "route:#{route}", wrappedCallback
 
 			registerAdminRoute: (route, callback) ->
 				wrappedCallback = () =>
+					(@_ rewriteIfNecessary) route
 					(@_ checkAccess) route, callback, @routeContext, 'admin', arguments 
 				@router.on "route:#{route}", wrappedCallback
 

@@ -21,17 +21,21 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.greendelta.cloud.index.DatasetIndex;
 
 public class CommitService {
 
 	private final static Logger log = LoggerFactory
 			.getLogger(CommitService.class);
+
 	private final UserService userService;
+	private final RepositoryService repoService;
 	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public CommitService(UserService userService) {
+	public CommitService(UserService userService, RepositoryService repoService) {
 		this.userService = userService;
+		this.repoService = repoService;
 	}
 
 	public String put(Repository repo, InputStream data) {
@@ -62,12 +66,12 @@ public class CommitService {
 
 	private void write(Repository repo, String commitId, CommitReader reader)
 			throws IOException {
-		writeDatasets(repo, commitId, reader);
-		writeCommit(repo, commitId, reader);
+		Commit commit = writeCommit(repo, commitId, reader);
+		writeDatasets(repo, commit, reader);
 		writeReferences(repo, commitId, reader.getDescriptors());
 	}
 
-	private void writeCommit(Repository repo, String commitId,
+	private Commit writeCommit(Repository repo, String commitId,
 			CommitReader reader) {
 		String username = userService.getCurrentUser().username;
 		long timestamp = Calendar.getInstance().getTimeInMillis();
@@ -78,20 +82,23 @@ public class CommitService {
 		commit.timestamp = timestamp;
 		File historyFile = repo.getHistoryFile(true);
 		dataAccessor.appendToHistory(historyFile, commit);
+		return commit;
 	}
 
-	private void writeDatasets(Repository repo, String commitId,
+	private void writeDatasets(Repository repo, Commit commit,
 			CommitReader reader) throws IOException {
 		List<Dataset> datasets = reader.getDescriptors();
+		DatasetIndex index = repoService.getIndex(repo);
 		for (Dataset dataset : datasets) {
 			ModelType type = dataset.type;
 			String refId = dataset.refId;
-			File file = repo.getDatasetFile(type, refId, commitId, true);
+			File file = repo.getDatasetFile(type, refId, commit.id, true);
 			String data = reader.getData(dataset);
 			dataAccessor.writeDataset(file, data);
-			File binDir = repo.getBinDir(type, refId, commitId, false);
+			File binDir = repo.getBinDir(type, refId, commit.id, false);
 			reader.copyBinaries(dataset, binDir);
 		}
+		index.index(datasets, commit);
 	}
 
 	private void writeReferences(Repository repo, String commitId,

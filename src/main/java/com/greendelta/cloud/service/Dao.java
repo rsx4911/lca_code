@@ -150,7 +150,7 @@ class Dao<T extends AbstractEntity> {
 		return getCountForAttributes(Collections.emptyMap());
 	}
 
-	public long getCount(String jpql, Map<String, ? extends Object> parameters) {
+	public long getCount(String jpql, Map<String, Object> parameters) {
 		EntityManager em = createManager();
 		TypedQuery<Long> query = em.createQuery(jpql, Long.class);
 		for (String parameter : parameters.keySet())

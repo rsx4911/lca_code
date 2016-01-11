@@ -1,7 +1,5 @@
 package com.greendelta.cloud.webservice;
 
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -72,11 +70,8 @@ public class AccessResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response checkAccess(@PathParam("group") String group,
 			@PathParam("name") String name) {
-		User user = userService.getCurrentUser();
-		Repository repo = repoService.get(group, name);
-		Set<String> access = service.getAccessListForRepository(repo);
-		if (!access.contains(user.username))
-			return Respond.forbidden();
+		// implicitly checks for existence and access
+		repoService.get(group, name);
 		return Respond.ok();
 	}
 

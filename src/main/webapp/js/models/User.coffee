@@ -7,7 +7,7 @@ define([
 		class User extends Backbone.Model
 
 			url: () ->
-				username = @get('username')
+				username = @get 'username'
 				return "/ws/admin/user/#{username}"
 
 			isNew: () ->

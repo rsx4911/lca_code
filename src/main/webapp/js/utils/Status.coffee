@@ -4,32 +4,33 @@ define([
 
 	(Layers) ->
 
+		hide = (statusBar) ->
+			if statusBar.prop('data-removed')
+				return
+			statusBar.prop 'data-removed', true	
+			statusBar.animate
+				top: statusBar.outerHeight() * -1
+			, 500
+			setTimeout () ->
+				statusBar.remove()
+			, 500
+
 		message: (message, type, details, time = 5000) ->
 			if type is 'error'
 				type = 'danger'
 			if $.inArray(type, ['success', 'warning', 'info', 'danger']) is -1
 				return
 			statusBarHtml = "<div class=\"status-bar alert-#{type}\">#{message}" 				
-			if details
-				statusBarHtml += '&nbsp;<button class="btn btn-xs btn-default">Show details</button>'
 			statusBarHtml += "</div>"
 			statusBar = $ statusBarHtml
-			if details
-				$('button', statusBar).on 'click', () ->
-					Layers.showMessageInLayer 
-						title: message
-						body: details
 			$('body').append statusBar
+			statusBar.on 'click', () =>
+				hide statusBar
 			statusBar.animate
-				bottom: 0
-			, 1000 
-			setTimeout () ->
-				statusBar.animate
-					bottom: statusBar.outerHeight() * -1
-				, 1000
-				setTimeout () ->
-					statusBar.remove()
-				, 1000
+				top: 0
+			, 500 
+			setTimeout () =>
+				hide statusBar
 			, time
 
 		ajaxError: (response, time = 5000) ->

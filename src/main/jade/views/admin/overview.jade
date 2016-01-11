@@ -5,7 +5,7 @@ mixin box(label, plural, count)
 		h4 #{plural}
 		.count #{count}
 		hr
-		button.btn.btn-lg.btn-success(data-action='create-new-#{lcLabel}') Create new #{lcLabel}
+		button.btn.btn-lg.btn-success(data-action='create-#{lcLabel}') Create new #{lcLabel}
 	.list-box
 		legend All #{lcPlural}
 			input.form-control.input-sm.filter.pull-right(id='#{lcLabel}-filter' type='text' placeholder='filter')

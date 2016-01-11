@@ -4,13 +4,14 @@ define([
 				'cs!utils/Forms'
 				'cs!utils/Model'
 				'cs!utils/Renderer'
+				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/User'
 				'cs!models/CurrentUser'
 				'templates/views/user/profile'
 			]
 
-	(Backbone, Events, Forms, Model, Renderer, Router, User, currentUser, template) ->
+	(Backbone, Events, Forms, Model, Renderer, Status, Router, User, currentUser, template) ->
 
 		class UserProfile extends Backbone.View
 
@@ -18,47 +19,50 @@ define([
 				user = @user.toJSON()
 				@$el.html template
 					user: user
-					isOwnUser: @isOwnUser
+					adminArea: @adminArea
 				Renderer.render @, renderOptions
-				Forms.fill '#user', user
+				Forms.fill 'user', user
 
 			saveUser = () ->
-				@user.set Forms.toJson '#user'
+				@user.set Forms.toJson 'user'
+				unless @user.get('username')
+					Forms.handleError 'user', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
+					return false
 				Model.save @user, 
 					success: () => (@_ reload)()
+					error: (model, response) -> Forms.handleError 'user', response
+				return false
 
 			savePassword = () ->
 				$.ajax
 					type: 'PUT'
 					url: '/ws/admin/user/' + @user.get('username') + '/setpassword'
-					data: JSON.stringify Forms.toJson '#password'
+					data: JSON.stringify Forms.toJson 'password'
 					contentType: 'application/json'
 					success: () => (@_ reload)()
+					error: (response) -> Forms.handleError 'password', response
+				return false
 
 			deleteUser = (event) ->
-				username = $(Events.target event).attr 'data-username'
-				new User({id: -1, username: username}).destroy 
+				@user.destroy 
 					success: () -> Router.navigate 'admin/overview'
 
 			reload = () ->
-				if currentUser.isAdmin() and !@isOwnUser
+				if currentUser.isAdmin() and @adminArea
 					Router.navigate 'admin/overview'
 				else
+					Status.success 'Successfully updated profile'
 					Backbone.history.loadUrl()
 
-			isOwnUser = () ->
-				return @user.id is currentUser.id 
-
 			events:
-				'click [data-action=save-user]': saveUser
-				'click [data-action=save-password]': savePassword
+				'submit #user': saveUser
+				'submit #password': savePassword
 				'click [data-action=delete-user]': deleteUser
 
 			initialize: (options) ->
-				{@user} = options
+				{@user, @adminArea} = options
 				unless @user
-					@user = currentUser
-					@isOwnUser = true
+					@user = new User currentUser.toJSON()
 
 			render: (renderOptions) ->
 				if @user.get('username') and !@isOwnUser

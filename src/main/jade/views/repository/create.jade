@@ -1,0 +1,8 @@
+include ../mixins/forms.jade
+
+form#repository
+	#repository-general-message-group.alert(role='alert'): span.message
+	+input('name', 'Name')
+	+input('group', 'Group')
+button.btn.btn-lg.btn-success.pull-right(data-action='create-repository') Create
+.clear

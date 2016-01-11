@@ -15,6 +15,8 @@ import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
+import com.google.inject.servlet.SessionScoped;
+import com.greendelta.cloud.platform.guice.util.CloudSession;
 import com.greendelta.cloud.platform.shiro.JpaRealm;
 import com.greendelta.cloud.platform.shiro.AuthenticationFilter;
 
@@ -34,6 +36,7 @@ class ShiroModule extends ShiroWebModule {
 		bind(JpaRealm.class);
 		expose(JpaRealm.class);
 		expose(Subject.class);
+		expose(CloudSession.class);
 		addFilterChain("/login", ANON);
 		addFilterChain("/ws/public/**", ANON);
 		for (String sr : WebappModule.STATIC_RESOURCES)
@@ -58,4 +61,10 @@ class ShiroModule extends ShiroWebModule {
 		return SecurityUtils.getSubject();
 	}
 
+	@Provides
+	@SessionScoped
+	public CloudSession provideSession() {
+		return new CloudSession();
+	}
+	
 }
