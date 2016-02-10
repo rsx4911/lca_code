@@ -10,7 +10,7 @@ define([
 
 		class UserMenu extends Backbone.View
 
-			logout = (event) ->
+			logout: (event) ->
 				Events.preventDefault event
 				$.ajax
 					type: 'POST' 
@@ -20,16 +20,12 @@ define([
 
 			events: 
 				'click a[href]:not([target=_blank]):not(.logout)': (event) -> Events.followLink event
-				'click a.logout': logout
+				'click a.logout': (event) -> @logout event
 
 			render: (renderOptions) ->
 				@$el.html template 
 					isAdmin: currentUser.isAdmin()
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 )

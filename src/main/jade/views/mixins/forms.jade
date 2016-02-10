@@ -27,7 +27,7 @@ mixin input(id, label, type, inline, required)
 		block
 
 mixin select(id, label, options, defaultSelection)
-	.form-group(id='#{id}-group')
+	.form-inline(id='#{id}-group')
 		label.control-label(for='#{id}') #{label}
 		select.form-control(id='#{id}' name='#{id}')&attributes(attributes)
 			each option in options

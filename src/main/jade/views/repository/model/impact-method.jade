@@ -1,0 +1,19 @@
+include ./mixins.jade
+
++menubar
+.model-left-content
+	+header
+	.content
+		ul.nav.nav-tabs(role='tablist')
+			li.active(role='presentation') 
+				a(href='#factors' aria-controls='factors' role='tab' data-toggle='tab') Impact factors
+			li(role='presentation') 
+				a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+		.tab-content
+			#factors.tab-pane.active(role='tabpanel')
+			if dataset.parameters && dataset.parameters.length
+				#parameters.tab-pane(role='tabpanel')
+					+parameter-table(dataset.parameters, true)
+					+parameter-table(dataset.parameters, false)
++meta
+.clear

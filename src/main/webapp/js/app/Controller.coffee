@@ -13,9 +13,7 @@ define([
 
 		Controller:: = (() ->
 
-			# private 
-
-			getNav = (options) ->
+			getNav: (options) ->
 				unless options
 					return
 				type = options.type
@@ -31,32 +29,33 @@ define([
 					when 'repository' then return [
 						{href: "#{prefix}/repository#{suffix}", imageSrc: '/images/repository.png', label: 'Repository'}
 						{href: "#{prefix}/repository/datasets#{suffix}", imageSrc: '/images/dataset.png', label: 'Data sets'}
+						{href: "#{prefix}/repository/commits#{suffix}", imageSrc: '/images/commit.png', label: 'Commits'}
 					]
 					when 'admin' then return [
 						{href: "#{prefix}/admin/overview#{suffix}", imageSrc: '/images/overview.png', label: 'Overview'}
 					]
 
-			initializeNavigation = () ->
+			initializeNavigation: () ->
 				@navigation = new Navigation()
 				@navigation.render 
 					container: 'nav'
 
-			initializeUserMenu = () ->
+			initializeUserMenu: () ->
 				new UserMenu().render 
 					container: '#user-menu'
 
-			registerRoutes = () ->
-				(@_ registerRouteRewrites)()
-				(@_ registerAdminRoutes)()
-				(@_ registerUserRoutes)()
+			registerRoutes: () ->
+				@registerRouteRewrites()
+				@registerAdminRoutes()
+				@registerUserRoutes()
 
-			registerRouteRewrites = () ->
+			registerRouteRewrites: () ->
 				@router.registerRouteRewrite 'defaultAction', '/dashboard/repositories'
 				@router.registerRouteRewrite 'dashboardRepositories', '/dashboard/repositories'
 				@router.registerRouteRewrite 'userProfile', '/user/profile'
 				@router.registerRouteRewrite 'adminOverview', '/admin/overview'
 
-			registerAdminRoutes = () ->
+			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', -> @showView 
 					view: 'admin/Overview'
 					title: 'Admin area'
@@ -93,15 +92,16 @@ define([
 						repository: new Repository({group: group, name: name})
 						adminArea: true
 
-			registerUserRoutes = () ->
+			registerUserRoutes: () ->
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
 					title: 'User area'
 					nav: 'user'
-				@router.registerUserRoute 'dashboardRepositories', -> @showView 
-					view: 'dashboard/Repositories'
-					title: 'Repositories' 
-					nav: 'dashboard'
+				@router.registerUserRoute 'dashboardRepositories', -> 
+					@showView 
+						view: 'dashboard/Repositories'
+						title: 'Repositories' 
+						nav: 'dashboard'
 				@router.registerUserRoute 'repositoryNew', -> @showView 
 					view: 'repository/Create'
 					title: 'New repository' 
@@ -122,8 +122,34 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						categoryId: categoryId
-
-			# public
+				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId) -> @showView 
+					view: 'repository/Dataset'
+					title: "#{group}/#{name} - Data sets"
+					nav: 
+						type: 'repository'
+						urlSuffix: "#{group}/#{name}"
+					viewOptions: 
+						repository: new Repository({group: group, name: name})
+						type: type
+						refId: refId
+						commitId: commitId
+				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
+					view: 'repository/Commits'
+					title: "#{group}/#{name} - Commits"
+					nav: 
+						type: 'repository'
+						urlSuffix: "#{group}/#{name}"
+					viewOptions: 
+						repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryCommit', (group, name, commitId) -> @showView 
+					view: 'repository/Commit'
+					title: "#{group}/#{name} - Commits"
+					nav: 
+						type: 'repository'
+						urlSuffix: "#{group}/#{name}"
+					viewOptions: 
+						repository: new Repository({group: group, name: name})
+						commitId: commitId
 
 			constructor: Controller
 
@@ -133,24 +159,20 @@ define([
 				Events.setRouter router
 				$('#main').empty();
 				$('a').on 'click', (event) -> Events.followLink event
-				(@_ initializeNavigation)()
-				(@_ initializeUserMenu)()
-				(@_ registerRoutes)()
+				@initializeNavigation()
+				@initializeUserMenu()
+				@registerRoutes()
 
 			showView: (options) ->
 				$('#main').empty()
 				$('#header-title').html options.title
 				if typeof options.nav is 'string'
 					options.nav = {type: options.nav}
-				@navigation.setItems getNav options.nav
+				@navigation.setItems @getNav options.nav
 				Layouts.renderViewInLayout 'full-size',
 					viewOptions: options.viewOptions
 					views:
 						center: options.view
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 		)()
 

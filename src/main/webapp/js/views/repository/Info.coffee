@@ -12,21 +12,21 @@ define([
 
 		class RepositoryInfo extends Backbone.View
 
-			deleteRepository = (event) ->
+			deleteRepository: (event) ->
 				Layers.showProgressIndicator 'Deleting'
 				@repository.destroy
 					success: () =>
 						Layers.hideProgressIndicator()
-						(@_ reload)()
+						@reload()
 
-			reload = () ->
+			reload: () ->
 				if currentUser.isAdmin() and @adminArea
 					Router.navigate 'admin/overview'
 				else
 					Router.navigate 'dashboard/repositories'
 
 			events:
-				'click [data-action=delete-repository]': deleteRepository
+				'click [data-action=delete-repository]': @deleteRepository
 
 			initialize: (options) ->
 				{@repository, @adminArea} = options
@@ -37,9 +37,5 @@ define([
 					repository: repository
 					canDelete: currentUser.isAdmin() # TODO include users with permisson to delete
 				Renderer.render @, renderOptions
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 )

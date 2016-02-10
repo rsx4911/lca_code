@@ -10,7 +10,7 @@ define([
 
 		class Navigation extends Backbone.View
 
-			doRender = (items) ->
+			doRender: (items) ->
 				@$el.html template
 					username: currentUser.get 'username'
 					name: currentUser.get 'name'
@@ -21,14 +21,10 @@ define([
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 
 			render: (renderOptions) ->
-				(@_ doRender)()
+				@doRender()
 				Renderer.render @, renderOptions
 
 			setItems: (items) ->
-				(@_ doRender) items
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
+				@doRender items
 
 )

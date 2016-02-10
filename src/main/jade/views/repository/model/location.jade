@@ -1,0 +1,13 @@
+include ./mixins.jade
+
++menubar
+.model-left-content
+	+header
+	.content
+		table.table.no-head
+			tbody
+				+field-row('Code', dataset.code)
+				+field-row('Longitude', dataset.longitude)
+				+field-row('Latitude', dataset.latitude)
++meta
+.clear

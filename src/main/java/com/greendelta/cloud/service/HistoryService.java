@@ -38,6 +38,14 @@ public class HistoryService {
 		return commits.get(commits.size() - 1);
 	}
 
+	public Commit getCommit(Repository repo, String commitId) {
+		File historyFile = repo.getHistoryFile(false);
+		List<Commit> commits =dataAccessor.readHistory(historyFile, new SpecificCommitFilter(commitId));
+		if (commits.isEmpty())
+			return null;
+		return commits.get(0);
+	}
+
 	public List<Commit> getCommits(Repository repo) {
 		return getCommits(repo, null);
 	}
@@ -127,6 +135,20 @@ public class HistoryService {
 
 		}
 
+	}
+
+	private class SpecificCommitFilter implements Filter<Commit> {
+
+		private final String commitId;
+
+		private SpecificCommitFilter(String commitId) {
+			this.commitId = commitId;
+		}
+
+		@Override
+		public boolean filter(Commit element) {
+			return !element.id.equals(commitId);
+		}
 	}
 
 }

@@ -1,0 +1,66 @@
+.full-size > .center > .repository-dataset
+	padding 0
+
+.repository-dataset
+
+	a, a:hover, a:visited, a:active, a:focus
+		
+		&:not(.btn)
+			color rgb(51, 122, 183)
+
+	.filter-box .form-inline
+		float left
+
+	.model-left-content
+		float left
+		width 75%
+		border-right 1px solid rgb(221, 221, 221)
+
+		.title, .content
+			padding 0 25px
+			
+			&:first-child
+				padding-top 25px
+				
+			&:last-child
+				padding-bottom 25px		
+				
+		.table.no-head > tbody 
+			
+			& > tr:first-child > td
+				border 0
+
+		.table.inputs > tbody > tr > td:first-child, .table.outputs > tbody > tr > td:first-child
+			width 35px
+
+		.table.units > thead > tr > th, .table.units > tbody > tr > td, .table.flow-properties > thead > tr > th, .table.flow-properties > tbody > tr > td
+			text-align center
+
+		.table.units > thead > tr > th, .table.units > tbody > tr > td
+
+			&:nth-child(2)
+				width 30%
+
+		.table > tbody > tr
+
+			& > td:first-child
+				width 25%
+
+			&.reference > td 
+				font-weight bold
+
+			&.reference > td a
+				font-weight initial
+		
+		img.icon-small
+			width 16px
+			height 16px
+	
+	.model-right-content
+		float right
+		width 25%
+		padding 25px
+
+		strong
+			color rgb(80, 80, 80)
+	

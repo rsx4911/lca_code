@@ -14,7 +14,7 @@ define([
 
 		class RepositoryCreate extends Backbone.View
 
-			createRepository = () ->
+			createRepository: () ->
 				@repository.set Forms.toJson 'repository'
 				@repository.set 'isNew', true
 				unless @repository.get('name')
@@ -24,12 +24,11 @@ define([
 					Forms.handleError 'repository', {responseJSON: {field: 'group', message: 'Missing input: Group'}}
 					return false
 				Model.save @repository, 
-					success: () =>
-						(@_ reload)()
+					success: @reload
 					error: (model, response) -> Forms.handleError 'repository', response
 				return false
 
-			reload = () ->
+			reload: () ->
 				if currentUser.isAdmin() and @adminArea
 					Router.navigate 'admin/overview'
 				else
@@ -38,7 +37,7 @@ define([
 					Router.navigate "repository/#{group}/#{name}"
 
 			events:
-				'click [data-action=create-repository]': createRepository
+				'click [data-action=create-repository]': @createRepository
 
 			initialize: (options) ->
 				{@adminArea} = options
@@ -48,9 +47,5 @@ define([
 				@$el.html template()
 				@$('#group').val currentUser.get 'username'
 				Renderer.render @, renderOptions
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 )

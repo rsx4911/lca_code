@@ -2,15 +2,16 @@ define([
 				'backbone'
 				'moment'
 				'cs!utils/Events'
+				'cs!utils/Icons'
 				'cs!utils/Renderer'
 				'templates/views/repository/datasets'
 			]
 
-	(Backbone, Moment, Events, Renderer, template) ->
+	(Backbone, Moment, Events, Icons, Renderer, template) ->
 
 		class RepositoryDatasets extends Backbone.View
 
-			getRootLabel = (entry) ->
+			getRootLabel: (entry) ->
 				switch entry
 					when 'PROJECT' then return 'Projects'
 					when 'PRODUCT_SYSTEM' then return 'Product systems'
@@ -26,7 +27,7 @@ define([
 					when 'CURRENCY' then return 'Currencies'
 					when 'PARAMETER' then return 'Parameters'
 
-			loadEntries = (callback) ->
+			loadEntries: (callback) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				url = "/ws/browse/#{group}/#{name}"
@@ -47,27 +48,33 @@ define([
 
 			render: (renderOptions) ->
 				repository = @repository.toJSON()
-				(@_ loadEntries) (entries) =>
+				@loadEntries (data) =>
 					path = ''
-					if entries?.length
-						if typeof(entries[0]) is 'object'
-							path = entries[0].fullPath
-							type = if entries[0].type is 'CATEGORY' then entries[0].categoryType else entries[0].type 
-							path = getRootLabel(type) + '/' + path.substring 0, path.lastIndexOf('/')
+					if data.entries?.length
+						if typeof(data.entries[0]) is 'object'
+							path = data.entries[0].fullPath
+							type = if data.entries[0].type is 'CATEGORY' then data.entries[0].categoryType else data.entries[0].type 
+							path = @getRootLabel(type) + '/' + path.substring(0, path.lastIndexOf('/'))
 							path = path.replace(/\//g, ' / ')
+							data.entries.sort (a, b) ->
+								n1 = a.name.toLowerCase();
+								n2 = b.name.toLowerCase();
+								if n1 > n2 
+									return 1
+								else if n1 < n2
+									return -1
+								return 0
 					@$el.html template
 						repository: repository
-						entries: entries
+						entries: data.entries
+						parentRefId: data.parentRefId
 						path: path
 						baseUrl: "/repository/datasets/#{repository.group}/#{repository.name}"
-						datasetBaseUrl: "/repository/dataset/#{repository.group}/#{repository.name}"
+						datasetUrl: "/repository/dataset/#{repository.group}/#{repository.name}"
 						isRoot: (if @categoryId then false else true)
 						formatLastUpdate: (value) -> return moment(value).fromNow()
-						getRootLabel: getRootLabel
+						getRootLabel: @getRootLabel
+						getIcon: @getIcon
 				Renderer.render @, renderOptions
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 )

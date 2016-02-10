@@ -15,6 +15,7 @@ header
 	width 100%
 	height 65px
 	background-color white
+	border-bottom 1px solid rgb(221, 221, 221)
 
 	.logo-container
 		float left
@@ -63,8 +64,10 @@ ul
 		padding-left 230px    
 
 a, a:hover, a:visited, a:active, a:focus
-	color inherit
-
+	
+	&:not(.btn)
+		color inherit
+	
 a.no-link
 	text-decoration none
 	color inherit
@@ -80,3 +83,9 @@ a.no-link
 
 .clear
 	clear both
+
+.comma-separated > *:not(:last-child):after 
+		content ', '
+
+.form-inline select
+	margin-left 5px

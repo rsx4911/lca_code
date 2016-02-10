@@ -11,22 +11,18 @@ define([
 
 		Router:: = (() ->
 
-			# private
-
-			checkAccess = (route, callback, context, restrictedTo, args) ->
+			checkAccess: (route, callback, context, restrictedTo, args) ->
 				if restrictedTo is 'admin' and !currentUser.isAdmin()
 					alert 'This is a restricted area, you do not have permission to enter it'
 					return @navigate ''
 				callback.apply context, args
 
-			rewriteIfNecessary = (route) ->
+			rewriteIfNecessary: (route) ->
 				fragment = @routeRewrites[route]
 				if fragment and Backbone.history.fragment isnt fragment
 					@router.navigate fragment,
 						trigger: false
 						replace: true
-
-			# public
 
 			constructor: Router
 
@@ -41,14 +37,14 @@ define([
 
 			registerUserRoute: (route, callback) ->
 				wrappedCallback = () =>
-					(@_ rewriteIfNecessary) route
-					(@_ checkAccess) route, callback, @routeContext, null, arguments 
+					@rewriteIfNecessary route
+					@checkAccess route, callback, @routeContext, null, arguments 
 				@router.on "route:#{route}", wrappedCallback
 
 			registerAdminRoute: (route, callback) ->
 				wrappedCallback = () =>
-					(@_ rewriteIfNecessary) route
-					(@_ checkAccess) route, callback, @routeContext, 'admin', arguments 
+					@rewriteIfNecessary route
+					@checkAccess route, callback, @routeContext, 'admin', arguments 
 				@router.on "route:#{route}", wrappedCallback
 
 			navigate: (route, options) ->
@@ -56,10 +52,6 @@ define([
 					Backbone.history.loadUrl route
 				@router.navigate route, 
 					trigger: true
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 		)()
 				

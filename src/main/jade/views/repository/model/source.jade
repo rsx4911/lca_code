@@ -1,0 +1,13 @@
+include ./mixins.jade
+
++menubar
+.model-left-content
+	+header
+	.content
+		table.table.no-head
+			tbody
+				+field-row('DOI', dataset.doi, true)
+				+field-row('Text reference', dataset.textReference, true)
+				+field-row('Year', dataset.year, true)
++meta
+.clear

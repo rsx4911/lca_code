@@ -1,0 +1,21 @@
+.filter-box
+.content
+	each group in groups	
+		.commit-group
+			.date-and-count
+				.date 
+					img(src='/images/calendar.png')
+					|  #{formatDate(group.date)}
+				.count #{group.commits.length} commits
+			.commits
+				each commit in group.commits
+					.commit
+						.commit-details.pull-left
+							.commit-message=commit.message
+							a.user-info(href='#') 
+								img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user.username}')
+								span.username=commit.user.name
+						.commit-link.pull-right
+							.pull-right=commit.id
+							a.pull-right(href='/repository/commit/#{repository.group}/#{repository.name}/#{commit.id}') Details »
+						.clear

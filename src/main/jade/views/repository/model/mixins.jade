@@ -1,0 +1,145 @@
+include ../../mixins/forms.jade
+
+mixin menubar()
+	.filter-box
+		+select('commitId', 'Version', [['null', 'Latest']])
+		a.btn.btn-success.pull-right(href='#{downloadUrl}' download='#{dataset.id}.json')
+			span.glyphicon.glyphicon-download  
+			| Download Raw Data
+		.clear
+
+mixin header()
+	h3.title
+		img.pull-right.model-icon(src='/images/model/large/#{getIcon(dataset)}')
+		div=dataset.name
+		small
+			span=dataset.description
+	.clear.content
+		if dataset.category
+			| #{dataset.category.name}
+	block
+	hr
+
+mixin meta() 
+	.model-right-content
+		.meta-info
+			div
+				strong Version
+				div=dataset.version
+			div
+				strong Last change
+				div=formatDate(dataset.lastChange)
+			div
+				strong UUID
+				div=dataset.id
+			block
+
+mixin field-row(label, value, checkValue, formatter)
+	if !checkValue || value
+		tr
+			td=label
+			td #{value?formatter?formatter(value):value:''}
+				block
+
+mixin ref(ref, additionalTypeInfo)
+	if ref
+		img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
+		a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
+
+mixin ref-row(label, ref, additionalTypeInfo)
+	if ref
+		tr
+			td=label
+			td: +ref(ref, additionalTypeInfo)
+
+mixin exchange-row(exchange)
+	tr(class=exchange.quantitativeReference?'reference':null)
+		td: img.icon-small(src='/images/' + (exchange.input?'input':'output') + '.png')
+		td: +ref(exchange.flow)
+		td 
+			if exchange.flow.category
+				| #{exchange.flow.category.name}
+		td=exchange.amount
+		td
+			if exchange.unit 
+				| #{exchange.unit.name}
+		td
+			if exchange.input
+				+ref(exchange.defaultProvider)
+			else
+				if exchange.avoidedProduct
+					img.icon-small(src='/images/check_true.png')
+
+mixin exchange-table(exchanges, input)
+	table.table(class=input?'inputs':'outputs')
+		thead
+			tr
+				th
+				th Flow
+				th Category
+				th Amount
+				th Unit
+				th #{input?'Default provider':'Avoided product'}
+		tbody
+			each exchange in exchanges
+				+exchange-row(exchange)
+
+mixin uncertainty(uncertainty)
+	if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
+		| Normal distribution (Geom. mean: #{uncertainty.geomMean}, Geom. SD: #{uncertainty.geomSd})
+	else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
+		| Normal distribution (Mean: #{uncertainty.mean}, SD: #{uncertainty.sd})
+	else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
+		| Triangle distribution (Min: #{uncertainty.minimum}, Mode: #{uncertainty.mode}, Max: #{uncertainty.maximum})
+	else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
+		| Uniform distribution (Min: #{uncertainty.minimum}, Max: #{uncertainty.maximum})
+
+mixin parameter-table(parameters, input)
+	- var isEmpty = true;
+	each parameter in parameters
+		if parameter.inputParameter === input
+			- isEmpty = false
+	if !isEmpty
+		h4 #{input?'Input parameters':'Dependant parameters'}
+		table.table
+			thead
+				tr
+					th Name
+					th #{input?'Value':'Formula'}
+					th #{input?'Uncertainty':'Value'}
+					th Description
+			tbody
+				each parameter in parameters
+					if parameter.inputParameter === input
+						tr
+							td=parameter.name
+							td #{parameter.inputParameter?parameter.value:parameter.formula}
+							td 
+								if parameter.inputParameter
+									+uncertainty(parameter.uncertainty)
+								else 
+									| #{parameter.value}
+							td=parameter.description
+
+mixin parameter-redef-table(parameters)
+	table.table
+		thead
+			tr
+				th Context
+				th Name
+				th Value
+				th Uncertainty
+		tbody
+			each parameter in parameters
+				tr
+					td 
+						if parameter.context
+							+ref(parameter.context)
+						else
+							| Global
+					td=parameter.name
+					td=parameter.value
+					td 
+						if parameter.inputParameter
+							+uncertainty(parameter.uncertainty)
+

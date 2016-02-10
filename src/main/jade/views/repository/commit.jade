@@ -1,0 +1,21 @@
+.filter-box
+	h4 
+		div #{commit.message}
+		small #{commit.id}
+	a.user-info(href='#') 
+		img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user.username}')
+		span.username #{commit.user.name} on #{formatDate(commit.timestamp)}
+.file-references
+	each dataset in commit.references
+		if dataset.type !== 'IMPACT_CATEGORY'
+			.file-reference(id=dataset.id)
+				a(href='#{baseUrl}/#{dataset.type}/#{dataset.refId}/#{commit.id}')
+					.header
+						if dataset.type === 'CATEGORY'
+							img.model-icon-small(src='/images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+						else
+							img.model-icon-small(src='/images/model/small/#{dataset.type.toLowerCase()}.png')
+						span=dataset.fullPath
+					.diff
+						.pull-left
+						.pull-right

@@ -15,7 +15,7 @@ define([
 
 		class UserProfile extends Backbone.View
 
-			doRender = (renderOptions) ->
+			doRender: (renderOptions) ->
 				user = @user.toJSON()
 				@$el.html template
 					user: user
@@ -23,31 +23,31 @@ define([
 				Renderer.render @, renderOptions
 				Forms.fill 'user', user
 
-			saveUser = () ->
+			saveUser: () ->
 				@user.set Forms.toJson 'user'
 				unless @user.get('username')
 					Forms.handleError 'user', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
 					return false
 				Model.save @user, 
-					success: () => (@_ reload)()
+					success: @reload
 					error: (model, response) -> Forms.handleError 'user', response
 				return false
 
-			savePassword = () ->
+			savePassword: () ->
 				$.ajax
 					type: 'PUT'
 					url: '/ws/admin/user/' + @user.get('username') + '/setpassword'
 					data: JSON.stringify Forms.toJson 'password'
 					contentType: 'application/json'
-					success: () => (@_ reload)()
+					success: @reload
 					error: (response) -> Forms.handleError 'password', response
 				return false
 
-			deleteUser = (event) ->
+			deleteUser: (event) ->
 				@user.destroy 
 					success: () -> Router.navigate 'admin/overview'
 
-			reload = () ->
+			reload: () ->
 				if currentUser.isAdmin() and @adminArea
 					Router.navigate 'admin/overview'
 				else
@@ -55,9 +55,9 @@ define([
 					Backbone.history.loadUrl()
 
 			events:
-				'submit #user': saveUser
-				'submit #password': savePassword
-				'click [data-action=delete-user]': deleteUser
+				'submit #user': @saveUser
+				'submit #password': @savePassword
+				'click [data-action=delete-user]': @deleteUser
 
 			initialize: (options) ->
 				{@user, @adminArea} = options
@@ -68,12 +68,8 @@ define([
 				if @user.get('username') and !@isOwnUser
 					Model.fetch @user, 
 						success: () =>
-							(@_ doRender) renderOptions
+							@doRender renderOptions
 				else
-					(@_ doRender) renderOptions
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
+					@doRender renderOptions
 
 )

@@ -1,0 +1,55 @@
+include ./mixins.jade
+
+- var doc = dataset.processDocumentation
++menubar
+.model-left-content
+	+header
+	.content
+		ul.nav.nav-tabs(role='tablist')
+			li.active(role='presentation') 
+				a(href='#exchanges' aria-controls='exchange' role='tab' data-toggle='tab') Inputs/Outputs
+			if doc
+				li(role='presentation') 
+					a(href='#documentation' aria-controls='documenation' role='tab' data-toggle='tab') Documentation
+			if dataset.parameters && dataset.parameters.length
+				li(role='presentation') 
+					a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+		.tab-content
+			#exchanges.tab-pane.active(role='tabpanel')
+				if dataset.inputs
+					+exchange-table(dataset.inputs, true)
+				if dataset.outputs
+					+exchange-table(dataset.outputs, false)
+			if doc
+				#documentation.tab-pane(role='tabpanel')
+					table.table.no-head
+						tbody
+							+field-row('Intended application', doc.intendedApplication, true)
+							+ref-row('Data set owner', doc.dataSetOwner)
+							+ref-row('Data generator', doc.dataGenerator)
+							+ref-row('Data documentor', doc.dataDocumentor)
+							+ref-row('Publication', doc.publication)
+							+ref-row('Reviewer', doc.reviewer)
+							+field-row('Review details', doc.reviewDetails, true)
+							+field-row('Access & use restrictions', doc.restrictionsDescription, true)
+							+field-row('Project', doc.project, true)
+							+field-row('Creation date', doc.creationDate, true, formatDate)
+							+field-row('Copyright protected')
+								img.icon-small(src='/images/check_' + (dataset.copyright?'true':'false') + '.png')
+							+field-row('LCI method', doc.inventoryMethodDescription, true)
+							+field-row('Modeling constants', doc.modelingConstantsDescription, true)
+							+field-row('Data completeness', doc.completenessDescription, true)
+							+field-row('Data selection', doc.dataSelectionDescription, true)
+							+field-row('Data treatment', doc.dataTreatmentDescription, true)
+							+field-row('Sampling procedure', doc.samplingDescription, true)
+							+field-row('Data collection period', doc.dataCollectionDescription, true)
+							if doc.sources
+								+field-row('Sources')
+									each source in sources
+										div: +ref(source)
+			if dataset.parameters && dataset.parameters.length
+				#parameters.tab-pane(role='tabpanel')
+					+parameter-table(dataset.parameters, true)
+					+parameter-table(dataset.parameters, false)
++meta
+.clear
