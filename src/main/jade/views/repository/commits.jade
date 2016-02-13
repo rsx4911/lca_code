@@ -15,8 +15,8 @@
 						.commit-details.pull-left
 							.commit-message=commit.message
 							a.user-info(href='#') 
-								img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user.username}')
-								span.username=commit.user.name
+								img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user}')
+								span.username=commit.userDisplayName
 						.commit-link.pull-right
 							.pull-right=commit.id
 							a.pull-right(href='/repository/commit/#{repository.group}/#{repository.name}/#{commit.id}') Details »

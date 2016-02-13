@@ -3,8 +3,8 @@
 		div #{commit.message}
 		small #{commit.id}
 	a.user-info(href='#') 
-		img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user.username}')
-		span.username #{commit.user.name} on #{formatDate(commit.timestamp)}
+		img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user}')
+		span.username #{commit.userDisplayName} on #{formatDate(commit.timestamp)}
 .file-references
 	each dataset in commit.references
 		if dataset.type !== 'IMPACT_CATEGORY'

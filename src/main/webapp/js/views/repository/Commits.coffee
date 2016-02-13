@@ -39,14 +39,13 @@ define([
 				groups = []
 				previous = null
 				group = null
-				if commits
-					for commit in commits
-						if !@isSameDay(previous, commit.timestamp)
-							group = {commits: []}
-							groups.push group
-						group.date = new Date(commit.timestamp)
-						group.commits.push commit
-						previous = commit.timestamp
+				for commit in commits
+					if !@isSameDay(previous, commit.timestamp)
+						group = {commits: []}
+						groups.push group
+					group.date = new Date(commit.timestamp)
+					group.commits.push commit
+					previous = commit.timestamp
 				return groups			
 
 			isSameDay: (t1, t2) ->
