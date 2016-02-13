@@ -26,7 +26,7 @@ define([
 					Router.navigate 'dashboard/repositories'
 
 			events:
-				'click [data-action=delete-repository]': @deleteRepository
+				'click [data-action=delete-repository]': (event) -> @deleteRepository event
 
 			initialize: (options) ->
 				{@repository, @adminArea} = options

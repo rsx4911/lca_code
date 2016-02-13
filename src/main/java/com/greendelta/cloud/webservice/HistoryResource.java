@@ -63,11 +63,8 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		Map<String, Object> result = putUserName(commit);
 		List<Dataset> refs = new ArrayList<>();
-		int i = 0;
 		for (Dataset d : service.getReferences(repo, commitId))
-			if (i++ == 10)
-				break;
-			else refs.add(d);
+			refs.add(d);
 		result.put("references", refs);
 		return Respond.ok(result);
 	}

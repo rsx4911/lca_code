@@ -24,7 +24,7 @@ define([
 					Forms.handleError 'repository', {responseJSON: {field: 'group', message: 'Missing input: Group'}}
 					return false
 				Model.save @repository, 
-					success: @reload
+					success: () => @reload()
 					error: (model, response) -> Forms.handleError 'repository', response
 				return false
 
@@ -37,7 +37,7 @@ define([
 					Router.navigate "repository/#{group}/#{name}"
 
 			events:
-				'click [data-action=create-repository]': @createRepository
+				'click [data-action=create-repository]': (event) -> @createRepository event
 
 			initialize: (options) ->
 				{@adminArea} = options

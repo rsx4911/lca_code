@@ -23,23 +23,26 @@ define([
 				Renderer.render @, renderOptions
 				Forms.fill 'user', user
 
-			saveUser: () ->
+			saveUser: (event) ->
+				Events.preventDefault event
 				@user.set Forms.toJson 'user'
 				unless @user.get('username')
 					Forms.handleError 'user', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
 					return false
 				Model.save @user, 
-					success: @reload
+					success: () => @reload()
 					error: (model, response) -> Forms.handleError 'user', response
 				return false
 
-			savePassword: () ->
+			savePassword: (event) ->
+				Events.preventDefault event
 				$.ajax
 					type: 'PUT'
 					url: '/ws/admin/user/' + @user.get('username') + '/setpassword'
 					data: JSON.stringify Forms.toJson 'password'
 					contentType: 'application/json'
-					success: @reload
+					dataType: 'text'
+					success: () => @reload()
 					error: (response) -> Forms.handleError 'password', response
 				return false
 
@@ -55,9 +58,9 @@ define([
 					Backbone.history.loadUrl()
 
 			events:
-				'submit #user': @saveUser
-				'submit #password': @savePassword
-				'click [data-action=delete-user]': @deleteUser
+				'submit #user': (event) -> @saveUser event
+				'submit #password': (event) -> @savePassword event
+				'click [data-action=delete-user]': (event) -> @deleteUser event
 
 			initialize: (options) ->
 				{@user, @adminArea} = options

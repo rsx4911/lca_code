@@ -6,7 +6,9 @@
 				.date 
 					img(src='/images/calendar.png')
 					|  #{formatDate(group.date)}
-				.count #{group.commits.length} commits
+				.count #{group.commits.length} commit
+				if group.commits.length > 1 
+					| s
 			.commits
 				each commit in group.commits
 					.commit
