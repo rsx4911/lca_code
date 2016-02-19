@@ -7,8 +7,8 @@
 					img(src='/images/calendar.png')
 					|  #{formatDate(group.date)}
 				.count #{group.commits.length} commit
-				if group.commits.length > 1 
-					| s
+					if group.commits.length > 1 
+						| s
 			.commits
 				each commit in group.commits
 					.commit
@@ -18,6 +18,6 @@
 								img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user}')
 								span.username=commit.userDisplayName
 						.commit-link.pull-right
-							.pull-right=commit.id
+							.commit-id.pull-right=commit.id
 							a.pull-right(href='/repository/commit/#{repository.group}/#{repository.name}/#{commit.id}') Details »
 						.clear

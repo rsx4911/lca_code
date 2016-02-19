@@ -28,7 +28,11 @@ mixin meta()
 				div=dataset.version
 			div
 				strong Last change
-				div=formatDate(dataset.lastChange)
+				div 
+					if dataset.lastChange
+						| #{formatDate(dataset.lastChange)}
+					else
+						| -
 			div
 				strong UUID
 				div=dataset.id
@@ -58,11 +62,13 @@ mixin exchange-row(exchange)
 		td: +ref(exchange.flow)
 		td 
 			if exchange.flow.category
-				| #{exchange.flow.category.name}
-		td=exchange.amount
-		td
+				- var path = exchange.flow.category.name.split('/');
+				| #{path[path.length - 1]}
+				if path.length > 1
+					|  / #{path[path.length - 2]}
+		td #{exchange.amount}
 			if exchange.unit 
-				| #{exchange.unit.name}
+				|  #{exchange.unit.name}
 		td
 			if exchange.input
 				+ref(exchange.defaultProvider)
@@ -78,21 +84,26 @@ mixin exchange-table(exchanges, input)
 				th Flow
 				th Category
 				th Amount
-				th Unit
 				th #{input?'Default provider':'Avoided product'}
 		tbody
 			each exchange in exchanges
-				+exchange-row(exchange)
+				if exchange.input === input
+					+exchange-row(exchange)
 
 mixin uncertainty(uncertainty)
-	if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
-		| Normal distribution (Geom. mean: #{uncertainty.geomMean}, Geom. SD: #{uncertainty.geomSd})
-	else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
-		| Normal distribution (Mean: #{uncertainty.mean}, SD: #{uncertainty.sd})
-	else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
-		| Triangle distribution (Min: #{uncertainty.minimum}, Mode: #{uncertainty.mode}, Max: #{uncertainty.maximum})
-	else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
-		| Uniform distribution (Min: #{uncertainty.minimum}, Max: #{uncertainty.maximum})
+	if uncertainty
+		if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
+			| Normal distribution (Geom. mean: #{uncertainty.geomMean}, Geom. SD: #{uncertainty.geomSd})
+		else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
+			| Normal distribution (Mean: #{uncertainty.mean}, SD: #{uncertainty.sd})
+		else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
+			| Triangle distribution (Min: #{uncertainty.minimum}, Mode: #{uncertainty.mode}, Max: #{uncertainty.maximum})
+		else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
+			| Uniform distribution (Min: #{uncertainty.minimum}, Max: #{uncertainty.maximum})
+		else
+			| No distribution
+	else
+		| No distribution
 
 mixin parameter-table(parameters, input)
 	- var isEmpty = true;

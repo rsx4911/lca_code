@@ -13,6 +13,7 @@ require.config({
 		'datepicker': 'libs/bootstrap-datepicker',
 		'numeral': 'libs/numeral',
 		'moment': 'libs/moment',
+		'open-layers': 'libs/open-layers',
 		'requireLib': 'libs/require'
 	}
 })

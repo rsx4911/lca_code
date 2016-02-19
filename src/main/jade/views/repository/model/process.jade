@@ -16,10 +16,9 @@ include ./mixins.jade
 					a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
 		.tab-content
 			#exchanges.tab-pane.active(role='tabpanel')
-				if dataset.inputs
-					+exchange-table(dataset.inputs, true)
-				if dataset.outputs
-					+exchange-table(dataset.outputs, false)
+				if dataset.exchanges
+					+exchange-table(dataset.exchanges, true)
+					+exchange-table(dataset.exchanges, false)
 			if doc
 				#documentation.tab-pane(role='tabpanel')
 					table.table.no-head
@@ -45,11 +44,40 @@ include ./mixins.jade
 							+field-row('Data collection period', doc.dataCollectionDescription, true)
 							if doc.sources
 								+field-row('Sources')
-									each source in sources
+									each source in doc.sources
 										div: +ref(source)
 			if dataset.parameters && dataset.parameters.length
 				#parameters.tab-pane(role='tabpanel')
 					+parameter-table(dataset.parameters, true)
 					+parameter-table(dataset.parameters, false)
 +meta
+	hr
+	strong Quantitative reference
+	div
+		- var flow = null;
+		each exchange in dataset.exchanges
+			if exchange.quantitativeReference
+				- flow = exchange.flow
+		if flow
+			+ref(flow, flow.flowType)
+		else
+			| -
+	strong Location
+	div
+		if dataset.location
+			+ref(dataset.location)
+		else
+			| -
+	hr
+	strong Valid from
+	div=doc.validFrom?formatDate(doc.validFrom):'-'
+	strong Valid until
+	div=doc.validUntil?formatDate(doc.validUntil):'-'
+	hr
+	strong Time description
+	div=doc.timeDescription?doc.timeDescription:'-'
+	strong Geography description
+	div=doc.geographyDescription?doc.geographyDescription:'-'
+	strong Technology description
+	div=doc.technologyDescription?doc.technologyDescription:'-'
 .clear

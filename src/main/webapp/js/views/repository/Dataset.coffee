@@ -1,6 +1,7 @@
 define([
 				'backbone'
 				'moment'
+				'open-layers'
 				'cs!utils/Events'
 				'cs!utils/Icons'
 				'cs!utils/Renderer'
@@ -19,7 +20,7 @@ define([
 				'templates/views/repository/model/location'
 			]
 
-	(Backbone, Moment, Events, Icons, Renderer, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location) ->
+	(Backbone, Moment, OpenLayers, Events, Icons, Renderer, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -76,7 +77,9 @@ define([
 						getTypeAsEnum: @getTypeAsEnum
 						getUncertaintyLabel: @getUncertaintyLabel
 						downloadUrl: @getUrl()
-				Renderer.render @, renderOptions
+					Renderer.render @, renderOptions
+					if dataset.type is 'Location' and dataset.geometry
+						@initMap dataset				
 
 			removeAtSigns: (object) ->
 				for key in Object.keys(object)
@@ -112,5 +115,16 @@ define([
 					first = false
 					asEnum += char
 				return asEnum.toUpperCase()
+
+			initMap: (dataset) ->
+				map = new OpenLayers.Map
+					layers: [
+						new OpenLayers.layer.Tile
+							source: new OpenLayers.source.OSM()
+					]
+					target: 'map'
+					view: new OpenLayers.View
+						center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
+						zoom: 5
 
 )

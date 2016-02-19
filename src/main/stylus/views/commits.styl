@@ -10,15 +10,20 @@
 		
 		.date-and-count
 			float left
-			width 200px
+			width 120px
+			
+			@media(max-width 560px)
+				display none
 			
 			.count
 				color rgb(127, 143, 164)
 				font-size 90%
 	
 		.commit
-			margin-left 200px
 			padding 0 10px 10px 10px
+
+			@media(min-width 561px)
+				margin-left 120px
 
 			&:not(:first-child)
 				padding 10px
@@ -27,13 +32,21 @@
 				border-bottom 1px solid rgb(221, 221, 221)
 
 			.commit-details
+				max-width 48%
 				
 				.commit-message
 					font-weight bold
 								
 			.commit-link
-				width 270px
+
+				@media(min-width 768px)
+					width 270px					
 
 				& > a
 					color rgb(127, 143, 164)
 					font-size 90%
+
+				.commit-id
+
+					@media(max-width 767px)
+						display none

@@ -14,7 +14,6 @@ include ./mixins.jade
 					th Name
 					th Description
 					th Synonyms
-					th Conversion factor
 					th Formula
 					th Is reference
 			tbody
@@ -30,7 +29,6 @@ include ./mixins.jade
 							if unit.synonyms
 								each synonym in unit.synonyms
 									.span #{synonym}
-						td=unit.conversionFactor
 						td 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
 						td
 							if unit.referenceUnit

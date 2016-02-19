@@ -12,9 +12,13 @@
 		float left
 
 	.model-left-content
-		float left
-		width 75%
-		border-right 1px solid rgb(221, 221, 221)
+		border-bottom 1px solid rgb(221, 221, 221)
+
+		@media(min-width 768px)
+			float left
+			width 75%
+			border-right 1px solid rgb(221, 221, 221)
+			border-bottom 0
 
 		.title, .content
 			padding 0 25px
@@ -38,8 +42,15 @@
 
 		.table.units > thead > tr > th, .table.units > tbody > tr > td
 
+			&:first-child
+				width 60px
+
 			&:nth-child(2)
 				width 30%
+				
+			&:nth-child(2), &:nth-child(3)
+				@media(max-width 767px)
+					display none
 
 		.table > tbody > tr
 
@@ -48,18 +59,21 @@
 
 			&.reference > td 
 				font-weight bold
-
-			&.reference > td a
-				font-weight initial
 		
 		img.icon-small
 			width 16px
 			height 16px
-	
+
+		.map
+			height 400px
+			width 100%
+
 	.model-right-content
-		float right
-		width 25%
 		padding 25px
+
+		@media(min-width 768px)
+			float right
+			width 25%
 
 		strong
 			color rgb(80, 80, 80)
