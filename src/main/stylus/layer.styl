@@ -72,6 +72,10 @@ modalContent(contentWidth, contentHeight, hasTitle = true, hasFooter = true, sup
 			.modal-dialog
 				transform initial
 
+.confirmation-phrase
+	color rgb(199, 37, 78)
+	background-color rgb(249, 242, 244)
+
 .progress-indicator
 
 	.backdrop
@@ -117,10 +121,7 @@ modalContent(contentWidth, contentHeight, hasTitle = true, hasFooter = true, sup
 	z-index 1039	
 
 .modal
-
-	.modal-header.empty
-		border-bottom 0
-				
+									
 	&.large-layer
 		
 		modalContent(1000px, 600px, true, false)
@@ -135,3 +136,15 @@ modalContent(contentWidth, contentHeight, hasTitle = true, hasFooter = true, sup
 
 				@media(max-width 767px)
 					top 5%
+
+	.modal-content
+		border-radius 0				
+
+		.modal-header
+			background-color rgb(248, 250, 252)
+
+			&.empty
+				border-bottom 0
+
+		.modal-footer
+			border-top 0

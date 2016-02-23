@@ -3,12 +3,15 @@ package com.greendelta.cloud.webservice;
 import static org.openlca.cloud.util.Strings.concat;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -26,6 +29,7 @@ import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.webservice.mapper.RepositoryMapper;
+import com.sun.jersey.multipart.FormDataParam;
 
 @Path("repository")
 @Produces(MediaType.APPLICATION_JSON)
@@ -71,6 +75,17 @@ public class RepositoryResource {
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		PagedResult<Repository> result = service.getAll(page, filter, true);
 		return Respond.ok(result.toClient(new RepositoryMapper()::map));
+	}
+
+	@PUT
+	@Path("avatar/{group}/{name}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response setAvatar(@PathParam("group") String group, @PathParam("name") String name,
+			@FormDataParam("file") InputStream file) {
+		service.get(group, name); // to ensure repo exists and user has access
+		service.setAvatar(group, name, file);
+		return getAvatar(group, name);
 	}
 
 	@GET

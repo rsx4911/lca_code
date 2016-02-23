@@ -27,7 +27,7 @@ define([
 						commit: commit
 						formatDate: (value) -> return if !value then '' else moment(value).format('M/D/YYYY h:mm:ssa')
 						getIcon: Icons.get
-						baseUrl: "/repository/dataset/#{repo.group}/#{repo.name}"
+						baseUrl: "/#{repo.group}/#{repo.name}/dataset"
 				Renderer.render @, renderOptions
 
 			loadCommit: (callback) ->

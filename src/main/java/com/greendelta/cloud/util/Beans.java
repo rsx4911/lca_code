@@ -12,9 +12,9 @@ import org.apache.commons.beanutils.BeanUtilsBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BeanUtils {
+public class Beans {
 
-	private static final Logger log = LoggerFactory.getLogger(BeanUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(Beans.class);
 	private static final BeanUtilsBean beanUtils = BeanUtilsBean.getInstance();
 
 	public static <T> T populate(T destination, Map<String, Object> sourceMap) {

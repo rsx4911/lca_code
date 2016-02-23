@@ -5,9 +5,10 @@ define([
 				'cs!utils/Layouts'
 				'cs!models/User'
 				'cs!models/Repository'
+				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layouts, User, Repository) ->
+	(Navigation, UserMenu, Events, Layouts, User, Repository, template404) ->
 
 		Controller = () ->
 
@@ -18,21 +19,22 @@ define([
 					return
 				type = options.type
 				prefix = if options.urlPrefix then "/#{options.urlPrefix}" else ''
-				suffix = if options.urlSuffix then "/#{options.urlSuffix}" else ''
+				# the ids are used in Navigation to identify which menu item is currently active
+				# they need only to be unique within 'type'
 				switch type
 					when 'dashboard' then return [
-						{href: "#{prefix}/dashboard/repositories#{suffix}", imageSrc: '/images/repository.png', label: 'Repositories'}
+						{href: "#{prefix}/dashboard/repositories", imageSrc: '/images/repository.png', label: 'Repositories', id: 'repositories'}
 					]
 					when 'user' then return [
-						{href: "#{prefix}/user/profile#{suffix}", imageSrc: '/images/profile.png', label: 'Profile'}
+						{href: "#{prefix}/user/profile", imageSrc: '/images/profile.png', label: 'Profile', id: 'profile'}
 					]
 					when 'repository' then return [
-						{href: "#{prefix}/repository#{suffix}", imageSrc: '/images/repository.png', label: 'Repository'}
-						{href: "#{prefix}/repository/datasets#{suffix}", imageSrc: '/images/dataset.png', label: 'Data sets'}
-						{href: "#{prefix}/repository/commits#{suffix}", imageSrc: '/images/commit.png', label: 'Commits'}
+						{href: "#{prefix}", imageSrc: '/images/repository.png', label: 'Info', id: 'info'}
+						{href: "#{prefix}/datasets", imageSrc: '/images/dataset.png', label: 'Data sets', id: 'datasets'}
+						{href: "#{prefix}/commits", imageSrc: '/images/commit.png', label: 'Commits', id: 'commits'}
 					]
 					when 'admin' then return [
-						{href: "#{prefix}/admin/overview#{suffix}", imageSrc: '/images/overview.png', label: 'Overview'}
+						{href: "#{prefix}/administration/overview", imageSrc: '/images/overview.png', label: 'Overview', id:'overview'}
 					]
 
 			initializeNavigation: () ->
@@ -50,52 +52,43 @@ define([
 				@registerUserRoutes()
 
 			registerRouteRewrites: () ->
-				@router.registerRouteRewrite 'defaultAction', '/dashboard/repositories'
 				@router.registerRouteRewrite 'dashboardRepositories', '/dashboard/repositories'
 				@router.registerRouteRewrite 'userProfile', '/user/profile'
-				@router.registerRouteRewrite 'adminOverview', '/admin/overview'
+				@router.registerRouteRewrite 'adminOverview', '/administration/overview'
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', -> @showView 
 					view: 'admin/Overview'
 					title: 'Admin area'
-					nav: 'admin'
 				@router.registerAdminRoute 'adminUserNew', -> @showView 
 					view: 'user/Profile'
-					title: 'Admin area'
+					title: 'Admin area - New profile'
 					viewOptions: 
 						user: new User()
 						adminArea: true
 				@router.registerAdminRoute 'adminUserEdit', (username) -> @showView 
 					view: 'user/Profile'
-					title: 'Admin area'
-					nav: 
-						type: 'user'
-						urlPrefix: 'admin'
-						urlSuffix: username
+					title: "Admin area - Profile '#{username}'"
 					viewOptions: 
 						user: new User {username: username}
 						adminArea: true
 				@router.registerAdminRoute 'adminRepositoryNew', -> @showView 
 					view: 'repository/Create'
-					title: 'New repository'
+					title: 'Admin area - New repository'
 					viewOptions: 
 						adminArea: true
 				@router.registerAdminRoute 'adminRepositoryInfo', (group, name) -> @showView 
 					view: 'repository/Info'
-					title: "#{group}/#{name}"
-					nav: 
-						type: 'repository'
-						urlPrefix: 'admin'
-						urlSuffix: "#{group}/#{name}"
+					title: "Admin area - Repository '#{group}/#{name}'"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						adminArea: true
 
 			registerUserRoutes: () ->
+				@router.registerUserRoute 'notFound', -> @show404()
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
-					title: 'User area'
+					title: 'Profile'
 					nav: 'user'
 				@router.registerUserRoute 'dashboardRepositories', -> 
 					@showView 
@@ -110,7 +103,8 @@ define([
 					title: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
-						urlSuffix: "#{group}/#{name}"
+						active: 'info'
+						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryId) -> @showView 
@@ -118,7 +112,8 @@ define([
 					title: "#{group}/#{name} - Data sets"
 					nav: 
 						type: 'repository'
-						urlSuffix: "#{group}/#{name}"
+						active: 'datasets'
+						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						categoryId: categoryId
@@ -127,7 +122,8 @@ define([
 					title: "#{group}/#{name} - Data sets"
 					nav: 
 						type: 'repository'
-						urlSuffix: "#{group}/#{name}"
+						active: 'datasets'
+						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						type: type
@@ -138,7 +134,8 @@ define([
 					title: "#{group}/#{name} - Commits"
 					nav: 
 						type: 'repository'
-						urlSuffix: "#{group}/#{name}"
+						active: 'commits'
+						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryCommit', (group, name, commitId) -> @showView 
@@ -146,7 +143,8 @@ define([
 					title: "#{group}/#{name} - Commits"
 					nav: 
 						type: 'repository'
-						urlSuffix: "#{group}/#{name}"
+						active: 'commits'
+						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						commitId: commitId
@@ -168,11 +166,17 @@ define([
 				$('#header-title').html options.title
 				if typeof options.nav is 'string'
 					options.nav = {type: options.nav}
-				@navigation.setItems @getNav options.nav
+				@navigation.setItems @getNav(options.nav), options.nav?.active
 				Layouts.renderViewInLayout 'full-size',
 					viewOptions: options.viewOptions
 					views:
 						center: options.view
+
+			show404: () ->
+				console.log 123
+				$('#header-title').empty()
+				@navigation.setItems []
+				$('#main').html template404()
 
 		)()
 

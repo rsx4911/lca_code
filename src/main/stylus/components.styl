@@ -32,10 +32,11 @@
 .status-bar:not(.alert-danger):not(.alert-success):not(.alert-warning):not(.alert-info)
 	display none
 	
-.filter-box
+.header-box
 	padding 25px
 	background-color rgb(248, 250, 252)
 	border-bottom 1px solid rgb(231, 233, 237)
+	border-top 1px solid rgb(231, 233, 237)
 
 	input.filter
 		width 200px
@@ -44,6 +45,25 @@
 	.btn > .glyphicon
 		font-size 14px
 		padding-right 5px
+
+.content-box
+	background-color white
+	
+.multi-box-view
+	
+	.header-box
+		font-size 18px
+
+		.pull-right
+			margin-top -12px
+
+	.content-box
+		padding 25px
+
+		&:not(:last-child)
+
+			@media(min-width 992px)
+				margin-bottom 25px
 
 .user-info
 	color rgb(127, 143, 164)

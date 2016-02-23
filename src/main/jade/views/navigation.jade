@@ -1,10 +1,12 @@
 if items && items.length
 	ul
+		- var first = true;
 		each item in items
-			li(class=path.indexOf(item.href)===0?'active':null)
+			li(class=item.id===active||(!active&&first)?'active':null)
 				a(href=item.href) 
 					img.nav-icon(src=item.imageSrc)
 					span.nav-label #{item.label}
+			- first = false;
 .profile-link
 	a(href='/user/profile')
 		img.avatar(src='/ws/user/avatar/#{username}')

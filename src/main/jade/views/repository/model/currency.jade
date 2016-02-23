@@ -1,13 +1,14 @@
 include ./mixins.jade
 
 +menubar
-.model-left-content
-	+header
-	.content
-		table.table.no-head
-			tbody
-				+field-row('Currency code', dataset.code)
-				+field-row('Conversion factor', dataset.conversionFactor)
-				+ref-row('Reference currency', dataset.referenceCurrency)
-+meta
-.clear
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+field-row('Currency code', dataset.code)
+					+field-row('Conversion factor', dataset.conversionFactor)
+					+ref-row('Reference currency', dataset.referenceCurrency)
+	+meta
+	.clear

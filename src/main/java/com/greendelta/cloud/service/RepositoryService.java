@@ -3,7 +3,9 @@ package com.greendelta.cloud.service;
 import static org.openlca.cloud.util.Strings.concat;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +17,7 @@ import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -151,6 +154,19 @@ public class RepositoryService {
 			log.error("Error reading repository avatar file", e);
 			return null;
 		}
+	}
+
+	public void setAvatar(String group, String name, InputStream file) {
+		File avatarFile = get(group, name).getAvatarFile();
+		if (file != null)
+			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
+				ByteStreams.copy(file, output);
+			} catch (IOException e) {
+				log.error("Error writing repository avatar file", e);
+			}
+		else if (avatarFile.exists())
+			avatarFile
+					.delete();
 	}
 
 }

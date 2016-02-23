@@ -70,7 +70,7 @@ define([
 					@removeAtSigns dataset
 					@$el.html template 
 						dataset: dataset
-						baseUrl: "/repository/dataset/#{group}/#{name}"
+						baseUrl: "/#{group}/#{name}/dataset"
 						formatDate: (value) -> return if !value then '' else moment(value).format('MM/DD/YYYY hh:mm:ss')
 						getLabel: @getLabel
 						getIcon: Icons.get
@@ -78,7 +78,7 @@ define([
 						getUncertaintyLabel: @getUncertaintyLabel
 						downloadUrl: @getUrl()
 					Renderer.render @, renderOptions
-					if dataset.type is 'Location' and dataset.geometry
+					if dataset.type is 'Location' # and dataset.geometry
 						@initMap dataset				
 
 			removeAtSigns: (object) ->

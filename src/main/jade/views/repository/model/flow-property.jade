@@ -1,13 +1,14 @@
 include ./mixins.jade
 
 +menubar
-.model-left-content
-	+header
-	.content
-		table.table.no-head
-			tbody
-				+ref-row('Unit group', dataset.unitGroup)
-				+field-row('Flow property type')
-					| #{getLabel('FlowPropertyType', dataset.flowPropertyType)}
-+meta
-.clear
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+ref-row('Unit group', dataset.unitGroup)
+					+field-row('Flow property type')
+						| #{getLabel('FlowPropertyType', dataset.flowPropertyType)}
+	+meta
+	.clear

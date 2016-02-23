@@ -1,15 +1,9 @@
 include ../mixins/forms.jade
 
-h4
-	if !adminArea
-		| Profile
-	else if user.id
-		| Profile: #{user.name} 
+.header-box Account
+	if user.id && adminArea
 		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
-	else
-		| New profile
-legend Account
-form#user
+form#user-form.content-box
 	#user-general-message-group.alert(role='alert'): span.message
 	unless user.id
 		+input('username', 'Username*')
@@ -22,11 +16,19 @@ form#user
 			| Save
 		else
 			| Create
+	.clear
 if user.id
-	legend Password
-	form#password
+	.header-box Avatar
+		img.pull-right.avatar(src='/ws/user/avatar/#{user.username}')
+	form#avatar-form.content-box
+		#avatar-general-message-group.alert(role='alert'): span.message
+		+input('avatar', null, 'file')
+		button.btn.btn-lg.btn-success.pull-right(data-action='save-avatar') Save
+		.clear
+	.header-box Password
+	form#password-form.content-box
 		#password-general-message-group.alert(role='alert'): span.message
 		+input('password', 'Password', 'password')
 		+input('password2', 'Password (repeated)', 'password')
 		button.btn.btn-lg.btn-success.pull-right(data-action='save-password') Save
-.clear
+		.clear

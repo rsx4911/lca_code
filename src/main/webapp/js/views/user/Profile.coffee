@@ -2,6 +2,7 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Forms'
+				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!utils/Renderer'
 				'cs!utils/Status'
@@ -11,55 +12,16 @@ define([
 				'templates/views/user/profile'
 			]
 
-	(Backbone, Events, Forms, Model, Renderer, Status, Router, User, currentUser, template) ->
+	(Backbone, Events, Forms, Layers, Model, Renderer, Status, Router, User, currentUser, template) ->
 
 		class UserProfile extends Backbone.View
 
-			doRender: (renderOptions) ->
-				user = @user.toJSON()
-				@$el.html template
-					user: user
-					adminArea: @adminArea
-				Renderer.render @, renderOptions
-				Forms.fill 'user', user
-
-			saveUser: (event) ->
-				Events.preventDefault event
-				@user.set Forms.toJson 'user'
-				unless @user.get('username')
-					Forms.handleError 'user', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
-					return false
-				Model.save @user, 
-					success: () => @reload()
-					error: (model, response) -> Forms.handleError 'user', response
-				return false
-
-			savePassword: (event) ->
-				Events.preventDefault event
-				$.ajax
-					type: 'PUT'
-					url: '/ws/admin/user/' + @user.get('username') + '/setpassword'
-					data: JSON.stringify Forms.toJson 'password'
-					contentType: 'application/json'
-					dataType: 'text'
-					success: () => @reload()
-					error: (response) -> Forms.handleError 'password', response
-				return false
-
-			deleteUser: (event) ->
-				@user.destroy 
-					success: () -> Router.navigate 'admin/overview'
-
-			reload: () ->
-				if currentUser.isAdmin() and @adminArea
-					Router.navigate 'admin/overview'
-				else
-					Status.success 'Successfully updated profile'
-					Backbone.history.loadUrl()
+			className: 'profile-view multi-box-view'
 
 			events:
-				'submit #user': (event) -> @saveUser event
-				'submit #password': (event) -> @savePassword event
+				'submit #user-form': (event) -> @saveUser event
+				'submit #avatar-form': (event) -> @saveAvatar event
+				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
 
 			initialize: (options) ->
@@ -74,5 +36,91 @@ define([
 							@doRender renderOptions
 				else
 					@doRender renderOptions
+
+			doRender: (renderOptions) ->
+				user = @user.toJSON()
+				@$el.html template
+					user: user
+					adminArea: @adminArea
+				Renderer.render @, renderOptions
+				Forms.fill 'user-form', user
+
+			saveUser: (event) ->
+				Events.preventDefault event
+				@user.set Forms.toJson 'user-form'
+				username = @user.get 'username'
+				unless username
+					Forms.handleError 'user-form', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
+					return false
+				if @adminArea and !@user.get('id')
+						$.ajax
+							type: 'POST'
+							url: "/ws/admin/user/#{username}"
+							data: JSON.stringify @user.toJSON()
+							contentType: 'application/json'
+							success: () => @reload()
+							error: (response) -> Forms.handleError 'user-form', response
+				else
+					Model.save @user, 
+						success: () => @reload()
+						error: (model, response) -> Forms.handleError 'user-form', response
+				return false
+
+			saveAvatar: (event) ->
+				Events.preventDefault event
+				file = @$('#avatar', '#avatar-form')[0].files[0]
+				unless file
+					Layers.askQuestion
+						title: 'Reset avatar'
+						question: 'You did not select a new image, do you want to replace your current avatar with the default?'
+						answers: ['No', 'Yes']
+						onAnswer: (index) => 
+							if index is 1
+								@uploadAvatar()
+				else
+					@uploadAvatar file
+				return false
+
+			uploadAvatar: (file) ->
+				formData = new FormData()
+				if file
+					formData.append 'file', file
+				else
+					formData.append 'dummy', true
+				$.ajax
+					type: 'PUT'
+					url: '/ws/user/avatar/' + @user.get('username')
+					data: formData
+					processData: false
+					contentType: false
+					success: () => @reload()
+					error: (response) -> Forms.handleError 'avatar-form', response
+
+			savePassword: (event) ->
+				Events.preventDefault event
+				$.ajax
+					type: 'PUT'
+					url: '/ws/user/setpassword/' + @user.get('username')
+					data: JSON.stringify Forms.toJson 'password-form'
+					contentType: 'application/json'
+					dataType: 'text'
+					success: () => @reload()
+					error: (response) -> Forms.handleError 'password-form', response
+				return false
+
+			deleteUser: (event) ->
+				username = @user.get 'name'
+				Layers.askDeleteQuestion "user #{username}", username, () =>
+					$.ajax
+						type: 'DELETE'
+						url: "/ws/admin/user/#{username}"
+						success: () -> Router.navigate 'admin/overview'
+
+			reload: () ->
+				if currentUser.isAdmin() and @adminArea
+					Router.navigate 'administration/overview'
+				else
+					Status.success 'Successfully updated profile'
+					Backbone.history.loadUrl()
 
 )

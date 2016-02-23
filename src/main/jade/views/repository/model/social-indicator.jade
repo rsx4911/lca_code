@@ -1,16 +1,17 @@
 include ./mixins.jade
 
 +menubar
-.model-left-content
-	+header
-	.content
-		table.table.no-head
-			tbody
-				+field-row('Unit of measurement', dataset.unitOfMeasurement, true)
-				+field-row('Evaluation scheme', dataset.evaluationScheme, true)
-				+field-row('Activity variable', dataset.activityVariable, true)
-				+ref-row('Activity quantity', dataset.activityQuantity)
-				if dataset.activityUnit
-					+field-row('Activity unit', dataset.activityUnit.name)
-+meta
-.clear
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+field-row('Unit of measurement', dataset.unitOfMeasurement, true)
+					+field-row('Evaluation scheme', dataset.evaluationScheme, true)
+					+field-row('Activity variable', dataset.activityVariable, true)
+					+ref-row('Activity quantity', dataset.activityQuantity)
+					if dataset.activityUnit
+						+field-row('Activity unit', dataset.activityUnit.name)
+	+meta
+	.clear

@@ -1,10 +1,10 @@
-.filter-box
+.header-box
 	strong #{path}
 	button.btn.btn-success.pull-right(data-action='create-repository') 
 		span.glyphicon.glyphicon-download
 		| Download Zip
 	.clear
-table.table.table-browse
+table.table.table-browse.content-box
 	thead
 		tr
 			th
@@ -25,7 +25,7 @@ table.table.table-browse
 			tr
 				if isRoot
 					td: img.model-icon-small(src='/images/model/small/category/#{entry.toLowerCase()}.png')
-					td: a(href='#{baseUrl}/#{entry}'): strong  #{getRootLabel(entry)}
+					td: a(href='#{baseUrl}/datasets/#{entry}'): strong  #{getRootLabel(entry)}
 					td
 					td
 				else
@@ -41,8 +41,8 @@ table.table.table-browse
 					td: img.model-icon-small(src='/images/model/small/#{icon}.png')
 					td
 						if entry.type === 'CATEGORY'
-							a(href='#{baseUrl}/#{entry.refId}'): strong #{entry.name}
+							a(href='#{baseUrl}/datasets/#{entry.refId}'): strong #{entry.name}
 						else
-							a(href='#{datasetUrl}/#{entry.type}/#{entry.refId}'): strong #{entry.name}
+							a(href='#{baseUrl}/dataset/#{entry.type}/#{entry.refId}'): strong #{entry.name}
 					td #{formatLastUpdate(entry.lastUpdate)}
-					td: a(href='/commit/#{entry.commitId}') #{entry.commitMessage}
+					td: a(href='#{baseUrl}/commit/#{entry.commitId}') #{entry.commitMessage}

@@ -69,8 +69,7 @@ define([
 						entries: data.entries
 						parentRefId: data.parentRefId
 						path: path
-						baseUrl: "/repository/datasets/#{repository.group}/#{repository.name}"
-						datasetUrl: "/repository/dataset/#{repository.group}/#{repository.name}"
+						baseUrl: "/#{repository.group}/#{repository.name}"
 						isRoot: (if @categoryId then false else true)
 						formatLastUpdate: (value) -> return moment(value).fromNow()
 						getRootLabel: @getRootLabel

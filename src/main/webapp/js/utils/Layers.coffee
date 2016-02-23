@@ -120,22 +120,31 @@ define([
 					title: options.title
 					buttons: buttons
 
-			askDeleteQuestion: (deleteCallback) ->
+			askDeleteQuestion: (toDelete, confirmationPhrase, callback) ->
 				buttons = []
 				buttons.push
-					text: 'Yes'
+					text: 'Confirm'
+					id: 'btn-confirm-delete'
 					className: 'btn-danger'
 					callback: () =>
 						@closeActive()
-						deleteCallback?()
+						callback?()
 				buttons.push
-					text: 'No'
-					className: 'btn-success'
+					text: 'Cancel'
+					className: 'btn-default'
 					callback: @closeActive
-				@showMessageInLayer
-					body: 'Are you sure you want to delete the selected element?'
-					title: 'Delete element'
+				@showTemplateInLayer
+					title: 'Confirmation required'
+					template: 'confirm-delete'
+					model: 
+						text: "You are about to delete #{toDelete}. This action can not be undone. Are you absolutely sure?"
+						confirmationPhrase: confirmationPhrase
 					buttons: buttons
+					callback: () ->
+						$('#btn-confirm-delete').prop 'disabled', true
+						$('#confirmation-phrase').on 'keyup', (event) ->
+							target = $ Events.target event
+							$('#btn-confirm-delete').prop 'disabled', (target.val() isnt confirmationPhrase)
 
 
 			showProgressIndicator: (message) ->

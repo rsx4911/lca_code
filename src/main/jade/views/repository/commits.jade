@@ -1,5 +1,5 @@
-.filter-box
-.content
+.header-box
+.content-box
 	each group in groups	
 		.commit-group
 			.date-and-count
@@ -14,10 +14,10 @@
 					.commit
 						.commit-details.pull-left
 							.commit-message=commit.message
-							a.user-info(href='#') 
+							span.user-info
 								img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user}')
 								span.username=commit.userDisplayName
 						.commit-link.pull-right
 							.commit-id.pull-right=commit.id
-							a.pull-right(href='/repository/commit/#{repository.group}/#{repository.name}/#{commit.id}') Details »
+							a.pull-right(href='/#{repository.group}/#{repository.name}/commit/#{commit.id}') Details »
 						.clear

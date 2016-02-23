@@ -1,15 +1,16 @@
 include ./mixins.jade
 
 +menubar
-.model-left-content
-	+header
-	.content
-		table.table.no-head
-			tbody
-				- var type = dataset.inputParameter ? 'Input' : 'Dependant'
-				+field-row('Type', type)
-				- var formula = dataset.name + ' = ';
-				- formula += dataset.inputParameter ? dataset.value : (dataset.formula + ' = ' + dataset.value)
-				+field-row('Formula', formula)
-+meta
-.clear
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					- var type = dataset.inputParameter ? 'Input' : 'Dependant'
+					+field-row('Type', type)
+					- var formula = dataset.name + ' = ';
+					- formula += dataset.inputParameter ? dataset.value : (dataset.formula + ' = ' + dataset.value)
+					+field-row('Formula', formula)
+	+meta
+	.clear

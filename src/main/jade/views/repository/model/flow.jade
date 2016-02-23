@@ -1,40 +1,41 @@
 include ./mixins.jade
 
 +menubar
-.model-left-content
-	+header
-	.content
-		table.table.no-head
-			tbody
-				+field-row('Type', getLabel('FlowType', dataset.flowType))
-				+field-row('CAS number', dataset.casNumber, true)
-				+field-row('Formula', dataset.formula, true)
-				if dataset.synonyms && dataset.synonyms.length
-					+field-row('Synonyms')
-						.comma-separated
-							each synonym in dataset.synonyms
-								span=synonym
-				+ref-row('Location', dataset.location)
-		if dataset.flowProperties
-			h4 Flow properties
-			table.table.flow-properties
-				thead
-					tr
-						th Name
-						th Formula
-						th Is reference
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
 				tbody
-					- var referenceFactor = null;
-					each factor in dataset.flowProperties
-						if factor.referenceFlowProperty
-							- referenceFactor = factor
-					each factor in dataset.flowProperties
-						if factor.flowProperty
-							tr(class=factor.referenceFlowProperty?'reference':null)
-								td: +ref(factor.flowProperty)
-								td 1 #{referenceFactor.flowProperty.name} = #{factor.conversionFactor} #{factor.flowProperty.name}
-								td
-									if factor.referenceFlowProperty
-										img.icon-small(src='/images/check_true.png')
-+meta
-.clear
+					+field-row('Type', getLabel('FlowType', dataset.flowType))
+					+field-row('CAS number', dataset.casNumber, true)
+					+field-row('Formula', dataset.formula, true)
+					if dataset.synonyms && dataset.synonyms.length
+						+field-row('Synonyms')
+							.comma-separated
+								each synonym in dataset.synonyms
+									span=synonym
+					+ref-row('Location', dataset.location)
+			if dataset.flowProperties
+				h4 Flow properties
+				table.table.flow-properties
+					thead
+						tr
+							th Name
+							th Formula
+							th Is reference
+					tbody
+						- var referenceFactor = null;
+						each factor in dataset.flowProperties
+							if factor.referenceFlowProperty
+								- referenceFactor = factor
+						each factor in dataset.flowProperties
+							if factor.flowProperty
+								tr(class=factor.referenceFlowProperty?'reference':null)
+									td: +ref(factor.flowProperty)
+									td 1 #{referenceFactor.flowProperty.name} = #{factor.conversionFactor} #{factor.flowProperty.name}
+									td
+										if factor.referenceFlowProperty
+											img.icon-small(src='/images/check_true.png')
+	+meta
+	.clear

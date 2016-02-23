@@ -15,12 +15,12 @@ define([
 
 		class AdminOverview extends Backbone.View
 
-			className: 'admin-overview two-columns'
+			className: 'admin-overview two-columns content-box'
 
 			events: 
 				'click a[href].follow': (event) -> Events.followLink event
-				'click [data-action=create-user]': () -> Router.navigate 'admin/user/new'
-				'click [data-action=create-repository]': () -> Router.navigate 'admin/repository/new'
+				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
+				'click [data-action=create-repository]': () -> Router.navigate 'administration/repository/new'
 
 			initialize: () ->
 				@userFilter = new Filter

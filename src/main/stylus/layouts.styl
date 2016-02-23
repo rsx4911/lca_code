@@ -2,18 +2,16 @@
 	max-width 1200px
 
 	@media(min-width 992px)
-		margin 20px auto
-		padding 0 20px
+		margin 25px auto
 
 	& > .center
-		background-color white
-		
-		& > *
-			padding 25px
-				
+	
+		@media(min-width 992px)
+			margin 0 25px
+						
 		.two-columns > *:not(.clear)
-			margin 1%
 
 			@media(min-width 992px)
+				margin 1%
 				width 48%
 				float left

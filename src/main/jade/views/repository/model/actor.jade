@@ -1,26 +1,27 @@
 include ./mixins.jade
 
 +menubar
-.model-left-content
-	+header
-	.content
-		table.table.no-head
-			tbody
-				+field-row('Address')
-					if dataset.address
-						div #{dataset.address}
-					if dataset.zipCode || dataset.city
-						div #{dataset.zipCode} #{dataset.city} 
-					if dataset.country
-						div #{dataset.country}
-				+field-row('Phone', dataset.telephone, true)
-				+field-row('Fax', dataset.telefax, true)
-				+field-row('Fax', dataset.telefax, true)
-				if dataset.email
-					+field-row('Email')
-						a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
-				if dataset.website
-					+field-row('Website')
-						a(href=dataset.website target='_blank')=dataset.website
-+meta
-.clear
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+field-row('Address')
+						if dataset.address
+							div #{dataset.address}
+						if dataset.zipCode || dataset.city
+							div #{dataset.zipCode} #{dataset.city} 
+						if dataset.country
+							div #{dataset.country}
+					+field-row('Phone', dataset.telephone, true)
+					+field-row('Fax', dataset.telefax, true)
+					+field-row('Fax', dataset.telefax, true)
+					if dataset.email
+						+field-row('Email')
+							a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
+					if dataset.website
+						+field-row('Website')
+							a(href=dataset.website target='_blank')=dataset.website
+	+meta
+	.clear

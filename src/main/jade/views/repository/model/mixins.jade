@@ -1,7 +1,7 @@
 include ../../mixins/forms.jade
 
 mixin menubar()
-	.filter-box
+	.header-box
 		+select('commitId', 'Version', [['null', 'Latest']])
 		a.btn.btn-success.pull-right(href='#{downloadUrl}' download='#{dataset.id}.json')
 			span.glyphicon.glyphicon-download  
@@ -21,7 +21,7 @@ mixin header()
 	hr
 
 mixin meta() 
-	.model-right-content
+	.model-right-content.content-box
 		.meta-info
 			div
 				strong Version

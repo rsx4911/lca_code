@@ -20,9 +20,10 @@ mixin input(id, label, type, inline, required)
 	if hidden || !type
 		- type = 'text'
 	div(id='#{id}-group' class=clazz)
-		label.control-label(for='#{id}') #{label}
-			if required
-				sup *
+		if label
+			label.control-label(for='#{id}') #{label}
+				if required
+					sup *
 		input.form-control(id='#{id}' name='#{id}' type='#{type}')&attributes(attributes)
 		block
 
@@ -86,8 +87,3 @@ mixin textarea(id, label)
 		label.control-label(for='#{id}') #{label}
 		textarea.form-control(id='#{id}' name='#{id}')&attributes(attributes)
 			block
-
-mixin fileReplacer(id, label, removeLabel)
-	+input(id, label, 'file')
-	if removeLabel
-		+checkbox('remove-' + id, removeLabel)

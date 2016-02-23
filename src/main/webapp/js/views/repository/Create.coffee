@@ -14,27 +14,29 @@ define([
 
 		class RepositoryCreate extends Backbone.View
 
+			className: 'repository-view multi-box-view'
+
 			createRepository: () ->
-				@repository.set Forms.toJson 'repository'
+				@repository.set Forms.toJson 'repository-form'
 				@repository.set 'isNew', true
 				unless @repository.get('name')
-					Forms.handleError 'repository', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
+					Forms.handleError 'repository-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
 					return false
 				unless @repository.get('group')
-					Forms.handleError 'repository', {responseJSON: {field: 'group', message: 'Missing input: Group'}}
+					Forms.handleError 'repository-form', {responseJSON: {field: 'group', message: 'Missing input: Group'}}
 					return false
 				Model.save @repository, 
 					success: () => @reload()
-					error: (model, response) -> Forms.handleError 'repository', response
+					error: (model, response) -> Forms.handleError 'repository-form', response
 				return false
 
 			reload: () ->
 				if currentUser.isAdmin() and @adminArea
-					Router.navigate 'admin/overview'
+					Router.navigate 'administration/overview'
 				else
 					group = @repository.get 'group'
 					name = @repository.get 'name'
-					Router.navigate "repository/#{group}/#{name}"
+					Router.navigate "#{group}/#{name}"
 
 			events:
 				'click [data-action=create-repository]': (event) -> @createRepository event
