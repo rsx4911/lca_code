@@ -57,6 +57,11 @@ public class BrowseResource {
 			}
 		}
 		List<DatasetIndexEntry> content = service.getCategoryContent(repo, categoryRefId);
+		if (content.isEmpty())
+			if (service.categoryExists(repo, categoryRefId))
+				Respond.ok(appendParentRefId(repo, content));
+			else
+				return Respond.notFound();
 		return Respond.ok(appendParentRefId(repo, content));
 	}
 

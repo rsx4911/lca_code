@@ -61,6 +61,8 @@ public class HistoryResource {
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
 		Commit commit = service.getCommit(repo, commitId);
+		if (commit == null)
+			return Respond.notFound();
 		Map<String, Object> result = putUserName(commit);
 		List<Dataset> refs = new ArrayList<>();
 		for (Dataset d : service.getReferences(repo, commitId))

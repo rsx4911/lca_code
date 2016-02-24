@@ -96,10 +96,8 @@ public class DatasetIndex {
 		if (searcher == null)
 			return Collections.emptyList();
 		try {
-			Query query1 = IndexUtil.andQuery(new Term("categoryRefId", ""),
-					new Term("type", type.name()));
-			Query query2 = IndexUtil.andQuery(new Term("categoryRefId", ""),
-					new Term("categoryType", type.name()));
+			Query query1 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("type", type.name()));
+			Query query2 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("categoryType", type.name()));
 			Query query = IndexUtil.orQuery(query1, query2);
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
@@ -132,6 +130,23 @@ public class DatasetIndex {
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);
 			return Collections.emptyList();
+		}
+	}
+
+	public boolean categoryExists(String categoryId) {
+		IndexSearcher searcher = IndexUtil.getSearcher(directory);
+		if (searcher == null)
+			return false;
+		if (categoryId == null)
+			categoryId = "";
+		try {
+			Query query = IndexUtil
+					.andQuery(new Term("refId", categoryId), new Term("type", ModelType.CATEGORY.name()));
+			TopDocs topDocs = searcher.search(query, 1);
+			return topDocs.totalHits != 0;
+		} catch (IOException e) {
+			log.error("Error retrieving dataset identifiers", e);
+			return false;
 		}
 	}
 

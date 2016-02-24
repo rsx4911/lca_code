@@ -71,6 +71,14 @@ public class RepositoryResource {
 	}
 
 	@GET
+	@Path("{group}/{name}")
+	public Response get(@PathParam("group") String group,
+			@PathParam("name") String name) {
+		service.get(group, name);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@GET
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		PagedResult<Repository> result = service.getAll(page, filter, true);

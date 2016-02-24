@@ -3,12 +3,13 @@ define([
 				'cs!app/UserMenu'
 				'cs!utils/Events'
 				'cs!utils/Layouts'
+				'cs!utils/Model'
 				'cs!models/User'
 				'cs!models/Repository'
 				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layouts, User, Repository, template404) ->
+	(Navigation, UserMenu, Events, Layouts, Model, User, Repository, template404) ->
 
 		Controller = () ->
 
@@ -161,19 +162,27 @@ define([
 				@initializeUserMenu()
 				@registerRoutes()
 
+			checkRepositoryExists: (options, callback) ->
+				unless options.viewOptions?.repository
+					callback?()
+					return
+				Model.fetch options.viewOptions.repository,
+					force: true
+					success: callback
+
 			showView: (options) ->
-				$('#main').empty()
-				$('#header-title').html options.title
-				if typeof options.nav is 'string'
-					options.nav = {type: options.nav}
-				@navigation.setItems @getNav(options.nav), options.nav?.active
-				Layouts.renderViewInLayout 'full-size',
-					viewOptions: options.viewOptions
-					views:
-						center: options.view
+				@checkRepositoryExists options, () =>
+					$('#main').empty()
+					$('#header-title').html options.title
+					if typeof options.nav is 'string'
+						options.nav = {type: options.nav}
+					@navigation.setItems @getNav(options.nav), options.nav?.active
+					Layouts.renderViewInLayout 'full-size',
+						viewOptions: options.viewOptions
+						views:
+							center: options.view
 
 			show404: () ->
-				console.log 123
 				$('#header-title').empty()
 				@navigation.setItems []
 				$('#main').html template404()
