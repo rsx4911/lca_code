@@ -114,7 +114,7 @@ define([
 					$.ajax
 						type: 'DELETE'
 						url: "/ws/admin/user/#{username}"
-						success: () -> Router.navigate 'admin/overview'
+						success: () -> Router.navigate 'administration/overview'
 
 			reload: () ->
 				if currentUser.isAdmin() and @adminArea

@@ -24,8 +24,14 @@
 			border-right 1px solid rgb(221, 221, 221)
 			border-bottom 0
 
+		.nav-tabs > li
+			
+			@media(max-width 479px)
+				float none
+
 		.title, .content
 			padding 0 25px
+			margin-top 0
 			
 			&:first-child
 				padding-top 25px
@@ -38,8 +44,20 @@
 			& > tr:first-child > td
 				border 0
 
-		.table.inputs > tbody > tr > td:first-child, .table.outputs > tbody > tr > td:first-child
-			width 35px
+		.table.inputs > tbody > tr > td, .table.inputs > thead > tr > th, .table.outputs > tbody > tr > td, .table.outputs > thead > tr > th
+			
+			&:first-child
+				width 35px
+
+			&:nth-child(3), &:nth-child(5)
+
+				@media(max-width 479px)
+					display none
+
+		.table-parameters > tbody > tr > td:nth-child(3), .table-parameters > thead > tr > th:nth-child(3)
+
+			@media(max-width 479px)
+				display none
 
 		.table.units > thead > tr > th, .table.units > tbody > tr > td, .table.flow-properties > thead > tr > th, .table.flow-properties > tbody > tr > td
 			text-align center
@@ -53,6 +71,7 @@
 				width 30%
 				
 			&:nth-child(2), &:nth-child(3)
+
 				@media(max-width 767px)
 					display none
 

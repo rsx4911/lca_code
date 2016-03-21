@@ -32,8 +32,14 @@
 				border-bottom 1px solid rgb(221, 221, 221)
 
 			.commit-details
-				max-width 48%
+				max-width 60%
 				
+				@media(max-width 767px)
+					max-width 70%
+
+				@media(min-width 768px) and (max-width 1199px)
+					max-width 45%
+
 				.commit-message
 					font-weight bold
 								

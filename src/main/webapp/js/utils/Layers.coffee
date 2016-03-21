@@ -80,7 +80,6 @@ define([
 
 			showMessageInLayer: (options) ->
 				internalOptions = $.extend {}, options
-				internalOptions.dialogType ?= 'small-content'
 				(@_ showInLayer) internalOptions
 
 			showTemplateInLayer: (options) ->

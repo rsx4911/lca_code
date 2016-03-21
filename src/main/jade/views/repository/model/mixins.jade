@@ -5,7 +5,7 @@ mixin menubar()
 		+select('commitId', 'Version', [['null', 'Latest']])
 		a.btn.btn-success.pull-right(href='#{downloadUrl}' download='#{dataset.id}.json')
 			span.glyphicon.glyphicon-download  
-			| Download Raw Data
+			span.text Download Raw Data
 		.clear
 
 mixin header()
@@ -112,25 +112,26 @@ mixin parameter-table(parameters, input)
 			- isEmpty = false
 	if !isEmpty
 		h4 #{input?'Input parameters':'Dependant parameters'}
-		table.table
+		table.table.table-parameters
 			thead
 				tr
-					th Name
-					th #{input?'Value':'Formula'}
-					th #{input?'Uncertainty':'Value'}
+					th Parameter
 					th Description
+					if input
+						th Uncertainty
 			tbody
 				each parameter in parameters
 					if parameter.inputParameter === input
 						tr
-							td=parameter.name
-							td #{parameter.inputParameter?parameter.value:parameter.formula}
-							td 
-								if parameter.inputParameter
-									+uncertainty(parameter.uncertainty)
-								else 
-									| #{parameter.value}
+							td
+								| #{parameter.name}
+								unless input
+									|  = #{parameter.formula}
+								|  = #{parameter.value}
 							td=parameter.description
+							if input
+								td
+									+uncertainty(parameter.uncertainty)
 
 mixin parameter-redef-table(parameters)
 	table.table

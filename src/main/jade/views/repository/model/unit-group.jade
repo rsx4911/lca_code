@@ -16,7 +16,6 @@ include ./mixins.jade
 						th Description
 						th Synonyms
 						th Formula
-						th Is reference
 				tbody
 					- var referenceUnit = null;
 					each unit in dataset.units
@@ -31,8 +30,5 @@ include ./mixins.jade
 									each synonym in unit.synonyms
 										.span #{synonym}
 							td 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
-							td
-								if unit.referenceUnit
-									img.icon-small(src='/images/check_true.png')
 	+meta
 	.clear
