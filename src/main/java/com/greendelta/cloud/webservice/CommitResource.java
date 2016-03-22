@@ -21,9 +21,9 @@ import com.greendelta.cloud.service.RepositoryService;
 @Path("commit")
 public class CommitResource {
 
-	private CommitService service;
-	private RepositoryService repoService;
-	private HistoryService historyService;
+	private final CommitService service;
+	private final RepositoryService repoService;
+	private final HistoryService historyService;
 
 	@Inject
 	public CommitResource(CommitService service, RepositoryService repoService,

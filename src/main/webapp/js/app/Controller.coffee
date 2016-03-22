@@ -6,10 +6,12 @@ define([
 				'cs!utils/Model'
 				'cs!models/User'
 				'cs!models/Repository'
+				'cs!models/Group'
+				'templates/views/403'
 				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layouts, Model, User, Repository, template404) ->
+	(Navigation, UserMenu, Events, Layouts, Model, User, Repository, Group, template403, template404) ->
 
 		Controller = () ->
 
@@ -20,19 +22,27 @@ define([
 					return
 				type = options.type
 				prefix = if options.urlPrefix then "/#{options.urlPrefix}" else ''
+				if type is 'group'
+					prefix = if options.urlPrefix then "/groups/#{options.urlPrefix}" else '/groups'
 				# the ids are used in Navigation to identify which menu item is currently active
 				# they need only to be unique within 'type'
 				switch type
 					when 'dashboard' then return [
 						{href: "#{prefix}/dashboard/repositories", imageSrc: '/images/repository.png', label: 'Repositories', id: 'repositories'}
+						{href: "#{prefix}/dashboard/groups", imageSrc: '/images/group.png', label: 'Groups', id: 'groups'}
 					]
 					when 'user' then return [
 						{href: "#{prefix}/user/profile", imageSrc: '/images/profile.png', label: 'Profile', id: 'profile'}
 					]
+					when 'group' then return [
+						{href: "#{prefix}", imageSrc: '/images/group.png', label: 'Group', id: 'group'}
+						{href: "#{prefix}/members", imageSrc: '/images/members.png', label: 'Members', id: 'members'}
+					]
 					when 'repository' then return [
-						{href: "#{prefix}", imageSrc: '/images/repository.png', label: 'Info', id: 'info'}
+						{href: "#{prefix}", imageSrc: '/images/repository.png', label: 'Repository', id: 'repository'}
 						{href: "#{prefix}/datasets", imageSrc: '/images/dataset.png', label: 'Data sets', id: 'datasets'}
 						{href: "#{prefix}/commits", imageSrc: '/images/commit.png', label: 'Commits', id: 'commits'}
+						{href: "#{prefix}/members", imageSrc: '/images/members.png', label: 'Members', id: 'members'}
 					]
 					when 'admin' then return [
 						{href: "#{prefix}/administration/overview", imageSrc: '/images/overview.png', label: 'Overview', id:'overview'}
@@ -73,20 +83,10 @@ define([
 					viewOptions: 
 						user: new User {username: username}
 						adminArea: true
-				@router.registerAdminRoute 'adminRepositoryNew', -> @showView 
-					view: 'repository/Create'
-					title: 'Admin area - New repository'
-					viewOptions: 
-						adminArea: true
-				@router.registerAdminRoute 'adminRepositoryInfo', (group, name) -> @showView 
-					view: 'repository/Info'
-					title: "Admin area - Repository '#{group}/#{name}'"
-					viewOptions: 
-						repository: new Repository({group: group, name: name})
-						adminArea: true
 
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @show404()
+				@router.registerUserRoute 'noAccess', -> @show403()
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
 					title: 'Profile'
@@ -95,16 +95,46 @@ define([
 					@showView 
 						view: 'dashboard/Repositories'
 						title: 'Repositories' 
-						nav: 'dashboard'
+						nav: 
+							type: 'dashboard'
+							active: 'repositories'
+				@router.registerUserRoute 'dashboardGroups', -> 
+					@showView 
+						view: 'dashboard/Groups'
+						title: 'Groups' 
+						nav: 
+							type: 'dashboard'
+							active: 'groups'
+				@router.registerUserRoute 'groupNew', -> @showView 
+					view: 'group/Create'
+					title: 'New group' 
+				@router.registerUserRoute 'groupInfo', (group) -> @showView 
+					view: 'group/Group'
+					title: group
+					nav: 
+						type: 'group'
+						active: 'group'
+						urlPrefix: group
+					viewOptions: 
+						group: new Group({name: group})
+				@router.registerUserRoute 'groupMembers', (group) -> @showView 
+					view: 'members/Members'
+					title: "#{group} - Members"
+					nav: 
+						type: 'group'
+						active: 'members'
+						urlPrefix: group
+					viewOptions: 
+						groupOrRepository: new Group({name: group})
 				@router.registerUserRoute 'repositoryNew', -> @showView 
 					view: 'repository/Create'
 					title: 'New repository' 
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> @showView 
-					view: 'repository/Info'
+					view: 'repository/Repository'
 					title: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
-						active: 'info'
+						active: 'repository'
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
@@ -149,7 +179,15 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						commitId: commitId
-
+				@router.registerUserRoute 'repositoryMembers', (group, name) -> @showView 
+					view: 'members/Members'
+					title: "#{group}/#{name} - Members"
+					nav: 
+						type: 'repository'
+						active: 'members'
+						urlPrefix: "#{group}/#{name}"
+					viewOptions: 
+						groupOrRepository: new Repository({group: group, name: name})
 			constructor: Controller
 
 			initialize: (router) ->
@@ -162,21 +200,25 @@ define([
 				@initializeUserMenu()
 				@registerRoutes()
 
-			checkRepositoryExists: (options, callback) ->
-				unless options.viewOptions?.repository
+			checkGroupOrRepositoryExists: (options, callback) ->
+				if options.viewOptions?.repository
+					Model.fetch options.viewOptions.repository,
+						force: true
+						success: callback
+				else if options.viewOptions?.group
+					Model.fetch options.viewOptions.group,
+						force: true
+						success: callback
+				else
 					callback?()
-					return
-				Model.fetch options.viewOptions.repository,
-					force: true
-					success: callback
 
 			showView: (options) ->
-				@checkRepositoryExists options, () =>
+				@checkGroupOrRepositoryExists options, () =>
 					$('#main').empty()
 					$('#header-title').html options.title
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
-					@navigation.setItems @getNav(options.nav), options.nav?.active
+					@navigation.setItems @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
 					Layouts.renderViewInLayout 'full-size',
 						viewOptions: options.viewOptions
 						views:
@@ -186,6 +228,11 @@ define([
 				$('#header-title').empty()
 				@navigation.setItems []
 				$('#main').html template404()
+
+			show403: () ->
+				$('#header-title').empty()
+				@navigation.setItems []
+				$('#main').html template403()
 
 		)()
 

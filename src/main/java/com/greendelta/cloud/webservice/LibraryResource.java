@@ -16,7 +16,7 @@ import com.greendelta.cloud.service.LibraryService;
 @Path("library")
 public class LibraryResource {
 
-	private LibraryService service;
+	private final LibraryService service;
 
 	@Inject
 	public LibraryResource(LibraryService service) {

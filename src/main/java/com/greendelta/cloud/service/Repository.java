@@ -1,7 +1,5 @@
 package com.greendelta.cloud.service;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -26,7 +24,7 @@ public class Repository {
 	Repository(String root, String group, String name) {
 		this.group = group;
 		this.name = name;
-		String path = concat(root, "/", toId());
+		String path = root + File.separator + toId();
 		repo = new File(path);
 		if (repo.exists()) {
 			checkVersion();
@@ -40,7 +38,7 @@ public class Repository {
 	}
 
 	public static String toId(String group, String name) {
-		return concat(group, "/", name);
+		return group + File.separator + name;
 	}
 
 	private void checkVersion() {
@@ -67,14 +65,14 @@ public class Repository {
 
 	File getCommitFile(String commitId, boolean create) {
 		File historyDir = getHistoryDir(create);
-		String filename = concat(commitId, ".txt");
+		String filename = commitId + ".txt";
 		return getFile(historyDir, filename, create);
 	}
 
 	File getDatasetFile(ModelType type, String refId, String commitId,
 			boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
-		String filename = concat(commitId, ".json");
+		String filename = commitId + ".json";
 		return getFile(datasetDir, filename, create);
 	}
 
@@ -120,7 +118,7 @@ public class Repository {
 				file.createNewFile();
 			} catch (IOException e) {
 				String path = file.getAbsolutePath();
-				String message = concat("Error creating file ", path);
+				String message = "Error creating file " + path;
 				log.error(message, e);
 			}
 		return file;

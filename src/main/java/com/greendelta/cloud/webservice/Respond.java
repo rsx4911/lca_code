@@ -1,12 +1,20 @@
 package com.greendelta.cloud.webservice;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.io.Resources;
+
 public class Respond {
+
+	private static final Logger log = LoggerFactory.getLogger(Respond.class);
 
 	public static Response ok() {
 		return status(Status.OK);
@@ -14,6 +22,16 @@ public class Respond {
 
 	public static Response ok(Object entity) {
 		return status(Status.OK, entity);
+	}
+
+	public static Response ok(byte[] bytes, String defaultPath) {
+		if (bytes == null)
+			try {
+				bytes = Resources.toByteArray(Respond.class.getResource(defaultPath));
+			} catch (IOException e) {
+				log.error("Error loading default value", e);
+			}
+		return Respond.ok(bytes);
 	}
 
 	public static Response badRequest() {
@@ -24,7 +42,6 @@ public class Respond {
 		return status(Status.BAD_REQUEST, entity);
 	}
 
-	
 	public static Response conflict() {
 		return status(Status.CONFLICT);
 	}
@@ -87,5 +104,5 @@ public class Respond {
 		error.put("message", message);
 		return badRequest(error);
 	}
-	
+
 }

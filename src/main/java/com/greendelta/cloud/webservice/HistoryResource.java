@@ -26,9 +26,9 @@ import com.greendelta.cloud.service.UserService;
 @Path("history")
 public class HistoryResource {
 
-	private HistoryService service;
-	private RepositoryService repoService;
-	private UserService userService;
+	private final HistoryService service;
+	private final RepositoryService repoService;
+	private final UserService userService;
 
 	@Inject
 	public HistoryResource(HistoryService service, RepositoryService repoService, UserService userService) {

@@ -1,7 +1,5 @@
 package com.greendelta.cloud.platform.guice;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -79,7 +77,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 				"database.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
-		String url = concat("jdbc:derby:", databasePath);
+		String url = "jdbc:derby:" + databasePath;
 		if (!new File(databasePath).exists())
 			copyDbTemplate(databasePath);
 		properties.setProperty("javax.persistence.jdbc.url", url);
@@ -97,7 +95,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 			byte[] buffer = new byte[1024];
 			while ((next = zis.getNextEntry()) != null) {
 				String fileName = next.getName();
-				String path = concat(databasePath, File.separator, fileName);
+				String path = databasePath + File.separator + fileName;
 				File newFile = new File(path);
 				if (next.isDirectory()) {
 					newFile.mkdirs();

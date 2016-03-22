@@ -32,11 +32,13 @@
 .status-bar:not(.alert-danger):not(.alert-success):not(.alert-warning):not(.alert-info)
 	display none
 	
-.header-box
-	padding 25px
+.header-box, .subheader-box
 	background-color rgb(248, 250, 252)
 	border-bottom 1px solid rgb(231, 233, 237)
 	border-top 1px solid rgb(231, 233, 237)
+
+.header-box
+	padding 25px
 
 	input.filter
 		width 200px
@@ -48,16 +50,23 @@
 		@media(min-width 481px)
 			padding-right 5px
 
-.content-box
+.content-box, .subcontent-box
 	background-color white
-	
+
+.subheader-box
+	padding 10px
+	border-left 1px solid rgb(231, 233, 237)
+	border-right 1px solid rgb(231, 233, 237)
+
 .multi-box-view
 	
 	.header-box
 		font-size 18px
 
 		.pull-right
-			margin-top -12px
+			
+			&.btn-lg, &.avatar
+				margin-top -12px
 
 	.content-box
 		padding 25px
@@ -68,8 +77,13 @@
 				margin-bottom 25px
 
 .user-info
-	color rgb(127, 143, 164)
-	
+
+	&.concealed
+		color rgb(127, 143, 164)
+		
+	&:not(.concealed)
+		font-weight bold
+
 	img.avatar-small
 		width 32px
 		height 32px

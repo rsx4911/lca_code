@@ -15,8 +15,6 @@ import org.openlca.cloud.model.data.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 class DataAccessor {
 
 	private final static Charset charset = Charset.forName("utf-8");
@@ -31,7 +29,7 @@ class DataAccessor {
 				Files.write(file.toPath(), data.getBytes(charset));
 		} catch (IOException e) {
 			String path = file.getAbsolutePath();
-			String message = concat("Error writing json data to file ", path);
+			String message = "Error writing json data to file " + path;
 			log.error(message, e);
 		}
 	}
@@ -48,7 +46,7 @@ class DataAccessor {
 			return new String(jsonData, charset);
 		} catch (IOException e) {
 			String path = file.getAbsolutePath();
-			String message = concat("Error reading json data from file ", path);
+			String message = "Error reading json data from file " + path;
 			log.error(message, e);
 			return null;
 		}

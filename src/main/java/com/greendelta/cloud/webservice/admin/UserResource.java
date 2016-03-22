@@ -17,9 +17,11 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.GroupService;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.webservice.Respond;
 import com.greendelta.cloud.webservice.mapper.UserMapper;
 
@@ -28,12 +30,14 @@ import com.greendelta.cloud.webservice.mapper.UserMapper;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
 
-	private UserService service;
-	private RepositoryService repoService;
+	private final UserService service;
+	private final GroupService groupService;
+	private final RepositoryService repoService;
 
 	@Inject
-	public UserResource(UserService service, RepositoryService repoService) {
+	public UserResource(UserService service, GroupService groupService, RepositoryService repoService) {
 		this.service = service;
+		this.groupService = groupService;
 		this.repoService = repoService;
 	}
 
@@ -49,12 +53,14 @@ public class UserResource {
 			return Respond.invalid("name", "Missing input: Name");
 		if (Strings.isNullOrEmpty(user.email))
 			return Respond.invalid("email", "Missing input: Email");
-		if (service.getForUsername(username) != null)
-			return Respond.invalid("username", "User already exists");
+		if (groupService.exists(username)) // user or group exists
+			return Respond.invalid("username", "Name is already in use");
+		if (Names.isReserved(username)) 
+			return Respond.invalid("username", "This is a reserved word");
 		String password = generatePassword();
 		service.setPassword(user, password);
 		user = service.insert(user);
-		return Respond.created(new UserMapper().map(user));
+		return Respond.created(new UserMapper().mapForSelf(user));
 	}
 
 	private String generatePassword() {

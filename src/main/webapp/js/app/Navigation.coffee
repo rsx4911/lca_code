@@ -10,12 +10,13 @@ define([
 
 		class Navigation extends Backbone.View
 
-			doRender: (items, active) ->
+			doRender: (items, active, repository) ->
 				@$el.html template
 					username: currentUser.get 'username'
 					name: currentUser.get 'name'
 					items: items
 					active: active
+					repository: repository
 					path: window.location.pathname
 
 			events: 
@@ -25,7 +26,7 @@ define([
 				@doRender()
 				Renderer.render @, renderOptions
 
-			setItems: (items, active) ->
-				@doRender items, active
+			setItems: (items, active, repository) ->
+				@doRender items, active, repository
 
 )

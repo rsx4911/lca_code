@@ -1,7 +1,5 @@
 package com.greendelta.cloud.webservice;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,9 +38,9 @@ import com.greendelta.cloud.service.RepositoryService;
 public class FetchResource {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	private FetchService service;
-	private RepositoryService repoService;
-	private HistoryService historyService;
+	private final FetchService service;
+	private final RepositoryService repoService;
+	private final HistoryService historyService;
 
 	@Inject
 	public FetchResource(FetchService service, RepositoryService repoService,
@@ -82,10 +80,10 @@ public class FetchResource {
 	}
 
 	private String notFoundMessage(ModelType type, String refId, String commitId) {
-		String base = concat(type.name(), " ", refId, " not found");
+		String base = type.name() + " " + refId + " not found";
 		if (commitId == null)
 			return base;
-		return concat(base, " for commit id ", commitId);
+		return base + " for commit id " + commitId;
 
 	}
 
@@ -116,7 +114,7 @@ public class FetchResource {
 			for (Dataset descriptor : descriptors) {
 				ModelType type = descriptor.type;
 				String refId = descriptor.refId;
-				String key = concat(type.name(), "_", refId);
+				String key = type.name() + "_" + refId;
 				FetchRequestData value = service.toRequestData(repo, commit.id,
 						descriptor);
 				result.put(key, value);
@@ -154,7 +152,7 @@ public class FetchResource {
 		List<Dataset> datasets = historyService.getReferences(repo, commitId);
 		if (datasets.size() == 0) {
 			// if size is 0, commit was not found (no commit without files)
-			String message = concat("Commit with id ", commitId, " not found");
+			String message = "Commit with id " + commitId + " not found";
 			return Respond.notFound(message);
 		}
 		List<FetchRequestData> resultData = new ArrayList<>();
@@ -232,7 +230,7 @@ public class FetchResource {
 	}
 
 	private String toKey(FileReference reference) {
-		return concat(reference.type.name(), "_", reference.refId);
+		return reference.type.name() + "_" + reference.refId;
 	}
 
 	private class DescriptorAndCommitId {

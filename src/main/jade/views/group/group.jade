@@ -1,0 +1,9 @@
+include ../mixins/forms.jade
+include ../mixins/avatar-box.jade
+
+.header-box Info
+	if group.userCanDelete
+		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-group') Delete
+.content-box
+	+static('name', 'Name', group.name)
++avatar-box('group', group.name, group.userCanWrite)

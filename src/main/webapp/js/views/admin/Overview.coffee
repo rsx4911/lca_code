@@ -20,7 +20,7 @@ define([
 			events: 
 				'click a[href].follow': (event) -> Events.followLink event
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
-				'click [data-action=create-repository]': () -> Router.navigate 'administration/repository/new'
+				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
 
 			initialize: () ->
 				@userFilter = new Filter

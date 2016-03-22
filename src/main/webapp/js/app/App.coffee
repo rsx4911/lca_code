@@ -13,7 +13,7 @@ define([
 			$(document).ajaxError (event, response, options, error) ->
 				switch response.status
 					when 401 then window.location.href = '/login'
-					when 403 then 'This is a restricted action, you do not have permission to execute it'
+					when 403 then Router.navigate '/403'
 					when 404 then Router.navigate '/404',
 						trigger: false
 						replace: true

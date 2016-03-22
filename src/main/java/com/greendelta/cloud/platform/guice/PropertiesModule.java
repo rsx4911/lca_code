@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.Properties;
 
 import org.openlca.cloud.util.Logs;
-import org.openlca.cloud.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +36,7 @@ class PropertiesModule extends AbstractModule {
 		properties = load("app.properties");
 		if (environment == null)
 			return properties;
-		Properties environmentSpecific = load(Strings.concat("app.", environment, ".properties"));
+		Properties environmentSpecific = load("app." + environment + ".properties");
 		for (String key : environmentSpecific.stringPropertyNames())
 			properties.put(key, environmentSpecific.getProperty(key));
 		return properties;

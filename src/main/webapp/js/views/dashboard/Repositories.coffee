@@ -12,7 +12,7 @@ define([
 
 		class DashboardRepositories extends Backbone.View
 
-			className: 'dashboard-repositories'
+			className: 'dashboard'
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event

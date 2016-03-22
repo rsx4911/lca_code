@@ -1,7 +1,5 @@
 package com.greendelta.cloud.service;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openlca.cloud.error.UnauthorizedRepositoryAccessException;
+import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
 import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
@@ -25,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.greendelta.cloud.index.DatasetIndex;
+import com.greendelta.cloud.model.Role;
 import com.greendelta.cloud.model.User;
 
 @Singleton
@@ -33,22 +32,25 @@ public class RepositoryService {
 	private static final Logger log = LoggerFactory.getLogger(Repository.class);
 
 	private final Map<String, DatasetIndex> indices = new HashMap<>();
-	private String root;
-	private AccessService accessService;
-	private UserService userService;
+	private final String root;
+	private final AccessService accessService;
+	private final MembershipService membershipService;
+	private final UserService userService;
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
-			AccessService accessService, UserService userService) {
+			AccessService accessService, MembershipService membershipService, UserService userService) {
 		this.root = repositoryPath;
 		this.accessService = accessService;
+		this.membershipService = membershipService;
 		this.userService = userService;
 	}
 
 	public Repository get(String group, String name) {
 		Repository repo = new Repository(root, group, name);
-		if (!accessService.hasAccess(repo))
-			throw new UnauthorizedRepositoryAccessException(repo.toId());
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canRead(currentUser, repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
 	}
 
@@ -66,9 +68,14 @@ public class RepositoryService {
 	}
 
 	public Repository create(String group, String name) {
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canWrite(currentUser, group))
+			throw new UnauthorizedAccessException(group, "WRITE");
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
-		return get(group, name);
+		Repository repo = get(group, name);
+		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER);
+		return repo;
 	}
 
 	private void putJsonContext(String group, String name) {
@@ -85,7 +92,10 @@ public class RepositoryService {
 	}
 
 	public void delete(Repository repo) {
-		accessService.unshare(repo);
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canDelete(currentUser, repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
+		membershipService.removeMemberships(repo.toId());
 		Directories.delete(new File(getPath(repo.group, repo.name)));
 	}
 
@@ -93,7 +103,8 @@ public class RepositoryService {
 		File userDirectory = new File(root, user.username);
 		if (!userDirectory.exists())
 			return;
-		accessService.unshareByUser(user.username);
+		for (File repoDir : userDirectory.listFiles())
+			membershipService.removeMemberships(userDirectory.getName() + File.separator + repoDir.getName());
 		Directories.delete(userDirectory);
 	}
 
@@ -104,23 +115,9 @@ public class RepositoryService {
 	public PagedResult<Repository> getAll(int page, String filter,
 			boolean adminArea) {
 		List<Repository> accessible = getAll(adminArea);
-		List<Repository> filtered = new ArrayList<>();
-		if (filter == null || filter.isEmpty())
-			filtered = accessible;
-		else
-			for (Repository repo : accessible)
-				if (repo.toId().contains(filter))
-					filtered.add(repo);
-		List<Repository> paged = new ArrayList<>();
-		for (int i = 0; i < filtered.size(); i++)
-			if (i < ((page - 1) * 10))
-				continue;
-			else if (i > (page * 10))
-				break;
-			else
-				paged.add(filtered.get(i));
-		return new PagedResult<>(page, filter, accessible.size(),
-				filtered.size(), paged);
+		return PagedResult.pagedAndFiltered(page, filter, accessible, (repo) -> {
+			return repo.toId();
+		});
 	}
 
 	private List<Repository> getAll(boolean adminArea) {
@@ -132,16 +129,15 @@ public class RepositoryService {
 			for (File name : group.listFiles()) {
 				Repository repo = new Repository(this.root, group.getName(),
 						name.getName());
-				if (!isAdmin)
-					if (!accessService.hasAccess(repo))
-						continue;
+				if (!isAdmin && !accessService.canRead(currentUser, repo.toId()))
+					continue;
 				repos.add(repo);
 			}
 		return repos;
 	}
 
 	private String getPath(String group, String name) {
-		return concat(root, "/", group, "/", name);
+		return root + File.separator + group + File.separator + name;
 	}
 
 	public byte[] getAvatar(String group, String name) {
@@ -157,6 +153,10 @@ public class RepositoryService {
 	}
 
 	public void setAvatar(String group, String name, InputStream file) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = Repository.toId(group, name);
+		if (!currentUser.admin && !accessService.canWrite(currentUser, repoId))
+			throw new UnauthorizedAccessException(Repository.toId(group, name), "WRITE");
 		File avatarFile = get(group, name).getAvatarFile();
 		if (file != null)
 			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
@@ -165,8 +165,7 @@ public class RepositoryService {
 				log.error("Error writing repository avatar file", e);
 			}
 		else if (avatarFile.exists())
-			avatarFile
-					.delete();
+			avatarFile.delete();
 	}
 
 }

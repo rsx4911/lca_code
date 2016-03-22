@@ -1,4 +1,5 @@
 include ../mixins/forms.jade
+include ../mixins/avatar-box.jade
 
 .header-box Account
 	if user.id && adminArea
@@ -11,6 +12,8 @@ form#user-form.content-box
 		+static('username', 'Username', user.username)
 	+input('name', 'Name*')
 	+input('email', 'Email*')
+	if adminArea
+		+checkbox('canCreateGroups', 'Is allowed to create groups')
 	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
 		if user.id
 			| Save
@@ -18,13 +21,7 @@ form#user-form.content-box
 			| Create
 	.clear
 if user.id
-	.header-box Avatar
-		img.pull-right.avatar(src='/ws/user/avatar/#{user.username}')
-	form#avatar-form.content-box
-		#avatar-general-message-group.alert(role='alert'): span.message
-		+input('avatar', null, 'file')
-		button.btn.btn-lg.btn-success.pull-right(data-action='save-avatar') Save
-		.clear
+	+avatar-box('user', user.username, true)
 	.header-box Password
 	form#password-form.content-box
 		#password-general-message-group.alert(role='alert'): span.message

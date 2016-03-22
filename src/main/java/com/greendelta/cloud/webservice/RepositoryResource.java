@@ -1,10 +1,8 @@
 package com.greendelta.cloud.webservice;
 
-import static org.openlca.cloud.util.Strings.concat;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -19,15 +17,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.AccessService;
+import com.greendelta.cloud.service.GroupService;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
+import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.webservice.mapper.RepositoryMapper;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -35,30 +34,36 @@ import com.sun.jersey.multipart.FormDataParam;
 @Produces(MediaType.APPLICATION_JSON)
 public class RepositoryResource {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(UserResource.class);
-	private RepositoryService service;
+	private final RepositoryService service;
+	private final UserService userService;
+	private final GroupService groupService;
+	private final AccessService accessService;
 
 	@Inject
-	public RepositoryResource(RepositoryService service) {
+	public RepositoryResource(RepositoryService service, UserService userService, GroupService groupService,
+			AccessService accessService) {
 		this.service = service;
+		this.userService = userService;
+		this.groupService = groupService;
+		this.accessService = accessService;
 	}
 
 	@POST
 	@Path("{group}/{name}")
 	public Response create(@PathParam("group") String group,
 			@PathParam("name") String name) {
-		// TODO check access to group
 		if (Strings.isNullOrEmpty(group))
 			return Respond.invalid("group", "Missing input: Group");
 		if (Strings.isNullOrEmpty(name))
 			return Respond.invalid("name", "Missing input: Name");
+		if (Names.isReserved(name))
+			return Respond.invalid("name", "This is a reserved word");
 		if (service.exists(group, name)) {
-			String message = concat("Repository ", name, " already exists");
+			String message = "Repository " + name + " already exists";
 			return Respond.conflict(message);
 		}
 		Repository repo = service.create(group, name);
-		return Respond.created(new RepositoryMapper().map(repo));
+		return Respond.created(new RepositoryMapper().map(repo, groupService.isUserNamespace(group)));
 	}
 
 	@DELETE
@@ -74,8 +79,12 @@ public class RepositoryResource {
 	@Path("{group}/{name}")
 	public Response get(@PathParam("group") String group,
 			@PathParam("name") String name) {
-		service.get(group, name);
-		return Respond.ok(new HashMap<>());
+		Repository repo = service.get(group, name);
+		Map<String, Object> mappedRepo = new RepositoryMapper().map(repo, groupService.isUserNamespace(group));
+		User currentUser = userService.getCurrentUser();
+		mappedRepo.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, repo.toId()));
+		mappedRepo.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, repo.toId()));
+		return Respond.ok(mappedRepo);
 	}
 
 	@GET
@@ -102,19 +111,7 @@ public class RepositoryResource {
 	public Response getAvatar(@PathParam("group") String group,
 			@PathParam("name") String name) {
 		byte[] avatar = service.getAvatar(group, name);
-		if (avatar == null)
-			return Respond.ok(loadDefaultAvatar());
-		return Respond.ok(avatar);
-	}
-
-	private byte[] loadDefaultAvatar() {
-		try {
-			return Resources.toByteArray(getClass().getResource(
-					"avatar-repository.png"));
-		} catch (IOException e) {
-			log.error("Error loading default avatar", e);
-			return null;
-		}
+		return Respond.ok(avatar, "avatar-repository.png");
 	}
 
 }

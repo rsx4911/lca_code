@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.openlca.cloud.api.data.CommitReader;
+import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.util.Directories;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndex;
+import com.greendelta.cloud.model.User;
 
 public class CommitService {
 
@@ -30,15 +32,20 @@ public class CommitService {
 
 	private final UserService userService;
 	private final RepositoryService repoService;
+	private final AccessService accessService;
 	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public CommitService(UserService userService, RepositoryService repoService) {
+	public CommitService(UserService userService, RepositoryService repoService, AccessService accessService) {
 		this.userService = userService;
 		this.repoService = repoService;
+		this.accessService = accessService;
 	}
 
 	public String put(Repository repo, InputStream data) {
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canWrite(currentUser, repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
 		Path dir = null;
 		CommitReader reader = null;
 		try {

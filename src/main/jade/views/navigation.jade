@@ -1,5 +1,10 @@
 if items && items.length
 	ul
+		if repository && !repository.groupIsUserNamespace
+			li.back: a(href='/groups/#{repository.group}')
+				img.nav-icon.mobile-only(src='/images/back.png')
+				span.nav-label Back to group
+			li.separate
 		- var first = true;
 		each item in items
 			li(class=item.id===active||(!active&&first)?'active':null)

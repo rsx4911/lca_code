@@ -1,0 +1,100 @@
+package com.greendelta.cloud.webservice;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import com.google.common.base.Strings;
+import com.google.inject.Inject;
+import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.AccessService;
+import com.greendelta.cloud.service.GroupService;
+import com.greendelta.cloud.service.PagedResult;
+import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.util.Names;
+
+@Path("group")
+@Produces(MediaType.APPLICATION_JSON)
+public class GroupResource {
+
+	private final GroupService service;
+	private final UserService userService;
+	private final AccessService accessService;
+
+	@Inject
+	public GroupResource(GroupService service, UserService userService, AccessService accessService) {
+		this.service = service;
+		this.userService = userService;
+		this.accessService = accessService;
+	}
+
+	@POST
+	@Path("{name}")
+	public Response create(@PathParam("name") String name) {
+		if (Strings.isNullOrEmpty(name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (Names.isReserved(name))
+			return Respond.invalid("name", "This is a reserved word");
+		if (service.exists(name)) {
+			String message = "Group " + name + " already exists";
+			return Respond.conflict(message);
+		}
+		service.create(name);
+		return Respond.created(Collections.singletonMap("name", name));
+	}
+
+	@GET
+	@Path("{name}")
+	public Response get(@PathParam("name") String name) {
+		if (!service.exists(name) || service.isUserNamespace(name))
+			return Respond.notFound("Group " + name + " not found");
+		Map<String, Object> group = new HashMap<>();
+		User currentUser = userService.getCurrentUser();
+		group.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, name));
+		group.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, name));
+		return Respond.ok(group);
+	}
+
+	@GET
+	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("filter") @DefaultValue("") String filter) {
+		PagedResult<String> result = service.getAll(page, filter, true);
+		return Respond.ok(result.toClient((groups) -> {
+			List<Map<String, Object>> maps = new ArrayList<>();
+			for (String group : groups)
+				maps.add(Collections.singletonMap("name", group));
+			return maps;
+		}));
+	}
+
+	@DELETE
+	@Path("{name}")
+	public Response delete(@PathParam("name") String name) {
+		service.delete(name);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@GET
+	@Path("avatar/{name}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response getAvatar(@PathParam("name") String name) {
+		boolean exists = service.exists(name);
+		if (!exists)
+			return Respond.notFound(name);
+		return Respond.ok(service.getAvatar(name), "avatar-group.png");
+	}
+
+}

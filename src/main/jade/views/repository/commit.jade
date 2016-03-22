@@ -2,7 +2,7 @@
 	h4 
 		div #{commit.message}
 		small #{commit.id}
-	span.user-info 
+	span.user-info.concealed
 		img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user}')
 		span.username #{commit.userDisplayName} on #{formatDate(commit.timestamp)}
 .file-references.content-box

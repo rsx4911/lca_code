@@ -17,6 +17,8 @@ define([
 					return true
 				return false
 
+			getPath: () ->
+
 			idAttribute: 'name'
 
 )

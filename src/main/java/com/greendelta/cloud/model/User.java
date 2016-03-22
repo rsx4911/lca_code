@@ -31,6 +31,9 @@ public class User extends AbstractEntity {
 	@Column(name = "admin")
 	public boolean admin;
 
+	@Column(name = "can_create_groups")
+	public boolean canCreateGroups;
+
 	@Column(name = "avatar")
 	public byte[] avatar;
 

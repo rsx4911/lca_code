@@ -18,8 +18,8 @@ import com.greendelta.cloud.webservice.Respond;
 @Produces(MediaType.APPLICATION_JSON)
 public class AdminAreaResource {
 
-	private UserService userService;
-	private RepositoryService repoService;
+	private final UserService userService;
+	private final RepositoryService repoService;
 
 	@Inject
 	public AdminAreaResource(UserService service, RepositoryService repoService) {

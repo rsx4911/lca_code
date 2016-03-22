@@ -29,8 +29,8 @@ public class SessionResource {
 	private final static Logger log = LoggerFactory
 			.getLogger(SessionResource.class);
 
-	private Provider<Subject> subjectProvider;
-	private UserService userService;
+	private final Provider<Subject> subjectProvider;
+	private final UserService userService;
 
 	@Inject
 	public SessionResource(Provider<Subject> subjectProvider,
@@ -83,7 +83,7 @@ public class SessionResource {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
 			return Respond.conflict("Not logged in");
-		return Respond.ok(new UserMapper().map(userService.getCurrentUser()));
+		return Respond.ok(new UserMapper().mapForSelf(userService.getCurrentUser()));
 	}
 
 }

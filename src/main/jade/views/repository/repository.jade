@@ -1,0 +1,11 @@
+include ../mixins/forms.jade
+include ../mixins/avatar-box.jade
+
+.header-box Info
+	if repository.userCanDelete
+		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
+.content-box
+	+static('name', 'Name', repository.name)
+	+static('group', 'Group', repository.group)
+- var repositoryId = repository.group + '/' + repository.name
++avatar-box('repository', repositoryId, repository.userCanWrite)

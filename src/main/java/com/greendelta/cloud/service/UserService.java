@@ -19,24 +19,28 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.cloud.model.User;
 
-import static org.openlca.cloud.util.Strings.concat;
-
 public class UserService {
 
 	private final static Logger log = LoggerFactory
 			.getLogger(UserService.class);
 	private final static Random random = new SecureRandom();
-	private Provider<Subject> subjectProvider;
-	private Dao<User> dao;
+	private final Provider<Subject> subjectProvider;
+	private final Dao<User> dao;
+	private final MembershipService memberService;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, MembershipService memberService) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
+		this.memberService = memberService;
 	}
 
-	public User getForUsername(String name) {
-		return dao.getFirstForAttribute("username", name);
+	public User getForUsername(String username) {
+		return dao.getFirstForAttribute("username", username);
+	}
+
+	public boolean exists(String username) {
+		return getForUsername(username) != null;
 	}
 
 	public User getCurrentUser() {
@@ -56,7 +60,7 @@ public class UserService {
 	public PagedResult<User> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))
-			parameters.put("name", concat("%", filter.toLowerCase(), "%"));
+			parameters.put("name", "%" + filter.toLowerCase() + "%");
 		long total = dao.getCount();
 		String query = createQuery(page, filter, true);
 		long subTotal = dao.getCount(query, parameters);
@@ -90,8 +94,13 @@ public class UserService {
 		}
 	}
 
-	public void delete(long id) {
-		dao.delete(id);
+	public boolean delete(long id) {
+		User user = dao.get(id);
+		if (user == null)
+			return false;
+		memberService.removeMemberships(user);
+		dao.delete(user);
+		return true;
 	}
 
 	@RequiresRoles("admin")

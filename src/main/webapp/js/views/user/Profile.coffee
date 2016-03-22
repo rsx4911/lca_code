@@ -1,5 +1,6 @@
 define([
 				'backbone'
+				'cs!utils/Avatar'
 				'cs!utils/Events'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
@@ -12,7 +13,7 @@ define([
 				'templates/views/user/profile'
 			]
 
-	(Backbone, Events, Forms, Layers, Model, Renderer, Status, Router, User, currentUser, template) ->
+	(Backbone, Avatar, Events, Forms, Layers, Model, Renderer, Status, Router, User, currentUser, template) ->
 
 		class UserProfile extends Backbone.View
 
@@ -20,9 +21,11 @@ define([
 
 			events:
 				'submit #user-form': (event) -> @saveUser event
-				'submit #avatar-form': (event) -> @saveAvatar event
 				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
+				'submit #avatar-form': (event) -> 
+					Events.preventDefault event
+					Avatar.save 'user', @user.get('username')
 
 			initialize: (options) ->
 				{@user, @adminArea} = options
@@ -65,36 +68,6 @@ define([
 						success: () => @reload()
 						error: (model, response) -> Forms.handleError 'user-form', response
 				return false
-
-			saveAvatar: (event) ->
-				Events.preventDefault event
-				file = @$('#avatar', '#avatar-form')[0].files[0]
-				unless file
-					Layers.askQuestion
-						title: 'Reset avatar'
-						question: 'You did not select a new image, do you want to replace your current avatar with the default?'
-						answers: ['No', 'Yes']
-						onAnswer: (index) => 
-							if index is 1
-								@uploadAvatar()
-				else
-					@uploadAvatar file
-				return false
-
-			uploadAvatar: (file) ->
-				formData = new FormData()
-				if file
-					formData.append 'file', file
-				else
-					formData.append 'dummy', true
-				$.ajax
-					type: 'PUT'
-					url: '/ws/user/avatar/' + @user.get('username')
-					data: formData
-					processData: false
-					contentType: false
-					success: () => @reload()
-					error: (response) -> Forms.handleError 'avatar-form', response
 
 			savePassword: (event) ->
 				Events.preventDefault event

@@ -25,9 +25,9 @@ import com.greendelta.cloud.service.RepositoryService;
 @Produces(MediaType.APPLICATION_JSON)
 public class BrowseResource {
 
-	private BrowseService service;
-	private RepositoryService repoService;
-	private FetchService fetchService;
+	private final BrowseService service;
+	private final RepositoryService repoService;
+	private final FetchService fetchService;
 
 	@Inject
 	public BrowseResource(BrowseService service, RepositoryService repoService, FetchService fetchService) {

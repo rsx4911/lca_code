@@ -1,0 +1,28 @@
+mixin membershipRow(membership)
+	.member-row
+		span.user-info
+			if membership.user
+				img.avatar.avatar-small(src='/ws/user/avatar/#{membership.user.username}')
+				span.username #{membership.user.name} (User)
+			else
+				img.avatar.avatar-small(src='/ws/team/avatar/#{membership.team.teamname}')
+				span.username #{membership.team.name} (Team)
+			span.role.pull-right(title=membership.role.description)=membership.role.name
+			.clear
+	
+.header-box 
+	button.btn.btn-success.pull-right(data-action='add-member') 
+		span.glyphicon.glyphicon-plus
+		span.text Add a member
+	.clear
+.content-box
+	if repoMembers.length
+	.subheader-box Repository members (#{repoMembers.length})
+	.subcontent-box
+		each membership in repoMembers
+			+membershipRow(membership)
+	if groupMembers.length
+		.subheader-box Group members (#{groupMembers.length})
+		.subcontent-box
+			each membership in groupMembers
+				+membershipRow(membership)

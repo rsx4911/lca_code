@@ -11,7 +11,7 @@ import com.greendelta.cloud.index.DatasetIndexEntry;
 
 public class BrowseService {
 
-	private RepositoryService repoService;
+	private final RepositoryService repoService;
 
 	@Inject
 	public BrowseService(RepositoryService repoService) {

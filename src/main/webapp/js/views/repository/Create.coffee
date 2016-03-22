@@ -19,30 +19,18 @@ define([
 			createRepository: () ->
 				@repository.set Forms.toJson 'repository-form'
 				@repository.set 'isNew', true
-				unless @repository.get('name')
-					Forms.handleError 'repository-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
-					return false
-				unless @repository.get('group')
-					Forms.handleError 'repository-form', {responseJSON: {field: 'group', message: 'Missing input: Group'}}
-					return false
 				Model.save @repository, 
-					success: () => @reload()
+					success: () => 
+						group = @repository.get 'group'
+						name = @repository.get 'name'
+						Router.navigate "#{group}/#{name}"						
 					error: (model, response) -> Forms.handleError 'repository-form', response
 				return false
-
-			reload: () ->
-				if currentUser.isAdmin() and @adminArea
-					Router.navigate 'administration/overview'
-				else
-					group = @repository.get 'group'
-					name = @repository.get 'name'
-					Router.navigate "#{group}/#{name}"
 
 			events:
 				'click [data-action=create-repository]': (event) -> @createRepository event
 
 			initialize: (options) ->
-				{@adminArea} = options
 				@repository = new Repository()
 
 			render: (renderOptions) ->

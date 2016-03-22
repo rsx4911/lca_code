@@ -12,14 +12,20 @@ public class UserMapper {
 
 	public List<Map<String, Object>> map(List<User> users) {
 		List<Map<String, Object>> all = new ArrayList<>();
-		for (User user : users) 
-			all.add(map(user));
+		for (User user : users)
+			all.add(mapForSelf(user));
 		return all;
 	}
 
-	public Map<String, Object> map(User user) {
+	public Map<String, Object> mapForSelf(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.remove("hash", "salt", "avatar");
+		return map;
+	}
+
+	public Map<String, Object> mapForOthers(User user) {
+		ObjectMap map = ObjectMap.fromObject(user);
+		map.removeAllBut("name", "username");
 		return map;
 	}
 
