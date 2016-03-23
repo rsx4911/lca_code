@@ -26,8 +26,7 @@ define () ->
 			for u in existing
 				if u.username is user.username
 					exists = true
-			unless exists
-				options.push [user.username, user.name]
+			options.push [user.username, user.name, exists]
 		return options
 
 	teamsToOptions: (teams, existing) ->
@@ -37,6 +36,5 @@ define () ->
 			for t in existing
 				if t.teamname is team.teamname
 					exists = true
-			unless exists
-				options.push [team.teamname, team.name]
+			options.push [team.teamname, team.name, exists]
 		return options

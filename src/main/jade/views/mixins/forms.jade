@@ -46,14 +46,18 @@ mixin options(options, defaultSelection)
 	each option in options
 		- var value = option;
 		- var label = option;
+		- var disabled = false;
 		- if (Object.prototype.toString.call(option) === '[object Array]') {
 		- 	value = option[0];
 		- 	label = option[1];
+		- 	if (option.length === 3 && option[2]) {
+		- 		disabled = true;
+		- 	}
 		- }
 		if defaultSelection === value
 			option(value='#{value}' selected) #{label}
 		else
-			option(value='#{value}') #{label}
+			option(value='#{value}' disabled=disabled) #{label}
 
 mixin checkbox(id, label)
 	.checkbox

@@ -22,21 +22,30 @@ define([
 
 			showAddMembersLayer: (event) ->
 				type = if @group then 'group' else 'repository'
+				existingUsers = []
+				existingTeams = []
+				for member in @members
+					if member.team
+						existingTeams.push member.team
+					else
+						existingUsers.push member.user
 				Data.getUsersAndTeams (users, teams) =>
 					Layers.showTemplateInLayer
 						template: 'members/add'
 						title: "Add #{type} members"
-						model: {type: type, users: Data.usersToOptions(users, []), teams: Data.teamsToOptions(teams, []), roles: Roles.getAll()}
+						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll()}
 						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
 
 			addMembers: () ->
 				console.log 'ADD'
 
 			beforeRender: (type, result) ->
+				if type is 'group-members' and @group
+					@members = result.data
+				else if type is 'repository-members'
+					@members = result.data
 				for member in result.data
 					member.role = Roles[member.role]
-				unless type
-					return
 				filtered = []
 				for member in result.data
 					if type is 'group-members'
@@ -54,7 +63,7 @@ define([
 					name = options.group.get 'name'
 					@filter1 = new Filter
 						type: 'group-members'
-						callback: @beforeRender
+						callback: (type, result) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
@@ -65,14 +74,14 @@ define([
 					name = options.repository.get 'name'
 					@filter1 = new Filter
 						type: 'repository-members'
-						callback: @beforeRender
+						callback: (type, result) => @beforeRender type, result
 						container: '#repository-members'
 						template: memberTemplate
 						filterId: 'filter'
 						url: (page, filter) -> "/ws/membership/#{group}/#{name}?filter=#{filter}"
 					@filter2 = new Filter
 						type: 'group-members'
-						callback: @beforeRender
+						callback: (type, result) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
