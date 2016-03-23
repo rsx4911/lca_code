@@ -22,20 +22,20 @@ public class TeamService {
 		this.membershipService = membershipService;
 	}
 
-	public Team getForTeamname(String name) {
-		return dao.getFirstForAttribute("name", name);
+	public Team getForTeamname(String teamname) {
+		return dao.getFirstForAttribute("teamname", teamname);
 	}
 
-	public Team create(String name) {
-		if (getForTeamname(name) != null)
-			throw new IllegalArgumentException("Team " + name + " already exists");
-		Team team = new Team();
-		team.name = name;
+	public Team insert(Team team) {
 		return dao.insert(team);
 	}
 
 	public Team update(Team team) {
 		return dao.update(team);
+	}
+
+	public boolean exists(String teamname) {
+		return getForTeamname(teamname) != null;
 	}
 
 	public boolean delete(long id) {
@@ -66,6 +66,10 @@ public class TeamService {
 	}
 
 	@RequiresRoles("admin")
+	public long getCount() {
+		return dao.getCount();
+	}
+
 	public PagedResult<Team> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))

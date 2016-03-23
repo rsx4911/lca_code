@@ -11,12 +11,23 @@ public class PagedResult<T> {
 	public final String filter;
 	public final long total;
 	public final long subTotal;
-	public final long pageSize = 10;
+	public final long pageSize;
 	public final List<T> data;
 
 	PagedResult(long page, String filter, long total, long subTotal,
 			List<T> data) {
 		this.page = page;
+		this.pageSize = 10;
+		this.filter = filter;
+		this.total = total;
+		this.subTotal = subTotal;
+		this.data = data;
+	}
+
+	PagedResult(String filter, long total, long subTotal,
+			List<T> data) {
+		this.page = -1;
+		this.pageSize = -1;
 		this.filter = filter;
 		this.total = total;
 		this.subTotal = subTotal;

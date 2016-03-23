@@ -8,7 +8,7 @@ define([
 		class Filter extends Backbone.Model
 
 			initialize: (options) ->
-				{@url, @container, @template, @filterId} = options
+				{@url, @container, @template, @filterId, @callback, @type} = options
 				@page = 1
 				@filter = ''
 
@@ -20,6 +20,8 @@ define([
 			load: (callback) ->
 				url = @url.apply @, [@page, @filter]
 				$.get url, (result) => 
+					if @callback
+						@callback @type, result
 					callback.apply @, [result]
 
 			append: (result) ->

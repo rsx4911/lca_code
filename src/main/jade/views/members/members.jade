@@ -1,28 +1,27 @@
-mixin membershipRow(membership)
-	.member-row
-		span.user-info
-			if membership.user
-				img.avatar.avatar-small(src='/ws/user/avatar/#{membership.user.username}')
-				span.username #{membership.user.name} (User)
-			else
-				img.avatar.avatar-small(src='/ws/team/avatar/#{membership.team.teamname}')
-				span.username #{membership.team.name} (Team)
-			span.role.pull-right(title=membership.role.description)=membership.role.name
-			.clear
-	
 .header-box 
-	button.btn.btn-success.pull-right(data-action='add-member') 
-		span.glyphicon.glyphicon-plus
-		span.text Add a member
+	.input-group.input-group-lg
+		input#filter.form-control(type='text' placeholder='Filter by name')
+		span.input-group-btn
+			button.btn.btn-success(data-action='add-members') 
+				span.glyphicon.glyphicon-plus
+				span.text Add members
 	.clear
 .content-box
-	if repoMembers.length
-	.subheader-box Repository members (#{repoMembers.length})
-	.subcontent-box
-		each membership in repoMembers
-			+membershipRow(membership)
-	if groupMembers.length
-		.subheader-box Group members (#{groupMembers.length})
-		.subcontent-box
-			each membership in groupMembers
-				+membershipRow(membership)
+	if showRepositoryMembers
+		.subheader-box(data-type='repository-members') Repository members (
+			span.count 0
+			| )
+		.subcontent-box#repository-members
+	if showGroupMembers
+		if showRepositoryMembers
+			br
+		.subheader-box(data-type='group-members') Group members (
+			span.count 0
+			| )
+			if showRepositoryMembers && group
+				button.btn.btn-xs.btn-default.pull-right(data-route='/groups/#{group}/members') 
+					span.glyphicon.glyphicon-pencil
+					span.text Edit group members
+				.clear
+		.subcontent-box#group-members
+			

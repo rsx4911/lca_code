@@ -1,9 +1,11 @@
 package com.greendelta.cloud.webservice.admin;
 
-import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -17,25 +19,28 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.MembershipService;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
-import com.greendelta.cloud.util.Bytes;
 import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.webservice.Respond;
 import com.greendelta.cloud.webservice.mapper.TeamMapper;
-import com.sun.jersey.multipart.FormDataParam;
 
 @Path("admin/team")
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class TeamResource {
 
 	private final TeamService service;
 	private final UserService userService;
+	private final MembershipService membershipService;
 
 	@Inject
-	public TeamResource(TeamService service, UserService userService) {
+	public TeamResource(TeamService service, UserService userService, MembershipService membershipService) {
 		this.service = service;
 		this.userService = userService;
+		this.membershipService = membershipService;
 	}
 
 	@GET
@@ -47,6 +52,24 @@ public class TeamResource {
 		return Respond.ok(new TeamMapper().mapForAdmin(team));
 	}
 
+	@POST
+	@Path("{teamname}")
+	public Response create(@PathParam("teamname") String teamname, Team team) {
+		if (Strings.isNullOrEmpty(teamname))
+			return Respond.invalid("teamname", "Missing input: Teamname");
+		if (teamname.length() < 4)
+			return Respond.invalid("teamname",
+					"Teamname must consist of at least 4 characters");
+		if (Strings.isNullOrEmpty(team.name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (service.exists(teamname))
+			return Respond.invalid("teamname", "Team already exists");
+		if (Names.isReserved(teamname))
+			return Respond.invalid("teamname", "This is a reserved word");
+		team = service.insert(team);
+		return Respond.created(new TeamMapper().mapForAdmin(team));
+	}
+
 	@PUT
 	@Path("{teamname}")
 	public Response update(@PathParam("teamname") String teamname, Team team) {
@@ -55,39 +78,31 @@ public class TeamResource {
 			return Respond.notFound();
 		if (Strings.isNullOrEmpty(team.teamname))
 			return Respond.invalid("teamname", "Missing input: Teamname");
-		if (Names.isReserved(team.teamname)) 
+		if (Names.isReserved(team.teamname))
 			return Respond.invalid("teamname", "This is a reserved word");
 		if (Strings.isNullOrEmpty(team.name))
 			return Respond.invalid("name", "Missing input: Name");
-		Beans.populateProperties(team, fromDb, "teamname", "name");
+		updateUsers(team);
+		Beans.populateProperties(team, fromDb, "teamname", "name", "users");
 		fromDb = service.update(fromDb);
 		return Respond.ok(new TeamMapper().mapForAdmin(fromDb));
 	}
 
-	@PUT
-	@Path("avatar/{teamname}")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("teamname") String teamname, @FormDataParam("file") InputStream file) {
-		Team team = authorizedGetTeam(teamname);
-		if (team == null)
-			return Respond.notFound();
-		if (file == null)
-			team.avatar = null;
-		else
-			team.avatar = Bytes.readStream(file);
-		team = service.update(team);
-		return getAvatar(teamname);
-	}
-
-	@GET
-	@Path("avatar/{teamname}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getAvatar(@PathParam("username") String teamname) {
-		Team team = service.getForTeamname(teamname);
-		if (team == null)
-			return Respond.notFound(teamname);
-		return Respond.ok(team.avatar, "avatar-team.png");
+	private void updateUsers(Team team) {
+		Team fromDb = service.getForTeamname(team.teamname);
+		List<User> users = new ArrayList<>(team.users);
+		team.users.clear();
+		for (User user : users) {
+			team.users.add(userService.getForUsername(user.username));
+			if (fromDb.users.contains(user))
+				continue;
+			membershipService.addMemberships(user, team);
+		}
+		for (User user : fromDb.users) {
+			if (team.users.contains(user))
+				continue;
+			membershipService.removeMemberships(user, team);
+		}
 	}
 
 	private Team authorizedGetTeam(String teamname) {

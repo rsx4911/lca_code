@@ -1,12 +1,14 @@
 package com.greendelta.cloud.service;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.Membership;
 import com.greendelta.cloud.model.Role;
@@ -199,10 +201,25 @@ public class MembershipService {
 		return dao.getFirstForAttributes(attributes);
 	}
 
-	public List<Membership> getMemberships(String groupOrRepo) {
+	public PagedResult<Membership> getMemberships(String groupOrRepo, String filter) {
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("memberOf", groupOrRepo);
-		return dao.getForAttributes(attributes);
+		List<Membership> result = dao.getForAttributes(attributes);
+		filter = filter.toLowerCase();
+		if (!Strings.isNullOrEmpty(filter))
+			for (Membership m : new ArrayList<>(result))
+				if (m.team != null && !m.team.name.toLowerCase().contains(filter))
+					result.remove(m);
+				else if (!m.user.name.toLowerCase().contains(filter))
+					result.remove(m);
+		return new PagedResult<Membership>(filter, result.size(), result.size(), result);
+	}
+
+	private List<Membership> getMemberships(String groupOrRepo) {
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("memberOf", groupOrRepo);
+		List<Membership> result = dao.getForAttributes(attributes);
+		return result;
 	}
 
 	private List<Membership> getMemberships(User user) {

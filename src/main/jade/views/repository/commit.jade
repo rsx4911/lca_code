@@ -1,10 +1,11 @@
+include ../mixins/user-info.jade
+
 .header-box
 	h4 
 		div #{commit.message}
 		small #{commit.id}
-	span.user-info.concealed
-		img.avatar.avatar-small(src='/ws/user/avatar/#{commit.user}')
-		span.username #{commit.userDisplayName} on #{formatDate(commit.timestamp)}
+	+user-info(commit.user, commit.userDisplayName)(class='concealed')
+		|  on #{formatDate(commit.timestamp)}
 .file-references.content-box
 	each dataset in commit.references
 		if dataset.type !== 'IMPACT_CATEGORY'

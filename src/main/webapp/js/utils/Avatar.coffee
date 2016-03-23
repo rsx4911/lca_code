@@ -33,8 +33,8 @@ define([
 				data: formData
 				processData: false
 				contentType: false
-				success: () -> 
-					Status.success "Successfully updated #{type}"
+				success: (response) -> 
+					Status.success "Successfully updated #{type} #{id}"
 					Backbone.history.loadUrl()
 				error: (response) -> 
 					Forms.handleError 'avatar-form', response

@@ -4,13 +4,10 @@ import java.util.HashMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -18,7 +15,6 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.GroupService;
-import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
@@ -79,10 +75,4 @@ public class UserResource {
 		return Respond.ok(new HashMap<>());
 	}
 
-	@GET
-	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("filter") @DefaultValue("") String filter) {
-		PagedResult<User> result = service.getAll(page, filter);
-		return Respond.ok(result.toClient(new UserMapper()::map));
-	}
 }

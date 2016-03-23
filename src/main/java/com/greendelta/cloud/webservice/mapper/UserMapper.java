@@ -10,10 +10,17 @@ import com.greendelta.cloud.model.User;
 
 public class UserMapper {
 
-	public List<Map<String, Object>> map(List<User> users) {
+	public List<Map<String, Object>> mapForSelfOrAdmin(List<User> users) {
 		List<Map<String, Object>> all = new ArrayList<>();
 		for (User user : users)
 			all.add(mapForSelf(user));
+		return all;
+	}
+
+	public List<Map<String, Object>> mapForOthers(List<User> users) {
+		List<Map<String, Object>> all = new ArrayList<>();
+		for (User user : users)
+			all.add(mapForOthers(user));
 		return all;
 	}
 

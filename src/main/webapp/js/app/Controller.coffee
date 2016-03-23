@@ -4,14 +4,15 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Layouts'
 				'cs!utils/Model'
-				'cs!models/User'
 				'cs!models/Repository'
+				'cs!models/User'
 				'cs!models/Group'
+				'cs!models/Team'
 				'templates/views/403'
 				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layouts, Model, User, Repository, Group, template403, template404) ->
+	(Navigation, UserMenu, Events, Layouts, Model, Repository, User, Group, Team, template403, template404) ->
 
 		Controller = () ->
 
@@ -73,16 +74,26 @@ define([
 					title: 'Admin area'
 				@router.registerAdminRoute 'adminUserNew', -> @showView 
 					view: 'user/Profile'
-					title: 'Admin area - New profile'
+					title: 'New profile'
 					viewOptions: 
 						user: new User()
 						adminArea: true
 				@router.registerAdminRoute 'adminUserEdit', (username) -> @showView 
 					view: 'user/Profile'
-					title: "Admin area - Profile '#{username}'"
+					title: "Profile of user '#{username}'"
 					viewOptions: 
 						user: new User {username: username}
 						adminArea: true
+				@router.registerAdminRoute 'adminTeamNew', -> @showView 
+					view: 'team/Profile'
+					title: 'New team'
+					viewOptions: 
+						team: new Team()
+				@router.registerAdminRoute 'adminTeamEdit', (teamname) -> @showView 
+					view: 'team/Profile'
+					title: "Profile of team '#{teamname}'"
+					viewOptions: 
+						team: new Team {teamname: teamname}
 
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @show404()
@@ -125,7 +136,7 @@ define([
 						active: 'members'
 						urlPrefix: group
 					viewOptions: 
-						groupOrRepository: new Group({name: group})
+						group: new Group({name: group})
 				@router.registerUserRoute 'repositoryNew', -> @showView 
 					view: 'repository/Create'
 					title: 'New repository' 
@@ -187,7 +198,7 @@ define([
 						active: 'members'
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
-						groupOrRepository: new Repository({group: group, name: name})
+						repository: new Repository({group: group, name: name})
 			constructor: Controller
 
 			initialize: (router) ->

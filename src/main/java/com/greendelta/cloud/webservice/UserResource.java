@@ -4,11 +4,13 @@ import java.io.InputStream;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -18,6 +20,7 @@ import org.openlca.cloud.util.ObjectMap;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
@@ -41,6 +44,14 @@ public class UserResource {
 		if (user == null)
 			return Respond.notFound();
 		return Respond.ok(new UserMapper().mapForSelf(user));
+	}
+
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("filter") @DefaultValue("") String filter) {
+		PagedResult<User> result = service.getAll(page, filter);
+		return Respond.ok(result.toClient(new UserMapper()::mapForOthers));
 	}
 
 	@GET

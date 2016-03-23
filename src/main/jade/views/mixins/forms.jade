@@ -28,22 +28,32 @@ mixin input(id, label, type, inline, required)
 		block
 
 mixin select(id, label, options, defaultSelection)
-	.form-inline(id='#{id}-group')
+	.form-group(id='#{id}-group')
 		label.control-label(for='#{id}') #{label}
 		select.form-control(id='#{id}' name='#{id}')&attributes(attributes)
-			each option in options
-				- var value = option;
-				- var label = option;
-				- if (Object.prototype.toString.call(option) === '[object Array]') {
-				- 	value = option[0];
-				- 	label = option[1];
-				- }
-				if defaultSelection === value
-					option(value='#{value}' selected) #{label}
-				else
-					option(value='#{value}') #{label}
-		block
+			if options
+				+options(options, defaultSelection)
+			else
+				block
+		if options
+			block
 
+mixin optgroup(label, options, defaultSelection)
+	optgroup(label=label)
+		+options(options, defaultSelection)
+
+mixin options(options, defaultSelection)
+	each option in options
+		- var value = option;
+		- var label = option;
+		- if (Object.prototype.toString.call(option) === '[object Array]') {
+		- 	value = option[0];
+		- 	label = option[1];
+		- }
+		if defaultSelection === value
+			option(value='#{value}' selected) #{label}
+		else
+			option(value='#{value}') #{label}
 
 mixin checkbox(id, label)
 	.checkbox

@@ -56,7 +56,6 @@ public class UserService {
 		return dao.getCount();
 	}
 
-	@RequiresRoles("admin")
 	public PagedResult<User> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))

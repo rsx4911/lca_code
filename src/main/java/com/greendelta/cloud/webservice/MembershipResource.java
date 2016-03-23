@@ -1,15 +1,16 @@
 package com.greendelta.cloud.webservice;
 
 import java.util.Collections;
-import java.util.List;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -23,6 +24,7 @@ import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.MembershipService;
+import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
@@ -109,16 +111,17 @@ public class MembershipResource {
 
 	@GET
 	@Path("{group}/{repo}")
-	public Response getAll(@PathParam("group") String group, @PathParam("repo") String repo) {
+	public Response getAll(@PathParam("group") String group, @PathParam("repo") String repo,
+			@QueryParam("filter") @DefaultValue("") String filter) {
 		String path = getAuthorizedPath(group, repo);
-		List<Membership> memberships = service.getMemberships(path);
-		return Respond.ok(new MembershipMapper().map(memberships));
+		PagedResult<Membership> memberships = service.getMemberships(path, filter);
+		return Respond.ok(memberships.toClient(new MembershipMapper()::map));
 	}
 
 	private String getAuthorizedPath(String group, String repo) {
 		String path = group;
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-			path = group + Repository.toId(group, repo);
+			path = Repository.toId(group, repo);
 		User currentUser = userService.getCurrentUser();
 		if (!currentUser.admin && !accessService.canEditMembers(currentUser, path))
 			throw new UnauthorizedAccessException(path, "VIEW");

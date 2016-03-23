@@ -21,6 +21,13 @@ public class Membership extends AbstractEntity {
 	@JoinColumn(name = "f_user")
 	public User user;
 
+	// this looks a bit intricately but makes access members, roles and
+	// permissions for user more convenient (in opposite to have teams and users
+	// as possible members directly)
+	@OneToOne
+	@JoinColumn(name = "f_team")
+	public Team team;
+
 	// can be a group or repository
 	@Column(name = "member_of")
 	public String memberOf;
@@ -28,13 +35,6 @@ public class Membership extends AbstractEntity {
 	@Column(name = "role")
 	@Enumerated(EnumType.STRING)
 	public Role role;
-
-	// this looks a bit intricately but makes access members, roles and
-	// permissions for user more convenient (in opposite to have teams and users
-	// as possible members directly)
-	@OneToOne
-	@JoinColumn(name = "f_team")
-	public Team team;
 
 	@Override
 	public long getId() {

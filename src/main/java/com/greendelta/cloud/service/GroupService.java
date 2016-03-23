@@ -1,7 +1,9 @@
 package com.greendelta.cloud.service;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +12,7 @@ import org.openlca.cloud.util.Directories;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -86,6 +89,25 @@ public class GroupService {
 			log.error("Error reading group avatar file", e);
 			return null;
 		}
+	}
+
+	public void setAvatar(String group, InputStream file) {
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canWrite(currentUser, group))
+			throw new UnauthorizedAccessException(group, "WRITE");
+		File avatarFile = new File(root, group + File.separator + "avatar");
+		if (file != null)
+			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
+				ByteStreams.copy(file, output);
+			} catch (IOException e) {
+				log.error("Error writing group avatar file", e);
+			}
+		else if (avatarFile.exists())
+			avatarFile.delete();
+	}
+
+	public long getCount(boolean adminArea) {
+		return getAll(adminArea).size();
 	}
 
 	public PagedResult<String> getAll(int page, String filter,

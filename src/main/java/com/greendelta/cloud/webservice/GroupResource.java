@@ -1,15 +1,18 @@
 package com.greendelta.cloud.webservice;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -25,6 +28,7 @@ import com.greendelta.cloud.service.GroupService;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
+import com.sun.jersey.multipart.FormDataParam;
 
 @Path("group")
 @Produces(MediaType.APPLICATION_JSON)
@@ -85,6 +89,18 @@ public class GroupResource {
 	public Response delete(@PathParam("name") String name) {
 		service.delete(name);
 		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
+	@Path("avatar/{name}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response setAvatar(@PathParam("name") String name,
+			@FormDataParam("file") InputStream file) {
+		if (!service.exists(name))
+			return Respond.notFound();
+		service.setAvatar(name, file);
+		return getAvatar(name);
 	}
 
 	@GET

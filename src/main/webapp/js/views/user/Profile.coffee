@@ -82,7 +82,7 @@ define([
 				return false
 
 			deleteUser: (event) ->
-				username = @user.get 'name'
+				username = @user.get 'username'
 				Layers.askDeleteQuestion "user #{username}", username, () =>
 					$.ajax
 						type: 'DELETE'

@@ -20,7 +20,7 @@ define([
 			events:
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
-					Avatars.save 'group', @group.get('name')
+					Avatar.save 'group', @group.get('name')
 				'click [data-action=delete-group]': (event) -> @deleteGroup event
 
 			initialize: (options) ->

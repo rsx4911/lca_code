@@ -10,6 +10,8 @@ define
 	'administration/overview': 'adminOverview'
 	'administration/user/new': 'adminUserNew'
 	'administration/user/profile/:username': 'adminUserEdit'
+	'administration/team/new': 'adminTeamNew'
+	'administration/team/profile/:teamname': 'adminTeamEdit'
 	'group/new': 'groupNew'
 	'groups/:group': 'groupInfo'
 	'groups/:group/members': 'groupMembers'	

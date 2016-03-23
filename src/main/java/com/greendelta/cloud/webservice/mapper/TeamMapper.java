@@ -12,23 +12,24 @@ public class TeamMapper {
 
 	private final UserMapper userMapper = new UserMapper();
 
-	public List<Map<String, Object>> map(List<Team> teams) {
+	public List<Map<String, Object>> mapForOthers(List<Team> teams) {
 		List<Map<String, Object>> maps = new ArrayList<>();
 		for (Team team : teams)
-			maps.add(mapForAdmin(team));
+			maps.add(mapForOthers(team));
 		return maps;
 	}
 
 	public Map<String, Object> mapForAdmin(Team team) {
 		ObjectMap map = ObjectMap.fromObject(team);
-		map.put("users", userMapper.map(team.users));
+		map.removeAllBut("id", "teamname", "name");
+		map.put("users", userMapper.mapForOthers(team.users));
 		return map;
 	}
 
 	public Map<String, Object> mapForOthers(Team team) {
 		ObjectMap map = ObjectMap.fromObject(team);
 		map.removeAllBut("teamname", "name");
-		map.put("users", userMapper.map(team.users));
+		map.put("users", userMapper.mapForOthers(team.users));
 		return map;
 	}
 

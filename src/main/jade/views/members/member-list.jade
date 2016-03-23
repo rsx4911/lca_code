@@ -1,0 +1,9 @@
+include ../mixins/user-info.jade
+
+each membership in data
+	.member-row
+		- var type = membership.user ? 'User' : 'Team' 
+		- var id = membership.user ? membership.user.username : membership.team.teamname
+		- var name = membership.user ? membership.user.name : membership.team.name
+		+user-info(id, name, type)
+			span.role.pull-right(title=membership.role.description)=membership.role.name

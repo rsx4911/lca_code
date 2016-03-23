@@ -1,49 +1,101 @@
 define([
 				'backbone'
+				'cs!utils/Data'
+				'cs!utils/Events'
+				'cs!utils/Filter'
+				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!utils/Roles'
 				'templates/views/members/members'
+				'templates/views/members/member-list'
 			]
 
-	(Backbone, Renderer, Roles, template) ->
+	(Backbone, Data, Events, Filter, Layers, Renderer, Roles, template, memberTemplate) ->
 
 		class MembersView extends Backbone.View
 
-			loadMembers: (callback) ->
-				group = @groupOrRepository.get 'group'
-				name = @groupOrRepository.get 'name'
-				path = if group then "#{group}/#{name}" else "#{name}/NULL"
-				$.ajax
-					type: 'GET'
-					url: "/ws/membership/#{path}"
-					success: callback
-
-			createModel: (members) ->
-				repoMembers = []
-				groupMembers = []
-				path = if group then "#{group}/#{name}" else name
-				group = path
-				if path.indexOf('/') isnt -1
-					group = path.substring 0, path.indexOf('/')
-				for member in members
-					member.role = Roles[member.role]
-					if member.memberOf is group
-						groupMembers.push member
-					else
-						repoMembers.push member
-				return {
-					repoMembers: repoMembers
-					groupMembers: groupMembers
-				}
-
 			className: 'members-view'
 
+			events: 
+				'click [data-route]': (event) -> Events.followRoute event
+				'click [data-action=add-members]': (event) -> @showAddMembersLayer event
+
+			showAddMembersLayer: (event) ->
+				type = if @group then 'group' else 'repository'
+				Data.getUsersAndTeams (users, teams) =>
+					Layers.showTemplateInLayer
+						template: 'members/add'
+						title: "Add #{type} members"
+						model: {type: type, users: Data.usersToOptions(users, []), teams: Data.teamsToOptions(teams, []), roles: Roles.getAll()}
+						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
+
+			addMembers: () ->
+				console.log 'ADD'
+
+			beforeRender: (type, result) ->
+				for member in result.data
+					member.role = Roles[member.role]
+				unless type
+					return
+				filtered = []
+				for member in result.data
+					if type is 'group-members'
+						if member.memberOf.indexOf('/') is -1
+							filtered.push member
+					else if type is 'repository-members'
+						if member.memberOf.indexOf('/') isnt -1
+							filtered.push member
+				$(".subheader-box[data-type=#{type}] .count").html filtered.length
+				result.data = filtered
+
 			initialize: (options) ->
-				{@groupOrRepository} = options
+				if options.group
+					@group = options.group
+					name = options.group.get 'name'
+					@filter1 = new Filter
+						type: 'group-members'
+						callback: @beforeRender
+						container: '#group-members'
+						template: memberTemplate
+						filterId: 'filter'
+						url: (page, filter) -> "/ws/membership/#{name}/NULL?filter=#{filter}"
+				else if options.repository
+					@repository = options.repository
+					group = options.repository.get 'group'
+					name = options.repository.get 'name'
+					@filter1 = new Filter
+						type: 'repository-members'
+						callback: @beforeRender
+						container: '#repository-members'
+						template: memberTemplate
+						filterId: 'filter'
+						url: (page, filter) -> "/ws/membership/#{group}/#{name}?filter=#{filter}"
+					@filter2 = new Filter
+						type: 'group-members'
+						callback: @beforeRender
+						container: '#group-members'
+						template: memberTemplate
+						filterId: 'filter'
+						url: (page, filter) -> "/ws/membership/#{name}/NULL?filter=#{filter}"
 
 			render: (renderOptions) ->
-				@loadMembers (members) =>
-					@$el.html template @createModel members
-					Renderer.render @, renderOptions
+				showRepositoryMembers = false
+				showGroupMembers = false
+				group = null
+				if @repository
+					showRepositoryMembers = true
+					if !@repository.get('groupIsUserNamespace')
+						showGroupMembers = true
+						group = @repository.get 'group'
+				else if @group
+					showGroupMembers = true
+				@$el.html template
+					showRepositoryMembers: showRepositoryMembers
+					showGroupMembers: showGroupMembers
+					group: group
+				Renderer.render @, renderOptions
+				@filter1.init()
+				if @filter2
+					@filter2.init()
 
 )
