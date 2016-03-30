@@ -4,11 +4,12 @@ define([
 				'cs!utils/Filter'
 				'cs!utils/Renderer'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/dashboard/groups'
 				'templates/views/dashboard/groups-list'
 			]
 
-	(Backbone, Events, Filter, Renderer, Router, template, listTemplate) ->
+	(Backbone, Events, Filter, Renderer, Router, currentUser, template, listTemplate) ->
 
 		class DashboardGroups extends Backbone.View
 
@@ -26,7 +27,8 @@ define([
 					url: (page, filter) -> "/ws/group?page=#{page}&filter=#{filter}"
 
 			render: (renderOptions) ->
-				@$el.html template()
+				@$el.html template
+					canCreateGroups: (currentUser.get('canCreateGroups') or currentUser.get('admin'))
 				Renderer.render @, renderOptions
 				@filter.init()
 

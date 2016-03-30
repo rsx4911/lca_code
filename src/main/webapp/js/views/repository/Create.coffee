@@ -14,7 +14,17 @@ define([
 
 		class RepositoryCreate extends Backbone.View
 
-			className: 'repository-view multi-box-view'
+			loadGroups: (callback) ->
+				$.ajax
+					type: 'GET'
+					url: '/ws/group?onlyIfCanWrite=true'
+					success: (result) =>
+						options = []
+						options.push currentUser.get 'username'
+						for group in result.data
+							options.push group.name
+						callback options
+
 
 			createRepository: () ->
 				@repository.set Forms.toJson 'repository-form'
@@ -27,15 +37,22 @@ define([
 					error: (model, response) -> Forms.handleError 'repository-form', response
 				return false
 
+			className: 'repository-view multi-box-view'
+
 			events:
 				'click [data-action=create-repository]': (event) -> @createRepository event
 
 			initialize: (options) ->
+				{@groupName} = options
 				@repository = new Repository()
 
 			render: (renderOptions) ->
-				@$el.html template()
-				@$('#group').val currentUser.get 'username'
-				Renderer.render @, renderOptions
+				@loadGroups (groups) =>
+					unless @groupName
+						@groupName = currentUser.get 'username'
+					@$el.html template
+						groups: groups
+						selection: @groupName
+					Renderer.render @, renderOptions
 
 )

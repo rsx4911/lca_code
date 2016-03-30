@@ -2,8 +2,14 @@ include ../mixins/user-info.jade
 
 each membership in data
 	.member-row
-		- var type = membership.user ? 'User' : 'Team' 
-		- var id = membership.user ? membership.user.username : membership.team.teamname
-		- var name = membership.user ? membership.user.name : membership.team.name
-		+user-info(id, name, type)
-			span.role.pull-right(title=membership.role.description)=membership.role.name
+		- var memberType = membership.user ? 'User' : 'Team';
+		- var lcType = memberType.toLowerCase();
+		- var id = membership.user ? membership.user.username : membership.team.teamname;
+		- var name = membership.user ? membership.user.name : membership.team.name;
+		- var roleDescription = type === 'group-members' ? membership.role.descriptionForGroup : membership.role.descriptionForRepository;
+		+user-info(id, name, memberType)
+			span.role.pull-right(title=roleDescription)=membership.role.name
+				if canEdit && (membership.role.id !== 'OWNER' || !onlyOneOwner)
+					|  
+					button.btn.btn-xs.btn-danger(data-action='remove-member' data-id=id data-type=lcType)
+						span.glyphicon.glyphicon-minus

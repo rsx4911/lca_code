@@ -1,12 +1,21 @@
 include ../../mixins/forms.jade
+include ../../mixins/user-info.jade
 
 mixin menubar()
 	.header-box
-		+select('commitId', 'Version', [['null', 'Latest']])
-		a.btn.btn-success.pull-right(href='#{downloadUrl}' download='#{dataset.id}.json')
-			span.glyphicon.glyphicon-download  
+		- var currentCommit = null;
+		+select('commitId', 'Version', null, null, true)
+			each commit, i in commits
+				if commit.id === commitId
+					- currentCommit = commit;
+				option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
+				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
+		a.btn.btn-success.pull-right(href=downloadUrl download='#{dataset.id}.json')
+			span.glyphicon.glyphicon-download
 			span.text Download Raw Data
 		.clear
+		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed')
+			|  on #{formatDate(currentCommit.timestamp)}
 
 mixin header()
 	h3.title
@@ -16,7 +25,8 @@ mixin header()
 			span=dataset.description
 	.clear.content
 		if dataset.category
-			| #{dataset.category.name}
+			a(href='#{baseUrl}s/#{dataset.category.id}')
+				| #{dataset.category.name}
 	block
 	hr
 
@@ -45,9 +55,10 @@ mixin field-row(label, value, checkValue, formatter)
 			td #{value?formatter?formatter(value):value:''}
 				block
 
-mixin ref(ref, additionalTypeInfo)
+mixin ref(ref, additionalTypeInfo, noImage)
 	if ref
-		img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
+		if !noImage
+			img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
 		a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
 
 mixin ref-row(label, ref, additionalTypeInfo)
@@ -69,6 +80,10 @@ mixin exchange-row(exchange)
 		td #{exchange.amount}
 			if exchange.unit 
 				|  #{exchange.unit.name}
+		td 
+			if exchange.costValue
+				| #{exchange.costValue} #{exchange.currency.name}
+		td: +uncertainty(exchange.uncertainty)
 		td
 			if exchange.input
 				+ref(exchange.defaultProvider)
@@ -84,11 +99,48 @@ mixin exchange-table(exchanges, input)
 				th Flow
 				th Category
 				th Amount
-				th #{input?'Default provider':'Avoided product'}
+				th Costs
+				th Uncertainty
+				th #{input?'Provider':'Avoided product'}
 		tbody
 			each exchange in exchanges
 				if exchange.input === input
 					+exchange-row(exchange)
+
+mixin non-causal-allocation-table(factors)
+	h4 Physical & Economic allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th Product
+				th Physical
+				th Economic
+		tbody
+			each factor in factors
+				tr
+					td
+					td: +ref(factor.product)
+					td=factor.physical
+					td=factor.economic
+
+mixin causal-allocation-table(factors)
+	if factors.length
+		h4 Causal allocation
+		table.table.allocation-factors
+			thead
+				tr
+					th
+					th Flow
+					each product in factors[0].products
+						th: +ref(product.product)
+			tbody
+				each factor in factors
+					tr
+						td: img.icon-small(src='/images/' + (factor.exchange.input?'input':'output') + '.png')
+						td: +ref(factor.exchange.flow)
+						each product in factor.products
+							td=product.value
 
 mixin uncertainty(uncertainty)
 	if uncertainty

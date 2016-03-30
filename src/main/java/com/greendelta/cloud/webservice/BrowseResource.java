@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexEntry;
 import com.greendelta.cloud.service.BrowseService;
@@ -77,8 +78,13 @@ public class BrowseResource {
 		if (!(obj instanceof DatasetIndexEntry))
 			return null;
 		DatasetIndexEntry entry = (DatasetIndexEntry) obj;
-		String parent = fetchService.getDataset(repo, entry.categoryType, entry.categoryRefId, entry.commitId);
-		return ObjectMap.fromJson(parent).get("categoryRefId");
+		if (Strings.isNullOrEmpty(entry.categoryRefId))
+			return null;
+		String parent = fetchService.getDataset(repo, ModelType.CATEGORY, entry.categoryRefId, entry.commitId);
+		String parentRefId = ObjectMap.fromJson(parent).get("category.@id");
+		if (parentRefId == null)
+			return entry.categoryType.name();
+		return parentRefId;
 	}
 
 }

@@ -13,7 +13,9 @@ form#user-form.content-box
 	+input('name', 'Name*')
 	+input('email', 'Email*')
 	if adminArea
-		+checkbox('canCreateGroups', 'Is allowed to create groups')
+		+checkbox('admin', 'Is admin user')(disabled=isOwnUser)
+		+checkbox('canCreateGroups', 'Is allowed to create groups')(disabled=isOwnUser)
+		+checkbox('canCreateRepositories', 'Is allowed to create private repositories')(disabled=isOwnUser)
 	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
 		if user.id
 			| Save

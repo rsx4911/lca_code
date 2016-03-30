@@ -58,10 +58,10 @@ public class RepositoryResource {
 			return Respond.invalid("name", "Missing input: Name");
 		if (Names.isReserved(name))
 			return Respond.invalid("name", "This is a reserved word");
-		if (service.exists(group, name)) {
-			String message = "Repository " + name + " already exists";
-			return Respond.conflict(message);
-		}
+		if (service.exists(group, name))
+			return Respond.conflict("Repository " + name + " already exists");
+		if (!groupService.exists(group))
+			return Respond.invalid("group", "Specified group does not exist");
 		Repository repo = service.create(group, name);
 		return Respond.created(new RepositoryMapper().map(repo, groupService.isUserNamespace(group)));
 	}
@@ -84,12 +84,14 @@ public class RepositoryResource {
 		User currentUser = userService.getCurrentUser();
 		mappedRepo.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, repo.toId()));
 		mappedRepo.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, repo.toId()));
+		mappedRepo.put("userCanEditMembers",
+				currentUser.admin || accessService.canEditMembers(currentUser, repo.toId()));
 		return Respond.ok(mappedRepo);
 	}
 
 	@GET
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("filter") @DefaultValue("") String filter) {
+			@QueryParam("filter") @DefaultValue("") String filter, @QueryParam("group") @DefaultValue("") String group) {
 		PagedResult<Repository> result = service.getAll(page, filter, true);
 		return Respond.ok(result.toClient(new RepositoryMapper()::map));
 	}

@@ -60,11 +60,11 @@ public class MembershipResource {
 	}
 
 	@POST
-	@Path("{group}/{repo}/team/{name}/{role}")
+	@Path("{group}/{repo}/team/{teamname}/{role}")
 	public Response addTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("name") String name, @PathParam("role") Role role) {
+			@PathParam("teamname") String teamname, @PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
-		Team team = teamService.getForTeamname(name);
+		Team team = teamService.getForTeamname(teamname);
 		boolean added = service.addMemberships(team, path, role);
 		return Respond.ok(Collections.singletonMap("added", added));
 	}
@@ -80,11 +80,11 @@ public class MembershipResource {
 	}
 
 	@PUT
-	@Path("{group}/{repo}/team/{name}/{role}")
+	@Path("{group}/{repo}/team/{teamname}/{role}")
 	public Response setTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("name") String name, @PathParam("role") Role role) {
+			@PathParam("teamname") String teamname, @PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
-		Team team = teamService.getForTeamname(name);
+		Team team = teamService.getForTeamname(teamname);
 		boolean changed = service.setRole(team, path, role);
 		return Respond.ok(Collections.singletonMap("changed", changed));
 	}
@@ -100,11 +100,11 @@ public class MembershipResource {
 	}
 
 	@DELETE
-	@Path("{group}/{repo}/team/{username}")
+	@Path("{group}/{repo}/team/{teamname}")
 	public Response removeTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("name") String name) {
+			@PathParam("teamname") String teamname) {
 		String path = getAuthorizedPath(group, repo);
-		Team team = teamService.getForTeamname(name);
+		Team team = teamService.getForTeamname(teamname);
 		boolean removed = service.removeMemberships(team, path);
 		return Respond.ok(Collections.singletonMap("removed", removed));
 	}
@@ -113,7 +113,9 @@ public class MembershipResource {
 	@Path("{group}/{repo}")
 	public Response getAll(@PathParam("group") String group, @PathParam("repo") String repo,
 			@QueryParam("filter") @DefaultValue("") String filter) {
-		String path = getAuthorizedPath(group, repo);
+		String path = group;
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			path = Repository.toId(group, repo);
 		PagedResult<Membership> memberships = service.getMemberships(path, filter);
 		return Respond.ok(memberships.toClient(new MembershipMapper()::map));
 	}
@@ -123,8 +125,6 @@ public class MembershipResource {
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canEditMembers(currentUser, path))
-			throw new UnauthorizedAccessException(path, "VIEW");
 		if (!currentUser.admin && !accessService.canEditMembers(currentUser, path))
 			throw new UnauthorizedAccessException(path, "CHANGE_ROLE");
 		return path;

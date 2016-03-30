@@ -44,7 +44,9 @@ public class MembershipMapper {
 		for (Membership m : memberships) {
 			String key = m.memberOf;
 			if (m.team != null)
-				key += m.team.name;
+				key += m.team.teamname;
+			else
+				key += m.user.username;
 			if (!repoPlusTeam.contains(key)) {
 				filtered.add(m);
 				repoPlusTeam.add(key);
@@ -52,5 +54,4 @@ public class MembershipMapper {
 		}
 		return filtered;
 	}
-
 }

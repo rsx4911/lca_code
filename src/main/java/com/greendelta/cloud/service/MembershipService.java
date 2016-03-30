@@ -66,6 +66,7 @@ public class MembershipService {
 		member.team = team;
 		member.memberOf = groupOrRepo;
 		member.role = role;
+		dao.insert(member);
 		return true;
 	}
 

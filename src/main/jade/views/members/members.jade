@@ -1,10 +1,14 @@
 .header-box 
-	.input-group.input-group-lg
-		input#filter.form-control(type='text' placeholder='Filter by name')
-		span.input-group-btn
-			button.btn.btn-success(data-action='add-members') 
-				span.glyphicon.glyphicon-plus
-				span.text Add members
+	if canEdit
+		.input-group.input-group-lg
+			input#filter.form-control(type='text' placeholder='Filter by name')
+			span.input-group-btn
+				button.btn.btn-success(data-action='add-members') 
+					span.glyphicon.glyphicon-plus
+					span.text Add members
+	else
+		.form-group
+			input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
 	.clear
 .content-box
 	if showRepositoryMembers
@@ -18,7 +22,7 @@
 		.subheader-box(data-type='group-members') Group members (
 			span.count 0
 			| )
-			if showRepositoryMembers && group
+			if showRepositoryMembers && group && canEdit
 				button.btn.btn-xs.btn-default.pull-right(data-route='/groups/#{group}/members') 
 					span.glyphicon.glyphicon-pencil
 					span.text Edit group members

@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.util.ObjectMap;
+import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
@@ -47,6 +48,20 @@ public class HistoryResource {
 		if (lastCommitId.equals("null"))
 			lastCommitId = null;
 		List<Commit> commits = service.getCommits(repo, lastCommitId);
+		if (commits.size() == 0)
+			return Respond.noContent();
+		Collections.reverse(commits);
+		return Respond.ok(putUserName(commits));
+	}
+
+	@GET
+	@Path("{group}/{name}/{type}/{refId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistory(@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type, @PathParam("refId") String refId) {
+		Repository repo = repoService.get(group, name);
+		List<Commit> commits = service.getCommits(repo, type, refId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		Collections.reverse(commits);

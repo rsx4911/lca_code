@@ -1,6 +1,6 @@
 define
 	'': 'dashboardRepositories'
-	'repository/new': 'repositoryNew'
+	'repository/new(/:group)': 'repositoryNew'
 	'user': 'userProfile'
 	'user/profile': 'userProfile'
 	'dashboard': 'dashboardRepositories'
@@ -17,7 +17,6 @@ define
 	'groups/:group/members': 'groupMembers'	
 	':group/:name': 'repositoryInfo'
 	':group/:name/datasets(/:categoryId)': 'repositoryDatasets'
-	':group/:name/dataset/:type/:refId': 'repositoryDataset'
 	':group/:name/dataset/:type/:refId(/:commitId)': 'repositoryDataset'
 	':group/:name/commits': 'repositoryCommits'
 	':group/:name/commit/:commitId': 'repositoryCommit'

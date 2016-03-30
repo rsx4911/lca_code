@@ -137,9 +137,11 @@ define([
 						urlPrefix: group
 					viewOptions: 
 						group: new Group({name: group})
-				@router.registerUserRoute 'repositoryNew', -> @showView 
+				@router.registerUserRoute 'repositoryNew', (groupName) -> @showView 
 					view: 'repository/Create'
 					title: 'New repository' 
+					viewOptions: 
+						groupName: groupName
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> @showView 
 					view: 'repository/Repository'
 					title: "#{group}/#{name}"

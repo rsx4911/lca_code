@@ -69,17 +69,21 @@ public class GroupResource {
 		User currentUser = userService.getCurrentUser();
 		group.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, name));
 		group.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, name));
+		group.put("userCanEditMembers", currentUser.admin || accessService.canEditMembers(currentUser, name));
 		return Respond.ok(group);
 	}
 
 	@GET
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("filter") @DefaultValue("") String filter) {
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
 		PagedResult<String> result = service.getAll(page, filter, true);
+		User currentUser = userService.getCurrentUser();
 		return Respond.ok(result.toClient((groups) -> {
 			List<Map<String, Object>> maps = new ArrayList<>();
 			for (String group : groups)
-				maps.add(Collections.singletonMap("name", group));
+				if (!onlyIfCanWrite || currentUser.admin || accessService.canWrite(currentUser, group))
+					maps.add(Collections.singletonMap("name", group));
 			return maps;
 		}));
 	}

@@ -15,21 +15,32 @@ define([
 
 		class GroupView extends Backbone.View
 
+			loadRepositories: (callback) ->
+				group = @group.get 'name'
+				$.ajax
+					type: 'GET'
+					url: "/ws/repository?filter=#{group}/"
+					success: callback
+
 			className: 'group-view multi-box-view'
 
 			events:
+				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
+				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
 				'click [data-action=delete-group]': (event) -> @deleteGroup event
 
 			initialize: (options) ->
 				{@group} = options
 
 			render: (renderOptions) ->
-				@$el.html template
-					group: @group.toJSON()
-				Renderer.render @, renderOptions
+				@loadRepositories (repositories) =>
+					@$el.html template
+						group: @group.toJSON()
+						repositories: repositories.data
+					Renderer.render @, renderOptions
 
 			deleteGroup: (event) ->
 				name = @group.get 'name'

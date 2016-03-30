@@ -4,11 +4,12 @@ define([
 				'cs!utils/Filter'
 				'cs!utils/Renderer'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/dashboard/repositories'
 				'templates/views/dashboard/repositories-list'
 			]
 
-	(Backbone, Events, Filter, Renderer, Router, template, listTemplate) ->
+	(Backbone, Events, Filter, Renderer, Router, currentUser, template, listTemplate) ->
 
 		class DashboardRepositories extends Backbone.View
 
@@ -26,7 +27,8 @@ define([
 					url: (page, filter) -> "/ws/repository?page=#{page}&filter=#{filter}"
 
 			render: (renderOptions) ->
-				@$el.html template()
+				@$el.html template
+					canCreateRepositories: (currentUser.get('canCreateRepositories') or currentUser.get('admin'))
 				Renderer.render @, renderOptions
 				@filter.init()
 

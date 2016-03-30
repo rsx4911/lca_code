@@ -34,6 +34,9 @@ define () ->
 		followLink: (event) ->
 			link = $ @target event, 'a'
 			route = link.attr 'href'
+			if route is '#'
+				@preventDefault event
+				return '#'
 			if route.indexOf('callto:') isnt 0 and route.indexOf('mailto:') isnt 0
 				@preventDefault event
 				if route.charAt(0) is '/'
@@ -45,6 +48,9 @@ define () ->
 		followRoute: (event) ->
 			link = $ @target event, 'button'
 			route = link.attr 'data-route'
+			if route is '#'
+				@preventDefault event
+				return '#'
 			if route.indexOf('callto:') isnt 0 and route.indexOf('mailto:') isnt 0
 				@preventDefault event
 				if route.charAt(0) is '/'

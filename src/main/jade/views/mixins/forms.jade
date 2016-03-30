@@ -27,8 +27,8 @@ mixin input(id, label, type, inline, required)
 		input.form-control(id='#{id}' name='#{id}' type='#{type}')&attributes(attributes)
 		block
 
-mixin select(id, label, options, defaultSelection)
-	.form-group(id='#{id}-group')
+mixin select(id, label, options, defaultSelection, inline)
+	div(id='#{id}-group' class=inline?'form-inline':'form-group')
 		label.control-label(for='#{id}') #{label}
 		select.form-control(id='#{id}' name='#{id}')&attributes(attributes)
 			if options
@@ -38,11 +38,11 @@ mixin select(id, label, options, defaultSelection)
 		if options
 			block
 
-mixin optgroup(label, options, defaultSelection)
+mixin optgroup(label, options, defaultSelection, groupId)
 	optgroup(label=label)
-		+options(options, defaultSelection)
+		+options(options, defaultSelection, groupId)
 
-mixin options(options, defaultSelection)
+mixin options(options, defaultSelection, groupId)
 	each option in options
 		- var value = option;
 		- var label = option;
@@ -55,9 +55,9 @@ mixin options(options, defaultSelection)
 		- 	}
 		- }
 		if defaultSelection === value
-			option(value='#{value}' selected) #{label}
+			option(value='#{value}' selected data-group-id=groupId) #{label}
 		else
-			option(value='#{value}' disabled=disabled) #{label}
+			option(value='#{value}' disabled=disabled data-group-id=groupId) #{label}
 
 mixin checkbox(id, label)
 	.checkbox

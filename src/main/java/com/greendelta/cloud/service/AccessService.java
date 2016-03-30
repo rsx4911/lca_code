@@ -47,6 +47,13 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.EDIT_MEMBERS);
 	}
 
+	public boolean canCreateRepository(User user, String groupOrRepo) {
+		if (isOwnNamespace(user, groupOrRepo))
+			return user.canCreateRepositories;
+		Role role = membershipService.getRole(user, groupOrRepo);
+		return role.getPermissions().contains(Permission.WRITE);
+	}
+
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equals(user.username);

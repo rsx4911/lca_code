@@ -109,14 +109,18 @@ class Dao<T extends AbstractEntity> {
 				if (value instanceof Collection
 						|| (value != null && value.getClass().isArray()))
 					comparator = "IN";
-				jpql += "o." + parameter.getKey() + " " + comparator + " :p" + ++count;
+				if (value == null)
+					jpql += "o." + parameter.getKey() + " IS NULL";
+				else
+					jpql += "o." + parameter.getKey() + " " + comparator + " :p" + ++count;
 				if (value != null && value.getClass().isArray()) {
 					Set<Object> values = new HashSet<>();
 					for (Object object : (Object[]) value)
 						values.add(object);
 					value = values;
 				}
-				internal.put("p" + count, value);
+				if (value != null)
+					internal.put("p" + count, value);
 			}
 			parameters = internal;
 		}

@@ -21,6 +21,7 @@ define([
 
 			events:
 				'submit #user-form': (event) -> @saveUser event
+				'change #admin, #canCreateGroups': (event) -> @updateRights()
 				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
 				'submit #avatar-form': (event) -> 
@@ -45,8 +46,10 @@ define([
 				@$el.html template
 					user: user
 					adminArea: @adminArea
+					isOwnUser: (user.id is currentUser.get('id'))
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
+				@updateRights()
 
 			saveUser: (event) ->
 				Events.preventDefault event
@@ -95,5 +98,15 @@ define([
 				else
 					Status.success 'Successfully updated profile'
 					Backbone.history.loadUrl()
+
+			updateRights: () ->
+				@$('#canCreateGroups').prop 'disabled', false
+				@$('#canCreateRepositories').prop 'disabled', false
+				if @$('#admin').is(':checked')
+					@$('#canCreateGroups').prop 'checked', true
+					@$('#canCreateGroups').prop 'disabled', true
+				if @$('#canCreateGroups').is(':checked')
+					@$('#canCreateRepositories').prop 'checked', true
+					@$('#canCreateRepositories').prop 'disabled', true
 
 )

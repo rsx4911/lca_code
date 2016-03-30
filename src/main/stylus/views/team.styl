@@ -1,6 +1,6 @@
 .team-view 
 	
-	.team-members-container
+	.flex-container
 		
 		.content-box
 			padding 0
@@ -12,39 +12,3 @@
 	
 			button[data-action=remove-member]
 				margin-top 7px
-
-	.two-columns
-
-		@media(min-width 992px)
-			display flex
-
-			& > *:last-child
-				display flex
-
-			.team-members-container
-				width 100%
-				background-color rgb(255, 255, 255)
-					
-		@media(min-width 1120px)
-
-			& > *:first-child
-				width 55% !important
-
-			& > *:last-child
-				width 41% !important
-
-		@media(min-width 1220px)
-
-			& > *:first-child
-				width 58% !important
-
-			& > *:last-child
-				width 38% !important
-				
-		@media(min-width 1320px)
-
-			& > *:first-child
-				width 63% !important
-
-			& > *:last-child
-				width 33% !important

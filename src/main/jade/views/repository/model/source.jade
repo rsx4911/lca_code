@@ -10,5 +10,8 @@ include ./mixins.jade
 					+field-row('DOI', dataset.doi, true)
 					+field-row('Text reference', dataset.textReference, true)
 					+field-row('Year', dataset.year, true)
+					if dataset.externalFile
+						+field-row('Year')
+							a(href='#{fileBaseUrl}/#{dataset.externalFile}' target='_blank')=dataset.externalFile
 	+meta
 	.clear

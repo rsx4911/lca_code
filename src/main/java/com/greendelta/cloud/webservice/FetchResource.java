@@ -28,6 +28,7 @@ import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.service.FetchService;
 import com.greendelta.cloud.service.HistoryService;
@@ -48,6 +49,27 @@ public class FetchResource {
 		this.service = service;
 		this.repoService = repoService;
 		this.historyService = historyService;
+	}
+
+	@GET
+	@Path("file/{group}/{name}/{type}/{refId}/{commitId}/{filename}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response getFile(@PathParam("group") String group,
+			@PathParam("name") String name, @PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId, @PathParam("filename") String filename) throws IOException {
+		Repository repo = repoService.get(group, name);
+		if (commitId.equals("null"))
+			commitId = getLastCommitId(repo, type, refId);
+		if (commitId == null)
+			return Respond.notFound(notFoundMessage(type, refId, null));
+		File binDir = service.getBinDir(repo, type, refId, commitId);
+		if (!binDir.exists())
+			return Respond.notFound(notFoundMessage(type, refId, filename));
+		File file = new File(binDir, filename);
+		if (!file.exists())
+			return Respond.notFound(notFoundMessage(type, refId, filename));
+		return Respond.ok(Files.readAllBytes(file.toPath()));
 	}
 
 	@GET
@@ -80,7 +102,14 @@ public class FetchResource {
 	}
 
 	private String notFoundMessage(ModelType type, String refId, String commitId) {
-		String base = type.name() + " " + refId + " not found";
+		return notFoundMessage(type, refId, commitId, null);
+	}
+
+	private String notFoundMessage(ModelType type, String refId, String commitId, String filename) {
+		String base = "";
+		if (!Strings.isNullOrEmpty(filename))
+			base = "Binary file " + filename + " of ";
+		base += type.name() + " " + refId + " not found";
 		if (commitId == null)
 			return base;
 		return base + " for commit id " + commitId;

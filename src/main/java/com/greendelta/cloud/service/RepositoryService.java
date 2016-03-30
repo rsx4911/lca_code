@@ -69,7 +69,7 @@ public class RepositoryService {
 
 	public Repository create(String group, String name) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canWrite(currentUser, group))
+		if (!currentUser.admin && !accessService.canCreateRepository(currentUser, group))
 			throw new UnauthorizedAccessException(group, "WRITE");
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
