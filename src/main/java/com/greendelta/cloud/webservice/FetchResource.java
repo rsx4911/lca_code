@@ -76,7 +76,8 @@ public class FetchResource {
 	@Path("data/{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getData(@PathParam("group") String group,
-			@PathParam("name") String name, @PathParam("type") ModelType type,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
@@ -113,7 +114,6 @@ public class FetchResource {
 		if (commitId == null)
 			return base;
 		return base + " for commit id " + commitId;
-
 	}
 
 	@GET

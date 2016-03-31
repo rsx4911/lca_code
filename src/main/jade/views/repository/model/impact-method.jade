@@ -1,5 +1,37 @@
 include ./mixins.jade
 
+mixin impact-category-selection()
+	+select('impact-category', 'Impact category')
+		each ic in dataset.impactCategories
+			option(id=ic.id)=ic.name
+	span.impact-category-description
+
+mixin impact-factor-table()
+	h4 Impact factors
+	table#impact-factors.table
+		thead
+			tr
+				th Flow
+				th Category
+				th Factor
+				th Uncertainty
+		tbody
+
+mixin nw-set-selection()
+	+select('nw-set', 'Normalization and weighting set')
+		each set in dataset.nwSets
+			option(id=set.id) #{set.name}
+
+mixin nw-factor-table()
+	h4 Normalization and weighting factors
+	table#nw-factors.table
+		thead
+			tr
+				th Impact category
+				th Normalization factor
+				th Weighting factor
+		tbody
+
 +menubar
 .content-box
 	.model-left-content
@@ -7,11 +39,26 @@ include ./mixins.jade
 		.content
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
-					a(href='#factors' aria-controls='factors' role='tab' data-toggle='tab') Impact factors
-				li(role='presentation') 
-					a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+					a(href='#categories' aria-controls='categories' role='tab' data-toggle='tab') Impact factors
+				if dataset.nwSets && dataset.nwSets.length
+					li(role='presentation') 
+						a(href='#nwsets' aria-controls='nwsets' role='tab' data-toggle='tab') Normalization and weighting
+				if dataset.parameters && dataset.parameters.length
+					li(role='presentation') 
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
 			.tab-content
-				#factors.tab-pane.active(role='tabpanel')
+				#categories.tab-pane.active(role='tabpanel')
+					if dataset.impactCategories && dataset.impactCategories.length
+						+impact-category-selection
+						hr
+						+impact-factor-table
+				if dataset.nwSets && dataset.nwSets.length
+					#nwsets.tab-pane(role='tabpanel')
+						+nw-set-selection
+						| Reference unit: 
+						span#nw-set-unit
+						hr
+						+nw-factor-table
 				if dataset.parameters && dataset.parameters.length
 					#parameters.tab-pane(role='tabpanel')
 						+parameter-table(dataset.parameters, true)

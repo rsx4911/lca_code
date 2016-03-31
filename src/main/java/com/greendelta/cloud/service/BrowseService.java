@@ -42,6 +42,11 @@ public class BrowseService {
 		return index.getForCategory(categoryId);
 	}
 
+	public DatasetIndexEntry getCategory(Repository repo, String refId) {
+		DatasetIndex index = repoService.getIndex(repo);
+		return index.getForId(ModelType.CATEGORY, refId);
+	}
+
 	public boolean categoryExists(Repository repo, String categoryId) {
 		DatasetIndex index = repoService.getIndex(repo);
 		return index.categoryExists(categoryId);

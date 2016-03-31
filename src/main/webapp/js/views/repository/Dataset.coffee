@@ -2,9 +2,11 @@ define([
 				'backbone'
 				'moment'
 				'open-layers'
+				'cs!utils/Allocation'
 				'cs!utils/Events'
 				'cs!utils/Icons'
 				'cs!utils/Renderer'
+				'cs!utils/RiskLevel'
 				'cs!app/Router'
 				'templates/views/repository/model/project'
 				'templates/views/repository/model/product-system'
@@ -19,9 +21,11 @@ define([
 				'templates/views/repository/model/source'
 				'templates/views/repository/model/actor'
 				'templates/views/repository/model/location'
+				'templates/views/repository/model/impact-factor-rows'
+				'templates/views/repository/model/nw-factor-rows'
 			]
 
-	(Backbone, Moment, OpenLayers, Events, Icons, Renderer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location) ->
+	(Backbone, Moment, OpenLayers, Allocation, Events, Icons, Renderer, RiskLevel, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -42,9 +46,11 @@ define([
 					when 'LOCATION' then return location
 
 			loadDataset: (callback) ->
+				urlPart = @getUrlPart()
+				commitId = @commitId or 'null'
 				$.ajax
 					type: 'GET'
-					url: @getDataSetUrl()
+					url: "/ws/browse/#{urlPart}/#{commitId}" 
 					success: callback
 
 			loadCommitHistory: (callback) ->
@@ -54,7 +60,7 @@ define([
 					url: "/ws/history/#{urlPart}"
 					success: callback
 
-			getDataSetUrl: () ->
+			getDownloadUrl: () ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
 				return "/ws/fetch/data/#{urlPart}/#{commitId}" 
@@ -64,11 +70,11 @@ define([
 				commitId = @commitId or 'null'
 				return "/ws/fetch/file/#{urlPart}/#{commitId}" 
 
-			getUrlPart: () ->
+			getUrlPart: (type, refId) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				type = @type
-				refId = @refId
+				type = type or @type
+				refId = refId or @refId
 				return "#{group}/#{name}/#{type}/#{refId}"
 
 			showExchangeDetails: (event) ->
@@ -90,6 +96,8 @@ define([
 			events: 
 				'click a:not([role]):not([download]):not([target=_blank])': (event) -> Events.followLink event
 				'click a[data-action=show-exchange-details]': (event) -> showExchangeDetails event
+				'change #impact-category': (event) -> @loadImpactCategory()
+				'change #nw-set': (event) -> @loadNwSet()
 				'change #commitId': (event) -> 
 					repo = @repository.toJSON()
 					type = @type
@@ -117,7 +125,7 @@ define([
 							getIcon: Icons.get
 							getTypeAsEnum: @getTypeAsEnum
 							getUncertaintyLabel: @getUncertaintyLabel
-							downloadUrl: @getDataSetUrl()
+							downloadUrl: @getDownloadUrl()
 							fileBaseUrl: @getFileBaseUrl()
 							commits: commits
 							commitId: @commitId or commits[0].id
@@ -125,6 +133,9 @@ define([
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset
+						if dataset.type is 'ImpactMethod'
+							@loadImpactCategory()
+							@loadNwSet()
 
 			removeAtSigns: (object) ->
 				for key in Object.keys(object)
@@ -138,6 +149,16 @@ define([
 					when 'PROCESS'
 						@sortExchanges dataset
 						@prepareAllocationFactors dataset
+						if dataset.socialAspects
+							for aspect in dataset.socialAspects
+								if aspect.riskLevel
+									aspect.riskLevel = RiskLevel[aspect.riskLevel]
+								else
+									aspect.riskLevel = RiskLevel.DEFAULT
+					when 'PROJECT'
+						@prepareParameterRedefs dataset
+						for variant in dataset.variants
+							variant.allocationMethod = Allocation[variant.allocationMethod]
 
 			sortExchanges: (dataset) ->
 				dataset.exchanges.sort (e1, e2) ->
@@ -209,6 +230,30 @@ define([
 					factor.products.sort (p1, p2) ->
 						return order[p1.product.id] - order[p2.product.id]
 
+			prepareParameterRedefs: (dataset) ->
+				parameters = {}
+				for variant in dataset.variants
+					for parameter in variant.parameterRedefs
+						contextId = 'Global'
+						if parameter.context
+							contextId = parameter.context.id
+						p = parameters[contextId + parameter.name]
+						unless p
+							p = {name: parameter.name, context: parameter.context, values: {}}
+							parameters[contextId + parameter.name] = p
+						p.values[variant.productSystem.id] = {variant: variant.name, value: parameter.value}
+				dataset.parameterRedefs = []
+				for key in Object.keys(parameters)
+					p = parameters[key]
+					values = []
+					for variant in dataset.variants
+						unless p.values[variant.productSystem.id]
+							p.values[variant.productSystem.id] = 0
+					for key2 in Object.keys(p.values)
+						values.push p.values[key2]
+					p.values = values
+					dataset.parameterRedefs.push p
+
 			getLabel: (type, value) ->
 				switch type 
 					when 'FlowPropertyType'
@@ -247,5 +292,33 @@ define([
 					view: new OpenLayers.View
 						center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
 						zoom: 5
+
+			loadImpactCategory: () ->
+				commitId = @commitId or 'null'
+				selectedImpactCategory = $('#impact-category option:selected').attr 'id'
+				if selectedImpactCategory
+					urlPart = @getUrlPart 'IMPACT_CATEGORY', selectedImpactCategory
+					$.ajax
+						type: 'GET'
+						url: "/ws/browse/#{urlPart}/#{commitId}"
+						success: (impactCategory) =>
+							@$('.impact-category-description').html impactCategory.description
+							@$('#impact-factors tbody').empty()
+							@$('#impact-factors tbody').append impactFactorsTemplate 
+								impactCategory: impactCategory
+
+			loadNwSet: () ->
+				commitId = @commitId or 'null'
+				selectedNwSet = $('#nw-set option:selected').attr 'id'
+				if selectedNwSet
+					urlPart = @getUrlPart 'NW_SET', selectedNwSet
+					$.ajax
+						type: 'GET'
+						url: "/ws/browse/#{urlPart}/#{commitId}"
+						success: (nwSet) =>
+							@$('#nw-set-unit').html nwSet.weightedScoreUnit
+							@$('#nw-factors tbody').empty()
+							@$('#nw-factors tbody').append nwFactorsTemplate 
+								nwSet: nwSet
 
 )

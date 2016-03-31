@@ -8,8 +8,9 @@ include ./mixins.jade
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
 					a(href='#overview' aria-controls='overview' role='tab' data-toggle='tab') Overview
-				li(role='presentation') 
-					a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+				if dataset.parameterRedefs && dataset.parameterRedefs.length
+					li(role='presentation') 
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
 			.tab-content
 				#overview.tab-pane.active(role='tabpanel')
 					table.table.no-head

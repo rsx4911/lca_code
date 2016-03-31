@@ -40,7 +40,7 @@ public class HistoryService {
 
 	public Commit getCommit(Repository repo, String commitId) {
 		File historyFile = repo.getHistoryFile(false);
-		List<Commit> commits =dataAccessor.readHistory(historyFile, new SpecificCommitFilter(commitId));
+		List<Commit> commits = dataAccessor.readHistory(historyFile, new SpecificCommitFilter(commitId));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(0);

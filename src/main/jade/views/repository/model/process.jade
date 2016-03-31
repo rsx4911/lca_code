@@ -1,5 +1,102 @@
 include ./mixins.jade
 
+mixin exchange-row(exchange)
+	tr(class=exchange.quantitativeReference?'reference':null)
+		td: img.icon-small(src='/images/' + (exchange.input?'input':'output') + '.png')
+		td: +ref(exchange.flow)
+		td 
+			if exchange.flow.category
+				- var path = exchange.flow.category.split('/');
+				| #{path[path.length - 1]}
+				if path.length > 1
+					|  / #{path[path.length - 2]}
+		td #{exchange.amount}
+			if exchange.unit 
+				|  #{exchange.unit.name}
+		td 
+			if exchange.costValue
+				| #{exchange.costValue} #{exchange.currency.name}
+		td: +uncertainty(exchange.uncertainty)
+		td
+			if exchange.input
+				+ref(exchange.defaultProvider)
+			else
+				if exchange.avoidedProduct
+					img.icon-small(src='/images/check_true.png')
+
+mixin exchange-table(exchanges, input)
+	table.table(class=input?'inputs':'outputs')
+		thead
+			tr
+				th
+				th Flow
+				th Category
+				th Amount
+				th Costs
+				th Uncertainty
+				th #{input?'Provider':'Avoided product'}
+		tbody
+			each exchange in exchanges
+				if exchange.input === input
+					+exchange-row(exchange)
+
+mixin non-causal-allocation-table(factors)
+	h4 Physical & Economic allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th Product
+				th Physical
+				th Economic
+		tbody
+			each factor in factors
+				tr
+					td
+					td: +ref(factor.product)
+					td=factor.physical
+					td=factor.economic
+
+mixin causal-allocation-table(factors)
+	if factors.length
+		h4 Causal allocation
+		table.table.allocation-factors
+			thead
+				tr
+					th
+					th Flow
+					each product in factors[0].products
+						th: +ref(product.product)
+			tbody
+				each factor in factors
+					tr
+						td: img.icon-small(src='/images/' + (factor.exchange.input?'input':'output') + '.png')
+						td: +ref(factor.exchange.flow)
+						each product in factor.products
+							td=product.value
+
+mixin social-aspect-table(aspects)
+	table.table.social-aspects
+		thead
+			tr
+				th Name
+				th Raw value
+				th Risk level
+				th Activity variable
+				th Data quality
+				th Comment
+				th Source
+		tbody
+			each aspect in aspects
+				tr
+					td=aspect.socialIndicator.name
+					td #{aspect.rawAmount} [#{aspect.socialIndicator.unitOfMeasurement}]
+					td=aspect.riskLevel
+					td 1 #{aspect.socialIndicator.activityUnit.name} #{aspect.socialIndicator.activityVariable}
+					td=aspect.quality
+					td=aspect.comment
+					td: +ref(aspect.source)
+
 - var doc = dataset.processDocumentation
 +menubar
 .content-box
@@ -14,6 +111,9 @@ include ./mixins.jade
 						a(href='#documentation' aria-controls='documentation' role='tab' data-toggle='tab') Documentation
 				li(role='presentation') 
 					a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab') Allocation
+				if dataset.socialAspects && dataset.socialAspects.length
+					li(role='presentation') 
+						a(href='#social' aria-controls='social' role='tab' data-toggle='tab') Social aspects
 				if dataset.parameters && dataset.parameters.length
 					li(role='presentation') 
 						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
@@ -50,9 +150,13 @@ include ./mixins.jade
 										each source in doc.sources
 											div: +ref(source)
 				#allocation.tab-pane(role='tabpanel')
-					if dataset.nonCausalAllocationFactors || dataset.causalAllocationFactors
+					if dataset.nonCausalAllocationFactors
 						+non-causal-allocation-table(dataset.nonCausalAllocationFactors)
+					if dataset.causalAllocationFactors
 						+causal-allocation-table(dataset.causalAllocationFactors)
+				if dataset.socialAspects && dataset.socialAspects.length
+					#social.tab-pane(role='tabpanel')
+						+social-aspect-table(dataset.socialAspects)
 				if dataset.parameters && dataset.parameters.length
 					#parameters.tab-pane(role='tabpanel')
 						+parameter-table(dataset.parameters, true)

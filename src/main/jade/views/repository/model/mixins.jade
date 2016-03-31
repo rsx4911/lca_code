@@ -18,15 +18,14 @@ mixin menubar()
 			|  on #{formatDate(currentCommit.timestamp)}
 
 mixin header()
-	h3.title
+	.title
 		img.pull-right.model-icon(src='/images/model/large/#{getIcon(dataset)}')
-		div=dataset.name
-		small
-			span=dataset.description
-	.clear.content
-		if dataset.category
-			a(href='#{baseUrl}s/#{dataset.category.id}')
-				| #{dataset.category.name}
+		div
+			h3=dataset.name
+			.category
+				if dataset.category
+					| #{dataset.category.name}
+			h3: small: span=dataset.description
 	block
 	hr
 
@@ -61,97 +60,30 @@ mixin ref(ref, additionalTypeInfo, noImage)
 			img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
 		a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
 
-mixin ref-row(label, ref, additionalTypeInfo)
+mixin ref-row(label, ref, additionalTypeInfo, noImage)
 	if ref
 		tr
 			td=label
-			td: +ref(ref, additionalTypeInfo)
-
-mixin exchange-row(exchange)
-	tr(class=exchange.quantitativeReference?'reference':null)
-		td: img.icon-small(src='/images/' + (exchange.input?'input':'output') + '.png')
-		td: +ref(exchange.flow)
-		td 
-			if exchange.flow.category
-				- var path = exchange.flow.category.name.split('/');
-				| #{path[path.length - 1]}
-				if path.length > 1
-					|  / #{path[path.length - 2]}
-		td #{exchange.amount}
-			if exchange.unit 
-				|  #{exchange.unit.name}
-		td 
-			if exchange.costValue
-				| #{exchange.costValue} #{exchange.currency.name}
-		td: +uncertainty(exchange.uncertainty)
-		td
-			if exchange.input
-				+ref(exchange.defaultProvider)
-			else
-				if exchange.avoidedProduct
-					img.icon-small(src='/images/check_true.png')
-
-mixin exchange-table(exchanges, input)
-	table.table(class=input?'inputs':'outputs')
-		thead
-			tr
-				th
-				th Flow
-				th Category
-				th Amount
-				th Costs
-				th Uncertainty
-				th #{input?'Provider':'Avoided product'}
-		tbody
-			each exchange in exchanges
-				if exchange.input === input
-					+exchange-row(exchange)
-
-mixin non-causal-allocation-table(factors)
-	h4 Physical & Economic allocation
-	table.table.allocation-factors
-		thead
-			tr
-				th
-				th Product
-				th Physical
-				th Economic
-		tbody
-			each factor in factors
-				tr
-					td
-					td: +ref(factor.product)
-					td=factor.physical
-					td=factor.economic
-
-mixin causal-allocation-table(factors)
-	if factors.length
-		h4 Causal allocation
-		table.table.allocation-factors
-			thead
-				tr
-					th
-					th Flow
-					each product in factors[0].products
-						th: +ref(product.product)
-			tbody
-				each factor in factors
-					tr
-						td: img.icon-small(src='/images/' + (factor.exchange.input?'input':'output') + '.png')
-						td: +ref(factor.exchange.flow)
-						each product in factor.products
-							td=product.value
+			td: +ref(ref, additionalTypeInfo, noImage)
 
 mixin uncertainty(uncertainty)
 	if uncertainty
 		if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
-			| Normal distribution (Geom. mean: #{uncertainty.geomMean}, Geom. SD: #{uncertainty.geomSd})
+			| Logarithmic normal distribution
+			br
+			| (Geom. mean: #{uncertainty.geomMean}, Geom. SD: #{uncertainty.geomSd})
 		else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
-			| Normal distribution (Mean: #{uncertainty.mean}, SD: #{uncertainty.sd})
+			| Normal distribution 
+			br
+			| (Mean: #{uncertainty.mean}, SD: #{uncertainty.sd})
 		else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
-			| Triangle distribution (Min: #{uncertainty.minimum}, Mode: #{uncertainty.mode}, Max: #{uncertainty.maximum})
+			| Triangle distribution
+			br
+			| (Min: #{uncertainty.minimum}, Mode: #{uncertainty.mode}, Max: #{uncertainty.maximum})
 		else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
-			| Uniform distribution (Min: #{uncertainty.minimum}, Max: #{uncertainty.maximum})
+			| Uniform distribution 
+			br
+			| (Min: #{uncertainty.minimum}, Max: #{uncertainty.maximum})
 		else
 			| No distribution
 	else

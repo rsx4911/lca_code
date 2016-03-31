@@ -1,0 +1,5 @@
+define () ->
+
+	PHYSICAL_ALLOCATION: 'Physical'
+	ECONOMIC_ALLOCATION: 'Economic'
+	CAUSAL_ALLOCATION: 'Causal'

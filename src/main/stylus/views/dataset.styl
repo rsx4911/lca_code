@@ -7,7 +7,7 @@
 		
 		#commitId
 			width 112px
-			
+		
 		.user-info
 			display block
 			margin-top 10px
@@ -15,6 +15,9 @@
 	@media(min-width 768px)
 		.content-box
 			display flex
+
+	.category
+		color rgb(127, 143, 164)
 
 	a, a:hover, a:visited, a:active, a:focus
 		
@@ -48,8 +51,23 @@
 			&:last-child
 				padding-bottom 25px		
 
+		.table > tbody > tr
+
+			& > td:first-child
+				width 25%
+
+			&.reference > td 
+				font-weight bold
+
 		.table.no-head > tbody > tr:first-child > td
 			border 0
+
+		#impact-category-group
+			margin-bottom 5px
+			
+		.impact-category-description
+			margin-top 0
+			color rgb(119, 119, 119)
 
 		#documentation
 
@@ -78,7 +96,19 @@
 			
 			&:first-child
 				width 35px
+		
+		.table.social-aspects 
+			
+			& > tbody > tr > td, & > thead > tr > th
 
+				&:first-child
+					width auto
+					
+				@media(max-width 767px)
+
+					&:nth-child(5), &:nth-child(6), &:nth-child(7)
+						display none
+	
 		.table-parameters > tbody > tr > td:nth-child(3), .table-parameters > thead > tr > th:nth-child(3)
 
 			@media(max-width 479px)
@@ -99,14 +129,6 @@
 
 				@media(max-width 767px)
 					display none
-
-		.table > tbody > tr
-
-			& > td:first-child
-				width 25%
-
-			&.reference > td 
-				font-weight bold
 		
 		img.icon-small
 			width 16px

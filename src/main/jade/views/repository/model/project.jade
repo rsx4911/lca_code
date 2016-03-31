@@ -7,6 +7,42 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
+					+ref-row('Impact method', dataset.impactMethod)
+					+field-row('Normalization & weighting set', dataset.nwSet.name)
+			h4 Variants
+			table.table
+				thead
+					tr
+						th Name
+						th Product system
+						th Allocation method
+						th Amount
+				tbody
+					each variant in dataset.variants
+						tr
+							td=variant.name
+							td: +ref(variant.productSystem)
+							td=variant.allocationMethod
+							td #{variant.amount} #{variant.unit.name}
 
+			h4 Parameters
+			table.table
+				thead
+					tr
+						th Parameter
+						th Context
+						each variant in dataset.variants
+							th=variant.name
+				tbody
+					each parameter in dataset.parameterRedefs
+						tr
+							td=parameter.name
+							td
+								if parameter.context
+									+ref(parameter.context)
+								else
+									| Global
+							each entry in parameter.values
+								td=entry.value
 	+meta
 	.clear
