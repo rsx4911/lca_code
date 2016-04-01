@@ -80,7 +80,7 @@ define([
 						adminArea: true
 				@router.registerAdminRoute 'adminUserEdit', (username) -> @showView 
 					view: 'user/Profile'
-					title: "Profile of user '#{username}'"
+					title: "Profile | #{username}"
 					viewOptions: 
 						user: new User {username: username}
 						adminArea: true
@@ -91,7 +91,7 @@ define([
 						team: new Team()
 				@router.registerAdminRoute 'adminTeamEdit', (teamname) -> @showView 
 					view: 'team/Profile'
-					title: "Profile of team '#{teamname}'"
+					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
 
@@ -100,7 +100,7 @@ define([
 				@router.registerUserRoute 'noAccess', -> @show403()
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
-					title: 'Profile'
+					title: 'Profile' 
 					nav: 'user'
 				@router.registerUserRoute 'dashboardRepositories', -> 
 					@showView 
@@ -130,7 +130,7 @@ define([
 						group: new Group({name: group})
 				@router.registerUserRoute 'groupMembers', (group) -> @showView 
 					view: 'members/Members'
-					title: "#{group} - Members"
+					title: "#{group} | Members"
 					nav: 
 						type: 'group'
 						active: 'members'
@@ -153,7 +153,7 @@ define([
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryId) -> @showView 
 					view: 'repository/Datasets'
-					title: "#{group}/#{name} - Data sets"
+					title: "#{group}/#{name} | Data sets"
 					nav: 
 						type: 'repository'
 						active: 'datasets'
@@ -163,7 +163,7 @@ define([
 						categoryId: categoryId
 				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId) -> @showView 
 					view: 'repository/Dataset'
-					title: "#{group}/#{name} - Data sets"
+					title: "#{group}/#{name} | Data sets"
 					nav: 
 						type: 'repository'
 						active: 'datasets'
@@ -175,7 +175,7 @@ define([
 						commitId: commitId
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/Commits'
-					title: "#{group}/#{name} - Commits"
+					title: "#{group}/#{name} | Commits"
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -184,7 +184,7 @@ define([
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryCommit', (group, name, commitId) -> @showView 
 					view: 'repository/Commit'
-					title: "#{group}/#{name} - Commits"
+					title: "#{group}/#{name} | Commits"
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -194,7 +194,7 @@ define([
 						commitId: commitId
 				@router.registerUserRoute 'repositoryMembers', (group, name) -> @showView 
 					view: 'members/Members'
-					title: "#{group}/#{name} - Members"
+					title: "#{group}/#{name} | Members"
 					nav: 
 						type: 'repository'
 						active: 'members'
@@ -225,10 +225,20 @@ define([
 				else
 					callback?()
 
+			getDocumentTitle: (value) ->
+				if value.indexOf('|') is -1 
+					return "#{value} | LCA Cloud"
+				split = value.split '|'
+				reversed = 'LCA Cloud'
+				for v in split
+					reversed = "#{v} | #{reversed}"
+				return reversed
+
 			showView: (options) ->
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main').empty()
-					$('#header-title').html options.title
+					$('#header-title').html options.title.replace('|', '-')
+					document.title = @getDocumentTitle options.title
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
 					@navigation.setItems @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
