@@ -1,0 +1,32 @@
+include ../mixins/forms.jade
+
+mixin notification-group(id) 
+	.flex-column
+		.flex-container
+			.header-box #{id}
+				.btn-group.btn-group-sm.pull-right
+					button.btn.btn-default.check-group(data-group=id title='Select all') 
+						img(src='/images/check_all.png')
+					button.btn.btn-default.uncheck-group(data-group=id title='Unselect all')
+						img(src='/images/uncheck_all.png')
+			.content-box
+				div
+					strong Notify me when
+					each notification in notifications
+						if notification.group === id
+							if notification.id === 'NOTIFY_FOR_ALL'
+								hr
+							+checkbox(notification.id, notification.label)(checked=notification.enabled)
+
+if isAdmin
+	.flex-layout.two-columns
+		+notification-group('Group')
+		+notification-group('Repository')
+	.flex-layout.two-columns
+		+notification-group('Member')
+		+notification-group('Admin')
+else
+	.flex-layout.three-columns
+		+notification-group('Group')
+		+notification-group('Repository')
+		+notification-group('Member')
