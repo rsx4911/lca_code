@@ -1,7 +1,7 @@
 include ../mixins/forms.jade
 include ../mixins/avatar-box.jade
 
-.two-columns.special
+.two-columns.special.flex-layout
 	div
 		.header-box Info
 			if group.userCanDelete
@@ -9,7 +9,7 @@ include ../mixins/avatar-box.jade
 		.content-box
 			+static('name', 'Name', group.name)
 		+avatar-box('group', group.name, group.userCanWrite)
-	.repositories
+	.repositories.flex-column
 		.flex-container
 			.header-box Repositories (#{repositories.length})
 				if group.userCanWrite

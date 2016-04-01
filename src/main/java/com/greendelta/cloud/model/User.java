@@ -40,6 +40,9 @@ public class User extends AbstractEntity {
 	@Column(name = "avatar")
 	public byte[] avatar;
 
+	@Column(name = "notifications")
+	private int notifications;
+
 	@Override
 	public long getId() {
 		return id;
@@ -58,4 +61,24 @@ public class User extends AbstractEntity {
 			return true;
 		return ((User) obj).username.equals(username);
 	}
+
+	public void enable(Notification notification) {
+		if (isEnabled(notification))
+			return;
+		int e = (int) Math.pow(2, notification.ordinal());
+		notifications += e;
+	}
+
+	public void disable(Notification notification) {
+		if (!isEnabled(notification))
+			return;
+		int e = (int) Math.pow(2, notification.ordinal());
+		notifications -= e;
+	}
+
+	public boolean isEnabled(Notification notification) {
+		int e = (int) Math.pow(2, notification.ordinal());
+		return (notifications | e) == notifications;
+	}
+
 }

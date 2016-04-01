@@ -85,7 +85,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroModule(servletContext), jpaModule,
 				new JerseyModule(resourcePackages), new EhCacheModule(),
-				new PropertiesModule() };
+				new PropertiesModule(), new MailModule() };
 	}
 
 	private void copyDbTemplate(String databasePath) {

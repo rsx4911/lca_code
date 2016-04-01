@@ -34,6 +34,7 @@ define([
 					]
 					when 'user' then return [
 						{href: "#{prefix}/user/profile", imageSrc: '/images/profile.png', label: 'Profile', id: 'profile'}
+						{href: "#{prefix}/user/notifications", imageSrc: '/images/notifications.png', label: 'Notifications', id: 'notifications'}
 					]
 					when 'group' then return [
 						{href: "#{prefix}", imageSrc: '/images/group.png', label: 'Group', id: 'group'}
@@ -101,7 +102,15 @@ define([
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
 					title: 'Profile' 
-					nav: 'user'
+					nav: 
+						type: 'user'
+						active: 'profile'
+				@router.registerUserRoute 'userNotifications', -> @showView 
+					view: 'user/Notifications'
+					title: 'Notifications' 
+					nav: 
+						type: 'user'
+						active: 'notifications'
 				@router.registerUserRoute 'dashboardRepositories', -> 
 					@showView 
 						view: 'dashboard/Repositories'

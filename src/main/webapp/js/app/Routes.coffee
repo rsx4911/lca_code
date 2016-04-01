@@ -3,6 +3,7 @@ define
 	'repository/new(/:group)': 'repositoryNew'
 	'user': 'userProfile'
 	'user/profile': 'userProfile'
+	'user/notifications': 'userNotifications'
 	'dashboard': 'dashboardRepositories'
 	'dashboard/repositories': 'dashboardRepositories'
 	'dashboard/groups': 'dashboardGroups'

@@ -216,7 +216,7 @@ public class MembershipService {
 		return new PagedResult<Membership>(filter, result.size(), result.size(), result);
 	}
 
-	private List<Membership> getMemberships(String groupOrRepo) {
+	public List<Membership> getMemberships(String groupOrRepo) {
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("memberOf", groupOrRepo);
 		List<Membership> result = dao.getForAttributes(attributes);

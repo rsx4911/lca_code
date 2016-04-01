@@ -43,6 +43,10 @@ public class UserService {
 		return getForUsername(username) != null;
 	}
 
+	public List<User> getAdmins() {
+		return dao.getForAttribute("admin", true);
+	}
+
 	public User getCurrentUser() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())

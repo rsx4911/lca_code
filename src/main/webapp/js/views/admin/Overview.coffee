@@ -17,7 +17,7 @@ define([
 
 		class AdminOverview extends Backbone.View
 
-			className: 'admin-overview four-columns content-box'
+			className: 'admin-overview content-box'
 
 			events: 
 				'click a[href].follow': (event) -> Events.followLink event

@@ -12,12 +12,13 @@ mixin box(label, plural, count)
 			.clear
 		div(id='#{lcPlural}')
 
-div
-	+box('Repository', 'Repositories', repositories)
-div
-	+box('User', 'Users', users)
-div
-	+box('Group', 'Groups', groups)
-div
-	+box('Team', 'Teams', teams)
+.four-columns
+	div
+		+box('Repository', 'Repositories', repositories)
+	div
+		+box('User', 'Users', users)
+	div
+		+box('Group', 'Groups', groups)
+	div
+		+box('Team', 'Teams', teams)
 .clear

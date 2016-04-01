@@ -5,42 +5,57 @@
 		margin 25px auto
 
 	& > .center
-	
+							
 		@media(min-width 992px)
 			margin 0 25px
-						
-		.two-columns > *:not(.clear)
 
-			@media(min-width 992px)
-				margin 1%
-				width 48%
+			.two-columns, .three-columns, .four-columns
+				
+				&:not(:last-child)
+					margin-bottom 2%
+
+				& > *
+
+					&:not(:first-child)
+						margin-left 1%
+
+					&:not(:last-child)
+						margin-right 1%
+
+			.two-columns > *
+				width 49%
 				float left
 
-		.three-columns > *:not(.clear)
-
-			@media(min-width 992px)
-				margin 1%
-				width 31.3%
+			.three-columns > *
+				width 32%
 				float left
 
-		.four-columns > *:not(.clear)
-
-			@media(min-width 992px)
-				margin 1%
-				width 23%
+			.four-columns > *
+				width 23.5%
 				float left
 
-		.two-columns.special
-
-			@media(min-width 992px)
+			.flex-layout
 				display flex
 
-				& > *:last-child
+				& > .flex-column
 					display flex
 
 				.flex-container
 					width 100%
 					background-color rgb(255, 255, 255)
+
+		@media(min-width 992px) and (max-width 1199px)
+
+			.four-columns > *
+				width 49% !important
+
+				&:first-child, &:nth-child(3)
+					margin-left 0
+
+				&:last-child, &:nth-child(2)
+					margin-right 0
+
+		.two-columns.special
 						
 			@media(min-width 1120px)
 
@@ -48,7 +63,7 @@
 					width 55% !important
 
 				& > *:last-child
-					width 41% !important
+					width 43% !important
 
 			@media(min-width 1220px)
 
@@ -56,7 +71,7 @@
 					width 58% !important
 
 				& > *:last-child
-					width 38% !important
+					width 40% !important
 					
 			@media(min-width 1320px)
 
@@ -64,4 +79,4 @@
 					width 63% !important
 
 				& > *:last-child
-					width 33% !important
+					width 35% !important

@@ -2,7 +2,7 @@ include ../mixins/forms.jade
 include ../mixins/avatar-box.jade
 include ../mixins/user-info.jade
 
-div(class=team.id?'two-columns special':null)
+div(class=team.id?'two-columns special flex-layout':null)
 	.team-info
 		.header-box Team
 			if team.id
@@ -23,7 +23,7 @@ div(class=team.id?'two-columns special':null)
 		if team.id
 			+avatar-box('team', team.teamname, true)
 	if team.id
-		.team-members
+		.team-members.flex-column
 			.flex-container
 				.header-box Members (#{team.users.length})
 					button.btn.btn-lg.btn-success.pull-right(data-action='add-members')

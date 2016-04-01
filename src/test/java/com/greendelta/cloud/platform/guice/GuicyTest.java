@@ -85,7 +85,7 @@ public abstract class GuicyTest {
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroTestModule(), new JpaPersistModule(persistenceUnit),
 				new JerseyModule(resourcePackages), new EhCacheModule(),
-				new PropertiesModule() };
+				new PropertiesModule(), new MailModule() };
 	}
 
 }
