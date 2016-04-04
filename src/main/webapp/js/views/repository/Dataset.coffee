@@ -23,6 +23,7 @@ define([
 				'templates/views/repository/model/location'
 				'templates/views/repository/model/impact-factor-rows'
 				'templates/views/repository/model/nw-factor-rows'
+				'tablesorter'
 			]
 
 	(Backbone, Moment, OpenLayers, Allocation, Events, Icons, Renderer, RiskLevel, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, impactFactorsTemplate, nwFactorsTemplate) ->
@@ -96,8 +97,8 @@ define([
 			events: 
 				'click a:not([role]):not([download]):not([target=_blank])': (event) -> Events.followLink event
 				'click a[data-action=show-exchange-details]': (event) -> showExchangeDetails event
-				'change #impact-category': (event) -> @loadImpactCategory()
-				'change #nw-set': (event) -> @loadNwSet()
+				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
+				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
 				'change #commitId': (event) -> 
 					repo = @repository.toJSON()
 					type = @type
@@ -134,8 +135,20 @@ define([
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset
 						if dataset.type is 'ImpactMethod'
-							@loadImpactCategory()
-							@loadNwSet()
+							@loadImpactCategory () =>
+								@loadNwSet () =>
+									@initTableSorting()
+						else
+							@initTableSorting()
+
+			initTableSorting: () ->
+				tables = @$('table:not(.no-head)')
+				for table in tables
+					options = {headers: {}}
+					for th, index in $('thead > tr > th', table)
+						if $(th).is(':empty') or $('a', th).length
+							options.headers[index] = {sorter: false}
+					$(table).tablesorter options
 
 			removeAtSigns: (object) ->
 				for key in Object.keys(object)
@@ -233,15 +246,15 @@ define([
 			prepareParameterRedefs: (dataset) ->
 				parameters = {}
 				for variant in dataset.variants
-					for parameter in variant.parameterRedefs
+					for param in variant.parameterRedefs
 						contextId = 'Global'
-						if parameter.context
-							contextId = parameter.context.id
-						p = parameters[contextId + parameter.name]
+						if param.context
+							contextId = param.context.id
+						p = parameters[contextId + param.name]
 						unless p
-							p = {name: parameter.name, context: parameter.context, values: {}}
+							p = {name: param.name, context: param.context, values: {}}
 							parameters[contextId + parameter.name] = p
-						p.values[variant.productSystem.id] = {variant: variant.name, value: parameter.value}
+						p.values[variant.productSystem.id] = {variant: variant.name, value: param.value}
 				dataset.parameterRedefs = []
 				for key in Object.keys(parameters)
 					p = parameters[key]
@@ -293,7 +306,7 @@ define([
 						center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
 						zoom: 5
 
-			loadImpactCategory: () ->
+			loadImpactCategory: (callback) ->
 				commitId = @commitId or 'null'
 				selectedImpactCategory = $('#impact-category option:selected').attr 'id'
 				if selectedImpactCategory
@@ -306,8 +319,9 @@ define([
 							@$('#impact-factors tbody').empty()
 							@$('#impact-factors tbody').append impactFactorsTemplate 
 								impactCategory: impactCategory
+							callback()
 
-			loadNwSet: () ->
+			loadNwSet: (callback) ->
 				commitId = @commitId or 'null'
 				selectedNwSet = $('#nw-set option:selected').attr 'id'
 				if selectedNwSet
@@ -320,5 +334,6 @@ define([
 							@$('#nw-factors tbody').empty()
 							@$('#nw-factors tbody').append nwFactorsTemplate 
 								nwSet: nwSet
+							callback()
 
 )

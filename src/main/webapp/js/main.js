@@ -13,9 +13,15 @@ require.config({
 		'datepicker': 'libs/bootstrap-datepicker',
 		'numeral': 'libs/numeral',
 		'moment': 'libs/moment',
+		'tablesorter': 'libs/jquery-tablesorter',
 		'open-layers': 'libs/open-layers',
 		'requireLib': 'libs/require'
-	}
+	},
+	shim: {
+  	'tablesorter': {
+      exports: '$.fn.tablesorter'
+    }
+	} 
 })
 
 define(['cs!app/App'], function(App) {

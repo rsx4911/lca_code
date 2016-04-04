@@ -32,6 +32,21 @@ option[disabled]
 	text-align center
 	z-index 10000
 
+table > thead > tr > th.header:not(:empty)
+	cursor pointer
+		
+	&:after
+		position relative
+		left 10px
+
+	&.headerSortDown:after
+		content '\2303'
+		top 3px
+			
+	&.headerSortUp:after
+		content '\2304'
+		top -3px
+
 .tab-content
 	margin 15px
 	overflow auto
