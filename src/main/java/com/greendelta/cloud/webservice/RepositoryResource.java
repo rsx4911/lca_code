@@ -60,6 +60,9 @@ public class RepositoryResource {
 			return Respond.invalid("group", "Missing input: Group");
 		if (Strings.isNullOrEmpty(name))
 			return Respond.invalid("name", "Missing input: Name");
+		if (Names.isValid(name))
+			return Respond.invalid("name",
+					"Name must consist of at least 4 characters and can only contain characters, numbers and _");
 		if (Names.isReserved(name))
 			return Respond.invalid("name", "This is a reserved word");
 		if (service.exists(group, name))

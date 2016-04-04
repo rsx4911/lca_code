@@ -46,17 +46,17 @@ public class UserResource {
 	public Response create(@PathParam("username") String username, User user) {
 		if (Strings.isNullOrEmpty(username))
 			return Respond.invalid("username", "Missing input: Username");
-		if (username.length() < 4)
+		if (Names.isValid(username))
 			return Respond.invalid("username",
-					"Username must consist of at least 4 characters");
-		if (Strings.isNullOrEmpty(user.name))
-			return Respond.invalid("name", "Missing input: Name");
-		if (Strings.isNullOrEmpty(user.email))
-			return Respond.invalid("email", "Missing input: Email");
+					"Username must consist of at least 4 characters and can only contain characters, numbers and _");
 		if (groupService.exists(username)) // user or group exists
 			return Respond.invalid("username", "Name is already in use");
 		if (Names.isReserved(username))
 			return Respond.invalid("username", "This is a reserved word");
+		if (Strings.isNullOrEmpty(user.name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (Strings.isNullOrEmpty(user.email))
+			return Respond.invalid("email", "Missing input: Email");
 		String password = generatePassword();
 		service.setPassword(user, password);
 		user = service.insert(user);

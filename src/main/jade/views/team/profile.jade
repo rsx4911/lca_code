@@ -8,7 +8,7 @@ div(class=team.id?'two-columns special flex-layout':null)
 			if team.id
 				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-team') Delete
 		form#team-form.content-box
-			#team-general-message-group.alert(role='alert'): span.message
+			#team-form-general-message-group.alert(role='alert'): span.message
 			unless team.id
 				+input('teamname', 'Teamname*')
 			else

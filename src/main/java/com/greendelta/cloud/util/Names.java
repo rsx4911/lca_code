@@ -6,6 +6,7 @@ import java.util.List;
 public class Names {
 
 	private final static List<String> reservedNames;
+	private final static String REGEX_NAME = "^[a-zA-Z0-9_]+$";
 
 	static {
 		reservedNames = new ArrayList<>();
@@ -27,6 +28,14 @@ public class Names {
 
 	public static boolean isReserved(String name) {
 		return reservedNames.contains(name.toLowerCase());
+	}
+
+	public static boolean isValid(String name) {
+		if (name.length() < 4)
+			return false;
+		if (!name.matches(REGEX_NAME))
+			return false;
+		return true;
 	}
 
 }

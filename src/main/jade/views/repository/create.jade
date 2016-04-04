@@ -2,7 +2,7 @@ include ../mixins/forms.jade
 
 .header-box Info
 form#repository-form.content-box
-	#repository-general-message-group.alert(role='alert'): span.message
+	#repository-form-general-message-group.alert(role='alert'): span.message
 	+input('name', 'Name')
 	+select('group', 'Group', groups, selection)
 	button.btn.btn-lg.btn-success.pull-right(data-action='create-repository') Create

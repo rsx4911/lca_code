@@ -58,9 +58,18 @@ define([
 				unless username
 					Forms.handleError 'user-form', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
 					return false
-				Model.save @user, 
-					success: () => @reload()
-					error: (model, response) -> Forms.handleError 'user-form', response
+				if @adminArea and !@user.get('id')
+						$.ajax
+							type: 'POST'
+							url: "/ws/admin/user/#{username}"
+							data: JSON.stringify @user.toJSON()
+							contentType: 'application/json'
+							success: () => @reload()
+							error: (response) -> Forms.handleError 'user-form', response
+				else
+					Model.save @user, 
+						success: () => @reload()
+						error: (model, response) -> Forms.handleError 'user-form', response
 				return false
 
 			savePassword: (event) ->

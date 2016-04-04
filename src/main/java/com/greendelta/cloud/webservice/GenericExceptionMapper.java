@@ -15,20 +15,18 @@ import org.slf4j.LoggerFactory;
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(GenericExceptionMapper.class);
+	private static final Logger log = LoggerFactory.getLogger(GenericExceptionMapper.class);
 
+	@Override
 	public Response toResponse(Throwable e) {
 		if (e instanceof WebApplicationException)
 			return ((WebApplicationException) e).getResponse();
 		if (e instanceof UnsupportedSchemaException)
-			return Response.status(Status.NOT_ACCEPTABLE)
-					.entity(e.getMessage()).build();
+			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		if (e instanceof AuthorizationException)
 			return Response.status(Status.FORBIDDEN).build();
 		log.error("Unexpected error", e);
-		return Response.status(getStatus(e)).entity(getMessage(e))
-				.type(MediaType.APPLICATION_JSON).build();
+		return Response.status(getStatus(e)).entity(getMessage(e)).type(MediaType.APPLICATION_JSON).build();
 	}
 
 	private int getStatus(Throwable e) {
@@ -38,8 +36,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	private String getMessage(Throwable e) {
 		if (e instanceof WebApplicationException)
 			return e.getMessage();
-		else
-			return "Server error, please contact your admin";
+		return "Server error, please contact your admin";
 	}
 
 }

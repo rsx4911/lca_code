@@ -18,6 +18,9 @@ define([
 			createGroup: () ->
 				@group.set Forms.toJson 'group-form'
 				@group.set 'isNew', true
+				unless @group.get('name')
+					Forms.handleError 'group-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
+					return false
 				Model.save @group, 
 					success: () => 
 						name = @group.get 'name'

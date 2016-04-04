@@ -64,9 +64,9 @@ public class TeamResource {
 	public Response create(@PathParam("teamname") String teamname, Team team) {
 		if (Strings.isNullOrEmpty(teamname))
 			return Respond.invalid("teamname", "Missing input: Teamname");
-		if (teamname.length() < 4)
+		if (Names.isValid(teamname))
 			return Respond.invalid("teamname",
-					"Teamname must consist of at least 4 characters");
+					"Teamname must consist of at least 4 characters and can only contain characters, numbers and _");
 		if (Strings.isNullOrEmpty(team.name))
 			return Respond.invalid("name", "Missing input: Name");
 		if (service.exists(teamname))

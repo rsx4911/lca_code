@@ -5,7 +5,7 @@ include ../mixins/avatar-box.jade
 	if user.id && adminArea
 		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 form#user-form.content-box
-	#user-general-message-group.alert(role='alert'): span.message
+	#user-form-general-message-group.alert(role='alert'): span.message
 	unless user.id
 		+input('username', 'Username*')
 	else
@@ -26,7 +26,7 @@ if user.id
 	+avatar-box('user', user.username, true)
 	.header-box Password
 	form#password-form.content-box
-		#password-general-message-group.alert(role='alert'): span.message
+		#password-form-general-message.alert(role='alert'): span.message
 		+input('password', 'Password', 'password')
 		+input('password2', 'Password (repeated)', 'password')
 		button.btn.btn-lg.btn-success.pull-right(data-action='save-password') Save

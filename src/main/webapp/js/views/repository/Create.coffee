@@ -29,6 +29,9 @@ define([
 			createRepository: () ->
 				@repository.set Forms.toJson 'repository-form'
 				@repository.set 'isNew', true
+				unless @repository.get('name')
+					Forms.handleError 'repository-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
+					return false
 				Model.save @repository, 
 					success: () => 
 						group = @repository.get 'group'
