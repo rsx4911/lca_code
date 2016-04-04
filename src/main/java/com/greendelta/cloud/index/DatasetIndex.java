@@ -90,20 +90,24 @@ public class DatasetIndex {
 		}
 	}
 
-	public List<DatasetIndexEntry> getForModelType(ModelType type) {
+	public List<DatasetIndexEntry> getForModelType(ModelType type, String nameFilter) {
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return Collections.emptyList();
 		try {
-			Query query1 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("type", type.name()));
-			Query query2 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("categoryType", type.name()));
-			Query query = IndexUtil.orQuery(query1, query2);
+			Query squery1 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("type", type.name()));
+			Query squery2 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("categoryType", type.name()));
+			Query query = IndexUtil.orQuery(squery1, squery2);
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return Collections.emptyList();
-			for (ScoreDoc doc : topDocs.scoreDocs)
-				entries.add(convert(searcher.doc(doc.doc)));
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				// TODO other filtering, directly with lucene
+				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
+				if (Strings.isNullOrEmpty(nameFilter) || entry.name.contains(nameFilter))
+					entries.add(entry);
+			}
 			return entries;
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);
@@ -111,7 +115,7 @@ public class DatasetIndex {
 		}
 	}
 
-	public List<DatasetIndexEntry> getForCategory(String categoryId) {
+	public List<DatasetIndexEntry> getForCategory(String categoryId, String nameFilter) {
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -119,13 +123,17 @@ public class DatasetIndex {
 		try {
 			if (categoryId == null)
 				categoryId = "";
-			Term term = new Term("categoryRefId", categoryId);
-			Query query = new TermQuery(term);
+			Term categoryTerm = new Term("categoryRefId", categoryId);
+			Query query = new TermQuery(categoryTerm);
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return Collections.emptyList();
-			for (ScoreDoc doc : topDocs.scoreDocs)
-				entries.add(convert(searcher.doc(doc.doc)));
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				// TODO other filtering, directly with lucene
+				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
+				if (Strings.isNullOrEmpty(nameFilter) || entry.name.contains(nameFilter))
+					entries.add(entry);
+			}
 			return entries;
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);

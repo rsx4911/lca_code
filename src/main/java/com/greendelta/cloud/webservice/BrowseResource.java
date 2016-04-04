@@ -8,6 +8,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -52,17 +53,16 @@ public class BrowseResource {
 
 	@GET
 	@Path("{group}/{name}/{categoryRefId}")
-	public Response getCategoryContent(@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("categoryRefId") String categoryRefId) {
+	public Response getCategoryContent(@PathParam("group") String group, @PathParam("name") String name,
+			@PathParam("categoryRefId") String categoryRefId, @QueryParam("filter") String filter) {
 		Repository repo = repoService.get(group, name);
 		for (ModelType type : ModelType.values()) {
 			if (type.name().equals(categoryRefId)) {
-				List<DatasetIndexEntry> content = service.getCategoryContent(repo, type);
+				List<DatasetIndexEntry> content = service.getCategoryContent(repo, type, filter);
 				return Respond.ok(appendParentRefId(repo, content));
 			}
 		}
-		List<DatasetIndexEntry> content = service.getCategoryContent(repo, categoryRefId);
+		List<DatasetIndexEntry> content = service.getCategoryContent(repo, categoryRefId, filter);
 		if (content.isEmpty())
 			if (service.categoryExists(repo, categoryRefId))
 				Respond.ok(appendParentRefId(repo, content));

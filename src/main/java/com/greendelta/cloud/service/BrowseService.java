@@ -32,14 +32,14 @@ public class BrowseService {
 		return types;
 	}
 
-	public List<DatasetIndexEntry> getCategoryContent(Repository repo, ModelType type) {
+	public List<DatasetIndexEntry> getCategoryContent(Repository repo, ModelType type, String filter) {
 		DatasetIndex index = repoService.getIndex(repo);
-		return index.getForModelType(type);
+		return index.getForModelType(type, filter);
 	}
 
-	public List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryId) {
+	public List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryId, String filter) {
 		DatasetIndex index = repoService.getIndex(repo);
-		return index.getForCategory(categoryId);
+		return index.getForCategory(categoryId, filter);
 	}
 
 	public DatasetIndexEntry getCategory(Repository repo, String refId) {
