@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.GroupService;
+import com.greendelta.cloud.service.NotificationService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
@@ -38,14 +40,16 @@ public class RepositoryResource {
 	private final UserService userService;
 	private final GroupService groupService;
 	private final AccessService accessService;
+	private final NotificationService notificationService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, UserService userService, GroupService groupService,
-			AccessService accessService) {
+			AccessService accessService, NotificationService notificationService) {
 		this.service = service;
 		this.userService = userService;
 		this.groupService = groupService;
 		this.accessService = accessService;
+		this.notificationService = notificationService;
 	}
 
 	@POST
@@ -63,6 +67,7 @@ public class RepositoryResource {
 		if (!groupService.exists(group))
 			return Respond.invalid("group", "Specified group does not exist");
 		Repository repo = service.create(group, name);
+		notificationService.repositoryCreated(repo).send();
 		return Respond.created(new RepositoryMapper().map(repo, groupService.isUserNamespace(group)));
 	}
 
@@ -71,7 +76,9 @@ public class RepositoryResource {
 	public Response delete(@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
+		NotificationJob notification = notificationService.repositoryDeleted(repo);
 		service.delete(repo);
+		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
 

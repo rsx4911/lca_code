@@ -15,6 +15,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.GroupService;
+import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
@@ -29,12 +30,15 @@ public class UserResource {
 	private final UserService service;
 	private final GroupService groupService;
 	private final RepositoryService repoService;
+	private final NotificationService notificationService;
 
 	@Inject
-	public UserResource(UserService service, GroupService groupService, RepositoryService repoService) {
+	public UserResource(UserService service, GroupService groupService, RepositoryService repoService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.repoService = repoService;
+		this.notificationService = notificationService;
 	}
 
 	@POST
@@ -51,11 +55,12 @@ public class UserResource {
 			return Respond.invalid("email", "Missing input: Email");
 		if (groupService.exists(username)) // user or group exists
 			return Respond.invalid("username", "Name is already in use");
-		if (Names.isReserved(username)) 
+		if (Names.isReserved(username))
 			return Respond.invalid("username", "This is a reserved word");
 		String password = generatePassword();
 		service.setPassword(user, password);
 		user = service.insert(user);
+		notificationService.userCreated(user).send();
 		return Respond.created(new UserMapper().mapForSelf(user));
 	}
 
@@ -72,6 +77,7 @@ public class UserResource {
 			return Respond.notFound();
 		repoService.deleteAllFor(user);
 		service.delete(user.getId());
+		notificationService.userDeleted(user).send();
 		return Respond.ok(new HashMap<>());
 	}
 

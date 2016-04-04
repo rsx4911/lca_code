@@ -15,6 +15,7 @@ import org.openlca.cloud.model.data.Commit;
 import com.google.inject.Inject;
 import com.greendelta.cloud.service.CommitService;
 import com.greendelta.cloud.service.HistoryService;
+import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 
@@ -24,13 +25,15 @@ public class CommitResource {
 	private final CommitService service;
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
+	private final NotificationService notificationService;
 
 	@Inject
-	public CommitResource(CommitService service, RepositoryService repoService,
-			HistoryService historyService) {
+	public CommitResource(CommitService service, RepositoryService repoService, HistoryService historyService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.historyService = historyService;
+		this.notificationService = notificationService;
 	}
 
 	@GET
@@ -64,6 +67,8 @@ public class CommitResource {
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
 		String commitId = service.put(repo, commitData);
+		Commit commit = historyService.getCommit(repo, commitId);
+		notificationService.dataCommitted(repo, commit).send();
 		return Respond.created(commitId);
 	}
 

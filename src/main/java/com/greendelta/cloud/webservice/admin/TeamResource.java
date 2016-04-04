@@ -1,9 +1,11 @@
 package com.greendelta.cloud.webservice.admin;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -20,6 +22,8 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.MembershipService;
+import com.greendelta.cloud.service.NotificationService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
@@ -35,12 +39,15 @@ public class TeamResource {
 	private final TeamService service;
 	private final UserService userService;
 	private final MembershipService membershipService;
+	private final NotificationService notificationService;
 
 	@Inject
-	public TeamResource(TeamService service, UserService userService, MembershipService membershipService) {
+	public TeamResource(TeamService service, UserService userService, MembershipService membershipService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.userService = userService;
 		this.membershipService = membershipService;
+		this.notificationService = notificationService;
 	}
 
 	@GET
@@ -67,6 +74,7 @@ public class TeamResource {
 		if (Names.isReserved(teamname))
 			return Respond.invalid("teamname", "This is a reserved word");
 		team = service.insert(team);
+		notificationService.teamCreated(team).send();
 		return Respond.created(new TeamMapper().mapForAdmin(team));
 	}
 
@@ -82,27 +90,46 @@ public class TeamResource {
 			return Respond.invalid("teamname", "This is a reserved word");
 		if (Strings.isNullOrEmpty(team.name))
 			return Respond.invalid("name", "Missing input: Name");
-		updateUsers(team);
+		List<NotificationJob> notifications = updateUsers(team);
 		Beans.populateProperties(team, fromDb, "teamname", "name", "users");
 		fromDb = service.update(fromDb);
+		for (NotificationJob notification : notifications)
+			notification.send();
 		return Respond.ok(new TeamMapper().mapForAdmin(fromDb));
 	}
 
-	private void updateUsers(Team team) {
+	@DELETE
+	@Path("{teamname}")
+	public Response delete(@PathParam("teamname") String teamname) {
+		Team team = service.getForTeamname(teamname);
+		if (team == null)
+			return Respond.notFound();
+		service.delete(team.getId());
+		notificationService.teamDeleted(team).send();
+		return Respond.ok(new HashMap<>());
+	}
+
+	private List<NotificationJob> updateUsers(Team team) {
+		List<NotificationJob> notifications = new ArrayList<>();
 		Team fromDb = service.getForTeamname(team.teamname);
 		List<User> users = new ArrayList<>(team.users);
 		team.users.clear();
 		for (User user : users) {
-			team.users.add(userService.getForUsername(user.username));
+			user = userService.getForUsername(user.username);
+			team.users.add(user);
 			if (fromDb.users.contains(user))
 				continue;
+			notifications.add(notificationService.memberAdded(team, user));
 			membershipService.addMemberships(user, team);
 		}
 		for (User user : fromDb.users) {
 			if (team.users.contains(user))
 				continue;
+			user = userService.getForUsername(user.username);
+			notifications.add(notificationService.memberRemoved(team, user));
 			membershipService.removeMemberships(user, team);
 		}
+		return notifications;
 	}
 
 	private Team authorizedGetTeam(String teamname) {

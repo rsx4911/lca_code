@@ -6,7 +6,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -24,8 +23,11 @@ import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.MembershipService;
+import com.greendelta.cloud.service.NotificationService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
+import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.webservice.mapper.MembershipMapper;
@@ -35,18 +37,22 @@ import com.greendelta.cloud.webservice.mapper.MembershipMapper;
 public class MembershipResource {
 
 	private final MembershipService service;
+	private final RepositoryService repoService;
 	private final AccessService accessService;
 	private final UserService userService;
 	private final TeamService teamService;
+	private final NotificationService notificationService;
 
 	@Inject
-	public MembershipResource(MembershipService service, AccessService accessService,
+	public MembershipResource(MembershipService service, RepositoryService repoService, AccessService accessService,
 			UserService userService,
-			TeamService teamService) {
+			TeamService teamService, NotificationService notificationService) {
 		this.service = service;
+		this.repoService = repoService;
 		this.accessService = accessService;
 		this.userService = userService;
 		this.teamService = teamService;
+		this.notificationService = notificationService;
 	}
 
 	@POST
@@ -56,6 +62,10 @@ public class MembershipResource {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean added = service.addMembership(user, path, role);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notificationService.memberAdded(repoService.get(group, repo), user).send();
+		else
+			notificationService.memberAdded(group, user).send();
 		return Respond.ok(Collections.singletonMap("added", added));
 	}
 
@@ -66,27 +76,11 @@ public class MembershipResource {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean added = service.addMemberships(team, path, role);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notificationService.memberAdded(repoService.get(group, repo), team).send();
+		else
+			notificationService.memberAdded(group, team).send();
 		return Respond.ok(Collections.singletonMap("added", added));
-	}
-
-	@PUT
-	@Path("{group}/{repo}/user/{username}/{role}")
-	public Response setUserRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("username") String username, @PathParam("role") Role role) {
-		String path = getAuthorizedPath(group, repo);
-		User user = userService.getForUsername(username);
-		boolean changed = service.setRole(user, path, role);
-		return Respond.ok(Collections.singletonMap("changed", changed));
-	}
-
-	@PUT
-	@Path("{group}/{repo}/team/{teamname}/{role}")
-	public Response setTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("teamname") String teamname, @PathParam("role") Role role) {
-		String path = getAuthorizedPath(group, repo);
-		Team team = teamService.getForTeamname(teamname);
-		boolean changed = service.setRole(team, path, role);
-		return Respond.ok(Collections.singletonMap("changed", changed));
 	}
 
 	@DELETE
@@ -95,7 +89,13 @@ public class MembershipResource {
 			@PathParam("username") String username) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
+		NotificationJob notification = null;
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notification = notificationService.memberRemoved(repoService.get(group, repo), user);
+		else
+			notification = notificationService.memberRemoved(group, user);
 		boolean removed = service.removeMembership(user, path);
+		notification.send();
 		return Respond.ok(Collections.singletonMap("removed", removed));
 	}
 
@@ -105,7 +105,13 @@ public class MembershipResource {
 			@PathParam("teamname") String teamname) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
+		NotificationJob notification = null;
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notification = notificationService.memberRemoved(repoService.get(group, repo), team);
+		else
+			notification = notificationService.memberRemoved(group, team);
 		boolean removed = service.removeMemberships(team, path);
+		notification.send();
 		return Respond.ok(Collections.singletonMap("removed", removed));
 	}
 

@@ -25,8 +25,10 @@ import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.GroupService;
+import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.util.Names;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -37,12 +39,15 @@ public class GroupResource {
 	private final GroupService service;
 	private final UserService userService;
 	private final AccessService accessService;
+	private final NotificationService notificationService;
 
 	@Inject
-	public GroupResource(GroupService service, UserService userService, AccessService accessService) {
+	public GroupResource(GroupService service, UserService userService, AccessService accessService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.userService = userService;
 		this.accessService = accessService;
+		this.notificationService = notificationService;
 	}
 
 	@POST
@@ -57,6 +62,7 @@ public class GroupResource {
 			return Respond.conflict(message);
 		}
 		service.create(name);
+		notificationService.groupCreated(name).send();
 		return Respond.created(Collections.singletonMap("name", name));
 	}
 
@@ -91,7 +97,9 @@ public class GroupResource {
 	@DELETE
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {
+		NotificationJob notification = notificationService.groupDeleted(name);
 		service.delete(name);
+		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
 
