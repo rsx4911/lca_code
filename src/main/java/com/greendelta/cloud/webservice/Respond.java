@@ -99,7 +99,7 @@ public class Respond {
 	}
 
 	public static Response invalid(String field, String message) {
-		Map<String, String> error = new HashMap<>();
+		Map<String, Object> error = new HashMap<>();
 		error.put("field", field);
 		error.put("message", message);
 		return badRequest(error);

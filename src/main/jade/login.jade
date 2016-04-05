@@ -16,6 +16,7 @@ html(lang='en')
 		#main-login
 			#login-container
 				form#login
+					#login-general-message.alert.alert-danger(role='alert'): span.message
 					+input('username', 'Username')
 					+input('password', 'Password', 'password')
 					button.btn.btn-primary.pull-right(type='submit') Login
@@ -24,8 +25,12 @@ html(lang='en')
 		script.
 			$('#login').on('submit', function(event) {
 				var data = {username: $('#username').val(), password: $('#password').val()};
-				$.ajax({type: 'POST', url: '/ws/public/login', contentType: 'application/json', data: JSON.stringify(data), success: function(response) {
-					window.location.href = '/'
-				}});
+				$.ajax({type: 'POST', url: '/ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
+					success: function(response) {
+						window.location.href = '/'
+					}, error: function(response) {
+						$('#login-general-message').show();
+						$('#login-general-message .message').html(response.responseText);
+					}});
 				return false;
 			});

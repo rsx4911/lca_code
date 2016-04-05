@@ -1,6 +1,7 @@
 package com.greendelta.cloud.webservice;
 
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -28,6 +29,7 @@ import com.greendelta.cloud.webservice.mapper.UserMapper;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("user")
+@Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
 
 	private final UserService service;
@@ -47,7 +49,6 @@ public class UserResource {
 	}
 
 	@GET
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		PagedResult<User> result = service.getAll(page, filter);
@@ -98,7 +99,7 @@ public class UserResource {
 			return Respond.notFound();
 		service.setPassword(user, password);
 		service.update(user);
-		return Respond.ok();
+		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT

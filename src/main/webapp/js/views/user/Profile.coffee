@@ -79,7 +79,6 @@ define([
 					url: '/ws/user/setpassword/' + @user.get('username')
 					data: JSON.stringify Forms.toJson 'password-form'
 					contentType: 'application/json'
-					dataType: 'text'
 					success: () => @reload()
 					error: (response) -> Forms.handleError 'password-form', response
 				return false
