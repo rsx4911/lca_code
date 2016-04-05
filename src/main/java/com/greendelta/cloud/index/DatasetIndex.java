@@ -105,7 +105,7 @@ public class DatasetIndex {
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				// TODO other filtering, directly with lucene
 				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
-				if (Strings.isNullOrEmpty(nameFilter) || entry.name.contains(nameFilter))
+				if (Strings.isNullOrEmpty(nameFilter) || entry.name.toLowerCase().contains(nameFilter.toLowerCase()))
 					entries.add(entry);
 			}
 			return entries;
@@ -131,7 +131,7 @@ public class DatasetIndex {
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				// TODO other filtering, directly with lucene
 				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
-				if (Strings.isNullOrEmpty(nameFilter) || entry.name.contains(nameFilter))
+				if (Strings.isNullOrEmpty(nameFilter) || entry.name.toLowerCase().contains(nameFilter.toLowerCase()))
 					entries.add(entry);
 			}
 			return entries;
