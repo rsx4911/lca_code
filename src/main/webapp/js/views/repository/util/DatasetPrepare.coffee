@@ -1,0 +1,109 @@
+define([
+				'cs!views/repository/util/DatasetSort'
+				'cs!utils/Allocation'
+				'cs!utils/RiskLevel'
+			]
+
+	(Sort, Allocation, RiskLevel) ->
+
+		applyTo: (dataset) ->
+			@removeAtSigns dataset
+			switch dataset.type
+				when 'ImpactMethod'
+					Sort.impactCategories dataset
+					Sort.nwSets dataset
+				when 'ImpactCategory'
+					Sort.impactFactors dataset
+				when 'NwSet'
+					Sort.nwFactors dataset
+				when 'Project'
+					Sort.projectVariants dataset
+					@prepareParameterRedefs dataset
+					Sort.parameterRedefs dataset
+					for variant in dataset.variants
+						variant.allocationMethod = Allocation[variant.allocationMethod]
+				when 'ProductSystem'
+					Sort.parameterRedefs dataset
+				when 'Process'
+					Sort.exchanges dataset
+					Sort.socialAspects dataset
+					Sort.parameters dataset
+					@prepareAllocationFactors dataset
+					if dataset.socialAspects
+						for aspect in dataset.socialAspects
+							if aspect.riskLevel
+								aspect.riskLevel = RiskLevel[aspect.riskLevel]
+							else
+								aspect.riskLevel = RiskLevel.DEFAULT
+				when 'Flow'
+					Sort.flowPropertyFactors dataset
+				when 'UnitGroup'
+					Sort.units dataset
+
+		removeAtSigns: (object) ->
+			for key in Object.keys(object)
+				if key.indexOf('@') is 0
+					object[key.substring(1)] = object[key]
+					delete object[key]
+				else if typeof(object[key]) is 'object'
+					@removeAtSigns object[key]
+
+		prepareAllocationFactors: (dataset) ->
+			nonCausalAllocationFactors = {}
+			causalAllocationFactors = {}
+			exchangeMap = {}
+			flowMap = {}
+			for e in dataset.exchanges
+				exchangeMap[e.id] = e
+				flowMap[e.flow.id] = e.flow
+			if dataset.allocationFactors?.length
+				for factor in dataset.allocationFactors
+					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
+						f = nonCausalAllocationFactors[factor.product.id]
+						unless f
+							f = {product: flowMap[factor.product.id]}
+							nonCausalAllocationFactors[factor.product.id] = f
+						if factor.allocationType is 'PHYSICAL_ALLOCATION'
+							f.physical = factor.value
+						else if factor.allocationType is 'ECONOMIC_ALLOCATION'
+							f.economic = factor.value
+					else if factor.allocationType is 'CAUSAL_ALLOCATION'
+						f = causalAllocationFactors[factor.exchange.id]
+						unless f
+							f = {exchange: exchangeMap[factor.exchange.id], products: []}
+							causalAllocationFactors[factor.exchange.id] = f
+						f.products.push {product: flowMap[factor.product.id], value: factor.value}
+			dataset.nonCausalAllocationFactors = []
+			dataset.causalAllocationFactors = []
+			for key in Object.keys(nonCausalAllocationFactors)
+				dataset.nonCausalAllocationFactors.push nonCausalAllocationFactors[key]
+			for key in Object.keys(causalAllocationFactors)
+				dataset.causalAllocationFactors.push causalAllocationFactors[key]
+			delete dataset.allocationFactors 
+			Sort.allocationFactors dataset
+
+		prepareParameterRedefs: (dataset) ->
+			parameters = {}
+			for variant in dataset.variants
+				for param in variant.parameterRedefs
+					contextId = 'Global'
+					if param.context
+						contextId = param.context.id
+					p = parameters[contextId + param.name]
+					unless p
+						p = {name: param.name, context: param.context, values: {}}
+						parameters[contextId + param.name] = p
+					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value}
+			dataset.parameterRedefs = []
+			for key in Object.keys(parameters)
+				p = parameters[key]
+				values = []
+				for variant in dataset.variants
+					unless p.values[variant.productSystem.id]
+						p.values[variant.productSystem.id] = 0
+				for key2 in Object.keys(p.values)
+					values.push p.values[key2]
+				p.values = values
+				dataset.parameterRedefs.push p
+
+)

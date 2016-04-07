@@ -16,8 +16,8 @@ define([
 				$.ajax
 					type: 'POST' 
 					url: '/ws/public/logout'
-					success: () ->
-						window.location.href = '/login'
+					success: () -> window.location.href = '/login'
+					error: () -> window.location.href = '/login'
 
 			onSearchKeyUp: (event) ->
 				if Events.keyCode(event) isnt 13

@@ -17,6 +17,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.openlca.cloud.model.data.Commit;
@@ -31,7 +32,7 @@ public class DatasetIndex {
 
 	private final static Logger log = LoggerFactory
 			.getLogger(DatasetIndex.class);
-	private final Directory directory;
+	final Directory directory;
 
 	public DatasetIndex(File indexDirectory) {
 		Directory directory = null;
@@ -98,15 +99,20 @@ public class DatasetIndex {
 		try {
 			Query squery1 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("type", type.name()));
 			Query squery2 = IndexUtil.andQuery(new Term("categoryRefId", ""), new Term("categoryType", type.name()));
-			Query query = IndexUtil.orQuery(squery1, squery2);
+			Query squery = IndexUtil.orQuery(squery1, squery2);
+			Query query = null;
+			if (Strings.isNullOrEmpty(nameFilter))
+				query = squery;
+			else {
+				WildcardQuery nameQuery = new WildcardQuery(new Term("name", "*" + nameFilter.toLowerCase() + "*"));
+				query = IndexUtil.andQuery(squery, nameQuery);
+			}
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
-				// TODO other filtering, directly with lucene
 				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
-				if (Strings.isNullOrEmpty(nameFilter) || entry.name.toLowerCase().contains(nameFilter.toLowerCase()))
-					entries.add(entry);
+				entries.add(entry);
 			}
 			return entries;
 		} catch (IOException e) {
@@ -123,16 +129,20 @@ public class DatasetIndex {
 		try {
 			if (categoryId == null)
 				categoryId = "";
-			Term categoryTerm = new Term("categoryRefId", categoryId);
-			Query query = new TermQuery(categoryTerm);
+			Query query = null;
+			TermQuery categoryQuery = new TermQuery(new Term("categoryRefId", categoryId));
+			if (Strings.isNullOrEmpty(nameFilter))
+				query = categoryQuery;
+			else {
+				WildcardQuery nameQuery = new WildcardQuery(new Term("name", "*" + nameFilter.toLowerCase() + "*"));
+				query = IndexUtil.andQuery(categoryQuery, nameQuery);
+			}
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
-				// TODO other filtering, directly with lucene
 				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
-				if (Strings.isNullOrEmpty(nameFilter) || entry.name.toLowerCase().contains(nameFilter.toLowerCase()))
-					entries.add(entry);
+				entries.add(entry);
 			}
 			return entries;
 		} catch (IOException e) {
