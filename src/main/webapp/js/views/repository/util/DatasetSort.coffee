@@ -79,7 +79,6 @@ define () ->
 		@sortByName dataset.parameters
 
 	parameterRedefs: (dataset) ->
-		console.log dataset.parameterRedefs
 		unless dataset.parameterRedefs
 			return
 		dataset.parameterRedefs.sort (p1, p2) ->

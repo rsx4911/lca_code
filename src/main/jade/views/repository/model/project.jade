@@ -5,44 +5,57 @@ include ./mixins.jade
 	.model-left-content
 		+header
 		.content
-			table.table.no-head
-				tbody
-					+ref-row('Impact method', dataset.impactMethod)
-					+field-row('Normalization & weighting set', dataset.nwSet.name)
-			h4 Variants
-			table.table
-				thead
-					tr
-						th Name
-						th Product system
-						th Allocation method
-						th Amount
-				tbody
-					each variant in dataset.variants
-						tr
-							td=variant.name
-							td: +ref(variant.productSystem)
-							td=variant.allocationMethod
-							td #{variant.amount} #{variant.unit.name}
-
-			h4 Parameters
-			table.table
-				thead
-					tr
-						th Parameter
-						th Context
-						each variant in dataset.variants
-							th=variant.name
-				tbody
-					each parameter in dataset.parameterRedefs
-						tr
-							td=parameter.name
-							td
-								if parameter.context
-									+ref(parameter.context)
-								else
-									| Global
-							each entry in parameter.values
-								td=entry.value
+			if dataset.variants
+				ul.nav.nav-tabs(role='tablist')
+					li.active(role='presentation') 
+						a(href='#variants' aria-controls='variants' role='tab' data-toggle='tab') Variants
+					if dataset.parameterRedefs
+						li(role='presentation') 
+							a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+				.tab-content
+					#variants.tab-pane.active(role='tabpanel')
+						table.table
+							thead
+								tr
+									th Name
+									th Product system
+									th Allocation method
+									th Amount
+							tbody
+								each variant in dataset.variants
+									tr
+										td=variant.name
+										td: +ref(variant.productSystem)
+										td=variant.allocationMethod
+										td #{variant.amount} #{variant.unit.name}
+					if dataset.parameterRedefs
+						#parameters.tab-pane(role='tabpanel')
+							table.table
+								thead
+									tr
+										th Parameter
+										th Context
+										each variant in dataset.variants
+											th=variant.name
+								tbody
+									each parameter in dataset.parameterRedefs
+										tr
+											td=parameter.name
+											td
+												if parameter.context
+													+ref(parameter.context)
+												else
+													| Global
+											each entry in parameter.values
+												td=entry.value
 	+meta
+		hr
+		strong Impact method
+		div
+			if dataset.impactMethod
+				+ref(dataset.impactMethod)
+			else
+				| -
+		strong Normalization & Weighting set
+		div=dataset.nwSet?dataset.nwSet.name:'-'
 	.clear
