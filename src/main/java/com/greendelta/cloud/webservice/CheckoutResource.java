@@ -25,20 +25,21 @@ import org.openlca.cloud.model.data.FileReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.greendelta.cloud.service.FetchService;
 import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 
-@Path("reset")
-public class ResetResource {
+@Path("checkout")
+public class CheckoutResource {
 
-	private final static Logger log = LoggerFactory.getLogger(ResetResource.class);
+	private final static Logger log = LoggerFactory.getLogger(CheckoutResource.class);
 	private final RepositoryService repoService;
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 
-	public ResetResource(RepositoryService repoService, FetchService fetchService, HistoryService historyService) {
+	public CheckoutResource(RepositoryService repoService, FetchService fetchService, HistoryService historyService) {
 		this.repoService = repoService;
 		this.fetchService = fetchService;
 		this.historyService = historyService;
@@ -47,7 +48,7 @@ public class ResetResource {
 	@GET
 	@Path("{group}/{name}/{untilCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetch(@PathParam("group") String group, @PathParam("name") String name,
+	public Response checkout(@PathParam("group") String group, @PathParam("name") String name,
 			@PathParam("untilCommitId") String untilCommitId) {
 		Repository repo = repoService.get(group, name);
 		if (untilCommitId.equals("null"))
@@ -85,6 +86,8 @@ public class ResetResource {
 
 	private void put(FetchWriter writer, Repository repo, Dataset dataset, String commitId) throws IOException {
 		String data = fetchService.getDataset(repo, dataset.type, dataset.refId, commitId);
+		if (Strings.isNullOrEmpty(data))
+			return; // ignore deleted data sets
 		File binDir = fetchService.getBinDir(repo, dataset.type, dataset.refId, commitId);
 		writer.put(dataset, data, binDir);
 	}
