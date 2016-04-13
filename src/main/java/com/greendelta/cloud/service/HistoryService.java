@@ -47,20 +47,26 @@ public class HistoryService {
 	}
 
 	public List<Commit> getCommits(Repository repo) {
-		return getCommits(repo, null);
+		return getCommitsAfter(repo, null);
 	}
 
-	public List<Commit> getCommits(Repository repo, String afterCommitId) {
+	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
+		return getCommitsBefore(repo, type, refId, null);
+	}
+
+	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId) {
 		File file = repo.getHistoryFile(false);
 		return dataAccessor.readHistory(file, new AfterCommitFilter(
 				afterCommitId));
 	}
 
-	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
-		return getCommits(repo, type, refId, null);
+	public List<Commit> getCommitsUntil(Repository repo, String untilCommitId) {
+		File file = repo.getHistoryFile(false);
+		return dataAccessor.readHistory(file, new UntilCommitFilter(
+				untilCommitId));
 	}
 
-	public List<Commit> getCommits(Repository repo, ModelType type,
+	public List<Commit> getCommitsBefore(Repository repo, ModelType type,
 			String refId, String beforeCommitId) {
 		File historyFile = repo.getHistoryFile(false);
 		return dataAccessor.readHistory(historyFile, new BeforeCommitFilter(
@@ -133,6 +139,26 @@ public class HistoryService {
 			}
 			return true;
 
+		}
+
+	}
+
+	private class UntilCommitFilter implements Filter<Commit> {
+
+		private final String commitId;
+		private boolean reachedId;
+
+		private UntilCommitFilter(String commitId) {
+			this.commitId = commitId;
+		}
+
+		@Override
+		public boolean filter(Commit element) {
+			if (reachedId)
+				return true;
+			if (element.id.equals(commitId))
+				reachedId = true;
+			return false;
 		}
 
 	}

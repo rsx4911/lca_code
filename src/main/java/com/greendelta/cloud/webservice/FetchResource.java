@@ -5,9 +5,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -125,28 +126,27 @@ public class FetchResource {
 		Repository repo = repoService.get(group, name);
 		if (lastCommitId.equals("null"))
 			lastCommitId = null;
-		List<Commit> commits = historyService.getCommits(repo, lastCommitId);
+		List<Commit> commits = historyService.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Map<String, FetchRequestData> result = getData(commits, repo);
+		List<FetchRequestData> result = getData(commits, repo);
 		if (result.size() == 0)
 			return Respond.noContent();
-		return Respond.ok(new ArrayList<>(result.values()));
+		return Respond.ok(new ArrayList<>(result));
 	}
 
-	private Map<String, FetchRequestData> getData(List<Commit> commits,
-			Repository repo) {
-		// iterate over all commits, only latest version will "remain"
-		Map<String, FetchRequestData> result = new HashMap<>();
+	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
+		List<FetchRequestData> result = new ArrayList<>();
+		Set<String> alreadyAdded = new HashSet<>();
+		Collections.reverse(commits);
 		for (Commit commit : commits) {
-			List<Dataset> descriptors = getDatasets(repo, commit.id, null);
+			List<Dataset> descriptors = historyService.getReferences(repo, commit.id);
 			for (Dataset descriptor : descriptors) {
-				ModelType type = descriptor.type;
-				String refId = descriptor.refId;
-				String key = type.name() + "_" + refId;
-				FetchRequestData value = service.toRequestData(repo, commit.id,
-						descriptor);
-				result.put(key, value);
+				if (alreadyAdded.contains(toKey(descriptor)))
+					continue;
+				FetchRequestData value = service.toRequestData(repo, commit.id, descriptor);
+				result.add(value);
+				alreadyAdded.add(toKey(descriptor));
 			}
 		}
 		return result;
@@ -162,7 +162,7 @@ public class FetchResource {
 		Repository repo = repoService.get(group, name);
 		if (lastCommitId.equals("null"))
 			lastCommitId = null;
-		List<Commit> commits = historyService.getCommits(repo, lastCommitId);
+		List<Commit> commits = historyService.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		StreamingOutput data = prepareFetch(requested, commits, repo);
@@ -193,15 +193,22 @@ public class FetchResource {
 		return Respond.ok(resultData);
 	}
 
-	private StreamingOutput prepareFetch(List<Dataset> requested,
-			List<Commit> commits, Repository repo) {
+	private StreamingOutput prepareFetch(List<Dataset> requested, List<Commit> commits, Repository repo) {
 		FetchWriter writer = new FetchWriter(null);
-		Map<String, DescriptorAndCommitId> datasets = getNewestVersions(
-				commits, repo, requested);
+		Collections.reverse(commits);
 		try {
-			for (DescriptorAndCommitId value : datasets.values())
-				put(writer, repo, value);
-			writer.setCommitId(commits.get(commits.size() - 1).id);
+			Set<String> alreadyPut = new HashSet<>();
+			for (Commit commit : commits) {
+				for (Dataset dataset : historyService.getReferences(repo, commit.id)) {
+					if (requested != null && !requested.contains(dataset))
+						continue;
+					if (alreadyPut.contains(toKey(dataset)))
+						continue;
+					put(writer, repo, dataset, commit.id);
+					alreadyPut.add(toKey(dataset));
+				}
+			}
+			writer.setCommitId(commits.get(0).id);
 			writer.close();
 			return toStream(writer.getFile());
 		} catch (IOException e) {
@@ -210,40 +217,10 @@ public class FetchResource {
 		}
 	}
 
-	private void put(FetchWriter writer, Repository repo,
-			DescriptorAndCommitId value) throws IOException {
-		Dataset dataset = value.dataset;
-		String data = service.getDataset(repo, dataset.type, dataset.refId,
-				value.commitId);
-		File binDir = service.getBinDir(repo, dataset.type, dataset.refId,
-				value.commitId);
+	private void put(FetchWriter writer, Repository repo, Dataset dataset, String commitId) throws IOException {
+		String data = service.getDataset(repo, dataset.type, dataset.refId, commitId);
+		File binDir = service.getBinDir(repo, dataset.type, dataset.refId, commitId);
 		writer.put(dataset, data, binDir);
-	}
-
-	private Map<String, DescriptorAndCommitId> getNewestVersions(
-			List<Commit> commits, Repository repo, List<Dataset> requested) {
-		Map<String, DescriptorAndCommitId> result = new HashMap<>();
-		// iterate over all commits, only latest version will "remain"
-		for (Commit commit : commits) {
-			List<Dataset> datasets = getDatasets(repo, commit.id, requested);
-			for (Dataset dataset : datasets) {
-				String key = toKey(dataset);
-				DescriptorAndCommitId value = new DescriptorAndCommitId(
-						dataset, commit.id);
-				result.put(key, value);
-			}
-		}
-		return result;
-	}
-
-	private List<Dataset> getDatasets(Repository repo, String commitId,
-			List<Dataset> requested) {
-		List<Dataset> refs = historyService.getReferences(repo, commitId);
-		List<Dataset> datasets = new ArrayList<Dataset>();
-		for (Dataset dataset : refs)
-			if (requested == null || requested.contains(dataset))
-				datasets.add(dataset);
-		return datasets;
 	}
 
 	private StreamingOutput toStream(File file) {
@@ -260,18 +237,6 @@ public class FetchResource {
 
 	private String toKey(FileReference reference) {
 		return reference.type.name() + "_" + reference.refId;
-	}
-
-	private class DescriptorAndCommitId {
-
-		private Dataset dataset;
-		private String commitId;
-
-		private DescriptorAndCommitId(Dataset dataset, String commitId) {
-			this.dataset = dataset;
-			this.commitId = commitId;
-		}
-
 	}
 
 }

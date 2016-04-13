@@ -47,7 +47,7 @@ public class HistoryResource {
 		Repository repo = repoService.get(group, name);
 		if (lastCommitId.equals("null"))
 			lastCommitId = null;
-		List<Commit> commits = service.getCommits(repo, lastCommitId);
+		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		Collections.reverse(commits);

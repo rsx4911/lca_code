@@ -40,7 +40,7 @@ public class FetchService {
 
 	private boolean wasAdded(Repository repo, ModelType type, String refId,
 			String commitId) {
-		List<Commit> previous = historyService.getCommits(repo, type, refId,
+		List<Commit> previous = historyService.getCommitsBefore(repo, type, refId,
 				commitId);
 		if (previous.isEmpty())
 			return true;
