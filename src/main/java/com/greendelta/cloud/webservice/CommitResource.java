@@ -10,14 +10,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
+import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.CommitService;
 import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
+import com.greendelta.cloud.service.UserService;
 
 @Path("commit")
 public class CommitResource {
@@ -26,14 +30,18 @@ public class CommitResource {
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
 	private final NotificationService notificationService;
+	private final UserService userService;
+	private final AccessService accessService;
 
 	@Inject
 	public CommitResource(CommitService service, RepositoryService repoService, HistoryService historyService,
-			NotificationService notificationService) {
+			NotificationService notificationService, UserService userService, AccessService accessService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.historyService = historyService;
 		this.notificationService = notificationService;
+		this.userService = userService;
+		this.accessService = accessService;
 	}
 
 	@GET
@@ -42,6 +50,9 @@ public class CommitResource {
 			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canWrite(currentUser, repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
 		return Respond.ok();
