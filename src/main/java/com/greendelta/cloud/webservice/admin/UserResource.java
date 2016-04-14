@@ -46,7 +46,7 @@ public class UserResource {
 	public Response create(@PathParam("username") String username, User user) {
 		if (Strings.isNullOrEmpty(username))
 			return Respond.invalid("username", "Missing input: Username");
-		if (Names.isValid(username))
+		if (!Names.isValid(username))
 			return Respond.invalid("username",
 					"Username must consist of at least 4 characters and can only contain characters, numbers and _");
 		if (groupService.exists(username)) // user or group exists

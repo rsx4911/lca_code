@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import com.google.inject.Inject;
 import com.greendelta.cloud.service.FetchService;
 import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.Repository;
@@ -39,6 +40,7 @@ public class CheckoutResource {
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 
+	@Inject
 	public CheckoutResource(RepositoryService repoService, FetchService fetchService, HistoryService historyService) {
 		this.repoService = repoService;
 		this.fetchService = fetchService;

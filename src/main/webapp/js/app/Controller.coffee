@@ -105,6 +105,12 @@ define([
 					nav: 
 						type: 'user'
 						active: 'profile'
+				@router.registerUserRoute 'search', (query, page) -> @showView 
+					view: 'search/Results'
+					title: 'Search' 
+					viewOptions: 
+						query: query	
+						page: page
 				@router.registerUserRoute 'userNotifications', -> @showView 
 					view: 'user/Notifications'
 					title: 'Notifications' 

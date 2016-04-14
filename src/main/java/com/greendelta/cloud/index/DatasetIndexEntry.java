@@ -13,10 +13,11 @@ public class DatasetIndexEntry {
 	public final String commitMessage;
 	public final String fullPath;
 	public final long lastUpdate;
+	public final String repositoryId;
 
 	DatasetIndexEntry(ModelType type, String refId, String name,
 			ModelType categoryType, String categoryRefId, String commitId,
-			String commitMessage, String fullPath, long lastUpdate) {
+			String commitMessage, String fullPath, long lastUpdate, String repositoryId) {
 		this.type = type;
 		this.refId = refId;
 		this.name = name;
@@ -26,6 +27,7 @@ public class DatasetIndexEntry {
 		this.commitMessage = commitMessage;
 		this.fullPath = fullPath;
 		this.lastUpdate = lastUpdate;
+		this.repositoryId = repositoryId;
 	}
 
 }

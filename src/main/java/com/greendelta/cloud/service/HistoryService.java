@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.google.inject.Inject;
+import com.greendelta.cloud.index.DatasetIndexEntry;
 import com.greendelta.cloud.service.DataAccessor.Filter;
 
 public class HistoryService {
@@ -23,6 +25,13 @@ public class HistoryService {
 			.getLogger(HistoryService.class);
 	private final static Charset charset = Charset.forName("utf-8");
 	private final DataAccessor dataAccessor = new DataAccessor();
+
+	private final RepositoryService repoService;
+
+	@Inject
+	public HistoryService(RepositoryService repoService) {
+		this.repoService = repoService;
+	}
 
 	public Commit getLastCommit(Repository repo) {
 		List<Commit> commits = getCommits(repo);
@@ -36,6 +45,16 @@ public class HistoryService {
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
+	}
+
+	public boolean isLastCommit(DatasetIndexEntry entry) {
+		String group = entry.repositoryId.split(File.separator)[0];
+		String name = entry.repositoryId.split(File.separator)[1];
+		Repository repo = repoService.get(group, name);
+		Commit commit = getLastCommit(repo, entry.type, entry.refId);
+		if (commit == null)
+			return false;
+		return commit.id.equals(entry.commitId);
 	}
 
 	public Commit getCommit(Repository repo, String commitId) {

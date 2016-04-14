@@ -256,7 +256,7 @@ public class NotificationService {
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.name));
+			emails.add(createEmail(personalSubject, personalMessage, member.email));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamEmails(Notification.ADDED_TEAM_MEMBER, team)));
 		emails.addAll(createEmails(othersSubject, othersMessage, getAdminEmails(Notification.ADDED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
@@ -271,7 +271,7 @@ public class NotificationService {
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_TEAM_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.name));
+			emails.add(createEmail(personalSubject, personalMessage, member.email));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamEmails(Notification.REMOVED_TEAM_MEMBER, team)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getAdminEmails(Notification.REMOVED_TEAM_MEMBER, false)));

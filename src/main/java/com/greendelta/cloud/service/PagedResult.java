@@ -14,8 +14,7 @@ public class PagedResult<T> {
 	public final long pageSize;
 	public final List<T> data;
 
-	PagedResult(long page, String filter, long total, long subTotal,
-			List<T> data) {
+	public PagedResult(long page, String filter, long total, long subTotal, List<T> data) {
 		this.page = page;
 		this.pageSize = 10;
 		this.filter = filter;
@@ -24,8 +23,7 @@ public class PagedResult<T> {
 		this.data = data;
 	}
 
-	PagedResult(String filter, long total, long subTotal,
-			List<T> data) {
+	public PagedResult(String filter, long total, long subTotal, List<T> data) {
 		this.page = -1;
 		this.pageSize = -1;
 		this.filter = filter;
@@ -34,10 +32,8 @@ public class PagedResult<T> {
 		this.data = data;
 	}
 
-	public PagedResult<Map<String, Object>> toClient(
-			Function<List<T>, List<Map<String, Object>>> mapper) {
-		return new PagedResult<>(page, filter, total, subTotal,
-				mapper.apply(data));
+	public PagedResult<Map<String, Object>> toClient(Function<List<T>, List<Map<String, Object>>> mapper) {
+		return new PagedResult<>(page, filter, total, subTotal, mapper.apply(data));
 	}
 
 	static <T> PagedResult<T> pagedAndFiltered(int page, String filter, List<T> toFilter) {
@@ -46,8 +42,7 @@ public class PagedResult<T> {
 		});
 	}
 
-	static <T> PagedResult<T> pagedAndFiltered(int page, String filter, List<T> toFilter,
-			Function<T, String> toString) {
+	static <T> PagedResult<T> pagedAndFiltered(int page, String filter, List<T> toFilter, Function<T, String> toString) {
 		List<T> filtered = new ArrayList<>();
 		if (filter == null || filter.isEmpty())
 			filtered = toFilter;

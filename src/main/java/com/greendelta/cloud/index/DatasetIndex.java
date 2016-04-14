@@ -4,12 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Function;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
@@ -27,14 +24,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import com.greendelta.cloud.service.Repository;
 
 public class DatasetIndex {
 
-	private final static Logger log = LoggerFactory
-			.getLogger(DatasetIndex.class);
+	private final static Logger log = LoggerFactory.getLogger(DatasetIndex.class);
 	final Directory directory;
+	final Repository repo;
 
-	public DatasetIndex(File indexDirectory) {
+	public DatasetIndex(Repository repo, File indexDirectory) {
 		Directory directory = null;
 		try {
 			directory = FSDirectory.open(indexDirectory.toPath());
@@ -42,39 +40,21 @@ public class DatasetIndex {
 			log.error("Error creating dataset indexer", e);
 		}
 		this.directory = directory;
+		this.repo = repo;
 	}
 
 	public void index(List<Dataset> datasets, Commit commit) {
-		delete(toIds(datasets));
 		IndexWriter writer = IndexUtil.getWriter(directory, false);
 		try {
 			for (Dataset dataset : datasets)
-				writer.addDocument(convert(dataset, commit));
+				writer.addDocument(ConversionUtil.convert(repo, dataset, commit));
 			writer.close();
 		} catch (IOException e) {
 			log.error("Error indexing dataset identifiers", e);
 		}
 	}
 
-	public void delete(String refId) {
-		delete(Collections.singleton(refId));
-	}
-
-	public void delete(Set<String> refIds) {
-		IndexWriter writer = IndexUtil.getWriter(directory, false);
-		try {
-			for (String refId : refIds) {
-				Term term = new Term("refId", refId);
-				Query query = new TermQuery(term);
-				writer.deleteDocuments(query);
-			}
-			writer.close();
-		} catch (IOException e) {
-			log.error("Error deleting dataset identifier indices", e);
-		}
-	}
-
-	public DatasetIndexEntry getForId(ModelType type, String refId) {
+	public DatasetIndexEntry getForId(ModelType type, String refId, Function<DatasetIndexEntry, Boolean> isLatestEntry) {
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return null;
@@ -84,14 +64,20 @@ public class DatasetIndex {
 			TopDocs topDocs = searcher.search(query, 1);
 			if (topDocs.totalHits == 0)
 				return null;
-			return convert(searcher.doc(topDocs.scoreDocs[0].doc));
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				if (isLatestEntry.apply(entry))
+					return entry;
+			}
+			return null;
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);
 			return null;
 		}
 	}
 
-	public List<DatasetIndexEntry> getForModelType(ModelType type, String nameFilter) {
+	public List<DatasetIndexEntry> getForModelType(ModelType type, String nameFilter,
+			Function<DatasetIndexEntry, Boolean> isLatestEntry) {
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -111,8 +97,9 @@ public class DatasetIndex {
 			if (topDocs.totalHits == 0)
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
-				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
-				entries.add(entry);
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				if (isLatestEntry.apply(entry))
+					entries.add(entry);
 			}
 			return entries;
 		} catch (IOException e) {
@@ -121,7 +108,8 @@ public class DatasetIndex {
 		}
 	}
 
-	public List<DatasetIndexEntry> getForCategory(String categoryId, String nameFilter) {
+	public List<DatasetIndexEntry> getForCategory(String categoryId, String nameFilter,
+			Function<DatasetIndexEntry, Boolean> isLatestEntry) {
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -141,8 +129,9 @@ public class DatasetIndex {
 			if (topDocs.totalHits == 0)
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
-				DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
-				entries.add(entry);
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				if (isLatestEntry.apply(entry))
+					entries.add(entry);
 			}
 			return entries;
 		} catch (IOException e) {
@@ -151,7 +140,7 @@ public class DatasetIndex {
 		}
 	}
 
-	public boolean categoryExists(String categoryId) {
+	public boolean categoryExists(String categoryId, Function<DatasetIndexEntry, Boolean> isLatestEntry) {
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return false;
@@ -161,64 +150,18 @@ public class DatasetIndex {
 			Query query = IndexUtil
 					.andQuery(new Term("refId", categoryId), new Term("type", ModelType.CATEGORY.name()));
 			TopDocs topDocs = searcher.search(query, 1);
-			return topDocs.totalHits != 0;
+			if (topDocs.totalHits == 0)
+				return false;
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				if (isLatestEntry.apply(entry))
+					return true;
+			}
+			return false;
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);
 			return false;
 		}
-	}
-
-	public List<DatasetIndexEntry> getAll() {
-		List<DatasetIndexEntry> entries = new ArrayList<>();
-		IndexReader reader = IndexUtil.getReader(directory);
-		if (reader == null)
-			return Collections.emptyList();
-		try {
-			for (int i = 0; i < reader.maxDoc(); i++)
-				entries.add(convert(reader.document(i)));
-			reader.close();
-			return entries;
-		} catch (IOException e) {
-			log.error("Error retrieving all dataset identifiers", e);
-			return Collections.emptyList();
-		}
-	}
-
-	private Set<String> toIds(List<Dataset> datasets) {
-		Set<String> ids = new HashSet<>();
-		for (Dataset dataset : datasets)
-			ids.add(dataset.refId);
-		return ids;
-	}
-
-	private DatasetIndexEntry convert(Document document) {
-		String refId = document.get("refId");
-		ModelType type = ModelType.valueOf(document.get("type"));
-		String name = document.get("name");
-		String categoryRefId = document.get("categoryRefId");
-		ModelType categoryType = null;
-		if (!Strings.isNullOrEmpty(document.get("categoryType")))
-			categoryType = ModelType.valueOf(document.get("categoryType"));
-		String commitId = document.get("commitId");
-		String commitMessage = document.get("commitMessage");
-		String fullPath = document.get("fullPath");
-		long lastUpdate = Long.parseLong(document.get("lastUpdate"));
-		return new DatasetIndexEntry(type, refId, name, categoryType,
-				categoryRefId, commitId, commitMessage, fullPath, lastUpdate);
-	}
-
-	private Document convert(Dataset dataset, Commit commit) {
-		Document document = new Document();
-		IndexUtil.addField(document, "refId", dataset.refId);
-		IndexUtil.addField(document, "type", dataset.type.name());
-		IndexUtil.addField(document, "name", dataset.name);
-		IndexUtil.addField(document, "categoryRefId", dataset.categoryRefId);
-		IndexUtil.addField(document, "categoryType", dataset.categoryType);
-		IndexUtil.addField(document, "commitId", commit.id);
-		IndexUtil.addField(document, "commitMessage", commit.message);
-		IndexUtil.addField(document, "fullPath", dataset.fullPath);
-		IndexUtil.addField(document, "lastUpdate", commit.timestamp);
-		return document;
 	}
 
 }

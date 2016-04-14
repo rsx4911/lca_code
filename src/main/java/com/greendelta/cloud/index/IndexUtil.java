@@ -8,14 +8,15 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.LongField;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -31,6 +32,13 @@ class IndexUtil {
 
 	private final static Logger log = LoggerFactory.getLogger(IndexUtil.class);
 	private final static Gson mapper = new Gson();
+
+	public static void addTextField(Document document, String name, String value) {
+		if (value == null)
+			value = "";
+		IndexableField field = new TextField(name, value, Store.YES);
+		document.add(field);
+	}
 
 	public static void addField(Document document, String name, String value) {
 		if (value == null)

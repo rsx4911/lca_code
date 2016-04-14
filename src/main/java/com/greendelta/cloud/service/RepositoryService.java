@@ -57,7 +57,7 @@ public class RepositoryService {
 	public DatasetIndex getIndex(Repository repo) {
 		DatasetIndex index = indices.get(repo.toId());
 		if (index == null) {
-			index = new DatasetIndex(repo.getIndexDir());
+			index = new DatasetIndex(repo, repo.getIndexDir());
 			indices.put(repo.toId(), index);
 		}
 		return index;
@@ -118,6 +118,10 @@ public class RepositoryService {
 		return PagedResult.pagedAndFiltered(page, filter, accessible, (repo) -> {
 			return repo.toId();
 		});
+	}
+
+	public List<Repository> getAllAccessible() {
+		return getAll(true);
 	}
 
 	private List<Repository> getAll(boolean adminArea) {

@@ -12,10 +12,12 @@ import com.greendelta.cloud.index.DatasetIndexEntry;
 public class BrowseService {
 
 	private final RepositoryService repoService;
+	private final HistoryService historyService;
 
 	@Inject
-	public BrowseService(RepositoryService repoService) {
+	public BrowseService(RepositoryService repoService, HistoryService historyService) {
 		this.repoService = repoService;
+		this.historyService = historyService;
 	}
 
 	public List<ModelType> getRootContent(Repository repo) {
@@ -34,22 +36,22 @@ public class BrowseService {
 
 	public List<DatasetIndexEntry> getCategoryContent(Repository repo, ModelType type, String filter) {
 		DatasetIndex index = repoService.getIndex(repo);
-		return index.getForModelType(type, filter);
+		return index.getForModelType(type, filter, historyService::isLastCommit);
 	}
 
 	public List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryId, String filter) {
 		DatasetIndex index = repoService.getIndex(repo);
-		return index.getForCategory(categoryId, filter);
+		return index.getForCategory(categoryId, filter, historyService::isLastCommit);
 	}
 
 	public DatasetIndexEntry getCategory(Repository repo, String refId) {
 		DatasetIndex index = repoService.getIndex(repo);
-		return index.getForId(ModelType.CATEGORY, refId);
+		return index.getForId(ModelType.CATEGORY, refId, historyService::isLastCommit);
 	}
 
 	public boolean categoryExists(Repository repo, String categoryId) {
 		DatasetIndex index = repoService.getIndex(repo);
-		return index.categoryExists(categoryId);
+		return index.categoryExists(categoryId, historyService::isLastCommit);
 	}
 
 }

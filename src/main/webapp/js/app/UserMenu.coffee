@@ -25,7 +25,7 @@ define([
 				input = $ Events.target event, 'input'
 				query = input.val()
 				input.val ''
-				Router.navigate "/search?query=#{query}"
+				Router.navigate "/search/#{query}"
 
 			events: 
 				'click a[href]:not([target=_blank]):not(.logout)': (event) -> Events.followLink event

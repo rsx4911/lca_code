@@ -55,7 +55,7 @@ public class GroupResource {
 	public Response create(@PathParam("name") String name) {
 		if (Strings.isNullOrEmpty(name))
 			return Respond.invalid("name", "Missing input: Name");
-		if (Names.isValid(name))
+		if (!Names.isValid(name))
 			return Respond
 					.invalid("name",
 							"Name must consist of at least 4 characters and can only contain characters, numbers and underscore");
