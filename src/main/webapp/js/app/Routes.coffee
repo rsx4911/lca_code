@@ -1,7 +1,6 @@
 define
 	'': 'dashboardRepositories'
 	'search(/:query)': 'search'
-	'search/:query/:page': 'search'
 	'repository/new(/:group)': 'repositoryNew'
 	'user': 'userProfile'
 	'user/profile': 'userProfile'

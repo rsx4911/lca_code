@@ -105,12 +105,10 @@ define([
 					nav: 
 						type: 'user'
 						active: 'profile'
-				@router.registerUserRoute 'search', (query, page) -> @showView 
+				@router.registerUserRoute 'search', (query) => @showView 
 					view: 'search/Results'
 					title: 'Search' 
-					viewOptions: 
-						query: query	
-						page: page
+					viewOptions: @splitQuery query
 				@router.registerUserRoute 'userNotifications', -> @showView 
 					view: 'user/Notifications'
 					title: 'Notifications' 
@@ -227,6 +225,17 @@ define([
 				@initializeNavigation()
 				@initializeUserMenu()
 				@registerRoutes()
+
+			splitQuery: (query) ->
+				unless query
+					return {}
+				params = query.split '&'
+				result = {}
+				for param in params
+					param = param.split '='
+					result[param[0]] = param[1]
+				return result
+
 
 			checkGroupOrRepositoryExists: (options, callback) ->
 				if options.viewOptions?.repository

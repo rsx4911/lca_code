@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.util.ObjectMap;
+import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndexEntry;
@@ -31,14 +32,28 @@ public class SearchResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response search(@QueryParam("query") @DefaultValue("") String filter, @QueryParam("page") @DefaultValue("1") int page) {
-		PagedResult<DatasetIndexEntry> result = service.search(page, filter);
-		return Respond.ok(result.toClient((entries) -> {
-			List<Map<String, Object>> mapped = new ArrayList<>();
+	public Response search(@QueryParam("query") @DefaultValue("") String filter,
+			@QueryParam("page") @DefaultValue("1") int page, @QueryParam("type") ModelType type) {
+		PagedResult<DatasetIndexEntry> result = service.search(page, filter, type);
+		PagedResult<Map<String, Object>> mapped = result.toClient((entries) -> {
+			List<Map<String, Object>> list = new ArrayList<>();
 			for (DatasetIndexEntry entry : entries)
-				mapped.add(ObjectMap.fromObject(entry));
-			return mapped;
-		}));
+				list.add(ObjectMap.fromObject(entry));
+			return list;
+		});
+		Map<String, Object> response = ObjectMap.fromObject(mapped);
+		response.put("modelTypes", getModelTypes());
+		if (type != null)
+			response.put("filteredType", type);
+		return Respond.ok(response);
+	}
+
+	private List<ModelType> getModelTypes() {
+		List<ModelType> types = new ArrayList<>();
+		for (ModelType type : ModelType.values())
+			if (type.isCategorized())
+				types.add(type);
+		return types;
 	}
 
 }

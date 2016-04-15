@@ -9,8 +9,11 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
+import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +24,8 @@ public class GlobalIndex {
 
 	private final static Logger log = LoggerFactory.getLogger(GlobalIndex.class);
 
-	public static PagedResult<DatasetIndexEntry> search(List<DatasetIndex> indices, int page, String filter) {
+	public static PagedResult<DatasetIndexEntry> search(List<DatasetIndex> indices, int page, String filter,
+			ModelType type) {
 		if (indices.size() == 0)
 			return new PagedResult<>(page, filter, 0, 0, Collections.emptyList());
 		IndexReader[] readers = new IndexReader[indices.size()];
@@ -36,7 +40,9 @@ public class GlobalIndex {
 				term = new Term("fullPath", "*");
 			else
 				term = new Term("fullPath", "*" + filter.toLowerCase() + "*");
-			WildcardQuery query = new WildcardQuery(term);
+			Query query = new WildcardQuery(term);
+			if (type != null)
+				query = IndexUtil.andQuery(query, new TermQuery(new Term("type", type.name())));
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return new PagedResult<>(page, filter, 0, 0, Collections.emptyList());

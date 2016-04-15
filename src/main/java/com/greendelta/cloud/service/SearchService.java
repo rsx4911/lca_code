@@ -3,6 +3,8 @@ package com.greendelta.cloud.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openlca.core.model.ModelType;
+
 import com.google.inject.Inject;
 import com.greendelta.cloud.index.DatasetIndex;
 import com.greendelta.cloud.index.DatasetIndexEntry;
@@ -17,11 +19,11 @@ public class SearchService {
 		this.repoService = repoService;
 	}
 
-	public PagedResult<DatasetIndexEntry> search(int page, String filter) {
+	public PagedResult<DatasetIndexEntry> search(int page, String filter, ModelType type) {
 		List<Repository> repos = repoService.getAllAccessible();
 		List<DatasetIndex> indices = new ArrayList<>();
 		for (Repository repo : repos)
 			indices.add(repoService.getIndex(repo));
-		return GlobalIndex.search(indices, page, filter);
+		return GlobalIndex.search(indices, page, filter, type);
 	}
 }
