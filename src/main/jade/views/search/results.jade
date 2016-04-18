@@ -23,4 +23,4 @@ include ../mixins/paging.jade
 					a(href='/#{dataset.repositoryId}')=dataset.repositoryId
 				div Commit: 
 					a(href='/#{dataset.repositoryId}/commit/#{dataset.commitId}') #{dataset.commitMessage} (#{dataset.commitId})
-	+paging(page, total/pageSize)
+	+paging(page, Math.ceil(total/pageSize))

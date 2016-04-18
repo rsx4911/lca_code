@@ -5,10 +5,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -20,6 +22,7 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.HistoryService;
+import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
@@ -79,10 +82,24 @@ public class HistoryResource {
 		if (commit == null)
 			return Respond.notFound();
 		Map<String, Object> result = putUserName(commit);
+		return Respond.ok(result);
+	}
+
+	@GET
+	@Path("references/{group}/{name}/{commitId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getReferences(@PathParam("group") String group, @PathParam("name") String name,
+			@PathParam("commitId") String commitId, @QueryParam("page") @DefaultValue("1") int page) {
+		Repository repo = repoService.get(group, name);
+		Commit commit = service.getCommit(repo, commitId);
+		if (commit == null)
+			return Respond.notFound();
+		List<Dataset> all = service.getReferences(repo, commitId);
 		List<Dataset> refs = new ArrayList<>();
-		for (Dataset d : service.getReferences(repo, commitId))
-			refs.add(d);
-		result.put("references", refs);
+		for (int i = (page - 1) * 10; i < page * 10; i++)
+			if (all.size() > i)
+				refs.add(all.get(i));
+		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, all.size(), refs.size(), refs);
 		return Respond.ok(result);
 	}
 

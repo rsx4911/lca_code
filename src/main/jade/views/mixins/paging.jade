@@ -9,8 +9,8 @@ mixin paging(page, pageCount)
 			if pageCount <= endPage
 				- endPage = pageCount;
 			if page > 1
-				span: a(href='#' data-page=1) <<
-				span: a(href='#' data-page=page-1) <
+				span: a.page(href='#' data-page=1) <<
+				span: a.page(href='#' data-page=page-1) <
 			- var p = startPage
 			while p <= endPage
 				- var isActive = (p === page)
@@ -18,8 +18,8 @@ mixin paging(page, pageCount)
 				if isActive
 					span #{p}
 				else
-					span(class=isFirstAfterActive?'indent':''): a(href='#' data-page=p) #{p}
+					span(class=isFirstAfterActive?'indent':''): a.page(href='#' data-page=p) #{p}
 				- p++;
 			if page < pageCount
-				span: a(href='#' data-page=page+1) >
-				span: a(href='#' data-page=pageCount) >>
+				span: a.page(href='#' data-page=page+1) >
+				span: a.page(href='#' data-page=pageCount) >>

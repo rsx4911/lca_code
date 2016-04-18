@@ -28,8 +28,7 @@ define([
 				model = result
 				model.pageCount = Math.ceil(result.subTotal / result.pageSize)
 				$(@container).html @template model
-				$(@container + ' .paging a').on 'click', (event) => 
-					@applyFilter event
+				$(@container + ' a.page').on 'click', (event) => @applyFilter event
 
 			applyFilter: (event) ->
 				Events.preventDefault event

@@ -2,32 +2,44 @@ define([
 				'backbone'
 				'moment'
 				'cs!utils/Events'
+				'cs!utils/Filter'
 				'cs!utils/Icons'
 				'cs!utils/Renderer'
 				'templates/views/repository/commit'
+				'templates/views/repository/commit-references'
 			]
 
-	(Backbone, moment, Events, Icons, Renderer, template) ->
+	(Backbone, moment, Events, Filter, Icons, Renderer, template, refTemplate) ->
 
 		class RepositoryCommit extends Backbone.View
 
 			className: 'repository-commit'
 
 			events: 
-				'click a': (event) -> Events.followLink event
+				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 
 			initialize: (options) ->
 				{@repository, @commitId} = options
+				repo = @repository.toJSON()
+				commitId = @commitId
+				@filter = new Filter
+					container: '.file-references'
+					template: refTemplate
+					callback: (type, result) -> 
+						result.commitId = commitId
+						result.baseUrl = "/#{repo.group}/#{repo.name}/dataset"
+					url: (page) -> "/ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
 
 			render: (renderOptions) ->
 				repo = @repository.toJSON()
+				commitId = @commitId
 				@loadCommit (commit) =>
 					@$el.html template
 						repository: repo
 						commit: commit
 						formatDate: (value) -> return if !value then '' else moment(value).format('M/D/YYYY h:mm:ssa')
 						getIcon: Icons.get
-						baseUrl: "/#{repo.group}/#{repo.name}/dataset"
+					@filter.init()
 				Renderer.render @, renderOptions
 
 			loadCommit: (callback) ->

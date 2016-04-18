@@ -7,13 +7,3 @@ include ../mixins/user-info.jade
 	+user-info(commit.user, commit.userDisplayName)(class='concealed')
 		|  on #{formatDate(commit.timestamp)}
 .file-references.content-box
-	each dataset in commit.references
-		if dataset.type !== 'IMPACT_CATEGORY' && dataset.type !== 'NW_SET'
-			.file-reference(id=dataset.id)
-				a(href='#{baseUrl}/#{dataset.type}/#{dataset.refId}/#{commit.id}')
-					.header
-						if dataset.type === 'CATEGORY'
-							img.model-icon-small(src='/images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
-						else
-							img.model-icon-small(src='/images/model/small/#{dataset.type.toLowerCase()}.png')
-						span=dataset.fullPath

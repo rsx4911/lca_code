@@ -25,6 +25,7 @@ public class Names {
 		reservedNames.add("members");
 		reservedNames.add("member");
 		reservedNames.add("search");
+		reservedNames.add("references");
 	}
 
 	public static boolean isReserved(String name) {

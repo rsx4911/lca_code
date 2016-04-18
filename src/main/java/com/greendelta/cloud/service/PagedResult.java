@@ -54,7 +54,7 @@ public class PagedResult<T> {
 		for (int i = 0; i < filtered.size(); i++)
 			if (i < ((page - 1) * 10))
 				continue;
-			else if (i > (page * 10))
+			else if (i >= (page * 10))
 				break;
 			else
 				paged.add(filtered.get(i));
