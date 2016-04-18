@@ -25,6 +25,7 @@ form#user-form.content-box
 if user.id
 	+avatar-box('user', user.username, true)
 	.header-box Password
+		button.btn.btn-default.pull-right(data-action='generate-password') Generate password
 	form#password-form.content-box
 		#password-form-general-message-group.alert(role='alert'): span.message
 		+input('password', 'Password', 'password')

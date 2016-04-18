@@ -39,6 +39,10 @@ public class UserService {
 		return dao.getFirstForAttribute("username", username);
 	}
 
+	public User getForEmail(String email) {
+		return dao.getFirstForAttribute("email", email);
+	}
+
 	public boolean exists(String username) {
 		return getForUsername(username) != null;
 	}

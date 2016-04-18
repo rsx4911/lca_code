@@ -5,6 +5,7 @@ define([
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Model'
+				'cs!utils/Password'
 				'cs!utils/Renderer'
 				'cs!utils/Status'
 				'cs!app/Router'
@@ -13,7 +14,7 @@ define([
 				'templates/views/user/profile'
 			]
 
-	(Backbone, Avatar, Events, Forms, Layers, Model, Renderer, Status, Router, User, currentUser, template) ->
+	(Backbone, Avatar, Events, Forms, Layers, Model, Password, Renderer, Status, Router, User, currentUser, template) ->
 
 		class UserProfile extends Backbone.View
 
@@ -24,6 +25,7 @@ define([
 				'change #admin, #canCreateGroups': (event) -> @updateRights()
 				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
+				'click [data-action=generate-password]': (event) -> @generatePassword()
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'user', @user.get('username')
@@ -107,5 +109,33 @@ define([
 				if @$('#canCreateGroups').is(':checked')
 					@$('#canCreateRepositories').prop 'checked', true
 					@$('#canCreateRepositories').prop 'disabled', true
+
+			generatePassword: () ->
+				Layers.showMessageInLayer
+					title: 'Strong password generator'
+					body: 'The following password is generated client-side and was not send across the internet<br><br><div id="generated-password"><strong><center>' + Password.generate() + '</center></strong></div>'
+					buttons: [
+						{text: 'Generate again', callback: () => @generatePassword()}
+						{text: 'Use password', callback: () => @usePassword()}
+					]
+				@markPassword()
+
+			markPassword: () ->
+				elem = $('#generated-password')[0]
+				if document.body.createTextRange 
+					range = document.body.createTextRange()
+					range.moveToElementText elem
+					range.select()
+				else if window.getSelection 
+					selection = window.getSelection()
+					range = document.createRange()
+					range.selectNodeContents elem
+					selection.removeAllRanges()
+					selection.addRange range
+
+			usePassword: () ->
+				pass = $('#generated-password').text()
+				Layers.closeActive()
+				$('#password, #password2').val pass
 
 )

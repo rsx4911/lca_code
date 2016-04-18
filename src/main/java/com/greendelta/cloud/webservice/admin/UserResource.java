@@ -19,6 +19,7 @@ import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
+import com.greendelta.cloud.util.Password;
 import com.greendelta.cloud.webservice.Respond;
 import com.greendelta.cloud.webservice.mapper.UserMapper;
 
@@ -51,22 +52,19 @@ public class UserResource {
 					"Username must consist of at least 4 characters and can only contain characters, numbers and _");
 		if (groupService.exists(username)) // user or group exists
 			return Respond.invalid("username", "Name is already in use");
+		if (service.getForEmail(user.email) != null)
+			return Respond.invalid("email", "Email is already in use");
 		if (Names.isReserved(username))
 			return Respond.invalid("username", "This is a reserved word");
 		if (Strings.isNullOrEmpty(user.name))
 			return Respond.invalid("name", "Missing input: Name");
 		if (Strings.isNullOrEmpty(user.email))
 			return Respond.invalid("email", "Missing input: Email");
-		String password = generatePassword();
+		String password = Password.generate();
 		service.setPassword(user, password);
 		user = service.insert(user);
-		notificationService.userCreated(user).send();
+		notificationService.userCreated(user, password).send();
 		return Respond.created(new UserMapper().mapForSelf(user));
-	}
-
-	private String generatePassword() {
-		// TODO
-		return "12345sechs";
 	}
 
 	@DELETE

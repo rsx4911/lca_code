@@ -25,6 +25,7 @@ import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
+import com.greendelta.cloud.util.Password;
 import com.greendelta.cloud.webservice.mapper.UserMapper;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -75,6 +76,9 @@ public class UserResource {
 			return Respond.invalid("name", "Missing input: Name");
 		if (Strings.isNullOrEmpty(user.email))
 			return Respond.invalid("email", "Missing input: Email");
+		User userWithSameMail = service.getForEmail(user.email);
+		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
+			return Respond.invalid("email", "Email is already in use");
 		Beans.populateProperties(user, fromDb, "name", "email");
 		User currentUser = service.getCurrentUser();
 		if (currentUser.admin)
@@ -92,6 +96,10 @@ public class UserResource {
 		String password2 = map.get("password2");
 		if (Strings.isNullOrEmpty(password))
 			return Respond.invalid("password", "Missing input: Password");
+		if (!Password.isValid(password)) {
+			String passwordMessage = "Password must consist of at least 8 characters and must contain at least 1 digit, 2 different lowercase letters and 2 different uppercase letters";
+			return Respond.invalid("password", passwordMessage);
+		}
 		if (!password.equals(password2))
 			return Respond.invalid("password2", "Passwords are not equal");
 		User user = authorizedGetUser(username);
