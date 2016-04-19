@@ -48,6 +48,7 @@ define([
 					]
 					when 'admin' then return [
 						{href: "#{prefix}/administration/overview", imageSrc: '/images/overview.png', label: 'Overview', id:'overview'}
+						{href: "#{prefix}/administration/libraries", imageSrc: '/images/libraries.png', label: 'Library data sets', id:'libraries'}
 					]
 
 			initializeNavigation: () ->
@@ -72,7 +73,10 @@ define([
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', -> @showView 
 					view: 'admin/Overview'
-					title: 'Admin area'
+					title: 'Admin area - Overview'
+					nav:
+						type: 'admin'
+						active: 'overview'
 				@router.registerAdminRoute 'adminUserNew', -> @showView 
 					view: 'user/Profile'
 					title: 'New profile'
@@ -95,6 +99,12 @@ define([
 					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
+				@router.registerAdminRoute 'adminLibraries', -> @showView 
+					view: 'admin/Libraries'
+					title: 'Admin area - Library data sets'
+					nav:
+						type: 'admin'
+						active: 'libraries'
 
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @show404()

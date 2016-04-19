@@ -11,13 +11,13 @@ import com.greendelta.cloud.index.DatasetIndexEntry;
 
 public class BrowseService {
 
-	private final RepositoryService repoService;
 	private final HistoryService historyService;
+	private final RepositoryIndices repositoryIndices;
 
 	@Inject
-	public BrowseService(RepositoryService repoService, HistoryService historyService) {
-		this.repoService = repoService;
+	public BrowseService(HistoryService historyService, RepositoryIndices repositoryIndices) {
 		this.historyService = historyService;
+		this.repositoryIndices = repositoryIndices;
 	}
 
 	public List<ModelType> getRootContent(Repository repo) {
@@ -35,22 +35,22 @@ public class BrowseService {
 	}
 
 	public List<DatasetIndexEntry> getCategoryContent(Repository repo, ModelType type, String filter) {
-		DatasetIndex index = repoService.getIndex(repo);
+		DatasetIndex index = repositoryIndices.get(repo);
 		return index.getForModelType(type, filter, historyService::isLastCommit);
 	}
 
 	public List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryId, String filter) {
-		DatasetIndex index = repoService.getIndex(repo);
+		DatasetIndex index = repositoryIndices.get(repo);
 		return index.getForCategory(categoryId, filter, historyService::isLastCommit);
 	}
 
 	public DatasetIndexEntry getCategory(Repository repo, String refId) {
-		DatasetIndex index = repoService.getIndex(repo);
+		DatasetIndex index = repositoryIndices.get(repo);
 		return index.getForId(ModelType.CATEGORY, refId, historyService::isLastCommit);
 	}
 
 	public boolean categoryExists(Repository repo, String categoryId) {
-		DatasetIndex index = repoService.getIndex(repo);
+		DatasetIndex index = repositoryIndices.get(repo);
 		return index.categoryExists(categoryId, historyService::isLastCommit);
 	}
 

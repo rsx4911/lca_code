@@ -3,7 +3,7 @@ include ../mixins/paging.jade
 
 .header-box #{total} results for '#{filter}'
 	if filteredType
-		| and type '#{getTypeLabel(filteredType)}'
+		|  and type '#{getTypeLabel(filteredType)}'
 	.pull-right
 		+select('type', 'Type', null, null, true)
 			option All
@@ -17,10 +17,11 @@ include ../mixins/paging.jade
 					img.model-icon-small(src='/images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
 				else
 					img.model-icon-small(src='/images/model/small/#{dataset.type.toLowerCase()}.png')
-				span=dataset.fullPath
+				span.result-text=dataset.fullPath
 			.details
 				div Repository: 
 					a(href='/#{dataset.repositoryId}')=dataset.repositoryId
 				div Commit: 
-					a(href='/#{dataset.repositoryId}/commit/#{dataset.commitId}') #{dataset.commitMessage} (#{dataset.commitId})
+					a(href='/#{dataset.repositoryId}/commit/#{dataset.commitId}') 
+						span.result-text #{dataset.commitMessage} (#{dataset.commitId})
 	+paging(page, Math.ceil(total/pageSize))

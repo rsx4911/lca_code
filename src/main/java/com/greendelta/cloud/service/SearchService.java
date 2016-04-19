@@ -13,17 +13,19 @@ import com.greendelta.cloud.index.GlobalIndex;
 public class SearchService {
 
 	private final RepositoryService repoService;
+	private final RepositoryIndices repositoryIndices;
 
 	@Inject
-	public SearchService(RepositoryService repoService) {
+	public SearchService(RepositoryService repoService, RepositoryIndices repositoryIndices) {
 		this.repoService = repoService;
+		this.repositoryIndices = repositoryIndices;
 	}
 
 	public PagedResult<DatasetIndexEntry> search(int page, String filter, ModelType type) {
 		List<Repository> repos = repoService.getAllAccessible();
 		List<DatasetIndex> indices = new ArrayList<>();
 		for (Repository repo : repos)
-			indices.add(repoService.getIndex(repo));
+			indices.add(repositoryIndices.get(repo));
 		return GlobalIndex.search(indices, page, filter, type);
 	}
 }

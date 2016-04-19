@@ -5,9 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
@@ -20,18 +18,14 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.greendelta.cloud.index.DatasetIndex;
 import com.greendelta.cloud.model.Role;
 import com.greendelta.cloud.model.User;
 
-@Singleton
 public class RepositoryService {
 
 	private static final Logger log = LoggerFactory.getLogger(Repository.class);
 
-	private final Map<String, DatasetIndex> indices = new HashMap<>();
 	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;
@@ -52,15 +46,6 @@ public class RepositoryService {
 		if (!currentUser.admin && !accessService.canRead(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
-	}
-
-	public DatasetIndex getIndex(Repository repo) {
-		DatasetIndex index = indices.get(repo.toId());
-		if (index == null) {
-			index = new DatasetIndex(repo, repo.getIndexDir());
-			indices.put(repo.toId(), index);
-		}
-		return index;
 	}
 
 	public boolean exists(String group, String name) {

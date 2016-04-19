@@ -9,7 +9,6 @@ mixin static(id, label, value, inline)
 		div.form-value #{value}
 		block
 
-
 mixin input(id, label, type, inline, required)
 	- var hidden = type === 'hidden'
 	- var clazz = hidden ? 'hidden ' : ''

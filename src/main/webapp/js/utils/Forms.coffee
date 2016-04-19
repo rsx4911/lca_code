@@ -160,8 +160,7 @@ define([
 
 			_: (callback) ->
 				() =>
-					callback.apply @, arguments				
-
+					callback.apply @, arguments
 
 		)()
 

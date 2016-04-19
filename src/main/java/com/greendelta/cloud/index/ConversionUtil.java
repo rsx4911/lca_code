@@ -34,11 +34,11 @@ class ConversionUtil {
 		IndexUtil.addField(document, "type", dataset.type.name());
 		IndexUtil.addField(document, "categoryRefId", dataset.categoryRefId);
 		IndexUtil.addField(document, "categoryType", dataset.categoryType);
-		IndexUtil.addField(document, "commitMessage", commit.message);
 		IndexUtil.addField(document, "lastUpdate", commit.timestamp);
 		IndexUtil.addField(document, "repositoryId", repo.toId());
 		IndexUtil.addTextField(document, "fullPath", dataset.fullPath);
 		IndexUtil.addTextField(document, "name", dataset.name);
+		IndexUtil.addTextField(document, "commitMessage", commit.message);
 		return document;
 	}
 

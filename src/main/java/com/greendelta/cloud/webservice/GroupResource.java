@@ -26,9 +26,9 @@ import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.AccessService;
 import com.greendelta.cloud.service.GroupService;
 import com.greendelta.cloud.service.NotificationService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.util.Names;
 import com.sun.jersey.multipart.FormDataParam;
 

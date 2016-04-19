@@ -61,8 +61,4 @@ define([
 					@groupFilter.init()
 					@teamFilter.init()
 
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
-
 )

@@ -14,6 +14,7 @@ define
 	'administration/user/profile/:username': 'adminUserEdit'
 	'administration/team/new': 'adminTeamNew'
 	'administration/team/profile/:teamname': 'adminTeamEdit'
+	'administration/libraries': 'adminLibraries'
 	'group/new': 'groupNew'
 	'groups/:group': 'groupInfo'
 	'groups/:group/members': 'groupMembers'	

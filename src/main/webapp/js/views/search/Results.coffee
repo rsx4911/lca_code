@@ -61,5 +61,20 @@ define([
 						result.getTypeLabel = (type) -> return ModelTypes[type]
 						@$el.html template result
 						Renderer.render @, renderOptions
+						if result.filter
+							for textElement in $('.search-view .content-box .result-text')
+								@highlight result.filter, $(textElement)
+
+			highlight: (word, element) ->
+				word = word.toLowerCase()
+				text = element.html()
+				replaced = ''
+				next = text.toLowerCase().indexOf word
+				while next isnt -1
+					replaced += text.substring(0, next) + '<span class="highlight-result">' + text.substring(next, next + word.length) + '</span>'
+					text = text.substring(next + word.length)
+					next = text.toLowerCase().indexOf word, next
+				replaced += text
+				element.html replaced
 
 )

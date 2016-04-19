@@ -22,10 +22,12 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 
 class IndexUtil {
@@ -82,6 +84,13 @@ class IndexUtil {
 		return query;
 	}
 
+	public static Query andNotQuery(Query query1, Query query2) {
+		BooleanQuery query = new BooleanQuery();
+		query.add(query1, BooleanClause.Occur.MUST);
+		query.add(query2, BooleanClause.Occur.MUST_NOT);
+		return query;
+	}
+	
 	public static Query orQuery(Term term1, Term term2) {
 		Query query1 = new TermQuery(term1);
 		Query query2 = new TermQuery(term2);
@@ -93,6 +102,15 @@ class IndexUtil {
 		query.add(query1, BooleanClause.Occur.SHOULD);
 		query.add(query2, BooleanClause.Occur.SHOULD);
 		return query;
+	}
+
+	public static Query wildcardQuery(String field, String filter) {
+		Term term = null;
+		if (Strings.isNullOrEmpty(filter))
+			term = new Term(field, "*");
+		else
+			term = new Term(field, "*" + filter.toLowerCase() + "*");
+		return new WildcardQuery(term);
 	}
 
 	public static IndexWriter getWriter(Directory directory, boolean create) {

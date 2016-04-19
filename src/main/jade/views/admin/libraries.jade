@@ -1,0 +1,9 @@
+.header-box
+	.btn.btn-success.pull-right(data-action='add') Add library
+	.clear
+.content-box
+	each library in libraries
+		.entry #{library.name} (#{library.count} data set ids)
+			.btn.btn-default.btn-xs.pull-right(data-action='show' data-library=library.name) Show
+			.btn.btn-warning.btn-xs.pull-right(data-action='replace' data-library=library.name) Replace
+			.btn.btn-danger.btn-xs.pull-right(data-action='delete' data-library=library.name) Delete

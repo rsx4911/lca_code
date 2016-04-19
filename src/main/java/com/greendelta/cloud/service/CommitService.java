@@ -31,14 +31,14 @@ public class CommitService {
 			.getLogger(CommitService.class);
 
 	private final UserService userService;
-	private final RepositoryService repoService;
 	private final AccessService accessService;
+	private final RepositoryIndices repositoryIndices;
 	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public CommitService(UserService userService, RepositoryService repoService, AccessService accessService) {
+	public CommitService(UserService userService, RepositoryIndices repositoryIndices, AccessService accessService) {
 		this.userService = userService;
-		this.repoService = repoService;
+		this.repositoryIndices = repositoryIndices;
 		this.accessService = accessService;
 	}
 
@@ -95,7 +95,7 @@ public class CommitService {
 	private void writeDatasets(Repository repo, Commit commit,
 			CommitReader reader) throws IOException {
 		List<Dataset> datasets = reader.getDescriptors();
-		DatasetIndex index = repoService.getIndex(repo);
+		DatasetIndex index = repositoryIndices.get(repo);
 		for (Dataset dataset : datasets) {
 			ModelType type = dataset.type;
 			String refId = dataset.refId;

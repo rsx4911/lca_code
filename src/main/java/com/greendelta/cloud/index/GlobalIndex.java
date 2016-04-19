@@ -12,12 +12,10 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.WildcardQuery;
 import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
 import com.greendelta.cloud.service.PagedResult;
 
 public class GlobalIndex {
@@ -35,14 +33,14 @@ public class GlobalIndex {
 		}
 		try {
 			IndexSearcher searcher = new IndexSearcher(new MultiReader(readers));
-			Term term = null;
-			if (Strings.isNullOrEmpty(filter))
-				term = new Term("fullPath", "*");
-			else
-				term = new Term("fullPath", "*" + filter.toLowerCase() + "*");
-			Query query = new WildcardQuery(term);
+			Query query1 = IndexUtil.wildcardQuery("fullPath", filter);
+			Query query2 = IndexUtil.wildcardQuery("commitMessage", filter);
+			Query query = IndexUtil.orQuery(query1, query2);
 			if (type != null)
 				query = IndexUtil.andQuery(query, new TermQuery(new Term("type", type.name())));
+			query = IndexUtil.andNotQuery(query,
+					IndexUtil.orQuery(new Term("type", ModelType.NW_SET.name()), new Term("type",
+							ModelType.IMPACT_CATEGORY.name())));
 			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return new PagedResult<>(page, filter, 0, 0, Collections.emptyList());
