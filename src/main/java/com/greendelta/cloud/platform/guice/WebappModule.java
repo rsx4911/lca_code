@@ -12,8 +12,7 @@ import com.greendelta.cloud.platform.servlet.DefaultServlet;
 
 class WebappModule extends ServletModule {
 
-	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/",
-			"js/", "favicon.ico" };
+	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "favicon.ico" };
 	private static final Logger log = LoggerFactory
 			.getLogger(WebappModule.class);
 
@@ -34,8 +33,8 @@ class WebappModule extends ServletModule {
 			else
 				statics += "|" + sr;
 		String webservices = "ws/";
-		String webapp = "^/(?!" + statics + "|" + webservices
-				+ "|[^/]+[.]html).*";
+		String webapp = "^/(?!" + statics + "|" + webservices + "|[^/]+[.]html).*";
 		serveRegex(webapp).with(DefaultServlet.class);
 	}
+
 }

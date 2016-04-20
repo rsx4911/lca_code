@@ -24,10 +24,12 @@ public class DefaultServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		boolean isLoginUrl = request.getRequestURL().toString()
-				.endsWith("/login");
+		boolean isLoginUrl = request.getRequestURL().toString().endsWith("/login");
+		boolean isImprintUrl = request.getRequestURL().toString().endsWith("/imprint");
 		if (isLoginUrl)
 			forward("/login.html", request, response);
+		else if (isImprintUrl)
+			forward("/imprint.html", request, response);
 		else {
 			String redirectUrl = sessionProvider.get().redirectUrl;
 			if (!Strings.isNullOrEmpty(redirectUrl)) {

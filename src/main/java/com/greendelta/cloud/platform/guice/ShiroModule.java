@@ -38,6 +38,7 @@ class ShiroModule extends ShiroWebModule {
 		expose(Subject.class);
 		expose(CloudSession.class);
 		addFilterChain("/login", ANON);
+		addFilterChain("/imprint", ANON);
 		addFilterChain("/ws/public/**", ANON);
 		for (String sr : WebappModule.STATIC_RESOURCES)
 			if (sr.endsWith("/"))

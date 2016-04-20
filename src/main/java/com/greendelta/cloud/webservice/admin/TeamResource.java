@@ -119,15 +119,17 @@ public class TeamResource {
 			team.users.add(user);
 			if (fromDb.users.contains(user))
 				continue;
-			notifications.add(notificationService.memberAdded(team, user));
-			membershipService.addMemberships(user, team);
+			NotificationJob notification = notificationService.memberAdded(team, user);
+			if (membershipService.addMemberships(user, team))
+				notifications.add(notification);
 		}
 		for (User user : fromDb.users) {
 			if (team.users.contains(user))
 				continue;
 			user = userService.getForUsername(user.username);
-			notifications.add(notificationService.memberRemoved(team, user));
-			membershipService.removeMemberships(user, team);
+			NotificationJob notification = notificationService.memberRemoved(team, user);
+			if (membershipService.removeMemberships(user, team))
+				notifications.add(notification);
 		}
 		return notifications;
 	}

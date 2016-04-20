@@ -106,6 +106,7 @@ define([
 					result.canEdit = @group.get 'userCanEditMembers'
 				if (type is 'repository-members' and @repository)		
 					result.canEdit = @repository.get 'userCanEditMembers'
+					result.group = @repository.get 'group'
 				result.onlyOneOwner = ownerMembers is 1
 				result.type = type
 

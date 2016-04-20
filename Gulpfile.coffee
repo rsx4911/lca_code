@@ -34,7 +34,7 @@ gulp.task 'default', [], (callback) ->
 	runSequence 'clearTemplates', 'jadeIndex', 'jadeLayouts', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
-	runSequence 'default', 'addTimestampToIndex', 'addTimestampToLogin', 'copyJQueryForLogin', 'jsBuild', callback
+	runSequence 'default', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
 
 gulp.task 'clearTemplates', () ->
 	gulp.src('./src/main/webapp/js/templates', {read: false})
@@ -117,16 +117,27 @@ gulp.task 'addTimestampToIndex', () ->
 
 gulp.task 'addTimestampToLogin', () ->
 	# replace styles-login.css with timestamp filename
-	gulp.src('./src/main/webapp/index.html')
+	gulp.src('./src/main/webapp/login.html')
 		.pipe(insert.transform (contents) ->
-			content = contents.replace('href="/css/styles-login.css"', 'href="/css/styles' + timestamp + '.css"')
+			content = contents.replace('href="/css/styles.css"', 'href="/css/styles' + timestamp + '.css"')
+			content = content.replace('js/libs/jquery', 'js/jquery')
+			return content
+		)
+		.pipe gulp.dest './target/require-build'
+
+gulp.task 'addTimestampToImprint', () ->
+	# replace styles-login.css with timestamp filename
+	gulp.src('./src/main/webapp/imprint.html')
+		.pipe(insert.transform (contents) ->
+			content = contents.replace('href="/css/styles.css"', 'href="/css/styles' + timestamp + '.css"')
+			content = content.replace('js/libs/jquery', 'js/jquery')
 			return content
 		)
 		.pipe gulp.dest './target/require-build'
 
 gulp.task 'copyJQueryForLogin', () ->
 	gulp.src('./src/main/webapp/js/libs/jquery.js')
-		.pipe gulp.dest './target/require-build/js/libs'
+		.pipe gulp.dest './target/require-build/js'
 
 gulp.task 'jsBuild', () ->
 	rjs(

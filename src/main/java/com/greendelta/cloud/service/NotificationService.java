@@ -15,6 +15,7 @@ import com.greendelta.cloud.model.Membership;
 import com.greendelta.cloud.model.Notification;
 import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.platform.Imprint;
 import com.greendelta.cloud.platform.mail.EmailJob;
 import com.greendelta.cloud.platform.mail.EmailService;
 
@@ -23,14 +24,16 @@ public class NotificationService {
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final EmailService emailService;
+	private final Imprint imprint;
 	private final String baseUrl;
 
 	@Inject
 	public NotificationService(UserService userService, MembershipService membershipService, EmailService emailService,
-			@Named("base.url") String baseUrl) {
+			Imprint imprint, @Named("base.url") String baseUrl) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.emailService = emailService;
+		this.imprint = imprint;
 		this.baseUrl = baseUrl;
 	}
 
@@ -38,20 +41,20 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String url = baseUrl + "/groups/" + group;
 		String subject = "A new group was created";
-		String message = "A new group <a href=\"" + url + "\">" + group + "</a> was created by user "
+		String message = "A new group <a href=\"" + url + "\">" + group + "</a> was created by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
-		emails.addAll(createEmails(subject, message, getAdminEmails(Notification.GROUP_CREATED, true)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.GROUP_CREATED, true)));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob groupDeleted(String group) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A group was deleted";
-		String message = "The group " + group + " was deleted by user " + currentUser.name;
+		String message = "The group " + group + " was deleted by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
-		emails.addAll(createEmails(subject, message, getMemberEmails(Notification.GROUP_DELETED, group)));
-		emails.addAll(createEmails(subject, message, getAdminEmails(Notification.GROUP_DELETED, false)));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.GROUP_DELETED, group)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.GROUP_DELETED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -59,22 +62,23 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String url = baseUrl + "/" + repo.toId();
 		String subject = "A new repository was created";
-		String message = "A new repository <a href=\"" + url + "\">" + repo.toId() + "</a> was created by user "
+		String message = "A new repository <a href=\"" + url + "\">" + repo.toId()
+				+ "</a> was created by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
-		emails.addAll(createEmails(subject, message, getMemberEmails(Notification.REPOSITORY_CREATED, repo.group)));
-		emails.addAll(createEmails(subject, message, getAdminEmails(Notification.REPOSITORY_CREATED, false)));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_CREATED, repo.group)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_CREATED, false)));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob repositoryDeleted(Repository repo) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A repository was deleted";
-		String message = "The repository " + repo.toId() + " was deleted by user " + currentUser.name;
+		String message = "The repository " + repo.toId() + " was deleted by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
-		emails.addAll(createEmails(subject, message, getMemberEmails(Notification.REPOSITORY_DELETED, repo.toId())));
-		emails.addAll(createEmails(subject, message, getMemberEmails(Notification.REPOSITORY_DELETED, repo.group)));
-		emails.addAll(createEmails(subject, message, getAdminEmails(Notification.REPOSITORY_DELETED, false)));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_DELETED, repo.toId())));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_DELETED, repo.group)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_DELETED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -83,12 +87,13 @@ public class NotificationService {
 		String repoUrl = baseUrl + "/" + repo.toId();
 		String commitUrl = baseUrl + "/" + repo.toId() + "/commit/" + commit.id;
 		String subject = "Data was committed";
-		String message = "Data was committed to <a href=\"" + repoUrl + "\">" + repo.toId() + "</a> by user "
+		String message = "Data was committed to <a href=\"" + repoUrl + "\">" + repo.toId()
+				+ "</a> by the LCA Cloud user  "
 				+ currentUser.name + " with message <a href=\"" + commitUrl + "\">" + commit.message + "</a>";
 		Set<EmailJob> emails = new HashSet<>();
-		emails.addAll(createEmails(subject, message, getMemberEmails(Notification.DATA_COMMITTED, repo.toId())));
-		emails.addAll(createEmails(subject, message, getMemberEmails(Notification.DATA_COMMITTED, repo.group)));
-		emails.addAll(createEmails(subject, message, getAdminEmails(Notification.DATA_COMMITTED, false)));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.toId())));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.group)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.DATA_COMMITTED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -97,17 +102,17 @@ public class NotificationService {
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "You were added to a group";
 		String othersSubject = "A member was added to a group";
-		String personalMessage = "You were added to group " + group + " by user " + currentUser.name;
+		String personalMessage = "You were added to group " + group + " by the LCA Cloud user  " + currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to group <a href=\"" + url + "\">" + group
-				+ "</a> by user "
+				+ "</a> by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_GROUP_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.email));
+			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.ADDED_GROUP_MEMBER, group)));
+				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.ADDED_GROUP_MEMBER, false)));
+				getAdminUsers(Notification.ADDED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -117,17 +122,17 @@ public class NotificationService {
 		String personalSubject = "A team you are in was added to a group";
 		String othersSubject = "A team was added to a group";
 		String personalMessage = "A team you are in was added to group <a href=\"" + url + "\">" + group
-				+ "</a> by user " + currentUser.name;
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		String othersMessage = "The team " + member.name + " was added to group <a href=\"" + url + "\">" + group
-				+ "</a> by user "
+				+ "</a> by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
-				getTeamEmails(Notification.ADDED_TO_GROUP_MEMBERS, member)));
+				getTeamUsers(Notification.ADDED_TO_GROUP_MEMBERS, member)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.ADDED_GROUP_MEMBER, group)));
+				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.ADDED_GROUP_MEMBER, false)));
+				getAdminUsers(Notification.ADDED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -136,16 +141,16 @@ public class NotificationService {
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "You were removed from a group";
 		String othersSubject = "A member was removed from a group";
-		String personalMessage = "You were removed from group " + group + " by user " + currentUser.name;
+		String personalMessage = "You were removed from group " + group + " by the LCA Cloud user  " + currentUser.name;
 		String othersMessage = "The user " + member.name + " was removed from group <a href=\"" + url + "\">" + group
-				+ "</a> by user " + currentUser.name;
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_GROUP_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.email));
+			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.REMOVED_GROUP_MEMBER, group)));
+				getMemberUsers(Notification.REMOVED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.REMOVED_GROUP_MEMBER, false)));
+				getAdminUsers(Notification.REMOVED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -154,16 +159,17 @@ public class NotificationService {
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "A team you are in was removed from a group";
 		String othersSubject = "A team was removed from a group";
-		String personalMessage = "A team you are in was removed from group " + group + " by user " + currentUser.name;
+		String personalMessage = "A team you are in was removed from group " + group + " by the LCA Cloud user  "
+				+ currentUser.name;
 		String othersMessage = "The team " + member.name + " was removed from group <a href=\"" + url + "\">" + group
-				+ "</a> by user " + currentUser.name;
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
-				getTeamEmails(Notification.REMOVED_FROM_GROUP_MEMBERS, member)));
+				getTeamUsers(Notification.REMOVED_FROM_GROUP_MEMBERS, member)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.REMOVED_GROUP_MEMBER, group)));
+				getMemberUsers(Notification.REMOVED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.REMOVED_GROUP_MEMBER, false)));
+				getAdminUsers(Notification.REMOVED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -173,17 +179,18 @@ public class NotificationService {
 		String url = baseUrl + "/" + path;
 		String personalSubject = "You were added to a repository";
 		String othersSubject = "A member was added to a repository";
-		String personalMessage = "You were added to repository <a href=\"" + url + "\">" + path + "</a> by user "
+		String personalMessage = "You were added to repository <a href=\"" + url + "\">" + path
+				+ "</a> by the LCA Cloud user  "
 				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by user " + currentUser.name;
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_REPOSITORY_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.email));
+			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.ADDED_REPOSITORY_MEMBER, path)));
+				getMemberUsers(Notification.ADDED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.ADDED_REPOSITORY_MEMBER, false)));
+				getAdminUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -194,16 +201,16 @@ public class NotificationService {
 		String personalSubject = "A team you are in was added to a repository";
 		String othersSubject = "A team was added to a repository";
 		String personalMessage = "A team you are in was added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by user " + currentUser.name;
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		String othersMessage = "The team " + member.name + " was added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by user " + currentUser.name;
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
-				getTeamEmails(Notification.ADDED_TO_REPOSITORY_MEMBERS, member)));
+				getTeamUsers(Notification.ADDED_TO_REPOSITORY_MEMBERS, member)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.ADDED_REPOSITORY_MEMBER, path)));
+				getMemberUsers(Notification.ADDED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.ADDED_REPOSITORY_MEMBER, false)));
+				getAdminUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -213,17 +220,18 @@ public class NotificationService {
 		String url = baseUrl + "/" + path;
 		String personalSubject = "You were removed from a repository";
 		String othersSubject = "A member was removed from a repository";
-		String personalMessage = "You were removed from repository " + path + " by user " + currentUser.name;
+		String personalMessage = "You were removed from repository " + path + " by the LCA Cloud user  "
+				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was removed from repository <a href=\"" + url + "\">"
-				+ path + "</a> by user "
+				+ path + "</a> by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_REPOSITORY_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.email));
+			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.REMOVED_REPOSITORY_MEMBER, path)));
+				getMemberUsers(Notification.REMOVED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.REMOVED_REPOSITORY_MEMBER, false)));
+				getAdminUsers(Notification.REMOVED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -233,17 +241,17 @@ public class NotificationService {
 		String url = baseUrl + "/" + path;
 		String personalSubject = "A team you are in was removed from a repository";
 		String othersSubject = "A team was removed from a repository";
-		String personalMessage = "A team you are in was removed from repository " + path + " by user "
+		String personalMessage = "A team you are in was removed from repository " + path + " by the LCA Cloud user  "
 				+ currentUser.name;
 		String othersMessage = "The team " + member.name + " was removed from repository <a href=\"" + url + "\">"
-				+ path + "</a> by user " + currentUser.name;
+				+ path + "</a> by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
-				getTeamEmails(Notification.REMOVED_FROM_REPOSITORY_MEMBERS, member)));
+				getTeamUsers(Notification.REMOVED_FROM_REPOSITORY_MEMBERS, member)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getMemberEmails(Notification.REMOVED_REPOSITORY_MEMBER, path)));
+				getMemberUsers(Notification.REMOVED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.REMOVED_REPOSITORY_MEMBER, false)));
+				getAdminUsers(Notification.REMOVED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -251,14 +259,15 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String personalSubject = "You were added to a team";
 		String othersSubject = "A member was added to a team";
-		String personalMessage = "You were added to team " + team.name + " by user " + currentUser.name;
-		String othersMessage = "The user " + member.name + " was added to team " + team.name + " by user "
+		String personalMessage = "You were added to team " + team.name + " by the LCA Cloud user  " + currentUser.name;
+		String othersMessage = "The user " + member.name + " was added to team " + team.name
+				+ " by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.email));
-		emails.addAll(createEmails(othersSubject, othersMessage, getTeamEmails(Notification.ADDED_TEAM_MEMBER, team)));
-		emails.addAll(createEmails(othersSubject, othersMessage, getAdminEmails(Notification.ADDED_TEAM_MEMBER, false)));
+			emails.add(createEmail(personalSubject, personalMessage, member));
+		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.ADDED_TEAM_MEMBER, team)));
+		emails.addAll(createEmails(othersSubject, othersMessage, getAdminUsers(Notification.ADDED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -266,99 +275,117 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String personalSubject = "You were removed from a team";
 		String othersSubject = "A member was removed from a team";
-		String personalMessage = "You were removed from team " + team.name + " by user " + currentUser.name;
-		String othersMessage = "The user " + member.name + " was removed from team " + team.name + " by user "
+		String personalMessage = "You were removed from team " + team.name + " by the LCA Cloud user  "
+				+ currentUser.name;
+		String othersMessage = "The user " + member.name + " was removed from team " + team.name
+				+ " by the LCA Cloud user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_TEAM_MEMBERS))
-			emails.add(createEmail(personalSubject, personalMessage, member.email));
-		emails.addAll(createEmails(othersSubject, othersMessage, getTeamEmails(Notification.REMOVED_TEAM_MEMBER, team)));
+			emails.add(createEmail(personalSubject, personalMessage, member));
+		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.REMOVED_TEAM_MEMBER, team)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminEmails(Notification.REMOVED_TEAM_MEMBER, false)));
+				getAdminUsers(Notification.REMOVED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob userCreated(User user, String password) {
 		User currentUser = userService.getCurrentUser();
-		String adminMessage = "The user " + user.name + " was created by user " + currentUser.name;
-		String userMessage = "A new account with the username " + user.username + " was created for you by user "
+		String adminMessage = "The user " + user.name + " was created by the LCA Cloud user  " + currentUser.name;
+		String userMessage = "A new account with username " + user.username
+				+ " was created for you by the LCA Cloud user  "
 				+ currentUser.name
-				+ ". If you wish to login please navigate to " + baseUrl
+				+ ". To login please navigate to " + baseUrl
 				+ " and enter your credentials. The password for this was generated by the system: " + password;
 		Set<EmailJob> emails = createEmails("A user was created", adminMessage,
-				getAdminEmails(Notification.USER_CREATED, true));
-		emails.add(createEmail("A user was created for you", userMessage, user.email));
+				getAdminUsers(Notification.USER_CREATED, true));
+		emails.add(createEmail("A user was created for you", userMessage, user));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob userDeleted(User user) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A user was deleted";
-		String message = "The user " + user.name + " was deleted by user " + currentUser.name;
-		Set<EmailJob> emails = createEmails(subject, message, getAdminEmails(Notification.USER_DELETED, true));
+		String message = "The user " + user.name + " was deleted by the LCA Cloud user  " + currentUser.name;
+		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.USER_DELETED, true));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob teamCreated(Team team) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A team was created";
-		String message = "The team " + team.name + " was created by user " + currentUser.name;
-		Set<EmailJob> emails = createEmails(subject, message, getAdminEmails(Notification.TEAM_CREATED, true));
+		String message = "The team " + team.name + " was created by the LCA Cloud user  " + currentUser.name;
+		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.TEAM_CREATED, true));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob teamDeleted(Team team) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A team was deleted";
-		String message = "The team " + team.name + " was deleted by user " + currentUser.name;
-		Set<EmailJob> emails = createEmails(subject, message, getAdminEmails(Notification.TEAM_DELETED, true));
+		String message = "The team " + team.name + " was deleted by the LCA Cloud user  " + currentUser.name;
+		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.TEAM_DELETED, true));
 		return new NotificationJob(emails);
 	}
 
-	private EmailJob createEmail(String subject, String message, String recipient) {
+	private EmailJob createEmail(String subject, String message, User recipient) {
 		EmailJob emailJob = new EmailJob();
 		emailJob.setSubject(subject);
-		emailJob.setHtmlContent(message);
-		emailJob.setRecipient(recipient);
+		emailJob.setHtmlContent(toEmailContent(message, recipient));
+		emailJob.setRecipient(recipient.email);
 		return emailJob;
 	}
 
-	private Set<EmailJob> createEmails(String subject, String message, Set<String> recipients) {
+	private String toEmailContent(String message, User user) {
+		String content = "Dear " + user.name + ",<br><br>";
+		content += message + "<br><br>";
+		content += "<div style=\"font-size:80%;\">This message was automatically sent to you by the LCA Cloud system. If you do not wish to receive this type of notification again, you can configure the notification settings in your <a href=\""
+				+ baseUrl + "/user/notifications\">profile</a>" + "<br>";
+		content += "<hr>";
+		content += imprint.company + ", " + imprint.street + ", " + imprint.zipCode + " " + imprint.city + ", "
+				+ imprint.country + "<br>";
+		content += "Companies' Register: " + imprint.registration + "<br>";
+		content += "Managing Director: " + imprint.ceo + "</div>";
+		return content;
+	}
+
+	private Set<EmailJob> createEmails(String subject, String message, Set<User> recipients) {
 		Set<EmailJob> emails = new HashSet<>();
-		for (String recipient : recipients)
+		for (User recipient : recipients)
 			emails.add(createEmail(subject, message, recipient));
 		return emails;
 	}
 
-	private Set<String> getMemberEmails(Notification notification, String path) {
-		Set<String> emails = new HashSet<>();
+	private Set<User> getMemberUsers(Notification notification, String path) {
+		Set<User> users = new HashSet<>();
 		User currentUser = userService.getCurrentUser();
 		for (Membership member : membershipService.getMemberships(path)) {
+			if (member.user == null)
+				continue;
 			if (!member.user.isEnabled(notification))
 				continue;
 			if (currentUser.equals(member.user))
 				continue;
-			emails.add(member.user.email);
+			users.add(member.user);
 		}
-		return emails;
+		return users;
 	}
 
-	private Set<String> getTeamEmails(Notification notification, Team team) {
-		Set<String> emails = new HashSet<>();
+	private Set<User> getTeamUsers(Notification notification, Team team) {
+		Set<User> users = new HashSet<>();
 		User currentUser = userService.getCurrentUser();
 		for (User user : team.users) {
 			if (!user.isEnabled(notification))
 				continue;
 			if (currentUser.equals(user))
 				continue;
-			emails.add(user.email);
+			users.add(user);
 		}
-		return emails;
+		return users;
 	}
 
-	private Set<String> getAdminEmails(Notification notification, boolean adminMessage) {
+	private Set<User> getAdminUsers(Notification notification, boolean adminMessage) {
 		List<User> admins = userService.getAdmins();
-		Set<String> emails = new HashSet<>();
+		Set<User> users = new HashSet<>();
 		User currentUser = userService.getCurrentUser();
 		for (User admin : admins) {
 			if (!admin.isEnabled(notification))
@@ -367,9 +394,9 @@ public class NotificationService {
 				continue;
 			if (currentUser.equals(admin))
 				continue;
-			emails.add(admin.email);
+			users.add(admin);
 		}
-		return emails;
+		return users;
 	}
 
 	public class NotificationJob {

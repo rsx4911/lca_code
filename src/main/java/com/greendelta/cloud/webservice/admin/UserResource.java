@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.cloud.model.Notification;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.GroupService;
 import com.greendelta.cloud.service.NotificationService;
@@ -62,6 +63,8 @@ public class UserResource {
 			return Respond.invalid("email", "Missing input: Email");
 		String password = Password.generate();
 		service.setPassword(user, password);
+		for (Notification notification : Notification.values())
+			user.enable(notification);
 		user = service.insert(user);
 		notificationService.userCreated(user, password).send();
 		return Respond.created(new UserMapper().mapForSelf(user));

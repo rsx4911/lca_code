@@ -9,7 +9,7 @@ each membership in data
 		- var roleDescription = type === 'group-members' ? membership.role.descriptionForGroup : membership.role.descriptionForRepository;
 		+user-info(id, name, memberType)
 			span.role.pull-right(title=roleDescription)=membership.role.name
-				if canEdit && (membership.role.id !== 'OWNER' || !onlyOneOwner)
+				if canEdit && (membership.role.id !== 'OWNER' || !onlyOneOwner) && (!membership.user || group !== membership.user.username)
 					|  
 					button.btn.btn-xs.btn-danger(data-action='remove-member' data-id=id data-type=lcType)
 						span.glyphicon.glyphicon-minus

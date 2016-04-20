@@ -1,16 +1,19 @@
 package com.greendelta.cloud.platform.guice;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
+import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
@@ -28,8 +31,7 @@ import com.greendelta.cloud.platform.guice.util.StartupListener;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(GuiceConfig.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceConfig.class);
 	private volatile Set<ShutdownListener> shutdownListeners;
 	private ServletContext servletContext;
 
@@ -41,9 +43,11 @@ public class GuiceConfig extends GuiceServletContextListener {
 
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
 		if (shutdownListeners != null)
 			for (ShutdownListener listener : shutdownListeners)
 				listener.shutdown();
+		unlockDatabase(databasePath);
 		super.contextDestroyed(servletContextEvent);
 	}
 
@@ -69,18 +73,21 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String env = System.getProperty("app.env");
 		if (!Strings.isNullOrEmpty(env))
 			PropertiesModule.setEnvironment(env);
-		String resourcePackages = PropertiesModule.getProperties().getProperty(
-				"jersey.resource.packages");
-		String persistenceUnit = PropertiesModule.getProperties().getProperty(
-				"persistence.unit");
-		String databasePath = PropertiesModule.getProperties().getProperty(
-				"database.path");
+		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
+		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
+		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
+		String repositoriesPath = PropertiesModule.getProperties().getProperty("repository.path");
+		String librariesPath = PropertiesModule.getProperties().getProperty("library.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
-		String url = "jdbc:derby:" + databasePath;
-		if (!new File(databasePath).exists())
-			copyDbTemplate(databasePath);
-		properties.setProperty("javax.persistence.jdbc.url", url);
+		checkAndCreateDirectories(repositoriesPath);
+		checkAndCreateDirectories(librariesPath);
+		if (!new File(databasePath).exists()) {
+			checkAndCreateDirectories(new File(databasePath).getParent());
+			createDatabase(databasePath);
+			new File(repositoriesPath, "admin").mkdir();
+		}
+		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroModule(servletContext), jpaModule,
@@ -88,29 +95,43 @@ public class GuiceConfig extends GuiceServletContextListener {
 				new PropertiesModule(), new MailModule() };
 	}
 
-	private void copyDbTemplate(String databasePath) {
-		try (ZipInputStream zis = new ZipInputStream(
-				GuiceConfig.class.getResourceAsStream("database.zip"))) {
-			ZipEntry next = null;
-			byte[] buffer = new byte[1024];
-			while ((next = zis.getNextEntry()) != null) {
-				String fileName = next.getName();
-				String path = databasePath + File.separator + fileName;
-				File newFile = new File(path);
-				if (next.isDirectory()) {
-					newFile.mkdirs();
-					continue;
-				}
-				new File(newFile.getParent()).mkdirs();
-				FileOutputStream fos = new FileOutputStream(newFile);
-				int len;
-				while ((len = zis.read(buffer)) > 0)
-					fos.write(buffer, 0, len);
-				fos.close();
+	private void checkAndCreateDirectories(String path) {
+		if (!new File(path).exists())
+			new File(path).mkdirs();
+	}
+
+	private void createDatabase(String databasePath) {
+		log.info("Creating new database");
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(
+				"database.sql")))) {
+			DriverManager.registerDriver(new EmbeddedDriver());
+			DriverManager.getConnection("jdbc:derby:" + databasePath + ";create=true").close();
+			String line = null;
+			while ((line = reader.readLine()) != null)
+				update("jdbc:derby:" + databasePath, line);
+			unlockDatabase(databasePath);
+		} catch (Exception e) {
+			log.error("Error creating inital database", e);
+		}
+	}
+
+	private void update(String url, String query) throws SQLException {
+		log.info(query);
+		try (Connection con = DriverManager.getConnection(url)) {
+			try (Statement s = con.createStatement()) {
+				s.executeUpdate(query);
 			}
-			zis.close();
-		} catch (IOException e) {
-			log.error("Error extracting db template", e);
+		}
+	}
+
+	private void unlockDatabase(String databasePath) {
+		try {
+			DriverManager.getConnection("jdbc:derby:" + databasePath + ";shutdown=true");
+		} catch (SQLException e) {
+			// Derby 10.9.1.0 shutdown raises a SQLException with code "XJ015"
+			if (!"XJ015".equals(e.getSQLState())) {
+				log.error("Error shutting down database", e);
+			}
 		}
 	}
 

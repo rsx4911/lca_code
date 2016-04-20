@@ -113,9 +113,9 @@ define([
 			generatePassword: () ->
 				Layers.showMessageInLayer
 					title: 'Strong password generator'
-					body: 'The following password is generated client-side and was not send across the internet<br><br><div id="generated-password"><strong><center>' + Password.generate() + '</center></strong></div>'
+					body: 'The following password is generated client-side and was not sent across the internet<br><br><div id="generated-password"><strong><center>' + Password.generate() + '</center></strong></div>'
 					buttons: [
-						{text: 'Generate again', callback: () => @generatePassword()}
+						{text: 'Regenerate', callback: () => @generatePassword()}
 						{text: 'Use password', callback: () => @usePassword()}
 					]
 				@markPassword()

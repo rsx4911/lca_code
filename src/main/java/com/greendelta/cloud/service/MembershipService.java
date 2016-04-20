@@ -39,6 +39,7 @@ public class MembershipService {
 		boolean added = false;
 		for (User user : team.users)
 			added = addMembership(user, team, groupOrRepo, role) || added;
+		added = addMembership(null, team, groupOrRepo, role) || added;
 		return added;
 	}
 
@@ -196,7 +197,8 @@ public class MembershipService {
 
 	private Membership getTeamMembership(User user, Team team, String groupOrRepo) {
 		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("user", user);
+		if (user != null)
+			attributes.put("user", user);
 		attributes.put("memberOf", groupOrRepo);
 		attributes.put("team", team);
 		return dao.getFirstForAttributes(attributes);
@@ -211,7 +213,7 @@ public class MembershipService {
 			for (Membership m : new ArrayList<>(result))
 				if (m.team != null && !m.team.name.toLowerCase().contains(filter))
 					result.remove(m);
-				else if (!m.user.name.toLowerCase().contains(filter))
+				else if (m.user != null && !m.user.name.toLowerCase().contains(filter))
 					result.remove(m);
 		return new PagedResult<Membership>(filter, result.size(), result.size(), result);
 	}

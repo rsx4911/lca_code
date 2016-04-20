@@ -12,17 +12,29 @@ html(lang='en')
 	body.login
 		header
 			.logo-container
-				img.logo(src='/images/logo.png')
+				a(href='/')
+					img.logo(src='/images/logo.png')
 		#main-login
+			#login-description
+				h3 Welcome to LCA Cloud!
+					div: small Manage LCA repositories with user specific access management that keeps your LCA data secure and enables collaboration. 
 			#login-container
+				h3 Sign in
 				form#login
 					#login-general-message.alert.alert-danger(role='alert'): span.message
 					+input('username', 'Username')
 					+input('password', 'Password', 'password')
 					button.btn.btn-primary.pull-right(type='submit') Login
 					.clear
+		#footer &copy; 
+			a(href='http://www.greendelta.com' target='_blank') GreenDelta GmbH
+			|  
+			span#year
+			|  | 
+			a(href='/imprint') Imprint
 		script(src='/js/libs/jquery.js')
 		script.
+			$('#year').html(new Date().getFullYear());
 			$('#login').on('submit', function(event) {
 				var data = {username: $('#username').val(), password: $('#password').val()};
 				$.ajax({type: 'POST', url: '/ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 

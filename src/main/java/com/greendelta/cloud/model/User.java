@@ -62,6 +62,11 @@ public class User extends AbstractEntity {
 		return ((User) obj).username.equals(username);
 	}
 
+	@Override
+	public int hashCode() {
+		return username.hashCode();
+	}
+	
 	public void enable(Notification notification) {
 		if (isEnabled(notification))
 			return;
