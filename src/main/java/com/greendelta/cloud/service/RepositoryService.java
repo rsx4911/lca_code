@@ -116,6 +116,8 @@ public class RepositoryService {
 		boolean isAdmin = adminArea && currentUser.admin;
 		for (File group : root.listFiles())
 			for (File name : group.listFiles()) {
+				if (!name.isDirectory())
+					continue;
 				Repository repo = new Repository(this.root, group.getName(),
 						name.getName());
 				if (!isAdmin && !accessService.canRead(currentUser, repo.toId()))
