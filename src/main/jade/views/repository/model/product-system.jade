@@ -18,7 +18,7 @@ include ./mixins.jade
 							+ref-row('Reference process', dataset.referenceProcess)
 							if dataset.referenceExchange
 								+ref-row('Reference product', dataset.referenceExchange.flow, 'PRODUCT_FLOW')
-							+ref-row('Reference process', dataset.targetFlowProperty)
+							+ref-row('Target flow property', dataset.targetFlowProperty)
 							if dataset.targetUnit
 								+field-row('Target unit', dataset.targetUnit.name)
 							+field-row('Target amount', dataset.targetAmount, true)
@@ -26,4 +26,9 @@ include ./mixins.jade
 					#parameters.tab-pane(role='tabpanel')
 						+parameter-redef-table(dataset.parameterRedefs)
 	+meta
+		hr
+		strong No. of processes
+		div=dataset.processes?dataset.processes.length:0
+		strong No. of links
+		div=dataset.processLinks?dataset.processLinks.length:0
 	.clear
