@@ -5,10 +5,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openlca.cloud.error.UnauthorizedAccessException;
+import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.Directories;
+import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,14 +34,17 @@ public class RepositoryService {
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
+	private final DataAccessor dataAccessor;
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
-			AccessService accessService, MembershipService membershipService, UserService userService) {
+			AccessService accessService, MembershipService membershipService, UserService userService,
+			DataAccessor dataAccessor) {
 		this.root = repositoryPath;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
+		this.dataAccessor = dataAccessor;
 	}
 
 	public Repository get(String group, String name) {
@@ -61,6 +68,102 @@ public class RepositoryService {
 		Repository repo = get(group, name);
 		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER);
 		return repo;
+	}
+
+	public boolean cloneContents(Repository from, Repository to, List<Commit> commits) {
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canWrite(currentUser, to.group))
+			throw new UnauthorizedAccessException(to.group, "WRITE");
+		try {
+			for (ModelType type : ModelType.values()) {
+				cloneTypeContents(from, to, commits, type);
+				cloneTypeBinContents(from, to, commits, type);
+			}
+			cloneHistoryContents(from, to, commits);
+			cloneDirectFiles(from, to);
+			return true;
+		} catch (IOException e) {
+			log.error("Error cloning repository contents", e);
+			return false;
+		}
+	}
+
+	private void cloneTypeContents(Repository from, Repository to, List<Commit> commits, ModelType type)
+			throws IOException {
+		File modelDir = from.getModelDir(type, false);
+		if (!modelDir.exists())
+			return;
+		Set<String> commitIds = toIds(commits);
+		for (File datasetDir : modelDir.listFiles()) {
+			for (File file : datasetDir.listFiles()) {
+				String commitId = file.getName().substring(0, file.getName().indexOf(".json"));
+				if (!commitIds.contains(commitId))
+					continue;
+				File copy = to.getDatasetFile(type, datasetDir.getName(), commitId, true);
+				Files.copy(file, copy);
+			}
+		}
+	}
+
+	private void cloneTypeBinContents(Repository from, Repository to, List<Commit> commits, ModelType type)
+			throws IOException {
+		File binModelDir = from.getBinDir(type, false);
+		if (!binModelDir.exists())
+			return;
+		Set<String> commitIds = toIds(commits);
+		for (File datasetDir : binModelDir.listFiles()) {
+			for (File dir : datasetDir.listFiles()) {
+				String commitId = dir.getName();
+				if (!commitIds.contains(commitId))
+					continue;
+				File[] files = dir.listFiles();
+				if (files == null || files.length == 0)
+					continue;
+				File copyDir = to.getBinDir(type, datasetDir.getName(), commitId, true);
+				for (File file : files) {
+					File copy = new File(copyDir, file.getName());
+					copy.createNewFile();
+					Files.copy(file, copy);
+				}
+			}
+		}
+	}
+
+	private void cloneHistoryContents(Repository from, Repository to, List<Commit> commits) throws IOException {
+		File historyDir = from.getHistoryDir(false);
+		if (!historyDir.exists())
+			return;
+		File historyFile = from.getHistoryFile(false);
+		Set<String> commitIds = toIds(commits);
+		for (File file : historyDir.listFiles()) {
+			if (file.equals(historyFile))
+				continue;
+			String commitId = file.getName().substring(0, file.getName().indexOf(".txt"));
+			if (!commitIds.contains(commitId))
+				continue;
+			File copy = to.getCommitFile(commitId, true);
+			Files.copy(file, copy);
+		}
+		File copy = to.getHistoryFile(true);
+		for (Commit commit : commits)
+			dataAccessor.appendToHistory(copy, commit);
+	}
+
+	private void cloneDirectFiles(Repository from, Repository to) throws IOException {
+		for (File file : from.repoDir.listFiles()) {
+			if (file.isDirectory())
+				continue;
+			File copy = new File(to.repoDir, file.getName());
+			copy.createNewFile();
+			Files.copy(file, copy);
+		}
+	}
+
+	private Set<String> toIds(List<Commit> commits) {
+		Set<String> commitIds = new HashSet<>();
+		for (Commit commit : commits)
+			commitIds.add(commit.id);
+		return commitIds;
 	}
 
 	private void putJsonContext(String group, String name) {

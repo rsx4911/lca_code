@@ -17,7 +17,7 @@ import com.google.gson.JsonElement;
 public class Repository {
 
 	private final static Logger log = LoggerFactory.getLogger(Repository.class);
-	private final File repo;
+	final File repoDir;
 	public final String group;
 	public final String name;
 
@@ -25,8 +25,8 @@ public class Repository {
 		this.group = group;
 		this.name = name;
 		String path = root + File.separator + toId();
-		repo = new File(path);
-		if (repo.exists()) {
+		repoDir = new File(path);
+		if (repoDir.exists()) {
 			checkVersion();
 			return;
 		}
@@ -43,7 +43,7 @@ public class Repository {
 
 	private void checkVersion() {
 		try {
-			File file = new File(repo, "context.json");
+			File file = new File(repoDir, "context.json");
 			if (!file.exists())
 				throw new UnsupportedSchemaException("null");
 			byte[] data = Files.toByteArray(file);
@@ -82,11 +82,11 @@ public class Repository {
 	}
 
 	File getIndexDir() {
-		return new File(repo, "ds_index");
+		return new File(repoDir, "ds_index");
 	}
 
 	File getAvatarFile() {
-		return new File(repo, "avatar");
+		return new File(repoDir, "avatar");
 	}
 
 	private File getDatasetDir(ModelType type, String refId, boolean create) {
@@ -95,20 +95,25 @@ public class Repository {
 	}
 
 	File getModelDir(ModelType type, boolean create) {
-		return getDir(repo, type.name().toLowerCase(), create);
+		return getDir(repoDir, type.name().toLowerCase(), create);
 	}
 
 	private File getBinDir(ModelType type, String refId, boolean create) {
+		File typeDir = getBinDir(type, create);
+		return getDir(typeDir, refId, create);
+	}
+
+	File getBinDir(ModelType type, boolean create) {
 		File binDir = getBinDir(create);
 		return getDir(binDir, type.name().toLowerCase(), create);
 	}
 
 	private File getBinDir(boolean create) {
-		return getDir(repo, "bin", create);
+		return getDir(repoDir, "bin", create);
 	}
 
-	private File getHistoryDir(boolean create) {
-		return getDir(repo, "history", true);
+	File getHistoryDir(boolean create) {
+		return getDir(repoDir, "history", true);
 	}
 
 	private File getFile(File dir, String name, boolean create) {

@@ -103,6 +103,8 @@ public class BrowseResource {
 	@SuppressWarnings("unchecked")
 	private void putFlowCategories(Repository repo, ObjectMap map) {
 		List<Map<String, Object>> exchanges = (List<Map<String, Object>>) map.get("exchanges");
+		if (exchanges == null)
+			return;
 		for (Map<String, Object> exchange : exchanges) {
 			if (!exchange.containsKey("flow"))
 				continue;
@@ -120,6 +122,8 @@ public class BrowseResource {
 	@SuppressWarnings("unchecked")
 	private void putSocialIndicators(Repository repo, ObjectMap map) {
 		List<Map<String, Object>> aspects = (List<Map<String, Object>>) map.get("socialAspects");
+		if (aspects == null)
+			return;
 		for (Map<String, Object> aspect : aspects) {
 			if (!aspect.containsKey("socialIndicator"))
 				continue;

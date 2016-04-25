@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 import com.greendelta.cloud.index.DatasetIndex;
 
 @Singleton
-class RepositoryIndices {
+public class RepositoryIndices {
 
 	private final Map<String, DatasetIndex> indices = new HashMap<>();
 

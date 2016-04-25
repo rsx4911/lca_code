@@ -13,11 +13,12 @@ import com.google.inject.Inject;
 public class FetchService {
 
 	private final HistoryService historyService;
-	private final DataAccessor dataAccessor = new DataAccessor();
+	private final DataAccessor dataAccessor;
 
 	@Inject
-	public FetchService(HistoryService historyService) {
+	public FetchService(HistoryService historyService, DataAccessor dataAccessor) {
 		this.historyService = historyService;
+		this.dataAccessor = dataAccessor;
 	}
 
 	public FetchRequestData toRequestData(Repository repo, String commitId,

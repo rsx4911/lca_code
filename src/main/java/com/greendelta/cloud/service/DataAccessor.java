@@ -18,8 +18,7 @@ import org.slf4j.LoggerFactory;
 class DataAccessor {
 
 	private final static Charset charset = Charset.forName("utf-8");
-	private final static Logger log = LoggerFactory
-			.getLogger(DataAccessor.class);
+	private final static Logger log = LoggerFactory.getLogger(DataAccessor.class);
 
 	public void writeDataset(File file, String data) {
 		try {

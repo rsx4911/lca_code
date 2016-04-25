@@ -25,7 +25,6 @@ define([
 							options.push group.name
 						callback options
 
-
 			createRepository: () ->
 				@repository.set Forms.toJson 'repository-form'
 				@repository.set 'isNew', true

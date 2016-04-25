@@ -33,13 +33,15 @@ public class CommitService {
 	private final UserService userService;
 	private final AccessService accessService;
 	private final RepositoryIndices repositoryIndices;
-	private final DataAccessor dataAccessor = new DataAccessor();
+	private final DataAccessor dataAccessor;
 
 	@Inject
-	public CommitService(UserService userService, RepositoryIndices repositoryIndices, AccessService accessService) {
+	public CommitService(UserService userService, RepositoryIndices repositoryIndices, AccessService accessService,
+			DataAccessor dataAccessor) {
 		this.userService = userService;
 		this.repositoryIndices = repositoryIndices;
 		this.accessService = accessService;
+		this.dataAccessor = dataAccessor;
 	}
 
 	public String put(Repository repo, InputStream data) {

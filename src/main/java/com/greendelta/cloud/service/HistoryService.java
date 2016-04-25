@@ -21,16 +21,15 @@ import com.greendelta.cloud.service.DataAccessor.Filter;
 
 public class HistoryService {
 
-	private final static Logger log = LoggerFactory
-			.getLogger(HistoryService.class);
+	private final static Logger log = LoggerFactory.getLogger(HistoryService.class);
 	private final static Charset charset = Charset.forName("utf-8");
-	private final DataAccessor dataAccessor = new DataAccessor();
-
 	private final RepositoryService repoService;
+	private final DataAccessor dataAccessor;
 
 	@Inject
-	public HistoryService(RepositoryService repoService) {
+	public HistoryService(RepositoryService repoService, DataAccessor dataAccessor) {
 		this.repoService = repoService;
+		this.dataAccessor = dataAccessor;
 	}
 
 	public Commit getLastCommit(Repository repo) {

@@ -104,5 +104,9 @@ public class Respond {
 		error.put("message", message);
 		return badRequest(error);
 	}
+	
+	public static Response error(String message) {
+		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
+	}
 
 }
