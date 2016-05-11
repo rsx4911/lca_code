@@ -35,10 +35,12 @@ define([
 			showRefIds: (event) ->
 				target = $ Events.target event
 				name = target.attr 'data-library'
+				Layers.showProgressIndicator 'Loading'
 				$.ajax
 					type: 'GET'
 					url: "/ws/admin/library/#{name}"
 					success: (refIds) -> 
+						Layers.hideProgressIndicator()
 						content = ''
 						for refId in refIds
 							content += refId + '\n'

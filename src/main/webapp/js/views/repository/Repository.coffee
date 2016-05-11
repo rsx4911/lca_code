@@ -2,6 +2,7 @@ define([
 				'backbone'
 				'cs!utils/Avatar'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
@@ -11,7 +12,7 @@ define([
 				'templates/views/repository/repository'
 			]
 
-	(Backbone, Avatar, Events, Forms, Layers, Renderer, Status, Router, currentUser, template) ->
+	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, template) ->
 
 		class RepositoryView extends Backbone.View
 
@@ -50,7 +51,7 @@ define([
 						Layers.showTemplateInLayer
 							title: "Clone #{fullPath}"
 							template: 'repository/clone'
-							model: {commits: commits, groups: groups, formatCommitDescription: @formatCommitDescription}
+							model: {commits: commits, groups: groups, formatCommitDescription: Format.formatCommitDescription}
 							buttons: [{text: 'Clone', className: 'btn-success', callback: () => @cloneRepository()}]
 
 			loadCommitsAndGroups: (callback) ->
@@ -89,15 +90,5 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'clone-form', response
-
-			formatCommitDescription: (text) ->
-				if text.length < 100
-					return text
-				space = -1
-				while text.indexOf(' ', space + 1) < 100 and text.indexOf(' ', space + 1) isnt -1
-					space = text.indexOf(' ', space + 1)
-				if space is -1
-					return text.substring(0, 100) + '...'
-				return text.substring(0, space) + '...'
 
 )
