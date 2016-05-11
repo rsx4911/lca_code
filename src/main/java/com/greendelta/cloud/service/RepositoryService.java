@@ -217,7 +217,9 @@ public class RepositoryService {
 		List<Repository> repos = new ArrayList<>();
 		User currentUser = userService.getCurrentUser();
 		boolean isAdmin = adminArea && currentUser.admin;
-		for (File group : root.listFiles())
+		for (File group : root.listFiles()) {
+			if (group.listFiles() == null)
+				continue;
 			for (File name : group.listFiles()) {
 				if (!name.isDirectory())
 					continue;
@@ -227,6 +229,7 @@ public class RepositoryService {
 					continue;
 				repos.add(repo);
 			}
+		}
 		return repos;
 	}
 

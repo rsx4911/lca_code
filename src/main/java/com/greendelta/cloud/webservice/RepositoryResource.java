@@ -130,7 +130,7 @@ public class RepositoryResource {
 			@PathParam("commitId") String commitId, @PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
 		Response response = _create(newGroup, newName);
-		if (response.getStatus() != Status.OK.getStatusCode())
+		if (response.getStatus() != Status.CREATED.getStatusCode())
 			return response;
 		Repository from = service.get(group, name);
 		Repository to = service.get(newGroup, newName);

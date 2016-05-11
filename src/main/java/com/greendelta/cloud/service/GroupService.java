@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
 import org.slf4j.Logger;
@@ -52,15 +53,25 @@ public class GroupService {
 	}
 
 	public boolean create(String group) {
+		return create(group, false);
+	}
+
+	@RequiresRoles("admin")
+	public boolean createUserGroup(String username) {
+		return create(username, true);
+	}
+	
+	private boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.canCreateGroups)
+		if (!currentUser.admin && !currentUser.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
 		boolean created = new File(getPath(group)).mkdir();
 		if (!created)
 			return false;
-		membershipService.addMembership(currentUser, group, Role.OWNER);
+		if (!userGroup)
+			membershipService.addMembership(currentUser, group, Role.OWNER);
 		return true;
 	}
 
@@ -122,6 +133,8 @@ public class GroupService {
 		User currentUser = userService.getCurrentUser();
 		boolean isAdmin = adminArea && currentUser.admin;
 		for (File group : root.listFiles()) {
+			if (!group.isDirectory())
+				continue;
 			if (!isAdmin && !accessService.canRead(currentUser, group.getName()))
 				continue;
 			if (isUserNamespace(group.getName()))
