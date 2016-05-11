@@ -62,8 +62,9 @@ public class DatasetIndex {
 		if (searcher == null)
 			return null;
 		try {
-			Term term = new Term("refId", refId);
-			Query query = new TermQuery(term);
+			Term term1 = new Term("refId", refId);
+			Term term2 = new Term("commitId", refId);
+			Query query = IndexUtil.andQuery(term1, term2);
 			TopDocs topDocs = searcher.search(query, 1);
 			if (topDocs.totalHits == 0)
 				return null;
