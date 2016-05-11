@@ -44,31 +44,38 @@ public class BrowseResource {
 	}
 
 	@GET
-	@Path("{group}/{name}")
-	public Response getRootContent(@PathParam("group") String group,
-			@PathParam("name") String name) {
-		Repository repo = repoService.get(group, name);
-		return Respond.ok(appendParentRefId(repo, service.getRootContent(repo)));
-	}
-
-	@GET
 	@Path("{group}/{name}/{categoryRefId}")
 	public Response getCategoryContent(@PathParam("group") String group, @PathParam("name") String name,
 			@PathParam("categoryRefId") String categoryRefId, @QueryParam("filter") String filter) {
 		Repository repo = repoService.get(group, name);
+		List<?> content = null;
+		if ("null".equals(categoryRefId) || categoryRefId == null)
+			content = getRootContent(repo);
+		else
+			content = getCategoryContent(repo, categoryRefId, filter);
+		if (content == null)
+			return Respond.notFound();
+		return Respond.ok(appendParentRefId(repo, content));
+	}
+
+	private List<ModelType> getRootContent(Repository repo) {
+		return service.getRootContent(repo);
+	}
+
+	private List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryRefId, String filter) {
 		for (ModelType type : ModelType.values()) {
-			if (type.name().equals(categoryRefId)) {
-				List<DatasetIndexEntry> content = service.getCategoryContent(repo, type, filter);
-				return Respond.ok(appendParentRefId(repo, content));
-			}
+			if (!type.name().equals(categoryRefId))
+				continue;
+			List<DatasetIndexEntry> content = service.getCategoryContent(repo, type, filter);
+			return content;
 		}
 		List<DatasetIndexEntry> content = service.getCategoryContent(repo, categoryRefId, filter);
 		if (content.isEmpty())
 			if (service.categoryExists(repo, categoryRefId))
-				Respond.ok(appendParentRefId(repo, content));
+				return content;
 			else
-				return Respond.notFound();
-		return Respond.ok(appendParentRefId(repo, content));
+				return null;
+		return content;
 	}
 
 	@GET
@@ -79,29 +86,28 @@ public class BrowseResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		if (commitId.equals("null"))
-			commitId = getLastCommitId(repo, type, refId);
+		if (commitId.equals("null") || commitId == null)
+			commitId = getLastCommitId(repo, type, refId, null);
+		else if (!fetchService.hasDataset(repo, type, refId, commitId))
+			commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null) {
 			String message = notFoundMessage(type, refId, null);
 			return Respond.notFound(message);
 		}
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
-		if (dataset == null) {
-			String message = notFoundMessage(type, refId, commitId);
-			return Respond.notFound(message);
-		}
 		ObjectMap map = ObjectMap.fromJson(dataset);
 		if (map.containsKey("category"))
-			map.put("category.name", getFullPath(repo, map.get("category.@id")));
+			map.put("category.name", getFullPath(repo, map.get("category.@id"), commitId));
 		if (type == ModelType.PROCESS) {
-			putFlowCategories(repo, map);
-			putSocialIndicators(repo, map);
+			putFlowCategories(repo, map, commitId);
+			putSocialIndicators(repo, map, commitId);
 		}
+		map.put("commitId", commitId);
 		return Respond.ok(map);
 	}
 
 	@SuppressWarnings("unchecked")
-	private void putFlowCategories(Repository repo, ObjectMap map) {
+	private void putFlowCategories(Repository repo, ObjectMap map, String commitId) {
 		List<Map<String, Object>> exchanges = (List<Map<String, Object>>) map.get("exchanges");
 		if (exchanges == null)
 			return;
@@ -110,8 +116,10 @@ public class BrowseResource {
 				continue;
 			Map<String, Object> flow = (Map<String, Object>) exchange.get("flow");
 			String refId = (String) flow.get("@id");
+
 			// last element in path is the flow name itself
-			String fullPath = getFullPath(repo, refId);
+			String flowCommitId = getLastCommitId(repo, ModelType.FLOW, refId, commitId);
+			String fullPath = getFullPath(repo, refId, flowCommitId);
 			if (!fullPath.contains("/"))
 				continue;
 			fullPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
@@ -120,7 +128,7 @@ public class BrowseResource {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void putSocialIndicators(Repository repo, ObjectMap map) {
+	private void putSocialIndicators(Repository repo, ObjectMap map, String commitId) {
 		List<Map<String, Object>> aspects = (List<Map<String, Object>>) map.get("socialAspects");
 		if (aspects == null)
 			return;
@@ -129,23 +137,23 @@ public class BrowseResource {
 				continue;
 			Map<String, Object> indicator = (Map<String, Object>) aspect.get("socialIndicator");
 			String refId = (String) indicator.get("@id");
-			String commitId = getLastCommitId(repo, ModelType.SOCIAL_INDICATOR, refId);
+			String cId = getLastCommitId(repo, ModelType.SOCIAL_INDICATOR, refId, commitId);
 			aspect.put("socialIndicator",
-					ObjectMap.fromJson(fetchService.getDataset(repo, ModelType.SOCIAL_INDICATOR, refId, commitId)));
+					ObjectMap.fromJson(fetchService.getDataset(repo, ModelType.SOCIAL_INDICATOR, refId, cId)));
 		}
 	}
 
-	private String getFullPath(Repository repo, String refId) {
+	private String getFullPath(Repository repo, String refId, String commitId) {
 		if (refId == null)
 			return "";
-		DatasetIndexEntry entry = service.getCategory(repo, refId);
+		DatasetIndexEntry entry = service.getDataset(repo, refId, commitId);
 		if (entry == null)
 			return "";
 		return entry.fullPath;
 	}
 
-	private String getLastCommitId(Repository repo, ModelType type, String refId) {
-		Commit commit = historyService.getLastCommit(repo, type, refId);
+	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
+		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
 			return null;
 		return commit.id;

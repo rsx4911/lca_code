@@ -1,15 +1,23 @@
 package com.greendelta.cloud.webservice;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.common.io.Resources;
 
 public class Respond {
@@ -32,6 +40,39 @@ public class Respond {
 				log.error("Error loading default value", e);
 			}
 		return Respond.ok(bytes);
+	}
+
+	public static Response ok(String filename, File file) {
+		return ok(filename, file, null);
+	}
+
+	public static Response ok(String filename, File file, Runnable callback) {
+		if (!file.exists())
+			return Respond.notFound();
+		long filesize = 0;
+		try {
+			filesize = Files.size(file.toPath());
+		} catch (IOException e) {
+			// ignore, not relevant
+		}
+		return ok(filename, filesize, new StreamingOutput() {
+
+			@Override
+			public void write(OutputStream output) throws IOException, WebApplicationException {
+				Files.copy(file.toPath(), output);
+				if (callback != null)
+					callback.run();
+			}
+		});
+	}
+
+	public static Response ok(String filename, long filesize, StreamingOutput stream) {
+		ResponseBuilder builder = Response.ok(stream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+		if (!Strings.isNullOrEmpty(filename))
+			builder.header("Content-Disposition", "attachment; filename=" + filename);
+		if (filesize > 0)
+			builder.header("Content-Length", filesize);
+		return builder.build();
 	}
 
 	public static Response badRequest() {
@@ -104,7 +145,7 @@ public class Respond {
 		error.put("message", message);
 		return badRequest(error);
 	}
-	
+
 	public static Response error(String message) {
 		return Response.status(Status.INTERNAL_SERVER_ERROR).entity(message).build();
 	}

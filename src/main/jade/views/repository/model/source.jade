@@ -11,7 +11,7 @@ include ./mixins.jade
 					+field-row('Text reference', dataset.textReference, true)
 					+field-row('Year', dataset.year, true)
 					if dataset.externalFile
-						+field-row('Year')
+						+field-row('External file')
 							a(href='#{fileBaseUrl}/#{dataset.externalFile}' target='_blank')=dataset.externalFile
 	+meta
 	.clear

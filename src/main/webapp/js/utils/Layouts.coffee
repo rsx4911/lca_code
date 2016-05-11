@@ -79,6 +79,7 @@ define () ->
 						view = (@_ createView) View, options?.viewOptions
 						view.render 
 							container: part
+							callback: options.callback
 
 			renderTemplateInLayout: (layout, options) ->
 				(@_ renderInLayout) layout,

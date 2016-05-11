@@ -51,8 +51,7 @@ class DataAccessor {
 		}
 	}
 
-	public List<Commit> readHistory(File file,
-			Filter<Commit> filter) {
+	public List<Commit> readHistory(File file, Filter<Commit> filter) {
 		if (file == null)
 			return Collections.emptyList();
 		if (!file.exists())
@@ -71,7 +70,7 @@ class DataAccessor {
 			}
 			return commits;
 		} catch (IOException e) {
-			log.error("Unexpected error appending to commit history", e);
+			log.error("Unexpected error reading to commit history", e);
 			return Collections.emptyList();
 		}
 	}

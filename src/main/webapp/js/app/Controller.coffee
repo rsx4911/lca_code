@@ -2,6 +2,7 @@ define([
 				'cs!app/Navigation'
 				'cs!app/UserMenu'
 				'cs!utils/Events'
+				'cs!utils/Layers'
 				'cs!utils/Layouts'
 				'cs!utils/Model'
 				'cs!models/Repository'
@@ -12,7 +13,7 @@ define([
 				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layouts, Model, Repository, User, Group, Team, template403, template404) ->
+	(Navigation, UserMenu, Events, Layers, Layouts, Model, Repository, User, Group, Team, template403, template404) ->
 
 		Controller = () ->
 
@@ -246,7 +247,6 @@ define([
 					result[param[0]] = param[1]
 				return result
 
-
 			checkGroupOrRepositoryExists: (options, callback) ->
 				if options.viewOptions?.repository
 					Model.fetch options.viewOptions.repository,
@@ -276,17 +276,29 @@ define([
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
 					@navigation.setItems @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
+					@loaded = false
+					setTimeout () => 
+						unless @loaded
+							Layers.showProgressIndicator 'Loading'
+					, 500
 					Layouts.renderViewInLayout 'full-size',
 						viewOptions: options.viewOptions
 						views:
 							center: options.view
+						callback: () =>
+							@loaded = true
+							Layers.hideProgressIndicator()
 
 			show404: () ->
+				@loaded = true
+				Layers.hideProgressIndicator()
 				$('#header-title').empty()
 				@navigation.setItems []
 				$('#main').html template404()
 
 			show403: () ->
+				@loaded = true
+				Layers.hideProgressIndicator()
 				$('#header-title').empty()
 				@navigation.setItems []
 				$('#main').html template403()

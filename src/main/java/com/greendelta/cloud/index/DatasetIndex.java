@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
@@ -24,15 +23,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import com.google.inject.Provider;
+import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.Repository;
 
 public class DatasetIndex {
 
 	private final static Logger log = LoggerFactory.getLogger(DatasetIndex.class);
+	private final Provider<HistoryService> historyServiceProvider;
 	final Directory directory;
 	final Repository repo;
 
-	public DatasetIndex(Repository repo, File indexDirectory) {
+	public DatasetIndex(Repository repo, File indexDirectory, Provider<HistoryService> historyServiceProvider) {
+		this.historyServiceProvider = historyServiceProvider;
 		Directory directory = null;
 		try {
 			directory = FSDirectory.open(indexDirectory.toPath());
@@ -54,19 +57,20 @@ public class DatasetIndex {
 		}
 	}
 
-	public DatasetIndexEntry getForId(ModelType type, String refId, Function<DatasetIndexEntry, Boolean> isLatestEntry) {
+	public DatasetIndexEntry getForId(String refId) {
+		HistoryService historyService = historyServiceProvider.get();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return null;
 		try {
 			Term term = new Term("refId", refId);
 			Query query = new TermQuery(term);
-			TopDocs topDocs = searcher.search(query, 1);
+			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return null;
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (isLatestEntry.apply(entry))
+				if (historyService.isLastCommit(entry))
 					return entry;
 			}
 			return null;
@@ -76,8 +80,8 @@ public class DatasetIndex {
 		}
 	}
 
-	public List<DatasetIndexEntry> getForModelType(ModelType type, String nameFilter,
-			Function<DatasetIndexEntry, Boolean> isLatestEntry) {
+	public List<DatasetIndexEntry> getForModelType(ModelType type, String nameFilter) {
+		HistoryService historyService = historyServiceProvider.get();
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -98,7 +102,7 @@ public class DatasetIndex {
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (isLatestEntry.apply(entry))
+				if (historyService.isLastCommit(entry))
 					entries.add(entry);
 			}
 			return entries;
@@ -108,8 +112,8 @@ public class DatasetIndex {
 		}
 	}
 
-	public List<DatasetIndexEntry> getForCategory(String categoryId, String nameFilter,
-			Function<DatasetIndexEntry, Boolean> isLatestEntry) {
+	public List<DatasetIndexEntry> getForCategory(String categoryId, String nameFilter) {
+		HistoryService historyService = historyServiceProvider.get();
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -130,7 +134,7 @@ public class DatasetIndex {
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (isLatestEntry.apply(entry))
+				if (historyService.isLastCommit(entry))
 					entries.add(entry);
 			}
 			return entries;
@@ -140,7 +144,8 @@ public class DatasetIndex {
 		}
 	}
 
-	public boolean categoryExists(String categoryId, Function<DatasetIndexEntry, Boolean> isLatestEntry) {
+	public boolean categoryExists(String categoryId) {
+		HistoryService historyService = historyServiceProvider.get();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return false;
@@ -149,12 +154,12 @@ public class DatasetIndex {
 		try {
 			Query query = IndexUtil
 					.andQuery(new Term("refId", categoryId), new Term("type", ModelType.CATEGORY.name()));
-			TopDocs topDocs = searcher.search(query, 1);
+			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
 				return false;
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (isLatestEntry.apply(entry))
+				if (historyService.isLastCommit(entry))
 					return true;
 			}
 			return false;

@@ -50,8 +50,11 @@ define([
 			navigate: (route, options) ->
 				if options?.forceTrigger and Backbone.history.fragment is route
 					Backbone.history.loadUrl route
+				trigger = true
+				if options?.trigger is false
+					trigger = false
 				@router.navigate route, 
-					trigger: (options?.trigger is false) or true
+					trigger: trigger
 					replace: options?.replace
 
 

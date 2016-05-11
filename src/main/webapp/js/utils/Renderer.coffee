@@ -30,6 +30,7 @@ define () ->
 			$(options.container).after view.$el			
 		else
 			$(options.container).html view.$el
+		options.callback?()
 
 	_: (callback) ->
 		() =>

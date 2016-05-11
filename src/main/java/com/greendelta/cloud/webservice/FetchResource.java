@@ -60,8 +60,7 @@ public class FetchResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId, @PathParam("filename") String filename) throws IOException {
 		Repository repo = repoService.get(group, name);
-		if (commitId.equals("null"))
-			commitId = getLastCommitId(repo, type, refId);
+		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
 			return Respond.notFound(notFoundMessage(type, refId, null));
 		File binDir = service.getBinDir(repo, type, refId, commitId);
@@ -82,8 +81,7 @@ public class FetchResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		if (commitId.equals("null"))
-			commitId = getLastCommitId(repo, type, refId);
+		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null) {
 			String message = notFoundMessage(type, refId, null);
 			return Respond.notFound(message);
@@ -96,8 +94,10 @@ public class FetchResource {
 		return Respond.ok(dataset);
 	}
 
-	private String getLastCommitId(Repository repo, ModelType type, String refId) {
-		Commit commit = historyService.getLastCommit(repo, type, refId);
+	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
+		if ("null".equals(commitId))
+			commitId = null;
+		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
 			return null;
 		return commit.id;

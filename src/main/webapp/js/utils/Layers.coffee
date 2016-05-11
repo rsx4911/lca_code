@@ -146,6 +146,7 @@ define([
 							$('#btn-confirm-delete').prop 'disabled', (target.val() isnt confirmationPhrase)
 
 			showProgressIndicator: (message) ->
+				$('.progress-indicator').remove()
 				$('body').append progressIndicatorTemplate
 					message: message				
 

@@ -3,7 +3,9 @@ define([
 				'moment'
 				'open-layers'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Icons'
+				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!views/repository/util/DatasetPrepare'
 				'cs!app/Router'
@@ -25,7 +27,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Moment, OpenLayers, Events, Icons, Renderer, DatasetPrepare, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, Moment, OpenLayers, Events, Format, Icons, Layers, Renderer, DatasetPrepare, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -63,7 +65,7 @@ define([
 			getDownloadUrl: () ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "/ws/fetch/data/#{urlPart}/#{commitId}" 
+				return "/ws/download/prepare/#{urlPart}/#{commitId}" 
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
@@ -77,25 +79,21 @@ define([
 				refId = refId or @refId
 				return "#{group}/#{name}/#{type}/#{refId}"
 
-			showExchangeDetails: (event) ->
-				target = $ Events.target event
-				exchangeId = target.attr 'data-id'
-
-			formatCommitDescription: (text) ->
-				if text.length < 100
-					return text
-				space = -1
-				while text.indexOf(' ', space + 1) < 100 and text.indexOf(' ', space + 1) isnt -1
-					space = text.indexOf(' ', space + 1)
-				if space is -1
-					return text.substring(0, 100) + '...'
-				return text.substring(0, space) + '...'
+			downloadData: (event) ->
+				@$('iframe').remove()
+				Layers.showProgressIndicator 'Preparing'
+				$.ajax
+					type: 'GET'
+					url: @getDownloadUrl()
+					success: (token) =>
+						Layers.hideProgressIndicator()
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="/ws/download/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
 
 			events: 
-				'click a:not([role]):not([download]):not([target=_blank])': (event) -> Events.followLink event
-				'click a[data-action=show-exchange-details]': (event) -> showExchangeDetails event
+				'click a:not([role]):not([target=_blank])': (event) -> Events.followLink event
+				'click [data-action=download-data]': (event) -> @downloadData event
 				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
 				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
 				'change #commitId': (event) -> 
@@ -107,13 +105,18 @@ define([
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId} = options
-				window.formatCommitDescription = @formatCommitDescription
 
 			render: (renderOptions) ->
 				template = @getTemplate()
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				@loadDataset (dataset) =>
+					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
+					if @commitId isnt dataset.commitId
+						Router.navigate "/#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
+							trigger: false
+							replace: true
+					@commitId = dataset.commitId
 					@loadCommitHistory (commits) =>
 						DatasetPrepare.applyTo dataset
 						@$el.html template 
@@ -124,11 +127,10 @@ define([
 							getIcon: Icons.get
 							getTypeAsEnum: @getTypeAsEnum
 							getUncertaintyLabel: @getUncertaintyLabel
-							downloadUrl: @getDownloadUrl()
 							fileBaseUrl: @getFileBaseUrl()
 							commits: commits
 							commitId: @commitId or commits[0].id
-							formatCommitDescription: @formatCommitDescription
+							formatCommitDescription: Format.formatCommitDescription
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset

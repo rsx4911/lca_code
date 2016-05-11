@@ -21,11 +21,11 @@ define([
 
 			initialize: (options) ->
 				{@repository, @categoryId} = options
+				unless @categoryId
+					@categoryId = 'null'
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				url = "/ws/browse/#{group}/#{name}"
-				if @categoryId
-					url += '/' + @categoryId
+				url = "/ws/browse/#{group}/#{name}/" + @categoryId
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
@@ -37,14 +37,14 @@ define([
 						@sortEntries result
 						result.repository = @repository.toJSON()
 						result.baseUrl = "/#{group}/#{name}"
-						result.isRoot = (if @categoryId then false else true)
+						result.isRoot = (if @categoryId and @categoryId isnt 'null' then false else true)
 						result.getRootLabel = (type) -> return ModelTypes[type]
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						@initialized = true
 				
 			render: (renderOptions) ->
 				@$el.html template
-					isRoot: (if @categoryId then false else true)
+					isRoot: (if @categoryId and @categoryId isnt 'null' then false else true)
 				Renderer.render @, renderOptions
 				@filter.init()
 

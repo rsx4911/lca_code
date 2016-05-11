@@ -13,8 +13,8 @@ define([
 				@filter = ''
 
 			init: () ->
-				$('#' + @filterId).on 'keyup', (event) => @applyFilter event
 				@load (result) =>
+					$('#' + @filterId).on 'keyup', (event) => @applyFilter event
 					@append result
 
 			load: (callback) ->

@@ -1,5 +1,6 @@
 package com.greendelta.cloud.service;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,12 +12,10 @@ import com.greendelta.cloud.index.DatasetIndexEntry;
 
 public class BrowseService {
 
-	private final HistoryService historyService;
 	private final RepositoryIndices repositoryIndices;
 
 	@Inject
-	public BrowseService(HistoryService historyService, RepositoryIndices repositoryIndices) {
-		this.historyService = historyService;
+	public BrowseService(RepositoryIndices repositoryIndices) {
 		this.repositoryIndices = repositoryIndices;
 	}
 
@@ -28,30 +27,33 @@ public class BrowseService {
 				ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP,
 				ModelType.CURRENCY, ModelType.SOURCE, ModelType.ACTOR,
 				ModelType.LOCATION };
-		for (ModelType type : all)
-			if (repo.getModelDir(type, false).exists())
+		for (ModelType type : all) {
+			File dir = repo.getModelDir(type, false);
+			if (dir.exists())
 				types.add(type);
+		}
 		return types;
 	}
 
 	public List<DatasetIndexEntry> getCategoryContent(Repository repo, ModelType type, String filter) {
 		DatasetIndex index = repositoryIndices.get(repo);
-		return index.getForModelType(type, filter, historyService::isLastCommit);
+		return index.getForModelType(type, filter);
 	}
 
 	public List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryId, String filter) {
 		DatasetIndex index = repositoryIndices.get(repo);
-		return index.getForCategory(categoryId, filter, historyService::isLastCommit);
+		return index.getForCategory(categoryId, filter);
 	}
 
-	public DatasetIndexEntry getCategory(Repository repo, String refId) {
+	public DatasetIndexEntry getDataset(Repository repo, String refId, String commitId) {
+		// TODO apply commitId
 		DatasetIndex index = repositoryIndices.get(repo);
-		return index.getForId(ModelType.CATEGORY, refId, historyService::isLastCommit);
+		return index.getForId(refId);
 	}
 
 	public boolean categoryExists(Repository repo, String categoryId) {
 		DatasetIndex index = repositoryIndices.get(repo);
-		return index.categoryExists(categoryId, historyService::isLastCommit);
+		return index.categoryExists(categoryId);
 	}
 
 }

@@ -10,9 +10,9 @@ mixin menubar()
 					- currentCommit = commit;
 				option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
 				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
-		a.btn.btn-success.pull-right(href=downloadUrl download='#{dataset.id}.json')
+		button.btn.btn-success.pull-right(data-action='download-data')
 			span.glyphicon.glyphicon-download
-			span.text Download Raw Data
+			span.text Download
 		.clear
 		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed')
 			|  on #{formatDate(currentCommit.timestamp)}
@@ -58,7 +58,10 @@ mixin ref(ref, additionalTypeInfo, noImage)
 	if ref
 		if !noImage
 			img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
-		a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
+		if commitId
+			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
+		else
+			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
 
 mixin ref-row(label, ref, additionalTypeInfo, noImage)
 	if ref

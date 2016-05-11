@@ -21,8 +21,7 @@ public class FetchService {
 		this.dataAccessor = dataAccessor;
 	}
 
-	public FetchRequestData toRequestData(Repository repo, String commitId,
-			Dataset dataset) {
+	public FetchRequestData toRequestData(Repository repo, String commitId, Dataset dataset) {
 		FetchRequestData value = new FetchRequestData(dataset);
 		ModelType type = dataset.type;
 		String refId = dataset.refId;
@@ -31,18 +30,15 @@ public class FetchService {
 		return value;
 	}
 
-	private boolean wasDeleted(Repository repo, ModelType type, String refId,
-			String commitId) {
+	private boolean wasDeleted(Repository repo, ModelType type, String refId, String commitId) {
 		String data = getDataset(repo, type, refId, commitId);
 		if (data == null)
 			return true;
 		return data.isEmpty();
 	}
 
-	private boolean wasAdded(Repository repo, ModelType type, String refId,
-			String commitId) {
-		List<Commit> previous = historyService.getCommitsBefore(repo, type, refId,
-				commitId);
+	private boolean wasAdded(Repository repo, ModelType type, String refId, String commitId) {
+		List<Commit> previous = historyService.getCommitsBefore(repo, type, refId, commitId);
 		if (previous.isEmpty())
 			return true;
 		Commit commit = previous.get(previous.size() - 1);
@@ -52,14 +48,16 @@ public class FetchService {
 		return previousData.isEmpty();
 	}
 
-	public String getDataset(Repository repo, ModelType type, String refId,
-			String commitId) {
+	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
+		return repo.getDatasetFile(type, refId, commitId, false).exists();
+	}
+
+	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		File file = repo.getDatasetFile(type, refId, commitId, false);
 		return dataAccessor.readDataset(file);
 	}
 
-	public File getBinDir(Repository repo, ModelType type, String refId,
-			String commitId) {
+	public File getBinDir(Repository repo, ModelType type, String refId, String commitId) {
 		return repo.getBinDir(type, refId, commitId, false);
 	}
 

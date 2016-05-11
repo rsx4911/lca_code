@@ -34,7 +34,7 @@ public class CommitService {
 	private final AccessService accessService;
 	private final RepositoryIndices repositoryIndices;
 	private final DataAccessor dataAccessor;
-
+	
 	@Inject
 	public CommitService(UserService userService, RepositoryIndices repositoryIndices, AccessService accessService,
 			DataAccessor dataAccessor) {
