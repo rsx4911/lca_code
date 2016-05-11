@@ -34,6 +34,6 @@ include ./mixins.jade
 							if factor.flowProperty
 								tr(class=factor.referenceFlowProperty?'reference':null)
 									td: +ref(factor.flowProperty)
-									td 1 #{referenceFactor.flowProperty.name} = #{factor.conversionFactor} #{factor.flowProperty.name}
+									td 1 #{referenceFactor.referenceUnit} = #{factor.conversionFactor} #{factor.referenceUnit}
 	+meta
 	.clear

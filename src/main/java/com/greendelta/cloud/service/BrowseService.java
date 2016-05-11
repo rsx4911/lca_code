@@ -45,10 +45,9 @@ public class BrowseService {
 		return index.getForCategory(categoryId, filter);
 	}
 
-	public DatasetIndexEntry getDataset(Repository repo, String refId, String commitId) {
-		// TODO apply commitId
+	public DatasetIndexEntry getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		DatasetIndex index = repositoryIndices.get(repo);
-		return index.getForId(refId);
+		return index.getForId(refId, commitId);
 	}
 
 	public boolean categoryExists(Repository repo, String categoryId) {

@@ -86,10 +86,7 @@ public class BrowseResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		if (commitId.equals("null") || commitId == null)
-			commitId = getLastCommitId(repo, type, refId, null);
-		else if (!fetchService.hasDataset(repo, type, refId, commitId))
-			commitId = getLastCommitId(repo, type, refId, commitId);
+		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null) {
 			String message = notFoundMessage(type, refId, null);
 			return Respond.notFound(message);
@@ -97,10 +94,12 @@ public class BrowseResource {
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
 		ObjectMap map = ObjectMap.fromJson(dataset);
 		if (map.containsKey("category"))
-			map.put("category.name", getFullPath(repo, map.get("category.@id"), commitId));
+			map.put("category.name", getFullPath(repo, ModelType.CATEGORY, map.get("category.@id"), commitId));
 		if (type == ModelType.PROCESS) {
 			putFlowCategories(repo, map, commitId);
 			putSocialIndicators(repo, map, commitId);
+		} else if (type == ModelType.FLOW) {
+			putReferenceUnits(repo, map, commitId);
 		}
 		map.put("commitId", commitId);
 		return Respond.ok(map);
@@ -119,7 +118,7 @@ public class BrowseResource {
 
 			// last element in path is the flow name itself
 			String flowCommitId = getLastCommitId(repo, ModelType.FLOW, refId, commitId);
-			String fullPath = getFullPath(repo, refId, flowCommitId);
+			String fullPath = getFullPath(repo, ModelType.FLOW, refId, flowCommitId);
 			if (!fullPath.contains("/"))
 				continue;
 			fullPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
@@ -143,16 +142,60 @@ public class BrowseResource {
 		}
 	}
 
-	private String getFullPath(Repository repo, String refId, String commitId) {
+	@SuppressWarnings("unchecked")
+	private void putReferenceUnits(Repository repo, ObjectMap map, String commitId) {
+		List<Map<String, Object>> factors = (List<Map<String, Object>>) map.get("flowProperties");
+		if (factors == null)
+			return;
+		for (Map<String, Object> factor : factors) {
+			if (!factor.containsKey("flowProperty"))
+				continue;
+			Map<String, Object> property = (Map<String, Object>) factor.get("flowProperty");
+			String refId = (String) property.get("@id");
+			String cId = getLastCommitId(repo, ModelType.FLOW_PROPERTY, refId, commitId);
+			String data = fetchService.getDataset(repo, ModelType.FLOW_PROPERTY, refId, cId);
+			if (data == null)
+				continue;
+			Map<String, Object> flowProperty = ObjectMap.fromJson(data);
+			Map<String, Object> unitGroup = (Map<String, Object>) flowProperty.get("unitGroup");
+			if (unitGroup == null)
+				continue;
+			refId = (String) unitGroup.get("@id");
+			cId = getLastCommitId(repo, ModelType.UNIT_GROUP, refId, commitId);
+			data = fetchService.getDataset(repo, ModelType.UNIT_GROUP, refId, cId);
+			if (data == null)
+				continue;
+			unitGroup = ObjectMap.fromJson(data);
+			List<Map<String, Object>> units = (List<Map<String, Object>>) unitGroup.get("units");
+			if (units == null)
+				continue;
+			for (Map<String, Object> unit : units) {
+				if (!unit.containsKey("referenceUnit"))
+					continue;
+				if (Boolean.parseBoolean(unit.get("referenceUnit").toString()) == false)
+					continue;
+				factor.put("referenceUnit", unit.get("name"));
+				break;
+			}
+		}
+	}
+
+	private String getFullPath(Repository repo, ModelType type, String refId, String commitId) {
 		if (refId == null)
 			return "";
-		DatasetIndexEntry entry = service.getDataset(repo, refId, commitId);
+		if (commitId == null)
+			return "";
+		DatasetIndexEntry entry = service.getDataset(repo, type, refId, commitId);
 		if (entry == null)
 			return "";
 		return entry.fullPath;
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
+		if (commitId.equals("null"))
+			commitId = null;
+		if (commitId != null && fetchService.hasDataset(repo, type, refId, commitId))
+			return commitId;
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
 			return null;

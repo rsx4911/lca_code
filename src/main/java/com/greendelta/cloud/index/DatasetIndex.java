@@ -57,23 +57,17 @@ public class DatasetIndex {
 		}
 	}
 
-	public DatasetIndexEntry getForId(String refId) {
-		HistoryService historyService = historyServiceProvider.get();
+	public DatasetIndexEntry getForId(String refId, String commitId) {
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return null;
 		try {
 			Term term = new Term("refId", refId);
 			Query query = new TermQuery(term);
-			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
+			TopDocs topDocs = searcher.search(query, 1);
 			if (topDocs.totalHits == 0)
 				return null;
-			for (ScoreDoc doc : topDocs.scoreDocs) {
-				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (historyService.isLastCommit(entry))
-					return entry;
-			}
-			return null;
+			return ConversionUtil.convert(searcher.doc(topDocs.scoreDocs[0].doc));
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);
 			return null;
