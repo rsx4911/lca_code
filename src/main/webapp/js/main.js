@@ -13,6 +13,7 @@ require.config({
 		'datepicker': 'libs/bootstrap-datepicker',
 		'numeral': 'libs/numeral',
 		'moment': 'libs/moment',
+		'pace': 'libs/pace.min',
 		'tablesorter': 'libs/jquery-tablesorter',
 		'open-layers': 'libs/open-layers',
 		'requireLib': 'libs/require'
@@ -24,6 +25,7 @@ require.config({
 	} 
 })
 
-define(['cs!app/App'], function(App) {
+define(['cs!app/App', 'pace'], function(App, pace) {
+	pace.start();
 	App.initialize();
 });
