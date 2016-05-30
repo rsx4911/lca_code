@@ -120,8 +120,7 @@ public class FetchResource {
 	@GET
 	@Path("request/{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response request(@PathParam("group") String group,
-			@PathParam("name") String name,
+	public Response request(@PathParam("group") String group, @PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
 		if (lastCommitId.equals("null"))

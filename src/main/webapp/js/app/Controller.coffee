@@ -276,18 +276,12 @@ define([
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
 					@navigation.setItems @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
-					@loaded = false
-					setTimeout () => 
-						unless @loaded
-							Layers.showProgressIndicator 'Loading'
-					, 500
 					Layouts.renderViewInLayout 'full-size',
 						viewOptions: options.viewOptions
 						views:
 							center: options.view
 						callback: () =>
 							@loaded = true
-							Layers.hideProgressIndicator()
 
 			show404: () ->
 				@loaded = true

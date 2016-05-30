@@ -81,12 +81,10 @@ define([
 
 			downloadData: (event) ->
 				@$('iframe').remove()
-				Layers.showProgressIndicator 'Preparing'
 				$.ajax
 					type: 'GET'
 					url: @getDownloadUrl()
 					success: (token) =>
-						Layers.hideProgressIndicator()
 						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="/ws/download/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
