@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -39,25 +39,21 @@ public class SyncResource {
 		this.repoService = repoService;
 	}
 
-	@POST
-	@Path("{group}/{name}/{lastCommitId}/{untilCommitId}")
+	@GET
+	@Path("{group}/{name}/{untilCommitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response request(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId, @PathParam("untilCommitId") String untilCommitId,
-			List<Dataset> localChanges) {
+			@PathParam("untilCommitId") String untilCommitId) {
 		Repository repo = repoService.get(group, name);
-		if (lastCommitId.equals("null"))
-			lastCommitId = null;
+		List<Commit> commits = null;
 		if (untilCommitId.equals("null"))
-			untilCommitId = null;
-		List<Commit> commits = historyService.getCommitsBetween(repo, lastCommitId, untilCommitId);
-		List<FetchRequestData> result = new ArrayList<>();
-		if (!commits.isEmpty())
-			result = getData(commits, repo);
-		appendRequestedDatasets(result, repo, localChanges, untilCommitId);
-		if (result.size() == 0)
+			commits = historyService.getCommits(repo);
+		else
+			commits = historyService.getCommitsUntil(repo, untilCommitId);
+		if (commits.isEmpty())
 			return Respond.noContent();
+		List<FetchRequestData> result = getData(commits, repo);
 		return Respond.ok(new ArrayList<>(result));
 	}
 
@@ -76,25 +72,6 @@ public class SyncResource {
 			}
 		}
 		return result;
-	}
-
-	private void appendRequestedDatasets(List<FetchRequestData> result, Repository repo, List<Dataset> requested,
-			String untilCommitId) {
-		Set<String> alreadyAdded = new HashSet<>();
-		for (FetchRequestData data : result)
-			alreadyAdded.add(data.refId);
-		for (Dataset dataset : requested) {
-			if (alreadyAdded.contains(dataset.refId))
-				continue;
-			Commit commit = historyService.getLastCommit(repo, dataset.type, dataset.refId, untilCommitId);
-			if (commit == null)
-				continue;
-			dataset = historyService.getReference(repo, commit.id, dataset.type, dataset.refId);
-			if (dataset == null)
-				continue;
-			FetchRequestData value = fetchService.toRequestData(repo, commit.id, dataset);
-			result.add(value);
-		}
 	}
 
 	private String toKey(FileReference reference) {
