@@ -2,7 +2,7 @@ include ../mixins/forms.jade
 
 if isRoot
 	.header-box
-		//-button.btn.btn-lg.btn-success.pull-right(data-action='download') 
+		button.btn.btn-lg.btn-success.pull-right(data-action='download') 
 			span.glyphicon.glyphicon-download
 			span.text Download Zip
 		.clear
@@ -10,12 +10,6 @@ else
 	.header-box
 		.form-group
 			input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
-		//-.input-group.input-group-lg
-			input#filter.form-control(type='text' placeholder='Filter by name')
-			.input-group-btn
-				button.btn.btn-success.pull-right(data-action='download') 
-					span.glyphicon.glyphicon-download
-					span.text Download Zip
 		.clear
 	.header-box.path
 table.table.table-browse.content-box

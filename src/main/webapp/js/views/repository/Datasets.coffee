@@ -4,13 +4,14 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Filter'
 				'cs!utils/Icons'
+				'cs!utils/Layers'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'templates/views/repository/datasets'
 				'templates/views/repository/datasets-entries'
 			]
 
-	(Backbone, Moment, Events, Filter, Icons, ModelTypes, Renderer, template, entriesTemplate) ->
+	(Backbone, Moment, Events, Filter, Icons, Layers, ModelTypes, Renderer, template, entriesTemplate) ->
 
 		class RepositoryDatasets extends Backbone.View
 
@@ -18,6 +19,7 @@ define([
 
 			events: 
 				'click a': (event) -> Events.followLink event
+				'click [data-action=download]': (event) -> @downloadRepository event
 
 			initialize: (options) ->
 				{@repository, @categoryId} = options
@@ -42,6 +44,18 @@ define([
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						@initialized = true
 				
+			downloadRepository: (event) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				@$('iframe').remove()
+				Layers.showProgressIndicator 'Preparing'
+				$.ajax
+					type: 'GET'
+					url: "/ws/download/prepare/#{group}/#{name}/"
+					success: (token) =>
+						Layers.hideProgressIndicator()
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="/ws/download/' + token + '"></iframe>'						
+
 			render: (renderOptions) ->
 				@$el.html template
 					isRoot: (if @categoryId and @categoryId isnt 'null' then false else true)

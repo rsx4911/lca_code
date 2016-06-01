@@ -2,8 +2,12 @@ package com.greendelta.cloud.webservice;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.GET;
@@ -14,6 +18,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.model.data.Dataset;
+import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
@@ -66,6 +72,37 @@ public class DownloadResource {
 	}
 
 	@GET
+	@Path("prepare/{group}/{repository}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response prepare(@PathParam("group") String group, @PathParam("repository") String repository) {
+		Repository repo = repoService.get(group, repository);
+		List<Commit> commits = historyService.getCommits(repo);
+		if (commits.size() == 0)
+			return Respond.noContent();
+		Set<String> alreadyAdded = new HashSet<>();
+		Collections.reverse(commits);
+		try {
+			DatasetWriter writer = new DatasetWriter(fetchService, historyService, repo);
+			for (Commit commit : commits) {
+				List<Dataset> descriptors = historyService.getReferences(repo, commit.id);
+				for (Dataset descriptor : descriptors) {
+					if (alreadyAdded.contains(toKey(descriptor)))
+						continue;
+					alreadyAdded.add(toKey(descriptor));
+					writer.write(descriptor.type, descriptor.refId, commit.id);
+				}
+			}
+			File tmpFile = writer.close();
+			String token = UUID.randomUUID().toString();
+			tokenToPath.put(token, tmpFile.getAbsolutePath());
+			tokenToFilename.put(token, group + "_" + repository + ".zip");
+			return Respond.ok(token);
+		} catch (IOException e) {
+			return Respond.error("Error writing data sets to tmp file");
+		}
+	}
+
+	@GET
 	@Path("{token}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response download(@PathParam("token") String token) {
@@ -77,4 +114,7 @@ public class DownloadResource {
 		return Respond.ok(filename, tmpFile, () -> tmpFile.delete());
 	}
 
+	private String toKey(FileReference reference) {
+		return reference.type.name() + "_" + reference.refId;
+	}
 }
