@@ -56,10 +56,12 @@ define([
 				@navigation = new Navigation()
 				@navigation.render 
 					container: 'nav'
+					noAnimation: true
 
 			initializeUserMenu: () ->
 				new UserMenu().render 
 					container: '#user-menu'
+					noAnimation: true
 
 			registerRoutes: () ->
 				@registerRouteRewrites()

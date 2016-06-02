@@ -30,6 +30,8 @@ define () ->
 			$(options.container).after view.$el			
 		else
 			$(options.container).html view.$el
+		unless options.noAnimation
+			view.$el.animateCss 'fadeIn'
 		options.callback?()
 
 	_: (callback) ->

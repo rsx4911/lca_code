@@ -4,7 +4,6 @@ define([
 				'cs!app/Router'
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
-				'cs!app/DynamicDependencies'
 			]
 
 	(Backbone, Controller, Router, Model, currentUser) ->
@@ -19,6 +18,11 @@ define([
 						replace: true
 
 		initialize: () ->
+			$.fn.extend
+				animateCss: (animationName) ->
+					animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend'
+					$(@).addClass('animated ' + animationName).one animationEnd, () -> 
+						$(@).removeClass 'animated ' + animationName
 			@initializeErrorHandling()
 			Model.fetch currentUser,
 				success: () ->
