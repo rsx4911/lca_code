@@ -26,13 +26,15 @@ public class GlobalIndex {
 			ModelType type) {
 		if (indices.size() == 0)
 			return new PagedResult<>(page, filter, 0, 0, Collections.emptyList());
-		IndexReader[] readers = new IndexReader[indices.size()];
+		List<IndexReader> readers = new ArrayList<>();
 		for (int i = 0; i < indices.size(); i++) {
 			DatasetIndex index = indices.get(i);
-			readers[i] = IndexUtil.getReader(index.directory);
+			if (index.indexDir.listFiles() == null || index.indexDir.listFiles().length == 0)
+				continue;
+			readers.add(IndexUtil.getReader(index.directory));
 		}
 		try {
-			IndexSearcher searcher = new IndexSearcher(new MultiReader(readers));
+			IndexSearcher searcher = new IndexSearcher(new MultiReader(readers.toArray(new IndexReader[readers.size()])));
 			Query query1 = IndexUtil.wildcardQuery("fullPath", filter);
 			Query query2 = IndexUtil.wildcardQuery("commitMessage", filter);
 			Query query = IndexUtil.orQuery(query1, query2);
@@ -60,5 +62,4 @@ public class GlobalIndex {
 			return new PagedResult<>(page, filter, 0, 0, Collections.emptyList());
 		}
 	}
-
 }

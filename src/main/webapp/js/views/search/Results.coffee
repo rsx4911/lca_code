@@ -20,6 +20,8 @@ define([
 			doFilterType: (event) ->
 				target = $ Events.target event
 				type = target.val()
+				if type is 'All'
+					type = null
 				Router.navigate @getUrl @query, null, type
 
 			getUrl: (query, page, type) ->

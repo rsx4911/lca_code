@@ -33,9 +33,11 @@ public class DatasetIndex {
 	private final Provider<HistoryService> historyServiceProvider;
 	final Directory directory;
 	final Repository repo;
+	final File indexDir;
 
 	public DatasetIndex(Repository repo, File indexDirectory, Provider<HistoryService> historyServiceProvider) {
 		this.historyServiceProvider = historyServiceProvider;
+		this.indexDir = indexDirectory;
 		Directory directory = null;
 		try {
 			directory = FSDirectory.open(indexDirectory.toPath());
