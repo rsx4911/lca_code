@@ -4,6 +4,7 @@ define([
 				'cs!app/Router'
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
+				'cs!app/DynamicDependencies'
 			]
 
 	(Backbone, Controller, Router, Model, currentUser) ->

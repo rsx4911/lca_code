@@ -277,7 +277,7 @@ define([
 					document.title = @getDocumentTitle options.title
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
-					@navigation.setItems @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
+					@navigation.setItems options.nav?.type, @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
 					Layouts.renderViewInLayout 'full-size',
 						viewOptions: options.viewOptions
 						views:

@@ -9,9 +9,11 @@ nav
 		
 	@media(min-width 992px)
 		width 230px
-				
-	ul 
+		
+	.menu-left
 		margin-top 10px
+		
+	ul 
 
 		li 
 			width 100%
@@ -31,6 +33,7 @@ nav
 			
 			&:not(.active):hover
 				background-color rgb(51, 60, 71)
+				transition background-color .5s ease
 		
 			a
 				display block

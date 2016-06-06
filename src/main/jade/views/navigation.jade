@@ -1,17 +1,20 @@
 if items && items.length
-	ul
-		if repository && !repository.groupIsUserNamespace
-			li.back: a(href='/groups/#{repository.group}')
-				img.nav-icon.mobile-only(src='/images/back.png')
-				span.nav-label Back to group
-			li.separate
-		- var first = true;
-		each item in items
-			li(class=item.id===active||(!active&&first)?'active':null)
-				a(href=item.href) 
-					img.nav-icon(src=item.imageSrc)
-					span.nav-label #{item.label}
-			- first = false;
+	.menu-left
+		.menu-bar.menu-active-bar
+		.menu-bar.menu-hover-bar
+		ul
+			if repository && !repository.groupIsUserNamespace
+				li.back: a(href='/groups/#{repository.group}')
+					img.nav-icon.mobile-only(src='/images/back.png')
+					span.nav-label Back to group
+				li.separate
+			- var first = true;
+			each item in items
+				li(data-nav-id=item.id class=item.id===active||(!active&&first)?'active':null)
+					a(href=item.href) 
+						img.nav-icon(src=item.imageSrc)
+						span.nav-label #{item.label}
+				- first = false;
 .profile-link
 	a(href='/user/profile')
 		img.avatar(src='/ws/user/avatar/#{username}')

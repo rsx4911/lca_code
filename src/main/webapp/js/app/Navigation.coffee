@@ -1,12 +1,13 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Menu'
 				'cs!utils/Renderer'
 				'cs!models/CurrentUser'
 				'templates/views/navigation'
 			]
 
-	(Backbone, Events, Renderer, currentUser, template) ->
+	(Backbone, Events, Menu, Renderer, currentUser, template) ->
 
 		class Navigation extends Backbone.View
 
@@ -18,6 +19,7 @@ define([
 					active: active
 					repository: repository
 					path: window.location.pathname
+				Menu.init @$('.menu-left')
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
@@ -26,7 +28,12 @@ define([
 				@doRender()
 				Renderer.render @, renderOptions
 
-			setItems: (items, active, repository) ->
-				@doRender items, active, repository
+			setItems: (type, items, active, repository) ->
+				if type isnt @lastType
+					@doRender items, active, repository
+				else
+					@$('li.active').removeClass 'active'
+					@$("li[data-nav-id=#{active}]").addClass 'active'
+				@lastType = type
 
 )
