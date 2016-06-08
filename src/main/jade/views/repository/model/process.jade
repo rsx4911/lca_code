@@ -166,9 +166,10 @@ mixin social-aspect-table(aspects)
 		strong Quantitative reference
 		div
 			- var flow = null;
-			each exchange in dataset.exchanges
-				if exchange.quantitativeReference
-					- flow = exchange.flow
+			if dataset.exchanges
+				each exchange in dataset.exchanges
+					if exchange.quantitativeReference
+						- flow = exchange.flow
 			if flow
 				+ref(flow, flow.flowType)
 			else

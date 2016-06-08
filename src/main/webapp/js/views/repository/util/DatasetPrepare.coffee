@@ -53,9 +53,10 @@ define([
 			causalAllocationFactors = {}
 			exchangeMap = {}
 			flowMap = {}
-			for e in dataset.exchanges
-				exchangeMap[e.id] = e
-				flowMap[e.flow.id] = e.flow
+			if dataset.exchanges
+				for e in dataset.exchanges
+					exchangeMap[e.id] = e
+					flowMap[e.flow.id] = e.flow
 			if dataset.allocationFactors?.length
 				for factor in dataset.allocationFactors
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
