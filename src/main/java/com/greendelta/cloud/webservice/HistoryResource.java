@@ -95,12 +95,21 @@ public class HistoryResource {
 		if (commit == null)
 			return Respond.notFound();
 		List<Dataset> all = service.getReferences(repo, commitId);
+		List<Dataset> filtered = filterCategorizedTypes(all);
 		List<Dataset> refs = new ArrayList<>();
 		for (int i = (page - 1) * 10; i < page * 10; i++)
-			if (all.size() > i)
-				refs.add(all.get(i));
-		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, all.size(), refs.size(), refs);
+			if (filtered.size() > i)
+				refs.add(filtered.get(i));
+		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, filtered.size(), refs.size(), refs);
 		return Respond.ok(result);
+	}
+	
+	private List<Dataset> filterCategorizedTypes(List<Dataset> all) {
+		List<Dataset> filtered = new ArrayList<>();
+		for (Dataset ds: all) 
+			if (ds.type.isCategorized())
+				filtered.add(ds);
+		return filtered;
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
