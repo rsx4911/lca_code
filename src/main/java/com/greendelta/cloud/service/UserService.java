@@ -21,8 +21,7 @@ import com.greendelta.cloud.model.User;
 
 public class UserService {
 
-	private final static Logger log = LoggerFactory
-			.getLogger(UserService.class);
+	private final static Logger log = LoggerFactory.getLogger(UserService.class);
 	private final static Random random = new SecureRandom();
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
@@ -49,6 +48,13 @@ public class UserService {
 
 	public List<User> getAdmins() {
 		return dao.getForAttribute("admin", true);
+	}
+
+	public boolean isLastAdmin(User user) {
+		if (!user.admin)
+			return false;
+		List<User> admins = getAdmins();
+		return admins.size() == 1;
 	}
 
 	public User getCurrentUser() {
@@ -117,6 +123,17 @@ public class UserService {
 
 	public User update(User user) {
 		return dao.update(user);
+	}
+
+	public boolean logout() {
+		Subject subject = subjectProvider.get();
+		if (!subject.isAuthenticated())
+			return false;
+		Object principal = subject.getPrincipal();
+		log.info("User {} attempts to logout", principal);
+		subject.logout();
+		log.info("User {} successfully logged out", principal);
+		return true;
 	}
 
 }

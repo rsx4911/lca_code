@@ -19,6 +19,7 @@ import com.greendelta.cloud.service.GroupService;
 import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.util.Password;
 import com.greendelta.cloud.webservice.Respond;
@@ -77,9 +78,10 @@ public class UserResource {
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound();
+		NotificationJob notification = notificationService.userDeleted(user);
 		repoService.deleteAllFor(user);
 		service.delete(user.getId());
-		notificationService.userDeleted(user).send();
+		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
 

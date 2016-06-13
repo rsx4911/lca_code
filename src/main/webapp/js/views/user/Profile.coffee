@@ -28,7 +28,7 @@ define([
 				'click [data-action=generate-password]': (event) -> @generatePassword()
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
-					Avatar.save 'user', @user.get('username')
+					Avatar.save 'user', @user.get('username')		
 
 			initialize: (options) ->
 				{@user, @adminArea} = options
@@ -87,14 +87,24 @@ define([
 
 			deleteUser: (event) ->
 				username = @user.get 'username'
-				Layers.askDeleteQuestion "user #{username}", username, () =>
+				isOwnUser = @user.get('id') is currentUser.get('id')
+				text = if isOwnUser then 'your own user' else "user #{username}"
+				url = if isOwnUser then '/ws/user' else "/ws/admin/user/#{username}"
+				Layers.askDeleteQuestion text, username, () =>
 					$.ajax
 						type: 'DELETE'
-						url: "/ws/admin/user/#{username}"
-						success: () -> Router.navigate 'administration/overview'
+						url: url
+						success: () -> 
+							if currentUser.isAdmin() and @adminArea
+								Router.navigate 'administration/overview'
+							else
+								window.location.href = '/login'
 
 			reload: () ->
-				if currentUser.isAdmin() and @adminArea
+				isOwnUser = @user.get('id') is currentUser.get('id')
+				if currentUser.isAdmin() and isOwnUser and !@user.get('admin')
+					window.location.href = '/administration/overview'
+				else if currentUser.isAdmin() and @adminArea
 					Router.navigate 'administration/overview'
 				else
 					Status.success 'Successfully updated profile'

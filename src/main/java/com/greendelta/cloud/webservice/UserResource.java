@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -21,8 +22,11 @@ import org.openlca.cloud.util.ObjectMap;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.PagedResult;
+import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
 import com.greendelta.cloud.util.Password;
@@ -34,10 +38,14 @@ import com.sun.jersey.multipart.FormDataParam;
 public class UserResource {
 
 	private final UserService service;
+	private final RepositoryService repoService;
+	private final NotificationService notificationService;
 
 	@Inject
-	public UserResource(UserService service) {
+	public UserResource(UserService service, RepositoryService repoService, NotificationService notificationService) {
 		this.service = service;
+		this.repoService = repoService;
+		this.notificationService = notificationService;
 	}
 
 	@GET
@@ -46,7 +54,10 @@ public class UserResource {
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound();
-		return Respond.ok(new UserMapper().mapForSelf(user));
+		Map<String, Object> userMap = new UserMapper().mapForSelf(user);
+		if (user.admin)
+			userMap.put("lastAdmin", service.isLastAdmin(user));
+		return Respond.ok(userMap);
 	}
 
 	@GET
@@ -85,6 +96,19 @@ public class UserResource {
 			Beans.populateProperties(user, fromDb, "canCreateGroups", "canCreateRepositories", "admin");
 		fromDb = service.update(fromDb);
 		return Respond.ok(new UserMapper().mapForSelf(fromDb));
+	}
+
+	@DELETE
+	public Response delete() {
+		User user = service.getCurrentUser();
+		if (user == null)
+			return Respond.notFound();
+		NotificationJob notification = notificationService.userDeleted(user);
+		repoService.deleteAllFor(user);
+		service.delete(user.getId());
+		notification.send();
+		service.logout();
+		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT

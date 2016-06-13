@@ -68,13 +68,8 @@ public class SessionResource {
 	@POST
 	@Path("logout")
 	public Response logout() {
-		Subject subject = subjectProvider.get();
-		if (!subject.isAuthenticated())
+		if (!userService.logout())
 			return Respond.conflict("Not logged in");
-		Object principal = subject.getPrincipal();
-		log.info("User {} attempts to logout", principal);
-		subject.logout();
-		log.info("User {} successfully logged out", principal);
 		return Respond.ok();
 	}
 
