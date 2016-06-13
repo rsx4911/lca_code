@@ -14,7 +14,7 @@ define([
 			for li in $('li', menu)
 				if li is elem
 					break
-				margin += $(li).height()
+				margin += $(li).outerHeight true
 			return margin
 
 		activateActiveBar: (menu) ->
