@@ -91,10 +91,27 @@ public class RepositoryResource {
 		return Respond.created(new RepositoryMapper().map(repo, groupService.isUserNamespace(group)));
 	}
 
+	@POST
+	@Path("move/{group}/{name}/{newGroup}/{newName}")
+	public Response move(@PathParam("group") String group, @PathParam("name") String name,
+			@PathParam("newGroup") String newGroup, @PathParam("newName") String newName) {
+		if (!group.equals(newGroup))
+			if (!groupService.exists(newGroup))
+				return Respond.invalid("newGroup", "Specified group does not exist");
+		if (service.exists(newGroup, newName))
+			return Respond.conflict("Specified repository does already exist");
+		Repository repo = service.get(group, name);
+		boolean successful = service.move(repo, newGroup, newName);
+		if (!successful)
+			return Respond.error("Repository could not be moved");
+		Repository newRepo = service.get(newGroup, newName);
+		notificationService.repositoryMoved(repo, newRepo).send();
+		return Respond.ok(newRepo);
+	}
+
 	@DELETE
 	@Path("{group}/{name}")
-	public Response delete(@PathParam("group") String group,
-			@PathParam("name") String name) {
+	public Response delete(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		NotificationJob notification = notificationService.repositoryDeleted(repo);
 		service.delete(repo);
@@ -104,13 +121,13 @@ public class RepositoryResource {
 
 	@GET
 	@Path("{group}/{name}")
-	public Response get(@PathParam("group") String group,
-			@PathParam("name") String name) {
+	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = new RepositoryMapper().map(repo, groupService.isUserNamespace(group));
 		User currentUser = userService.getCurrentUser();
 		mappedRepo.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, repo.toId()));
 		mappedRepo.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, repo.toId()));
+		mappedRepo.put("userCanMove", currentUser.admin || accessService.canMove(currentUser, repo.toId()));
 		mappedRepo.put("userCanClone", currentUser.admin || accessService.canWrite(currentUser, repo.group));
 		mappedRepo.put("userCanEditMembers",
 				currentUser.admin || accessService.canEditMembers(currentUser, repo.toId()));
@@ -160,8 +177,7 @@ public class RepositoryResource {
 	@GET
 	@Path("avatar/{group}/{name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getAvatar(@PathParam("group") String group,
-			@PathParam("name") String name) {
+	public Response getAvatar(@PathParam("group") String group, @PathParam("name") String name) {
 		byte[] avatar = service.getAvatar(group, name);
 		return Respond.ok(avatar, "avatar-repository.png");
 	}

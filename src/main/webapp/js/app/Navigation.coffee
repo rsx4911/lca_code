@@ -29,11 +29,20 @@ define([
 				Renderer.render @, renderOptions
 
 			setItems: (type, items, active, repository) ->
-				if type isnt @lastType
+				if type isnt @lastType or !@isSameRepository(repository)
 					@doRender items, active, repository
 				else
 					@$('li.active').removeClass 'active'
 					@$("li[data-nav-id=#{active}]").addClass 'active'
 				@lastType = type
+				@lastRepository = repository
 
+			isSameRepository: (repository) ->
+				if !repository && !@lastRepository
+					return true 
+				if !repository || !@lastRepository
+					return false
+				if repository.group isnt @lastRepository.group
+					return false
+				return repository.name is @lastRepository.name
 )

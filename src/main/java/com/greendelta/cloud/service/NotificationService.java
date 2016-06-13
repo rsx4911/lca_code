@@ -71,6 +71,17 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
+	public NotificationJob repositoryMoved(Repository oldRepo, Repository newRepo) {
+		User currentUser = userService.getCurrentUser();
+		String subject = "A repository was deleted";
+		String message = "The repository " + oldRepo.toId() + " was moved to " + newRepo.toId()
+				+ " by the LCA Cloud user  " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_MOVED, newRepo.toId())));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_MOVED, false)));
+		return new NotificationJob(emails);
+	}
+
 	public NotificationJob repositoryDeleted(Repository repo) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A repository was deleted";

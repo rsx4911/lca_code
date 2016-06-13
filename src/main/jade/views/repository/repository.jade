@@ -2,6 +2,8 @@ include ../mixins/forms.jade
 include ../mixins/avatar-box.jade
 
 .header-box Info
+	if repository.userCanMove
+		button.btn.btn-lg.btn-default.pull-right(data-action='move-repository') Move
 	if repository.userCanClone
 		button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
 	if repository.userCanDelete

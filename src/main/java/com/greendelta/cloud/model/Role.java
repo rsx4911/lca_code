@@ -13,7 +13,7 @@ public enum Role {
 
 	CONTRIBUTOR(3, Permission.READ, Permission.WRITE),
 
-	OWNER(4, Permission.READ, Permission.WRITE, Permission.DELETE, Permission.EDIT_MEMBERS);
+	OWNER(4, Permission.READ, Permission.WRITE, Permission.MOVE, Permission.DELETE, Permission.EDIT_MEMBERS);
 
 	private List<Permission> permissions;
 	private int level;

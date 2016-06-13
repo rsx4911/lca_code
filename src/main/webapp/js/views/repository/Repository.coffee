@@ -24,6 +24,7 @@ define([
 					Avatar.save 'repository', @repository.get('group') + '/' + @repository.get('name')
 				'click [data-action=delete-repository]': (event) -> @deleteRepository event
 				'click [data-action=clone-repository]': (event) -> @openCloneLayer event
+				'click [data-action=move-repository]': (event) -> @openMoveLayer event
 
 			initialize: (options) ->
 				{@repository} = options
@@ -48,11 +49,27 @@ define([
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				@loadCommitsAndGroups (commits, groups) =>
-						Layers.showTemplateInLayer
-							title: "Clone #{fullPath}"
-							template: 'repository/clone'
-							model: {commits: commits, groups: groups, formatCommitDescription: Format.formatCommitDescription}
-							buttons: [{text: 'Clone', className: 'btn-success', callback: () => @cloneRepository()}]
+					Layers.showTemplateInLayer
+						title: "Clone #{fullPath}"
+						template: 'repository/clone'
+						model: {commits: commits, groups: groups, formatCommitDescription: Format.formatCommitDescription}
+						buttons: [{text: 'Clone', className: 'btn-success', callback: () => @cloneRepository()}]
+						callback: () =>
+							$('.modal #name').val repository.name
+							$('.modal #group').select repository.group
+
+			openMoveLayer: (event) ->
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				@loadGroups (groups) =>
+					Layers.showTemplateInLayer
+						title: "Move #{fullPath}"
+						template: 'repository/move'
+						model: {groups: groups}
+						buttons: [{text: 'Move', className: 'btn-success', callback: () => @moveRepository()}]
+						callback: () =>
+							$('.modal #name').val repository.name
+							$('.modal #group').val repository.group
 
 			loadCommitsAndGroups: (callback) ->
 				repository = @repository.toJSON()
@@ -61,15 +78,19 @@ define([
 					type: 'GET'
 					url: "/ws/history/#{fullPath}/null"
 					success: (commits) =>
-						$.ajax
-							type: 'GET'
-							url: '/ws/group?onlyIfCanWrite=true'
-							success: (result) =>
-								options = []
-								options.push currentUser.get 'username'
-								for group in result.data
-									options.push group.name
-								callback commits, options
+						@loadGroups (groups) =>
+							callback commits, groups
+
+			loadGroups: (callback) ->
+				$.ajax
+					type: 'GET'
+					url: '/ws/group?onlyIfCanWrite=true'
+					success: (result) =>
+						options = []
+						options.push currentUser.get 'username'
+						for group in result.data
+							options.push group.name
+						callback options
 
 			cloneRepository: () ->
 				repo = @repository.toJSON()
@@ -90,5 +111,24 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'clone-form', response
+
+			moveRepository: () ->
+				repo = @repository.toJSON()
+				newGroup = $('#group').val()
+				newName = $('#name').val()
+				unless newName
+					Forms.handleError 'move-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
+				Layers.showProgressIndicator 'Moving'
+				$.ajax
+					type: 'POST'
+					url: "/ws/repository/move/#{repo.group}/#{repo.name}/#{newGroup}/#{newName}"
+					success: () -> 
+						Layers.hideProgressIndicator()
+						Layers.closeActive()
+						Status.success 'Successfully moved repository'
+						Router.navigate "#{newGroup}/#{newName}"
+					error: (response) -> 
+						Layers.hideProgressIndicator()
+						Forms.handleError 'move-form', response
 
 )

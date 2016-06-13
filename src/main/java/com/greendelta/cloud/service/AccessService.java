@@ -33,6 +33,13 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.WRITE);
 	}
 
+	public boolean canMove(User user, String groupOrRepo) {
+		if (isGroup(groupOrRepo))
+			return false; // can not move groups
+		Role role = membershipService.getRole(user, groupOrRepo);
+		return role.getPermissions().contains(Permission.MOVE);
+	}
+	
 	public boolean canDelete(User user, String groupOrRepo) {
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;

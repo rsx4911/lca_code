@@ -23,8 +23,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.greendelta.cloud.model.Membership;
 import com.greendelta.cloud.model.Role;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.util.Dirs;
 
 public class RepositoryService {
 
@@ -68,6 +70,40 @@ public class RepositoryService {
 		Repository repo = get(group, name);
 		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER);
 		return repo;
+	}
+
+	public boolean move(Repository repo, String group, String name) {
+		User currentUser = userService.getCurrentUser();
+		if (!currentUser.admin && !accessService.canMove(currentUser, repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "MOVE");
+		if (!currentUser.admin && !accessService.canCreateRepository(currentUser, group))
+			throw new UnauthorizedAccessException(group, "WRITE");
+		if (!currentUser.admin && !accessService.canDelete(currentUser, repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
+		if (exists(group, name))
+			return false;
+		Repository newRepo = create(group, name);
+		try {
+			boolean moved = Dirs.moveContents(repo.repoDir, newRepo.repoDir, true);
+			if (!moved) {
+				delete(newRepo);
+				return false;
+			}
+			moveMemberships(repo, newRepo);
+			delete(repo);
+		} catch (IOException e) {
+			log.error("Error moving repository contents", e);
+		}
+		return true;
+	}
+
+	private void moveMemberships(Repository fromRepo, Repository toRepo) {
+		List<Membership> memberships = membershipService.getMemberships(fromRepo.toId());
+		for (Membership membership : memberships)
+			if (membership.team != null)
+				membershipService.addMemberships(membership.team, toRepo.toId(), membership.role);
+			else
+				membershipService.addMembership(membership.user, toRepo.toId(), membership.role);
 	}
 
 	public boolean cloneContents(Repository from, Repository to, List<Commit> commits) {
