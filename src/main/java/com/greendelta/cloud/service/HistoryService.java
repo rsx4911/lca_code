@@ -67,7 +67,17 @@ public class HistoryService {
 
 	public Commit getLastCommit(Repository repo, ModelType type, String refId, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId));
+		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId,
+				false));
+		if (commits.isEmpty())
+			return null;
+		return commits.get(commits.size() - 1);
+	}
+
+	public Commit getLastCommitBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
+		File file = repo.getHistoryFile(false);
+		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId,
+				true));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -255,12 +265,15 @@ public class HistoryService {
 		private final ModelType type;
 		private final String refId;
 		private boolean done;
+		private boolean beforeCommit; // if true the commit itself will not be
+										// returned
 
-		private LastCommitFilter(String commitId, Repository repo, ModelType type, String refId) {
+		private LastCommitFilter(String commitId, Repository repo, ModelType type, String refId, boolean beforeCommit) {
 			this.commitId = commitId;
 			this.repo = repo;
 			this.type = type;
 			this.refId = refId;
+			this.beforeCommit = beforeCommit;
 		}
 
 		@Override
@@ -269,6 +282,8 @@ public class HistoryService {
 				return true;
 			if (element.id.equals(commitId))
 				done = true;
+			if (beforeCommit && done)
+				return true;
 			return !containsModel(element.id);
 		}
 

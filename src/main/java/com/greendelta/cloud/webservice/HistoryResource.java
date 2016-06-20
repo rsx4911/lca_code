@@ -86,6 +86,20 @@ public class HistoryResource {
 	}
 
 	@GET
+	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response getPreviousReference(@PathParam("group") String group, @PathParam("name") String name,
+			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
+		Repository repo = repoService.get(group, name);
+		if (commitId == "null")
+			commitId = null;
+		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
+		if (lastCommit == null || lastCommit.id.equals(commitId))
+			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
+		return Respond.ok(lastCommit.id);
+	}
+
+	@GET
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getReferences(@PathParam("group") String group, @PathParam("name") String name,
@@ -103,10 +117,10 @@ public class HistoryResource {
 		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, filtered.size(), refs.size(), refs);
 		return Respond.ok(result);
 	}
-	
+
 	private List<Dataset> filterCategorizedTypes(List<Dataset> all) {
 		List<Dataset> filtered = new ArrayList<>();
-		for (Dataset ds: all) 
+		for (Dataset ds : all)
 			if (ds.type.isCategorized())
 				filtered.add(ds);
 		return filtered;
