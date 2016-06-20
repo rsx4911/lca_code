@@ -90,9 +90,13 @@ mixin social-aspect-table(aspects)
 			each aspect in aspects
 				tr
 					td=aspect.socialIndicator.name
-					td #{aspect.rawAmount} [#{aspect.socialIndicator.unitOfMeasurement}]
+					td #{aspect.rawAmount} 
+						if aspect.socialIndicator.unitOfMeasurement
+							| [#{aspect.socialIndicator.unitOfMeasurement}]
 					td=aspect.riskLevel
-					td 1 #{aspect.socialIndicator.activityUnit.name} #{aspect.socialIndicator.activityVariable}
+					td #{aspect.activityValue}
+						if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+							| [#{aspect.socialIndicator.activityUnit.name}, #{aspect.socialIndicator.activityVariable}]
 					td=aspect.quality
 					td=aspect.comment
 					td: +ref(aspect.source)
