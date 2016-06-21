@@ -136,7 +136,10 @@ public class HistoryResource {
 	private Map<String, Object> putUserName(Commit commit) {
 		ObjectMap map = ObjectMap.fromObject(commit);
 		User user = userService.getForUsername(commit.user);
-		map.put("userDisplayName", user.name);
+		if (user != null)
+			map.put("userDisplayName", user.name);
+		else 
+			map.put("userDisplayName", commit.user);
 		return map;
 	}
 }
