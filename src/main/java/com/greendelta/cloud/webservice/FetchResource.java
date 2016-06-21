@@ -157,7 +157,7 @@ public class FetchResource {
 	public Response fetch(@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId,
-			List<Dataset> requested) {
+			List<String> requested) {
 		Repository repo = repoService.get(group, name);
 		if (lastCommitId.equals("null"))
 			lastCommitId = null;
@@ -192,14 +192,14 @@ public class FetchResource {
 		return Respond.ok(resultData);
 	}
 
-	private StreamingOutput prepareFetch(List<Dataset> requested, List<Commit> commits, Repository repo) {
+	private StreamingOutput prepareFetch(List<String> requested, List<Commit> commits, Repository repo) {
 		FetchWriter writer = new FetchWriter(null);
 		Collections.reverse(commits);
 		try {
 			Set<String> alreadyPut = new HashSet<>();
 			for (Commit commit : commits) {
 				for (Dataset dataset : historyService.getReferences(repo, commit.id)) {
-					if (requested != null && !requested.contains(dataset))
+					if (requested != null && !requested.contains(dataset.refId))
 						continue;
 					if (alreadyPut.contains(toKey(dataset)))
 						continue;
