@@ -13,6 +13,7 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -259,11 +260,15 @@ public class RepositoryService {
 			for (File name : group.listFiles()) {
 				if (!name.isDirectory())
 					continue;
-				Repository repo = new Repository(this.root, group.getName(),
-						name.getName());
-				if (!isAdmin && !accessService.canRead(currentUser, repo.toId()))
-					continue;
-				repos.add(repo);
+				try {
+					Repository repo = new Repository(this.root, group.getName(),
+							name.getName());
+					if (!isAdmin && !accessService.canRead(currentUser, repo.toId()))
+						continue;
+					repos.add(repo);
+				} catch (UnsupportedSchemaException e) {
+					// ignore, just don't add to list
+				}
 			}
 		}
 		return repos;

@@ -54,7 +54,7 @@ mixin field-row(label, value, checkValue, formatter)
 			td #{value?formatter?formatter(value):value:''}
 				block
 
-mixin ref(ref, additionalTypeInfo, noImage)
+mixin ref(ref, additionalTypeInfo, noImage, defaultLabel)
 	if ref
 		if !noImage
 			img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
@@ -62,6 +62,8 @@ mixin ref(ref, additionalTypeInfo, noImage)
 			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
 		else
 			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
+	else if defaultLabel
+		| #{defaultLabel}
 
 mixin ref-row(label, ref, additionalTypeInfo, noImage)
 	if ref
@@ -69,24 +71,34 @@ mixin ref-row(label, ref, additionalTypeInfo, noImage)
 			td=label
 			td: +ref(ref, additionalTypeInfo, noImage)
 
-mixin uncertainty(uncertainty)
+mixin uncertainty(uncertainty, round)
 	if uncertainty
 		if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
-			| Logarithmic normal distribution
+			| Lognormal distribution
 			br
-			| (Geom. mean: #{uncertainty.geomMean}, Geom. SD: #{uncertainty.geomSd})
+			| Geom. mean: #{noToStr(uncertainty.geomMean, round)}
+			br
+			| Geom. SD: #{noToStr(uncertainty.geomSd, round)}
 		else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
 			| Normal distribution 
 			br
-			| (Mean: #{uncertainty.mean}, SD: #{uncertainty.sd})
+			| Mean: #{noToStr(uncertainty.mean, round)} 
+			br
+			| SD: #{noToStr(uncertainty.sd, round)}
 		else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
 			| Triangle distribution
 			br
-			| (Min: #{uncertainty.minimum}, Mode: #{uncertainty.mode}, Max: #{uncertainty.maximum})
+			| Min: #{noToStr(uncertainty.minimum, round)}
+			br
+			| Mode: #{noToStr(uncertainty.mode, round)}
+			br
+			| Max: #{noToStruncertainty.maximum, round)}
 		else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
 			| Uniform distribution 
 			br
-			| (Min: #{uncertainty.minimum}, Max: #{uncertainty.maximum})
+			| Min: #{noToStr(uncertainty.minimum, round)}
+			br
+			| Max: #{noToStr(uncertainty.maximum, round)}
 		else
 			| No distribution
 	else
@@ -141,4 +153,27 @@ mixin parameter-redef-table(parameters)
 					td 
 						if parameter.inputParameter
 							+uncertainty(parameter.uncertainty)
+
+mixin data-quality-matrix(system, uncertainties, entries)
+	if system.indicators && system.indicators.length
+		- clazz = ''
+		if uncertainties
+			- clazz += 'uncertainties'
+		else if entries
+			- clazz += 'center-inline'
+		table.data-quality.no-head(class=clazz?clazz:null)
+			thead
+				tr
+					th
+					each score in system.indicators[0].scores
+						th=score.label?score.label:score.position
+			tbody
+				each indicator in system.indicators
+					tr
+						td=indicator.name?indicator.name:indicator.position
+						each score in indicator.scores
+							if uncertainties
+								td=score.uncertainty
+							else
+								td(style='background-color:#{getDQColor(system, indicator, score, entries)}' data-indicator=indicator.position data-score=score.position): span=score.description
 

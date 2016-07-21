@@ -9,3 +9,8 @@ define () ->
 		if space is -1
 			return text.substring(0, 100) + '...'
 		return text.substring(0, space) + '...'
+
+	number: (value, round) ->
+		unless round
+			return value
+		return Math.round(value * 1000) / 1000

@@ -1,6 +1,6 @@
 include ./mixins.jade
 
-mixin exchange-row(exchange)
+mixin exchange-row(exchange, dqSystem)
 	tr(class=exchange.quantitativeReference?'reference':null)
 		td: img.icon-small(src='/images/' + (exchange.input?'input':'output') + '.png')
 		td: +ref(exchange.flow)
@@ -16,7 +16,13 @@ mixin exchange-row(exchange)
 		td 
 			if exchange.costValue
 				| #{exchange.costValue} #{exchange.currency.name}
-		td: +uncertainty(exchange.uncertainty)
+		td: +uncertainty(exchange.uncertainty, true)
+		td
+			if exchange.dqEntry
+				if dqSystem
+					a(href='#' data-action='show-data-quality' data-entry=exchange.dqEntry data-schema=dqSystem.id)=exchange.dqEntry
+				else
+					| #{exchange.dqEntry}
 		td
 			if exchange.input
 				+ref(exchange.defaultProvider)
@@ -24,7 +30,7 @@ mixin exchange-row(exchange)
 				if exchange.avoidedProduct
 					img.icon-small(src='/images/check_true.png')
 
-mixin exchange-table(exchanges, input)
+mixin exchange-table(exchanges, input, dqSystem)
 	table.table(class=input?'inputs':'outputs')
 		thead
 			tr
@@ -34,11 +40,12 @@ mixin exchange-table(exchanges, input)
 				th Amount
 				th Costs
 				th Uncertainty
+				th Data quality
 				th #{input?'Provider':'Avoided product'}
 		tbody
 			each exchange in exchanges
 				if exchange.input === input
-					+exchange-row(exchange)
+					+exchange-row(exchange, dqSystem)
 
 mixin non-causal-allocation-table(factors)
 	h4 Physical & Economic allocation
@@ -75,7 +82,7 @@ mixin causal-allocation-table(factors)
 						each product in factor.products
 							td=product.value
 
-mixin social-aspect-table(aspects)
+mixin social-aspect-table(aspects, dqSystem)
 	table.table.social-aspects
 		thead
 			tr
@@ -89,7 +96,7 @@ mixin social-aspect-table(aspects)
 		tbody
 			each aspect in aspects
 				tr
-					td=aspect.socialIndicator.name
+					td: +ref(aspect.socialIndicator)
 					td #{aspect.rawAmount} 
 						if aspect.socialIndicator.unitOfMeasurement
 							| [#{aspect.socialIndicator.unitOfMeasurement}]
@@ -97,7 +104,12 @@ mixin social-aspect-table(aspects)
 					td #{aspect.activityValue}
 						if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
 							| [#{aspect.socialIndicator.activityUnit.name}, #{aspect.socialIndicator.activityVariable}]
-					td=aspect.quality
+					td
+						if aspect.quality
+							if dqSystem
+								a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dqSystem.id)=aspect.quality
+							else
+								| #{aspect.quality}
 					td=aspect.comment
 					td: +ref(aspect.source)
 
@@ -124,8 +136,8 @@ mixin social-aspect-table(aspects)
 			.tab-content
 				#exchanges.tab-pane.active(role='tabpanel')
 					if dataset.exchanges
-						+exchange-table(dataset.exchanges, true)
-						+exchange-table(dataset.exchanges, false)
+						+exchange-table(dataset.exchanges, true, dataset.exchangeDqSystem)
+						+exchange-table(dataset.exchanges, false, dataset.exchangeDqSystem)
 				if doc
 					#documentation.tab-pane(role='tabpanel')
 						table.table.no-head
@@ -160,7 +172,7 @@ mixin social-aspect-table(aspects)
 						+causal-allocation-table(dataset.causalAllocationFactors)
 				if dataset.socialAspects && dataset.socialAspects.length
 					#social.tab-pane(role='tabpanel')
-						+social-aspect-table(dataset.socialAspects)
+						+social-aspect-table(dataset.socialAspects, dataset.socialDqSystem)
 				if dataset.parameters && dataset.parameters.length
 					#parameters.tab-pane(role='tabpanel')
 						+parameter-table(dataset.parameters, true)
@@ -174,16 +186,9 @@ mixin social-aspect-table(aspects)
 				each exchange in dataset.exchanges
 					if exchange.quantitativeReference
 						- flow = exchange.flow
-			if flow
-				+ref(flow, flow.flowType)
-			else
-				| -
+			+ref(flow, flow?flow.flowType:null, false, '-')
 		strong Location
-		div
-			if dataset.location
-				+ref(dataset.location)
-			else
-				| -
+		div: +ref(dataset.location, null, false, '-')
 		hr
 		strong Valid from
 		div=doc.validFrom?formatDate(doc.validFrom):'-'
@@ -196,4 +201,20 @@ mixin social-aspect-table(aspects)
 		div=doc.geographyDescription?doc.geographyDescription:'-'
 		strong Technology description
 		div=doc.technologyDescription?doc.technologyDescription:'-'
+		hr
+		strong Process data quality schema
+		div: +ref(dataset.dqSystem, null, false, '-')
+		strong Input/Output data quality schema
+		div: +ref(dataset.exchangeDqSystem, null, false, '-')
+		strong Social data quality schema
+		div: +ref(dataset.socialDqSystem, null, false, '-')
+		strong Process data quality
+		div
+			if dataset.dqEntry
+				if dataset.dqSystem
+					a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-schema=dataset.dqSystem.id)=dataset.dqEntry
+				else
+					| #{dataset.dqEntry}
+			else
+				| -
 	.clear

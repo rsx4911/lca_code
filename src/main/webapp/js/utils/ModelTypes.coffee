@@ -14,3 +14,4 @@ define () ->
 	CURRENCY: 'Currencies'
 	PARAMETER: 'Parameters'
 	CATEGORY: 'Category'
+	DQ_SYSTEM: 'Data quality systems'

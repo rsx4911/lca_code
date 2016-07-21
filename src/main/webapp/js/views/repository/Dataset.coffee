@@ -2,12 +2,14 @@ define([
 				'backbone'
 				'moment'
 				'open-layers'
+				'cs!utils/DataQuality'
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Icons'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!views/repository/util/DatasetPrepare'
+				'cs!views/repository/util/DataQualityLayer'
 				'cs!app/Router'
 				'templates/views/repository/model/project'
 				'templates/views/repository/model/product-system'
@@ -22,12 +24,13 @@ define([
 				'templates/views/repository/model/source'
 				'templates/views/repository/model/actor'
 				'templates/views/repository/model/location'
+				'templates/views/repository/model/dq-system'
 				'templates/views/repository/model/impact-factor-rows'
 				'templates/views/repository/model/nw-factor-rows'
 				'tablesorter'
 			]
 
-	(Backbone, Moment, OpenLayers, Events, Format, Icons, Layers, Renderer, DatasetPrepare, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, Moment, OpenLayers, DataQuality, Events, Format, Icons, Layers, Renderer, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -46,6 +49,7 @@ define([
 					when 'SOURCE' then return source
 					when 'ACTOR' then return actor
 					when 'LOCATION' then return location
+					when 'DQ_SYSTEM' then return dqSystem
 
 			loadDataset: (callback) ->
 				urlPart = @getUrlPart()
@@ -90,10 +94,15 @@ define([
 			className: 'repository-dataset'
 
 			events: 
-				'click a:not([role]):not([target=_blank])': (event) -> Events.followLink event
+				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
 				'click [data-action=download-data]': (event) -> @downloadData event
 				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
 				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
+				'click a[data-action=show-data-quality]': (event) ->
+					target = $ Events.target event
+					entry = target.attr 'data-entry'
+					schemaId = target.attr 'data-schema'
+					DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
 				'change #commitId': (event) -> 
 					repo = @repository.toJSON()
 					type = @type
@@ -123,8 +132,10 @@ define([
 							formatDate: (value) -> return if !value then '' else moment(value).format('MM/DD/YYYY hh:mm:ss')
 							getLabel: @getLabel
 							getIcon: Icons.get
-							getTypeAsEnum: @getTypeAsEnum
+							getTypeAsEnum: (type) => @getTypeAsEnum(type)
 							getUncertaintyLabel: @getUncertaintyLabel
+							getDQColor: DataQuality.getColor 
+							noToStr: Format.number
 							fileBaseUrl: @getFileBaseUrl()
 							commits: commits
 							commitId: @commitId or commits[0].id
@@ -138,6 +149,8 @@ define([
 									@initTableSorting()
 						else
 							@initTableSorting()
+						if dataset.type is 'DQSystem'
+							@initDataQualityPopups(dataset)
 
 			initTableSorting: () ->
 				tables = @$('table:not(.no-head)')
@@ -165,12 +178,17 @@ define([
 							when 'LCI_RESULT' then return 'System process'
 				return ''
 
+			isCapital: (char) ->
+				asInt = char.charCodeAt(0)
+				if asInt < 65 or asInt > 90
+					return false
+				return true
+
 			getTypeAsEnum: (type) ->
 				asEnum = ''
 				first = true
-				for char in type 
-					asInt = char.charCodeAt(0)
-					if !first and asInt >= 65 and asInt <= 90
+				for char, index in type 
+					if !first and @isCapital(char) and !@isCapital(type[index + 1])
 						asEnum += '_'
 					first = false
 					asEnum += char
@@ -218,5 +236,20 @@ define([
 							@$('#nw-factors tbody').append nwFactorsTemplate 
 								nwSet: nwSet
 							callback()
+
+			initDataQualityPopups: (dataset) ->
+				@$('table.data-quality td').on 'click', (event) ->
+					target = $ Events.target event
+					span = $ 'span', target
+					if span.css('display') is 'none'
+						iIndex = target.attr('data-indicator') - 1
+						sIndex = target.attr('data-score') - 1
+						indicator = dataset.indicators[iIndex]
+						score = indicator.scores[sIndex]
+						iName = if indicator.name then indicator.name else indicator.position
+						sName = if score.label then score.label else score.position
+						Layers.showMessageInLayer
+							title: "#{iName} - #{sName}"
+							body: score.description
 
 )

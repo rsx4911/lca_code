@@ -26,7 +26,7 @@ public class BrowseService {
 				ModelType.PROCESS, ModelType.FLOW, ModelType.SOCIAL_INDICATOR,
 				ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP,
 				ModelType.CURRENCY, ModelType.SOURCE, ModelType.ACTOR,
-				ModelType.LOCATION };
+				ModelType.LOCATION, ModelType.DQ_SYSTEM };
 		for (ModelType type : all) {
 			File dir = repo.getModelDir(type, false);
 			if (dir.exists())

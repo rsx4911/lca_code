@@ -51,11 +51,7 @@ include ./mixins.jade
 	+meta
 		hr
 		strong Impact method
-		div
-			if dataset.impactMethod
-				+ref(dataset.impactMethod)
-			else
-				| -
+		div: +ref(dataset.impactMethod, null, false, '-')
 		strong Normalization & Weighting set
 		div=dataset.nwSet?dataset.nwSet.name:'-'
 	.clear

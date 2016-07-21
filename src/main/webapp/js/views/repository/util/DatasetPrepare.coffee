@@ -39,6 +39,8 @@ define([
 					Sort.flowPropertyFactors dataset
 				when 'UnitGroup'
 					Sort.units dataset
+				when 'DQSystem'
+					Sort.indicatorsAndScores dataset
 
 		removeAtSigns: (object) ->
 			for key in Object.keys(object)

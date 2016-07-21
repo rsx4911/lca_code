@@ -17,6 +17,9 @@ define([
 						replace: true
 					when 404 then Router.navigate '/404',
 						replace: true
+					# treat unsupported schema as not existing
+					when 406 then Router.navigate '/404',
+						replace: true
 
 		initialize: () ->
 			$.fn.extend

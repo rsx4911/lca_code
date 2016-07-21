@@ -129,3 +129,13 @@ define () ->
 				return 1
 			return 0
 						
+	indicatorsAndScores: (dataset) ->
+		unless dataset.indicators
+			return
+		dataset.indicators.sort (i1, i2) ->
+			return i1.position - i2.position
+		for indicator in dataset.indicators
+			unless indicator.scores
+				continue
+			indicator.scores.sort (s1, s2) ->
+				return s1.position - s2.position

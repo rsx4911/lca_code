@@ -1,11 +1,16 @@
 define () ->
 
+	isCapital = (char) ->
+		asInt = char.charCodeAt(0)
+		if asInt < 65 or asInt > 90
+			return false
+		return true
+
 	get: (ref, additionalTypeInfo) ->
 		icon = ''
 		first = true
-		for char in ref.type 
-			asInt = char.charCodeAt(0)
-			if !first and asInt >= 65 and asInt <= 90
+		for char, index in ref.type 
+			if !first and isCapital(char) and !isCapital(ref.type[index + 1])
 				icon += '_'
 			first = false
 			icon += char
