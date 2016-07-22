@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
@@ -65,7 +64,6 @@ public class UserService {
 		return getForUsername(name);
 	}
 
-	@RequiresRoles("admin")
 	public long getCount() {
 		return dao.getCount();
 	}
@@ -116,7 +114,6 @@ public class UserService {
 		return true;
 	}
 
-	@RequiresRoles("admin")
 	public User insert(User user) {
 		return dao.insert(user);
 	}

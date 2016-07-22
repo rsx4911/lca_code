@@ -1,13 +1,14 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/user-menu'
 			]
 
-	(Backbone, Events, Renderer, Router, currentUser, template) ->
+	(Backbone, Events, Layers, Renderer, Router, currentUser, template) ->
 
 		class UserMenu extends Backbone.View
 
@@ -31,14 +32,26 @@ define([
 					Router.navigate '/search'
 
 			events: 
-				'click a[href]:not([target=_blank]):not(.logout)': (event) -> Events.followLink event
+				'click a[href]:not([target=_blank]):not(.logout):not([data-action])': (event) -> Events.followLink event
 				'click a.logout': (event) -> @logout event
+				'click a[data-action=upgrade]': (event) -> @openUpgradeDialog event
 				'keyup #global-search': (event) -> @onSearchKeyUp event
 
 			render: (renderOptions) ->
-				@$el.html template 
-					isAdmin: currentUser.isAdmin()
-				Renderer.render @, renderOptions
-				@$('[data-toggle=tooltip]').tooltip()
+				$.ajax
+					type: 'GET' 
+					url: '/ws/admin/area/upgradeAvailable'
+					success: (upgradeAvailable) =>
+						@$el.html template 
+							isAdmin: currentUser.isAdmin()
+							upgradeAvailable: upgradeAvailable is 'true'
+						Renderer.render @, renderOptions
+						@$('[data-toggle=tooltip]').tooltip()
 
+			openUpgradeDialog: (event) ->
+				Events.preventDefault event
+				Layers.showProgressInLayer 
+					title: 'Upgrading repositories' 
+					url: 'ws://localhost:8080/sockets/admin/upgrade'
+					pageReloadOnClose: true
 )

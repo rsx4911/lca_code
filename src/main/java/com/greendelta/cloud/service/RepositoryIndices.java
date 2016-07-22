@@ -11,7 +11,7 @@ import com.greendelta.cloud.index.DatasetIndex;
 @Singleton
 public class RepositoryIndices {
 
-	private final Map<String, DatasetIndex> indices = new HashMap<>();
+	private final static Map<String, DatasetIndex> indices = new HashMap<>();
 	private final Provider<HistoryService> historyServiceProvider;
 
 	@Inject

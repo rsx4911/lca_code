@@ -103,6 +103,21 @@ define([
 									button.context = view
 						(@_ showInLayer) options
 
+			showProgressInLayer: (options) ->
+				@showViewInLayer
+					title: options.title
+					view: 'ProgressLayer'
+					viewOptions: 
+						url: options.url
+						pageReloadOnClose: options.pageReloadOnClose
+					notCloseable: true
+					static: true
+					buttons: [
+						{id: 'progress-btn-close', text: 'Close', callback: 'close'}
+						{id: 'progress-btn-cancel', text: 'Cancel', callback: 'cancel'}
+						{id: 'progress-btn-run', className: 'btn-primary', text: 'Run', callback: 'start'}
+					]
+
 			askQuestion: (options) ->
 				unless options.question
 					return

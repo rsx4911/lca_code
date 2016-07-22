@@ -7,6 +7,7 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,15 +22,23 @@ public class Repository {
 	public final String group;
 	public final String name;
 
-	Repository(String root, String group, String name) {
+	static Repository get(String root, String group, String name) {
+		Repository repo = new Repository(root, group, name);
+		repo.checkVersion();
+		return repo;
+	}
+
+	static Repository getIgnoreSchema(String root, String group, String name) {
+		return new Repository(root, group, name);
+	}
+
+	private Repository(String root, String group, String name) {
 		this.group = group;
 		this.name = name;
 		String path = root + File.separator + toId();
 		repoDir = new File(path);
-		if (repoDir.exists()) {
-			checkVersion();
+		if (repoDir.exists())
 			return;
-		}
 		throw new RepositoryNotFoundException(toId());
 	}
 
@@ -41,15 +50,35 @@ public class Repository {
 		return group + File.separator + name;
 	}
 
-	private void checkVersion() {
+	public String getSchemaVersion() {
 		try {
 			File file = new File(repoDir, "context.json");
 			if (!file.exists())
-				throw new UnsupportedSchemaException("null");
+				return null;
 			byte[] data = Files.toByteArray(file);
 			String json = new String(data, "utf-8");
 			JsonElement context = new Gson().fromJson(json, JsonElement.class);
-			String version = Schema.parseUri(context);
+			return Schema.parseUri(context);
+		} catch (Exception e) {
+			log.error("Could not read context.json", e);
+			return null;
+		}
+	}
+
+	public void setSchemaVersion(String version) {
+		File file = new File(repoDir, "context.json");
+		JsonElement context = Context.write(version);
+		String json = new Gson().toJson(context);
+		try {
+			Files.write(json.getBytes(), file);
+		} catch (IOException e) {
+			log.error("Could not write context.json", e);
+		}
+	}
+
+	private void checkVersion() {
+		try {
+			String version = getSchemaVersion();
 			if (!Schema.isSupportedSchema(version))
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {

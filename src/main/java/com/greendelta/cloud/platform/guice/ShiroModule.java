@@ -37,6 +37,8 @@ class ShiroModule extends ShiroWebModule {
 		expose(JpaRealm.class);
 		expose(Subject.class);
 		expose(CloudSession.class);
+		addFilterChain("/sockets/admin**", ROLES, config(ROLES, "admin"));
+		addFilterChain("/ws/admin/**", ROLES, config(ROLES, "admin"));
 		addFilterChain("/login", ANON);
 		addFilterChain("/imprint", ANON);
 		addFilterChain("/ws/public/**", ANON);
@@ -46,7 +48,6 @@ class ShiroModule extends ShiroWebModule {
 			else
 				addFilterChain("/" + sr, ANON);
 		addFilterChain("/**", Key.get(AuthenticationFilter.class));
-		addFilterChain("/ws/admin/**", ROLES, config(ROLES, "admin"));
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}
 

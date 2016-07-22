@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.shiro.authz.annotation.RequiresRoles;
-
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.Team;
@@ -65,7 +63,6 @@ public class TeamService {
 		return false;
 	}
 
-	@RequiresRoles("admin")
 	public long getCount() {
 		return dao.getCount();
 	}

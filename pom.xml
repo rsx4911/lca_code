@@ -244,6 +244,7 @@
 			<groupId>javax.websocket</groupId>
 			<artifactId>javax.websocket-api</artifactId>
 			<version>1.1</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- Tests -->
@@ -420,7 +421,7 @@
 					</webResources>
 				</configuration>
 			</plugin>
-			
+
 		</plugins>
 
 	</build>

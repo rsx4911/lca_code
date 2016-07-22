@@ -26,8 +26,7 @@ public class JpaAccount implements Account, SaltedAuthenticationInfo {
 	public JpaAccount(User user, Realm realm) {
 		Sha256Hash hash = Sha256Hash.fromHexString(user.hash);
 		ByteSource salt = new SimpleByteSource(Hex.decode(user.salt));
-		authenticationInfo = new SimpleAuthenticationInfo(user.username, hash,
-				salt, realm.getName());
+		authenticationInfo = new SimpleAuthenticationInfo(user.username, hash, salt, realm.getName());
 		roles = new ArrayList<>();
 		if (user.admin)
 			roles.add("admin");

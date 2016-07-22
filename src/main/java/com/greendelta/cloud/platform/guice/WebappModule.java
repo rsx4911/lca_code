@@ -5,6 +5,8 @@ import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import websocket.WebsocketConfigurator;
+
 import com.google.inject.Singleton;
 import com.google.inject.persist.PersistFilter;
 import com.google.inject.servlet.ServletModule;
@@ -13,13 +15,14 @@ import com.greendelta.cloud.platform.servlet.DefaultServlet;
 class WebappModule extends ServletModule {
 
 	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "favicon.ico" };
-	private static final Logger log = LoggerFactory
-			.getLogger(WebappModule.class);
+	private static final Logger log = LoggerFactory.getLogger(WebappModule.class);
 
 	@Override
 	protected void configureServlets() {
+		requestStaticInjection(WebsocketConfigurator.class);
 		configureNonStaticResources();
 		filter("/ws/*").through(PersistFilter.class);
+		filter("/sockets/*").through(PersistFilter.class);
 		bind(ShiroFilter.class).in(Singleton.class);
 		filter("/*").through(ShiroFilter.class);
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
@@ -32,7 +35,7 @@ class WebappModule extends ServletModule {
 				statics = sr;
 			else
 				statics += "|" + sr;
-		String webservices = "ws/";
+		String webservices = "ws/|sockets/";
 		String webapp = "^/(?!" + statics + "|" + webservices + "|[^/]+[.]html).*";
 		serveRegex(webapp).with(DefaultServlet.class);
 	}

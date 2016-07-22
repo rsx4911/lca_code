@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
 import org.slf4j.Logger;
@@ -56,11 +55,6 @@ public class GroupService {
 		return create(group, false);
 	}
 
-	@RequiresRoles("admin")
-	public boolean createUserGroup(String username) {
-		return create(username, true);
-	}
-	
 	private boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
 		if (!currentUser.admin && !currentUser.canCreateGroups)

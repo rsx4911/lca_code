@@ -13,6 +13,7 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.jsonld.output.Context;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class RepositoryService {
 	}
 
 	public Repository get(String group, String name) {
-		Repository repo = new Repository(root, group, name);
+		Repository repo = Repository.get(root, group, name);
 		User currentUser = userService.getCurrentUser();
 		if (!currentUser.admin && !accessService.canRead(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
@@ -204,7 +205,7 @@ public class RepositoryService {
 	}
 
 	private void putJsonContext(String group, String name) {
-		JsonObject context = Context.write();
+		JsonObject context = Context.write(Schema.URI);
 		try {
 			File file = new File(getPath(group, name), "context.json");
 			file.createNewFile();
@@ -261,8 +262,7 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				try {
-					Repository repo = new Repository(this.root, group.getName(),
-							name.getName());
+					Repository repo = Repository.get(this.root, group.getName(), name.getName());
 					if (!isAdmin && !accessService.canRead(currentUser, repo.toId()))
 						continue;
 					repos.add(repo);

@@ -77,8 +77,30 @@ public class DatasetIndex {
 		}
 	}
 
+	public List<DatasetIndexEntry> getAll(ModelType type) {
+		List<DatasetIndexEntry> entries = new ArrayList<>();
+		IndexSearcher searcher = IndexUtil.getSearcher(directory);
+		if (searcher == null)
+			return Collections.emptyList();
+		try {
+			Query query = new TermQuery(new Term("type", type.name()));
+			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
+			if (topDocs.totalHits == 0)
+				return Collections.emptyList();
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				entries.add(entry);
+			}
+			return entries;
+		} catch (IOException e) {
+			log.error("Error retrieving dataset identifiers", e);
+			return Collections.emptyList();
+		}
+
+	}
+
 	public List<DatasetIndexEntry> getForModelType(ModelType type, String nameFilter) {
-		HistoryService historyService = historyServiceProvider.get();
+		HistoryService historyService = historyServiceProvider != null ? historyServiceProvider.get() : null;
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -99,7 +121,7 @@ public class DatasetIndex {
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (historyService.isLastCommit(entry))
+				if (historyService == null || historyService.isLastCommit(entry))
 					entries.add(entry);
 			}
 			return entries;
@@ -110,7 +132,7 @@ public class DatasetIndex {
 	}
 
 	public List<DatasetIndexEntry> getForCategory(String categoryId, String nameFilter) {
-		HistoryService historyService = historyServiceProvider.get();
+		HistoryService historyService = historyServiceProvider != null ? historyServiceProvider.get() : null;
 		List<DatasetIndexEntry> entries = new ArrayList<>();
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -131,7 +153,7 @@ public class DatasetIndex {
 				return Collections.emptyList();
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (historyService.isLastCommit(entry))
+				if (historyService == null || historyService.isLastCommit(entry))
 					entries.add(entry);
 			}
 			return entries;
@@ -142,7 +164,7 @@ public class DatasetIndex {
 	}
 
 	public boolean categoryExists(String categoryId) {
-		HistoryService historyService = historyServiceProvider.get();
+		HistoryService historyService = historyServiceProvider != null ? historyServiceProvider.get() : null;
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return false;
@@ -156,7 +178,7 @@ public class DatasetIndex {
 				return false;
 			for (ScoreDoc doc : topDocs.scoreDocs) {
 				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
-				if (historyService.isLastCommit(entry))
+				if (historyService == null || historyService.isLastCommit(entry))
 					return true;
 			}
 			return false;
@@ -165,5 +187,4 @@ public class DatasetIndex {
 			return false;
 		}
 	}
-
 }

@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,12 +69,10 @@ public class LibraryService {
 		return null;
 	}
 
-	@RequiresRoles("admin")
 	public Set<String> getLibraryNames() {
 		return refIds.keySet();
 	}
 
-	@RequiresRoles("admin")
 	public void putLibrary(String name, Collection<String> refIds) {
 		removeLibrary(name);
 		this.refIds.put(name, new HashSet<>(refIds));
@@ -94,7 +91,6 @@ public class LibraryService {
 		}
 	}
 
-	@RequiresRoles("admin")
 	public void removeLibrary(String name) {
 		refIds.remove(name);
 		File file = new File(libraryPath + File.separator + name + ".txt");
@@ -103,7 +99,6 @@ public class LibraryService {
 		file.delete();
 	}
 
-	@RequiresRoles("admin")
 	public Set<String> getRefIds(String library) {
 		return refIds.get(library);
 	}

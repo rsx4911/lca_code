@@ -2,9 +2,10 @@
 	.modal-dialog
 		.modal-content
 			.modal-header(class=!title?'empty':'')
-				button.close(type='button' data-dismiss='modal')
-					span(aria-hidden='true') &times;
-					span.sr-only Close
+				if (!notCloseable)
+					button.close(type='button' data-dismiss='modal')
+						span(aria-hidden='true') &times;
+						span.sr-only Close
 				h4.modal-title #{title}
 			.modal-body.clearfix !{body}
 			if buttons

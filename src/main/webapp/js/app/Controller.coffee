@@ -59,7 +59,7 @@ define([
 					noAnimation: true
 
 			initializeUserMenu: () ->
-				new UserMenu().render 
+				@userMenu = new UserMenu().render 
 					container: '#user-menu'
 					noAnimation: true
 
