@@ -50,9 +50,12 @@ define([
 
 			openUpgradeDialog: (event) ->
 				Events.preventDefault event
+				loc = window.location
+				schema = if loc.protocol is 'https' then 'wss' else 'ws'
+				host = loc.host
 				Layers.showProgressInLayer 
 					title: 'Upgrading repositories' 
-					url: 'ws://localhost:8080/sockets/admin/upgrade'
+					url: "#{schema}://#{host}/sockets/admin/upgrade"
 					message: 'Some repositories need to be upgraded to be used with the current version.'
 					pageReloadOnClose: true
 )
