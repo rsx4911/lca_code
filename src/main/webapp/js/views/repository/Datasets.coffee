@@ -27,7 +27,7 @@ define([
 					@categoryId = 'null'
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				url = "/ws/browse/#{group}/#{name}/" + @categoryId
+				url = "/ws/public/browse/#{group}/#{name}/" + @categoryId
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate

@@ -18,6 +18,10 @@ public class Names {
 		reservedNames.add("teams");
 		reservedNames.add("repository");
 		reservedNames.add("repositories");
+		reservedNames.add("public");
+		reservedNames.add("images");
+		reservedNames.add("fonts");
+		reservedNames.add("sockets");
 		reservedNames.add("group");
 		reservedNames.add("groups");
 		reservedNames.add("dashboard");

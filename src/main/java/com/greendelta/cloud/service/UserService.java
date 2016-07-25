@@ -59,7 +59,7 @@ public class UserService {
 	public User getCurrentUser() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
-			return null;
+			return new User();
 		String name = subject.getPrincipal().toString();
 		return getForUsername(name);
 	}

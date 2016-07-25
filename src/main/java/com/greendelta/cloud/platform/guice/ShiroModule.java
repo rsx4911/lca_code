@@ -37,11 +37,13 @@ class ShiroModule extends ShiroWebModule {
 		expose(JpaRealm.class);
 		expose(Subject.class);
 		expose(CloudSession.class);
-		addFilterChain("/sockets/admin**", ROLES, config(ROLES, "admin"));
 		addFilterChain("/ws/admin/**", ROLES, config(ROLES, "admin"));
+		addFilterChain("/sockets/admin/**", ROLES, config(ROLES, "admin"));
 		addFilterChain("/login", ANON);
 		addFilterChain("/imprint", ANON);
+		addFilterChain("/public/**", ANON);
 		addFilterChain("/ws/public/**", ANON);
+		addFilterChain("/sockets/public/**", ANON);
 		for (String sr : WebappModule.STATIC_RESOURCES)
 			if (sr.endsWith("/"))
 				addFilterChain("/" + sr + "/**", ANON);

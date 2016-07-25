@@ -25,7 +25,7 @@ import com.greendelta.cloud.service.HistoryService;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 
-@Path("browse")
+@Path("public/browse")
 @Produces(MediaType.APPLICATION_JSON)
 public class BrowseResource {
 

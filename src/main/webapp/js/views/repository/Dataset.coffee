@@ -56,7 +56,7 @@ define([
 				commitId = @commitId or 'null'
 				$.ajax
 					type: 'GET'
-					url: "/ws/browse/#{urlPart}/#{commitId}" 
+					url: "/ws/public/browse/#{urlPart}/#{commitId}" 
 					success: callback
 
 			loadCommitHistory: (callback) ->
@@ -212,7 +212,7 @@ define([
 					urlPart = @getUrlPart 'IMPACT_CATEGORY', selectedImpactCategory
 					$.ajax
 						type: 'GET'
-						url: "/ws/browse/#{urlPart}/#{commitId}"
+						url: "/ws/public/browse/#{urlPart}/#{commitId}"
 						success: (impactCategory) =>
 							DatasetPrepare.applyTo impactCategory
 							@$('.impact-category-description').html impactCategory.description
@@ -228,7 +228,7 @@ define([
 					urlPart = @getUrlPart 'NW_SET', selectedNwSet
 					$.ajax
 						type: 'GET'
-						url: "/ws/browse/#{urlPart}/#{commitId}"
+						url: "/ws/public/browse/#{urlPart}/#{commitId}"
 						success: (nwSet) =>
 							DatasetPrepare.applyTo nwSet
 							@$('#nw-set-unit').html nwSet.weightedScoreUnit
