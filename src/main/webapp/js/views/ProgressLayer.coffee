@@ -11,11 +11,11 @@ define([
 		class ProgressLayer extends Backbone.View
 
 			initialize: (options) ->
-				@url = options?.url
-				@pageReloadOnClose = options?.pageReloadOnClose
+				{@url, @pageReloadOnClose, @message} = options
 
 			render: (renderOptions) ->
-				@$el.html template()
+				@$el.html template
+					message: @message
 				Renderer.render @, renderOptions
 				@setButtons true, false, true
 
@@ -24,6 +24,7 @@ define([
 					@setButtons false, true, false
 					@socket = new WebSocket @url
 					@socket.onopen = () =>
+						@didRun = true
 						@socket.send 'start'
 					@socket.onmessage = (msg) =>
 						data = JSON.parse msg.data
@@ -37,10 +38,11 @@ define([
 
 			close: () ->
 				Layers.closeActive()
-				if @pageReloadOnClose
-					window.location.reload()
-				else
-					Backbone.history.loadUrl()
+				if @didRun
+					if @pageReloadOnClose
+						window.location.reload()
+					else
+						Backbone.history.loadUrl()
 
 			cancel: () ->
 				$('#progress-btn-cancel').prop 'disabled', true

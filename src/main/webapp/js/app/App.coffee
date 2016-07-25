@@ -13,9 +13,15 @@ define([
 			$(document).ajaxError (event, response, options, error) ->
 				switch response.status
 					when 401 
-						if currentUser
-							Router.navigate '/403',
-								replace: true
+						if currentUser.id
+							Model.fetch currentUser,
+								force: true
+								success: () ->
+									if currentUser.id
+										Router.navigate '/403',
+											replace: true
+									else
+										window.location.href = '/login'
 						else
 							window.location.href = '/login'
 					when 403 then Router.navigate '/403',

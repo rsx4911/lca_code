@@ -4,9 +4,7 @@ define () ->
 		unless entries
 			return null
 		entries = entries.substring(1, entries.length - 1)
-		console.log entries
 		entries = entries.split ';'
-		console.log entries
 		return entries[indicator.position - 1]
 
 	getColor: (system, indicator, score, entries) ->

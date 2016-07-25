@@ -107,9 +107,7 @@ define([
 				@showViewInLayer
 					title: options.title
 					view: 'ProgressLayer'
-					viewOptions: 
-						url: options.url
-						pageReloadOnClose: options.pageReloadOnClose
+					viewOptions: options
 					notCloseable: true
 					static: true
 					buttons: [

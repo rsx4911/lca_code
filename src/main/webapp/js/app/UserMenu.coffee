@@ -53,5 +53,6 @@ define([
 				Layers.showProgressInLayer 
 					title: 'Upgrading repositories' 
 					url: 'ws://localhost:8080/sockets/admin/upgrade'
+					message: 'Some repositories need to be upgraded to be used with the current version.'
 					pageReloadOnClose: true
 )
