@@ -22,6 +22,8 @@ define([
 											replace: true
 									else
 										window.location.href = '/login'
+								error: () ->
+									window.location.href = '/login'
 						else
 							window.location.href = '/login'
 					when 403 then Router.navigate '/403',
