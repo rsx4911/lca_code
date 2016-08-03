@@ -92,7 +92,7 @@ mixin uncertainty(uncertainty, round)
 			br
 			| Mode: #{noToStr(uncertainty.mode, round)}
 			br
-			| Max: #{noToStruncertainty.maximum, round)}
+			| Max: #{noToStr(uncertainty.maximum, round)}
 		else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
 			| Uniform distribution 
 			br
