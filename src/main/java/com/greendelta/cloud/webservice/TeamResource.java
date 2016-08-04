@@ -39,7 +39,7 @@ public class TeamResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
+	public Response getAll(@QueryParam("page") @DefaultValue("0") int page,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		PagedResult<Team> result = service.getAll(page, filter);
 		return Respond.ok(result.toClient(new TeamMapper()::mapForOthers));

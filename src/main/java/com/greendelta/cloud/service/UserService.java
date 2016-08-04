@@ -73,15 +73,16 @@ public class UserService {
 		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
 		long total = dao.getCount();
-		String query = createQuery(page, filter, true);
+		String query = createQuery(filter, true);
 		long subTotal = dao.getCount(query, parameters);
-		int start = 1 + (page - 1) * 10;
-		query = createQuery(page, filter, false);
-		List<User> data = dao.getAll(query, parameters, start, 10);
+		int start = page == 0 ? 0 : 1 + (page - 1) * 10;
+		int limit = page == 0 ? 0 : 10;
+		query = createQuery(filter, false);
+		List<User> data = dao.getAll(query, parameters, start, limit);
 		return new PagedResult<>(page, filter, total, subTotal, data);
 	}
 
-	private String createQuery(int page, String filter, boolean forCount) {
+	private String createQuery(String filter, boolean forCount) {
 		StringBuilder jpql = new StringBuilder();
 		if (forCount)
 			jpql.append("SELECT count(u) FROM User u");

@@ -61,7 +61,7 @@ public class UserResource {
 	}
 
 	@GET
-	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
+	public Response getAll(@QueryParam("page") @DefaultValue("0") int page,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		PagedResult<User> result = service.getAll(page, filter);
 		return Respond.ok(result.toClient(new UserMapper()::mapForOthers));
