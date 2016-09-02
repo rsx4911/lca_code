@@ -16,12 +16,16 @@ require.config({
 		'pace': 'libs/pace.min',
 		'tablesorter': 'libs/jquery-tablesorter',
 		'open-layers': 'libs/open-layers',
+		'qrcode': 'libs/qrcode',
 		'requireLib': 'libs/require'
 	},
 	shim: {
-  	'tablesorter': {
-      exports: '$.fn.tablesorter'
-    }
+			'tablesorter': {
+				exports: '$.fn.tablesorter'
+			},
+			'qrcode': {
+				exports: 'QRCode'
+			}
 	} 
 })
 

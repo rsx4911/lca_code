@@ -40,6 +40,9 @@ public class User extends AbstractEntity {
 	@Column(name = "avatar")
 	public byte[] avatar;
 
+	@Column(name = "two_factor_secret")
+	public String twoFactorSecret;
+	
 	@Column(name = "notifications")
 	private int notifications;
 

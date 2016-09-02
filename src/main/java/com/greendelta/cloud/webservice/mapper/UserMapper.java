@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.openlca.cloud.util.ObjectMap;
 
+import com.google.common.base.Strings;
 import com.greendelta.cloud.model.User;
 
 public class UserMapper {
@@ -26,7 +27,9 @@ public class UserMapper {
 
 	public Map<String, Object> mapForSelf(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
-		map.remove("hash", "salt", "avatar");
+		map.remove("hash", "salt", "avatar", "twoFactorSecret");
+		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) 
+			map.put("twoFactorAuth", true);
 		return map;
 	}
 

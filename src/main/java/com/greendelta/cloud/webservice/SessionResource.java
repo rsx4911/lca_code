@@ -6,6 +6,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -20,8 +21,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.webservice.mapper.UserMapper;
+import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 @Path("public")
 public class SessionResource {
@@ -31,6 +34,7 @@ public class SessionResource {
 
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;
+	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
 	public SessionResource(Provider<Subject> subjectProvider,
@@ -42,10 +46,12 @@ public class SessionResource {
 	@POST
 	@Path("login")
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response login(Map<String, Object> credentials) {
 		ObjectMap formMap = ObjectMap.fromMap(credentials);
 		String username = formMap.getString("username");
 		String password = formMap.getString("password");
+		Integer token = formMap.get("token");
 		log.info("User {} attempts to login", username);
 		Subject subject = subjectProvider.get();
 		if (subject.isAuthenticated())
@@ -61,6 +67,22 @@ public class SessionResource {
 		}
 		if (!subject.isAuthenticated())
 			return Respond.unauthorized("Unknown error");
+		User user = userService.getCurrentUser();
+		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) {
+			if (token != null && token != 0) {
+				boolean valid = authenticator.authorize(user.twoFactorSecret, token);
+				if (valid) {
+					log.info("User {} successfully logged in", username);
+					return Respond.ok();
+				} else {
+					subject.logout();					
+					return Respond.unauthorized("Invalid token");
+				}
+			} else {
+				subject.logout();
+				return Respond.ok("tokenRequired");
+			}
+		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();
 	}

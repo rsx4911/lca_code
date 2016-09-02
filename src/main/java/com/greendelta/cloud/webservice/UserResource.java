@@ -23,10 +23,10 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.NotificationService;
+import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
 import com.greendelta.cloud.util.Password;
@@ -148,6 +148,23 @@ public class UserResource {
 			user.avatar = Bytes.readStream(file);
 		user = service.update(user);
 		return getAvatar(username);
+	}
+
+	@PUT
+	@Path("twoFactorAuth/{username}/{enable}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response toggleTwoFactorAuthentication(@PathParam("username") String username,
+			@PathParam("enable") boolean enable) {
+		User user = authorizedGetUser(username);
+		if (user == null)
+			return Respond.notFound();
+		if (!enable) {
+			user.twoFactorSecret = null;
+			user = service.update(user);
+			return Respond.ok();
+		}
+		String url = service.enableTwoFactorAuthentication(user);
+		return Respond.ok(url);
 	}
 
 	private User authorizedGetUser(String username) {

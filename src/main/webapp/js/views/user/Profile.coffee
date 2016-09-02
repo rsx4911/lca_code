@@ -11,10 +11,11 @@ define([
 				'cs!app/Router'
 				'cs!models/User'
 				'cs!models/CurrentUser'
+				'qrcode'
 				'templates/views/user/profile'
 			]
 
-	(Backbone, Avatar, Events, Forms, Layers, Model, Password, Renderer, Status, Router, User, currentUser, template) ->
+	(Backbone, Avatar, Events, Forms, Layers, Model, Password, Renderer, Status, Router, User, currentUser, QRCode, template) ->
 
 		class UserProfile extends Backbone.View
 
@@ -26,6 +27,8 @@ define([
 				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
 				'click [data-action=generate-password]': (event) -> @generatePassword()
+				'click [data-action=disable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication false
+				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication true
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'user', @user.get('username')		
@@ -84,6 +87,28 @@ define([
 					success: () => @reload()
 					error: (response) -> Forms.handleError 'password-form', response
 				return false
+
+			toggleTwoFactorAuthentication: (value) ->
+				username = @user.get 'username'
+				$.ajax
+					type: 'PUT'
+					url: "/ws/user/twoFactorAuth/#{username}/#{value}"
+					success: (url) => 
+						Backbone.history.loadUrl()
+						Layers.showMessageInLayer
+							title: 'Register Google Authenticator Device'
+							body: '<p>To register your mobile device scan the QR code below in your Google Authenticator App:</p><div id="two-auth-link"></div>'
+							buttons: [{
+								text: 'Close'
+								className: 'btn-default'
+								callback: Layers.closeActive
+							}]
+						new QRCode($('#two-auth-link')[0], url)
+						$('#two-auth-link').removeAttr 'title'
+						$('#two-auth-link img').addClass 'center-block'
+
+
+					error: (response) -> Status.error response.responseText
 
 			deleteUser: (event) ->
 				username = @user.get 'username'

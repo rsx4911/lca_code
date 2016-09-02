@@ -17,6 +17,9 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.cloud.model.User;
+import com.warrenstrange.googleauth.GoogleAuthenticator;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+import com.warrenstrange.googleauth.GoogleAuthenticatorQRGenerator;
 
 public class UserService {
 
@@ -104,6 +107,15 @@ public class UserService {
 		} catch (UnsupportedEncodingException e) {
 			log.error("Unexpected encoding exception", e);
 		}
+	}
+
+	public String enableTwoFactorAuthentication(User user) {
+		GoogleAuthenticator authenticator = new GoogleAuthenticator();
+		GoogleAuthenticatorKey key = authenticator.createCredentials();
+		user.twoFactorSecret = key.getKey();
+		user = update(user);
+		// TODO configure the issuer globally
+		return GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL("lca-collaboration-server", user.username, key);
 	}
 
 	public boolean delete(long id) {

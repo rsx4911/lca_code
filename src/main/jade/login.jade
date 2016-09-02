@@ -32,6 +32,17 @@ html(lang='en')
 			span#year
 			|  | 
 			a(href='/imprint') Imprint
+		.modal(style='display:none')
+			.modal-dialog
+				.modal-content
+					.modal-header
+						h4.modal-title Google Authenticator token required
+					.modal-body.clearfix 
+						p Please enter your Google Authenticator token to login
+						input#token.form-control(type='text')
+					.modal-footer
+							button.btn.btn-default#cancel(tabindex=50 type='button') Cancel
+							button.btn.btn-primary#ok(tabindex=50 type='button') Login
 		script(src='/js/libs/jquery.js')
 		script.
 			$('#year').html(new Date().getFullYear());
@@ -39,7 +50,27 @@ html(lang='en')
 				var data = {username: $('#username').val(), password: $('#password').val()};
 				$.ajax({type: 'POST', url: '/ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
-						window.location.href = '/'
+						if (response === 'tokenRequired') {
+							$('#cancel').on('click', function() {
+								window.location.href = '/'							
+							});
+							$('#ok').on('click', function() {
+								data.token = parseInt($('#token').val())
+								$.ajax({type: 'POST', url: '/ws/public/login', contentType: 'application/json', data: JSON.stringify(data),
+									success: function() {
+										window.location.href = '/'
+									}, error: function(response) {
+										$('#login-general-message').show();
+										$('#login-general-message .message').html(response.responseText);
+										$('.modal').hide()
+										$('#token').val('');
+									}
+								});
+							});
+							$('.modal').show()
+						} else {
+							window.location.href = '/'
+						}
 					}, error: function(response) {
 						$('#login-general-message').show();
 						$('#login-general-message .message').html(response.responseText);
