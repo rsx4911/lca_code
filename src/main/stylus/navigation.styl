@@ -72,9 +72,23 @@ nav
 		@media(max-width 991px)
 			padding 8px
 
-		.username
-			line-height 48px
-			padding-left 10px
+		a
+			display inline-block
 
-			@media(max-width 991px)
-				display none
+			@media(min-width 992px)
+				width 210px
+
+			img 
+				float left
+
+			.username
+				float left
+				padding-left 10px
+				line-height 48px
+				max-height 48px
+				overflow hidden
+				max-width 158px
+				word-wrap normal
+
+				@media(max-width 991px)
+					display none

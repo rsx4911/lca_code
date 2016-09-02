@@ -274,6 +274,7 @@ define([
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main').empty()
 					$('#header-title').html options.title.replace('|', '-')
+					$('#header-title').attr 'title', options.title.replace('|', '-')
 					document.title = @getDocumentTitle options.title
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
