@@ -4,8 +4,10 @@ define () ->
 	GROUP_DELETED: 'A group was deleted'
 	REPOSITORY_CREATED: 'A new repository was created'
 	ADDED_TO_GROUP_MEMBERS: 'I was added to a group'
+	GROUP_ROLE_CHANGED: 'My role in a group was changed'
 	REMOVED_FROM_GROUP_MEMBERS: 'I was removed from a group'
 	ADDED_GROUP_MEMBER: 'A member was added to a group'
+	GROUP_ROLE_OF_MEMBER_CHANGED: 'A members role in a group was changed'
 	REMOVED_GROUP_MEMBER: 'A member was removed from a group'
 
 	# repository notifications
@@ -13,8 +15,10 @@ define () ->
 	REPOSITORY_DELETED: 'A repository was deleted'
 	DATA_COMMITTED: 'Data was commited to a repository'
 	ADDED_TO_REPOSITORY_MEMBERS: 'I was added to a repository'
+	REPOSITORY_ROLE_CHANGED: 'My role in a repository was changed'
 	REMOVED_FROM_REPOSITORY_MEMBERS: 'I was removed from a repository'
 	ADDED_REPOSITORY_MEMBER: 'A member was added to a repository'
+	REPOSITORY_ROLE_OF_MEMBER_CHANGED: 'A members role in a repository was changed'
 	REMOVED_REPOSITORY_MEMBER: 'A member was removed from a repository'
 
 	# own membership notifications
@@ -36,9 +40,9 @@ define () ->
 		for key in Object.keys(@)
 			if typeof @[key] is 'function'
 				continue
-			if $.inArray(key, ['GROUP_DELETED', 'REPOSITORY_CREATED', 'ADDED_TO_GROUP_MEMBERS', 'REMOVED_FROM_GROUP_MEMBERS', 'ADDED_GROUP_MEMBER', 'REMOVED_GROUP_MEMBER']) isnt -1
+			if $.inArray(key, ['GROUP_DELETED', 'REPOSITORY_CREATED', 'ADDED_TO_GROUP_MEMBERS', 'GROUP_ROLE_CHANGED', 'REMOVED_FROM_GROUP_MEMBERS', 'ADDED_GROUP_MEMBER', 'GROUP_ROLE_OF_MEMBER_CHANGED', 'REMOVED_GROUP_MEMBER']) isnt -1
 				group = 'Group'
-			else if $.inArray(key, ['REPOSITORY_MOVED', 'REPOSITORY_DELETED', 'DATA_COMMITTED', 'ADDED_TO_REPOSITORY_MEMBERS', 'REMOVED_FROM_REPOSITORY_MEMBERS', 'ADDED_REPOSITORY_MEMBER', 'REMOVED_REPOSITORY_MEMBER']) isnt -1
+			else if $.inArray(key, ['REPOSITORY_MOVED', 'REPOSITORY_DELETED', 'DATA_COMMITTED', 'ADDED_TO_REPOSITORY_MEMBERS', 'REPOSITORY_ROLE_CHANGED', 'REMOVED_FROM_REPOSITORY_MEMBERS', 'ADDED_REPOSITORY_MEMBER', 'REPOSITORY_ROLE_OF_MEMBER_CHANGED', 'REMOVED_REPOSITORY_MEMBER']) isnt -1
 				group = 'Repository'
 			else if $.inArray(key, ['ADDED_TO_TEAM_MEMBERS', 'REMOVED_FROM_TEAM_MEMBERS', 'ADDED_TEAM_MEMBER', 'REMOVED_TEAM_MEMBER']) isnt -1
 				group = 'Team'

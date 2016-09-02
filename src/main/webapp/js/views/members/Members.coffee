@@ -20,6 +20,7 @@ define([
 			events: 
 				'click [data-route]': (event) -> Events.followRoute event
 				'click [data-action=add-members]': (event) -> @showAddMembersLayer event
+				'click [data-action=set-role]': (event) -> @showSetRoleLayer event
 				'click [data-action=remove-member]': (event) -> @removeMember event
 
 			showAddMembersLayer: (event) ->
@@ -33,7 +34,7 @@ define([
 						existingUsers.push member.user
 				Data.getUsersAndTeams (users, teams) =>
 					Layers.showTemplateInLayer
-						template: 'members/add'
+						template: 'members/set-role'
 						title: "Add #{type} members"
 						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll()}
 						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
@@ -41,29 +42,44 @@ define([
 			addMembers: () ->
 				users = []
 				teams = []
-				selection = $('#add-members-form #name option:selected')
-				role = $('#add-members-form #role').val()
+				selection = $('#set-role-form #name option:selected')
+				role = $('#set-role-form #role').val()
 				for option in selection
 					option = $ option
 					if option.attr('data-group-id') is 'users'
-						users.push {username: option.val(), role: role}
+						users.push {id: option.val(), role: role}
 					else if option.attr('data-group-id') is 'teams'
-						teams.push {teamname: option.val(), role: role}
-				Synchronized.forEach ((user, finish) => @addUser(user, finish)), users, () =>
-					Synchronized.forEach ((team, finish) => @addTeam(team, finish)), teams, () =>
+						teams.push {id: option.val(), role: role}
+				Synchronized.forEach ((user, finish) => @setRole('user', user, true, finish)), users, () =>
+					Synchronized.forEach ((team, finish) => @setRole('team', team, true, finish)), teams, () =>
 						Layers.closeActive()
 						Backbone.history.loadUrl()
 
-			addUser: (user, finish) ->
-				@addMember "user/#{user.username}/#{user.role}", finish
+			showSetRoleLayer: (event) ->
+				target = $ Events.target event, 'button'
+				id = target.attr 'data-id'
+				memberType = target.attr 'data-type'
+				type = if @group then 'group' else 'repository'
+				Layers.showTemplateInLayer
+					template: 'members/set-role'
+					title: "Set role for #{memberType} #{id}"
+					model: {type: type, roles: Roles.getAll()}	
+					buttons: [{
+						id: 'set-role'
+						className: 'btn-success'
+						text: 'Set role'
+						callback: () => 
+							role = $('#set-role-form #role').val()
+							@setRole memberType, {id: id, role: role}, false, () => 
+								Layers.closeActive()
+								Backbone.history.loadUrl()
+					}]				
 
-			addTeam: (team, finish) ->
-				@addMember "team/#{team.teamname}/#{team.role}", finish
-
-			addMember: (url, finish) ->
+			setRole: (type, member, isNew, finish) ->
 				path = @getPath()
+				url = "#{type}/#{member.id}/#{member.role}"
 				$.ajax
-					type: 'POST'
+					type: (if isNew then 'POST' else 'PUT')
 					url: "#{path}/#{url}"
 					success: finish
 

@@ -1,10 +1,11 @@
 include ../mixins/forms.jade
 
-form#add-members-form
-	#add-members-general-message-group.alert(role='alert'): span.message
-	+select('name', 'User/Team')(multiple=true class='member-selection')
-		+optgroup('Users', users, null, 'users')
-		+optgroup('Teams', teams, null, 'teams')
+form#set-role-form
+	#set-role-general-message-group.alert(role='alert'): span.message
+	if users || teams
+		+select('name', 'User/Team')(multiple=true class='member-selection')
+			+optgroup('Users', users, null, 'users')
+			+optgroup('Teams', teams, null, 'teams')
 	+select('role', 'Role')
 		each role in roles
 			option(value=role.id)=role.name

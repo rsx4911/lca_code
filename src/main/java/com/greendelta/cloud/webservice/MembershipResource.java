@@ -6,6 +6,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -83,6 +84,36 @@ public class MembershipResource {
 			else
 				notificationService.memberAdded(group, team).send();
 		return Respond.ok(Collections.singletonMap("added", added));
+	}
+	
+	@PUT
+	@Path("{group}/{repo}/user/{username}/{role}")
+	public Response updateUserRole(@PathParam("group") String group, @PathParam("repo") String repo,
+			@PathParam("username") String username, @PathParam("role") Role role) {
+		String path = getAuthorizedPath(group, repo);
+		User user = userService.getForUsername(username);
+		boolean updated = service.setRole(user, path, role);
+		if (updated)
+			if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+				notificationService.roleChanged(repoService.get(group, repo), user).send();
+			else
+				notificationService.roleChanged(group, user).send();
+		return Respond.ok(Collections.singletonMap("updated", updated));
+	}
+
+	@PUT
+	@Path("{group}/{repo}/team/{teamname}/{role}")
+	public Response updateTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
+			@PathParam("teamname") String teamname, @PathParam("role") Role role) {
+		String path = getAuthorizedPath(group, repo);
+		Team team = teamService.getForTeamname(teamname);
+		boolean updated = service.setRole(team, path, role);
+		if (updated)
+			if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+				notificationService.roleChanged(repoService.get(group, repo), team).send();
+			else
+				notificationService.roleChanged(group, team).send();
+		return Respond.ok(Collections.singletonMap("updated", updated));
 	}
 
 	@DELETE
