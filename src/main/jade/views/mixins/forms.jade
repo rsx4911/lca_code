@@ -1,9 +1,9 @@
 mixin static(id, label, value, inline)
 	- var clazz = null;
 	if inline
-		- clazz += 'form-inline';
+		- clazz = 'form-inline';
 	else
-		- clazz += 'form-group';
+		- clazz = 'form-group';
 	div(id='#{id}-group' class=clazz)
 		label.control-label(for='#{id}') #{label}
 		div.form-value #{value}

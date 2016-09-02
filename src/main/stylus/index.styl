@@ -39,12 +39,31 @@ header
 		@media(max-width 480px)
 			max-width 45%
 
+		@media(min-width 481px) and (max-width 767px)
+			max-width 55%
+
+		@media(min-width 768px) and (max-width 991px)
+			max-width 40%
+
+		@media(min-width 992px) and (max-width 1199px)
+			max-width 38%
+
+		@media(min-width 1200px) and (max-width 1299px)
+			max-width 45%
+
+		@media(min-width 1300px)
+			max-width 50%
+
 		.header-content
 			margin-left 30px
 			padding-top 13px
 
 			@media(max-width 480px)
 				margin-left 10px
+				
+			#header-title
+				height 40px
+				overflow hidden
 	
 	#user-menu
 		float right
@@ -140,3 +159,6 @@ a.no-link
 	
 	hr
 		border-top 1px solid rgb(201, 201, 201)
+		
+*
+	word-wrap break-word

@@ -73,9 +73,10 @@ public class NotificationService {
 
 	public NotificationJob repositoryMoved(Repository oldRepo, Repository newRepo) {
 		User currentUser = userService.getCurrentUser();
-		String subject = "A repository was deleted";
-		String message = "The repository " + oldRepo.toId() + " was moved to " + newRepo.toId()
-				+ " by the LCA Cloud user  " + currentUser.name;
+		String url = baseUrl + "/" + newRepo.toId();
+		String subject = "A repository was moved";
+		String message = "The repository " + oldRepo.toId() + " was moved to a href=\"" + url + "\">" + newRepo.toId()
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_MOVED, newRepo.toId())));
 		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_MOVED, false)));
@@ -113,7 +114,7 @@ public class NotificationService {
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "You were added to a group";
 		String othersSubject = "A member was added to a group";
-		String personalMessage = "You were added to group " + group + " by the LCA Cloud user  " + currentUser.name;
+		String personalMessage = "You were added to group <a href=\"" + url + "\">" + group + "</a> by the LCA Cloud user  " + currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to group <a href=\"" + url + "\">" + group
 				+ "</a> by the LCA Cloud user  "
 				+ currentUser.name;
@@ -124,6 +125,25 @@ public class NotificationService {
 				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getAdminUsers(Notification.ADDED_GROUP_MEMBER, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob roleChanged(String group, User member)  {
+		User currentUser = userService.getCurrentUser();
+		String url = baseUrl + "/groups/" + group;
+		String personalSubject = "Your role in a group was changed";
+		String othersSubject = "A role was changed in a group";
+		String personalMessage = "Your role in group <a href=\"" + url + "\">" + group + "</a> was changed by the LCA Cloud user  " + currentUser.name;
+		String othersMessage = "The role of user " + member.name + " for group <a href=\"" + url + "\">" + group
+				+ "</a> was changed by the LCA Cloud user  "
+				+ currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		if (member.isEnabled(Notification.GROUP_ROLE_CHANGED))
+			emails.add(createEmail(personalSubject, personalMessage, member));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getMemberUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, group)));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getAdminUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -144,6 +164,26 @@ public class NotificationService {
 				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getAdminUsers(Notification.ADDED_GROUP_MEMBER, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob roleChanged(String group, Team member)  {
+		User currentUser = userService.getCurrentUser();
+		String url = baseUrl + "/groups/" + group;
+		String personalSubject = "The role of a team you are in was changed for a group";
+		String othersSubject = "The role of a team was changed for a group";
+		String personalMessage = "The role of a team you are in was changed for group <a href=\"" + url + "\">" + group
+				+ "</a> by the LCA Cloud user  " + currentUser.name;
+		String othersMessage = "The role of team " + member.name + " was changed for group <a href=\"" + url + "\">" + group
+				+ "</a> by the LCA Cloud user  "
+				+ currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(personalSubject, personalMessage,
+				getTeamUsers(Notification.GROUP_ROLE_CHANGED, member)));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getMemberUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, group)));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getAdminUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -205,6 +245,27 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
+	public NotificationJob roleChanged(Repository repo, User member)  {
+		User currentUser = userService.getCurrentUser();
+		String path = repo.toId();
+		String url = baseUrl + "/" + path;
+		String personalSubject = "Your role in a repository was changed";
+		String othersSubject = "A role was changed in a repository ";
+		String personalMessage = "Your role in repository <a href=\"" + url + "\">" + path
+				+ "</a> was changed by the LCA Cloud user  " + currentUser.name;
+		String othersMessage = "The role of user " + member.name + " for repository <a href=\"" + url + "\">" + path
+				+ "</a> was changed by the LCA Cloud user  "
+				+ currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		if (member.isEnabled(Notification.REPOSITORY_ROLE_CHANGED))
+			emails.add(createEmail(personalSubject, personalMessage, member));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getMemberUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, path)));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getAdminUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
+		return new NotificationJob(emails);
+	}
+	
 	public NotificationJob memberAdded(Repository repo, Team member) {
 		User currentUser = userService.getCurrentUser();
 		String path = repo.toId();
@@ -222,6 +283,27 @@ public class NotificationService {
 				getMemberUsers(Notification.ADDED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getAdminUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob roleChanged(Repository repo, Team member)  {
+		User currentUser = userService.getCurrentUser();
+		String path = repo.toId();
+		String url = baseUrl + "/" + path;
+		String personalSubject = "The role of a team you are in was changed for a repository";
+		String othersSubject = "The role of a team was changed in a repository ";
+		String personalMessage = "The role of a team you are in for repository <a href=\"" + url + "\">" + path
+				+ "</a> was changed by the LCA Cloud user  " + currentUser.name;
+		String othersMessage = "The role of team " + member.name + " for repository <a href=\"" + url + "\">" + path
+				+ "</a> was changed by the LCA Cloud user  "
+				+ currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(personalSubject, personalMessage,
+				getTeamUsers(Notification.REPOSITORY_ROLE_CHANGED, member)));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getMemberUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, path)));
+		emails.addAll(createEmails(othersSubject, othersMessage,
+				getAdminUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -299,7 +381,7 @@ public class NotificationService {
 				getAdminUsers(Notification.REMOVED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
-
+	
 	public NotificationJob userCreated(User user, String password) {
 		User currentUser = userService.getCurrentUser();
 		String adminMessage = "The user " + user.name + " was created by the LCA Cloud user  " + currentUser.name;

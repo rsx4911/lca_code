@@ -24,6 +24,10 @@ public enum Notification {
 	TEAM_CREATED,
 	TEAM_DELETED,
 	GROUP_CREATED,
+	GROUP_ROLE_CHANGED,
+	GROUP_ROLE_OF_MEMBER_CHANGED,
+	REPOSITORY_ROLE_CHANGED,
+	REPOSITORY_ROLE_OF_MEMBER_CHANGED,
 	NOTIFY_FOR_ALL; // also notify about above events when not member
 
 	public boolean isOneOf(Notification... notifications) {

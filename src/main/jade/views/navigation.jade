@@ -15,8 +15,8 @@ if items && items.length
 						img.nav-icon(src=item.imageSrc)
 						span.nav-label #{item.label}
 				- first = false;
-.profile-link
+.profile-link(title=name)
 	a(href='/user/profile')
 		img.avatar(src='/ws/user/avatar/#{username}')
-		span.username #{name}
+		span.username=name
 .clear
