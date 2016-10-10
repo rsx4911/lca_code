@@ -9,13 +9,15 @@ mixin static(id, label, value, inline)
 		div.form-value #{value}
 		block
 
-mixin input(id, label, type, inline, required)
+mixin input(id, label, type, inline, required, hide)
 	- var hidden = type === 'hidden'
 	- var clazz = hidden ? 'hidden ' : ''
 	if inline
 		- clazz += 'form-inline';
 	else
 		- clazz += 'form-group';
+	if hide
+		- clazz += ' hidden'
 	if hidden || !type
 		- type = 'text'
 	div(id='#{id}-group' class=clazz)

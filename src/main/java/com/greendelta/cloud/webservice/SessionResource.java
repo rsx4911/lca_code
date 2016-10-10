@@ -51,7 +51,6 @@ public class SessionResource {
 		ObjectMap formMap = ObjectMap.fromMap(credentials);
 		String username = formMap.getString("username");
 		String password = formMap.getString("password");
-		Integer token = formMap.get("token");
 		log.info("User {} attempts to login", username);
 		Subject subject = subjectProvider.get();
 		if (subject.isAuthenticated())
@@ -69,19 +68,18 @@ public class SessionResource {
 			return Respond.unauthorized("Unknown error");
 		User user = userService.getCurrentUser();
 		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) {
-			if (token != null && token != 0) {
-				boolean valid = authenticator.authorize(user.twoFactorSecret, token);
-				if (valid) {
-					log.info("User {} successfully logged in", username);
-					return Respond.ok();
-				} else {
-					subject.logout();					
-					return Respond.unauthorized("Invalid token");
-				}
-			} else {
+			Integer token = (int) formMap.getLong("token");
+			if (token == null || token == 0) {
 				subject.logout();
 				return Respond.ok("tokenRequired");
 			}
+			boolean valid = authenticator.authorize(user.twoFactorSecret, token);
+			if (!valid) {
+				subject.logout();
+				return Respond.unauthorized("Invalid token");
+			}
+			log.info("User {} successfully logged in", username);
+			return Respond.ok();
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();

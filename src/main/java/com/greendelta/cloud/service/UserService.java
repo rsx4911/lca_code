@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
@@ -19,7 +20,6 @@ import com.google.inject.Provider;
 import com.greendelta.cloud.model.User;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
-import com.warrenstrange.googleauth.GoogleAuthenticatorQRGenerator;
 
 public class UserService {
 
@@ -115,7 +115,34 @@ public class UserService {
 		user.twoFactorSecret = key.getKey();
 		user = update(user);
 		// TODO configure the issuer globally
-		return GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL("lca-collaboration-server", user.username, key);
+		return getTwoFactorUrl(user);
+	}
+
+	public String getTwoFactorUrl(User user) {
+		String key = user.twoFactorSecret;
+		return getOtpAuthTotpURL("lca-collaboration-server", user.username, key);
+	}
+
+	private String getOtpAuthTotpURL(String issuer, String username, String key) {
+		URIBuilder uri = new URIBuilder();
+		uri.setScheme("otpauth");
+		uri.setHost("totp");
+		uri.setPath("/" + formatLabel(issuer, username));
+		uri.setParameter("secret", key);
+		if (issuer == null)
+			return uri.toString();
+		uri.setParameter("issuer", issuer);
+		return uri.toString();
+	}
+
+	private String formatLabel(String issuer, String username) {
+		if (username == null || username.trim().length() == 0)
+			throw new IllegalArgumentException("Account name must not be empty.");
+		if (issuer == null)
+			return username;
+		if (issuer.contains(":"))
+			throw new IllegalArgumentException("Issuer cannot contain the \':\' character.");
+		return issuer + ":" + username;
 	}
 
 	public boolean delete(long id) {

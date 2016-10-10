@@ -1,6 +1,7 @@
 package com.greendelta.cloud.webservice;
 
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -150,9 +151,21 @@ public class UserResource {
 		return getAvatar(username);
 	}
 
+	@GET
+	@Path("twoFactorAuth/{username}")
+	public Response showTwoFactorAuthentication(@PathParam("username") String username) {
+		User user = authorizedGetUser(username);
+		if (user == null)
+			return Respond.notFound();
+		Map<String, Object> response = new HashMap<>();
+		response.put("url", service.getTwoFactorUrl(user));
+		response.put("key", user.twoFactorSecret);
+		response.put("enabled", true);
+		return Respond.ok(response);
+	}
+
 	@PUT
 	@Path("twoFactorAuth/{username}/{enable}")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response toggleTwoFactorAuthentication(@PathParam("username") String username,
 			@PathParam("enable") boolean enable) {
 		User user = authorizedGetUser(username);
@@ -161,10 +174,14 @@ public class UserResource {
 		if (!enable) {
 			user.twoFactorSecret = null;
 			user = service.update(user);
-			return Respond.ok();
+			return Respond.ok(Collections.emptyMap());
 		}
 		String url = service.enableTwoFactorAuthentication(user);
-		return Respond.ok(url);
+		Map<String, Object> response = new HashMap<>();
+		response.put("url", url);
+		response.put("key", user.twoFactorSecret);
+		response.put("enabled", true);
+		return Respond.ok(response);
 	}
 
 	private User authorizedGetUser(String username) {

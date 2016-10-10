@@ -27,7 +27,7 @@ if user.id
 	.header-box Password
 		button.btn.btn-default.pull-right(data-action='generate-password') Generate password
 		if user.twoFactorAuth
-			button.btn.btn-primary.pull-right(data-action='disable-two-factor-auth') Disable two-factor-authentication
+			button.btn.btn-primary.pull-right(data-action='show-two-factor-auth') Show two-factor-authentication info
 		else
 			button.btn.btn-primary.pull-right(data-action='enable-two-factor-auth') Enable two-factor-authentication
 	form#password-form.content-box

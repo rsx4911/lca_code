@@ -27,11 +27,11 @@ define([
 				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
 				'click [data-action=generate-password]': (event) -> @generatePassword()
-				'click [data-action=disable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication false
+				'click [data-action=show-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication ''
 				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication true
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
-					Avatar.save 'user', @user.get('username')		
+					Avatar.save 'user', @user.get('username')
 
 			initialize: (options) ->
 				{@user, @adminArea} = options
@@ -91,24 +91,34 @@ define([
 			toggleTwoFactorAuthentication: (value) ->
 				username = @user.get 'username'
 				$.ajax
-					type: 'PUT'
+					type: if value is true or value is false then 'PUT' else 'GET'
 					url: "/ws/user/twoFactorAuth/#{username}/#{value}"
-					success: (url) => 
+					success: (response) => 
 						Backbone.history.loadUrl()
-						Layers.showMessageInLayer
-							title: 'Register Google Authenticator Device'
-							body: '<p>To register your mobile device scan the QR code below in your Google Authenticator App:</p><div id="two-auth-link"></div>'
-							buttons: [{
-								text: 'Close'
-								className: 'btn-default'
-								callback: Layers.closeActive
-							}]
-						new QRCode($('#two-auth-link')[0], url)
-						$('#two-auth-link').removeAttr 'title'
-						$('#two-auth-link img').addClass 'center-block'
-
-
+						if response.enabled
+							@showTwoFactorAuthentication response
+						else
+							Layers.closeActive()
 					error: (response) -> Status.error response.responseText
+
+			showTwoFactorAuthentication: (response) ->
+				Layers.showMessageInLayer
+					title: 'Register Authenticator Device'
+					body: '<p>To register your mobile device scan the QR code below in your Authenticator App:</p>
+								 <div id="two-auth-link"></div>
+								 <div style="text-align:center"><a class="default-link" href="#" id="show-secret">Show secret key</a></div>
+								 <div id="two-auth-key" class="well well-sm" style="display:none; text-align:center; margin-top:20px">' + response.key + '</div>'
+					buttons: [
+						{text: 'Disable', className: 'btn-warning', callback: () => @toggleTwoFactorAuthentication(false)},
+						{text: 'Close', className: 'btn-default', callback: Layers.closeActive}
+					]
+				new QRCode($('#two-auth-link')[0], response.url)
+				$('#two-auth-link').removeAttr 'title'
+				$('#two-auth-link img').addClass 'center-block'
+				$('#show-secret').on 'click', (event) -> 
+					Events.preventDefault event
+					$('#two-auth-key').show()
+					$('#show-secret').remove()
 
 			deleteUser: (event) ->
 				username = @user.get 'username'
