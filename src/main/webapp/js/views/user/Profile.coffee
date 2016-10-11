@@ -130,7 +130,7 @@ define([
 						type: 'DELETE'
 						url: url
 						success: () -> 
-							if currentUser.isAdmin() and @adminArea
+							if currentUser.isAdmin() and !isOwnUser
 								Router.navigate 'administration/overview'
 							else
 								window.location.href = '/login'
