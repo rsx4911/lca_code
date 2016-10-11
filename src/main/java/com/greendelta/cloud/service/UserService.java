@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
@@ -28,12 +29,15 @@ public class UserService {
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
 	private final MembershipService memberService;
+	private final TeamService teamService;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, MembershipService memberService) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, MembershipService memberService,
+			TeamService teamService) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.memberService = memberService;
+		this.teamService = teamService;
 	}
 
 	public User getForUsername(String username) {
@@ -149,6 +153,9 @@ public class UserService {
 		User user = dao.get(id);
 		if (user == null)
 			return false;
+		for (Team team : teamService.getTeamsFor(user)) {
+			teamService.removeMember(user, team);
+		}
 		memberService.removeMemberships(user);
 		dao.delete(user);
 		return true;

@@ -1,5 +1,6 @@
 package com.greendelta.cloud.service;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,11 @@ public class TeamService {
 		team = dao.update(team);
 		membershipService.removeMemberships(user, team);
 		return false;
+	}
+
+	public List<Team> getTeamsFor(User user) {
+		String jpql = "SELECT team FROM Team team JOIN team.users user WHERE user = :user";
+		return dao.getAll(jpql, Collections.singletonMap("user", user));
 	}
 
 	public long getCount() {
