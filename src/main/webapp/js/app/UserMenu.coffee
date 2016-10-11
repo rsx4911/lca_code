@@ -38,15 +38,21 @@ define([
 				'keyup #global-search': (event) -> @onSearchKeyUp event
 
 			render: (renderOptions) ->
-				$.ajax
-					type: 'GET' 
-					url: '/ws/admin/area/upgradeAvailable'
-					success: (upgradeAvailable) =>
-						@$el.html template 
-							isAdmin: currentUser.isAdmin()
-							upgradeAvailable: upgradeAvailable is 'true'
-						Renderer.render @, renderOptions
-						@$('[data-toggle=tooltip]').tooltip()
+				if currentUser.isAdmin()
+					$.ajax
+						type: 'GET' 
+						url: '/ws/admin/area/upgradeAvailable'
+						success: (upgradeAvailable) =>
+							@doRender renderOptions, upgradeAvailable
+				else
+					@doRender renderOptions
+
+			doRender: (renderOptions, upgradeAvailable) ->
+				@$el.html template 
+					isAdmin: currentUser.isAdmin()
+					upgradeAvailable: upgradeAvailable is 'true'
+				Renderer.render @, renderOptions
+				@$('[data-toggle=tooltip]').tooltip()
 
 			openUpgradeDialog: (event) ->
 				Events.preventDefault event
