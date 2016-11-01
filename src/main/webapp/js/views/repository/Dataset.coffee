@@ -1,6 +1,5 @@
 define([
 				'backbone'
-				'moment'
 				'open-layers'
 				'cs!utils/DataQuality'
 				'cs!utils/Events'
@@ -30,7 +29,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Moment, OpenLayers, DataQuality, Events, Format, Icons, Layers, Renderer, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, Renderer, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -129,7 +128,7 @@ define([
 						@$el.html template 
 							dataset: dataset
 							baseUrl: "/#{group}/#{name}/dataset"
-							formatDate: (value) -> return if !value then '' else moment(value).format('MM/DD/YYYY hh:mm:ss')
+							formatDate: Format.dateTime
 							getLabel: @getLabel
 							getIcon: Icons.get
 							getTypeAsEnum: (type) => @getTypeAsEnum(type)

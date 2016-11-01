@@ -1,0 +1,5 @@
+.message-wrapper(id=message.id class=message.from.username===username?'right':'left')
+	span=message.text
+		| &nbsp; &nbsp;
+	small.date=formatDate(message.date)
+.clear

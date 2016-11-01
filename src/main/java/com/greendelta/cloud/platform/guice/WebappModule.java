@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import websocket.WebsocketConfigurator;
 
 import com.google.inject.Singleton;
-import com.google.inject.persist.PersistFilter;
 import com.google.inject.servlet.ServletModule;
 import com.greendelta.cloud.platform.servlet.DefaultServlet;
 
@@ -19,10 +18,9 @@ class WebappModule extends ServletModule {
 
 	@Override
 	protected void configureServlets() {
+		filter("/ws/*", "/sockets/*").through(PersistFilter.class);
 		requestStaticInjection(WebsocketConfigurator.class);
 		configureNonStaticResources();
-		filter("/ws/*").through(PersistFilter.class);
-		filter("/sockets/*").through(PersistFilter.class);
 		bind(ShiroFilter.class).in(Singleton.class);
 		filter("/*").through(ShiroFilter.class);
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));

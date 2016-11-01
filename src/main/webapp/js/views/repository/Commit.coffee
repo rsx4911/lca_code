@@ -1,15 +1,15 @@
 define([
 				'backbone'
-				'moment'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Format'
 				'cs!utils/Icons'
 				'cs!utils/Renderer'
 				'templates/views/repository/commit'
 				'templates/views/repository/commit-references'
 			]
 
-	(Backbone, moment, Events, Filter, Icons, Renderer, template, refTemplate) ->
+	(Backbone, Events, Filter, Format, Icons, Renderer, template, refTemplate) ->
 
 		class RepositoryCommit extends Backbone.View
 
@@ -37,7 +37,7 @@ define([
 					@$el.html template
 						repository: repo
 						commit: commit
-						formatDate: (value) -> return if !value then '' else moment(value).format('M/D/YYYY h:mm:ssa')
+						formatDate: Format.dateTime
 						getIcon: Icons.get
 					@filter.init()
 				Renderer.render @, renderOptions

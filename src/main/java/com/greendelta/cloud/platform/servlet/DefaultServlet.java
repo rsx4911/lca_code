@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.shiro.subject.Subject;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -21,13 +23,19 @@ public class DefaultServlet extends HttpServlet {
 	@Inject
 	private Provider<CloudSession> sessionProvider;
 
+	@Inject
+	private Provider<Subject> subjectProvider;
+
 	@Override
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		boolean isLoginUrl = request.getRequestURL().toString().endsWith("/login");
 		boolean isImprintUrl = request.getRequestURL().toString().endsWith("/imprint");
 		if (isLoginUrl)
-			forward("/login.html", request, response);
+			if (subjectProvider.get() != null && subjectProvider.get().isAuthenticated())
+				response.sendRedirect("/");
+			else
+				forward("/login.html", request, response);
 		else if (isImprintUrl)
 			forward("/imprint.html", request, response);
 		else {

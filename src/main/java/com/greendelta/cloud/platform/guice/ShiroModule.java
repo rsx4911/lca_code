@@ -17,13 +17,12 @@ import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.SessionScoped;
 import com.greendelta.cloud.platform.guice.util.CloudSession;
-import com.greendelta.cloud.platform.shiro.JpaRealm;
 import com.greendelta.cloud.platform.shiro.AuthenticationFilter;
+import com.greendelta.cloud.platform.shiro.JpaRealm;
 
 class ShiroModule extends ShiroWebModule {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(ShiroModule.class);
+	private static final Logger log = LoggerFactory.getLogger(ShiroModule.class);
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);
@@ -70,5 +69,5 @@ class ShiroModule extends ShiroWebModule {
 	public CloudSession provideSession() {
 		return new CloudSession();
 	}
-	
+
 }

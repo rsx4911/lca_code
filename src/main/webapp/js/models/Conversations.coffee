@@ -1,0 +1,60 @@
+define([
+				'backbone'
+				'cs!utils/Layers'
+				'cs!models/Conversation'
+				'cs!models/CurrentUser'
+			]
+
+	(Backbone, Layers, Conversation, currentUser) ->
+
+		class Conversations extends Backbone.Collection
+
+			url: '/ws/messages'
+
+			model: Conversation
+
+			comparator: (c1, c2) ->
+				d1 = c1.findNewestMessage()?.date or Number.MAX_VALUE
+				d2 = c2.findNewestMessage()?.date or Number.MAX_VALUE
+				return d1 < d2
+
+			initSocket: () ->
+				loc = window.location
+				schema = if loc.protocol is 'https' then 'wss' else 'ws'
+				@socket = new WebSocket "#{schema}://#{loc.host}/sockets/messages"
+				@socket.onmessage = (msg) =>
+					data = JSON.parse msg.data
+					if data.type is 'NEW_MESSAGE'
+						message = data.data
+						otherUser = if message.from.username is currentUser.get('username') then message.to.username else message.from.username
+						conversation = @getForUsername otherUser
+						conversation.get('messages').push message
+						if otherUser is message.from.username
+							conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
+						@trigger 'newMessage', conversation, message, true
+				@socket.onclose = () ->
+					Layers.showLoginLayer()
+
+			closeSocket: (callback) ->
+				@socket.onclose = () ->
+					callback?()
+				@socket.close()
+
+			sendMessage: (to, text) ->
+				@socket.send JSON.stringify {type: 'NEW_MESSAGE', data: "#{to};#{text}"}
+
+			getForUsername: (username) ->
+				for conversation in @models
+					if conversation.getOtherUser().username is username
+						return conversation
+				return null
+
+			getUnreadMessages: () ->
+				total = 0
+				for conversation in @models
+					total += conversation.get('unreadMessages')
+				return total
+
+		return new Conversations()
+
+)

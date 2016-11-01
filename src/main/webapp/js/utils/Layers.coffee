@@ -116,6 +116,17 @@ define([
 						{id: 'progress-btn-run', className: 'btn-primary', text: 'Run', callback: 'start'}
 					]
 
+			showLoginLayer: () ->
+				@showViewInLayer
+					title: 'Login'
+					view: 'LoginLayer'
+					notCloseable: true
+					static: true
+					buttons: [
+						{id: 'close', text: 'Close', className: 'btn-default', callback: () -> window.location.href = '/login'}
+						{id: 'login', text: 'Login', className: 'btn-primary', callback: 'login'}
+					]
+
 			askQuestion: (options) ->
 				unless options.question
 					return

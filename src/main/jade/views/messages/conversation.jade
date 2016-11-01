@@ -1,0 +1,15 @@
+a.no-deco(href='#' data-action='show-message' data-user=user.username)
+	.list-entry(class=selected?'active':null)
+		span.unread-messages.badge=unreadMessages?unreadMessages:''
+		img.avatar.pull-left(src='/ws/user/avatar/#{user.username}')
+		.message-container
+			div
+				.username.pull-left=user.name
+				.date.pull-right
+					if message
+						| #{formatDate(message.date)}
+				.clear
+			.message
+				if message
+					| #{message.text}
+		.clear

@@ -2,11 +2,12 @@ define([
 				'backbone'
 				'moment'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Renderer'
 				'templates/views/repository/commits'
 			]
 
-	(Backbone, moment, Events, Renderer, template) ->
+	(Backbone, moment, Events, Format, Renderer, template) ->
 
 		class RepositoryCommits extends Backbone.View
 
@@ -24,7 +25,7 @@ define([
 					@$el.html template
 						repository: repository
 						groups: @prepareModel commits
-						formatDate: (value) -> return if !value then '' else moment(value).format('MM/DD/YYYY')
+						formatDate: Format.date
 				Renderer.render @, renderOptions
 
 			loadCommits: (callback) ->

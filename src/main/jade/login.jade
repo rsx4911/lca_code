@@ -1,4 +1,4 @@
-include views/mixins/forms.jade
+include views/mixins/login-form.jade
 
 <!DOCTYPE html>
 html(lang='en')
@@ -19,15 +19,12 @@ html(lang='en')
 				h3 Welcome to the LCA Collaboration Server!
 					div: small Manage LCA repositories with user specific access management that keeps your LCA data secure and enables collaboration. 
 			#login-container
-				h3 Sign in
-				form#login
-					#login-general-message.alert.alert-danger(role='alert'): span.message
-					+input('username', 'Username')
-					+input('password', 'Password', 'password')
-					+input('token', 'Token', 'text', false, false, true)
-						a.default-link(href='/login') Login with another user
+				+login-form
 					button.btn.btn-primary.pull-right(type='submit') Login
 					.clear
+		br
+		br
+		br
 		#footer &copy; 
 			a(href='http://www.greendelta.com' target='_blank') GreenDelta GmbH
 			|  
@@ -49,9 +46,9 @@ html(lang='en')
 							$('#password-group').addClass('hidden');
 							$('#token-group').removeClass('hidden');
 							$('#login-general-message').hide();
-							$('#token').focus()
+							$('#token').focus();
 						} else {
-							window.location.href = '/'
+							window.location.href = '/';
 						}
 					}, error: function(response) {
 						$('#login-general-message').show();

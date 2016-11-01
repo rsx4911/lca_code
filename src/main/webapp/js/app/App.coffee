@@ -2,30 +2,21 @@ define([
 				'backbone' 
 				'cs!app/Controller'
 				'cs!app/Router'
+				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
-				'cs!app/DynamicDependencies'
+				'cs!models/Conversations'
+				#'cs!app/DynamicDependencies'
 			]
 
-	(Backbone, Controller, Router, Model, currentUser) ->
+	(Backbone, Controller, Router, Layers, Model, currentUser, conversations) ->
 
 		initializeErrorHandling: () ->
 			$(document).ajaxError (event, response, options, error) ->
 				switch response.status
-					when 401 
-						if currentUser.id
-							Model.fetch currentUser,
-								force: true
-								success: () ->
-									if currentUser.id
-										Router.navigate '/403',
-											replace: true
-									else
-										window.location.href = '/login'
-								error: () ->
-									window.location.href = '/login'
-						else
-							window.location.href = '/login'
+					when 401
+						if !currentUser.get('inLoginProcess')
+							Layers.showLoginLayer()
 					when 403 then Router.navigate '/403',
 						replace: true
 					when 404 then Router.navigate '/404',
@@ -41,12 +32,12 @@ define([
 					$(@).addClass('animated ' + animationName).one animationEnd, () -> 
 						$(@).removeClass 'animated ' + animationName
 			@initializeErrorHandling()
-			Model.fetch currentUser,
-				success: () ->
-					Router.initialize()
-					Controller.initialize Router
-					Backbone.history.start
-						pushState: true
+			Model.fetchAll [currentUser, conversations], () ->
+				conversations.initSocket()
+				Router.initialize()
+				Controller.initialize Router
+				Backbone.history.start
+					pushState: true
 
 				
 )

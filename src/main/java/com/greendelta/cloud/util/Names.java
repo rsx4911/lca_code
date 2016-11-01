@@ -30,6 +30,7 @@ public class Names {
 		reservedNames.add("member");
 		reservedNames.add("search");
 		reservedNames.add("references");
+		reservedNames.add("messages");
 	}
 
 	public static boolean isReserved(String name) {

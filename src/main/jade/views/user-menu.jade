@@ -5,13 +5,16 @@ include mixins/forms.jade
 		span.glyphicon.glyphicon-search.form-control-feedback
 .pull-right.user-menu-actions
 	a.search-link-icon(href='/search')
-		.span.glyphicon.glyphicon-search  
+		span.glyphicon.glyphicon-search  
 	if isAdmin
 		if upgradeAvailable
 			a(href='#' data-action='upgrade')
 				span.glyphicon.glyphicon-upload(data-toggle='tooltip' data-placement='bottom' title='Upgrade repositories')
 		a(href='/administration')
 			span.glyphicon.glyphicon-wrench(data-toggle='tooltip' data-placement='bottom' title='Admin area')
+	a.no-deco.messages(href='/messages')
+		span#message-icon.glyphicon.glyphicon-comment(class=unreadMessages?'new-messages':null)
+		span#message-count(class=unreadMessages?null:'hidden')=unreadMessages
 	a.logout(href='#')
 		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout')
 

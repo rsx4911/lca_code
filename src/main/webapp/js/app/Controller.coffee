@@ -9,11 +9,12 @@ define([
 				'cs!models/User'
 				'cs!models/Group'
 				'cs!models/Team'
+				'cs!models/Conversations'
 				'templates/views/403'
 				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layers, Layouts, Model, Repository, User, Group, Team, template403, template404) ->
+	(Navigation, UserMenu, Events, Layers, Layouts, Model, Repository, User, Group, Team, conversations, template403, template404) ->
 
 		Controller = () ->
 
@@ -32,6 +33,9 @@ define([
 					when 'dashboard' then return [
 						{href: "#{prefix}/dashboard/repositories", imageSrc: '/images/repository.png', label: 'Repositories', id: 'repositories'}
 						{href: "#{prefix}/dashboard/groups", imageSrc: '/images/group.png', label: 'Groups', id: 'groups'}
+					]
+					when 'messages' then return [
+						{href: "#{prefix}/messages", imageSrc: '/images/inbox.png', label: 'Inbox', id: 'inbox'}
 					]
 					when 'user' then return [
 						{href: "#{prefix}/user/profile", imageSrc: '/images/profile.png', label: 'Profile', id: 'profile'}
@@ -128,20 +132,26 @@ define([
 					nav: 
 						type: 'user'
 						active: 'notifications'
-				@router.registerUserRoute 'dashboardRepositories', -> 
-					@showView 
-						view: 'dashboard/Repositories'
-						title: 'Repositories' 
-						nav: 
-							type: 'dashboard'
-							active: 'repositories'
-				@router.registerUserRoute 'dashboardGroups', -> 
-					@showView 
-						view: 'dashboard/Groups'
-						title: 'Groups' 
-						nav: 
-							type: 'dashboard'
-							active: 'groups'
+				@router.registerUserRoute 'dashboardRepositories', -> @showView 
+					view: 'dashboard/Repositories'
+					title: 'Repositories' 
+					nav: 
+						type: 'dashboard'
+						active: 'repositories'
+				@router.registerUserRoute 'dashboardGroups', -> @showView 
+					view: 'dashboard/Groups'
+					title: 'Groups' 
+					nav: 
+						type: 'dashboard'
+						active: 'groups'
+				@router.registerUserRoute 'messages', (username) -> @showView 
+					view: 'messages/Messages'
+					title: 'Messages' 
+					nav: 
+						type: 'messages'
+						active: 'inbox'
+					viewOptions: 
+						username: username
 				@router.registerUserRoute 'groupNew', -> @showView 
 					view: 'group/Create'
 					title: 'New group' 
@@ -262,12 +272,18 @@ define([
 					callback?()
 
 			getDocumentTitle: (value) ->
+				unread = conversations.getUnreadMessages()
 				if value.indexOf('|') is -1 
-					return "#{value} | LCA Cloud"
+					if unread
+						return "(#{unread}) #{value} | LCA Cloud"
+					else
+						return "#{value} | LCA Cloud"
 				split = value.split '|'
 				reversed = 'LCA Cloud'
 				for v in split
 					reversed = "#{v} | #{reversed}"
+				if unread
+					return "(#{unread}) #{reversed}"
 				return reversed
 
 			showView: (options) ->

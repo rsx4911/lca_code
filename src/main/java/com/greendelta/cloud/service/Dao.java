@@ -271,7 +271,6 @@ class Dao<T extends AbstractEntity> {
 		if (result == null)
 			return Collections.emptyList();
 		return result;
-
 	}
 
 	private EntityManager createManager() {
