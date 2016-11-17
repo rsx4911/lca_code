@@ -1,35 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
-  <display-name>LCA Cloud</display-name>
-  <listener>
-    <listener-class>com.greendelta.cloud.platform.guice.GuiceConfig</listener-class>
-  </listener>
-  <filter>
-    <filter-name>noCacheFilter</filter-name>
-    <filter-class>com.greendelta.cloud.platform.servlet.NoCacheFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>noCacheFilter</filter-name>
-    <url-pattern>/ws/*</url-pattern>
-  </filter-mapping>
-  <filter-mapping>
-    <filter-name>noCacheFilter</filter-name>
-    <url-pattern>/sockets/*</url-pattern>
-  </filter-mapping>
-  <filter-mapping>
-    <filter-name>noCacheFilter</filter-name>
-    <url-pattern>/login.html</url-pattern>
-  </filter-mapping>
-  <filter-mapping>
-    <filter-name>noCacheFilter</filter-name>
-    <url-pattern>/index.html</url-pattern>
-  </filter-mapping>
-  <filter>
-    <filter-name>guiceFilter</filter-name>
-    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
-  </filter>
-  <filter-mapping>
-    <filter-name>guiceFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	version="2.5">
+	<display-name>LCA Cloud</display-name>
+	<listener>
+		<listener-class>com.greendelta.cloud.platform.guice.GuiceConfig</listener-class>
+	</listener>
+	<filter>
+		<filter-name>noCacheFilter</filter-name>
+		<filter-class>com.greendelta.cloud.platform.servlet.NoCacheFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>noCacheFilter</filter-name>
+		<url-pattern>/ws/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>noCacheFilter</filter-name>
+		<url-pattern>/sockets/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>noCacheFilter</filter-name>
+		<url-pattern>/login.html</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>noCacheFilter</filter-name>
+		<url-pattern>/index.html</url-pattern>
+	</filter-mapping>
+	<filter>
+		<filter-name>guiceFilter</filter-name>
+		<filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>guiceFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	<!-- If session times out there are problems with the socket session, that 
+		lead to ongoing problems (app restart necessary), so for now, no session 
+		timeout -->
+	<session-config>
+		<session-timeout>-1</session-timeout>
+	</session-config>
 </web-app>

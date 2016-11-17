@@ -1,11 +1,10 @@
 define([
 				'backbone'
-				'cs!utils/Layers'
 				'cs!models/Conversation'
 				'cs!models/CurrentUser'
 			]
 
-	(Backbone, Layers, Conversation, currentUser) ->
+	(Backbone, Conversation, currentUser) ->
 
 		class Conversations extends Backbone.Collection
 
@@ -32,8 +31,6 @@ define([
 						if otherUser is message.from.username
 							conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
 						@trigger 'newMessage', conversation, message, true
-				@socket.onclose = () ->
-					Layers.showLoginLayer()
 
 			closeSocket: (callback) ->
 				@socket.onclose = () ->
