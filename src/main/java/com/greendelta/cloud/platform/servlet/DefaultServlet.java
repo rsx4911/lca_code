@@ -31,20 +31,23 @@ public class DefaultServlet extends HttpServlet {
 			HttpServletResponse response) throws ServletException, IOException {
 		boolean isLoginUrl = request.getRequestURL().toString().endsWith("/login");
 		boolean isImprintUrl = request.getRequestURL().toString().endsWith("/imprint");
-		if (isLoginUrl)
-			if (subjectProvider.get() != null && subjectProvider.get().isAuthenticated())
-				response.sendRedirect("/");
-			else
-				forward("/login.html", request, response);
-		else if (isImprintUrl)
+		if (isImprintUrl) {
 			forward("/imprint.html", request, response);
-		else {
+		} else if (isLoginUrl) {
+			Subject subject = subjectProvider.get();
+			if (subject != null && subject.isAuthenticated()) {
+				response.sendRedirect("/");
+			} else {
+				forward("/login.html", request, response);
+			}
+		} else {
 			String redirectUrl = sessionProvider.get().redirectUrl;
 			if (!Strings.isNullOrEmpty(redirectUrl)) {
 				sessionProvider.get().redirectUrl = null;
 				response.sendRedirect(redirectUrl);
-			} else
+			} else {
 				forward("/index.html", request, response);
+			}
 		}
 	}
 

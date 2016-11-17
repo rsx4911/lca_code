@@ -173,7 +173,7 @@ public class UserService {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
 			return false;
-		Object principal = subject.getPrincipal();
+		String principal = subject.getPrincipal().toString();
 		log.info("User {} attempts to logout", principal);
 		subject.logout();
 		log.info("User {} successfully logged out", principal);

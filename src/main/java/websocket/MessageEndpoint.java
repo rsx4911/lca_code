@@ -42,7 +42,9 @@ public class MessageEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config) {
-		User user = getUser(config);
+		Subject subject = (Subject) config.getUserProperties().get("subject");
+		String username = subject.getPrincipal().toString();
+		User user = userService.getForUsername(username);
 		Set<String> ids = online.get(user.username);
 		if (ids == null) {
 			ids = new HashSet<>();
@@ -52,34 +54,29 @@ public class MessageEndpoint {
 		broadcast(session, new Event(EventType.CONNECTED, user.username));
 	}
 
-	private User getUser(EndpointConfig config) {
-		Subject subject = (Subject) config.getUserProperties().get("subject");
-		String username = subject.getPrincipal().toString();
-		return userService.getForUsername(username);
-	}
-
 	@OnMessage
-	public void onMessage(String data, Session session, EndpointConfig config) {
+	public void onMessage(String data, Session session) {
 		Gson gson = new Gson();
 		Event event = gson.fromJson(data, Event.class);
-		if (event.type == EventType.NEW_MESSAGE) {
-			String[] content = event.data.toString().split(";");
-			User from = getUser(session);
-			User to = userService.getForUsername(content[0]);
-			Message message = new Message();
-			message.date = Calendar.getInstance().getTime();
-			message.from = from;
-			message.to = to;
-			message.text = content[1];
-			message.unread = true;
-			message = service.insert(message);
-			MessageMapper mapper = new MessageMapper();
-			send(new Event(EventType.NEW_MESSAGE, mapper.map(message)),
-					getSessions(session, online.get(from.username)));
-			if (online.containsKey(to.username))
-				send(new Event(EventType.NEW_MESSAGE, mapper.map(message)),
-						getSessions(session, online.get(to.username)));
-		}
+		if (event.type != EventType.NEW_MESSAGE)
+			return;
+		String[] content = event.data.toString().split(";");
+		User from = getUser(session);
+		User to = userService.getForUsername(content[0]);
+		Message message = new Message();
+		message.date = Calendar.getInstance().getTime();
+		message.from = from;
+		message.to = to;
+		message.text = content[1];
+		message.unread = true;
+		message = service.insert(message);
+		MessageMapper mapper = new MessageMapper();
+		Session[] sessions = getSessions(session, online.get(from.username));
+		send(new Event(EventType.NEW_MESSAGE, mapper.map(message)), sessions);
+		if (!online.containsKey(to.username))
+			return;
+		sessions = getSessions(session, online.get(to.username));
+		send(new Event(EventType.NEW_MESSAGE, mapper.map(message)), sessions);
 	}
 
 	@OnClose

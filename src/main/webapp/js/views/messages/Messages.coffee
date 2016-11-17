@@ -32,6 +32,9 @@ define([
 					element = @addConversation conversation, element
 				@initResizeListener()
 				@initConversationListener()
+				unless @hasScrollBar()
+					@conversation?.loadPrevious()
+
 
 			renderMessage: (message, prepend) ->
 				messages = @$ '#conversation-messages'
@@ -47,12 +50,21 @@ define([
 					messages.append content
 					if message.from.username is currentUser.get('username') or wasAtBottom
 						@scrollDown()
+					if wasAtBottom
+						@conversation.markAsRead()
 
 			isAtBottom: () ->
 				container = @$('#conversation-messages')
+				if container[0].scrollHeight <= container[0].clientHeight
+					return true
 				if container.scrollTop() is container.prop('scrollHeight') - container.innerHeight()
 					return true
 				if container.prop('scrollHeight') <= container.outerHeight()
+					return true
+				return false
+
+			hasScrollBar: () ->
+				if container[0].scrollHeight <= container[0].clientHeight
 					return true
 				return false
 
@@ -69,7 +81,7 @@ define([
 				@$('#conversation-messages').on 'scroll.messages', (event) =>
 					container = @$('#conversation-messages')
 					if @isAtBottom()
-						@conversation.markAsRead()
+						@conversation?.markAsRead()
 					if container.scrollTop()
 						return
 					@conversation?.loadPrevious()
