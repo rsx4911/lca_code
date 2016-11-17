@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "del": "~0.1.1",
-    "gulp": "~3.8.10",
+    "gulp": "~3.9.1",
     "gulp-jade": "^0.7.0",
     "gulp-shell": "^0.2.8",
     "gulp-wrap-amd": "^0.3.1",
