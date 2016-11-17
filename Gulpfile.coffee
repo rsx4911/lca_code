@@ -31,7 +31,7 @@ collect = (directory, finished) ->
 	return all
 
 gulp.task 'default', [], (callback) ->
-	runSequence 'clearTemplates', 'jadeIndex', 'jadeLayouts', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
+	runSequence 'clearTemplates', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
 	runSequence 'default', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
@@ -46,17 +46,6 @@ gulp.task 'jadeIndex', () ->
 			locals: {}
 		)
 		.pipe gulp.dest './src/main/webapp/'
-
-gulp.task 'jadeLayouts', () ->
-	gulp.src('./src/main/jade/layouts/**/*.jade')
-		.pipe($.jade 
-			client: true
-		)
-		.pipe($.wrapAmd
-			deps: ['jadeRuntime']
-			params: ['jade']
-		)
-		.pipe gulp.dest './src/main/webapp/js/templates/layouts'
 
 gulp.task 'jadeViews', () ->
 	gulp.src('./src/main/jade/views/**/*.jade')

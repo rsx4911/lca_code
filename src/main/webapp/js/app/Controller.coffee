@@ -3,7 +3,6 @@ define([
 				'cs!app/UserMenu'
 				'cs!utils/Events'
 				'cs!utils/Layers'
-				'cs!utils/Layouts'
 				'cs!utils/Model'
 				'cs!models/Repository'
 				'cs!models/User'
@@ -14,7 +13,7 @@ define([
 				'templates/views/404'
 			]
 	
-	(Navigation, UserMenu, Events, Layers, Layouts, Model, Repository, User, Group, Team, conversations, template403, template404) ->
+	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, template403, template404) ->
 
 		Controller = () ->
 
@@ -243,7 +242,7 @@ define([
 				@router = router
 				router.routeContext = @
 				Events.setRouter router
-				$('#main').empty();
+				$('#main .center').empty();
 				$('a').on 'click', (event) -> Events.followLink event
 				@initializeNavigation()
 				@initializeUserMenu()
@@ -288,33 +287,29 @@ define([
 
 			showView: (options) ->
 				@checkGroupOrRepositoryExists options, () =>
-					$('#main').empty()
+					$('#main .center').empty()
 					$('#header-title').html options.title.replace('|', '-')
 					$('#header-title').attr 'title', options.title.replace('|', '-')
 					document.title = @getDocumentTitle options.title
 					if typeof options.nav is 'string'
 						options.nav = {type: options.nav}
 					@navigation.setItems options.nav?.type, @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
-					Layouts.renderViewInLayout 'full-size',
-						viewOptions: options.viewOptions
-						views:
-							center: options.view
-						callback: () =>
-							@loaded = true
+					require ["cs!views/#{options.view}"], (View) =>
+						view = new View options.viewOptions
+						view.render
+							container: '#main .center'
 
 			show404: () ->
-				@loaded = true
 				Layers.hideProgressIndicator()
 				$('#header-title').empty()
 				@navigation.setItems []
-				$('#main').html template404()
+				$('#main .center').html template404()
 
 			show403: () ->
-				@loaded = true
 				Layers.hideProgressIndicator()
 				$('#header-title').empty()
 				@navigation.setItems []
-				$('#main').html template403()
+				$('#main .center').html template403()
 
 		)()
 

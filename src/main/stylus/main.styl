@@ -1,0 +1,89 @@
+#main
+	padding-top 65px
+	padding-left 65px    
+
+	@media(min-width 992px)
+		padding-left 230px    
+		
+	.full-size
+		max-width 1200px
+
+		@media(min-width 992px)
+			margin 25px auto
+
+		& > .center
+								
+			@media(min-width 992px)
+				margin 0 25px
+
+				.two-columns, .three-columns, .four-columns
+					
+					&:not(:last-child)
+						margin-bottom 2%
+
+					& > *
+
+						&:not(:first-child)
+							margin-left 1%
+
+						&:not(:last-child)
+							margin-right 1%
+
+				.two-columns > *
+					width 49%
+					float left
+
+				.three-columns > *
+					width 32%
+					float left
+
+				.four-columns > *
+					width 23.5%
+					float left
+
+				.flex-layout
+					display flex
+
+					& > .flex-column
+						display flex
+
+					.flex-container
+						width 100%
+						background-color rgb(255, 255, 255)
+
+			@media(min-width 992px) and (max-width 1199px)
+
+				.four-columns > *
+					width 49% !important
+
+					&:first-child, &:nth-child(3)
+						margin-left 0
+
+					&:last-child, &:nth-child(2)
+						margin-right 0
+
+			.two-columns.special
+							
+				@media(min-width 1120px)
+
+					& > *:first-child
+						width 55% !important
+
+					& > *:last-child
+						width 43% !important
+
+				@media(min-width 1220px)
+
+					& > *:first-child
+						width 58% !important
+
+					& > *:last-child
+						width 40% !important
+						
+				@media(min-width 1320px)
+
+					& > *:first-child
+						width 63% !important
+
+					& > *:last-child
+						width 35% !important
