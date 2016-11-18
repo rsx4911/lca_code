@@ -64,6 +64,7 @@ define([
 				return false
 
 			hasScrollBar: () ->
+				container = @$('#conversation-messages')
 				if container[0].scrollHeight <= container[0].clientHeight
 					return true
 				return false
