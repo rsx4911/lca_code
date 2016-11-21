@@ -19,9 +19,11 @@ import org.apache.shiro.subject.Subject;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.model.chat.Message;
 import com.greendelta.cloud.service.MessageService;
+import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.webservice.mapper.MessageMapper;
 
@@ -33,11 +35,13 @@ public class MessageEndpoint {
 
 	private final MessageService service;
 	private final UserService userService;
+	private final TeamService teamService;
 
 	@Inject
-	public MessageEndpoint(MessageService service, UserService userService) {
+	public MessageEndpoint(MessageService service, UserService userService, TeamService teamService) {
 		this.service = service;
 		this.userService = userService;
+		this.teamService = teamService;
 	}
 
 	@OnOpen
@@ -55,28 +59,47 @@ public class MessageEndpoint {
 	}
 
 	@OnMessage
-	public void onMessage(String data, Session session) {
+	public void onMessage(String value, Session session) {
 		Gson gson = new Gson();
-		Event event = gson.fromJson(data, Event.class);
+		Event event = gson.fromJson(value, Event.class);
 		if (event.type != EventType.NEW_MESSAGE)
 			return;
-		String[] content = event.data.toString().split(";");
+		NewMessage data = gson.fromJson(event.data.toString(), NewMessage.class);
 		User from = getUser(session);
-		User to = userService.getForUsername(content[0]);
+		User to = "user".equals(data.to.type) ? userService.getForUsername(data.to.id) : null;
+		Team team = "team".equals(data.to.type) ? teamService.getForTeamname(data.to.id) : null;
+		insertAndSendMessage(session, from, to, team, data.text);
+	}
+
+	private void insertAndSendMessage(Session session, User from, User to, Team team, String text) {
+		if (team == null) {
+			Message message = createMessage(from, to, null, text);
+			Session[] sessions = getSessions(session, online.get(from.username));
+			send(new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)), sessions);
+			if (!online.containsKey(to.username))
+				return;
+			sessions = getSessions(session, online.get(message.to.username));
+			send(new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)), sessions);
+			return;
+		}
+		for (User user : team.users) {
+			Message message = createMessage(from, user, team, text);
+			if (!online.containsKey(user.username))
+				continue;
+			Session[] sessions = getSessions(session, online.get(user.username));
+			send(new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)), sessions);
+		}
+	}
+
+	private Message createMessage(User from, User to, Team team, String text) {
 		Message message = new Message();
-		message.date = Calendar.getInstance().getTime();
 		message.from = from;
 		message.to = to;
-		message.text = content[1];
-		message.unread = true;
-		message = service.insert(message);
-		MessageMapper mapper = new MessageMapper();
-		Session[] sessions = getSessions(session, online.get(from.username));
-		send(new Event(EventType.NEW_MESSAGE, mapper.map(message)), sessions);
-		if (!online.containsKey(to.username))
-			return;
-		sessions = getSessions(session, online.get(to.username));
-		send(new Event(EventType.NEW_MESSAGE, mapper.map(message)), sessions);
+		message.team = team;
+		message.text = text;
+		message.date = Calendar.getInstance().getTime();
+		message.unread = !from.equals(to);
+		return service.insert(message);
 	}
 
 	@OnClose
@@ -149,6 +172,20 @@ public class MessageEndpoint {
 	private enum EventType {
 
 		CONNECTED, DISCONNECTED, NEW_MESSAGE;
+
+	}
+
+	private class NewMessage {
+
+		private Recipient to;
+		private String text;
+
+		private class Recipient {
+
+			String type;
+			String id;
+
+		}
 
 	}
 

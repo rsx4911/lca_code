@@ -25,10 +25,11 @@ define([
 					data = JSON.parse msg.data
 					if data.type is 'NEW_MESSAGE'
 						message = data.data
-						otherUser = if message.from.username is currentUser.get('username') then message.to.username else message.from.username
-						conversation = @getForUsername otherUser
+						type = if message.team then 'team' else 'user'
+						id = if type is 'team' then message.team.teamname else if message.from.username is currentUser.get('username') then message.to.username else message.from.username
+						conversation = @getFor type, id
 						conversation.get('messages').push message
-						if otherUser is message.from.username
+						if message.to.username is currentUser.get('username')
 							conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
 						@trigger 'newMessage', conversation, message, true
 
@@ -38,12 +39,13 @@ define([
 				@socket.close()
 
 			sendMessage: (to, text) ->
-				@socket.send JSON.stringify {type: 'NEW_MESSAGE', data: "#{to};#{text}"}
+				@socket.send JSON.stringify {type: 'NEW_MESSAGE', data: JSON.stringify(to: to, text: text)}
 
-			getForUsername: (username) ->
+			getFor: (type, id) ->
 				for conversation in @models
-					if conversation.getOtherUser().username is username
-						return conversation
+					if conversation.get('recipient').type is type
+						if conversation.get('recipient').id is id
+							return conversation
 				return null
 
 			getUnreadMessages: () ->

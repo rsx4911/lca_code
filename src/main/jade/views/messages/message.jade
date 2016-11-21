@@ -1,4 +1,7 @@
-.message-wrapper(id=message.id class=message.from.username===username?'right':'left')
+- var isOwnMessage = message.from.username===username;
+.message-wrapper(id=message.id class=isOwnMessage?'right':'left')
+	if message.team && !isOwnMessage
+		div: strong=message.from.name
 	span=message.text
 		| &nbsp; &nbsp;
 	small.date=formatDate(message.date)

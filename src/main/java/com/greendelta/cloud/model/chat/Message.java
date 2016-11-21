@@ -12,6 +12,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import com.greendelta.cloud.model.AbstractEntity;
+import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 
 @Entity
@@ -29,6 +30,10 @@ public class Message extends AbstractEntity {
 	@OneToOne
 	@JoinColumn(name = "f_to_user")
 	public User to;
+
+	@OneToOne
+	@JoinColumn(name = "f_team")
+	public Team team;
 
 	@Column(name = "date")
 	@Temporal(TemporalType.TIMESTAMP)

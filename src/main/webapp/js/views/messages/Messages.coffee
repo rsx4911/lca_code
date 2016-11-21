@@ -21,12 +21,12 @@ define([
 
 			events:
 				'click a[data-action=show-message]': (event) -> @onConversationClicked event
-				'click [data-action=start-new-conversation]': (event) -> @openUserSelection event
+				'click [data-action=start-new-conversation]': (event) -> @openSelection event
 				'keypress #conversation-input input': (event) -> @sendMessage event
 
 			render: (renderOptions) ->
 				@$el.html template
-					selected: @conversation?.getOtherUser().username
+					selected: @conversation?.get('recipient')
 				Renderer.render @, renderOptions
 				for conversation in conversations.models
 					element = @addConversation conversation, element
@@ -34,7 +34,6 @@ define([
 				@initConversationListener()
 				unless @hasScrollBar()
 					@conversation?.loadPrevious()
-
 
 			renderMessage: (message, prepend) ->
 				messages = @$ '#conversation-messages'
@@ -94,10 +93,11 @@ define([
 					@activateConversation conversation
 				, 'messages'
 				conversations.on 'newMessage', (conversation, message, isNew) => 
-					username = conversation.getOtherUser().username
+					recipient = conversation.get 'recipient' 
+					recipient2 = @conversation?.get 'recipient'
 					if isNew
 						@rerenderConversation conversation
-					if @conversation?.getOtherUser().username is username
+					if recipient2 and recipient2.type is recipient.type and recipient2.id is recipient.id
 						@renderMessage message, !isNew
 				, 'messages'
 				conversations.on 'markedAsRead', (conversation) => 
@@ -105,14 +105,14 @@ define([
 				, 'messages'
 
 			rerenderConversation: (conversation, keepPosition) ->
-				username = conversation.getOtherUser().username
-				element = @$("#conversations [data-user=#{username}]")
+				recipient = conversation.get 'recipient'
+				element = @$ "#conversations [data-type=#{recipient.type}][data-id=#{recipient.id}]"
 				prev = element.prev()
 				element.remove()
 				@addConversation conversation, (if keepPosition then prev else null)
-				@$("#conversations [data-user]").hide()
+				@$("#conversations [data-id]").hide()
 				setTimeout () -> # TODO fix this, have to add little timeout, otherwise badge will not be repositioned
-					@$("#conversations [data-user]").show()
+					@$("#conversations [data-id]").show()
 				, 2
 
 			updateHeight: () ->
@@ -122,29 +122,30 @@ define([
 
 			addConversation: (conversation, afterElement) ->
 				message = conversation.findNewestMessage()
-				user = conversation.getOtherUser()
+				recipient = conversation.get 'recipient'
+				recipient2 = @conversation?.get 'recipient'
 				newDate = message?.date or Number.MAX_VALUE
 				content = conversationTemplate
-					user: user
+					recipient: recipient
 					message: message
 					formatDate: Format.dayOrTime
 					unreadMessages: conversation.get('unreadMessages')
-					selected: if user.username is @conversation?.getOtherUser().username then true else false
+					selected: recipient2 and recipient2.type is recipient.type and recipient2.id is recipient.id
 				container = @$('#conversations .list-container')
-				if afterElement and afterElement.attr 'data-user'
+				if afterElement and afterElement.attr 'data-type'
 					afterElement.after content
 				else
 					container.prepend content
-				return @$("#conversations [data-user=#{user.username}]")
+				return @$("#conversations [data-type=#{recipient.type}][data-id=#{recipient.id}]")
 
 			activateConversation: (conversation) ->
-				user = conversation.getOtherUser()
 				@conversation = conversation
+				recipient = conversation.get 'recipient'
 				@$('.list-entry.active').removeClass 'active'
-				@$("[data-user=#{user.username}] .list-entry").addClass 'active'
+				@$("[data-type=#{recipient.type}][data-type=#{recipient.id}] .list-entry").addClass 'active'
 				@$('#next-message').prop 'disabled', false
-				@$('.header-box .username').html user.name
-				@$('.header-box .avatar').attr 'src', "/ws/user/avatar/#{user.username}"
+				@$('.header-box .username').html recipient.name
+				@$('.header-box .avatar').attr 'src', "/ws/#{recipient.type}/avatar/#{recipient.id}"
 				@$('#conversation-messages').empty()
 				for message in conversation.get('messages')
 					@renderMessage message
@@ -163,32 +164,39 @@ define([
 				input = @$ '#next-message'
 				text = input.val()
 				input.val ''				
-				conversations.sendMessage @conversation.getOtherUser().username, text
+				conversations.sendMessage @conversation.get('recipient'), text
 
 			onConversationClicked: (event) ->
 				Events.preventDefault event
 				target = $ Events.target event, 'a'
-				username = target.attr 'data-user'
-				@activateConversation conversations.getForUsername username
+				type = target.attr 'data-type'
+				id = target.attr 'data-id'
+				@activateConversation conversations.getFor type, id
 				@scrollDown()
 
-			openUserSelection: () ->
-				existing = []
-				existing.push {username: currentUser.get('username')}
+			openSelection: () ->
+				existingUsers = []
+				existingTeams = []
+				existingUsers.push {username: currentUser.get('username')}
 				for conversation in conversations.models
-					existing.push {username: conversation.getOtherUser().username}
-				Data.getUsers (users) =>
-					users = Data.usersToOptions users, existing, true 
+					if conversation.get('recipient').type is 'user'
+						existingUsers.push {username: conversation.get('recipient').id}
+					else if conversation.get('recipient').type is 'team'
+						existingTeams.push {teamname: conversation.get('recipient').id}
+				Data.getUsersAndTeams (users, teams) =>
+					users = Data.usersToOptions users, existingUsers, true 
+					teams = Data.teamsToOptions teams, existingTeams, true 
 					Layers.showTemplateInLayer
 						template: 'messages/select-user'
 						title: "Start new conversation"
-						model: {users: users}
-						buttons: [{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () => @onUserSelection()}]
+						model: {users: users, teams: teams}
+						buttons: [{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () => @onSelection()}]
 
-			onUserSelection: () ->
-				selection = $('#name option:selected')
-				user = {username: selection.val(), name: selection.text()}
-				conversations.add new Conversation {messages: [], unreadMessages: 0, otherUser: user}
+			onSelection: () ->
+				selection = $ '#name option:selected'
+				type = selection.attr 'data-group-id'
+				recipient = {type: type, id: selection.val(), username: selection.val(), name: selection.text()}
+				conversations.add new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
 				Layers.closeActive()
 
 )

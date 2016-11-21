@@ -6,26 +6,22 @@ define([
 	(Backbone, currentUser) ->
 
 		class Conversation extends Backbone.Model
-
-			getOtherUser: () ->
-				if @get('otherUser')
-					return @get('otherUser')
-				for message in @get('messages')
-					if message.from.username is currentUser.get('username')
-						return message.to
-					else 
-						return message.from
-				return null;
 			
+			initialize: () ->
+				unless @get('messages')
+					@set 'messages', []
+
 			loadPrevious: () ->
 				if @loading or @allLoaded
 					return
 				@loading = true
-				username = @getOtherUser().username
+				recipient = @get 'recipient'
+				subpath = "#{recipient.type}/#{recipient.id}"
 				oldestMessage = @findOldestMessage()
+				query = if oldestMessage then "?before=#{oldestMessage.date}" else ''
 				$.ajax
 					type: 'GET'
-					url: "/ws/messages/#{username}?before=" + oldestMessage.date
+					url: "/ws/messages/#{subpath}#{query}"
 					success: (messages) =>
 						@loading = false
 						if !messages or !messages.length
@@ -53,7 +49,8 @@ define([
 			markAsRead: () ->
 				if parseInt(@get('unreadMessages')) is 0
 					return
-				username = @getOtherUser().username
+				recipient = @get 'recipient'
+				subpath = "#{recipient.type}/#{recipient.id}"
 				for message in @get('messages')
 					if message.to.username is currentUser.get('username')
 						message.unread = false
@@ -62,6 +59,6 @@ define([
 				@trigger 'markedAsRead', @, total
 				$.ajax
 					type: 'PUT'
-					url: "/ws/messages/markAsRead/#{username}"
+					url: "/ws/messages/markAsRead/#{subpath}"
 
 )

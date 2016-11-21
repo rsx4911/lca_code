@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.inject.Inject;
+import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.model.chat.Message;
 
@@ -25,46 +26,34 @@ public class MessageService {
 		return dao.insert(message);
 	}
 
-	public void delete(Message message) {
-		dao.delete(message);
-	}
-
-	public List<Message> getAll(User from, User to, int page) {
-		return null;
-	}
-
-	public List<Message> getLast(User user, int count) {
-		return null;
-	}
-
-	public List<Message> getUnreadMessages(User user) {
-		String jpql = "SELECT m FROM Message m WHERE m.unread = true AND m.to = :user";
-		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("user", user);
-		return dao.getAll(jpql, attributes);
-	}
-
 	public List<ConversationDescriptor> getConversations(User user) {
-		String jpql = "SELECT m FROM Message m WHERE m.from = :user OR m.to = :user ORDER BY m.date DESC";
+		String jpql = "SELECT m FROM Message m WHERE ((m.from = :user AND m.team IS NULL) OR m.to = :user) ORDER BY m.date DESC";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("user", user);
 		List<Message> all = dao.getAll(jpql, attributes);
-		Map<Long, ConversationDescriptor> conversations = new HashMap<>();
+		Map<String, ConversationDescriptor> conversations = new HashMap<>();
 		for (Message message : all) {
-			User with = message.from.equals(user) ? message.to : message.from;
-			ConversationDescriptor conversation = conversations.get(with.getId());
+			String key = getKey(user, message);
+			ConversationDescriptor conversation = conversations.get(key);
 			if (conversation == null) {
-				conversations.put(with.getId(), conversation = new ConversationDescriptor(message));
+				conversations.put(key, conversation = new ConversationDescriptor(message));
 			}
-			if (message.unread && message.from.equals(with)) {
+			if (message.unread && !message.from.equals(user)) {
 				conversation.unreadMessages++;
 			}
 		}
 		return new ArrayList<>(conversations.values());
 	}
 
+	private String getKey(User user, Message message) {
+		if (message.team != null)
+			return "team-" + message.team.getId();
+		User with = message.from.equals(user) ? message.to : message.from;
+		return "user-" + with.getId();
+	}
+
 	public List<Message> getMessages(User user, User with, int limit, Date before) {
-		String jpql = "SELECT m FROM Message m WHERE ((m.from = :user AND m.to = :with) OR (m.to = :user AND m.from = :with)) ";
+		String jpql = "SELECT m FROM Message m WHERE ((m.from = :user AND m.to = :with) OR (m.to = :user AND m.from = :with)) AND m.team IS NULL ";
 		if (before != null)
 			jpql += "AND m.date < :before ";
 		jpql += "ORDER BY m.date DESC";
@@ -78,9 +67,39 @@ public class MessageService {
 		return filtered;
 	}
 
-	public void markAsRead(User user) {
-		String jpql = "SELECT m FROM Message m WHERE m.from = :user AND m.unread = true";
-		List<Message> messages = dao.getAll(jpql, Collections.singletonMap("user", user));
+	public List<Message> getMessages(User user, Team team, int limit, Date before) {
+		String jpql = "SELECT m FROM Message m WHERE m.team = :team AND m.to = :user ";
+		if (before != null)
+			jpql += "AND m.date < :before ";
+		jpql += "ORDER BY m.date DESC";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("team", team);
+		attributes.put("user", user);
+		if (before != null)
+			attributes.put("before", before);
+		List<Message> filtered = dao.getAll(jpql, attributes, 0, limit);
+		Collections.sort(filtered, new MessageSorter());
+		return filtered;
+	}
+
+	public void markAsRead(User user, User with) {
+		String jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.unread = true";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("user", user);
+		attributes.put("with", with);
+		List<Message> messages = dao.getAll(jpql, attributes);
+		for (Message message : messages) {
+			message.unread = false;
+		}
+		dao.update(messages);
+	}
+
+	public void markAsRead(User user, Team team) {
+		String jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.unread = true";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("user", user);
+		attributes.put("team", team);
+		List<Message> messages = dao.getAll(jpql, attributes);
 		for (Message message : messages) {
 			message.unread = false;
 		}
