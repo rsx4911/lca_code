@@ -32,6 +32,8 @@ define([
 						if message.to.username is currentUser.get('username')
 							conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
 						@trigger 'newMessage', conversation, message, true
+					else if data.type is 'CONNECTED'
+					else if data.type is 'DISCONNCTED'
 
 			closeSocket: (callback) ->
 				@socket.onclose = () ->

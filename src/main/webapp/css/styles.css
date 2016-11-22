@@ -2,4 +2,6 @@
 @import 'libs/bootstrap.css';
 @import 'libs/bootstrap-theme.css';
 @import 'libs/bootstrap-datepicker.css';
+@import 'libs/select2.css';
+@import 'libs/select2-bootstrap.css';
 @import 'main.css';

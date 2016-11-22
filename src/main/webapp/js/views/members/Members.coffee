@@ -9,6 +9,7 @@ define([
 				'cs!utils/Synchronized'
 				'templates/views/members/members'
 				'templates/views/members/member-list'
+				'select2'
 			]
 
 	(Backbone, Data, Events, Filter, Layers, Renderer, Roles, Synchronized, template, memberTemplate) ->
@@ -38,6 +39,7 @@ define([
 						title: "Add #{type} members"
 						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll()}
 						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
+						callback: () -> $('.modal #name').select2 {theme: 'bootstrap'}
 
 			addMembers: () ->
 				users = []
@@ -46,9 +48,9 @@ define([
 				role = $('#set-role-form #role').val()
 				for option in selection
 					option = $ option
-					if option.attr('data-group-id') is 'users'
+					if option.attr('data-group-id') is 'user'
 						users.push {id: option.val(), role: role}
-					else if option.attr('data-group-id') is 'teams'
+					else if option.attr('data-group-id') is 'team'
 						teams.push {id: option.val(), role: role}
 				Synchronized.forEach ((user, finish) => @setRole('user', user, true, finish)), users, () =>
 					Synchronized.forEach ((team, finish) => @setRole('team', team, true, finish)), teams, () =>

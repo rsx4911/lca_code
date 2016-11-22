@@ -14,6 +14,7 @@ require.config({
 		'numeral': 'libs/numeral',
 		'moment': 'libs/moment',
 		'pace': 'libs/pace.min',
+		'select2': 'libs/select2',
 		'tablesorter': 'libs/jquery-tablesorter',
 		'open-layers': 'libs/open-layers',
 		'qrcode': 'libs/qrcode',

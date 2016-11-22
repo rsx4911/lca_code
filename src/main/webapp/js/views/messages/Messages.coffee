@@ -11,6 +11,7 @@ define([
 				'templates/views/messages/messages'
 				'templates/views/messages/conversation'
 				'templates/views/messages/message'
+				'select2'
 			]
 
 	(Backbone, Data, Events, Format, Layers, Renderer, Conversation, conversations, currentUser, template, conversationTemplate, messageTemplate) ->
@@ -142,7 +143,7 @@ define([
 				@conversation = conversation
 				recipient = conversation.get 'recipient'
 				@$('.list-entry.active').removeClass 'active'
-				@$("[data-type=#{recipient.type}][data-type=#{recipient.id}] .list-entry").addClass 'active'
+				@$("[data-type=#{recipient.type}][data-id=#{recipient.id}] .list-entry").addClass 'active'
 				@$('#next-message').prop 'disabled', false
 				@$('.header-box .username').html recipient.name
 				@$('.header-box .avatar').attr 'src', "/ws/#{recipient.type}/avatar/#{recipient.id}"
@@ -175,28 +176,26 @@ define([
 				@scrollDown()
 
 			openSelection: () ->
-				existingUsers = []
-				existingTeams = []
-				existingUsers.push {username: currentUser.get('username')}
-				for conversation in conversations.models
-					if conversation.get('recipient').type is 'user'
-						existingUsers.push {username: conversation.get('recipient').id}
-					else if conversation.get('recipient').type is 'team'
-						existingTeams.push {teamname: conversation.get('recipient').id}
 				Data.getUsersAndTeams (users, teams) =>
-					users = Data.usersToOptions users, existingUsers, true 
-					teams = Data.teamsToOptions teams, existingTeams, true 
+					users = Data.usersToOptions users
+					teams = Data.teamsToOptions teams
 					Layers.showTemplateInLayer
 						template: 'messages/select-user'
 						title: "Start new conversation"
 						model: {users: users, teams: teams}
 						buttons: [{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () => @onSelection()}]
+						callback: () -> $('.modal #name').select2 {theme: 'bootstrap', placeholder: 'Test'}
 
 			onSelection: () ->
 				selection = $ '#name option:selected'
 				type = selection.attr 'data-group-id'
-				recipient = {type: type, id: selection.val(), username: selection.val(), name: selection.text()}
-				conversations.add new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
+				id = selection.val()
+				conversation = conversations.getFor type, id
+				if conversation
+					@activateConversation conversation
+				else
+					recipient = {type: type, id: id, username: selection.val(), name: selection.text()}
+					conversations.add new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
 				Layers.closeActive()
 
 )

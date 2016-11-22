@@ -102,3 +102,8 @@ mixin textarea(id, label)
 		label.control-label(for='#{id}') #{label}
 		textarea.form-control(id='#{id}' name='#{id}')&attributes(attributes)
 			block
+
+mixin member-selection(multiple)
+	+select('name', 'User/Team')(multiple=multiple class='member-selection')
+		+optgroup('User', users, null, 'user')
+		+optgroup('Team', teams, null, 'team')
