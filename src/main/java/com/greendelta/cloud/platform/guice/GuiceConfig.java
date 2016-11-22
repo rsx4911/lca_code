@@ -43,11 +43,9 @@ public class GuiceConfig extends GuiceServletContextListener {
 
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
-		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
 		if (shutdownListeners != null)
 			for (ShutdownListener listener : shutdownListeners)
 				listener.shutdown();
-		unlockDatabase(databasePath);
 		super.contextDestroyed(servletContextEvent);
 	}
 
@@ -128,7 +126,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		try {
 			DriverManager.getConnection("jdbc:derby:" + databasePath + ";shutdown=true");
 		} catch (SQLException e) {
-			// Derby 10.9.1.0 shutdown raises a SQLException with code "XJ015"
+			// Derby 10.9.1.0 shutdown raises a SQLException with state "XJ015"
 			if (!"XJ015".equals(e.getSQLState())) {
 				log.error("Error shutting down database", e);
 			}
