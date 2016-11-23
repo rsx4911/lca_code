@@ -56,7 +56,7 @@ public class AccessService {
 
 	public boolean canCreateRepository(User user, String groupOrRepo) {
 		if (isOwnNamespace(user, groupOrRepo))
-			return user.canCreateRepositories;
+			return user.settings.canCreateRepositories;
 		Role role = membershipService.getRole(user, groupOrRepo);
 		return role.getPermissions().contains(Permission.WRITE);
 	}

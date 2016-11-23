@@ -24,16 +24,56 @@ define([
 				@socket.onmessage = (msg) =>
 					data = JSON.parse msg.data
 					if data.type is 'NEW_MESSAGE'
-						message = data.data
-						type = if message.team then 'team' else 'user'
-						id = if type is 'team' then message.team.teamname else if message.from.username is currentUser.get('username') then message.to.username else message.from.username
-						conversation = @getFor type, id
-						conversation.get('messages').push message
-						if message.to.username is currentUser.get('username')
-							conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
-						@trigger 'newMessage', conversation, message, true
+						@handleNewMessage data.data
 					else if data.type is 'CONNECTED'
-					else if data.type is 'DISCONNCTED'
+						@handleConnected data.data
+					else if data.type is 'DISCONNECTED'
+						@handleDisconnected data.data
+					else if data.type is 'MESSAGE_READ'
+						@handleMessageRead data.data
+					else if data.type is 'IS_ONLINE'
+						@handleIsOnline data.data
+
+			handleNewMessage: (message) ->
+				type = if message.team then 'team' else 'user'
+				id = if type is 'team' then message.team.teamname else if message.from.username is currentUser.get('username') then message.to.username else message.from.username
+				conversation = @getFor type, id
+				unless conversation
+					recipient = {type: type, id: id, username: id, name: (if message.type is 'team' then message.team.name else message.to.name)}
+					conversation = new Conversation {messages: [], unreadMessages: 0, recipient: recipient, online: true}
+					@add conversation
+				conversation.get('messages').push message
+				if message.to.username is currentUser.get('username')
+					conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
+				@trigger 'newMessage', conversation, message, true
+
+			handleConnected: (username) ->
+				conversation = @getFor 'user', username
+				if conversation
+					conversation.set 'online', true
+					@trigger 'connected', conversation 
+
+			handleDisconnected: (username) ->
+				conversation = @getFor 'user', username
+				if conversation
+					conversation.set 'online', false
+					@trigger 'disconnected', conversation
+
+			handleMessageRead: (username) ->
+				conversation = @getFor 'user', username
+				if conversation
+					for message in conversation.get('messages')
+						if message.read
+							continue
+						# exact time is set on server, this is only for display purposes until page is reloaded
+						message.read = new Date().getTime() 
+					@trigger 'messageRead', conversation
+
+			handleIsOnline: (username) ->
+				conversation = @getFor 'user', username
+				if conversation
+					conversation.set 'online', true
+					@trigger 'connected', conversation 
 
 			closeSocket: (callback) ->
 				@socket.onclose = () ->
@@ -55,6 +95,13 @@ define([
 				for conversation in @models
 					total += conversation.get('unreadMessages')
 				return total
+
+			markAsRead: (conversation) ->
+				conversation.markAsRead()
+				@socket.send JSON.stringify {type: 'MESSAGE_READ', data: JSON.stringify(conversation.get('recipient'))}
+
+			pingUser: (conversation) ->
+				@socket.send JSON.stringify {type: 'IS_ONLINE', data: JSON.stringify(conversation.get('recipient'))}
 
 		return new Conversations()
 

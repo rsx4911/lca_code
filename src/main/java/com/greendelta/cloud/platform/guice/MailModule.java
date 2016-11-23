@@ -8,11 +8,6 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import com.greendelta.cloud.platform.guice.util.BindUtils;
-import com.greendelta.cloud.platform.guice.util.ShutdownListener;
-import com.greendelta.cloud.platform.guice.util.StartupListener;
-import com.greendelta.cloud.platform.mail.EmailService;
-
 import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +20,10 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.throwingproviders.ThrowingProviderBinder;
+import com.greendelta.cloud.platform.guice.util.BindUtils;
+import com.greendelta.cloud.platform.guice.util.ShutdownListener;
+import com.greendelta.cloud.platform.guice.util.StartupListener;
+import com.greendelta.cloud.platform.mail.EmailService;
 
 /**
  * Sending should happen with SMTPMessage if FROM needs customization.

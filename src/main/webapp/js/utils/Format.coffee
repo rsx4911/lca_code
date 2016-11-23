@@ -4,6 +4,11 @@ define([
 
 	(moment) ->
 
+		apply = (value, format) ->
+			unless value 
+				return ''
+			return moment(value).format format
+
 		formatCommitDescription: (text) ->
 			if text.length < 100
 				return text
@@ -20,20 +25,27 @@ define([
 			return Math.round(value * 1000) / 1000
 
 		date: (value) -> 
-			unless value
-				return ''
-			return moment(value).format 'M/D/YYYY'
+			return apply value, 'M/D/YY'
+
+		time: (value) -> 
+			return apply value, 'h:mm a'
 
 		dateTime: (value) -> 
-			unless value
-				return ''
-			return moment(value).format 'M/D/YYYY h:mm a'
+			return apply value, 'M/D/YY h:mm a'
 
-		dayOrTime: (value) -> 
-			unless value
-				return ''
+		timeOrDate: (value) -> 
 			if moment(value).isBefore(new Date(), 'day')
-				return moment(value).format 'M/D/YY'
-			return moment(value).format 'h:mm a'
+				return apply value, 'M/D/YY'
+			return apply value, 'h:mm a'
+
+		dateOrTime: (value) -> 
+			if moment(value).isBefore(new Date(), 'day')
+				return apply value, 'h:mm a'
+			return apply value, 'M/D/YY'
+
+		moment: (value, format) ->
+			unless value 
+				return ''
+			return moment(value).format format
 
 )

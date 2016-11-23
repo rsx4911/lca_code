@@ -72,8 +72,13 @@ define([
 			model = Backbone.Model.extend {urlRoot: url} 
 			return new model()
 
-		copyFields: (fields, from, to) ->
+		copyFields: (from, to) ->
+			fields = Object.keys from
 			for field in fields
-				to.set field, from.get field
+				value = if typeof(from.get) is 'function' then from.get(field) else from[field]
+				if typeof(to.set) is 'function'
+					to.set field, value
+				else
+					to[field] = value
 
 )

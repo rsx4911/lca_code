@@ -42,9 +42,14 @@ public class Message extends AbstractEntity {
 	@Column(name = "text", length = 4000)
 	public String text;
 
-	@Column(name = "unread")
-	public boolean unread;
+	@Column(name = "read_date")
+	@Temporal(TemporalType.TIMESTAMP)
+	public Date read;
 
+	@Column(name = "show_read_receipt")
+	public boolean showReadReceipt;
+	
+	
 	@Override
 	public long getId() {
 		return id;

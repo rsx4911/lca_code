@@ -28,8 +28,9 @@ public class UserMapper {
 	public Map<String, Object> mapForSelf(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.remove("hash", "salt", "avatar", "twoFactorSecret");
-		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) 
+		if (!Strings.isNullOrEmpty(user.twoFactorSecret))
 			map.put("twoFactorAuth", true);
+		map.put("settings.blockedUsers", mapForOthers(user.settings.blockedUsers));
 		return map;
 	}
 

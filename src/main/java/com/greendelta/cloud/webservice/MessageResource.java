@@ -1,7 +1,7 @@
 package com.greendelta.cloud.webservice;
 
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -13,14 +13,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.util.ObjectMap;
+
 import com.google.inject.Inject;
 import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
+import com.greendelta.cloud.model.UserSettings;
 import com.greendelta.cloud.model.chat.Message;
 import com.greendelta.cloud.service.MessageService;
 import com.greendelta.cloud.service.MessageService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.webservice.mapper.ConversationMapper;
 import com.greendelta.cloud.webservice.mapper.MessageMapper;
 
@@ -77,21 +81,37 @@ public class MessageResource {
 	}
 
 	@PUT
-	@Path("markAsRead/user/{username}")
-	public Response markAsRead(@PathParam("username") String username) {
-		User user = userService.getCurrentUser();
-		User other = userService.getForUsername(username);
-		service.markAsRead(user, other);
-		return Respond.ok(Collections.emptyMap());
+	@Path("settings")
+	public Response updateSettings(UserSettings settings) {
+		User currentUser = userService.getCurrentUser();
+		Beans.populateProperties(settings, currentUser.settings,
+				"messagingEnabled", "messagingRestricted", "showOnlineStatus", "showReadReceipt");
+		currentUser = userService.update(currentUser);
+		return Respond.ok(ObjectMap.fromObject(currentUser.settings));
 	}
 
 	@PUT
-	@Path("markAsRead/team/{teamname}")
-	public Response markAsReadTeam(@PathParam("teamname") String teamname) {
-		User user = userService.getCurrentUser();
-		Team team = teamService.getForTeamname(teamname);
-		service.markAsRead(user, team);
-		return Respond.ok(Collections.emptyMap());
+	@Path("block/{username}")
+	public Response blockUser(@PathParam("username") String username) {
+		User other = userService.getForUsername(username);
+		if (other == null)
+			return Respond.notFound();
+		User currentUser = userService.getCurrentUser();
+		currentUser.settings.blockedUsers.add(other);
+		currentUser = userService.update(currentUser);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
+	@Path("unblock/{username}")
+	public Response unblockUser(@PathParam("username") String username) {
+		User other = userService.getForUsername(username);
+		if (other == null)
+			return Respond.notFound();
+		User currentUser = userService.getCurrentUser();
+		currentUser.settings.blockedUsers.remove(other);
+		currentUser = userService.update(currentUser);
+		return Respond.ok(new HashMap<>());
 	}
 
 }

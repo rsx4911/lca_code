@@ -5,10 +5,8 @@ mixin notification-group(id)
 		.flex-container
 			.header-box #{id}
 				.btn-group.btn-group-sm.pull-right
-					button.btn.btn-default.check-group(data-group=id title='Select all') 
-						img(src='/images/check_all.png')
-					button.btn.btn-default.uncheck-group(data-group=id title='Unselect all')
-						img(src='/images/uncheck_all.png')
+					img.check-all(src='/images/check_all.png' data-group=id title='Select all')
+					img.uncheck-all(src='/images/uncheck_all.png' data-group=id title='Unselect all')
 			.content-box
 				div
 					strong Notify me when
@@ -18,6 +16,10 @@ mixin notification-group(id)
 								hr
 							+checkbox(notification.id, notification.label)(checked=notification.enabled)
 
+.header-box Info
+.content-box Notifications are send by email, everytime specific actions were performed by other users. Below you can specify which actions should trigger a notification. You can change the notification email address in your 
+	a.default-link(href='/user/profile') profile
+	| .
 if isAdmin
 	.flex-layout.two-columns
 		+notification-group('Group')

@@ -23,7 +23,7 @@ define([
 
 			events:
 				'submit #user-form': (event) -> @saveUser event
-				'change #admin, #canCreateGroups': (event) -> @updateRights()
+				'change #admin, #settings-canCreateGroups': (event) -> @updateRights()
 				'submit #password-form': (event) -> @savePassword event
 				'click [data-action=delete-user]': (event) -> @deleteUser event
 				'click [data-action=generate-password]': (event) -> @generatePassword()
@@ -146,14 +146,14 @@ define([
 					Backbone.history.loadUrl()
 
 			updateRights: () ->
-				@$('#canCreateGroups').prop 'disabled', false
-				@$('#canCreateRepositories').prop 'disabled', false
+				@$('#settings-canCreateGroups').prop 'disabled', false
+				@$('#settings-canCreateRepositories').prop 'disabled', false
 				if @$('#admin').is(':checked')
-					@$('#canCreateGroups').prop 'checked', true
-					@$('#canCreateGroups').prop 'disabled', true
-				if @$('#canCreateGroups').is(':checked')
-					@$('#canCreateRepositories').prop 'checked', true
-					@$('#canCreateRepositories').prop 'disabled', true
+					@$('#settings-canCreateGroups').prop 'checked', true
+					@$('#settings-canCreateGroups').prop 'disabled', true
+				if @$('#settings-canCreateGroups').is(':checked')
+					@$('#settings-canCreateRepositories').prop 'checked', true
+					@$('#settings-canCreateRepositories').prop 'disabled', true
 
 			generatePassword: () ->
 				Layers.showMessageInLayer

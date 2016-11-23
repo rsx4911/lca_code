@@ -18,6 +18,12 @@ define([
 					return true
 				return false
 
+			isBlocked: (username) ->
+				for user in @get('settings').blockedUsers
+					if user.username is username
+						return true
+				return false
+
 		return new CurrentUser()
 
 )

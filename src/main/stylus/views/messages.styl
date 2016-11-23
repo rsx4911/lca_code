@@ -1,4 +1,7 @@
 .messages-view
+	
+	.avatar.blocked
+		position absolute
 
 	.header-box 
 
@@ -46,10 +49,19 @@
 				padding 10px
 				display flex
 				
-				.unread-messages
+				.unread-messages, .online-indicator
 					background-color rgb(92, 184, 92)
 					position absolute
-    				
+					
+				.online-indicator
+					margin-top 40px
+					margin-left 247px
+					padding 3px 5px
+					font-size 5px
+
+				.read-indicator.is-read
+					color rgb(143, 188, 151)
+
 				&.active
 					background-color rgb(245, 245, 245)
 
@@ -101,7 +113,13 @@
 				.date
 					float right
 					margin-top 5px
-				
+
+				.read-indicator
+					color rgb(220, 248, 198)
+					
+					&.is-read
+						color rgb(143, 188, 151)
+									
 		#conversation-input
 			width 100%
 			height 40px
@@ -116,3 +134,5 @@
 				
 				&[disabled]
 					background-color white
+
+		

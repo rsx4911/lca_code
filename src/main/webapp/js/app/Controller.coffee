@@ -38,6 +38,7 @@ define([
 					]
 					when 'user' then return [
 						{href: "#{prefix}/user/profile", imageSrc: '/images/profile.png', label: 'Profile', id: 'profile'}
+						{href: "#{prefix}/user/messaging", imageSrc: '/images/inbox.png', label: 'Messaging', id: 'messaging'}
 						{href: "#{prefix}/user/notifications", imageSrc: '/images/notifications.png', label: 'Notifications', id: 'notifications'}
 					]
 					when 'group' then return [
@@ -115,16 +116,22 @@ define([
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @show404()
 				@router.registerUserRoute 'noAccess', -> @show403()
+				@router.registerUserRoute 'search', (query) => @showView 
+					view: 'search/Results'
+					title: 'Search' 
+					viewOptions: @splitQuery query
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
 					title: 'Profile' 
 					nav: 
 						type: 'user'
 						active: 'profile'
-				@router.registerUserRoute 'search', (query) => @showView 
-					view: 'search/Results'
-					title: 'Search' 
-					viewOptions: @splitQuery query
+				@router.registerUserRoute 'userMessaging', -> @showView 
+					view: 'user/Messaging'
+					title: 'Messaging' 
+					nav: 
+						type: 'user'
+						active: 'messaging'
 				@router.registerUserRoute 'userNotifications', -> @showView 
 					view: 'user/Notifications'
 					title: 'Notifications' 

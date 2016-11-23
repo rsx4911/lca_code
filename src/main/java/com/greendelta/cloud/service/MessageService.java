@@ -1,6 +1,7 @@
 package com.greendelta.cloud.service;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,7 +39,7 @@ public class MessageService {
 			if (conversation == null) {
 				conversations.put(key, conversation = new ConversationDescriptor(message));
 			}
-			if (message.unread && !message.from.equals(user)) {
+			if (message.read == null && !message.from.equals(user)) {
 				conversation.unreadMessages++;
 			}
 		}
@@ -83,25 +84,25 @@ public class MessageService {
 	}
 
 	public void markAsRead(User user, User with) {
-		String jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.unread = true";
+		String jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.read IS NULL";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("user", user);
 		attributes.put("with", with);
 		List<Message> messages = dao.getAll(jpql, attributes);
 		for (Message message : messages) {
-			message.unread = false;
+			message.read = Calendar.getInstance().getTime();
 		}
 		dao.update(messages);
 	}
 
 	public void markAsRead(User user, Team team) {
-		String jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.unread = true";
+		String jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.read IS NULL";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("user", user);
 		attributes.put("team", team);
 		List<Message> messages = dao.getAll(jpql, attributes);
 		for (Message message : messages) {
-			message.unread = false;
+			message.read = Calendar.getInstance().getTime();
 		}
 		dao.update(messages);
 	}

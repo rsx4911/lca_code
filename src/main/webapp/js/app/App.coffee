@@ -15,7 +15,7 @@ define([
 			$(document).ajaxError (event, response, options, error) ->
 				switch response.status
 					when 401
-						if !currentUser.get('inLoginProcess')
+						unless currentUser.get('inLoginProcess')
 							Layers.showLoginLayer()
 					when 403 then Router.navigate '/403',
 						replace: true
@@ -26,6 +26,10 @@ define([
 						replace: true
 
 		initialize: () ->
+			window.onfocus = () -> 
+				window.isActive = true
+			window.onblur = () -> 
+				window.isActive = false
 			$.fn.extend
 				animateCss: (animationName) ->
 					animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend'

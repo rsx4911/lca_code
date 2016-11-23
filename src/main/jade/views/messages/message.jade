@@ -4,5 +4,8 @@
 		div: strong=message.from.name
 	span=message.text
 		| &nbsp; &nbsp;
-	small.date=formatDate(message.date)
+	small.date(title=formatDateOrTime(message.date))=formatTimeOrDate(message.date)
+		if isOwnMessage
+			|  
+			span.glyphicon.glyphicon-ok.read-indicator(class=message.read?'is-read':null)
 .clear

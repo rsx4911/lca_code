@@ -14,9 +14,10 @@ define([
 			className: 'notifications-view multi-box-view'
 
 			events: 
+				'click a[href]': (event) -> Events.followLink event
 				'change .checkbox': (event) -> @changeNotificationState event
-				'click .check-group': (event) -> @setGroupState event, true
-				'click .uncheck-group': (event) -> @setGroupState event, false
+				'click .check-all': (event) -> @setGroupState event, true
+				'click .uncheck-all': (event) -> @setGroupState event, false
 
 			render: (renderOptions) ->
 				$.ajax
@@ -40,7 +41,7 @@ define([
 					url: "/ws/notifications/#{type}/#{notification}"
 
 			setGroupState: (event, enable) ->
-				target = $ Events.target event, 'button'
+				target = $ Events.target event, 'img'
 				group = target.attr 'data-group'
 				list = ''
 				for notification in Notifications.getAll()

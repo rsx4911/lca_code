@@ -3,7 +3,6 @@ package websocket;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,8 +22,10 @@ import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.model.chat.Message;
 import com.greendelta.cloud.service.MessageService;
+import com.greendelta.cloud.service.MessageService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.util.Collections;
 import com.greendelta.cloud.webservice.mapper.MessageMapper;
 
 @ServerEndpoint(value = "/sockets/messages", configurator = WebsocketConfigurator.class)
@@ -46,15 +47,29 @@ public class MessageEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config) {
+		User user = getUser(config);
+		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
+		if (wasConnected)
+			return;
+		notifyConnected(session, user);
+	}
+
+	private User getUser(EndpointConfig config) {
 		Subject subject = (Subject) config.getUserProperties().get("subject");
 		String username = subject.getPrincipal().toString();
-		User user = userService.getForUsername(username);
-		Set<String> ids = online.get(user.username);
-		if (ids == null) {
-			ids = new HashSet<>();
-			online.put(user.username, ids);
+		return userService.getForUsername(username);
+	}
+
+	private void notifyConnected(Session session, User user) {
+		for (ConversationDescriptor conversation : service.getConversations(user)) {
+			Message lastMessage = conversation.lastMessage;
+			if (lastMessage.team != null)
+				continue;
+			User other = user.equals(lastMessage.from) ? lastMessage.to : lastMessage.from;
+			if (!online.containsKey(other.username))
+				continue;
+			send(session, new Event(EventType.CONNECTED, other.username));
 		}
-		ids.add(session.getId());
 		broadcast(session, new Event(EventType.CONNECTED, user.username));
 	}
 
@@ -62,32 +77,55 @@ public class MessageEndpoint {
 	public void onMessage(String value, Session session) {
 		Gson gson = new Gson();
 		Event event = gson.fromJson(value, Event.class);
-		if (event.type != EventType.NEW_MESSAGE)
-			return;
-		NewMessage data = gson.fromJson(event.data.toString(), NewMessage.class);
-		User from = getUser(session);
-		User to = "user".equals(data.to.type) ? userService.getForUsername(data.to.id) : null;
-		Team team = "team".equals(data.to.type) ? teamService.getForTeamname(data.to.id) : null;
-		insertAndSendMessage(session, from, to, team, data.text);
+		switch (event.type) {
+		case NEW_MESSAGE:
+			onNewMessage(session, gson.fromJson(event.data.toString(), NewMessage.class));
+			break;
+		case MESSAGE_READ:
+			onMessageRead(session, gson.fromJson(event.data.toString(), Recipient.class));
+			break;
+		case IS_ONLINE:
+			onPingUser(session, gson.fromJson(event.data.toString(), Recipient.class));
+			break;
+		default:
+			break;
+		}
 	}
 
-	private void insertAndSendMessage(Session session, User from, User to, Team team, String text) {
-		if (team == null) {
-			Message message = createMessage(from, to, null, text);
-			Session[] sessions = getSessions(session, online.get(from.username));
-			send(new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)), sessions);
-			if (!online.containsKey(to.username))
-				return;
-			sessions = getSessions(session, online.get(message.to.username));
-			send(new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)), sessions);
-			return;
+	private void onNewMessage(Session session, NewMessage data) {
+		User from = getUser(session);
+		if ("team".equals(data.to.type)) {
+			Team team = teamService.getForTeamname(data.to.id);
+			insertAndSendMessage(session, from, team, data.text);
+		} else {
+			User to = userService.getForUsername(data.to.id);
+			insertAndSendMessage(session, from, to, data.text);
 		}
+	}
+
+	private User getUser(Session session) {
+		if (session == null || !session.isOpen())
+			return null;
+		for (String key : online.keySet())
+			if (online.get(key).contains(session.getId()))
+				return userService.getForUsername(key);
+		return null;
+	}
+
+	private void insertAndSendMessage(Session session, User from, User to, String text) {
+		Message message = createMessage(from, to, null, text);
+		notifyNewMessage(session, message, from);
+		if (!online.containsKey(to.username))
+			return;
+		notifyNewMessage(session, message, to);
+	}
+
+	private void insertAndSendMessage(Session session, User from, Team team, String text) {
 		for (User user : team.users) {
 			Message message = createMessage(from, user, team, text);
 			if (!online.containsKey(user.username))
 				continue;
-			Session[] sessions = getSessions(session, online.get(user.username));
-			send(new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)), sessions);
+			notifyNewMessage(session, message, user);
 		}
 	}
 
@@ -98,23 +136,46 @@ public class MessageEndpoint {
 		message.team = team;
 		message.text = text;
 		message.date = Calendar.getInstance().getTime();
-		message.unread = !from.equals(to);
+		message.read = from.equals(to) ? message.date : null;
 		return service.insert(message);
+	}
+
+	private void notifyNewMessage(Session session, Message message, User user) {
+		Session[] sessions = getSessions(session, online.get(user.username));
+		send(sessions, new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)));
+	}
+
+	private void onMessageRead(Session session, Recipient data) {
+		User user = getUser(session);
+		if ("team".equals(data.type)) {
+			Team team = teamService.getForTeamname(data.id);
+			service.markAsRead(user, team);
+		} else {
+			User other = userService.getForUsername(data.id);
+			service.markAsRead(user, other);
+			if (!online.containsKey(other.username))
+				return;
+			notifyMessageRead(session, user, other);
+		}
+	}
+
+	private void notifyMessageRead(Session session, User recipient, User sender) {
+		Session[] sessions = getSessions(session, online.get(sender.username));
+		send(sessions, new Event(EventType.MESSAGE_READ, recipient.username));
+	}
+
+	private void onPingUser(Session session, Recipient user) {
+		boolean isOnline = online.containsKey(user.id);
+		if (!isOnline)
+			return;
+		User self = getUser(session);
+		Session[] sessions = getSessions(session, online.get(self.username));
+		send(sessions, new Event(EventType.IS_ONLINE, user.id));
 	}
 
 	@OnClose
 	public void onClose(Session session) {
-		String username = null;
-		for (String key : new ArrayList<>(online.keySet())) {
-			Set<String> ids = online.get(key);
-			if (!ids.contains(session.getId()))
-				continue;
-			ids.remove(session.getId());
-			if (!ids.isEmpty())
-				continue;
-			username = key;
-			online.remove(key);
-		}
+		String username = Collections.remove(online, session.getId());
 		if (username == null)
 			return;
 		broadcast(session, new Event(EventType.DISCONNECTED, username));
@@ -123,18 +184,24 @@ public class MessageEndpoint {
 	private void broadcast(Session session, Event event) {
 		if (session == null || !session.isOpen())
 			return;
-		for (Session s : session.getOpenSessions()) {
-			s.getAsyncRemote().sendText(new Gson().toJson(event));
-		}
+		send(session.getOpenSessions(), event);
 	}
 
-	private void send(Event event, Session... sessions) {
+	private void send(Session session, Event event) {
+		send(new Session[] { session }, event);
+	}
+
+	private void send(Set<Session> sessions, Event event) {
+		send(sessions.toArray(new Session[sessions.size()]), event);
+	}
+
+	private void send(Session[] sessions, Event event) {
 		if (sessions == null || sessions.length == 0)
 			return;
-		for (Session session : sessions) {
-			if (!session.isOpen())
+		for (Session s : sessions) {
+			if (!s.isOpen())
 				continue;
-			session.getAsyncRemote().sendText(new Gson().toJson(event));
+			s.getAsyncRemote().sendText(new Gson().toJson(event));
 		}
 	}
 
@@ -146,15 +213,6 @@ public class MessageEndpoint {
 			if (sessionIds.contains(s.getId()))
 				sessions.add(s);
 		return sessions.toArray(new Session[sessions.size()]);
-	}
-
-	private User getUser(Session session) {
-		if (session == null || !session.isOpen())
-			return null;
-		for (String key : online.keySet())
-			if (online.get(key).contains(session.getId()))
-				return userService.getForUsername(key);
-		return null;
 	}
 
 	private class Event {
@@ -171,7 +229,7 @@ public class MessageEndpoint {
 
 	private enum EventType {
 
-		CONNECTED, DISCONNECTED, NEW_MESSAGE;
+		CONNECTED, DISCONNECTED, NEW_MESSAGE, MESSAGE_READ, IS_ONLINE;
 
 	}
 
@@ -180,12 +238,12 @@ public class MessageEndpoint {
 		private Recipient to;
 		private String text;
 
-		private class Recipient {
+	}
 
-			String type;
-			String id;
+	private class Recipient {
 
-		}
+		String type;
+		String id;
 
 	}
 

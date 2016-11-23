@@ -57,8 +57,5 @@ define([
 				total = @get 'unreadMessages'
 				@set 'unreadMessages', 0
 				@trigger 'markedAsRead', @, total
-				$.ajax
-					type: 'PUT'
-					url: "/ws/messages/markAsRead/#{subpath}"
 
 )

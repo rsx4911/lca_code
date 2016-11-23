@@ -73,7 +73,7 @@ gulp.task 'cssBuild', () ->
 		.pipe gulp.dest './target/require-build/css'
 
 gulp.task 'fontBuild', () ->
-	gulp.src('./src/main/webapp/css/fonts/*.*')
+	gulp.src('./src/main/webapp/css/fonts/**/*.*')
 		.pipe gulp.dest './target/require-build/css/fonts'
 
 gulp.task 'collectDependencies', () ->

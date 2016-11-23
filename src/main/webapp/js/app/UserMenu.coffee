@@ -44,10 +44,10 @@ define([
 				conversations.on 'newMessage', (conversation, message, isNew) => 
 					if isNew and message.to.username is currentUser.get('username')
 						@increaseCounter()
-				, 'username'
+				, 'usermenu'
 				conversations.on 'markedAsRead', (conversation, total) => 
 					@increaseCounter -total
-				, 'username'
+				, 'usermenu'
 
 			increaseCounter: (val = 1) ->
 				counter = @$ '#message-count' 

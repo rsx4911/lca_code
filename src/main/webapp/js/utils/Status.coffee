@@ -20,7 +20,7 @@ define([
 				type = 'danger'
 			if $.inArray(type, ['success', 'warning', 'info', 'danger']) is -1
 				return
-			statusBarHtml = "<div class=\"status-bar alert-#{type}\">#{message}" 				
+			statusBarHtml = "<div class=\"status-bar alert-#{type}\">#{message}"
 			statusBarHtml += "</div>"
 			statusBar = $ statusBarHtml
 			$('body').append statusBar

@@ -13,6 +13,27 @@ define([
 					return validator
 				return @["validate#{validator}"]
 
+			setValue = (bean, field, value) ->
+				if field.indexOf('-') is -1
+					bean[field] = value
+					return
+				head = field.substring 0, field.indexOf '-'
+				unless bean[head]
+					bean[head] = {}
+				bean = bean[head]
+				field = field.substring field.indexOf('-') + 1
+				setValue bean, field, value
+
+			getValue = (bean, field) ->
+				if field.indexOf('-') is -1
+					return bean[field]
+				head = field.substring 0, field.indexOf '-'
+				bean = bean[head]
+				unless bean
+					return null
+				field = field.substring field.indexOf('-') + 1
+				return getValue bean, field				
+
 			constructor: Forms
 
 			toJson: (form) ->
@@ -23,9 +44,9 @@ define([
 					name = field.attr 'name'
 					type = field.attr 'type'
 					if type is 'checkbox'
-						values[name] = field.is ':checked'
+						setValue values, name, field.is(':checked')
 					else if type isnt 'file'
-						values[name] = field.val()
+						setValue values, name, field.val()
 				return values
 
 			fill: (form, json) ->
@@ -34,7 +55,7 @@ define([
 					field = $ field
 					name = field.attr 'name'
 					type = field.attr 'type'
-					value = json[name]
+					value = getValue json, name
 					if value or value is 0
 						if type is 'checkbox'
 							field.prop 'checked', value

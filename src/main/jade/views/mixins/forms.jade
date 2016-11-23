@@ -60,10 +60,12 @@ mixin options(options, defaultSelection, groupId)
 		else
 			option(value='#{value}' disabled=disabled data-group-id=groupId) #{label}
 
-mixin checkbox(id, label)
-	.checkbox
+mixin checkbox(id, label, type)
+	if !type
+		- type = 'success'
+	.checkbox(class='checkbox-#{type}')
+		input(id='#{id}' name='#{id}' type='checkbox')&attributes(attributes)
 		label(for='#{id}')
-			input(id='#{id}' name='#{id}' type='checkbox')&attributes(attributes)
 			if label
 				| #{label}
 			else
@@ -71,10 +73,12 @@ mixin checkbox(id, label)
 		if label
 			block
 
-mixin radio(group, id, label)
-	.radio
+mixin radio(group, id, label, type)
+	if !type
+		- type = 'success'
+	.radio(class='radio-#{type}')
+		input(id='#{id}' name='#{group}' type='radio')&attributes(attributes)
 		label(for='#{id}')
-			input(id='#{id}' name='#{group}' type='radio')&attributes(attributes)
 			if label
 				| #{label}
 			else

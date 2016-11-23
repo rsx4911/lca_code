@@ -1,0 +1,93 @@
+package com.greendelta.cloud.util;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+
+public class Collections {
+
+	public static <K, V> Set<V> addToSet(Map<K, Set<V>> map, K key, V setValue) {
+		Set<V> set = map.get(key);
+		if (set == null) {
+			set = new HashSet<>();
+			map.put(key, set);
+		}
+		set.add(setValue);
+		return set;
+	}
+
+	public static <K, V> List<V> addToList(Map<K, List<V>> map, K key, V setValue) {
+		List<V> list = map.get(key);
+		if (list == null) {
+			list = new ArrayList<>();
+			map.put(key, list);
+		}
+		list.add(setValue);
+		return list;
+	}
+
+	public static <K, V> K remove(Map<K, ? extends Collection<V>> map, V value) {
+		K match = null;
+		for (K key : new ArrayList<>(map.keySet())) {
+			Collection<V> col = map.get(key);
+			if (!col.contains(value))
+				continue;
+			col.remove(value);
+			if (!col.isEmpty())
+				continue;
+			match = key;
+		}
+		return match;
+	}
+
+	public static <V> List<V> parseList(String values, Function<String, V> parse) {
+		return parseList(values, ',', parse);
+	}
+
+	public static <V> List<V> parseList(String values, char splitChar, Function<String, V> parse) {
+		List<V> list = new ArrayList<>();
+		parseInto(list, values, splitChar, parse);
+		return list;
+	}
+
+	public static <V> Set<V> parseSet(String values, Function<String, V> parse) {
+		return parseSet(values, ',', parse);
+	}
+
+	public static <V> Set<V> parseSet(String values, char splitChar, Function<String, V> parse) {
+		Set<V> set = new HashSet<>();
+		parseInto(set, values, splitChar, parse);
+		return set;
+	}
+
+	private static <C extends Collection<V>, V> void parseInto(C col, String values, char splitChar,
+			Function<String, V> parse) {
+		if (values == null)
+			return;
+		String[] split = values.split(Character.toString(splitChar));
+		for (String value : split) {
+			V parsed = parse.apply(value);
+			col.add(parsed);
+		}
+	}
+
+	public static <V> String stringify(Collection<V> col) {
+		return stringify(col, ',');
+	}
+
+	public static <V> String stringify(Collection<V> col, char splitChar) {
+		StringBuilder value = new StringBuilder();
+		for (V entry : col) {
+			if (value.length() != 0) {
+				value.append(splitChar);
+			}
+			value.append(entry.toString());
+		}
+		return value.toString();
+	}
+
+}

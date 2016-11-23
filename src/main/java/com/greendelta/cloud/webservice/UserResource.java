@@ -93,8 +93,10 @@ public class UserResource {
 			return Respond.invalid("email", "Email is already in use");
 		Beans.populateProperties(user, fromDb, "name", "email");
 		User currentUser = service.getCurrentUser();
-		if (currentUser.admin)
-			Beans.populateProperties(user, fromDb, "canCreateGroups", "canCreateRepositories", "admin");
+		if (currentUser.admin) {
+			Beans.populateProperties(user, fromDb, "admin");
+			Beans.populateProperties(user.settings, fromDb.settings, "canCreateGroups", "canCreateRepositories");
+		}
 		fromDb = service.update(fromDb);
 		return Respond.ok(new UserMapper().mapForSelf(fromDb));
 	}

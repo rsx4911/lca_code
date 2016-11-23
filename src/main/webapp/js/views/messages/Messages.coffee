@@ -5,6 +5,7 @@ define([
 				'cs!utils/Format'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
+				'cs!utils/Status'
 				'cs!models/Conversation'
 				'cs!models/Conversations'
 				'cs!models/CurrentUser'
@@ -14,7 +15,7 @@ define([
 				'select2'
 			]
 
-	(Backbone, Data, Events, Format, Layers, Renderer, Conversation, conversations, currentUser, template, conversationTemplate, messageTemplate) ->
+	(Backbone, Data, Events, Format, Layers, Renderer, Status, Conversation, conversations, currentUser, template, conversationTemplate, messageTemplate) ->
 
 		class MessagesView extends Backbone.View
 
@@ -23,6 +24,7 @@ define([
 			events:
 				'click a[data-action=show-message]': (event) -> @onConversationClicked event
 				'click [data-action=start-new-conversation]': (event) -> @openSelection event
+				'click .block': (event) -> @blockUser()
 				'keypress #conversation-input input': (event) -> @sendMessage event
 
 			render: (renderOptions) ->
@@ -42,7 +44,8 @@ define([
 				content = messageTemplate
 					message: message
 					username: currentUser.get('username')
-					formatDate: Format.dayOrTime
+					formatDateOrTime: Format.dateOrTime
+					formatTimeOrDate: Format.timeOrDate
 				if prepend
 					messages.prepend content
 					messages.scrollTop messages.scrollTop() + $("##{message.id}").outerHeight(true)
@@ -50,8 +53,8 @@ define([
 					messages.append content
 					if message.from.username is currentUser.get('username') or wasAtBottom
 						@scrollDown()
-					if wasAtBottom
-						@conversation.markAsRead()
+					if wasAtBottom and messages.is(':visible') and window.isActive
+						conversations.markAsRead @conversation
 
 			isAtBottom: () ->
 				container = @$('#conversation-messages')
@@ -72,6 +75,10 @@ define([
 			initResizeListener: () ->
 				# remove previous listeners
 				$(window).off 'resize.messages'
+				$(window).off 'focus.messages'
+				$(window).on 'focus.messages', () =>
+					if @$('#conversation-messages').is(':visible') and @isAtBottom() and @conversation
+						conversations.markAsRead @conversation
 				$(window).on 'resize.messages', (event) =>
 					if $('#conversation, #conversations').length is 0
 						$(window).off 'resize.messages'
@@ -80,9 +87,9 @@ define([
 				@updateHeight()
 				@$('#conversation-messages').off 'scroll.messages'
 				@$('#conversation-messages').on 'scroll.messages', (event) =>
-					container = @$('#conversation-messages')
-					if @isAtBottom()
-						@conversation?.markAsRead()
+					container = @$ '#conversation-messages'
+					if @isAtBottom() and @conversation and container.is(':visible') and window.isActive
+						conversations.markAsRead @conversation
 					if container.scrollTop()
 						return
 					@conversation?.loadPrevious()
@@ -101,8 +108,18 @@ define([
 					if recipient2 and recipient2.type is recipient.type and recipient2.id is recipient.id
 						@renderMessage message, !isNew
 				, 'messages'
+				conversations.on 'connected', (conversation) => 
+					id = conversation.get('recipient').id
+					@$("#conversations [data-type=user][data-id=#{id}] .online-indicator").show()
+				conversations.on 'disconnected', (conversation) => 
+					id = conversation.get('recipient').id
+					@$("#conversations [data-type=user][data-id=#{id}] .online-indicator").hide()
 				conversations.on 'markedAsRead', (conversation) => 
 					@rerenderConversation conversation, true
+				, 'messages'
+				conversations.on 'messageRead', (conversation) => 
+					@rerenderConversation conversation, true
+					@$('#conversation-messages .read-indicator').addClass 'is-read'
 				, 'messages'
 
 			rerenderConversation: (conversation, keepPosition) ->
@@ -129,9 +146,11 @@ define([
 				content = conversationTemplate
 					recipient: recipient
 					message: message
-					formatDate: Format.dayOrTime
+					formatTimeOrDate: Format.timeOrDate
 					unreadMessages: conversation.get('unreadMessages')
 					selected: recipient2 and recipient2.type is recipient.type and recipient2.id is recipient.id
+					online: conversation.get('online')
+					isBlocked: currentUser.isBlocked recipient.id
 				container = @$('#conversations .list-container')
 				if afterElement and afterElement.attr 'data-type'
 					afterElement.after content
@@ -142,6 +161,10 @@ define([
 			activateConversation: (conversation) ->
 				@conversation = conversation
 				recipient = conversation.get 'recipient'
+				if currentUser.isBlocked recipient.id
+					@$('.block').hide()
+				else
+					@$('.block').show()
 				@$('.list-entry.active').removeClass 'active'
 				@$("[data-type=#{recipient.type}][data-id=#{recipient.id}] .list-entry").addClass 'active'
 				@$('#next-message').prop 'disabled', false
@@ -177,7 +200,7 @@ define([
 
 			openSelection: () ->
 				Data.getUsersAndTeams (users, teams) =>
-					users = Data.usersToOptions users
+					users = Data.usersToOptions users, [{username: currentUser.get('username')}], true
 					teams = Data.teamsToOptions teams
 					Layers.showTemplateInLayer
 						template: 'messages/select-user'
@@ -194,8 +217,24 @@ define([
 				if conversation
 					@activateConversation conversation
 				else
-					recipient = {type: type, id: id, username: selection.val(), name: selection.text()}
-					conversations.add new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
+					recipient = {type: type, id: id, username: id, name: selection.text()}
+					conversation = new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
+					conversations.add conversation
+					conversations.pingUser conversation
 				Layers.closeActive()
 
+			blockUser: () ->
+				unless @conversation
+					return
+				recipient = @conversation.get('recipient')
+				if currentUser.isBlocked recipient.username
+					return
+				$.ajax
+					type: 'PUT'
+					url: "/ws/messages/block/#{recipient.username}"
+					success: () =>
+						currentUser.get('settings').blockedUsers.push {name: recipient.name, username: recipient.username}
+						@$('.block').hide()
+						@rerenderConversation @conversation, true
+						Status.success 'Successfully blocked user'
 )

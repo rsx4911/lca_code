@@ -1,6 +1,7 @@
 package com.greendelta.cloud.model;
 
 import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -28,23 +29,17 @@ public class User extends AbstractEntity {
 	@Column(name = "salt", length = 16)
 	public String salt;
 
-	@Column(name = "admin")
-	public boolean admin;
-
-	@Column(name = "can_create_groups")
-	public boolean canCreateGroups;
-
-	@Column(name = "can_create_repositories")
-	public boolean canCreateRepositories;
-
 	@Column(name = "avatar")
 	public byte[] avatar;
 
 	@Column(name = "two_factor_secret")
 	public String twoFactorSecret;
-	
-	@Column(name = "notifications")
-	private int notifications;
+
+	@Column(name = "admin")
+	public boolean admin;
+
+	@Embedded
+	public UserSettings settings;
 
 	@Override
 	public long getId() {
@@ -69,24 +64,24 @@ public class User extends AbstractEntity {
 	public int hashCode() {
 		return username.hashCode();
 	}
-	
+
 	public void enable(Notification notification) {
 		if (isEnabled(notification))
 			return;
 		int e = (int) Math.pow(2, notification.ordinal());
-		notifications += e;
+		settings.notifications += e;
 	}
 
 	public void disable(Notification notification) {
 		if (!isEnabled(notification))
 			return;
 		int e = (int) Math.pow(2, notification.ordinal());
-		notifications -= e;
+		settings.notifications -= e;
 	}
 
 	public boolean isEnabled(Notification notification) {
 		int e = (int) Math.pow(2, notification.ordinal());
-		return (notifications | e) == notifications;
+		return (settings.notifications | e) == settings.notifications;
 	}
 
 }
