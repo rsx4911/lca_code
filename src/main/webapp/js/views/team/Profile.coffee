@@ -68,7 +68,7 @@ define([
 				return false
 
 			showAddMembersLayer: (event) ->
-				Data.getUsers (users) =>
+				Data.getUsers 'teams', (users) =>
 					Layers.showTemplateInLayer
 						template: 'team/add-members'
 						title: 'Add team members'

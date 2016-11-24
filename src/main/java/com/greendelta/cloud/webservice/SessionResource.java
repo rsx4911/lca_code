@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.webservice.mapper.UserMapper;
+import com.greendelta.cloud.webservice.mapper.Users;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 @Path("public")
@@ -98,7 +98,7 @@ public class SessionResource {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
 			return Respond.conflict("Not logged in");
-		return Respond.ok(new UserMapper().mapForSelf(userService.getCurrentUser()));
+		return Respond.ok(Users.mapForSelf(userService.getCurrentUser()));
 	}
 
 }

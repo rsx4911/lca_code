@@ -25,8 +25,8 @@ import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
-import com.greendelta.cloud.webservice.mapper.ConversationMapper;
-import com.greendelta.cloud.webservice.mapper.MessageMapper;
+import com.greendelta.cloud.webservice.mapper.Conversations;
+import com.greendelta.cloud.webservice.mapper.Messages;
 
 @Path("messaging")
 @Produces(MediaType.APPLICATION_JSON)
@@ -47,7 +47,7 @@ public class MessagingResource {
 	public Response getConversations() {
 		User user = userService.getCurrentUser();
 		List<ConversationDescriptor> conversations = service.getConversations(user);
-		return Respond.ok(new ConversationMapper().map(conversations, user));
+		return Respond.ok(Conversations.map(conversations, user));
 	}
 
 	@GET
@@ -62,7 +62,7 @@ public class MessagingResource {
 		List<Message> conversation = service.getMessages(user, other, 20, before > 0 ? cal.getTime() : null);
 		if (conversation.isEmpty())
 			return Respond.noContent();
-		return Respond.ok(new MessageMapper().map(conversation));
+		return Respond.ok(Messages.map(conversation));
 	}
 
 	@GET
@@ -77,7 +77,7 @@ public class MessagingResource {
 		List<Message> conversation = service.getMessages(user, team, 20, before > 0 ? cal.getTime() : null);
 		if (conversation.isEmpty())
 			return Respond.noContent();
-		return Respond.ok(new MessageMapper().map(conversation));
+		return Respond.ok(Messages.map(conversation));
 	}
 
 	@PUT

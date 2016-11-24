@@ -1,23 +1,23 @@
 define () ->
 
-	getUsersAndTeams: (callback) ->
-		@getUsers (users) =>
-			@getTeams (teams) =>
+	getUsersAndTeams: (module, callback) ->
+		@getUsers module, (users) =>
+			@getTeams module, (teams) =>
 				callback users, teams
 
-	getUsers: (callback) ->
+	getUsers: (module, callback) ->
 		$.ajax
 			type: 'GET'
-			url: '/ws/user'
+			url: "/ws/user?module=#{module.toUpperCase()}"
 			success: (users) =>
-				callback users.data
+				callback users
 
-	getTeams: (callback) ->
+	getTeams: (module, callback) ->
 		$.ajax
 			type: 'GET'
-			url: '/ws/team'
+			url: "/ws/team?module=#{module.toUpperCase()}"
 			success: (teams) =>
-				callback teams.data
+				callback teams
 
 	usersToOptions: (users, existing = [], skipExisting = false) ->
 		options = []

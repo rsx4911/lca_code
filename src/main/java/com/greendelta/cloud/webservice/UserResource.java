@@ -31,7 +31,7 @@ import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
 import com.greendelta.cloud.util.Password;
-import com.greendelta.cloud.webservice.mapper.UserMapper;
+import com.greendelta.cloud.webservice.mapper.Users;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("user")
@@ -43,7 +43,8 @@ public class UserResource {
 	private final NotificationService notificationService;
 
 	@Inject
-	public UserResource(UserService service, RepositoryService repoService, NotificationService notificationService) {
+	public UserResource(UserService service, RepositoryService repoService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.notificationService = notificationService;
@@ -55,17 +56,23 @@ public class UserResource {
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound();
-		Map<String, Object> userMap = new UserMapper().mapForSelf(user);
+		Map<String, Object> userMap = Users.mapForSelf(user);
 		if (user.admin)
 			userMap.put("lastAdmin", service.isLastAdmin(user));
 		return Respond.ok(userMap);
 	}
 
 	@GET
-	public Response getAll(@QueryParam("page") @DefaultValue("0") int page,
-			@QueryParam("filter") @DefaultValue("") String filter) {
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("module") Module module) {
 		PagedResult<User> result = service.getAll(page, filter);
-		return Respond.ok(result.toClient(new UserMapper()::mapForOthers));
+		if (module == null)
+			return Respond.ok(result.toClient(Users::mapForOthers));
+		if (module != Module.MESSAGING)
+			return Respond.ok(Users.mapForOthers(result.data));
+		return Respond.ok(Users.mapForOthers(result.data));
 	}
 
 	@GET
@@ -98,7 +105,7 @@ public class UserResource {
 			Beans.populateProperties(user.settings, fromDb.settings, "canCreateGroups", "canCreateRepositories");
 		}
 		fromDb = service.update(fromDb);
-		return Respond.ok(new UserMapper().mapForSelf(fromDb));
+		return Respond.ok(Users.mapForSelf(fromDb));
 	}
 
 	@DELETE

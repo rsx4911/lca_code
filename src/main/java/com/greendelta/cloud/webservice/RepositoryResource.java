@@ -35,7 +35,7 @@ import com.greendelta.cloud.service.RepositoryIndices;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
-import com.greendelta.cloud.webservice.mapper.RepositoryMapper;
+import com.greendelta.cloud.webservice.mapper.Repositories;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -88,7 +88,7 @@ public class RepositoryResource {
 		if (!groupService.exists(group))
 			return Respond.invalid("group", "Specified group does not exist");
 		Repository repo = service.create(group, name);
-		return Respond.created(new RepositoryMapper().map(repo, groupService.isUserNamespace(group)));
+		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
 	}
 
 	@POST
@@ -123,7 +123,7 @@ public class RepositoryResource {
 	@Path("{group}/{name}")
 	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
-		Map<String, Object> mappedRepo = new RepositoryMapper().map(repo, groupService.isUserNamespace(group));
+		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
 		User currentUser = userService.getCurrentUser();
 		mappedRepo.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, repo.toId()));
 		mappedRepo.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, repo.toId()));
@@ -138,7 +138,7 @@ public class RepositoryResource {
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter, @QueryParam("group") @DefaultValue("") String group) {
 		PagedResult<Repository> result = service.getAll(page, filter, true);
-		return Respond.ok(result.toClient(new RepositoryMapper()::map));
+		return Respond.ok(result.toClient(Repositories::map));
 	}
 
 	@POST

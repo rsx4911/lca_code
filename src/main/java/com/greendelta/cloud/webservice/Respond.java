@@ -33,12 +33,13 @@ public class Respond {
 	}
 
 	public static Response ok(byte[] bytes, String defaultPath) {
-		if (bytes == null)
-			try {
-				bytes = Resources.toByteArray(Respond.class.getResource(defaultPath));
-			} catch (IOException e) {
-				log.error("Error loading default value", e);
-			}
+		if (bytes != null)
+			return Respond.ok(bytes);
+		try {
+			bytes = Resources.toByteArray(Respond.class.getResource(defaultPath));
+		} catch (IOException e) {
+			log.error("Error loading default value", e);
+		}
 		return Respond.ok(bytes);
 	}
 

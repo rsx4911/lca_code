@@ -33,7 +33,7 @@ define([
 						existingTeams.push member.team
 					else
 						existingUsers.push member.user
-				Data.getUsersAndTeams (users, teams) =>
+				Data.getUsersAndTeams 'members', (users, teams) =>
 					Layers.showTemplateInLayer
 						template: 'members/set-role'
 						title: "Add #{type} members"

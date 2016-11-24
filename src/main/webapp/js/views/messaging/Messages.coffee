@@ -199,11 +199,11 @@ define([
 				@scrollDown()
 
 			openSelection: () ->
-				Data.getUsersAndTeams (users, teams) =>
+				Data.getUsersAndTeams 'messaging', (users, teams) =>
 					users = Data.usersToOptions users, [{username: currentUser.get('username')}], true
 					teams = Data.teamsToOptions teams
 					Layers.showTemplateInLayer
-						template: 'messages/select-user'
+						template: 'messaging/select-user'
 						title: "Start new conversation"
 						model: {users: users, teams: teams}
 						buttons: [{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () => @onSelection()}]

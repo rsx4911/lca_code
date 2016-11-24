@@ -23,7 +23,7 @@ import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.util.Password;
 import com.greendelta.cloud.webservice.Respond;
-import com.greendelta.cloud.webservice.mapper.UserMapper;
+import com.greendelta.cloud.webservice.mapper.Users;
 
 @Path("admin/user")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -69,7 +69,7 @@ public class UserResource {
 		user = service.insert(user);
 		groupService.create(username);
 		notificationService.userCreated(user, password).send();
-		return Respond.created(new UserMapper().mapForSelf(user));
+		return Respond.created(Users.mapForSelf(user));
 	}
 
 	@DELETE

@@ -9,16 +9,20 @@ import org.openlca.cloud.util.ObjectMap;
 
 import com.greendelta.cloud.service.Repository;
 
-public class RepositoryMapper {
+public class Repositories {
 
-	public List<Map<String, Object>> map(List<Repository> repos) {
+	private Repositories() {
+		// only static access
+	}
+
+	public static List<Map<String, Object>> map(List<Repository> repos) {
 		List<Map<String, Object>> all = new ArrayList<>();
 		for (Repository repo : repos)
 			all.add(map(repo, null));
 		return all;
 	}
 
-	public Map<String, Object> map(Repository repo, Boolean groupIsUserNamespace) {
+	public static Map<String, Object> map(Repository repo, Boolean groupIsUserNamespace) {
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 		map.put("group", repo.group);
 		map.put("name", repo.name);

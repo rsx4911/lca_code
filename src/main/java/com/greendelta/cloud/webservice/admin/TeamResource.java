@@ -29,7 +29,7 @@ import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.webservice.Respond;
-import com.greendelta.cloud.webservice.mapper.TeamMapper;
+import com.greendelta.cloud.webservice.mapper.Teams;
 
 @Path("admin/team")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -56,7 +56,7 @@ public class TeamResource {
 		Team team = service.getForTeamname(teamname);
 		if (team == null)
 			return Respond.notFound();
-		return Respond.ok(new TeamMapper().mapForAdmin(team));
+		return Respond.ok(Teams.mapForAdmin(team));
 	}
 
 	@POST
@@ -75,7 +75,7 @@ public class TeamResource {
 			return Respond.invalid("teamname", "This is a reserved word");
 		team = service.insert(team);
 		notificationService.teamCreated(team).send();
-		return Respond.created(new TeamMapper().mapForAdmin(team));
+		return Respond.created(Teams.mapForAdmin(team));
 	}
 
 	@PUT
@@ -95,7 +95,7 @@ public class TeamResource {
 		fromDb = service.update(fromDb);
 		for (NotificationJob notification : notifications)
 			notification.send();
-		return Respond.ok(new TeamMapper().mapForAdmin(fromDb));
+		return Respond.ok(Teams.mapForAdmin(fromDb));
 	}
 
 	@DELETE

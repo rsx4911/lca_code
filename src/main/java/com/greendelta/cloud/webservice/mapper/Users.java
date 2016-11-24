@@ -9,23 +9,27 @@ import org.openlca.cloud.util.ObjectMap;
 import com.google.common.base.Strings;
 import com.greendelta.cloud.model.User;
 
-public class UserMapper {
+public class Users {
 
-	public List<Map<String, Object>> mapForSelfOrAdmin(List<User> users) {
+	private Users() {
+		// only static access
+	}
+
+	public static List<Map<String, Object>> mapForSelfOrAdmin(List<User> users) {
 		List<Map<String, Object>> all = new ArrayList<>();
 		for (User user : users)
 			all.add(mapForSelf(user));
 		return all;
 	}
 
-	public List<Map<String, Object>> mapForOthers(List<User> users) {
+	public static List<Map<String, Object>> mapForOthers(List<User> users) {
 		List<Map<String, Object>> all = new ArrayList<>();
 		for (User user : users)
 			all.add(mapForOthers(user));
 		return all;
 	}
 
-	public Map<String, Object> mapForSelf(User user) {
+	public static Map<String, Object> mapForSelf(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.remove("hash", "salt", "avatar", "twoFactorSecret");
 		if (!Strings.isNullOrEmpty(user.twoFactorSecret))
@@ -34,7 +38,7 @@ public class UserMapper {
 		return map;
 	}
 
-	public Map<String, Object> mapForOthers(User user) {
+	public static Map<String, Object> mapForOthers(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.removeAllBut("name", "username");
 		return map;

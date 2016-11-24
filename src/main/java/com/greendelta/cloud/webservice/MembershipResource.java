@@ -31,7 +31,7 @@ import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.webservice.mapper.MembershipMapper;
+import com.greendelta.cloud.webservice.mapper.Memberships;
 
 @Path("membership")
 @Produces(MediaType.APPLICATION_JSON)
@@ -158,7 +158,7 @@ public class MembershipResource {
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
 		PagedResult<Membership> memberships = service.getMemberships(path, filter);
-		return Respond.ok(memberships.toClient(new MembershipMapper()::map));
+		return Respond.ok(memberships.toClient(Memberships::map));
 	}
 
 	private String getAuthorizedPath(String group, String repo) {

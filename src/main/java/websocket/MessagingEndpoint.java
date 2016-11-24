@@ -26,7 +26,7 @@ import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Collections;
-import com.greendelta.cloud.webservice.mapper.MessageMapper;
+import com.greendelta.cloud.webservice.mapper.Messages;
 
 @ServerEndpoint(value = "/sockets/messaging", configurator = WebsocketConfigurator.class)
 public class MessagingEndpoint {
@@ -142,7 +142,7 @@ public class MessagingEndpoint {
 
 	private void notifyNewMessage(Session session, Message message, User user) {
 		Session[] sessions = getSessions(session, online.get(user.username));
-		send(sessions, new Event(EventType.NEW_MESSAGE, new MessageMapper().map(message)));
+		send(sessions, new Event(EventType.NEW_MESSAGE, Messages.map(message)));
 	}
 
 	private void onMessageRead(Session session, Recipient data) {

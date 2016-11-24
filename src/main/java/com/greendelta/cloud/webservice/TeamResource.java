@@ -22,7 +22,7 @@ import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Bytes;
-import com.greendelta.cloud.webservice.mapper.TeamMapper;
+import com.greendelta.cloud.webservice.mapper.Teams;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("team")
@@ -39,10 +39,16 @@ public class TeamResource {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getAll(@QueryParam("page") @DefaultValue("0") int page,
-			@QueryParam("filter") @DefaultValue("") String filter) {
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("module") Module module) {
 		PagedResult<Team> result = service.getAll(page, filter);
-		return Respond.ok(result.toClient(new TeamMapper()::mapForOthers));
+		if (module == null)
+			return Respond.ok(result.toClient(Teams::mapForOthers));
+		if (module != Module.MESSAGING)
+			return Respond.ok(Teams.mapForOthers(result.data));
+		return Respond.ok(Teams.mapForOthers(result.data));
 	}
 
 	@PUT
