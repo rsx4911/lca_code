@@ -1,0 +1,16 @@
+.header-box
+	.actions
+		button.btn.btn-success.btn-lg(data-action='start-new-conversation') Start new conversation
+	.message-with
+		img.avatar
+		span.username
+		button.btn.btn-lg.btn-danger.block.pull-right(style='display:none') Block
+	.clear
+.content-box
+	#conversations
+		.list-container
+	#conversation
+		#conversation-messages
+		#conversation-input
+			input#next-message(disabled=selected?false:true)
+	.clear
