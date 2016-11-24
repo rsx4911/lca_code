@@ -26,7 +26,7 @@ public class Conversations {
 	public static Map<String, Object> map(ConversationDescriptor conversation, User currentUser) {
 		Map<String, Object> map = new HashMap<>();
 		map.put("recipient", getRecipient(conversation.lastMessage, currentUser));
-		map.put("messages", Collections.singleton(Messages.map(conversation.lastMessage)));
+		map.put("messages", Collections.singleton(Messages.map(conversation.lastMessage, currentUser)));
 		map.put("unreadMessages", conversation.unreadMessages);
 		return map;
 	}

@@ -55,6 +55,8 @@ public class MessagingResource {
 	public Response getMessages(@PathParam("username") String username, @QueryParam("before") long before) {
 		User user = userService.getCurrentUser();
 		User other = userService.getForUsername(username);
+		if (user.settings.blockedUsers.contains(other))
+			return Respond.noContent();
 		Calendar cal = Calendar.getInstance();
 		if (before > 0) {
 			cal.setTimeInMillis(before);
@@ -62,7 +64,7 @@ public class MessagingResource {
 		List<Message> conversation = service.getMessages(user, other, 20, before > 0 ? cal.getTime() : null);
 		if (conversation.isEmpty())
 			return Respond.noContent();
-		return Respond.ok(Messages.map(conversation));
+		return Respond.ok(Messages.map(conversation, user));
 	}
 
 	@GET
@@ -77,7 +79,7 @@ public class MessagingResource {
 		List<Message> conversation = service.getMessages(user, team, 20, before > 0 ? cal.getTime() : null);
 		if (conversation.isEmpty())
 			return Respond.noContent();
-		return Respond.ok(Messages.map(conversation));
+		return Respond.ok(Messages.map(conversation, user));
 	}
 
 	@PUT

@@ -63,9 +63,9 @@ public class MessagingService {
 		attributes.put("with", with);
 		if (before != null)
 			attributes.put("before", before);
-		List<Message> filtered = dao.getAll(jpql, attributes, 0, limit);
-		Collections.sort(filtered, new MessageSorter());
-		return filtered;
+		List<Message> messages = dao.getAll(jpql, attributes, 0, limit);
+		Collections.sort(messages, new MessageSorter());
+		return messages;
 	}
 
 	public List<Message> getMessages(User user, Team team, int limit, Date before) {
@@ -78,9 +78,9 @@ public class MessagingService {
 		attributes.put("user", user);
 		if (before != null)
 			attributes.put("before", before);
-		List<Message> filtered = dao.getAll(jpql, attributes, 0, limit);
-		Collections.sort(filtered, new MessageSorter());
-		return filtered;
+		List<Message> messages = dao.getAll(jpql, attributes, 0, limit);
+		Collections.sort(messages, new MessageSorter());
+		return messages;
 	}
 
 	public void markAsRead(User user, User with) {

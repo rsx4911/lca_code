@@ -1,7 +1,6 @@
 package com.greendelta.cloud.webservice;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +25,7 @@ import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
+import com.greendelta.cloud.util.Collections;
 
 @Path("history")
 public class HistoryResource {
@@ -53,7 +53,7 @@ public class HistoryResource {
 		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Collections.reverse(commits);
+		java.util.Collections.reverse(commits);
 		return Respond.ok(putUserName(commits));
 	}
 
@@ -67,7 +67,7 @@ public class HistoryResource {
 		List<Commit> commits = service.getCommits(repo, type, refId);
 		if (commits.size() == 0)
 			return Respond.noContent();
-		Collections.reverse(commits);
+		java.util.Collections.reverse(commits);
 		return Respond.ok(putUserName(commits));
 	}
 
@@ -109,21 +109,13 @@ public class HistoryResource {
 		if (commit == null)
 			return Respond.notFound();
 		List<Dataset> all = service.getReferences(repo, commitId);
-		List<Dataset> filtered = filterCategorizedTypes(all);
+		List<Dataset> categorized = Collections.filter(all, (ds) -> !ds.type.isCategorized());
 		List<Dataset> refs = new ArrayList<>();
 		for (int i = (page - 1) * 10; i < page * 10; i++)
-			if (filtered.size() > i)
-				refs.add(filtered.get(i));
-		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, filtered.size(), refs.size(), refs);
+			if (categorized.size() > i)
+				refs.add(categorized.get(i));
+		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, categorized.size(), refs.size(), refs);
 		return Respond.ok(result);
-	}
-
-	private List<Dataset> filterCategorizedTypes(List<Dataset> all) {
-		List<Dataset> filtered = new ArrayList<>();
-		for (Dataset ds : all)
-			if (ds.type.isCategorized())
-				filtered.add(ds);
-		return filtered;
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
@@ -138,7 +130,7 @@ public class HistoryResource {
 		User user = userService.getForUsername(commit.user);
 		if (user != null)
 			map.put("userDisplayName", user.name);
-		else 
+		else
 			map.put("userDisplayName", commit.user);
 		return map;
 	}

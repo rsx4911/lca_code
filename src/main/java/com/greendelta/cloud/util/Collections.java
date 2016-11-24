@@ -90,4 +90,21 @@ public class Collections {
 		return value.toString();
 	}
 
+	public static <V> List<V> filter(List<V> list, Function<V, Boolean> filter) {
+		return filter(list, new ArrayList<>(), filter);
+	}
+
+	public static <V> Set<V> filter(Set<V> set, Function<V, Boolean> filter) {
+		return filter(set, new HashSet<>(), filter);
+	}
+
+	private static <C extends Collection<V>, V> C filter(C col, C filtered, Function<V, Boolean> filter) {
+		for (V value : col) {
+			if (filter.apply(value))
+				continue;
+			filtered.add(value);
+		}
+		return filtered;
+	}
+
 }

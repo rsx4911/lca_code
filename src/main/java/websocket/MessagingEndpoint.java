@@ -49,7 +49,7 @@ public class MessagingEndpoint {
 	public void onOpen(Session session, EndpointConfig config) {
 		User user = getUser(config);
 		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
-		if (wasConnected)
+		if (wasConnected || !user.settings.showOnlineStatus)
 			return;
 		notifyConnected(session, user);
 	}
@@ -67,6 +67,8 @@ public class MessagingEndpoint {
 				continue;
 			User other = user.equals(lastMessage.from) ? lastMessage.to : lastMessage.from;
 			if (!online.containsKey(other.username))
+				continue;
+			if (user.settings.blockedUsers.contains(other))
 				continue;
 			send(session, new Event(EventType.CONNECTED, other.username));
 		}
@@ -117,6 +119,9 @@ public class MessagingEndpoint {
 		notifyNewMessage(session, message, from);
 		if (!online.containsKey(to.username))
 			return;
+		// store but don't notify
+		if (to.settings.blockedUsers.contains(from))
+			return;
 		notifyNewMessage(session, message, to);
 	}
 
@@ -137,12 +142,13 @@ public class MessagingEndpoint {
 		message.text = text;
 		message.date = Calendar.getInstance().getTime();
 		message.read = from.equals(to) ? message.date : null;
+		message.showReadReceipt = to.settings.showReadReceipt;
 		return service.insert(message);
 	}
 
 	private void notifyNewMessage(Session session, Message message, User user) {
 		Session[] sessions = getSessions(session, online.get(user.username));
-		send(sessions, new Event(EventType.NEW_MESSAGE, Messages.map(message)));
+		send(sessions, new Event(EventType.NEW_MESSAGE, Messages.map(message, message.from)));
 	}
 
 	private void onMessageRead(Session session, Recipient data) {
@@ -154,6 +160,8 @@ public class MessagingEndpoint {
 			User other = userService.getForUsername(data.id);
 			service.markAsRead(user, other);
 			if (!online.containsKey(other.username))
+				return;
+			if (!user.settings.showReadReceipt)
 				return;
 			notifyMessageRead(session, user, other);
 		}
@@ -168,7 +176,12 @@ public class MessagingEndpoint {
 		boolean isOnline = online.containsKey(user.id);
 		if (!isOnline)
 			return;
+		User pinged = userService.getForUsername(user.id);
+		if (!pinged.settings.showOnlineStatus)
+			return;
 		User self = getUser(session);
+		if (pinged.settings.blockedUsers.contains(self))
+			return;
 		Session[] sessions = getSessions(session, online.get(self.username));
 		send(sessions, new Event(EventType.IS_ONLINE, user.id));
 	}
@@ -177,6 +190,9 @@ public class MessagingEndpoint {
 	public void onClose(Session session) {
 		String username = Collections.remove(online, session.getId());
 		if (username == null)
+			return;
+		User pinged = userService.getForUsername(username);
+		if (!pinged.settings.showOnlineStatus)
 			return;
 		broadcast(session, new Event(EventType.DISCONNECTED, username));
 	}

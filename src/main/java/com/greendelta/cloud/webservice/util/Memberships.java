@@ -9,15 +9,30 @@ import java.util.Set;
 import org.openlca.cloud.util.ObjectMap;
 
 import com.greendelta.cloud.model.Membership;
+import com.greendelta.cloud.util.Collections;
 
 public class Memberships {
-	
+
 	private Memberships() {
 		// only static access
 	}
 
 	public static List<Map<String, Object>> map(List<Membership> memberships) {
-		memberships = filter(memberships);
+		// each user of a team has a membership, but the teams also hold each
+		// user so only one team membership needs to remain for display purposes
+		Set<String> repoPlusTeam = new HashSet<>();
+		memberships = Collections.filter(memberships, (m) -> {
+			String key = m.memberOf;
+			if (m.team != null) {
+				key += m.team.teamname;
+			} else {
+				key += m.user.username;
+			}
+			if (repoPlusTeam.contains(key))
+				return true;
+			repoPlusTeam.add(key);
+			return false;
+		});
 		List<Map<String, Object>> maps = new ArrayList<>();
 		for (Membership membership : memberships)
 			maps.add(map(membership));
@@ -37,22 +52,4 @@ public class Memberships {
 		return map;
 	}
 
-	// each user of a team has a membership, but the teams also hold each user
-	// so only one team membership needs to remain for frontend display purposes
-	private static List<Membership> filter(List<Membership> memberships) {
-		Set<String> repoPlusTeam = new HashSet<>();
-		List<Membership> filtered = new ArrayList<>();
-		for (Membership m : memberships) {
-			String key = m.memberOf;
-			if (m.team != null)
-				key += m.team.teamname;
-			else
-				key += m.user.username;
-			if (!repoPlusTeam.contains(key)) {
-				filtered.add(m);
-				repoPlusTeam.add(key);
-			}
-		}
-		return filtered;
-	}
 }

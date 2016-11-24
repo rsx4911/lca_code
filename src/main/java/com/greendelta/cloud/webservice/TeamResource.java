@@ -1,6 +1,7 @@
 package com.greendelta.cloud.webservice;
 
 import java.io.InputStream;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -22,6 +23,7 @@ import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Bytes;
+import com.greendelta.cloud.util.Collections;
 import com.greendelta.cloud.webservice.util.Teams;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -46,9 +48,16 @@ public class TeamResource {
 		PagedResult<Team> result = service.getAll(page, filter);
 		if (module == null)
 			return Respond.ok(result.toClient(Teams::mapForOthers));
-		if (module != Module.MESSAGING)
+		switch (module) {
+		case MESSAGING:
+			User currentUser = userService.getCurrentUser();
+			if (currentUser.admin)
+				return Respond.ok(Teams.mapForOthers(result.data));
+			List<Team> teams = Collections.filter(result.data, (team) -> team.users.contains(currentUser));
+			return Respond.ok(Teams.mapForOthers(teams));
+		default:
 			return Respond.ok(Teams.mapForOthers(result.data));
-		return Respond.ok(Teams.mapForOthers(result.data));
+		}
 	}
 
 	@PUT

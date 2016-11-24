@@ -58,8 +58,7 @@ public class PagedResult<T> {
 				break;
 			else
 				paged.add(filtered.get(i));
-		return new PagedResult<T>(page, filter, toFilter.size(),
-				filtered.size(), paged);
+		return new PagedResult<T>(page, filter, toFilter.size(), filtered.size(), paged);
 	}
 
 }

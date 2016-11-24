@@ -1,8 +1,8 @@
 package com.greendelta.cloud.webservice;
 
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -22,14 +22,17 @@ import org.openlca.cloud.util.ObjectMap;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.NotificationService;
 import com.greendelta.cloud.service.NotificationService.NotificationJob;
 import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.RepositoryService;
+import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
+import com.greendelta.cloud.util.Collections;
 import com.greendelta.cloud.util.Password;
 import com.greendelta.cloud.webservice.util.Users;
 import com.sun.jersey.multipart.FormDataParam;
@@ -39,15 +42,17 @@ import com.sun.jersey.multipart.FormDataParam;
 public class UserResource {
 
 	private final UserService service;
+	private final TeamService teamService;
 	private final RepositoryService repoService;
 	private final NotificationService notificationService;
 
 	@Inject
-	public UserResource(UserService service, RepositoryService repoService,
-			NotificationService notificationService) {
+	public UserResource(UserService service, TeamService teamService,
+			RepositoryService repoService, NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.notificationService = notificationService;
+		this.teamService = teamService;
 	}
 
 	@GET
@@ -70,9 +75,31 @@ public class UserResource {
 		PagedResult<User> result = service.getAll(page, filter);
 		if (module == null)
 			return Respond.ok(result.toClient(Users::mapForOthers));
-		if (module != Module.MESSAGING)
+		switch (module) {
+		case MESSAGING:
+			User currentUser = service.getCurrentUser();
+			if (currentUser.admin)
+				return Respond.ok(Users.mapForOthers(result.data));
+			List<Team> teams = teamService.getTeamsFor(currentUser);
+			List<User> users = Collections.filter(result.data,
+					(user) -> filterForMessaging(user, teams, currentUser.settings.blockedUsers));
+			return Respond.ok(Users.mapForOthers(users));
+		default:
 			return Respond.ok(Users.mapForOthers(result.data));
-		return Respond.ok(Users.mapForOthers(result.data));
+		}
+	}
+
+	public boolean filterForMessaging(User user, List<Team> teams, List<User> blocked) {
+		if (blocked.contains(user))
+			return true;
+		if (!user.settings.messagingEnabled)
+			return true;
+		if (!user.settings.messagingRestricted)
+			return false;
+		for (Team team : teams)
+			if (team.users.contains(user))
+				return false;
+		return true;
 	}
 
 	@GET
@@ -183,7 +210,7 @@ public class UserResource {
 		if (!enable) {
 			user.twoFactorSecret = null;
 			user = service.update(user);
-			return Respond.ok(Collections.emptyMap());
+			return Respond.ok(new HashMap<>());
 		}
 		String url = service.enableTwoFactorAuthentication(user);
 		Map<String, Object> response = new HashMap<>();
