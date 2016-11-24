@@ -8,7 +8,7 @@ define([
 
 		class Conversations extends Backbone.Collection
 
-			url: '/ws/messages'
+			url: '/ws/messaging'
 
 			model: Conversation
 
@@ -20,7 +20,7 @@ define([
 			initSocket: () ->
 				loc = window.location
 				schema = if loc.protocol is 'https' then 'wss' else 'ws'
-				@socket = new WebSocket "#{schema}://#{loc.host}/sockets/messages"
+				@socket = new WebSocket "#{schema}://#{loc.host}/sockets/messaging"
 				@socket.onmessage = (msg) =>
 					data = JSON.parse msg.data
 					if data.type is 'NEW_MESSAGE'

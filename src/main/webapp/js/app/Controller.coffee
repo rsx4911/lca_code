@@ -33,7 +33,7 @@ define([
 						{href: "#{prefix}/dashboard/repositories", imageSrc: '/images/repository.png', label: 'Repositories', id: 'repositories'}
 						{href: "#{prefix}/dashboard/groups", imageSrc: '/images/group.png', label: 'Groups', id: 'groups'}
 					]
-					when 'messages' then return [
+					when 'messaging' then return [
 						{href: "#{prefix}/messages", imageSrc: '/images/inbox.png', label: 'Inbox', id: 'inbox'}
 					]
 					when 'user' then return [
@@ -151,10 +151,10 @@ define([
 						type: 'dashboard'
 						active: 'groups'
 				@router.registerUserRoute 'messages', (username) -> @showView 
-					view: 'messages/Messages'
+					view: 'messaging/Messages'
 					title: 'Messages' 
 					nav: 
-						type: 'messages'
+						type: 'messaging'
 						active: 'inbox'
 					viewOptions: 
 						username: username

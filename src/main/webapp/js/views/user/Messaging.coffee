@@ -33,7 +33,7 @@ define([
 					@updateSettings()
 				$.ajax
 					type: 'PUT'
-					url: '/ws/messages/settings'
+					url: '/ws/messaging/settings'
 					data: JSON.stringify Forms.toJson 'settings-form'
 					contentType: 'application/json'
 					success: (settings) ->
@@ -44,7 +44,7 @@ define([
 				username = target.attr 'data-username'
 				$.ajax
 					type: 'PUT'
-					url: "/ws/messages/unblock/#{username}"
+					url: "/ws/messaging/unblock/#{username}"
 					success: () =>
 						target.parent().remove()
 						unless @$('.unblock').length

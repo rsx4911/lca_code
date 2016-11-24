@@ -8,7 +8,7 @@ import java.util.Map;
 
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.model.chat.Message;
-import com.greendelta.cloud.service.MessageService.ConversationDescriptor;
+import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
 
 public class ConversationMapper {
 

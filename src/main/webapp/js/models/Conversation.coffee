@@ -21,7 +21,7 @@ define([
 				query = if oldestMessage then "?before=#{oldestMessage.date}" else ''
 				$.ajax
 					type: 'GET'
-					url: "/ws/messages/#{subpath}#{query}"
+					url: "/ws/messaging/#{subpath}#{query}"
 					success: (messages) =>
 						@loading = false
 						if !messages or !messages.length

@@ -20,24 +20,24 @@ import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.model.UserSettings;
 import com.greendelta.cloud.model.chat.Message;
-import com.greendelta.cloud.service.MessageService;
-import com.greendelta.cloud.service.MessageService.ConversationDescriptor;
+import com.greendelta.cloud.service.MessagingService;
+import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.webservice.mapper.ConversationMapper;
 import com.greendelta.cloud.webservice.mapper.MessageMapper;
 
-@Path("messages")
+@Path("messaging")
 @Produces(MediaType.APPLICATION_JSON)
-public class MessageResource {
+public class MessagingResource {
 
-	private final MessageService service;
+	private final MessagingService service;
 	private final UserService userService;
 	private final TeamService teamService;
 
 	@Inject
-	public MessageResource(MessageService service, UserService userService, TeamService teamService) {
+	public MessagingResource(MessagingService service, UserService userService, TeamService teamService) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;

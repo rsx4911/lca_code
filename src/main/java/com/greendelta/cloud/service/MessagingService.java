@@ -14,12 +14,12 @@ import com.greendelta.cloud.model.Team;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.model.chat.Message;
 
-public class MessageService {
+public class MessagingService {
 
 	private final Dao<Message> dao;
 
 	@Inject
-	public MessageService(Dao<Message> dao) {
+	public MessagingService(Dao<Message> dao) {
 		this.dao = dao;
 	}
 
