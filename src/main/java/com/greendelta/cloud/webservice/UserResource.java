@@ -31,7 +31,7 @@ import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Bytes;
 import com.greendelta.cloud.util.Password;
-import com.greendelta.cloud.webservice.mapper.Users;
+import com.greendelta.cloud.webservice.util.Users;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("user")

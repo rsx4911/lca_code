@@ -22,7 +22,7 @@ import com.greendelta.cloud.service.PagedResult;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Bytes;
-import com.greendelta.cloud.webservice.mapper.Teams;
+import com.greendelta.cloud.webservice.util.Teams;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("team")

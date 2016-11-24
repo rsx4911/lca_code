@@ -25,8 +25,8 @@ import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
-import com.greendelta.cloud.webservice.mapper.Conversations;
-import com.greendelta.cloud.webservice.mapper.Messages;
+import com.greendelta.cloud.webservice.util.Conversations;
+import com.greendelta.cloud.webservice.util.Messages;
 
 @Path("messaging")
 @Produces(MediaType.APPLICATION_JSON)

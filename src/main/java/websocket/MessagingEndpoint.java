@@ -26,7 +26,7 @@ import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Collections;
-import com.greendelta.cloud.webservice.mapper.Messages;
+import com.greendelta.cloud.webservice.util.Messages;
 
 @ServerEndpoint(value = "/sockets/messaging", configurator = WebsocketConfigurator.class)
 public class MessagingEndpoint {

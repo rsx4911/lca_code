@@ -29,7 +29,7 @@ import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Beans;
 import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.webservice.Respond;
-import com.greendelta.cloud.webservice.mapper.Teams;
+import com.greendelta.cloud.webservice.util.Teams;
 
 @Path("admin/team")
 @Consumes(MediaType.APPLICATION_JSON)

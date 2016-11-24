@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.cloud.model.User;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.webservice.mapper.Users;
+import com.greendelta.cloud.webservice.util.Users;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 @Path("public")

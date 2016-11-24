@@ -35,7 +35,7 @@ import com.greendelta.cloud.service.RepositoryIndices;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
-import com.greendelta.cloud.webservice.mapper.Repositories;
+import com.greendelta.cloud.webservice.util.Repositories;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.multipart.FormDataParam;
 

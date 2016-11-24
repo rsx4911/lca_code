@@ -23,7 +23,7 @@ import com.greendelta.cloud.service.UserService;
 import com.greendelta.cloud.util.Names;
 import com.greendelta.cloud.util.Password;
 import com.greendelta.cloud.webservice.Respond;
-import com.greendelta.cloud.webservice.mapper.Users;
+import com.greendelta.cloud.webservice.util.Users;
 
 @Path("admin/user")
 @Consumes(MediaType.APPLICATION_JSON)

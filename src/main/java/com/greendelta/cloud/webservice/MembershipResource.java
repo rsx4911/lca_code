@@ -31,7 +31,7 @@ import com.greendelta.cloud.service.Repository;
 import com.greendelta.cloud.service.RepositoryService;
 import com.greendelta.cloud.service.TeamService;
 import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.webservice.mapper.Memberships;
+import com.greendelta.cloud.webservice.util.Memberships;
 
 @Path("membership")
 @Produces(MediaType.APPLICATION_JSON)
