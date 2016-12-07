@@ -109,5 +109,7 @@ mixin textarea(id, label)
 
 mixin member-selection(multiple)
 	+select('name', 'User/Team')(multiple=multiple class='member-selection')
-		+optgroup('User', users, null, 'user')
-		+optgroup('Team', teams, null, 'team')
+		if users
+			+optgroup('User', users, null, 'user')
+		if teams
+			+optgroup('Team', teams, null, 'team')
