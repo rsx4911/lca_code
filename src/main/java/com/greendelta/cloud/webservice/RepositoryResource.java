@@ -120,6 +120,13 @@ public class RepositoryResource {
 	}
 
 	@GET
+	@Path("meta/{group}/{name}")
+	public Response getMeta(@PathParam("group") String group, @PathParam("name") String name) {
+		Repository repo = service.get(group, name);
+		return Respond.ok("{\"schemaVersion\": \"" + repo.getSchemaVersion() + "\"}");
+	}
+
+	@GET
 	@Path("{group}/{name}")
 	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
