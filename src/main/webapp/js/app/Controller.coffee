@@ -281,11 +281,11 @@ define([
 				unread = conversations.getUnreadMessages()
 				if value.indexOf('|') is -1 
 					if unread
-						return "(#{unread}) #{value} | LCA Cloud"
+						return "(#{unread}) #{value} | LCA Collaboration Server"
 					else
-						return "#{value} | LCA Cloud"
+						return "#{value} | LCA Collaboration Server"
 				split = value.split '|'
-				reversed = 'LCA Cloud'
+				reversed = 'LCA Collaboration Server'
 				for v in split
 					reversed = "#{v} | #{reversed}"
 				if unread

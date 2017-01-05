@@ -31,7 +31,7 @@ public class DatasetWriter {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.repo = repo;
-		File tmpDir = Files.createTempDirectory("lca-cloud-writer").toFile();
+		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, "temp.zip");
 		this.zipStore = ZipStore.open(tmpFile);
 	}
