@@ -1,6 +1,0 @@
-
-CREATE TABLE users(id BIGINT NOT NULL, username VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, hash VARCHAR(64) NOT NULL, salt VARCHAR(16) NOT NULL, admin BOOLEAN NOT NULL DEFAULT 0, can_create_groups BOOLEAN NOT NULL DEFAULT 0, can_create_repositories BOOLEAN NOT NULL DEFAULT 0, avatar BLOB(16 M), notifications INT NOT NULL DEFAULT 0);
-CREATE TABLE teams(id BIGINT NOT NULL, teamname VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, avatar BLOB(16 M));
-CREATE TABLE team_users(f_team BIGINT NOT NULL, f_user BIGINT NOT NULL);
-CREATE TABLE memberships(id BIGINT NOT NULL, f_user BIGINT, f_team BIGINT, member_of VARCHAR(255) NOT NULL, role VARCHAR(255) NOT NULL);
-INSERT INTO users VALUES (1, 'admin', 'Administrator', 'admin@yourdomain.com', '4beff40c3cf2ef51b5b840851b2836b2d1d6e25f2f1e7ec2e9e5fb5562638a1c', 'b7658c0e20a4134e', salt, 1, 1, 1, null, 0);
