@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.chat.Message;
 import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
 
 public class Conversations {

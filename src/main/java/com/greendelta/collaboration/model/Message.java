@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.model.chat;
+package com.greendelta.collaboration.model;
 
 import java.util.Date;
 
@@ -10,10 +10,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-
-import com.greendelta.collaboration.model.AbstractEntity;
-import com.greendelta.collaboration.model.Team;
-import com.greendelta.collaboration.model.User;
 
 @Entity
 @Table(name = "messages")

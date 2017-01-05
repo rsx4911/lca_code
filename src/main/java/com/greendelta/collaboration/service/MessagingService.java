@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.chat.Message;
 
 public class MessagingService {
 
