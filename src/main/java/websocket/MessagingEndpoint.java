@@ -18,15 +18,15 @@ import org.apache.shiro.subject.Subject;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.greendelta.cloud.model.Team;
-import com.greendelta.cloud.model.User;
-import com.greendelta.cloud.model.chat.Message;
-import com.greendelta.cloud.service.MessagingService;
-import com.greendelta.cloud.service.MessagingService.ConversationDescriptor;
-import com.greendelta.cloud.service.TeamService;
-import com.greendelta.cloud.service.UserService;
-import com.greendelta.cloud.util.Collections;
-import com.greendelta.cloud.webservice.util.Messages;
+import com.greendelta.collaboration.model.Team;
+import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.chat.Message;
+import com.greendelta.collaboration.service.MessagingService;
+import com.greendelta.collaboration.service.TeamService;
+import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
+import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.webservice.util.Messages;
 
 @ServerEndpoint(value = "/sockets/messaging", configurator = WebsocketConfigurator.class)
 public class MessagingEndpoint {

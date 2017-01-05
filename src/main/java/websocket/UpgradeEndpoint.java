@@ -8,7 +8,7 @@ import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
 import com.google.inject.Inject;
-import com.greendelta.cloud.service.UpgradeService;
+import com.greendelta.collaboration.service.UpgradeService;
 
 @ServerEndpoint(value = "/sockets/admin/upgrade", configurator = WebsocketConfigurator.class)
 public class UpgradeEndpoint extends ProgressWebsocket {

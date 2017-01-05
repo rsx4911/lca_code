@@ -1,195 +1,66 @@
-# Webservice documentation
+lca-collaboration
+========
+This repository contains the source code of the LCA Collaboration Server application. It is a servlet web application build with Google Guice and JAX-RS web services, secured with Shiro. This project depends on some of the [olca-modules](https://github.com/GreenDelta/olca-modules) project which is a plain [Maven](http://maven.apache.org/) project that contains the core functionalities (e.g. the model, database access, calculations, and data exchange) of openLCA. 
 
-## Login
-Login with your credentials; use JSESSIONID cookie for further calls
+Building from source
+--------------------
+To compile it from source you need to have the following tools installed:
 
-```bash
-curl -X POST [server_address]/ws/public/login \
-	 -d '{"username":"foo","password":"bar"}' \
-	 -H "Content-Type: application/json" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-Set-Cookie: JSESSIONID=8D184B7DFDA4751287BE363F7A1C9A04; Path=/; HttpOnly
-...
-```
+* [Git](https://git-scm.com/) (optional)
+* a [Java Development Kit 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* [Maven](http://maven.apache.org/)
+* [Node.js](https://nodejs.org/) and [Gulp](http://gulpjs.com/) (for building the HTML5 user interface components)
 
-## Logout
-```bash
-curl -X POST [server_address]/ws/public/logout \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+When you have these tools installed you can build the application from source via the following steps:
 
-## Create user (adminKey needed)
-```bash
-curl -X POST [server_address]/ws/user/create \
-	 -d '{"username":"foo","password":"bar", "adminKey": "KEY"}' \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 201 CREATED
-...
-```
+####Install the openLCA core modules
+The core modules contain the openLCA application logic that is independent from the collaboration server logic. These modules are plain Maven projects and can be installed via `mvn install`. See the [olca-modules](https://github.com/GreenDelta/olca-modules) repository for a more information.
 
-## Delete user (adminKey needed)
-```bash
-curl -X DELETE [server_address]/ws/user/delete/USERNAME \
-	 -d '{"adminKey": "KEY"}' \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+####Get the source code of the application
+We recommend that to use Git to manage the source code but you can also download the source code as a zip file. Create a development directory (the path should not contain whitespaces):
 
-## Create a new repository
-```bash
-curl -X POST [server_address]/ws/repository/create/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 201 CREATED
-...
-```
- 
-## Delete an existing repository
-```bash
-curl -X DELETE [server_address]/ws/repository/delete/REPOSITORY_NAME \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+    mkdir lca-collaboration
+    cd lca-collaboration
 
-## Share an existing repository
-```bash
-curl -X POST [server_address]/ws/repository/share/REPOSITORY_NAME/WITH_USER \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+and get the source code:
 
-## Cancel sharing of an existing repository
-```bash
-curl -X POST [server_address]/ws/repository/unshare/REPOSITORY_NAME/WITH_USER \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+    git clone [repository-url]
 
-## List users with access to repository
-```bash
-curl -X GET [server_address]/ws/repository/shared/REPOSITORY_NAME \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-["user1","user2"]
-```
+####Building the HTML pages
+To build the HTML pages of the user interface, install the Node.js modules via [npm](https://www.npmjs.com/) (npm is a package manager that comes with your Node.js installation):
 
-## List repositories current user can access
-```bash
-curl -X GET [server_address]/ws/user/shared \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-["username1/repository1","username2/repository2"]
-```
+    npm install
 
-## Request a commit
-```bash
-curl -X GET [server_address]/ws/repository/commit/request/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+This will create a folder `lca-collaboration/node_modules` with the dependent modules. After this, you can create the html package via Gulp:
 
-## Commit data
-```bash
-curl -X POST [server_address]/ws/repository/commit/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -d '{"message":"commit message text","data":[{"identifier":{"type":"ACTOR","refId":"bebaa223-44f2-d341-17d04977a0bc","version":"1.2.1","lastChange":14983897636},"json":"{}"}]}' \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 201 CREATED
-...
-eec315df-2552-43cb-beba-07d00977a042
-```
+    gulp
 
-## Request a fetch
-```bash
-curl -X GET [server_address]/ws/repository/fetch/request/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-```
+This will build and the HTML files.
 
-## Fetch data
-```bash
-curl -X GET [server_address]/ws/repository/fetch/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-[{"type":"ACTOR","refId":"bebaa223-44f2-d341-17d04977a0bc","version":"1.2.1","lastChange":14983897636,"hashId":"ef52ed4fe1660c67a3055068c69a81bd"}]
-```
+####Prepare the Eclipse workspace
+Download the current Eclipse package for JEE developers (to have everything together you can extract it into your development directory). Create a workspace directory in your development directory (e.g. under the eclipse folder to have a clean structure):
 
-## List commit entries
-```bash
-curl -X GET [server_address]/ws/repository/fetch/commits/REPOSITORY_OWNER/REPOSITORY_NAME/LATEST_COMMIT_ID \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-[{"id":"eec315df-2552-43cb-beba-07d00977a042","message":"test commit","user":"test_user","timestamp":1437566447818}]
-```
+    eclipse
+      ...
+      workspace
+    lca-collaboration
+      .git
+      ...
 
-## List file references for a commit
-```bash
-curl -X GET [server_address]/ws/repository/fetch/references/REPOSITORY_OWNER/REPOSITORY_NAME/COMMIT_ID \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-[{"refId":"bebaa223-44f2-d341-17d04977a0bc","type":"ACTOR"}]
-```
+To create the relevant project files for eclipse run:
 
-## Get data set content
-```bash
-curl -X GET [server_address]/ws/repository/fetch/data/REPOSITORY_OWNER/REPOSITORY_NAME/TYPE/REF_ID/COMMIT_ID \
-	 -H "Content-Type: application/json" \
-	 -b "JSESSIONID=FOOBAR" -i
-```
-```bash
-HTTP/1.1 200 OK
-...
-"{}"
-```
+	mvn eclipse:eclipse
+	
+After this, open Eclipse and select the created workspace directory. Import the project into Eclipse via `Import/General/Existing Projects into Workspace`
+(select the lca-collaboration directory). You should now see the project in your Eclipse workspace.
+
+####Build the web application for deployment
+To build the web application to be deployed on a web server (e.g. tomcat) run:
+
+	mvn package
+
+The file 'lca-collaboration.war' in the target sub directory is the deployable application.
+
+License
+-------
+Unless stated otherwise, all source code of the openLCA project is licensed under the [Mozilla Public License, v. 2.0](http://mozilla.org/MPL/2.0/). Please see the LICENSE.txt file in the root directory of the source code.

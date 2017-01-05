@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greendelta</groupId>
-	<artifactId>lca-cloud-ws</artifactId>
+	<artifactId>lca-collaboration</artifactId>
 	<version>1.6.0</version>
 	<packaging>war</packaging>
-	<name>LCA Cloud</name>
+	<name>LCA Collaboration Server</name>
 
 	<dependencies>
 
