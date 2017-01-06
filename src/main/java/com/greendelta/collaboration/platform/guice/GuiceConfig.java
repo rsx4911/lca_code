@@ -28,6 +28,7 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
+import com.greendelta.collaboration.platform.upgrade.Upgrades;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
@@ -80,11 +81,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		Properties properties = new Properties();
 		checkAndCreateDirectories(repositoriesPath);
 		checkAndCreateDirectories(librariesPath);
-		if (!new File(databasePath).exists()) {
-			checkAndCreateDirectories(new File(databasePath).getParent());
-			createDatabase(databasePath);
-			new File(repositoriesPath, "admin").mkdir();
-		}
+		checkAndCreateDatabase(databasePath, repositoriesPath);
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
@@ -92,6 +89,23 @@ public class GuiceConfig extends GuiceServletContextListener {
 				new JerseyModule(resourcePackages), new EhCacheModule(),
 				new PropertiesModule(), new MailModule() };
 	}
+
+	private void checkAndCreateDatabase(String databasePath, String repositoriesPath) {
+		try {
+			DriverManager.registerDriver(new EmbeddedDriver());
+		} catch (SQLException e) {
+			log.error("Error registering sql driver", e);
+		}
+		if (!new File(databasePath).exists()) {
+			checkAndCreateDirectories(new File(databasePath).getParent());
+			createDatabase(databasePath);
+			new File(repositoriesPath, "admin").mkdir();
+		} else {
+			Upgrades.run(databasePath);
+		}
+		shutdownDatabase(databasePath);
+	}
+
 
 	private void checkAndCreateDirectories(String path) {
 		if (!new File(path).exists())
@@ -102,27 +116,22 @@ public class GuiceConfig extends GuiceServletContextListener {
 		log.info("Creating new database");
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(
 				"database.sql")))) {
-			DriverManager.registerDriver(new EmbeddedDriver());
-			DriverManager.getConnection("jdbc:derby:" + databasePath + ";create=true").close();
-			String line = null;
-			while ((line = reader.readLine()) != null)
-				update("jdbc:derby:" + databasePath, line);
-			unlockDatabase(databasePath);
+			try (Connection con = DriverManager.getConnection("jdbc:derby:" + databasePath + ";create=true");
+					Statement s = con.createStatement()) {
+				String line = null;
+				String all = "";
+				while ((line = reader.readLine()) != null)
+					all += line;
+				for (String query : all.split(";")) {
+					s.executeUpdate(query);
+				}
+			}
 		} catch (Exception e) {
 			log.error("Error creating inital database", e);
 		}
 	}
 
-	private void update(String url, String query) throws SQLException {
-		log.info(query);
-		try (Connection con = DriverManager.getConnection(url)) {
-			try (Statement s = con.createStatement()) {
-				s.executeUpdate(query);
-			}
-		}
-	}
-
-	private void unlockDatabase(String databasePath) {
+	private void shutdownDatabase(String databasePath) {
 		try {
 			DriverManager.getConnection("jdbc:derby:" + databasePath + ";shutdown=true");
 		} catch (SQLException e) {
@@ -142,5 +151,6 @@ public class GuiceConfig extends GuiceServletContextListener {
 		private Set<StartupListener> startupListeners;
 
 	}
+
 
 }
