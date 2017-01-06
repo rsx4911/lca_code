@@ -422,7 +422,7 @@
 						js/utils/,
 						js/views/,
 						js/main.js/,
-						css/libs/,
+						css/libs/*.css,
 						css/main.css/,
 						css/styles.css
 					</packagingExcludes>

@@ -14,10 +14,10 @@ require.config({
 		'numeral': 'libs/numeral',
 		'moment': 'libs/moment',
 		'pace': 'libs/pace.min',
-		'select2': 'libs/select2',
 		'tablesorter': 'libs/jquery-tablesorter',
 		'open-layers': 'libs/open-layers',
 		'qrcode': 'libs/qrcode',
+		'select2': 'libs/select2',
 		'requireLib': 'libs/require'
 	},
 	shim: {
@@ -26,6 +26,10 @@ require.config({
 			},
 			'qrcode': {
 				exports: 'QRCode'
+			},
+			'select2': {
+				deps: ['jquery'],
+				exports: '$.fn.select2'
 			}
 	} 
 })

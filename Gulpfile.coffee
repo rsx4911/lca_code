@@ -34,7 +34,7 @@ gulp.task 'default', [], (callback) ->
 	runSequence 'clearTemplates', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
-	runSequence 'default', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
+	runSequence 'default', 'copySelect2Images', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
 
 gulp.task 'clearTemplates', () ->
 	gulp.src('./src/main/webapp/js/templates', {read: false})
@@ -75,6 +75,10 @@ gulp.task 'cssBuild', () ->
 gulp.task 'fontBuild', () ->
 	gulp.src('./src/main/webapp/css/fonts/**/*.*')
 		.pipe gulp.dest './target/require-build/css/fonts'
+
+gulp.task 'copySelect2Images', () ->
+	gulp.src(['./src/main/webapp/css/libs/select2.png', './src/main/webapp/css/libs/select2-spinner.gif'])
+		.pipe gulp.dest './target/require-build/css/libs'
 
 gulp.task 'collectDependencies', () ->
 	# (most) views and templates are loaded dynamically, App.coffee references DynamicDependencies so the build includes the files
