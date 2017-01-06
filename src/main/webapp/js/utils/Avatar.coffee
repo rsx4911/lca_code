@@ -27,6 +27,9 @@ define([
 				formData.append 'file', file
 			else
 				formData.append 'dummy', true
+			@uploadData type, id, formData
+
+		uploadData: (type, id, formData) ->
 			$.ajax
 				type: 'PUT'
 				url: "/ws/#{type}/avatar/#{id}"
@@ -35,7 +38,10 @@ define([
 				contentType: false
 				success: (response) -> 
 					Status.success "Successfully updated #{type} #{id}"
-					Backbone.history.loadUrl()
+					if type is 'user'
+						window.location.reload()
+					else
+						Backbone.history.loadUrl()
 				error: (response) -> 
 					Forms.handleError 'avatar-form', response
 

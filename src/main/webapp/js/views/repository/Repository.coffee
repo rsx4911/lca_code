@@ -22,6 +22,9 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'repository', @repository.get('group') + '/' + @repository.get('name')
+				'click [data-action=reset-avatar]': (event) -> 
+					Events.preventDefault event
+					Avatar.upload 'repository', @repository.get('group') + '/' + @repository.get('name')
 				'click [data-action=delete-repository]': (event) -> @deleteRepository event
 				'click [data-action=clone-repository]': (event) -> @openCloneLayer event
 				'click [data-action=move-repository]': (event) -> @openMoveLayer event
@@ -34,6 +37,13 @@ define([
 				@$el.html template
 					repository: repository
 				Renderer.render @, renderOptions
+				view = @
+				$('#avatar').on 'change', () ->
+					if @files and @files[0]
+						reader = new FileReader()
+						reader.onload = (e) ->
+							 view.openCropper.call view, e.target.result
+						reader.readAsDataURL @files[0]
 
 			deleteRepository: (event) ->
 				repository = @repository.toJSON()
@@ -130,5 +140,28 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'move-form', response
+
+			openCropper: (data) ->
+				Layers.showMessageInLayer
+					title: 'Avatar selection'
+					body: '<img class="image-crop" src="' + data + '">'
+					buttons: [
+						{text: 'Cancel', callback: () => @resetForm()}
+						{text: 'Save', className: 'btn-success', callback: () => @saveCropped()}
+					]
+				@cropper = $('.image-crop').cropper 
+					aspectRatio: 1
+					dragMode: 'move'
+
+			resetForm: () ->
+				$('form#avatar-form')[0].reset()
+				Layers.closeActive()
+
+			saveCropped: () ->
+				@cropper.cropper('getCroppedCanvas').toBlob (blob) =>
+					formData = new FormData()
+					formData.append 'file', blob
+					Layers.closeActive()
+					Avatar.uploadData 'repository', @repository.get('group') + '/' + @repository.get('name'), formData
 
 )

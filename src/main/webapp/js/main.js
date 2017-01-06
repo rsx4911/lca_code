@@ -18,6 +18,7 @@ require.config({
 		'open-layers': 'libs/open-layers',
 		'qrcode': 'libs/qrcode',
 		'select2': 'libs/select2',
+		'cropper': 'libs/cropper',
 		'requireLib': 'libs/require'
 	},
 	shim: {
