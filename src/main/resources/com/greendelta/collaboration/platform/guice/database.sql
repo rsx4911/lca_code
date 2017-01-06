@@ -48,6 +48,11 @@ CREATE TABLE messages(
 	show_read_receipt BOOLEAN NOT NULL DEFAULT false
 );
 
+CREATE TABLE blocked_users(
+	f_user BIGINT NOT NULL,
+	f_blocked BIGINT NOT NULL
+);
+
 CREATE TABLE version(
 	version INTEGER NOT NULL DEFAULT 1
 );
@@ -61,9 +66,14 @@ INSERT INTO users VALUES (
 	'admin@yourdomain.com', 
 	'4beff40c3cf2ef51b5b840851b2836b2d1d6e25f2f1e7ec2e9e5fb5562638a1c', 
 	'b7658c0e20a4134e', 
+	null,
+	null,
 	true, 
 	true, 
 	true, 
-	null, 
+	true,
+	false,
+	true,
+	true,
 	0
 );
