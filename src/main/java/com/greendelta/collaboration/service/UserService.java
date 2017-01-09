@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -30,14 +31,16 @@ public class UserService {
 	private final Dao<User> dao;
 	private final MembershipService memberService;
 	private final TeamService teamService;
-
+	private final String servername;
+	
 	@Inject
 	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, MembershipService memberService,
-			TeamService teamService) {
+			TeamService teamService,@Named("twofactor.servername") String servername) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.memberService = memberService;
 		this.teamService = teamService;
+		this.servername = servername;
 	}
 
 	public User getForUsername(String username) {
@@ -118,13 +121,12 @@ public class UserService {
 		GoogleAuthenticatorKey key = authenticator.createCredentials();
 		user.twoFactorSecret = key.getKey();
 		user = update(user);
-		// TODO configure the issuer globally
 		return getTwoFactorUrl(user);
 	}
 
 	public String getTwoFactorUrl(User user) {
 		String key = user.twoFactorSecret;
-		return getOtpAuthTotpURL("lca-collaboration-server", user.username, key);
+		return getOtpAuthTotpURL(servername, user.username, key);
 	}
 
 	private String getOtpAuthTotpURL(String issuer, String username, String key) {
