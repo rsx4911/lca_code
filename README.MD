@@ -60,7 +60,3 @@ To build the web application to be deployed on a web server (e.g. tomcat) run:
 	mvn package
 
 The file 'lca-collaboration.war' in the target sub directory is the deployable application.
-
-License
--------
-Unless stated otherwise, all source code of the openLCA project is licensed under the [Mozilla Public License, v. 2.0](http://mozilla.org/MPL/2.0/). Please see the LICENSE.txt file in the root directory of the source code.
