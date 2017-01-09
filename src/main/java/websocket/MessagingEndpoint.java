@@ -9,12 +9,15 @@ import java.util.Set;
 
 import javax.websocket.EndpointConfig;
 import javax.websocket.OnClose;
+import javax.websocket.OnError;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
 import org.apache.shiro.subject.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -22,15 +25,16 @@ import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.MessagingService;
+import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.webservice.util.Messages;
 
 @ServerEndpoint(value = "/sockets/messaging", configurator = WebsocketConfigurator.class)
 public class MessagingEndpoint {
 
+	private static final Logger log = LoggerFactory.getLogger(MessagingEndpoint.class);
 	// username->sessionId(s)
 	private static volatile Map<String, Set<String>> online = new HashMap<>();
 
@@ -47,11 +51,15 @@ public class MessagingEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config) {
+		log.info("Entering MessagingEndpoint.onOpen");
 		User user = getUser(config);
 		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
-		if (wasConnected || !user.settings.showOnlineStatus)
+		if (wasConnected || !user.settings.showOnlineStatus) {
+			log.info("Exiting MessagingEndpoint.onOpen");
 			return;
+		}
 		notifyConnected(session, user);
+		log.info("Exiting MessagingEndpoint.onOpen");
 	}
 
 	private User getUser(EndpointConfig config) {
@@ -77,6 +85,7 @@ public class MessagingEndpoint {
 
 	@OnMessage
 	public void onMessage(String value, Session session) {
+		log.info("Entering MessagingEndpoint.onMessage");
 		Gson gson = new Gson();
 		Event event = gson.fromJson(value, Event.class);
 		switch (event.type) {
@@ -92,6 +101,7 @@ public class MessagingEndpoint {
 		default:
 			break;
 		}
+		log.info("Exiting MessagingEndpoint.onMessage");
 	}
 
 	private void onNewMessage(Session session, NewMessage data) {
@@ -188,13 +198,26 @@ public class MessagingEndpoint {
 
 	@OnClose
 	public void onClose(Session session) {
+		log.info("Entering MessagingEndpoint.onClose");
 		String username = Collections.remove(online, session.getId());
-		if (username == null)
+		if (username == null) {
+			log.info("Exiting MessagingEndpoint.onClose");
 			return;
+		}
 		User pinged = userService.getForUsername(username);
-		if (!pinged.settings.showOnlineStatus)
+		if (!pinged.settings.showOnlineStatus) {
+			log.info("Exiting MessagingEndpoint.onClose");
 			return;
+		}
 		broadcast(session, new Event(EventType.DISCONNECTED, username));
+		log.info("Exiting MessagingEndpoint.onClose");
+	}
+
+	@OnError
+	public void onError(Session session, Throwable throwable) {
+		log.info("Entering MessagingEndpoint.onError");
+		log.info(throwable.getClass().getCanonicalName() + ": " + throwable.getMessage());
+		log.info("Exiting MessagingEndpoint.onError");
 	}
 
 	private void broadcast(Session session, Event event) {

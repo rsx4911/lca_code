@@ -9,6 +9,7 @@
 	</appender>
 
 	<logger name="com.greendelta.collaboration" level="TRACE" />
+	<logger name="websocket" level="TRACE" />
 
 	<root level="debug">
 		<appender-ref ref="STDOUT" />
