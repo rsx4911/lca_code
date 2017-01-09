@@ -81,6 +81,7 @@ define([
 					isAdmin: currentUser.isAdmin()
 					upgradeAvailable: upgradeAvailable is 'true'
 					unreadMessages: conversations.getUnreadMessages()
+					websocketSupported: (window.WebSocket isnt undefined)
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 

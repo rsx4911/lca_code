@@ -150,14 +150,17 @@ define([
 					nav: 
 						type: 'dashboard'
 						active: 'groups'
-				@router.registerUserRoute 'messages', (username) -> @showView 
-					view: 'messaging/Messages'
-					title: 'Messages' 
-					nav: 
-						type: 'messaging'
-						active: 'inbox'
-					viewOptions: 
-						username: username
+				@router.registerUserRoute 'messages', (username) -> 
+					unless window.WebSocket
+						@router.navigate '404', {trigger: true, replace: true}
+					@showView 
+						view: 'messaging/Messages'
+						title: 'Messages' 
+						nav: 
+							type: 'messaging'
+							active: 'inbox'
+						viewOptions: 
+							username: username
 				@router.registerUserRoute 'groupNew', -> @showView 
 					view: 'group/Create'
 					title: 'New group' 
@@ -278,7 +281,9 @@ define([
 					callback?()
 
 			getDocumentTitle: (value) ->
-				unread = conversations.getUnreadMessages()
+				unread = 0
+				if window.WebSocket
+					unread = conversations.getUnreadMessages()
 				if value.indexOf('|') is -1 
 					if unread
 						return "(#{unread}) #{value} | LCA Collaboration Server"

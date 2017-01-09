@@ -18,6 +18,8 @@ define([
 				return d1 < d2
 
 			initSocket: () ->
+				unless window.WebSocket
+					return
 				loc = window.location
 				schema = if loc.protocol is 'https' then 'wss' else 'ws'
 				@socket = new WebSocket "#{schema}://#{loc.host}/sockets/messaging"
@@ -76,6 +78,8 @@ define([
 					@trigger 'connected', conversation 
 
 			closeSocket: (callback) ->
+				unless window.WebSocket
+					return
 				@socket.onclose = () ->
 					callback?()
 				@socket.close()
