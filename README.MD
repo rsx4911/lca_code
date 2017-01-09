@@ -60,3 +60,52 @@ To build the web application to be deployed on a web server (e.g. tomcat) run:
 	mvn package
 
 The file 'lca-collaboration.war' in the target sub directory is the deployable application.
+
+####Server specific settings
+The app.properties file contains several values that need to be adjusted before the application can be deployed correctly.
+
+Storage settings
+
+	repository.path=/opt/collab/repository
+	database.path=/opt/collab/database
+	library.path=/opt/collab/libraries
+
+DNS settings
+
+	base.url=http://localhost:8080
+
+Two-factor-authentication settings
+
+	twofactor.servername=openLCA Collaboration Server
+
+Mail settings
+
+	mail.user=collab@greendelta.com
+	mail.pass=12345Sechs
+	mail.proto=smtps
+	mail.host=ssl0.ovh.net
+	mail.port=465
+	mail.ssl=true
+	mail.tls=false
+	mail.defaultFrom="LCA Collaboration Server" <no-reply@greendelta.com>
+	mail.defaultReplyTo="LCA Collaboration Server" <collab@greendelta.com>
+
+Imprint values
+
+	imprint.company=GreenDelta GmbH
+	imprint.ceo=Dr. Andreas Ciroth
+	imprint.street=Muellerstrasse 135
+	imprint.zipCode=13349
+	imprint.city=Berlin
+	imprint.country=Germany
+	imprint.phone=+49 (0) 30 4849 6030
+	imprint.fax=+ 49 (0) 30 4849 6991
+	imprint.email=gd@greendelta.com
+	imprint.website=http://www.greendelta.com
+	imprint.registration=HRB 92350 AG Charlottenburg
+	imprint.vat=DE813972343
+
+Internal application settings
+
+	jersey.resource.packages=com.greendelta.collaboration.webservice
+	persistence.unit=prod
