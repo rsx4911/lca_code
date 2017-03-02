@@ -35,11 +35,11 @@ define([
 				if debugMode
 					icon.removeClass 'glyphicon-eye-close'
 					icon.addClass 'glyphicon-eye-open'
-					icon.attr 'title', 'Debug mode enabled'
+					icon.attr 'title', 'Debugging on'
 				else
 					icon.removeClass 'glyphicon-eye-open'
 					icon.addClass 'glyphicon-eye-close'
-					icon.attr 'title', 'Debug mode disabled'
+					icon.attr 'title', 'Debugging off'
 				icon.tooltip('fixTitle').tooltip 'show'
 
 			onSearchKeyUp: (event) ->

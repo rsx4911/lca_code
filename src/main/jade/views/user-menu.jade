@@ -20,4 +20,4 @@ include mixins/forms.jade
 		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout')
 	if isAdmin
 		a.toggle-debug(href='#')
-			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' title='Debugging #{debugMode?"enabled":"disabled"}')
+			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' title='Debugging #{debugMode?"on":"off"}')
