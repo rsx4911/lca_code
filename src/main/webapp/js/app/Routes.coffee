@@ -20,6 +20,7 @@ define
 	'group/new': 'groupNew'
 	'groups/:group': 'groupInfo'
 	'groups/:group/members': 'groupMembers'	
+	'error(/:statuscode)':'error'
 	':group/:name': 'repositoryInfo'
 	':group/:name/datasets': 'repositoryDatasets'
 	':group/:name/datasets/:categoryId': 'repositoryDatasets'
@@ -27,5 +28,4 @@ define
 	':group/:name/commits': 'repositoryCommits'
 	':group/:name/commit/:commitId': 'repositoryCommit'
 	':group/:name/members': 'repositoryMembers'
-	'403':'noAccess'
 	'*path':'notFound'

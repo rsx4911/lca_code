@@ -9,11 +9,11 @@ define([
 				'cs!models/Group'
 				'cs!models/Team'
 				'cs!models/Conversations'
-				'templates/views/403'
-				'templates/views/404'
+				'cs!models/CurrentUser'
+				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, template403, template404) ->
+	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, currentUser, errorTemplate) ->
 
 		Controller = () ->
 
@@ -114,8 +114,12 @@ define([
 						active: 'libraries'
 
 			registerUserRoutes: () ->
-				@router.registerUserRoute 'notFound', -> @show404()
-				@router.registerUserRoute 'noAccess', -> @show403()
+				@router.registerUserRoute 'notFound', -> @showError 404
+				@router.registerUserRoute 'error', (statuscode) ->
+					if statuscode
+						@showError parseInt statuscode
+					else
+						@showError()
 				@router.registerUserRoute 'search', (query) => @showView 
 					view: 'search/Results'
 					title: 'Search' 
@@ -152,7 +156,7 @@ define([
 						active: 'groups'
 				@router.registerUserRoute 'messages', (username) -> 
 					unless window.WebSocket
-						@router.navigate '404', {trigger: true, replace: true}
+						@router.navigate 'error/404', {trigger: true, replace: true}
 					@showView 
 						view: 'messaging/Messages'
 						title: 'Messages' 
@@ -311,17 +315,39 @@ define([
 						view.render
 							container: '#main .center'
 
-			show404: () ->
+			showError: (statuscode) ->
 				Layers.hideProgressIndicator()
 				$('#header-title').empty()
 				@navigation.setItems []
-				$('#main .center').html template404()
+				message = localStorage?.getItem?('errorMessage')
+				localStorage?.removeItem?('errorMessage')
+				isStacktrace = (!statuscode or statuscode is 500) and currentUser.isAdmin()
+				unless message
+					message = if statuscode is 404 then 'Sorry, the page your were looking for could not be found.' else 'Unexpected error'
+					isStacktrace = false
+				if isStacktrace
+					message = @toStacktrace message
+				$('#main .center').html errorTemplate
+					imageSrc: (if statuscode is 403 then '/images/403.png' else '/images/404.png')
+					stacktrace: isStacktrace
+					statuscode: statuscode
+					errorMessage: message
+				$('.select-text').on 'click', (e) ->
+					text = $('.error-message')[0]
+					if document.body.createTextRange
+						range = document.body.createTextRange()
+						range.moveToElementText text
+						range.select()
+					else if window.getSelection
+						selection = window.getSelection()
+						range = document.createRange()
+						range.selectNodeContents text
+						selection.removeAllRanges()
+						selection.addRange range
 
-			show403: () ->
-				Layers.hideProgressIndicator()
-				$('#header-title').empty()
-				@navigation.setItems []
-				$('#main .center').html template403()
+			toStacktrace: (message) ->
+				message = message.replace /\n/g, '<br> &nbsp; &nbsp; '
+				return message
 
 		)()
 

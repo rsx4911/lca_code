@@ -116,11 +116,18 @@ input[type=checkbox], input[type=radio]
 
 .error-page
 	margin 50px auto 0 auto
-	width 350px
 	text-align center
-	
+
+	&:not(.stacktrace)
+		width 350px
+			
+	&.stacktrace .error-message
+		text-align initial
+		font-size 12px
+		padding 0 20px
+    	
 	hr
 		border-top 1px solid rgb(201, 201, 201)
-		
+
 *
 	word-wrap break-word

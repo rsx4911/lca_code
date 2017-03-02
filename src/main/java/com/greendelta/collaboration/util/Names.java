@@ -35,6 +35,7 @@ public class Names {
 		reservedNames.add("messages");
 		reservedNames.add("block");
 		reservedNames.add("unblock");
+		reservedNames.add("error");
 	}
 
 	public static boolean isReserved(String name) {

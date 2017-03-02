@@ -13,9 +13,11 @@ include mixins/forms.jade
 		a(href='/administration')
 			span.glyphicon.glyphicon-wrench(data-toggle='tooltip' data-placement='bottom' title='Admin area')
 	if websocketSupported
-		a.no-deco.messages(href='/messages')
+		a.no-deco.messages(href='/messages' data-toggle='tooltip' data-placement='bottom' title='Inbox')
 			span#message-icon.glyphicon.glyphicon-comment(class=unreadMessages?'new-messages':null)
 			span#message-count(class=unreadMessages?null:'hidden')=unreadMessages
 	a.logout(href='#')
 		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout')
-
+	if isAdmin
+		a.toggle-debug(href='#')
+			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' title='Debugging #{debugMode?"enabled":"disabled"}')

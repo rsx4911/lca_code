@@ -22,6 +22,26 @@ define([
 					success: () -> window.location.href = '/login'
 					error: () -> window.location.href = '/login'
 
+			toggleDebug: (event) ->
+				Events.preventDefault event
+				debugMode = false
+				if localStorage and localStorage.getItem and localStorage.setItem
+					debugMode = !(localStorage.getItem('debugMode') is 'true')
+					localStorage.setItem 'debugMode', debugMode.toString()
+				else 
+					debugMode = !(window.debugMode is 'true')
+					window.debugMode = debugMode.toString()
+				icon = $ '.toggle-debug .glyphicon'
+				if debugMode
+					icon.removeClass 'glyphicon-eye-close'
+					icon.addClass 'glyphicon-eye-open'
+					icon.attr 'title', 'Debug mode enabled'
+				else
+					icon.removeClass 'glyphicon-eye-open'
+					icon.addClass 'glyphicon-eye-close'
+					icon.attr 'title', 'Debug mode disabled'
+				icon.tooltip('fixTitle').tooltip 'show'
+
 			onSearchKeyUp: (event) ->
 				if Events.keyCode(event) isnt 13
 					return
@@ -36,6 +56,7 @@ define([
 			events: 
 				'click a[href]:not([target=_blank]):not(.logout):not([data-action])': (event) -> Events.followLink event
 				'click a.logout': (event) -> @logout event
+				'click a.toggle-debug': (event) -> @toggleDebug event
 				'click a[data-action=upgrade]': (event) -> @openUpgradeDialog event
 				'keyup #global-search': (event) -> @onSearchKeyUp event
 
@@ -82,6 +103,7 @@ define([
 					upgradeAvailable: upgradeAvailable is 'true'
 					unreadMessages: conversations.getUnreadMessages()
 					websocketSupported: (window.WebSocket isnt undefined)
+					debugMode: localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 

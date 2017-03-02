@@ -17,13 +17,31 @@ define([
 					when 401
 						unless currentUser.get('inLoginProcess')
 							Layers.showLoginLayer()
-					when 403 then Router.navigate '/403',
+					when 403
+						localStorage?.setItem?('errorMessage', 'Sorry, but you do not have access to this page.')
+					when 406
+						localStorage?.setItem?('errorMessage', 'Sorry, the repository schema version is not compatible with the current collaboration server version.')
+					else
+						localStorage?.setItem?('errorMessage', response.responseText)
+				unless response.status is 401
+					Router.navigate "/error/#{response.status}",
 						replace: true
-					when 404 then Router.navigate '/404',
-						replace: true
-					# treat unsupported schema as not existing
-					when 406 then Router.navigate '/404',
-						replace: true
+			window.onerror = (msg, url, line, col, error) ->
+				if window.inErrorHandling
+					return
+				window.inErrorHandling = true
+				$.ajax
+					type: 'POST'
+					url: '/ws/error'
+					contentType: 'text/plain'
+					data: error.stack
+					complete: () -> 
+						if localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
+							localStorage?.setItem?('errorMessage', error.stack)
+							Router.navigate "/error",
+								replace: true
+						window.inErrorHandling = false
+
 
 		initialize: () ->
 			window.onfocus = () -> 
