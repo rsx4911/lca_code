@@ -27,8 +27,8 @@ define([
 					template: refTemplate
 					callback: (type, result) -> 
 						result.commitId = commitId
-						result.baseUrl = "/#{repo.group}/#{repo.name}/dataset"
-					url: (page) -> "/ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
+						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
+					url: (page) -> "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
 
 			render: (renderOptions) ->
 				repo = @repository.toJSON()
@@ -47,7 +47,7 @@ define([
 				commitId = @commitId
 				$.ajax
 					type: 'GET'
-					url: "/ws/history/commit/#{repo.group}/#{repo.name}/#{commitId}"
+					url: "ws/history/commit/#{repo.group}/#{repo.name}/#{commitId}"
 					success: callback
 
 )

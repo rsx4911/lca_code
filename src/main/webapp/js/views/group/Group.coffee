@@ -19,7 +19,7 @@ define([
 				group = @group.get 'name'
 				$.ajax
 					type: 'GET'
-					url: "/ws/repository?filter=#{group}/"
+					url: "ws/repository?filter=#{group}/"
 					success: callback
 
 			className: 'group-view multi-box-view'
@@ -48,7 +48,7 @@ define([
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
-						url: "/ws/group/#{name}"
+						url: "ws/group/#{name}"
 						success: () =>
 							Layers.hideProgressIndicator()
 							Router.navigate 'dashboard/groups'

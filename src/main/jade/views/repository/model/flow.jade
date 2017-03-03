@@ -17,7 +17,7 @@ include ./mixins.jade
 									span=synonym
 					+ref-row('Location', dataset.location)
 					+field-row('Infrastructure flow')
-						img.icon-small(src='/images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
+						img.icon-small(src='images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
 			if dataset.flowProperties
 				h4 Flow properties
 				table.table.flow-properties

@@ -12,16 +12,16 @@ include ../mixins/paging.jade
 .content-box
 	each dataset in data
 		.result
-			a(href='/#{dataset.repositoryId}/dataset/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}')
+			a(href='#{dataset.repositoryId}/dataset/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}')
 				if dataset.type === 'CATEGORY'
-					img.model-icon-small(src='/images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+					img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
 				else
-					img.model-icon-small(src='/images/model/small/#{dataset.type.toLowerCase()}.png')
+					img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
 				span.result-text=dataset.fullPath
 			.details
 				div Repository: 
-					a(href='/#{dataset.repositoryId}')=dataset.repositoryId
+					a(href='#{dataset.repositoryId}')=dataset.repositoryId
 				div Commit: 
-					a(href='/#{dataset.repositoryId}/commit/#{dataset.commitId}') 
+					a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
 						span.result-text #{dataset.commitMessage} (#{dataset.commitId})
 	+paging(page, Math.ceil(total/pageSize))

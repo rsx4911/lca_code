@@ -8,7 +8,7 @@ define([
 
 			url: () ->
 				name = @get 'name'
-				return "/ws/group/#{name}"
+				return "ws/group/#{name}"
 
 			isNew: () ->
 				isNew = @get 'isNew'

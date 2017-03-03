@@ -2,7 +2,7 @@ include ./mixins.jade
 
 mixin exchange-row(exchange, dqSystem)
 	tr(class=exchange.quantitativeReference?'reference':null)
-		td: img.icon-small(src='/images/' + (exchange.input?'input':'output') + '.png')
+		td: img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
 		td: +ref(exchange.flow)
 		td 
 			if exchange.flow.category
@@ -28,7 +28,7 @@ mixin exchange-row(exchange, dqSystem)
 				+ref(exchange.defaultProvider)
 			else
 				if exchange.avoidedProduct
-					img.icon-small(src='/images/check_true.png')
+					img.icon-small(src='images/check_true.png')
 
 mixin exchange-table(exchanges, input, dqSystem)
 	table.table(class=input?'inputs':'outputs')
@@ -65,22 +65,21 @@ mixin non-causal-allocation-table(factors)
 					td=factor.economic
 
 mixin causal-allocation-table(factors)
-	if factors.length
-		h4 Causal allocation
-		table.table.allocation-factors
-			thead
+	h4 Causal allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th Flow
+				each product in factors[0].products
+					th: +ref(product.product)
+		tbody
+			each factor in factors
 				tr
-					th
-					th Flow
-					each product in factors[0].products
-						th: +ref(product.product)
-			tbody
-				each factor in factors
-					tr
-						td: img.icon-small(src='/images/' + (factor.exchange.input?'input':'output') + '.png')
-						td: +ref(factor.exchange.flow)
-						each product in factor.products
-							td=product.value
+					td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
+					td: +ref(factor.exchange.flow)
+					each product in factor.products
+						td=product.value
 
 mixin social-aspect-table(aspects, dqSystem)
 	table.table.social-aspects
@@ -125,8 +124,9 @@ mixin social-aspect-table(aspects, dqSystem)
 				if doc
 					li(role='presentation') 
 						a(href='#documentation' aria-controls='documentation' role='tab' data-toggle='tab') Documentation
-				li(role='presentation') 
-					a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab') Allocation
+				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors.length)
+					li(role='presentation') 
+						a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab') Allocation
 				if dataset.socialAspects && dataset.socialAspects.length
 					li(role='presentation') 
 						a(href='#social' aria-controls='social' role='tab' data-toggle='tab') Social aspects
@@ -153,7 +153,7 @@ mixin social-aspect-table(aspects, dqSystem)
 								+field-row('Project', doc.project, true)
 								+field-row('Creation date', doc.creationDate, true, formatDate)
 								+field-row('Copyright protected')
-									img.icon-small(src='/images/check_' + (dataset.copyright?'true':'false') + '.png')
+									img.icon-small(src='images/check_' + (dataset.copyright?'true':'false') + '.png')
 								+field-row('LCI method', doc.inventoryMethodDescription, true)
 								+field-row('Modeling constants', doc.modelingConstantsDescription, true)
 								+field-row('Data completeness', doc.completenessDescription, true)
@@ -165,11 +165,12 @@ mixin social-aspect-table(aspects, dqSystem)
 									+field-row('Sources')
 										each source in doc.sources
 											div: +ref(source)
-				#allocation.tab-pane(role='tabpanel')
-					if dataset.nonCausalAllocationFactors
-						+non-causal-allocation-table(dataset.nonCausalAllocationFactors)
-					if dataset.causalAllocationFactors
-						+causal-allocation-table(dataset.causalAllocationFactors)
+				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors)
+					#allocation.tab-pane(role='tabpanel')
+						if dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length
+							+non-causal-allocation-table(dataset.nonCausalAllocationFactors)
+						if dataset.causalAllocationFactors && dataset.causalAllocationFactors.length
+							+causal-allocation-table(dataset.causalAllocationFactors)
 				if dataset.socialAspects && dataset.socialAspects.length
 					#social.tab-pane(role='tabpanel')
 						+social-aspect-table(dataset.socialAspects, dataset.socialDqSystem)

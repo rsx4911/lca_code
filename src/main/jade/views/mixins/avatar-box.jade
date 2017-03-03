@@ -1,6 +1,6 @@
 mixin avatar-box(type, id, canWrite) 
 	.header-box Avatar
-		img.pull-right.avatar(src='/ws/#{type}/avatar/#{id}')
+		img.pull-right.avatar(src='ws/#{type}/avatar/#{id}')
 	if canWrite
 		form#avatar-form.content-box
 			#avatar-general-message-group.alert(role='alert'): span.message

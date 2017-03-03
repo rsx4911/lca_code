@@ -53,7 +53,7 @@ define([
 					@page = 1
 
 			render: (renderOptions) ->
-				url = '/ws/search?query=' + @query + '&page=' + @page
+				url = 'ws/search?query=' + @query + '&page=' + @page
 				if @type
 					url += '&type=' + @type
 				$.ajax

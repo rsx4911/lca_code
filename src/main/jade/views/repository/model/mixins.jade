@@ -19,7 +19,7 @@ mixin menubar()
 
 mixin header()
 	.title
-		img.pull-right.model-icon(src='/images/model/large/#{getIcon(dataset)}')
+		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
 		div
 			h3=dataset.name
 			.category
@@ -57,7 +57,7 @@ mixin field-row(label, value, checkValue, formatter)
 mixin ref(ref, additionalTypeInfo, noImage, defaultLabel)
 	if ref
 		if !noImage
-			img.model-icon-small(src='/images/model/small/#{getIcon(ref, additionalTypeInfo)}')
+			img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
 		if commitId
 			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
 		else

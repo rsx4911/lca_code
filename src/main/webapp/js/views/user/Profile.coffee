@@ -77,7 +77,7 @@ define([
 				if @adminArea and !@user.get('id')
 						$.ajax
 							type: 'POST'
-							url: "/ws/admin/user/#{username}"
+							url: "ws/admin/user/#{username}"
 							data: JSON.stringify @user.toJSON()
 							contentType: 'application/json'
 							success: () => @reload()
@@ -92,7 +92,7 @@ define([
 				Events.preventDefault event
 				$.ajax
 					type: 'PUT'
-					url: '/ws/user/setpassword/' + @user.get('username')
+					url: 'ws/user/setpassword/' + @user.get('username')
 					data: JSON.stringify Forms.toJson 'password-form'
 					contentType: 'application/json'
 					success: () => @reload()
@@ -103,7 +103,7 @@ define([
 				username = @user.get 'username'
 				$.ajax
 					type: if value is true or value is false then 'PUT' else 'GET'
-					url: "/ws/user/twoFactorAuth/#{username}/#{value}"
+					url: "ws/user/twoFactorAuth/#{username}/#{value}"
 					success: (response) => 
 						Backbone.history.loadUrl()
 						if response.enabled
@@ -135,7 +135,7 @@ define([
 				username = @user.get 'username'
 				isOwnUser = @user.get('id') is currentUser.get('id')
 				text = if isOwnUser then 'your own user' else "user #{username}"
-				url = if isOwnUser then '/ws/user' else "/ws/admin/user/#{username}"
+				url = if isOwnUser then 'ws/user' else "ws/admin/user/#{username}"
 				Layers.askDeleteQuestion text, username, () =>
 					$.ajax
 						type: 'DELETE'
@@ -144,12 +144,12 @@ define([
 							if currentUser.isAdmin() and !isOwnUser
 								Router.navigate 'administration/overview'
 							else
-								window.location.href = '/login'
+								window.location.href = 'login'
 
 			reload: () ->
 				isOwnUser = @user.get('id') is currentUser.get('id')
 				if currentUser.isAdmin() and isOwnUser and !@user.get('admin')
-					window.location.href = '/administration/overview'
+					window.location.href = 'administration/overview'
 				else if currentUser.isAdmin() and @adminArea
 					Router.navigate 'administration/overview'
 				else

@@ -18,9 +18,9 @@ define([
 				Events.preventDefault event
 				$.ajax
 					type: 'POST' 
-					url: '/ws/public/logout'
-					success: () -> window.location.href = '/login'
-					error: () -> window.location.href = '/login'
+					url: 'ws/public/logout'
+					success: () -> window.location.href = 'login'
+					error: () -> window.location.href = 'login'
 
 			toggleDebug: (event) ->
 				Events.preventDefault event
@@ -49,9 +49,9 @@ define([
 				query = input.val()
 				input.val ''
 				if query
-					Router.navigate "/search/query=#{query}"
+					Router.navigate "search/query=#{query}"
 				else
-					Router.navigate '/search'
+					Router.navigate 'search'
 
 			events: 
 				'click a[href]:not([target=_blank]):not(.logout):not([data-action])': (event) -> Events.followLink event
@@ -91,7 +91,7 @@ define([
 				if currentUser.isAdmin()
 					$.ajax
 						type: 'GET' 
-						url: '/ws/admin/area/upgradeAvailable'
+						url: 'ws/admin/area/upgradeAvailable'
 						success: (upgradeAvailable) =>
 							@doRender renderOptions, upgradeAvailable
 				else

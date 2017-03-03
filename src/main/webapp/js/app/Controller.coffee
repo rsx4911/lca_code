@@ -19,41 +19,51 @@ define([
 
 		Controller:: = (() ->
 
+			concatUrl: (prefix, part) ->
+				if !prefix and !part
+					return ''
+				if !prefix
+					return part
+				if !part
+					return prefix
+				return "#{prefix}/#{part}"
+
+
 			getNav: (options) ->
 				unless options
 					return
 				type = options.type
-				prefix = if options.urlPrefix then "/#{options.urlPrefix}" else ''
+				prefix = if options.urlPrefix then "#{options.urlPrefix}" else ''
 				if type is 'group'
-					prefix = if options.urlPrefix then "/groups/#{options.urlPrefix}" else '/groups'
+					prefix = if options.urlPrefix then "groups/#{options.urlPrefix}" else 'groups'
 				# the ids are used in Navigation to identify which menu item is currently active
 				# they need only to be unique within 'type'
 				switch type
 					when 'dashboard' then return [
-						{href: "#{prefix}/dashboard/repositories", imageSrc: '/images/repository.png', label: 'Repositories', id: 'repositories'}
-						{href: "#{prefix}/dashboard/groups", imageSrc: '/images/group.png', label: 'Groups', id: 'groups'}
+						{href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
+						{href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
 					]
 					when 'messaging' then return [
-						{href: "#{prefix}/messages", imageSrc: '/images/inbox.png', label: 'Inbox', id: 'inbox'}
+						{href: @concatUrl(prefix, 'messages'), imageSrc: 'images/inbox.png', label: 'Inbox', id: 'inbox'}
 					]
 					when 'user' then return [
-						{href: "#{prefix}/user/profile", imageSrc: '/images/profile.png', label: 'Profile', id: 'profile'}
-						{href: "#{prefix}/user/messaging", imageSrc: '/images/inbox.png', label: 'Messaging', id: 'messaging'}
-						{href: "#{prefix}/user/notifications", imageSrc: '/images/notifications.png', label: 'Notifications', id: 'notifications'}
+						{href: @concatUrl(prefix, 'user/profile'), imageSrc: 'images/profile.png', label: 'Profile', id: 'profile'}
+						{href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
+						{href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
 					]
 					when 'group' then return [
-						{href: "#{prefix}", imageSrc: '/images/group.png', label: 'Group', id: 'group'}
-						{href: "#{prefix}/members", imageSrc: '/images/members.png', label: 'Members', id: 'members'}
+						{href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
+						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 					]
 					when 'repository' then return [
-						{href: "#{prefix}", imageSrc: '/images/repository.png', label: 'Repository', id: 'repository'}
-						{href: "#{prefix}/datasets", imageSrc: '/images/dataset.png', label: 'Data sets', id: 'datasets'}
-						{href: "#{prefix}/commits", imageSrc: '/images/commit.png', label: 'Commits', id: 'commits'}
-						{href: "#{prefix}/members", imageSrc: '/images/members.png', label: 'Members', id: 'members'}
+						{href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
+						{href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
+						{href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
+						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 					]
 					when 'admin' then return [
-						{href: "#{prefix}/administration/overview", imageSrc: '/images/overview.png', label: 'Overview', id:'overview'}
-						{href: "#{prefix}/administration/libraries", imageSrc: '/images/libraries.png', label: 'Library data sets', id:'libraries'}
+						{href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
+						{href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
 					]
 
 			initializeNavigation: () ->
@@ -73,9 +83,9 @@ define([
 				@registerUserRoutes()
 
 			registerRouteRewrites: () ->
-				@router.registerRouteRewrite 'dashboardRepositories', '/dashboard/repositories'
-				@router.registerRouteRewrite 'userProfile', '/user/profile'
-				@router.registerRouteRewrite 'adminOverview', '/administration/overview'
+				@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
+				@router.registerRouteRewrite 'userProfile', 'user/profile'
+				@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', -> @showView 
@@ -328,7 +338,7 @@ define([
 				if isStacktrace
 					message = @toStacktrace message
 				$('#main .center').html errorTemplate
-					imageSrc: (if statuscode is 403 then '/images/403.png' else '/images/404.png')
+					imageSrc: (if statuscode is 403 then 'images/403.png' else 'images/404.png')
 					stacktrace: isStacktrace
 					statuscode: statuscode
 					errorMessage: message

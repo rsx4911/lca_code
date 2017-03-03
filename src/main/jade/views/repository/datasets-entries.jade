@@ -10,7 +10,7 @@ if !isRoot
 each entry in entries
 	tr
 		if isRoot
-			td: img.model-icon-small(src='/images/model/small/category/#{entry.toLowerCase()}.png')
+			td: img.model-icon-small(src='images/model/small/category/#{entry.toLowerCase()}.png')
 			td: a(href='#{baseUrl}/datasets/#{entry}'): strong  #{getRootLabel(entry)}
 			td
 			td
@@ -24,7 +24,7 @@ each entry in entries
 					- icon += '_' + entry.flowType.substring(0, entry.flowType.indexOf('_'));
 				else if entry.type === 'PROCESS' && entry.processType === 'LCI_RESULT'
 					- icon += '_system'
-			td: img.model-icon-small(src='/images/model/small/#{icon}.png')
+			td: img.model-icon-small(src='images/model/small/#{icon}.png')
 			td
 				if entry.type === 'CATEGORY'
 					a(href='#{baseUrl}/datasets/#{entry.refId}'): strong #{entry.name}

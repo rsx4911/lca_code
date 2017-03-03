@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 html(lang='en')
 	head
+		base(href='/')
 		title='LCA Collaboration Server'
 		meta(http-equiv='expires' content='0')
 		meta(name='viewport' content='width=device-width, initial-scale=1')
 		meta(name='fragment' content='!')
-		link(rel='shortcut icon' type='image/x-icon' href='/images/favicon.ico')
-		link(rel='stylesheet' type='text/css' href='/css/styles.css')
+		link(rel='shortcut icon' type='image/x-icon' href='images/favicon.ico')
+		link(rel='stylesheet' type='text/css' href='css/styles.css')
 	body.imprint
 		header
 			.logo-container
-				a(href='/')
-					img.logo(src='/images/logo.png')
+				a(href='')
+					img.logo(src='images/logo.png')
 		#main-login
 			h3 Imprint
 			a#company.website(href='' target='_blank')
@@ -50,12 +51,12 @@ html(lang='en')
 			|  
 			span#year
 			|  | 
-			a(href='/imprint') Imprint
-		script(src='/js/libs/jquery.js')
+			a(href='imprint') Imprint
+		script(src='js/libs/jquery.js')
 		script.
 			$('#year').html(new Date().getFullYear());
 			$('.imprint-table tr').hide()
-			$.ajax({type: 'GET', url: '/ws/public/imprint', success: function(imprint) {
+			$.ajax({type: 'GET', url: 'ws/public/imprint', success: function(imprint) {
 				var keys = Object.keys(imprint);
 				for (var i = 0; i < keys.length; i++) {
 					if (!keys[i]) {

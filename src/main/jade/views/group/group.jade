@@ -19,6 +19,6 @@ include ../mixins/avatar-box.jade
 			.list-container
 				each repo in repositories
 					.list-entry
-						img.avatar(src='/ws/repository/avatar/#{repo.group}/#{repo.name}')
-						a.follow(href='/#{repo.group}/#{repo.name}')
+						img.avatar(src='ws/repository/avatar/#{repo.group}/#{repo.name}')
+						a.follow(href='#{repo.group}/#{repo.name}')
 							strong #{repo.group}/#{repo.name}

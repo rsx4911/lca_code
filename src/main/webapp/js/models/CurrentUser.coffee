@@ -6,7 +6,7 @@ define([
 
 		class CurrentUser extends Backbone.Model
 
-			url: '/ws/public'
+			url: 'ws/public'
 
 			isLoggedIn: () ->
 				if @get('id')

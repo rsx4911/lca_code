@@ -18,7 +18,6 @@ define([
 					items: items
 					active: active
 					repository: repository
-					path: window.location.pathname
 				Menu.init @$('.menu-left')
 
 			events: 

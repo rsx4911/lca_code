@@ -56,7 +56,7 @@ define([
 				if !@team.get('id')
 						$.ajax
 							type: 'POST'
-							url: "/ws/admin/team/#{teamname}"
+							url: "ws/admin/team/#{teamname}"
 							data: JSON.stringify @team.toJSON()
 							contentType: 'application/json'
 							success: () -> Router.navigate 'administration/overview'
@@ -101,7 +101,7 @@ define([
 				Layers.askDeleteQuestion "team #{teamname}", teamname, () =>
 					$.ajax
 						type: 'DELETE'
-						url: "/ws/admin/team/#{teamname}"
+						url: "ws/admin/team/#{teamname}"
 						success: () -> Router.navigate 'administration/overview'
 
 )

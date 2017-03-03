@@ -55,25 +55,25 @@ define([
 				commitId = @commitId or 'null'
 				$.ajax
 					type: 'GET'
-					url: "/ws/public/browse/#{urlPart}/#{commitId}" 
+					url: "ws/public/browse/#{urlPart}/#{commitId}" 
 					success: callback
 
 			loadCommitHistory: (callback) ->
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'
-					url: "/ws/history/#{urlPart}"
+					url: "ws/history/#{urlPart}"
 					success: callback
 
 			getDownloadUrl: () ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "/ws/download/prepare/#{urlPart}/#{commitId}" 
+				return "ws/download/prepare/#{urlPart}/#{commitId}" 
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "/ws/fetch/file/#{urlPart}/#{commitId}" 
+				return "ws/fetch/file/#{urlPart}/#{commitId}" 
 
 			getUrlPart: (type, refId) ->
 				group = @repository.get 'group'
@@ -88,7 +88,7 @@ define([
 					type: 'GET'
 					url: @getDownloadUrl()
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="/ws/download/' + token + '"></iframe>'
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
 
@@ -107,7 +107,7 @@ define([
 					type = @type
 					refId = @refId
 					commitId = $(Events.target(event)).val()
-					Router.navigate "/#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId} = options
@@ -119,7 +119,7 @@ define([
 				@loadDataset (dataset) =>
 					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
 					if @commitId isnt dataset.commitId
-						Router.navigate "/#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
+						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
 							trigger: false
 							replace: true
 					@commitId = dataset.commitId
@@ -127,7 +127,7 @@ define([
 						DatasetPrepare.applyTo dataset
 						@$el.html template 
 							dataset: dataset
-							baseUrl: "/#{group}/#{name}/dataset"
+							baseUrl: "#{group}/#{name}/dataset"
 							formatDate: Format.dateTime
 							getLabel: @getLabel
 							getIcon: Icons.get
@@ -211,7 +211,7 @@ define([
 					urlPart = @getUrlPart 'IMPACT_CATEGORY', selectedImpactCategory
 					$.ajax
 						type: 'GET'
-						url: "/ws/public/browse/#{urlPart}/#{commitId}"
+						url: "ws/public/browse/#{urlPart}/#{commitId}"
 						success: (impactCategory) =>
 							DatasetPrepare.applyTo impactCategory
 							@$('.impact-category-description').html impactCategory.description
@@ -227,7 +227,7 @@ define([
 					urlPart = @getUrlPart 'NW_SET', selectedNwSet
 					$.ajax
 						type: 'GET'
-						url: "/ws/public/browse/#{urlPart}/#{commitId}"
+						url: "ws/public/browse/#{urlPart}/#{commitId}"
 						success: (nwSet) =>
 							DatasetPrepare.applyTo nwSet
 							@$('#nw-set-unit').html nwSet.weightedScoreUnit

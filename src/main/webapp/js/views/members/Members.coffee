@@ -97,8 +97,8 @@ define([
 
 			getPath: () ->
 				if @group
-					return '/ws/membership/' + @group.get('name') + '/NULL'
-				return '/ws/membership/' + @repository.get('group') + '/' + @repository.get('name')
+					return 'ws/membership/' + @group.get('name') + '/NULL'
+				return 'ws/membership/' + @repository.get('group') + '/' + @repository.get('name')
 
 			beforeRender: (type, result) ->
 				if type is 'group-members' and @group
@@ -138,7 +138,7 @@ define([
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "/ws/membership/#{name}/NULL?filter=#{filter}"
+						url: (page, filter) -> "ws/membership/#{name}/NULL?filter=#{filter}"
 				else if options.repository
 					@repository = options.repository
 					group = options.repository.get 'group'
@@ -149,14 +149,14 @@ define([
 						container: '#repository-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "/ws/membership/#{group}/#{name}?filter=#{filter}"
+						url: (page, filter) -> "ws/membership/#{group}/#{name}?filter=#{filter}"
 					@filter2 = new Filter
 						type: 'group-members'
 						callback: (type, result) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "/ws/membership/#{group}/NULL?filter=#{filter}"
+						url: (page, filter) -> "ws/membership/#{group}/NULL?filter=#{filter}"
 
 			render: (renderOptions) ->
 				showRepositoryMembers = false

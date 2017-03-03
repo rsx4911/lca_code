@@ -27,7 +27,7 @@ define([
 					@categoryId = 'null'
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				url = "/ws/public/browse/#{group}/#{name}/" + @categoryId
+				url = "ws/public/browse/#{group}/#{name}/" + @categoryId
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
@@ -38,7 +38,7 @@ define([
 							@setPath result
 						@sortEntries result
 						result.repository = @repository.toJSON()
-						result.baseUrl = "/#{group}/#{name}"
+						result.baseUrl = "#{group}/#{name}"
 						result.isRoot = (if @categoryId and @categoryId isnt 'null' then false else true)
 						result.getRootLabel = (type) -> return ModelTypes[type]
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
@@ -51,10 +51,10 @@ define([
 				Layers.showProgressIndicator 'Preparing'
 				$.ajax
 					type: 'GET'
-					url: "/ws/download/prepare/#{group}/#{name}/"
+					url: "ws/download/prepare/#{group}/#{name}/"
 					success: (token) =>
 						Layers.hideProgressIndicator()
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="/ws/download/' + token + '"></iframe>'						
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'						
 
 			render: (renderOptions) ->
 				@$el.html template

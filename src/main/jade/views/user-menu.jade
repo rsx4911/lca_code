@@ -4,16 +4,16 @@ include mixins/forms.jade
 	+input('global-search')(placeholder='Search')
 		span.glyphicon.glyphicon-search.form-control-feedback
 .pull-right.user-menu-actions
-	a.search-link-icon(href='/search')
+	a.search-link-icon(href='search')
 		span.glyphicon.glyphicon-search  
 	if isAdmin
 		if upgradeAvailable
 			a(href='#' data-action='upgrade')
 				span.glyphicon.glyphicon-upload(data-toggle='tooltip' data-placement='bottom' title='Upgrade repositories')
-		a(href='/administration')
+		a(href='administration')
 			span.glyphicon.glyphicon-wrench(data-toggle='tooltip' data-placement='bottom' title='Admin area')
 	if websocketSupported
-		a.no-deco.messages(href='/messages' data-toggle='tooltip' data-placement='bottom' title='Inbox')
+		a.no-deco.messages(href='messages' data-toggle='tooltip' data-placement='bottom' title='Inbox')
 			span#message-icon.glyphicon.glyphicon-comment(class=unreadMessages?'new-messages':null)
 			span#message-count(class=unreadMessages?null:'hidden')=unreadMessages
 	a.logout(href='#')

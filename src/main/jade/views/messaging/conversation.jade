@@ -2,9 +2,9 @@ a.no-deco(href='#' data-action='show-message' data-type=recipient.type data-id=r
 	.list-entry(class=selected?'active':null)
 		span.unread-messages.badge=unreadMessages?unreadMessages:''
 		span.online-indicator.badge(style=online?null:'display:none') &nbsp;
-		img.avatar.pull-left(src='/ws/#{recipient.type}/avatar/#{recipient.id}')
+		img.avatar.pull-left(src='ws/#{recipient.type}/avatar/#{recipient.id}')
 		if isBlocked
-			img.avatar.blocked(src='/images/blocked.png')
+			img.avatar.blocked(src='images/blocked.png')
 		.message-container
 			div
 				.username.pull-left=recipient.name

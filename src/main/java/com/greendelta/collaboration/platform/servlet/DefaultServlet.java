@@ -27,8 +27,7 @@ public class DefaultServlet extends HttpServlet {
 	private Provider<Subject> subjectProvider;
 
 	@Override
-	protected void doGet(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		boolean isLoginUrl = request.getRequestURL().toString().endsWith("/login");
 		boolean isImprintUrl = request.getRequestURL().toString().endsWith("/imprint");
 		if (isImprintUrl) {
@@ -36,7 +35,7 @@ public class DefaultServlet extends HttpServlet {
 		} else if (isLoginUrl) {
 			Subject subject = subjectProvider.get();
 			if (subject != null && subject.isAuthenticated()) {
-				response.sendRedirect("/");
+				response.sendRedirect(request.getContextPath() + "/");
 			} else {
 				forward("/login.html", request, response);
 			}
@@ -51,8 +50,8 @@ public class DefaultServlet extends HttpServlet {
 		}
 	}
 
-	private void forward(String path, HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+	private void forward(String path, HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		request.getRequestDispatcher(path).forward(request, response);
 	}
 

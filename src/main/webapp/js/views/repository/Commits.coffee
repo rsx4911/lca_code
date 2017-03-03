@@ -32,7 +32,7 @@ define([
 				repo = @repository.toJSON()
 				$.ajax
 					type: 'GET'
-					url: "/ws/history/#{repo.group}/#{repo.name}/null"
+					url: "ws/history/#{repo.group}/#{repo.name}/null"
 					success: callback
 
 			prepareModel: (commits) ->

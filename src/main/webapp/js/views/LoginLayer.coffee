@@ -27,7 +27,7 @@ define([
 					data.token = @$('#token').val()
 				$.ajax
 					type: 'POST'
-					url: '/ws/public/login'
+					url: 'ws/public/login'
 					contentType: 'application/json'
 					data: JSON.stringify(data) 
 					success: (response) =>
@@ -38,7 +38,7 @@ define([
 							@$('#login-general-message').hide()
 							@$('#token').focus()
 						else
-							window.location.href = '/'
+							window.location.href = ''
 							currentUser.unset 'inLoginProcess'
 					error: (response) =>
 						@$('#login-general-message').show()

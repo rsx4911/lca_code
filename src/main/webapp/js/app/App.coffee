@@ -24,7 +24,7 @@ define([
 					else
 						localStorage?.setItem?('errorMessage', response.responseText)
 				unless response.status is 401
-					Router.navigate "/error/#{response.status}",
+					Router.navigate "error/#{response.status}",
 						replace: true
 			window.onerror = (msg, url, line, col, error) ->
 				if window.inErrorHandling
@@ -32,13 +32,13 @@ define([
 				window.inErrorHandling = true
 				$.ajax
 					type: 'POST'
-					url: '/ws/error'
+					url: 'ws/error'
 					contentType: 'text/plain'
 					data: error.stack
 					complete: () -> 
 						if localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
 							localStorage?.setItem?('errorMessage', error.stack)
-							Router.navigate "/error",
+							Router.navigate "error",
 								replace: true
 						window.inErrorHandling = false
 
@@ -60,6 +60,8 @@ define([
 				Controller.initialize Router
 				Backbone.history.start
 					pushState: true
+					root: $('base').attr('href') or '/'
+
 
 				
 )

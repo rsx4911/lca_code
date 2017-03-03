@@ -8,14 +8,14 @@ define () ->
 	getUsers: (module, callback) ->
 		$.ajax
 			type: 'GET'
-			url: "/ws/user?module=#{module.toUpperCase()}"
+			url: "ws/user?module=#{module.toUpperCase()}"
 			success: (users) =>
 				callback users
 
 	getTeams: (module, callback) ->
 		$.ajax
 			type: 'GET'
-			url: "/ws/team?module=#{module.toUpperCase()}"
+			url: "ws/team?module=#{module.toUpperCase()}"
 			success: (teams) =>
 				callback teams
 

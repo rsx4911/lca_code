@@ -86,7 +86,7 @@ define([
 				fullPath = "#{repository.group}/#{repository.name}"
 				$.ajax
 					type: 'GET'
-					url: "/ws/history/#{fullPath}/null"
+					url: "ws/history/#{fullPath}/null"
 					success: (commits) =>
 						@loadGroups (groups) =>
 							callback commits, groups
@@ -94,7 +94,7 @@ define([
 			loadGroups: (callback) ->
 				$.ajax
 					type: 'GET'
-					url: '/ws/group?onlyIfCanWrite=true'
+					url: 'ws/group?onlyIfCanWrite=true'
 					success: (result) =>
 						options = []
 						options.push currentUser.get 'username'
@@ -112,7 +112,7 @@ define([
 				Layers.showProgressIndicator 'Cloning'
 				$.ajax
 					type: 'POST'
-					url: "/ws/repository/clone/#{repo.group}/#{repo.name}/#{commitId}/#{newGroup}/#{newName}"
+					url: "ws/repository/clone/#{repo.group}/#{repo.name}/#{commitId}/#{newGroup}/#{newName}"
 					success: () -> 
 						Layers.hideProgressIndicator()
 						Layers.closeActive()
@@ -131,7 +131,7 @@ define([
 				Layers.showProgressIndicator 'Moving'
 				$.ajax
 					type: 'POST'
-					url: "/ws/repository/move/#{repo.group}/#{repo.name}/#{newGroup}/#{newName}"
+					url: "ws/repository/move/#{repo.group}/#{repo.name}/#{newGroup}/#{newName}"
 					success: () -> 
 						Layers.hideProgressIndicator()
 						Layers.closeActive()

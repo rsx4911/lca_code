@@ -22,7 +22,7 @@ define([
 			render: (renderOptions) ->
 				$.ajax
 					type: 'GET'
-					url: '/ws/notifications'
+					url: 'ws/notifications'
 					success: (enabled) =>
 						notifications = Notifications.getAll()
 						for notification in notifications
@@ -38,7 +38,7 @@ define([
 				type = if target.is(':checked') then 'enable' else 'disable'
 				$.ajax
 					type: 'PUT'
-					url: "/ws/notifications/#{type}/#{notification}"
+					url: "ws/notifications/#{type}/#{notification}"
 
 			setGroupState: (event, enable) ->
 				target = $ Events.target event, 'img'
@@ -54,6 +54,6 @@ define([
 				type = if enable then 'enable' else 'disable'
 				$.ajax
 					type: 'PUT'
-					url: "/ws/notifications/#{type}/#{list}"
+					url: "ws/notifications/#{type}/#{list}"
 
 )

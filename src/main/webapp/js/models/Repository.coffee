@@ -9,7 +9,7 @@ define([
 			url: () ->
 				group = @get 'group'
 				name = @get 'name'
-				return "/ws/repository/#{group}/#{name}"
+				return "ws/repository/#{group}/#{name}"
 
 			isNew: () ->
 				isNew = @get 'isNew'

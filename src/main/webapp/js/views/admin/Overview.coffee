@@ -31,25 +31,25 @@ define([
 					container: '#repositories'
 					template: repositoriesTemplate
 					filterId: 'repository-filter'
-					url: (page, filter) -> "/ws/repository?page=#{page}&filter=#{filter}&adminArea=true"
+					url: (page, filter) -> "ws/repository?page=#{page}&filter=#{filter}&adminArea=true"
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
 					filterId: 'user-filter'
-					url: (page, filter) -> "/ws/user?page=#{page}&filter=#{filter}"
+					url: (page, filter) -> "ws/user?page=#{page}&filter=#{filter}"
 				@groupFilter = new Filter
 					container: '#groups'
 					template: groupsTemplate
 					filterId: 'group-filter'
-					url: (page, filter) -> "/ws/group?page=#{page}&filter=#{filter}&adminArea=true"
+					url: (page, filter) -> "ws/group?page=#{page}&filter=#{filter}&adminArea=true"
 				@teamFilter = new Filter
 					container: '#teams'
 					template: teamsTemplate
 					filterId: 'team-filter'
-					url: (page, filter) -> "/ws/team?page=#{page}&filter=#{filter}"
+					url: (page, filter) -> "ws/team?page=#{page}&filter=#{filter}"
 
 			render: (renderOptions) ->
-				$.get '/ws/admin/area/count', (result) =>
+				$.get 'ws/admin/area/count', (result) =>
 					@$el.html template
 						repositories: result.repositories
 						users: result.users

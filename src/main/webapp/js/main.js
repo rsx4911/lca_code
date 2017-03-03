@@ -1,6 +1,6 @@
 require.config({
 	enforceDefine: true,
-	baseUrl: '/js',
+	baseUrl: 'js',
 	paths: {
 		'jquery': 'libs/jquery',
 		'jquery-ui': 'libs/jquery-ui',

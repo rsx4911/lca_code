@@ -169,7 +169,7 @@ define([
 				@$("[data-type=#{recipient.type}][data-id=#{recipient.id}] .list-entry").addClass 'active'
 				@$('#next-message').prop 'disabled', false
 				@$('.header-box .username').html recipient.name
-				@$('.header-box .avatar').attr 'src', "/ws/#{recipient.type}/avatar/#{recipient.id}"
+				@$('.header-box .avatar').attr 'src', "ws/#{recipient.type}/avatar/#{recipient.id}"
 				@$('#conversation-messages').empty()
 				for message in conversation.get('messages')
 					@renderMessage message
@@ -231,7 +231,7 @@ define([
 					return
 				$.ajax
 					type: 'PUT'
-					url: "/ws/messaging/block/#{recipient.username}"
+					url: "ws/messaging/block/#{recipient.username}"
 					success: () =>
 						currentUser.get('settings').blockedUsers.push {name: recipient.name, username: recipient.username}
 						@$('.block').hide()

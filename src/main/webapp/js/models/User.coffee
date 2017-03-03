@@ -8,7 +8,7 @@ define([
 
 			url: () ->
 				username = @get 'username'
-				return "/ws/user/#{username}"
+				return "ws/user/#{username}"
 
 			isNew: () ->
 				if @get('id')

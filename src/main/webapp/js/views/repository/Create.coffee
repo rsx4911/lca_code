@@ -17,7 +17,7 @@ define([
 			loadGroups: (callback) ->
 				$.ajax
 					type: 'GET'
-					url: '/ws/group?onlyIfCanWrite=true'
+					url: 'ws/group?onlyIfCanWrite=true'
 					success: (result) =>
 						options = []
 						options.push currentUser.get 'username'

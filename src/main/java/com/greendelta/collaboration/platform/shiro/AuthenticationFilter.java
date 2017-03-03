@@ -18,16 +18,14 @@ public class AuthenticationFilter extends UserFilter {
 	private Provider<CloudSession> sessionProvider;
 
 	@Override
-	protected boolean onAccessDenied(ServletRequest request,
-			ServletResponse response) throws Exception {
+	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
 		try {
 			HttpServletRequest httpRequest = WebUtils.toHttp(request);
 			HttpServletResponse httpResponse = WebUtils.toHttp(response);
-			boolean isWebServiceUrl = httpRequest.getRequestURL().toString()
-					.contains("/ws/");
+			boolean isWebServiceUrl = httpRequest.getRequestURL().toString().contains("/ws/");
 			if (!isWebServiceUrl) {
 				sessionProvider.get().redirectUrl = httpRequest.getRequestURI();
-				httpResponse.sendRedirect("/login");
+				httpResponse.sendRedirect(request.getServletContext().getContextPath() + "/login");
 			} else {
 				httpResponse.reset();
 				httpResponse.setStatus(401);

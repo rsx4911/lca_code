@@ -32,7 +32,7 @@ define([
 		uploadData: (type, id, formData) ->
 			$.ajax
 				type: 'PUT'
-				url: "/ws/#{type}/avatar/#{id}"
+				url: "ws/#{type}/avatar/#{id}"
 				data: formData
 				processData: false
 				contentType: false

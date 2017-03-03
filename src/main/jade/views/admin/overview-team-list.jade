@@ -1,5 +1,5 @@
 include ../mixins/paging.jade
 
 each team in data
-	div: a.follow(href='/administration/team/profile/#{team.teamname}')=team.name
+	div: a.follow(href='administration/team/profile/#{team.teamname}')=team.name
 +paging(page, pageCount)
