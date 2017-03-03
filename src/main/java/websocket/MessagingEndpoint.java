@@ -51,15 +51,11 @@ public class MessagingEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config) {
-		log.info("Entering MessagingEndpoint.onOpen");
 		User user = getUser(config);
 		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
-		if (wasConnected || !user.settings.showOnlineStatus) {
-			log.info("Exiting MessagingEndpoint.onOpen");
+		if (wasConnected || !user.settings.showOnlineStatus) 
 			return;
-		}
 		notifyConnected(session, user);
-		log.info("Exiting MessagingEndpoint.onOpen");
 	}
 
 	private User getUser(EndpointConfig config) {
@@ -85,7 +81,6 @@ public class MessagingEndpoint {
 
 	@OnMessage
 	public void onMessage(String value, Session session) {
-		log.info("Entering MessagingEndpoint.onMessage");
 		Gson gson = new Gson();
 		Event event = gson.fromJson(value, Event.class);
 		switch (event.type) {
@@ -101,7 +96,6 @@ public class MessagingEndpoint {
 		default:
 			break;
 		}
-		log.info("Exiting MessagingEndpoint.onMessage");
 	}
 
 	private void onNewMessage(Session session, NewMessage data) {
@@ -198,26 +192,18 @@ public class MessagingEndpoint {
 
 	@OnClose
 	public void onClose(Session session) {
-		log.info("Entering MessagingEndpoint.onClose");
 		String username = Collections.remove(online, session.getId());
-		if (username == null) {
-			log.info("Exiting MessagingEndpoint.onClose");
+		if (username == null) 
 			return;
-		}
 		User pinged = userService.getForUsername(username);
-		if (!pinged.settings.showOnlineStatus) {
-			log.info("Exiting MessagingEndpoint.onClose");
+		if (!pinged.settings.showOnlineStatus) 
 			return;
-		}
 		broadcast(session, new Event(EventType.DISCONNECTED, username));
-		log.info("Exiting MessagingEndpoint.onClose");
 	}
 
 	@OnError
 	public void onError(Session session, Throwable throwable) {
-		log.info("Entering MessagingEndpoint.onError");
-		log.info(throwable.getClass().getCanonicalName() + ": " + throwable.getMessage());
-		log.info("Exiting MessagingEndpoint.onError");
+		log.info(throwable.getClass().getCanonicalName() + ": " + throwable.getMessage(), throwable);
 	}
 
 	private void broadcast(Session session, Event event) {
