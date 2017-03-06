@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -66,7 +65,7 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.DELETE);
 	}
 
-	public boolean canEditMembers(String groupOrRepo) {
+	public boolean canEditMembersOf(String groupOrRepo) {
 		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
@@ -76,28 +75,14 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.EDIT_MEMBERS);
 	}
 
-	public boolean canCreateRepository(String groupOrRepo) {
+	public boolean canCreateRepositoryIn(String group) {
 		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
-		if (isOwnNamespace(user, groupOrRepo))
+		if (isOwnNamespace(user, group))
 			return user.settings.canCreateRepositories;
-		Role role = membershipService.getRole(user, groupOrRepo);
+		Role role = membershipService.getRole(user, group);
 		return role.getPermissions().contains(Permission.WRITE);
-	}
-
-	public boolean canRead(Comment comment) {
-		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
-		canRead(comment.repositoryPath);
-		if (!comment.restrictedTo.isEmpty())
-			return comment.restrictedTo.contains(user);
-		if (comment.restrictedToRole != null) {
-			Role role = membershipService.getRole(user, comment.repositoryPath);
-			return comment.restrictedToRole == role;
-		}
-		return true;
 	}
 	
 	private boolean isOwnNamespace(User user, String groupOrRepo) {

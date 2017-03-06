@@ -281,7 +281,7 @@ public class MembershipService {
 	}
 
 	private void checkCanEdit(String path) {
-		if (!accessService.canEditMembers(path))
+		if (!accessService.canEditMembersOf(path))
 			throw new UnauthorizedAccessException(path, "CHANGE_ROLE");
 	}
 

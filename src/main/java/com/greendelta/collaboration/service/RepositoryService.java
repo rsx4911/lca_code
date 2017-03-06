@@ -64,7 +64,7 @@ public class RepositoryService {
 
 	public Repository create(String group, String name) {
 		User currentUser = userService.getCurrentUser();
-		if (!accessService.canCreateRepository(group))
+		if (!accessService.canCreateRepositoryIn(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
@@ -76,7 +76,7 @@ public class RepositoryService {
 	public boolean move(Repository repo, String group, String name) {
 		if (!accessService.canMove(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MOVE");
-		if (!accessService.canCreateRepository(group))
+		if (!accessService.canCreateRepositoryIn(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
 		if (!accessService.canDelete(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "DELETE");

@@ -130,7 +130,7 @@ public class RepositoryResource {
 		mappedRepo.put("userCanWrite", accessService.canWrite(repo.toId()));
 		mappedRepo.put("userCanMove", accessService.canMove(repo.toId()));
 		mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
-		mappedRepo.put("userCanEditMembers", accessService.canEditMembers(repo.toId()));
+		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(repo.toId()));
 		return Respond.ok(mappedRepo);
 	}
 
