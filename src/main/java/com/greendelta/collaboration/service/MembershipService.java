@@ -20,12 +20,13 @@ import com.greendelta.collaboration.model.User;
 public class MembershipService {
 
 	private final Dao<Membership> dao;
-	private final UserService userService;
+	private final AccessService accessService;
 
 	@Inject
 	public MembershipService(Dao<Membership> dao, UserService userService) {
 		this.dao = dao;
-		this.userService = userService;
+		// cannot inject access service - would result in a dependency loop
+		this.accessService = new AccessService(userService, this);
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {
@@ -278,11 +279,9 @@ public class MembershipService {
 			checkCanEdit(member.memberOf);
 		}
 	}
-	
+
 	private void checkCanEdit(String path) {
-		User currentUser = userService.getCurrentUser();
-		// cannot inject access service - would result in a dependency loop
-		if (!new AccessService(this).canEditMembers(currentUser, path))
+		if (!accessService.canEditMembers(path))
 			throw new UnauthorizedAccessException(path, "CHANGE_ROLE");
 	}
 

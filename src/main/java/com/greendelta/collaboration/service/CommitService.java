@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.model.User;
 
 public class CommitService {
 
@@ -45,8 +44,7 @@ public class CommitService {
 	}
 
 	public String put(Repository repo, InputStream data) {
-		User currentUser = userService.getCurrentUser();
-		if (!accessService.canWrite(currentUser, repo.toId()))
+		if (!accessService.canWrite(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
 		Path dir = null;
 		CommitReader reader = null;

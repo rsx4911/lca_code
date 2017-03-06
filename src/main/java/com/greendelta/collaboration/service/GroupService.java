@@ -39,8 +39,7 @@ public class GroupService {
 	public boolean exists(String group) {
 		if (!new File(getPath(group)).exists())
 			return false;
-		User currentUser = userService.getCurrentUser();
-		if (!accessService.canRead(currentUser, group))
+		if (!accessService.canRead(group))
 			throw new UnauthorizedAccessException(group, "READ");
 		return true;
 	}
@@ -72,8 +71,7 @@ public class GroupService {
 	public boolean delete(String group) {
 		if (!exists(group))
 			return false;
-		User currentUser = userService.getCurrentUser();
-		if (!accessService.canDelete(currentUser, group))
+		if (!accessService.canDelete(group))
 			throw new UnauthorizedAccessException(group, "DELETE");
 		File groupDir = new File(getPath(group));
 		for (File repo : groupDir.listFiles())
@@ -97,8 +95,7 @@ public class GroupService {
 	}
 
 	public void setAvatar(String group, InputStream file) {
-		User currentUser = userService.getCurrentUser();
-		if (!accessService.canWrite(currentUser, group))
+		if (!accessService.canWrite(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
 		File avatarFile = new File(root, group + File.separator + "avatar");
 		if (file != null)
@@ -124,11 +121,10 @@ public class GroupService {
 	private List<String> getAll(boolean adminArea) {
 		File root = new File(this.root);
 		List<String> groups = new ArrayList<>();
-		User currentUser = userService.getCurrentUser();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
-			if (!accessService.canRead(currentUser, group.getName(), !adminArea))
+			if (!accessService.canRead(group.getName(), !adminArea))
 				continue;
 			if (isUserNamespace(group.getName()))
 				continue;

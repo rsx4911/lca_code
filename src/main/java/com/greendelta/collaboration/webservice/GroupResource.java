@@ -22,13 +22,11 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.NotificationService;
-import com.greendelta.collaboration.service.PagedResult;
-import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.util.Names;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -37,15 +35,12 @@ import com.sun.jersey.multipart.FormDataParam;
 public class GroupResource {
 
 	private final GroupService service;
-	private final UserService userService;
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 
 	@Inject
-	public GroupResource(GroupService service, UserService userService, AccessService accessService,
-			NotificationService notificationService) {
+	public GroupResource(GroupService service, AccessService accessService, NotificationService notificationService) {
 		this.service = service;
-		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 	}
@@ -76,10 +71,9 @@ public class GroupResource {
 		if (!service.exists(name) || service.isUserNamespace(name))
 			return Respond.notFound("Group " + name + " not found");
 		Map<String, Object> group = new HashMap<>();
-		User currentUser = userService.getCurrentUser();
-		group.put("userCanDelete", accessService.canDelete(currentUser, name));
-		group.put("userCanWrite", accessService.canWrite(currentUser, name));
-		group.put("userCanEditMembers", accessService.canEditMembers(currentUser, name));
+		group.put("userCanDelete", accessService.canDelete(name));
+		group.put("userCanWrite", accessService.canWrite(name));
+		group.put("userCanEditMembers", accessService.canEditMembers(name));
 		return Respond.ok(group);
 	}
 
@@ -88,11 +82,10 @@ public class GroupResource {
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
 		PagedResult<String> result = service.getAll(page, filter, true);
-		User currentUser = userService.getCurrentUser();
 		return Respond.ok(result.toClient((groups) -> {
 			List<Map<String, Object>> maps = new ArrayList<>();
 			for (String group : groups)
-				if (!onlyIfCanWrite || accessService.canWrite(currentUser, group))
+				if (!onlyIfCanWrite || accessService.canWrite(group))
 					maps.add(Collections.singletonMap("name", group));
 			return maps;
 		}));

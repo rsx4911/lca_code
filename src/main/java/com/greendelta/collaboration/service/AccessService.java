@@ -3,24 +3,28 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 
 public class AccessService {
 
+	private final UserService userService;
 	private final MembershipService membershipService;
 
 	@Inject
-	public AccessService(MembershipService membershipService) {
+	public AccessService(UserService userService, MembershipService membershipService) {
+		this.userService = userService;
 		this.membershipService = membershipService;
 	}
 
-	public boolean canRead(User user, String groupOrRepo) {
-		return canRead(user, groupOrRepo, false);
+	public boolean canRead(String groupOrRepo) {
+		return canRead(groupOrRepo, false);
 	}
 
-	public boolean canRead(User user, String groupOrRepo, boolean ignoreAdmin) {
+	public boolean canRead(String groupOrRepo, boolean ignoreAdmin) {
+		User user = userService.getCurrentUser();
 		if (!ignoreAdmin && user.admin)
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
@@ -32,7 +36,8 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.READ);
 	}
 
-	public boolean canWrite(User user, String groupOrRepo) {
+	public boolean canWrite(String groupOrRepo) {
+		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
@@ -41,7 +46,8 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.WRITE);
 	}
 
-	public boolean canMove(User user, String groupOrRepo) {
+	public boolean canMove(String groupOrRepo) {
+		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
 		if (isGroup(groupOrRepo))
@@ -50,7 +56,8 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.MOVE);
 	}
 
-	public boolean canDelete(User user, String groupOrRepo) {
+	public boolean canDelete(String groupOrRepo) {
+		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
@@ -59,7 +66,8 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.DELETE);
 	}
 
-	public boolean canEditMembers(User user, String groupOrRepo) {
+	public boolean canEditMembers(String groupOrRepo) {
+		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
@@ -68,7 +76,8 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.EDIT_MEMBERS);
 	}
 
-	public boolean canCreateRepository(User user, String groupOrRepo) {
+	public boolean canCreateRepository(String groupOrRepo) {
+		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
@@ -77,6 +86,20 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.WRITE);
 	}
 
+	public boolean canRead(Comment comment) {
+		User user = userService.getCurrentUser();
+		if (user.admin)
+			return true;
+		canRead(comment.repositoryPath);
+		if (!comment.restrictedTo.isEmpty())
+			return comment.restrictedTo.contains(user);
+		if (comment.restrictedToRole != null) {
+			Role role = membershipService.getRole(user, comment.repositoryPath);
+			return comment.restrictedToRole == role;
+		}
+		return true;
+	}
+	
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equals(user.username);
