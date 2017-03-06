@@ -14,12 +14,15 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Notification;
+import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
-import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.TeamService;
+import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.webservice.Respond;
@@ -31,17 +34,21 @@ import com.greendelta.collaboration.webservice.util.Users;
 public class UserResource {
 
 	private final UserService service;
+	private final TeamService teamService;
 	private final GroupService groupService;
 	private final RepositoryService repoService;
 	private final NotificationService notificationService;
+	private final MembershipService memberService;
 
 	@Inject
-	public UserResource(UserService service, GroupService groupService, RepositoryService repoService,
-			NotificationService notificationService) {
+	public UserResource(UserService service, TeamService teamService, GroupService groupService,
+			RepositoryService repoService, NotificationService notificationService, MembershipService memberService) {
 		this.service = service;
+		this.teamService = teamService;
 		this.groupService = groupService;
 		this.repoService = repoService;
 		this.notificationService = notificationService;
+		this.memberService = memberService;
 	}
 
 	@POST
@@ -80,7 +87,11 @@ public class UserResource {
 			return Respond.notFound();
 		NotificationJob notification = notificationService.userDeleted(user);
 		repoService.deleteAllFor(user);
-		service.delete(user.getId());
+		for (Team team : teamService.getTeamsFor(user)) {
+			teamService.removeMember(user, team);
+		}
+		memberService.removeMemberships(user);
+		service.delete(user);
 		notification.send();
 		return Respond.ok(new HashMap<>());
 	}

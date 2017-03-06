@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openlca.cloud.error.UnauthorizedAccessException;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Membership;
@@ -18,13 +20,16 @@ import com.greendelta.collaboration.model.User;
 public class MembershipService {
 
 	private final Dao<Membership> dao;
+	private final UserService userService;
 
 	@Inject
-	public MembershipService(Dao<Membership> dao) {
+	public MembershipService(Dao<Membership> dao, UserService userService) {
 		this.dao = dao;
+		this.userService = userService;
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {
+		checkCanEdit(groupOrRepo);
 		if (getDirectMembership(user, groupOrRepo) != null)
 			return false;
 		Membership member = new Membership();
@@ -36,6 +41,7 @@ public class MembershipService {
 	}
 
 	public boolean addMemberships(Team team, String groupOrRepo, Role role) {
+		checkCanEdit(groupOrRepo);
 		boolean added = false;
 		for (User user : team.users)
 			added = addMembership(user, team, groupOrRepo, role) || added;
@@ -46,6 +52,7 @@ public class MembershipService {
 	public boolean addMemberships(User user, Team team) {
 		boolean added = false;
 		List<Membership> all = getMemberships(team);
+		checkCanEdit(all);
 		Set<String> addedFor = new HashSet<>();
 		for (Membership member : all) {
 			String groupOrRepo = member.memberOf;
@@ -72,6 +79,7 @@ public class MembershipService {
 	}
 
 	public boolean removeMembership(User user, String groupOrRepo) {
+		checkCanEdit(groupOrRepo);
 		Membership member = getDirectMembership(user, groupOrRepo);
 		if (member == null)
 			return false;
@@ -83,6 +91,7 @@ public class MembershipService {
 		List<Membership> members = getMemberships(user);
 		if (members.isEmpty())
 			return false;
+		checkCanEdit(members);
 		dao.delete(members);
 		return true;
 	}
@@ -91,6 +100,7 @@ public class MembershipService {
 		List<Membership> members = getMemberships(team);
 		if (members.isEmpty())
 			return false;
+		checkCanEdit(members);
 		dao.delete(members);
 		return true;
 	}
@@ -99,11 +109,13 @@ public class MembershipService {
 		List<Membership> members = getMemberships(user, team);
 		if (members.isEmpty())
 			return false;
+		checkCanEdit(members);
 		dao.delete(members);
 		return true;
 	}
 
 	public boolean removeMemberships(String groupOrRepo) {
+		checkCanEdit(groupOrRepo);
 		List<Membership> members = getMemberships(groupOrRepo);
 		if (members.isEmpty())
 			return false;
@@ -112,6 +124,7 @@ public class MembershipService {
 	}
 
 	public boolean removeMemberships(Team team, String groupOrRepo) {
+		checkCanEdit(groupOrRepo);
 		List<Membership> members = getMemberships(team, groupOrRepo);
 		if (members.isEmpty())
 			return false;
@@ -120,6 +133,7 @@ public class MembershipService {
 	}
 
 	public boolean setRole(User user, String groupOrRepo, Role role) {
+		checkCanEdit(groupOrRepo);
 		if (role == Role.NONE)
 			return false;
 		Membership member = getDirectMembership(user, groupOrRepo);
@@ -131,6 +145,7 @@ public class MembershipService {
 	}
 
 	public boolean setRole(Team team, String groupOrRepo, Role role) {
+		checkCanEdit(groupOrRepo);
 		boolean updated = false;
 		for (User user : team.users)
 			updated = setRole(user, team, groupOrRepo, role) || updated;
@@ -256,6 +271,19 @@ public class MembershipService {
 		attributes.put("memberOf", groupOrRepo);
 		attributes.put("team", team);
 		return dao.getForAttributes(attributes);
+	}
+
+	private void checkCanEdit(List<Membership> members) {
+		for (Membership member : members) {
+			checkCanEdit(member.memberOf);
+		}
+	}
+	
+	private void checkCanEdit(String path) {
+		User currentUser = userService.getCurrentUser();
+		// cannot inject access service - would result in a dependency loop
+		if (!new AccessService(this).canEditMembers(currentUser, path))
+			throw new UnauthorizedAccessException(path, "CHANGE_ROLE");
 	}
 
 }

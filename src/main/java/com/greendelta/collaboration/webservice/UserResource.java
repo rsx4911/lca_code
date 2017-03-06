@@ -24,12 +24,13 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
+import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
@@ -45,14 +46,16 @@ public class UserResource {
 	private final TeamService teamService;
 	private final RepositoryService repoService;
 	private final NotificationService notificationService;
+	private final MembershipService memberService;
 
 	@Inject
-	public UserResource(UserService service, TeamService teamService,
-			RepositoryService repoService, NotificationService notificationService) {
+	public UserResource(UserService service, TeamService teamService, RepositoryService repoService,
+			NotificationService notificationService, MembershipService memberService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.notificationService = notificationService;
 		this.teamService = teamService;
+		this.memberService = memberService;
 	}
 
 	@GET
@@ -142,7 +145,11 @@ public class UserResource {
 			return Respond.notFound();
 		NotificationJob notification = notificationService.userDeleted(user);
 		repoService.deleteAllFor(user);
-		service.delete(user.getId());
+		for (Team team : teamService.getTeamsFor(user)) {
+			teamService.removeMember(user, team);
+		}
+		memberService.removeMemberships(user);
+		service.delete(user);
 		notification.send();
 		service.logout();
 		return Respond.ok(new HashMap<>());
