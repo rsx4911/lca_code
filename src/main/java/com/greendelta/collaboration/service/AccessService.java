@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -76,18 +75,6 @@ public class AccessService {
 			return user.settings.canCreateRepositories;
 		Role role = membershipService.getRole(user, groupOrRepo);
 		return role.getPermissions().contains(Permission.WRITE);
-	}
-
-	public boolean canAccess(User user, Comment comment) {
-		if (user.admin)
-			return true;
-		if (!comment.restrictedTo.isEmpty())
-			return comment.restrictedTo.contains(user);
-		if (comment.restrictedToRole != null) {
-			Role role = membershipService.getRole(user, comment.repositoryPath);
-			return comment.restrictedToRole == role;
-		}
-		return true;
 	}
 
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
