@@ -3,6 +3,7 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -45,13 +46,13 @@ public class AccessService {
 		return role.getPermissions().contains(Permission.WRITE);
 	}
 
-	public boolean canMove(String groupOrRepo) {
+	public boolean canMove(String repository) {
 		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
-		if (isGroup(groupOrRepo))
+		if (isGroup(repository))
 			return false; // can not move groups
-		Role role = membershipService.getRole(user, groupOrRepo);
+		Role role = membershipService.getRole(user, repository);
 		return role.getPermissions().contains(Permission.MOVE);
 	}
 
@@ -84,7 +85,34 @@ public class AccessService {
 		Role role = membershipService.getRole(user, group);
 		return role.getPermissions().contains(Permission.WRITE);
 	}
-	
+
+	public boolean canRead(Comment comment) {
+		User user = userService.getCurrentUser();
+		if (user.admin)
+			return true;
+		if (comment.user.equals(user))
+			return true;
+		if (!canRead(comment.repositoryPath))
+			return false;
+		if (!comment.restrictedTo.isEmpty())
+			return comment.restrictedTo.contains(user);
+		if (comment.restrictedToRole != null) {
+			Role role = membershipService.getRole(user, comment.repositoryPath);
+			return comment.restrictedToRole == role;
+		}
+		return true;
+	}
+
+	public boolean canCommentIn(String repositoryPath) {
+		User user = userService.getCurrentUser();
+		if (user.admin)
+			return true;
+		if (!canRead(repositoryPath))
+			return false;
+		Role role = membershipService.getRole(user, repositoryPath);
+		return role.getPermissions().contains(Permission.COMMENT);
+	}
+
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equals(user.username);
