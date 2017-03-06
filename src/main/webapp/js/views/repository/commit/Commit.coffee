@@ -5,8 +5,8 @@ define([
 				'cs!utils/Format'
 				'cs!utils/Icons'
 				'cs!utils/Renderer'
-				'templates/views/repository/commit'
-				'templates/views/repository/commit-references'
+				'templates/views/repository/commit/commit'
+				'templates/views/repository/commit/commit-references'
 			]
 
 	(Backbone, Events, Filter, Format, Icons, Renderer, template, refTemplate) ->

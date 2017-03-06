@@ -1,5 +1,5 @@
 define([
-				'cs!views/repository/util/DatasetSort'
+				'cs!views/repository/dataset/DatasetSort'
 				'cs!utils/Allocation'
 				'cs!utils/RiskLevel'
 			]

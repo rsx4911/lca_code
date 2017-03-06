@@ -7,8 +7,8 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
-				'templates/views/repository/datasets'
-				'templates/views/repository/datasets-entries'
+				'templates/views/repository/dataset/datasets'
+				'templates/views/repository/dataset/datasets-entries'
 			]
 
 	(Backbone, Moment, Events, Filter, Icons, Layers, ModelTypes, Renderer, template, entriesTemplate) ->

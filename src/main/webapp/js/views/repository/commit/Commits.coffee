@@ -4,7 +4,7 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Renderer'
-				'templates/views/repository/commits'
+				'templates/views/repository/commit/commits'
 			]
 
 	(Backbone, moment, Events, Format, Renderer, template) ->

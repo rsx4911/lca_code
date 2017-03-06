@@ -1,7 +1,7 @@
 define([
 				'cs!utils/DataQuality'
 				'cs!utils/Layers'
-				'cs!views/repository/util/DatasetSort'
+				'cs!views/repository/dataset/DatasetSort'
 			]
 
 	(DataQuality, Layers, Sort) ->
@@ -14,7 +14,7 @@ define([
 					Sort.indicatorsAndScores system
 					Layers.showTemplateInLayer
 						title: 'Data quality'
-						template: 'repository/model/data-quality-entry'
+						template: 'repository/model/dataset/data-quality-entry'
 						dialogType: 'modal-large'
 						model: 
 							system: system

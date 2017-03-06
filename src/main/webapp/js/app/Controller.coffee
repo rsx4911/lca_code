@@ -211,7 +211,7 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryId) -> @showView 
-					view: 'repository/Datasets'
+					view: 'repository/dataset/Datasets'
 					title: "#{group}/#{name} | Data sets"
 					nav: 
 						type: 'repository'
@@ -221,7 +221,7 @@ define([
 						repository: new Repository({group: group, name: name})
 						categoryId: categoryId
 				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId) -> @showView 
-					view: 'repository/Dataset'
+					view: 'repository/dataset/Dataset'
 					title: "#{group}/#{name} | Data sets"
 					nav: 
 						type: 'repository'
@@ -233,7 +233,7 @@ define([
 						refId: refId
 						commitId: commitId
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
-					view: 'repository/Commits'
+					view: 'repository/commit/Commits'
 					title: "#{group}/#{name} | Commits"
 					nav: 
 						type: 'repository'
@@ -242,7 +242,7 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryCommit', (group, name, commitId) -> @showView 
-					view: 'repository/Commit'
+					view: 'repository/commit/Commit'
 					title: "#{group}/#{name} | Commits"
 					nav: 
 						type: 'repository'
