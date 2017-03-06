@@ -132,12 +132,11 @@ public class RepositoryResource {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
 		User currentUser = userService.getCurrentUser();
-		mappedRepo.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, repo.toId()));
-		mappedRepo.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, repo.toId()));
-		mappedRepo.put("userCanMove", currentUser.admin || accessService.canMove(currentUser, repo.toId()));
-		mappedRepo.put("userCanClone", currentUser.admin || accessService.canWrite(currentUser, repo.group));
-		mappedRepo.put("userCanEditMembers",
-				currentUser.admin || accessService.canEditMembers(currentUser, repo.toId()));
+		mappedRepo.put("userCanDelete", accessService.canDelete(currentUser, repo.toId()));
+		mappedRepo.put("userCanWrite", accessService.canWrite(currentUser, repo.toId()));
+		mappedRepo.put("userCanMove", accessService.canMove(currentUser, repo.toId()));
+		mappedRepo.put("userCanClone", accessService.canWrite(currentUser, repo.group));
+		mappedRepo.put("userCanEditMembers", accessService.canEditMembers(currentUser, repo.toId()));
 		return Respond.ok(mappedRepo);
 	}
 

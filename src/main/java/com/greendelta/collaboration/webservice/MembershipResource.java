@@ -166,7 +166,7 @@ public class MembershipResource {
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canEditMembers(currentUser, path))
+		if (!accessService.canEditMembers(currentUser, path))
 			throw new UnauthorizedAccessException(path, "CHANGE_ROLE");
 		return path;
 	}

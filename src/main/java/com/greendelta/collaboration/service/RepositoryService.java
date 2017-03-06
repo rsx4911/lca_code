@@ -54,7 +54,7 @@ public class RepositoryService {
 	public Repository get(String group, String name) {
 		Repository repo = Repository.get(root, group, name);
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canRead(currentUser, repo.toId()))
+		if (!accessService.canRead(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
 	}
@@ -65,7 +65,7 @@ public class RepositoryService {
 
 	public Repository create(String group, String name) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canCreateRepository(currentUser, group))
+		if (!accessService.canCreateRepository(currentUser, group))
 			throw new UnauthorizedAccessException(group, "WRITE");
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
@@ -76,11 +76,11 @@ public class RepositoryService {
 
 	public boolean move(Repository repo, String group, String name) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canMove(currentUser, repo.toId()))
+		if (!accessService.canMove(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MOVE");
-		if (!currentUser.admin && !accessService.canCreateRepository(currentUser, group))
+		if (!accessService.canCreateRepository(currentUser, group))
 			throw new UnauthorizedAccessException(group, "WRITE");
-		if (!currentUser.admin && !accessService.canDelete(currentUser, repo.toId()))
+		if (!accessService.canDelete(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
 		if (exists(group, name))
 			return false;
@@ -110,7 +110,7 @@ public class RepositoryService {
 
 	public boolean cloneContents(Repository from, Repository to, List<Commit> commits) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canWrite(currentUser, to.group))
+		if (!accessService.canWrite(currentUser, to.group))
 			throw new UnauthorizedAccessException(to.group, "WRITE");
 		try {
 			for (ModelType type : ModelType.values()) {
@@ -219,7 +219,7 @@ public class RepositoryService {
 
 	public void delete(Repository repo) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canDelete(currentUser, repo.toId()))
+		if (!accessService.canDelete(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
 		membershipService.removeMemberships(repo.toId());
 		Directories.delete(new File(getPath(repo.group, repo.name)));
@@ -254,7 +254,6 @@ public class RepositoryService {
 		File root = new File(this.root);
 		List<Repository> repos = new ArrayList<>();
 		User currentUser = userService.getCurrentUser();
-		boolean isAdmin = adminArea && currentUser.admin;
 		for (File group : root.listFiles()) {
 			if (group.listFiles() == null)
 				continue;
@@ -263,7 +262,7 @@ public class RepositoryService {
 					continue;
 				try {
 					Repository repo = Repository.get(this.root, group.getName(), name.getName());
-					if (!isAdmin && !accessService.canRead(currentUser, repo.toId()))
+					if (!accessService.canRead(currentUser, repo.toId(), !adminArea))
 						continue;
 					repos.add(repo);
 				} catch (UnsupportedSchemaException e) {
@@ -293,7 +292,7 @@ public class RepositoryService {
 	public void setAvatar(String group, String name, InputStream file) {
 		User currentUser = userService.getCurrentUser();
 		String repoId = Repository.toId(group, name);
-		if (!currentUser.admin && !accessService.canWrite(currentUser, repoId))
+		if (!accessService.canWrite(currentUser, repoId))
 			throw new UnauthorizedAccessException(Repository.toId(group, name), "WRITE");
 		File avatarFile = get(group, name).getAvatarFile();
 		if (file != null)

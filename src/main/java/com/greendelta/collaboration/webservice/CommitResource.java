@@ -51,7 +51,7 @@ public class CommitResource {
 			@PathParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canWrite(currentUser, repo.toId()))
+		if (!accessService.canWrite(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");

@@ -77,9 +77,9 @@ public class GroupResource {
 			return Respond.notFound("Group " + name + " not found");
 		Map<String, Object> group = new HashMap<>();
 		User currentUser = userService.getCurrentUser();
-		group.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, name));
-		group.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, name));
-		group.put("userCanEditMembers", currentUser.admin || accessService.canEditMembers(currentUser, name));
+		group.put("userCanDelete", accessService.canDelete(currentUser, name));
+		group.put("userCanWrite", accessService.canWrite(currentUser, name));
+		group.put("userCanEditMembers", accessService.canEditMembers(currentUser, name));
 		return Respond.ok(group);
 	}
 
@@ -92,7 +92,7 @@ public class GroupResource {
 		return Respond.ok(result.toClient((groups) -> {
 			List<Map<String, Object>> maps = new ArrayList<>();
 			for (String group : groups)
-				if (!onlyIfCanWrite || currentUser.admin || accessService.canWrite(currentUser, group))
+				if (!onlyIfCanWrite || accessService.canWrite(currentUser, group))
 					maps.add(Collections.singletonMap("name", group));
 			return maps;
 		}));

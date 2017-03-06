@@ -46,7 +46,7 @@ public class CommitService {
 
 	public String put(Repository repo, InputStream data) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canWrite(currentUser, repo.toId()))
+		if (!accessService.canWrite(currentUser, repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
 		Path dir = null;
 		CommitReader reader = null;

@@ -3,6 +3,7 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -17,6 +18,12 @@ public class AccessService {
 	}
 
 	public boolean canRead(User user, String groupOrRepo) {
+		return canRead(user, groupOrRepo, false);
+	}
+
+	public boolean canRead(User user, String groupOrRepo, boolean ignoreAdmin) {
+		if (!ignoreAdmin && user.admin)
+			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
 		if (isGroup(groupOrRepo))
@@ -27,6 +34,8 @@ public class AccessService {
 	}
 
 	public boolean canWrite(User user, String groupOrRepo) {
+		if (user.admin)
+			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
 		Role role = membershipService.getRole(user, groupOrRepo);
@@ -34,13 +43,17 @@ public class AccessService {
 	}
 
 	public boolean canMove(User user, String groupOrRepo) {
+		if (user.admin)
+			return true;
 		if (isGroup(groupOrRepo))
 			return false; // can not move groups
 		Role role = membershipService.getRole(user, groupOrRepo);
 		return role.getPermissions().contains(Permission.MOVE);
 	}
-	
+
 	public boolean canDelete(User user, String groupOrRepo) {
+		if (user.admin)
+			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
 		Role role = membershipService.getRole(user, groupOrRepo);
@@ -48,6 +61,8 @@ public class AccessService {
 	}
 
 	public boolean canEditMembers(User user, String groupOrRepo) {
+		if (user.admin)
+			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
 		Role role = membershipService.getRole(user, groupOrRepo);
@@ -55,10 +70,24 @@ public class AccessService {
 	}
 
 	public boolean canCreateRepository(User user, String groupOrRepo) {
+		if (user.admin)
+			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return user.settings.canCreateRepositories;
 		Role role = membershipService.getRole(user, groupOrRepo);
 		return role.getPermissions().contains(Permission.WRITE);
+	}
+
+	public boolean canAccess(User user, Comment comment) {
+		if (user.admin)
+			return true;
+		if (!comment.restrictedTo.isEmpty())
+			return comment.restrictedTo.contains(user);
+		if (comment.restrictedToRole != null) {
+			Role role = membershipService.getRole(user, comment.repositoryPath);
+			return comment.restrictedToRole == role;
+		}
+		return true;
 	}
 
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
