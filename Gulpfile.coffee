@@ -101,9 +101,9 @@ gulp.task 'addTimestampToIndex', () ->
 	# replace styles.css and main.js with timestamp filename
 	gulp.src('./src/main/webapp/index.html')
 		.pipe(insert.transform (contents) ->
-			content = contents.replace('href="/css/styles.css"', 'href="/css/styles' + timestamp + '.css"')
-			content = content.replace(' data-main="/js/main"', '')
-			content = content.replace('src="/js/libs/require.js"', 'src="/js/main' + timestamp + '.js"')
+			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
+			content = content.replace(' data-main="js/main"', '')
+			content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"')
 			return content
 		)
 		.pipe gulp.dest './target/require-build'
@@ -112,7 +112,7 @@ gulp.task 'addTimestampToLogin', () ->
 	# replace styles-login.css with timestamp filename
 	gulp.src('./src/main/webapp/login.html')
 		.pipe(insert.transform (contents) ->
-			content = contents.replace('href="/css/styles.css"', 'href="/css/styles' + timestamp + '.css"')
+			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
 			return content
 		)
@@ -122,7 +122,7 @@ gulp.task 'addTimestampToImprint', () ->
 	# replace styles-login.css with timestamp filename
 	gulp.src('./src/main/webapp/imprint.html')
 		.pipe(insert.transform (contents) ->
-			content = contents.replace('href="/css/styles.css"', 'href="/css/styles' + timestamp + '.css"')
+			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
 			return content
 		)
