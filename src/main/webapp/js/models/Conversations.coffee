@@ -21,7 +21,7 @@ define([
 				unless window.WebSocket
 					return
 				loc = window.location
-				schema = if loc.protocol is 'https' then 'wss' else 'ws'
+				schema = if loc.protocol is 'https' or loc.protocol is 'https:' then 'wss' else 'ws'
 				base = $('base').attr('href') or '/'
 				@socket = new WebSocket "#{schema}://#{loc.host}#{base}sockets/messaging"
 				@socket.onmessage = (msg) =>
