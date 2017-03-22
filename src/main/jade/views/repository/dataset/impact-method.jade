@@ -5,7 +5,7 @@ mixin impact-category-selection()
 		if dataset.impactCategories
 			each ic in dataset.impactCategories
 				option(id=ic.id)=ic.name
-	span#impact-category-description(data-path='description')
+	div#impact-category-description(data-path='description')
 	| Reference unit: 
 	span#impact-category-unit(data-path='referenceUnitName')
 
