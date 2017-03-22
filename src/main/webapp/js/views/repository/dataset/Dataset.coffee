@@ -6,6 +6,7 @@ define([
 				'cs!utils/Format'
 				'cs!utils/Icons'
 				'cs!utils/Layers'
+				'cs!utils/LocalStorage'
 				'cs!utils/Renderer'
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
@@ -30,7 +31,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, LocalStorage, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -141,7 +142,7 @@ define([
 							commits: commits
 							commitId: @commitId or commits[0].id
 							formatCommitDescription: Format.formatCommitDescription
-							reviewMode: true
+							reviewMode: LocalStorage.getValue('reviewMode')
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset
