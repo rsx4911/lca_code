@@ -1,13 +1,13 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.openlca.jsonld.Schema;
 
-import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
@@ -90,17 +90,16 @@ public class UpgradeService {
 		File dsFile = repo.getDatasetFile(indexEntry.type, indexEntry.refId, indexEntry.commitId, false);
 		if (dsFile == null)
 			return null;
-		String json = dataAccessor.readDataset(dsFile);
-		if (json == null)
+		byte[] data = dataAccessor.read(dsFile);
+		if (data == null || data.length == 0)
 			return null;
-		if (Strings.isNullOrEmpty(json))
-			return null;
+		String json = new String(data, Charset.forName("utf-8"));
 		return new Gson().fromJson(json, JsonObject.class);
 	}
 
 	private void putJson(Repository repo, DatasetIndexEntry indexEntry, JsonObject obj) {
 		File dsFile = repo.getDatasetFile(indexEntry.type, indexEntry.refId, indexEntry.commitId, false);
-		dataAccessor.writeDataset(dsFile, new Gson().toJson(obj));
+		dataAccessor.write(dsFile, new Gson().toJson(obj).getBytes(Charset.forName("utf-8")));
 	}
 
 	public static boolean isUpgrading() {

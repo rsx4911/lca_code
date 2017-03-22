@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,32 +16,27 @@ import org.slf4j.LoggerFactory;
 
 class DataAccessor {
 
-	private final static Charset charset = Charset.forName("utf-8");
 	private final static Logger log = LoggerFactory.getLogger(DataAccessor.class);
 
-	public void writeDataset(File file, String data) {
+	public void write(File file, byte[] data) {
 		try {
-			if (data == null)
+			file.mkdirs();
+			if (data == null || data.length == 0)
 				file.createNewFile();
 			else
-				Files.write(file.toPath(), data.getBytes(charset));
+				Files.write(file.toPath(), data);
 		} catch (IOException e) {
-			String path = file.getAbsolutePath();
-			String message = "Error writing json data to file " + path;
-			log.error(message, e);
+			log.error("Error writing json data to file " + file.getAbsolutePath(), e);
 		}
 	}
 
-	public String readDataset(File file) {
-		if (file == null)
-			return null;
-		if (!file.exists())
+	public byte[] read(File file) {
+		if (file == null || !file.exists())
 			return null;
 		if (file.length() == 0)
-			return "";
+			return new byte[0];
 		try {
-			byte[] jsonData = Files.readAllBytes(file.toPath());
-			return new String(jsonData, charset);
+			return Files.readAllBytes(file.toPath());
 		} catch (IOException e) {
 			String path = file.getAbsolutePath();
 			String message = "Error reading json data from file " + path;

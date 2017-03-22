@@ -120,7 +120,8 @@ public class Repository {
 
 	private File getDatasetDir(ModelType type, String refId, boolean create) {
 		File modelDir = getModelDir(type, create);
-		return getDir(modelDir, refId, create);
+		File intermediateDir = getDir(modelDir, refId.substring(0, 2), create);
+		return getDir(intermediateDir, refId, create);
 	}
 
 	File getModelDir(ModelType type, boolean create) {
@@ -128,8 +129,9 @@ public class Repository {
 	}
 
 	private File getBinDir(ModelType type, String refId, boolean create) {
-		File typeDir = getBinDir(type, create);
-		return getDir(typeDir, refId, create);
+		File typeBinDir = getBinDir(type, create);
+		File intermediateDir = getDir(typeBinDir, refId.substring(0, 2), create);
+		return getDir(intermediateDir, refId, create);
 	}
 
 	File getBinDir(ModelType type, boolean create) {
