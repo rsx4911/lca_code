@@ -7,6 +7,7 @@ define([
 				'cs!utils/Icons'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
+				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DataQualityLayer'
 				'cs!app/Router'
@@ -29,7 +30,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, Renderer, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -130,6 +131,7 @@ define([
 							baseUrl: "#{group}/#{name}/dataset"
 							formatDate: Format.dateTime
 							getLabel: @getLabel
+							getValue: (object, path) => @getValue object, path
 							getIcon: Icons.get
 							getTypeAsEnum: (type) => @getTypeAsEnum(type)
 							getUncertaintyLabel: @getUncertaintyLabel
@@ -139,6 +141,7 @@ define([
 							commits: commits
 							commitId: @commitId or commits[0].id
 							formatCommitDescription: Format.formatCommitDescription
+							reviewMode: true
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset
@@ -146,8 +149,10 @@ define([
 							@loadImpactCategory () =>
 								@loadNwSet () =>
 									@initTableSorting()
+									Comments.init @$el
 						else
 							@initTableSorting()
+							Comments.init @$el
 						if dataset.type is 'DQSystem'
 							@initDataQualityPopups(dataset)
 
@@ -176,6 +181,26 @@ define([
 							when 'UNIT_PROCESS' then return 'Unit process'
 							when 'LCI_RESULT' then return 'System process'
 				return ''
+
+			getValue: (object, path) ->
+				unless path
+					return null
+				if path.indexOf('.') is -1 and path.indexOf('[') is -1
+					return object[path]
+				subpath = path
+				if subpath.indexOf('.') isnt -1 
+					subpath = path.substring 0, path.indexOf('.')
+				arrayPos = null
+				if subpath.indexOf('[') isnt -1
+					arrayPos = subpath.substring(subpath.indexOf('[') + 1, subpath.indexOf(']'))
+					subpath = subpath.substring 0, subpath.indexOf('[')
+				object = object[subpath]
+				if (arrayPos and (parseInt(arrayPos) is NaN or parseInt(arrayPos) > 0)) or parseInt(arrayPos) is 0
+					object = object[arrayPos]
+				if path.indexOf('.') is -1
+					return object
+				path = path.substring path.indexOf('.') + 1
+				return @getValue object, path
 
 			isCapital: (char) ->
 				asInt = char.charCodeAt(0)
@@ -214,7 +239,8 @@ define([
 						url: "ws/public/browse/#{urlPart}/#{commitId}"
 						success: (impactCategory) =>
 							DatasetPrepare.applyTo impactCategory
-							@$('.impact-category-description').html impactCategory.description
+							@$('#impact-category-description').html impactCategory.description
+							@$('#impact-category-unit').html impactCategory.referenceUnitName
 							@$('#impact-factors tbody').empty()
 							@$('#impact-factors tbody').append impactFactorsTemplate 
 								impactCategory: impactCategory

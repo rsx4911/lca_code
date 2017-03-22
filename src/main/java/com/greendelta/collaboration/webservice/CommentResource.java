@@ -73,7 +73,7 @@ public class CommentResource {
 
 	@PUT
 	@Path("{id}")
-	public Response changeVisiblity(@PathParam("id") long id, Map<String, Object> data) {
+	public Response changeVisibility(@PathParam("id") long id, Map<String, Object> data) {
 		ObjectMap map = ObjectMap.fromMap(data);
 		Role role = parseRole(map);
 		List<User> users = parseUsers(map);

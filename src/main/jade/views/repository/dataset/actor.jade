@@ -9,19 +9,25 @@ include ./mixins.jade
 				tbody
 					+field-row('Address')
 						if dataset.address
-							div #{dataset.address}
-						if dataset.zipCode || dataset.city
-							div #{dataset.zipCode} #{dataset.city} 
-						if dataset.country
-							div #{dataset.country}
-					+field-row('Phone', dataset.telephone, true)
-					+field-row('Fax', dataset.telefax, true)
-					+field-row('Fax', dataset.telefax, true)
-					if dataset.email
+							div(data-path='address')=dataset.address
+						if dataset.zipCode || dataset.city || reviewMode
+							div 
+								span(data-path='zipCode')=dataset.zipCode
+								|  
+								span(data-path='city')=dataset.city 
+						if dataset.country || reviewMode
+							div(data-path='country') #{dataset.country}
+					+field-row('Phone', 'telephone', true)
+					+field-row('Fax', 'telefax', true)
+					if dataset.email || reviewMode
 						+field-row('Email')
-							a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
-					if dataset.website
+							span(data-path='email')
+								if dataset.email
+									a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
+					if dataset.website || reviewMode
 						+field-row('Website')
-							a(href=dataset.website target='_blank')=dataset.website
+							span(data-path='website')
+								if dataset.website
+									a(href=dataset.website target='_blank')=dataset.website
 	+meta
 	.clear

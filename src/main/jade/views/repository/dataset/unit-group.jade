@@ -7,8 +7,8 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+ref-row('Default flow property', dataset.defaultFlowProperty)
-			h4 Units
+					+ref-row('Default flow property', 'defaultFlowProperty')
+			h4(data-path='units') Units
 			table.table.units
 				thead
 					tr
@@ -21,14 +21,14 @@ include ./mixins.jade
 					each unit in dataset.units
 						if unit.referenceUnit
 							- referenceUnit = unit
-					each unit in dataset.units
+					each unit, index in dataset.units
 						tr(class=unit.referenceUnit?'reference':null)
-							td=unit.name
-							td=unit.description
-							td.comma-separated
+							td(data-path='units[' + index + '].name')=unit.name
+							td(data-path='units[' + index + '].description')=unit.description
+							td.comma-separated(data-path='units[' + index + '].synonyms')
 								if unit.synonyms
 									each synonym in unit.synonyms
 										.span #{synonym}
-							td 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
+							td(data-path='units[' + index + '].conversionFactor') 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
 	+meta
 	.clear

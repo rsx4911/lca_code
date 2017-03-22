@@ -14,18 +14,18 @@ mixin menubar()
 			span.glyphicon.glyphicon-download
 			span.text Download
 		.clear
-		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed')
+		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='')
 			|  on #{formatDate(currentCommit.timestamp)}
 
 mixin header()
 	.title
 		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
 		div
-			h3=dataset.name
-			.category
+			h3(data-path='name')=dataset.name
+			.category(data-path='category')
 				if dataset.category
 					| #{dataset.category.name}
-			h3: small: span=dataset.description
+			h3: small: span(data-path='description')=dataset.description
 	block
 	hr
 
@@ -34,42 +34,47 @@ mixin meta()
 		.meta-info
 			div
 				strong Version
-				div=dataset.version
+				div(data-path='version')=dataset.version
 			div
 				strong Last change
-				div 
+				div(data-path='lastChange')
 					if dataset.lastChange
 						| #{formatDate(dataset.lastChange)}
 					else
 						| -
 			div
 				strong UUID
-				div=dataset.id
+				div(data-path='id')=dataset.id
 			block
 
-mixin field-row(label, value, checkValue, formatter)
-	if !checkValue || value
+mixin field-row(label, path, checkValue, formatter)
+	- var value = getValue(dataset, path);
+	if !checkValue || value || reviewMode
 		tr
 			td=label
-			td #{value?formatter?formatter(value):value:''}
+			td(data-path=path) 
+				if value
+					| #{value?formatter?formatter(value):value:''}
 				block
 
-mixin ref(ref, additionalTypeInfo, noImage, defaultLabel)
-	if ref
-		if !noImage
-			img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
-		if commitId
-			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
-		else
-			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
-	else if defaultLabel
-		| #{defaultLabel}
+mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
+	- var ref = getValue(dataset, path);
+	span(data-path=noPath?null:path)
+		if ref
+			if !noImage
+				img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
+			if commitId
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
+			else
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
+		else if defaultLabel
+			| #{defaultLabel}
 
-mixin ref-row(label, ref, additionalTypeInfo, noImage)
-	if ref
+mixin ref-row(label, path, additionalTypeInfo, noImage)
+	if getValue(dataset, path) || reviewMode
 		tr
 			td=label
-			td: +ref(ref, additionalTypeInfo, noImage)
+			td: +ref(path, additionalTypeInfo, noImage)
 
 mixin uncertainty(uncertainty, round)
 	if uncertainty
@@ -104,13 +109,18 @@ mixin uncertainty(uncertainty, round)
 	else
 		| No distribution
 
-mixin parameter-table(parameters, input)
+mixin parameter-table(path, input)
+	- var parameters = getValue(dataset, path);
 	- var isEmpty = true;
-	each parameter in parameters
-		if parameter.inputParameter === input
-			- isEmpty = false
+	- var putPath = true;
+	if parameters
+		each parameter in parameters
+			if parameter.inputParameter && !input
+				- putPath = false;
+			if parameter.inputParameter === input
+				- isEmpty = false;
 	if !isEmpty
-		h4 #{input?'Input parameters':'Dependant parameters'}
+		h4=input?'Input parameters':'Dependant parameters'
 		table.table.table-parameters
 			thead
 				tr
@@ -119,40 +129,18 @@ mixin parameter-table(parameters, input)
 					if input
 						th Uncertainty
 			tbody
-				each parameter in parameters
+				each parameter, index in parameters
 					if parameter.inputParameter === input
 						tr
-							td
+							td(data-path=path + '[' + index + '].name')
 								| #{parameter.name}
 								unless input
 									|  = #{parameter.formula}
 								|  = #{parameter.value}
-							td=parameter.description
+							td(data-path=path + '[' + index + '].description')=parameter.description
 							if input
-								td
+								td(data-path=path + '[' + index + '].uncertainty')
 									+uncertainty(parameter.uncertainty)
-
-mixin parameter-redef-table(parameters)
-	table.table
-		thead
-			tr
-				th Context
-				th Name
-				th Value
-				th Uncertainty
-		tbody
-			each parameter in parameters
-				tr
-					td 
-						if parameter.context
-							+ref(parameter.context)
-						else
-							| Global
-					td=parameter.name
-					td=parameter.value
-					td 
-						if parameter.inputParameter
-							+uncertainty(parameter.uncertainty)
 
 mixin data-quality-matrix(system, uncertainties, entries)
 	if system.indicators && system.indicators.length
@@ -165,15 +153,16 @@ mixin data-quality-matrix(system, uncertainties, entries)
 			thead
 				tr
 					th
-					each score in system.indicators[0].scores
-						th=score.label?score.label:score.position
+					each score, index in system.indicators[0].scores
+						th(data-path=uncertainties?null:'indicators[0].scores[' + index + ']')=score.label?score.label:score.position
 			tbody
-				each indicator in system.indicators
+				each indicator, iIndex in system.indicators
 					tr
-						td=indicator.name?indicator.name:indicator.position
-						each score in indicator.scores
+						td(data-path=uncertainties?null:'indicators[' + iIndex + ']')=indicator.name?indicator.name:indicator.position
+						each score, sIndex in indicator.scores
 							if uncertainties
-								td=score.uncertainty
+								td(data-path='indicators[' + iIndex + '].scores[' + sIndex + '].uncertainty')=score.uncertainty
 							else
-								td(style='background-color:#{getDQColor(system, indicator, score, entries)}' data-indicator=indicator.position data-score=score.position): span=score.description
+								td(style='background-color:#{getDQColor(system, indicator, score, entries)}' data-indicator=indicator.position data-score=score.position)
+									span(data-path='indicators[' + iIndex + '].scores[' + sIndex + '].description')=score.description
 

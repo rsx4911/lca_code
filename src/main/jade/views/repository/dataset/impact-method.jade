@@ -2,12 +2,15 @@ include ./mixins.jade
 
 mixin impact-category-selection()
 	+select('impact-category', 'Impact category')
-		each ic in dataset.impactCategories
-			option(id=ic.id)=ic.name
-	span.impact-category-description
+		if dataset.impactCategories
+			each ic in dataset.impactCategories
+				option(id=ic.id)=ic.name
+	span#impact-category-description(data-path='description')
+	| Reference unit: 
+	span#impact-category-unit(data-path='referenceUnitName')
 
 mixin impact-factor-table()
-	h4 Impact factors
+	h4(data-path='impactFactors') Impact factors
 	table#impact-factors.table
 		thead
 			tr
@@ -23,7 +26,7 @@ mixin nw-set-selection()
 			option(id=set.id) #{set.name}
 
 mixin nw-factor-table()
-	h4 Normalization and weighting factors
+	h4(data-path='factors') Normalization and weighting factors
 	table#nw-factors.table
 		thead
 			tr
@@ -39,29 +42,32 @@ mixin nw-factor-table()
 		.content
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
-					a(href='#categories' aria-controls='categories' role='tab' data-toggle='tab') Impact factors
-				if dataset.nwSets && dataset.nwSets.length
+					a(href='#categories' aria-controls='categories' role='tab' data-toggle='tab' data-path='impactCategories') Impact factors
+				if (dataset.nwSets && dataset.nwSets.length) || reviewMode
 					li(role='presentation') 
-						a(href='#nwsets' aria-controls='nwsets' role='tab' data-toggle='tab') Normalization and weighting
-				if dataset.parameters && dataset.parameters.length
+						a(href='#nwsets' aria-controls='nwsets' role='tab' data-toggle='tab' data-path='nwSets') Normalization and weighting
+				if (dataset.parameters && dataset.parameters.length) || reviewMode
 					li(role='presentation') 
-						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters') Parameters
 			.tab-content
 				#categories.tab-pane.active(role='tabpanel')
 					if dataset.impactCategories && dataset.impactCategories.length
 						+impact-category-selection
 						hr
 						+impact-factor-table
-				if dataset.nwSets && dataset.nwSets.length
+				if (dataset.nwSets && dataset.nwSets.length) || reviewMode
 					#nwsets.tab-pane(role='tabpanel')
-						+nw-set-selection
+						if dataset.nwSets && dataset.nwSets.length
+							+nw-set-selection
 						| Reference unit: 
-						span#nw-set-unit
-						hr
-						+nw-factor-table
-				if dataset.parameters && dataset.parameters.length
+						span#nw-set-unit(data-path='weightedScoreUnit')
+						if dataset.nwSets && dataset.nwSets.length
+							hr
+							+nw-factor-table
+				if (dataset.parameters && dataset.parameters.length) || reviewMode
 					#parameters.tab-pane(role='tabpanel')
-						+parameter-table(dataset.parameters, true)
-						+parameter-table(dataset.parameters, false)
+						if dataset.parameters && dataset.parameters.length
+							+parameter-table('parameters', true)
+							+parameter-table('parameters', false)
 	+meta
 	.clear

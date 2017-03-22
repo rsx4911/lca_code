@@ -5,6 +5,7 @@ include ./mixins.jade
 	.model-left-content
 		+header
 		.content
+			h4(data-path='indicators') Indicators
 			+data-quality-matrix(dataset, false)
 			if dataset.hasUncertainties
 				hr
@@ -13,5 +14,5 @@ include ./mixins.jade
 	+meta
 		hr
 		strong Source
-		div: +ref(dataset.source, null, false, '-')
+		div: +ref('source', null, false, '-')
 	.clear

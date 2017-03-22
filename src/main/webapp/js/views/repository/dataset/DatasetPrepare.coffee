@@ -60,43 +60,42 @@ define([
 					exchangeMap[e.id] = e
 					flowMap[e.flow.id] = e.flow
 			if dataset.allocationFactors?.length
-				for factor in dataset.allocationFactors
+				for factor, index in dataset.allocationFactors
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
 						f = nonCausalAllocationFactors[factor.product.id]
 						unless f
 							f = {product: flowMap[factor.product.id]}
 							nonCausalAllocationFactors[factor.product.id] = f
 						if factor.allocationType is 'PHYSICAL_ALLOCATION'
-							f.physical = factor.value
+							f.physical = {value: factor.value, index: index}
 						else if factor.allocationType is 'ECONOMIC_ALLOCATION'
-							f.economic = factor.value
+							f.economic = {value: factor.value, index: index}
 					else if factor.allocationType is 'CAUSAL_ALLOCATION'
 						f = causalAllocationFactors[factor.exchange.id]
 						unless f
 							f = {exchange: exchangeMap[factor.exchange.id], products: []}
 							causalAllocationFactors[factor.exchange.id] = f
-						f.products.push {product: flowMap[factor.product.id], value: factor.value}
+						f.products.push {product: flowMap[factor.product.id], value: factor.value, index: index}
 			dataset.nonCausalAllocationFactors = []
 			dataset.causalAllocationFactors = []
 			for key in Object.keys(nonCausalAllocationFactors)
 				dataset.nonCausalAllocationFactors.push nonCausalAllocationFactors[key]
 			for key in Object.keys(causalAllocationFactors)
 				dataset.causalAllocationFactors.push causalAllocationFactors[key]
-			delete dataset.allocationFactors 
 			Sort.allocationFactors dataset
 
 		prepareParameterRedefs: (dataset) ->
 			parameters = {}
-			for variant in dataset.variants
-				for param in variant.parameterRedefs
+			for variant, vIndex in dataset.variants
+				for param, pIndex in variant.parameterRedefs
 					contextId = 'Global'
 					if param.context
 						contextId = param.context.id
 					p = parameters[contextId + param.name]
 					unless p
-						p = {name: param.name, context: param.context, values: {}}
+						p = {name: param.name, context: param.context, values: {}, path: 'variants[' + vIndex + '].parameterRedefs[' + pIndex + ']'}
 						parameters[contextId + param.name] = p
-					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value}
+					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: 'variants[' + vIndex + '].parameterRedefs[' + pIndex + '].value'}
 			dataset.parameterRedefs = []
 			for key in Object.keys(parameters)
 				p = parameters[key]

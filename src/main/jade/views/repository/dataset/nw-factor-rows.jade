@@ -1,5 +1,5 @@
-each factor in nwSet.factors
+each factor, index in nwSet.factors
 	tr
-		td=factor.impactCategory.name
-		td=factor.normalisationFactor
-		td=factor.weightingFactor
+		td(data-path='factors[' + index +'].impactCategory')=factor.impactCategory.name
+		td(data-path='factors[' + index +'].normalisationFactor')=factor.normalisationFactor
+		td(data-path='factors[' + index +'].weightingFactor')=factor.weightingFactor

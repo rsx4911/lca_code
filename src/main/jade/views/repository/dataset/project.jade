@@ -8,8 +8,8 @@ include ./mixins.jade
 			if dataset.variants
 				ul.nav.nav-tabs(role='tablist')
 					li.active(role='presentation') 
-						a(href='#variants' aria-controls='variants' role='tab' data-toggle='tab') Variants
-					if dataset.parameterRedefs
+						a(href='#variants' aria-controls='variants' role='tab' data-toggle='tab' data-path='variants') Variants
+					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 						li(role='presentation') 
 							a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
 				.tab-content
@@ -22,13 +22,18 @@ include ./mixins.jade
 									th Allocation method
 									th Amount
 							tbody
-								each variant in dataset.variants
+								each variant, index in dataset.variants
 									tr
-										td=variant.name
-										td: +ref(variant.productSystem)
-										td=variant.allocationMethod
-										td #{variant.amount} #{variant.unit.name}
-					if dataset.parameterRedefs
+										td(data-path='variants[' + index + '].name')=variant.name
+										td: +ref('variants[' + index + '].productSystem')
+										td(data-path='variants[' + index + '].allocationMethod')=variant.allocationMethod
+										td 
+											span(data-path='variants[' + index + '].amount')=variant.amount
+											|  
+											span(data-path='variants[' + index + '].unit')
+												if variant.unit
+													| #{variant.unit.name}
+					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 						#parameters.tab-pane(role='tabpanel')
 							table.table
 								thead
@@ -40,18 +45,18 @@ include ./mixins.jade
 								tbody
 									each parameter in dataset.parameterRedefs
 										tr
-											td=parameter.name
-											td
+											td(data-path=parameter.path + '.name')=parameter.name
+											td(data-path=parameter.path + '.context')
 												if parameter.context
 													+ref(parameter.context)
 												else
 													| Global
 											each entry in parameter.values
-												td=entry.value
+												td(data-path=entry.path)=entry.value
 	+meta
 		hr
 		strong Impact method
-		div: +ref(dataset.impactMethod, null, false, '-')
+		div: +ref('impactMethod', null, false, '-')
 		strong Normalization & Weighting set
-		div=dataset.nwSet?dataset.nwSet.name:'-'
+		div(data-path='nwSet')=dataset.nwSet?dataset.nwSet.name:'-'
 	.clear

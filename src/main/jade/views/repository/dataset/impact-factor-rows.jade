@@ -1,8 +1,9 @@
 include mixins.jade
 
-each factor in impactCategory.impactFactors
+each factor, index in impactCategory.impactFactors
+	- var hasFormula = factor.formula && (isNaN(factor.formula) || parseFloat(factor.formula) !== factor.value);
 	tr
-		td=factor.flow.name
+		td(data-path='factors[' + index + '].flow')=factor.flow.name
 		td
 			if factor.flow.category
 				- var path = factor.flow.category.split('/');
@@ -11,7 +12,9 @@ each factor in impactCategory.impactFactors
 					|  / #{path[path.length - 2]}			
 		td 
 			- var unit = impactCategory.referenceUnitName + '/' + factor.unit.name;
-			if factor.formula && (isNaN(factor.formula) || parseFloat(factor.formula) !== factor.value)
+			if hasFormula
 				| #{factor.formula} #{unit} = 
-			| #{factor.value} #{unit}
-		td: +uncertainty(factor.uncertainty)
+			span(data-path='factors[' + index + '].' + (hasFormula ? 'formula' : 'value'))=factor.value
+			|  
+			span(data-path='factors[' + index + '].unit')=unit
+		td(data-path='factors[' + index + '].uncertainty'): +uncertainty(factor.uncertainty)

@@ -7,11 +7,13 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+field-row('DOI', dataset.doi, true)
-					+field-row('Text reference', dataset.textReference, true)
-					+field-row('Year', dataset.year, true)
-					if dataset.externalFile
+					+field-row('DOI', 'doi', true)
+					+field-row('Text reference', 'textReference', true)
+					+field-row('Year', 'year', true)
+					if dataset.externalFile || reviewMode
 						+field-row('External file')
-							a(href='#{fileBaseUrl}/#{dataset.externalFile}' target='_blank')=dataset.externalFile
+							span(data-path='externalFile')
+								if dataset.externalFile
+									a(href='#{fileBaseUrl}/#{dataset.externalFile}' target='_blank')=dataset.externalFile
 	+meta
 	.clear
