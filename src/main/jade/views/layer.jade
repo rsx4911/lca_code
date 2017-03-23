@@ -1,14 +1,14 @@
-.modal(class=dialogType?dialogType:'')
+.modal(class=dialogType?dialogType:null)
 	.modal-dialog
 		.modal-content
-			.modal-header(class=!title?'empty':'')
+			.modal-header(class=!title?'empty':null)
 				if (!notCloseable)
 					button.close(type='button' data-dismiss='modal')
 						span(aria-hidden='true') &times;
 						span.sr-only Close
-				h4.modal-title #{title}
-			.modal-body.clearfix !{body}
+				h4.modal-title=title
+			.modal-body.clearfix!=body
 			if buttons
 				.modal-footer
 					each button in buttons
-						button.btn(id='#{button.id}' tabindex=50 class=button.className?button.className:'btn-default' type='button' data-dismiss=button.callback?'':'modal') #{button.text}
+						button.btn(id=button.id tabindex=50 class=button.className?button.className:'btn-default' type='button' data-dismiss=button.callback?null:'modal')=button.text

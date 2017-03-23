@@ -5,7 +5,8 @@ mixin static(id, label, value, inline)
 	else
 		- clazz = 'form-group';
 	div(id='#{id}-group' class=clazz)
-		label.control-label(for='#{id}') #{label}
+		if label
+			label.control-label(for='#{id}') #{label}
 		div.form-value #{value}
 		block
 
@@ -30,7 +31,8 @@ mixin input(id, label, type, inline, required, hide)
 
 mixin select(id, label, options, defaultSelection, inline)
 	div(id='#{id}-group' class=inline?'form-inline':'form-group')
-		label.control-label(for='#{id}') #{label}
+		if label
+			label.control-label(for='#{id}') #{label}
 		select.form-control(id='#{id}' name='#{id}')&attributes(attributes)
 			if options
 				+options(options, defaultSelection)
@@ -103,7 +105,8 @@ mixin radios(group, options)
 
 mixin textarea(id, label)
 	.form-group(id='#{id}-group')
-		label.control-label(for='#{id}') #{label}
+		if label
+			label.control-label(for='#{id}') #{label}
 		textarea.form-control(id='#{id}' name='#{id}')&attributes(attributes)
 			block
 

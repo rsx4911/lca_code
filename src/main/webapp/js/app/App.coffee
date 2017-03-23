@@ -6,7 +6,7 @@ define([
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
 				'cs!models/Conversations'
-				'cs!app/DynamicDependencies'
+				#'cs!app/DynamicDependencies'
 			]
 
 	(Backbone, Controller, Router, Layers, Model, currentUser, conversations) ->

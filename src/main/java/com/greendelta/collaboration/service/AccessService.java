@@ -94,11 +94,9 @@ public class AccessService {
 			return true;
 		if (!canRead(comment.repositoryPath))
 			return false;
-		if (!comment.restrictedTo.isEmpty())
-			return comment.restrictedTo.contains(user);
 		if (comment.restrictedToRole != null) {
 			Role role = membershipService.getRole(user, comment.repositoryPath);
-			return comment.restrictedToRole == role;
+			return comment.restrictedToRole.ordinal() <= role.ordinal();
 		}
 		return true;
 	}

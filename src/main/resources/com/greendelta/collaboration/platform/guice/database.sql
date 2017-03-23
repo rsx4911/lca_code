@@ -71,11 +71,6 @@ CREATE TABLE comments(
 	f_reply_to BIGINT
 );
 
-CREATE TABLE comment_users(
-	f_comment BIGINT NOT NULL,
-	f_user BIGINT NOT NULL
-);
-
 INSERT INTO version VALUES (2);
 
 INSERT INTO users VALUES (

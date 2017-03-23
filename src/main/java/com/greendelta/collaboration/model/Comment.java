@@ -1,8 +1,6 @@
 package com.greendelta.collaboration.model;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -11,8 +9,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -50,10 +46,6 @@ public class Comment extends AbstractEntity {
 	@Column(name = "restricted_to_role")
 	@Enumerated(EnumType.STRING)
 	public Role restrictedToRole;
-
-	@OneToMany
-	@JoinTable(name = "comment_users", joinColumns = { @JoinColumn(name = "f_comment") }, inverseJoinColumns = { @JoinColumn(name = "f_user") })
-	public List<User> restrictedTo = new ArrayList<>();
 
 	@Override
 	public long getId() {

@@ -20,7 +20,7 @@ public class DatasetField {
 	@Column(name = "ds_commit_id")
 	public String commitId;
 
-	@Column(name = "ds_field", length = 4000)
-	public String field;
+	@Column(name = "ds_path", length = 4000)
+	public String path;
 
 }

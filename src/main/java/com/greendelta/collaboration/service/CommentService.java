@@ -11,7 +11,6 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.User;
 
 public class CommentService {
 
@@ -29,8 +28,7 @@ public class CommentService {
 				+ "WHERE c.repositoryPath = :repositoryPath "
 				+ "AND c.field.modelType = :modelType "
 				+ "AND c.field.refId = :refId "
-				+ "AND c.field.commitId = :commitId "
-				+ "AND c.field.field = :field";
+				+ "AND c.field.commitId = :commitId";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
 		attributes.put("modelType", type);
@@ -45,12 +43,16 @@ public class CommentService {
 		return accessible;
 	}
 
+	public Comment get(long id) {
+		return dao.get(id);
+	}
+
 	public Comment insert(Comment comment) {
 		if (!accessService.canCommentIn(comment.repositoryPath))
 			throw new UnauthorizedAccessException(comment.repositoryPath, "COMMENT");
 		return dao.insert(comment);
 	}
-	
+
 	public boolean changeVisibility(long commentId, Role role) {
 		Comment comment = dao.get(commentId);
 		if (comment == null)
@@ -58,22 +60,8 @@ public class CommentService {
 		if (!accessService.canCommentIn(comment.repositoryPath))
 			throw new UnauthorizedAccessException(comment.repositoryPath, "COMMENT");
 		comment.restrictedToRole = role;
-		comment.restrictedTo.clear();
 		dao.update(comment);
 		return true;
-	}
-	
-	public boolean changeVisibility(long commentId, List<User> users) {
-		Comment comment = dao.get(commentId);
-		if (comment == null)
-			return false;
-		if (!accessService.canCommentIn(comment.repositoryPath))
-			throw new UnauthorizedAccessException(comment.repositoryPath, "COMMENT");
-		comment.restrictedToRole = null;
-		comment.restrictedTo.clear();
-		comment.restrictedTo.addAll(users);
-		dao.update(comment);
-		return true;		
 	}
 
 }

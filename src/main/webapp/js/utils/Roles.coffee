@@ -6,6 +6,12 @@ define () ->
 		descriptionForGroup: 'A reader can access the group and its repositories and fetch the contents'
 		descriptionForRepository: 'A reader can access the repository and fetch its contents'
 
+	REVIEWER:
+		id: 'REVIEWER'
+		name: 'Reviewer'
+		descriptionForGroup: 'A reviewer can comment specific fields and review data sets'
+		descriptionForRepository: 'A reviewer can comment specific fields and review data sets'
+
 	CONTRIBUTOR:
 		id: 'CONTRIBUTOR'
 		name: 'Contributor'
@@ -19,4 +25,4 @@ define () ->
 		descriptionForRepository: 'An owner can delete the repository and edit its members'
 
 	getAll: () ->
-		return [@READER, @CONTRIBUTOR, @OWNER]
+		return [@READER, @REVIEWER, @CONTRIBUTOR, @OWNER]

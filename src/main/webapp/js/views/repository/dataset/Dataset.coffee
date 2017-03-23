@@ -150,10 +150,18 @@ define([
 							@loadImpactCategory () =>
 								@loadNwSet () =>
 									@initTableSorting()
-									Comments.init @$el
+									Comments.init @$el, 
+										repository: @repository, 
+										type: @type, 
+										refId: @refId, 
+										commitId: @commitId
 						else
 							@initTableSorting()
-							Comments.init @$el
+							Comments.init @$el,
+								repository: @repository, 
+								type: @type, 
+								refId: @refId, 
+								commitId: @commitId
 						if dataset.type is 'DQSystem'
 							@initDataQualityPopups(dataset)
 
