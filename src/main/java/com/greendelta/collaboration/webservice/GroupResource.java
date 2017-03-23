@@ -20,6 +20,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.util.ObjectMap;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.AccessService;
@@ -83,10 +85,12 @@ public class GroupResource {
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
 		PagedResult<String> result = service.getAll(page, filter, true);
 		return Respond.ok(result.toClient((groups) -> {
-			List<Map<String, Object>> maps = new ArrayList<>();
-			for (String group : groups)
-				if (!onlyIfCanWrite || accessService.canWrite(group))
-					maps.add(Collections.singletonMap("name", group));
+			List<ObjectMap> maps = new ArrayList<>();
+			for (String group : groups) {
+				if (onlyIfCanWrite && !accessService.canWrite(group))
+					continue;
+				maps.add(ObjectMap.fromMap(Collections.singletonMap("name", group)));
+			}
 			return maps;
 		}));
 	}

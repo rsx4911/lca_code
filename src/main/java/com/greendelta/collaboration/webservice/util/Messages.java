@@ -2,7 +2,6 @@ package com.greendelta.collaboration.webservice.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.openlca.cloud.util.ObjectMap;
 
@@ -15,14 +14,14 @@ public class Messages {
 		// only static access
 	}
 
-	public static List<Map<String, Object>> map(List<Message> messages, User currentUser) {
-		List<Map<String, Object>> all = new ArrayList<>();
+	public static List<ObjectMap> map(List<Message> messages, User currentUser) {
+		List<ObjectMap> all = new ArrayList<>();
 		for (Message message : messages)
 			all.add(map(message, currentUser));
 		return all;
 	}
 
-	public static Map<String, Object> map(Message message, User currentUser) {
+	public static ObjectMap map(Message message, User currentUser) {
 		ObjectMap map = ObjectMap.fromObject(message);
 		map.remove("from", "to", "showReadReceipt");
 		map.put("from", Users.mapForOthers(message.from));

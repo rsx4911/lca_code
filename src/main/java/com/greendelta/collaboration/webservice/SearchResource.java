@@ -2,7 +2,6 @@ package com.greendelta.collaboration.webservice;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -35,13 +34,13 @@ public class SearchResource {
 	public Response search(@QueryParam("query") @DefaultValue("") String filter,
 			@QueryParam("page") @DefaultValue("1") int page, @QueryParam("type") ModelType type) {
 		PagedResult<DatasetIndexEntry> result = service.search(page, filter, type);
-		PagedResult<Map<String, Object>> mapped = result.toClient((entries) -> {
-			List<Map<String, Object>> list = new ArrayList<>();
+		PagedResult<ObjectMap> mapped = result.toClient((entries) -> {
+			List<ObjectMap> list = new ArrayList<>();
 			for (DatasetIndexEntry entry : entries)
 				list.add(ObjectMap.fromObject(entry));
 			return list;
 		});
-		Map<String, Object> response = ObjectMap.fromObject(mapped);
+		ObjectMap response = ObjectMap.fromObject(mapped);
 		response.put("modelTypes", getModelTypes());
 		if (type != null)
 			response.put("filteredType", type);

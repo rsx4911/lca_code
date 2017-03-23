@@ -2,9 +2,9 @@ package com.greendelta.collaboration.webservice.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import org.openlca.cloud.util.ObjectMap;
 
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.User;
@@ -16,31 +16,30 @@ public class Conversations {
 		// only static access
 	}
 	
-	public static List<Map<String, Object>> map(List<ConversationDescriptor> conversations, User currentUser) {
-		List<Map<String, Object>> all = new ArrayList<>();
+	public static List<ObjectMap> map(List<ConversationDescriptor> conversations, User currentUser) {
+		List<ObjectMap> all = new ArrayList<>();
 		for (ConversationDescriptor conversation : conversations)
 			all.add(map(conversation, currentUser));
 		return all;
 	}
 
-	public static Map<String, Object> map(ConversationDescriptor conversation, User currentUser) {
-		Map<String, Object> map = new HashMap<>();
+	public static ObjectMap map(ConversationDescriptor conversation, User currentUser) {
+		ObjectMap map = new ObjectMap();
 		map.put("recipient", getRecipient(conversation.lastMessage, currentUser));
 		map.put("messages", Collections.singleton(Messages.map(conversation.lastMessage, currentUser)));
 		map.put("unreadMessages", conversation.unreadMessages);
 		return map;
 	}
 
-	private static Map<String, Object> getRecipient(Message message, User currentUser) {
-		Map<String, Object> recipient = null;
+	private static ObjectMap getRecipient(Message message, User currentUser) {
 		if (message.team != null) {
-			recipient = Teams.mapForOthers(message.team);
+			ObjectMap recipient = Teams.mapForOthers(message.team);
 			recipient.put("type", "team");
 			recipient.put("id", message.team.teamname);
 			return recipient;
 		}
 		User other = currentUser.equals(message.from) ? message.to : message.from;
-		recipient = Users.mapForOthers(other);
+		ObjectMap recipient = Users.mapForOthers(other);
 		recipient.put("type", "user");
 		recipient.put("id", other.username);
 		return recipient;
