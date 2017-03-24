@@ -12,10 +12,10 @@ public enum Role {
 	NONE(1),
 
 	READER(2, READ),
-	
-	REVIEWER(3, READ, COMMENT),
 
-	CONTRIBUTOR(4, READ, COMMENT, WRITE),
+	CONTRIBUTOR(3, READ, WRITE),
+
+	REVIEWER(4, READ, WRITE, COMMENT),
 
 	OWNER(5, READ, COMMENT, WRITE, MOVE, DELETE, EDIT_MEMBERS);
 
@@ -36,5 +36,5 @@ public enum Role {
 			return r1;
 		return r2;
 	}
-	
+
 }
