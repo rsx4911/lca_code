@@ -1,0 +1,11 @@
+mixin category-breadcrumb(baseUrl, path, linkLast)
+	if path
+		- var paths = path.split('/');
+		- var link = baseUrl
+		ol.breadcrumb
+			each category, index in paths
+				- link += '/' + category
+				if index === paths.length - 1 && !linkLast
+					li.active=category
+				else
+					li: a.default-link(href=link)=category

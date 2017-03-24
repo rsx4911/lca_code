@@ -1,3 +1,4 @@
+include ../../mixins/category-breadcrumb.jade
 include ../../mixins/forms.jade
 
 if isRoot
@@ -11,7 +12,8 @@ else
 		.form-group
 			input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
 		.clear
-	.header-box.path
+	.header-box
+		+category-breadcrumb(baseUrl, categoryPath)
 table.table.table-browse.content-box
 	thead
 		tr

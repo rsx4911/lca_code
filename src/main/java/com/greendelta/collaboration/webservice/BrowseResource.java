@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -44,18 +45,24 @@ public class BrowseResource {
 	}
 
 	@GET
-	@Path("{group}/{name}/{categoryRefId}")
+	@Path("{group}/{name}")
 	public Response getCategoryContent(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("categoryRefId") String categoryRefId, @QueryParam("filter") String filter) {
+			@QueryParam("categoryPath") String categoryPath, @QueryParam("filter") String filter) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
-		if ("null".equals(categoryRefId) || categoryRefId == null)
+		if (Strings.isNullOrEmpty(categoryPath))
 			content = getRootContent(repo);
 		else
-			content = getCategoryContent(repo, categoryRefId, filter);
+			content = getCategoryContent(repo, toId(categoryPath), filter);
 		if (content == null)
 			return Respond.notFound();
 		return Respond.ok(appendParentRefId(repo, content));
+	}
+
+	private String toId(String categoryPath) {
+		if (categoryPath.contains("/"))
+			return KeyGen.get(categoryPath.split("/"));
+		return categoryPath;
 	}
 
 	private List<ModelType> getRootContent(Repository repo) {
@@ -185,6 +192,7 @@ public class BrowseResource {
 			return "";
 		if (commitId == null)
 			return "";
+		commitId = getLastCommitId(repo, type, refId, commitId);
 		DatasetIndexEntry entry = service.getDataset(repo, type, refId, commitId);
 		if (entry == null)
 			return "";

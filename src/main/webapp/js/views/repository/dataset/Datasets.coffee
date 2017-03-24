@@ -22,24 +22,38 @@ define([
 				'click [data-action=download]': (event) -> @downloadRepository event
 
 			initialize: (options) ->
-				{@repository, @categoryId} = options
+				{@repository, @categoryPath} = options
 				unless @categoryId
 					@categoryId = 'null'
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				url = "ws/public/browse/#{group}/#{name}/" + @categoryId
+				url = "ws/public/browse/#{group}/#{name}"
+				if @categoryPath 
+					slashIndex = @categoryPath.indexOf('/')
+					if slashIndex isnt -1
+						type = @categoryPath.substring 0, slashIndex
+						rest = @categoryPath.substring slashIndex
+					else
+						type = @categoryPath
+						rest = ''
+					for key in Object.keys(ModelTypes)
+						if ModelTypes[key] is type
+							type = key
+					url += "?categoryPath=#{type}#{rest}&"
+				else
+					url += '?'
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
 					filterId: 'filter'
-					url: (page, filter) -> "#{url}?filter=#{filter}"
+					url: (page, filter) -> "#{url}filter=#{filter}"
 					callback: (type, result) =>
 						unless @initialized
 							@setPath result
 						@sortEntries result
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
-						result.isRoot = (if @categoryId and @categoryId isnt 'null' then false else true)
+						result.categoryPath = @categoryPath
 						result.getRootLabel = (type) -> return ModelTypes[type]
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						@initialized = true
@@ -57,8 +71,12 @@ define([
 						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'						
 
 			render: (renderOptions) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'
 				@$el.html template
-					isRoot: (if @categoryId and @categoryId isnt 'null' then false else true)
+					baseUrl: "#{group}/#{name}/datasets"
+					categoryPath: @categoryPath
+					getRootLabel: (type) -> return ModelTypes[type]
 				Renderer.render @, renderOptions
 				@filter.init()
 
@@ -85,6 +103,5 @@ define([
 						path = ModelTypes[type] + '/' + path.substring(0, path.lastIndexOf('/'))
 						path = path.replace(/\//g, ' / ')
 				@$('.path').html path
-
 
 )

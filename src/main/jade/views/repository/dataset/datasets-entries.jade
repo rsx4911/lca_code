@@ -1,17 +1,18 @@
-if !isRoot
+if categoryPath
+	- var path = categoryPath.substring(0, categoryPath.lastIndexOf('/'));
 	- var previousUrl = baseUrl + '/datasets';
-	if parentRefId
-		- previousUrl += '/' + parentRefId;
-	tr
+	if path
+		- previousUrl += '/' + path;
+	tr 
 		td 
 		td: a(href=previousUrl): strong ..
 		td
 		td
 each entry in entries
 	tr
-		if isRoot
+		if !categoryPath
 			td: img.model-icon-small(src='images/model/small/category/#{entry.toLowerCase()}.png')
-			td: a(href='#{baseUrl}/datasets/#{entry}'): strong  #{getRootLabel(entry)}
+			td: a(href='#{baseUrl}/datasets/#{getRootLabel(entry)}'): strong  #{getRootLabel(entry)}
 			td
 			td
 		else
@@ -27,7 +28,7 @@ each entry in entries
 			td: img.model-icon-small(src='images/model/small/#{icon}.png')
 			td
 				if entry.type === 'CATEGORY'
-					a(href='#{baseUrl}/datasets/#{entry.refId}'): strong #{entry.name}
+					a(href='#{baseUrl}/datasets/#{categoryPath}/#{entry.name}'): strong #{entry.name}
 				else
 					a(href='#{baseUrl}/dataset/#{entry.type}/#{entry.refId}'): strong #{entry.name}
 			td #{formatLastUpdate(entry.lastUpdate)}

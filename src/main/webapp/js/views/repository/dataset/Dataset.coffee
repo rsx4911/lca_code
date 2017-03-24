@@ -7,6 +7,7 @@ define([
 				'cs!utils/Icons'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
+				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
@@ -31,7 +32,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, LocalStorage, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -135,6 +136,7 @@ define([
 							getValue: (object, path) => @getValue object, path
 							getIcon: Icons.get
 							getTypeAsEnum: (type) => @getTypeAsEnum(type)
+							getTypeLabel: (type) => ModelTypes[type]
 							getUncertaintyLabel: @getUncertaintyLabel
 							getDQColor: DataQuality.getColor 
 							noToStr: Format.number

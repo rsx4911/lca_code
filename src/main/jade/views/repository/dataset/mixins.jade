@@ -1,3 +1,4 @@
+include ../../mixins/category-breadcrumb.jade
 include ../../mixins/forms.jade
 include ../../mixins/user-info.jade
 
@@ -24,7 +25,9 @@ mixin header()
 			h3(data-path='name')=dataset.name
 			.category(data-path='category')
 				if dataset.category
-					| #{dataset.category.name}
+					- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
+					- var url = baseUrl + 's' + '/' + typeLabel
+					+category-breadcrumb(url, dataset.category.name, true)
 			h3: small: span(data-path='description')=dataset.description
 	block
 	hr

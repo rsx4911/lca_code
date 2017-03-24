@@ -59,6 +59,7 @@ define([
 						{href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
 						{href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
 						{href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
+						{href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comment.png', label: 'Comments', id: 'comments'}
 						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 					]
 					when 'admin' then return [
@@ -210,7 +211,7 @@ define([
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
-				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryId) -> @showView 
+				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryPath) -> @showView 
 					view: 'repository/dataset/Datasets'
 					title: "#{group}/#{name} | Data sets"
 					nav: 
@@ -219,7 +220,7 @@ define([
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
-						categoryId: categoryId
+						categoryPath: categoryPath
 				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId) -> @showView 
 					view: 'repository/dataset/Dataset'
 					title: "#{group}/#{name} | Data sets"
@@ -251,6 +252,15 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						commitId: commitId
+				@router.registerUserRoute 'repositoryComments', (group, name) -> @showView 
+					view: 'repository/Comments'
+					title: "#{group}/#{name} | Comments"
+					nav: 
+						type: 'repository'
+						active: 'comments'
+						urlPrefix: "#{group}/#{name}"
+					viewOptions: 
+						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryMembers', (group, name) -> @showView 
 					view: 'members/Members'
 					title: "#{group}/#{name} | Members"

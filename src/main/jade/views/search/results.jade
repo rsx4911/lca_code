@@ -9,6 +9,7 @@ include ../mixins/paging.jade
 			option All
 			each type in modelTypes
 				option(value='#{type}' selected=type===filteredType)=getTypeLabel(type)
+	.clear
 .content-box
 	each dataset in data
 		.result
