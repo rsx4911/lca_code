@@ -65,7 +65,7 @@ public class DatasetIndex {
 			return null;
 		try {
 			Term term1 = new Term("refId", refId);
-			Term term2 = new Term("commitId", refId);
+			Term term2 = new Term("commitId", commitId);
 			Query query = IndexUtil.andQuery(term1, term2);
 			TopDocs topDocs = searcher.search(query, 1);
 			if (topDocs.totalHits == 0)
