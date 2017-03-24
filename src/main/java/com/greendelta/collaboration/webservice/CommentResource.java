@@ -25,6 +25,7 @@ import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.CommentService;
+import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
@@ -37,14 +38,16 @@ public class CommentResource {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final AccessService accessService;
+	private final NotificationService notificationService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService) {
+			AccessService accessService, NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
+		this.notificationService = notificationService;
 	}
 
 	@GET
@@ -86,6 +89,7 @@ public class CommentResource {
 		comment.date = Calendar.getInstance().getTime();
 		comment.replyTo = service.get(map.getLong("replyTo"));
 		comment = service.insert(comment);
+		notificationService.fieldCommented(comment).send();
 		return Respond.ok(comment);
 	}
 

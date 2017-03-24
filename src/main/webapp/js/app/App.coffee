@@ -42,7 +42,6 @@ define([
 								replace: true
 						window.inErrorHandling = false
 
-
 		initialize: () ->
 			window.onfocus = () -> 
 				window.isActive = true
