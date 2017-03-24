@@ -113,9 +113,9 @@ public class AccessService {
 
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
-			return groupOrRepo.equals(user.username);
+			return groupOrRepo.equalsIgnoreCase(user.username);
 		String group = groupOrRepo.substring(0, groupOrRepo.indexOf(File.separator));
-		return group.equals(user.username);
+		return group.equalsIgnoreCase(user.username);
 	}
 
 	private boolean isGroup(String groupOrRepo) {

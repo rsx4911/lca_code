@@ -63,6 +63,8 @@ public class RepositoryResource {
 	@Path("{group}/{name}")
 	public Response create(@PathParam("group") String group, @PathParam("name") String name) {
 		Response response = _create(group, name);
+		if (response.getStatus() != Status.CREATED.getStatusCode())
+			return response;
 		Repository repo = service.get(group, name);
 		notificationService.repositoryCreated(repo).send();
 		return response;

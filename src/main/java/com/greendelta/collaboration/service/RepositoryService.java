@@ -59,7 +59,21 @@ public class RepositoryService {
 	}
 
 	public boolean exists(String group, String name) {
-		return new File(getPath(group, name)).exists();
+		File root = new File(this.root);
+		if (root.listFiles() == null)
+			return false;
+		for (File g : root.listFiles()) {
+			if (!g.getName().equalsIgnoreCase(group))
+				continue;
+			if (g.listFiles() == null)
+				return false;
+			for (File repo : g.listFiles()) {
+				if (!repo.getName().equalsIgnoreCase(name))
+					continue;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public Repository create(String group, String name) {
@@ -234,8 +248,7 @@ public class RepositoryService {
 		return getAll(adminArea).size();
 	}
 
-	public PagedResult<Repository> getAll(int page, String filter,
-			boolean adminArea) {
+	public PagedResult<Repository> getAll(int page, String filter, boolean adminArea) {
 		List<Repository> accessible = getAll(adminArea);
 		return PagedResult.pagedAndFiltered(page, filter, accessible, (repo) -> {
 			return repo.toId();

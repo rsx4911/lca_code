@@ -38,11 +38,11 @@ public class UserService {
 	}
 
 	public User getForUsername(String username) {
-		return dao.getFirstForAttribute("username", username);
+		return dao.getFirstForAttribute("username", username, true);
 	}
 
 	public User getForEmail(String email) {
-		return dao.getFirstForAttribute("email", email);
+		return dao.getFirstForAttribute("email", email, true);
 	}
 
 	public boolean exists(String username) {

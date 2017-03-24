@@ -37,11 +37,16 @@ public class GroupService {
 	}
 
 	public boolean exists(String group) {
-		if (!new File(getPath(group)).exists())
+		File root = new File(this.root);
+		if (root.list() == null)
 			return false;
-		if (!accessService.canRead(group))
-			throw new UnauthorizedAccessException(group, "READ");
-		return true;
+		for (String child : root.list())
+			if (child.equalsIgnoreCase(group))
+				if (!accessService.canRead(group))
+					throw new UnauthorizedAccessException(group, "READ");
+				else
+					return true;
+		return false;
 	}
 
 	public boolean isUserNamespace(String group) {
@@ -112,8 +117,7 @@ public class GroupService {
 		return getAll(adminArea).size();
 	}
 
-	public PagedResult<String> getAll(int page, String filter,
-			boolean adminArea) {
+	public PagedResult<String> getAll(int page, String filter, boolean adminArea) {
 		List<String> accessible = getAll(adminArea);
 		return PagedResult.pagedAndFiltered(page, filter, accessible);
 	}

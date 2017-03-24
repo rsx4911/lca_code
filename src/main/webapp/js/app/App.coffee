@@ -23,7 +23,7 @@ define([
 						localStorage?.setItem?('errorMessage', 'Sorry, the repository schema version is not compatible with the current collaboration server version.')
 					else
 						localStorage?.setItem?('errorMessage', response.responseText)
-				unless response.status is 401
+				if response.status isnt 400 and response.status isnt 401 and response.status isnt 409
 					Router.navigate "error/#{response.status}",
 						replace: true
 			window.onerror = (msg, url, line, col, error) ->
