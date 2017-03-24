@@ -1,35 +1,13 @@
-include ../../mixins/forms.jade
-include ../../mixins/user-info.jade
+include ../comment-entry.jade
 
 if currentUser.canComment
 	.new-comment-wrapper
-		+textarea('new-comment', 'New comment')(rows=5)
+		.form-group(id='new-comment-group')
+			label.control-label(for='new-comment') New comment 
+				+comment-visibility(newCommentRestrictedToRole, roles)
+			textarea.form-control(id='new-comment' name='new-comment' rows=5)
 if comments && comments.length && currentUser.canComment
 	hr
 .comments
 	each comment, index in comments
-		- var title = 'Visible to everybody';
-		- var canChangeVisibility = currentUser.canComment && (currentUser.admin || currentUser.username === comment.user.username)
-		if comment.restrictedToRole
-			- title = 'Only visible for users with role \'' + getRoleLabel(comment.restrictedToRole) + '\' or higher';
-		.comment-entry(class=comment.replyTo?'reply':null data-comment-id=comment.id)
-			+user-info(comment.user.username, comment.user.name)
-			span: small  wrote on #{formatDate(comment.date)} 
-			if canChangeVisibility
-				.change-visibility(class=canChangeVisibility?'dropdown':null)
-						a(href='#' data-toggle='dropdown')
-							span.comment-visibility.glyphicon(class=!comment.restrictedToRole?'glyphicon-globe':'glyphicon-lock' title=title)
-						ul.dropdown-menu
-							li: a(href='#' data-role='null') Everybody
-							li.dropdown-submenu
-								a(href='#') Specific role 
-									.caret.right
-								ul.dropdown-menu
-									each role in roles
-										li: a(href='#' data-role=role.id)=role.name
-			if !comment.replyTo && currentUser.canComment
-				|  | 
-				a.reply-to(href='#' data-comment-id=comment.id): small Reply
-			.comment-text=comment.text
-		if index < comments.length - 1
-			hr
+		+comment-entry(comment, index, roles)

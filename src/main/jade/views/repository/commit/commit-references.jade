@@ -3,9 +3,9 @@ include ../../mixins/paging.jade
 each dataset in data
 	if dataset.type !== 'IMPACT_CATEGORY' && dataset.type !== 'NW_SET'
 		.file-reference(id=dataset.id)
-			- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '/' + commitId
+			- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '/' + commitId;
 			if dataset.type === 'CATEGORY'
-				- url = baseUrl + 's/' + dataset.refId
+				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
 			a(href=url)
 				.header
 					if dataset.type === 'CATEGORY'

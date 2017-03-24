@@ -4,12 +4,13 @@ define([
 				'cs!utils/Filter'
 				'cs!utils/Format'
 				'cs!utils/Icons'
+				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'templates/views/repository/commit/commit'
 				'templates/views/repository/commit/commit-references'
 			]
 
-	(Backbone, Events, Filter, Format, Icons, Renderer, template, refTemplate) ->
+	(Backbone, Events, Filter, Format, Icons, ModelTypes, Renderer, template, refTemplate) ->
 
 		class RepositoryCommit extends Backbone.View
 
@@ -28,6 +29,7 @@ define([
 					callback: (type, result) -> 
 						result.commitId = commitId
 						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
+						result.getTypeLabel = (type) -> return ModelTypes[type]
 					url: (page) -> "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
 
 			render: (renderOptions) ->

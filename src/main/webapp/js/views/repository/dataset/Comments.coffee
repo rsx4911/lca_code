@@ -49,7 +49,7 @@ define([
 			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}"
 
 		showComments: (dataset, path) ->
-			comments = @sort @comments[path]
+			comments = @sortAndFilter @comments[path]
 			field = @toLabel path
 			buttons = []
 			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
@@ -69,7 +69,22 @@ define([
 				callback: () =>
 					@initSubMenues()
 					$('.modal .reply-to').on 'click', (event) => @setReplyTo event
-					$('.modal .change-visibility a[data-role]').on 'click', (event) => @setVisibility event, path
+					$('.modal [data-comment-id] .change-visibility a[data-role]').on 'click', (event) => @setVisibility event, path
+					$('.modal .new-comment-wrapper .change-visibility a[data-role]').on 'click', (event) => 
+						Events.preventDefault event
+						target = $ Events.target event, 'a'
+						@role = target.attr 'data-role'
+						if @role is 'null'
+							@role = null
+						visibility = $ '.modal .new-comment-wrapper .comment-visibility'
+						visibility.removeClass 'glyphicon-lock glyphicon-globe'
+						if @role
+							visibility.addClass 'glyphicon-lock'
+							visibility.attr 'title', 'Only visible for users with role \'' + Roles[@role].name + '\' or higher';
+						else
+							visibility.addClass 'glyphicon-globe'
+							visibility.attr 'title', 'Visible to everybody'
+						$('.dropdown.open > a').click()
 
 		initSubMenues: () ->
 			$('.modal .dropdown > .dropdown-menu > li').mouseenter (event) ->
@@ -110,7 +125,7 @@ define([
 				type: 'PUT'
 				url: "ws/comment/#{commentId}/#{role}"
 				success: () =>
-					visibility = $(".modal [data-comment-id=#{commentId}] .comment-visibility")
+					visibility = $ ".modal [data-comment-id=#{commentId}] .comment-visibility"
 					visibility.removeClass 'glyphicon-lock glyphicon-globe'
 					for comment in @comments[path]
 						if comment.id is commentId
@@ -132,7 +147,7 @@ define([
 				type: 'POST'
 				url: @getUrl(dataset)
 				contentType: 'application/json'
-				data: JSON.stringify({path: path, text: text, replyTo: @replyTo})
+				data: JSON.stringify({path: path, text: text, replyTo: @replyTo, restrictedToRole: @role})
 				success: (comment) => 
 					@comments[path].push comment
 					Layers.closeActive()
@@ -158,7 +173,7 @@ define([
 					result += ' ' + character.toLowerCase()
 			return result
 
-		sort: (comments) ->
+		sortAndFilter: (comments) ->
 			comments.sort (a, b) -> return b.date - a.date
 			added = []
 			sorted = []

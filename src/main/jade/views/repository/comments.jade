@@ -1,0 +1,6 @@
+include comment-entry.jade
+
+.header-box
+.content-box
+	each comment, index in comments
+		+comment-entry(comment, index, null, true)

@@ -25,15 +25,27 @@ public class CommentService {
 
 	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId) {
 		String jpql = "SELECT c FROM Comment c "
-				+ "WHERE c.repositoryPath = :repositoryPath "
-				+ "AND c.field.modelType = :modelType "
-				+ "AND c.field.refId = :refId "
-				+ "AND c.field.commitId = :commitId";
+				+ "WHERE c.repositoryPath = :repositoryPath ";
+		if (type != null) {
+			jpql += "AND c.field.modelType = :modelType ";
+		}
+		if (refId != null) {
+			jpql += "AND c.field.refId = :refId ";
+		}
+		if (commitId != null) {
+			jpql += "AND c.field.commitId = :commitId";
+		}
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
-		attributes.put("modelType", type);
-		attributes.put("refId", refId);
-		attributes.put("commitId", commitId);
+		if (type != null) {
+			attributes.put("modelType", type);
+		}
+		if (refId != null) {
+			attributes.put("refId", refId);
+		}
+		if (commitId != null) {
+			attributes.put("commitId", commitId);
+		}
 		List<Comment> accessible = new ArrayList<>();
 		for (Comment comment : dao.getAll(jpql, attributes)) {
 			if (!accessService.canRead(comment))

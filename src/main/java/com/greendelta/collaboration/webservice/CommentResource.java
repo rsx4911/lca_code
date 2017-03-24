@@ -39,11 +39,18 @@ public class CommentResource {
 	private final AccessService accessService;
 
 	@Inject
-	public CommentResource(CommentService service, RepositoryService repoService, UserService userService, AccessService accessService) {
+	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
+			AccessService accessService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
+	}
+
+	@GET
+	@Path("{group}/{name}")
+	public Response getForRepository(@PathParam("group") String group, @PathParam("name") String name) {
+		return getForDataset(group, name, null, null, null);
 	}
 
 	@GET
