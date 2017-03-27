@@ -98,7 +98,7 @@ public class FetchService {
 					continue;
 				if (datasets.contains(dataset))
 					continue;
-				if (skipEmpty && hasDataset(repo, dataset.type, dataset.refId, commit.id)) {
+				if (skipEmpty && !hasDataset(repo, dataset.type, dataset.refId, commit.id)) {
 					empty.add(dataset);
 					continue;
 				}
