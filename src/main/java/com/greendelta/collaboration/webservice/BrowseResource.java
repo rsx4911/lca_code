@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +56,7 @@ public class BrowseResource {
 			content = getCategoryContent(repo, toId(categoryPath), filter);
 		if (content == null)
 			return Respond.notFound();
-		return Respond.ok(appendParentRefId(repo, content));
+		return Respond.ok(Collections.singletonMap("entries", content));
 	}
 
 	private String toId(String categoryPath) {
@@ -222,27 +222,6 @@ public class BrowseResource {
 		if (commitId == null)
 			return base;
 		return base + " for commit id " + commitId;
-	}
-
-	private Map<String, Object> appendParentRefId(Repository repo, List<?> entries) {
-		String parentRefId = entries.size() == 0 ? null : getParentRefId(repo, entries.get(0));
-		Map<String, Object> clientData = new HashMap<>();
-		clientData.put("entries", entries);
-		clientData.put("parentRefId", parentRefId);
-		return clientData;
-	}
-
-	private String getParentRefId(Repository repo, Object obj) {
-		if (!(obj instanceof DatasetIndexEntry))
-			return null;
-		DatasetIndexEntry entry = (DatasetIndexEntry) obj;
-		if (Strings.isNullOrEmpty(entry.categoryRefId))
-			return null;
-		String parent = fetchService.getDataset(repo, ModelType.CATEGORY, entry.categoryRefId, entry.commitId);
-		String parentRefId = ObjectMap.fromJson(parent).get("category.@id");
-		if (parentRefId == null)
-			return entry.categoryType.name();
-		return parentRefId;
 	}
 
 }

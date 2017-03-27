@@ -9,3 +9,5 @@ mixin category-breadcrumb(baseUrl, path, linkLast)
 					li.active=category
 				else
 					li: a.default-link(href=link)=category
+	else
+		| &nbsp;

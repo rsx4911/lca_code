@@ -48,14 +48,17 @@ define([
 					filterId: 'filter'
 					url: (page, filter) -> "#{url}filter=#{filter}"
 					callback: (type, result) =>
-						unless @initialized
-							@setPath result
 						@sortEntries result
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
 						result.getRootLabel = (type) -> return ModelTypes[type]
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
+						if result.entries?.length
+							@$('.no-content-message').hide()
+						else
+							@$('.no-content-message').show()
+							@$('.table-browse').hide()
 						@initialized = true
 				
 			downloadRepository: (event) ->
@@ -93,15 +96,5 @@ define([
 					else if n1 < n2
 						return -1
 					return 0
-
-			setPath: (result) ->
-				path = ''
-				if result.entries?.length
-					if typeof(result.entries[0]) is 'object'
-						path = result.entries[0].fullPath
-						type = if result.entries[0].type is 'CATEGORY' then result.entries[0].categoryType else result.entries[0].type 
-						path = ModelTypes[type] + '/' + path.substring(0, path.lastIndexOf('/'))
-						path = path.replace(/\//g, ' / ')
-				@$('.path').html path
 
 )

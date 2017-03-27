@@ -9,6 +9,10 @@ img.image-crop
 	border-top 4px solid transparent
 	border-left 4px solid
 
+.no-content-message
+	padding 10px 20px
+	font-style italic
+
 .breadcrumb
 	background-color initial
 	margin-bottom 0
@@ -127,11 +131,22 @@ table > thead > tr > th.header:not(:empty)
 
 	.btn:not(:last-child) 
 		margin-left 10px
-	
+
+.header-box + .header-box
+	padding 10px 25px
+
 .btn > .glyphicon + .text
 	
 	@media(min-width 481px)
 		padding-left 5px
+
+@media (max-width 480px)
+
+	.btn-lg
+		padding 6px 12px
+		font-size 14px
+		line-height 1.42857143
+		border-radius 4px
 
 select[multiple].member-selection
 	height 200px

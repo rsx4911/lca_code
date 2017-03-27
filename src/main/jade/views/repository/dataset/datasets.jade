@@ -14,11 +14,13 @@ else
 		.clear
 	.header-box
 		+category-breadcrumb(baseUrl, categoryPath)
-table.table.table-browse.content-box
-	thead
-		tr
-			th
-			th Name
-			th Last change
-			th Commit
-	tbody
+.content-box
+	table.table.table-browse
+		thead
+			tr
+				th
+				th Name
+				th Last change
+				th Commit
+		tbody
+	.no-content-message(style='display:none') No data sets found

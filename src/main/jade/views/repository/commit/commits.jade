@@ -2,6 +2,8 @@ include ../../mixins/user-info.jade
 
 .header-box
 .content-box
+	if !groups.length
+		.no-content-message No commits yet
 	each group in groups	
 		.commit-group
 			.date-and-count
