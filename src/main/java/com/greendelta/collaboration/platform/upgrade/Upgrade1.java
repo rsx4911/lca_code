@@ -6,7 +6,7 @@ class Upgrade1 implements IUpgrade {
 
 	@Override
 	public int fromVersion() {
-		return 1;
+		return 0;
 	}
 
 	@Override
