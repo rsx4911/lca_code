@@ -63,7 +63,7 @@ CREATE TABLE comments(
 	ds_type VARCHAR(255) NOT NULL,
 	ds_ref_id VARCHAR(36) NOT NULL,
 	ds_commit_id VARCHAR(36) NOT NULL,
-	ds_field VARCHAR(4000) NOT NULL,
+	ds_path VARCHAR(4000) NOT NULL,
 	f_user BIGINT,
 	date TIMESTAMP NOT NULL,
 	text VARCHAR(4000),

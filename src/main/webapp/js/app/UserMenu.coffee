@@ -97,35 +97,13 @@ define([
 				$('title').html title
 
 			render: (renderOptions) ->
-				if currentUser.isAdmin()
-					$.ajax
-						type: 'GET' 
-						url: 'ws/admin/area/upgradeAvailable'
-						success: (upgradeAvailable) =>
-							@doRender renderOptions, upgradeAvailable
-				else
-					@doRender renderOptions
-
-			doRender: (renderOptions, upgradeAvailable) ->
 				@$el.html template 
 					isAdmin: currentUser.isAdmin()
-					upgradeAvailable: upgradeAvailable is 'true'
 					unreadMessages: conversations.getUnreadMessages()
 					websocketSupported: (window.WebSocket isnt undefined)
 					debugMode: LocalStorage.getValue('debugMode')
 					reviewMode: LocalStorage.getValue('reviewMode')
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
-
-			openUpgradeDialog: (event) ->
-				Events.preventDefault event
-				loc = window.location
-				schema = if loc.protocol is 'https' then 'wss' else 'ws'
-				host = loc.host
-				Layers.showProgressInLayer 
-					title: 'Upgrading repositories' 
-					url: "#{schema}://#{host}/sockets/admin/upgrade"
-					message: 'Some repositories need to be upgraded to be used with the current version.'
-					pageReloadOnClose: true
 
 )

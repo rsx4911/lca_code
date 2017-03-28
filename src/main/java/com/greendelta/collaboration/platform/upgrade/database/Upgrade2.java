@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.platform.upgrade;
+package com.greendelta.collaboration.platform.upgrade.database;
 
 import java.sql.SQLException;
 
@@ -6,7 +6,7 @@ class Upgrade2 implements IUpgrade {
 
 	@Override
 	public int fromVersion() {
-		return 1;
+		return 2;
 	}
 
 	@Override
@@ -17,12 +17,17 @@ class Upgrade2 implements IUpgrade {
 				"ds_type VARCHAR(255) NOT NULL",
 				"ds_ref_id VARCHAR(36) NOT NULL",
 				"ds_commit_id VARCHAR(36) NOT NULL",
-				"ds_field VARCHAR(4000) NOT NULL",
+				"ds_path VARCHAR(4000) NOT NULL",
 				"f_user BIGINT",
 				"date TIMESTAMP NOT NULL",
 				"text VARCHAR(4000)",
 				"restricted_to_role VARCHAR(255)",
 				"f_reply_to BIGINT");
-		dbUtil.update("UPDATE version SET version = 2");
+		updateDirectoryStructure();
 	}
+	
+	private void updateDirectoryStructure() {
+
+	}
+	
 }

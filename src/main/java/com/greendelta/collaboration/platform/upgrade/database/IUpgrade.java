@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.platform.upgrade;
+package com.greendelta.collaboration.platform.upgrade.database;
 
 import java.sql.SQLException;
 

@@ -99,6 +99,10 @@ public class BrowseResource {
 			return Respond.notFound(message);
 		}
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
+		if (dataset == null) {
+			String message = notFoundMessage(type, refId, null);
+			return Respond.notFound(message);
+		}
 		ObjectMap map = ObjectMap.fromJson(dataset);
 		if (map.containsKey("category"))
 			map.put("category.name", getFullPath(repo, ModelType.CATEGORY, map.get("category.@id"), commitId));

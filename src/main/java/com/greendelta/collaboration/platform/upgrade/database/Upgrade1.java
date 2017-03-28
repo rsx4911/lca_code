@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.platform.upgrade;
+package com.greendelta.collaboration.platform.upgrade.database;
 
 import java.sql.SQLException;
 
@@ -6,7 +6,7 @@ class Upgrade1 implements IUpgrade {
 
 	@Override
 	public int fromVersion() {
-		return 0;
+		return 1;
 	}
 
 	@Override
