@@ -87,43 +87,43 @@ mixin causal-allocation-table()
 						td(data-path='allocationFactors[' + product.index + ']')=product.value
 
 mixin social-aspect-table()
-	table.table.social-aspects
-		thead
-			tr
-				th Name
-				th Raw value
-				th Risk level
-				th Activity variable
-				th Data quality
-				th Comment
-				th Source
-		tbody
-			each aspect, index in dataset.aspects
+		table.table.social-aspects
+			thead
 				tr
-					td(data-path='aspects[' + index + '].socialIndicator'): +ref(aspect.socialIndicator)
-					td
-						span(data-path='aspects[' + index + '].rawAmount')=aspect.rawAmount
-						|  
-						span(data-path='aspects[' + index + '].unitOfMeasurement')
-							if aspect.socialIndicator.unitOfMeasurement
-								| [#{aspect.socialIndicator.unitOfMeasurement}]
-					td(data-path='aspects[' + index + '].riskLevel')=aspect.riskLevel
-					td
-						span(data-path='aspects[' + index + '].activityValue')=aspect.activityValue
-						span(data-path='aspects[' + index + '].activityUnit')
-							if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
-								| #{aspect.socialIndicator.activityUnit.name}, 
-						span(data-path='aspects[' + index + '].activityVariable')
-							if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
-								| #{aspect.socialIndicator.activityVariable}]
-					td(data-path='aspects[' + index + '].quality')
-						if aspect.quality
-							if dataset.socialDqSystem
-								a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dataset.socialDqSystem.id)=aspect.quality
-							else
-								| #{aspect.quality}
-					td(data-path='aspects[' + index + '].comment')=aspect.comment
-					td: +ref('aspects[' + index + '].source')
+					th Name
+					th Raw value
+					th Risk level
+					th Activity variable
+					th Data quality
+					th Comment
+					th Source
+			tbody
+				each aspect, index in dataset.socialAspects
+					tr
+						td: +ref('socialAspects[' + index + '].socialIndicator')
+						td
+							span(data-path='socialAspects[' + index + '].rawAmount')=aspect.rawAmount
+							|  
+							span(data-path='socialAspects[' + index + '].unitOfMeasurement')
+								if aspect.socialIndicator.unitOfMeasurement
+									| [#{aspect.socialIndicator.unitOfMeasurement}]
+						td(data-path='socialAspects[' + index + '].riskLevel')=aspect.riskLevel
+						td
+							span(data-path='socialAspects[' + index + '].activityValue')=aspect.activityValue
+							span(data-path='socialAspects[' + index + '].activityUnit')
+								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+									| #{aspect.socialIndicator.activityUnit.name}, 
+							span(data-path='socialAspects[' + index + '].activityVariable')
+								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+									| #{aspect.socialIndicator.activityVariable}]
+						td(data-path='socialAspects[' + index + '].quality')
+							if aspect.quality
+								if dataset.socialDqSystem
+									a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dataset.socialDqSystem.id)=aspect.quality
+								else
+									| #{aspect.quality}
+						td(data-path='socialAspects[' + index + '].comment')=aspect.comment
+						td: +ref('socialAspects[' + index + '].source')
 
 - var doc = dataset.processDocumentation
 +menubar
