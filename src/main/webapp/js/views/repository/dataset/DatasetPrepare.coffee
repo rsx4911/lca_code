@@ -86,7 +86,11 @@ define([
 
 		prepareParameterRedefs: (dataset) ->
 			parameters = {}
+			unless dataset.variants
+				return
 			for variant, vIndex in dataset.variants
+				unless variant.parameterRedefs
+					continue
 				for param, pIndex in variant.parameterRedefs
 					contextId = 'Global'
 					if param.context

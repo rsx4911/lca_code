@@ -95,6 +95,7 @@ public class RepositoryUpgrades {
 				return;
 			restructure(repo.getBinDir(type, false));
 		}
+		repositoryIndices.get(repo).updateCategoryRefIds();
 	}
 
 	private static boolean restructure(File dir) {
