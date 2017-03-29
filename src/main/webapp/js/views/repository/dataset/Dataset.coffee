@@ -196,6 +196,8 @@ define([
 			getValue: (object, path) ->
 				unless path
 					return null
+				unless object
+					return null
 				if path.indexOf('.') is -1 and path.indexOf('[') is -1
 					return object[path]
 				subpath = path
