@@ -23,17 +23,15 @@ import org.openlca.cloud.model.data.Commit;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
+import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.webservice.util.Repositories;
 import com.sun.jersey.api.client.ClientResponse.Status;
@@ -44,7 +42,6 @@ import com.sun.jersey.multipart.FormDataParam;
 public class RepositoryResource {
 
 	private final RepositoryService service;
-	private final UserService userService;
 	private final GroupService groupService;
 	private final AccessService accessService;
 	private final NotificationService notificationService;
@@ -52,11 +49,9 @@ public class RepositoryResource {
 	private final RepositoryIndices indices;
 
 	@Inject
-	public RepositoryResource(RepositoryService service, UserService userService, GroupService groupService,
-			AccessService accessService, NotificationService notificationService, HistoryService historyService,
-			RepositoryIndices indices) {
+	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
+			NotificationService notificationService, HistoryService historyService, RepositoryIndices indices) {
 		this.service = service;
-		this.userService = userService;
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
@@ -68,6 +63,8 @@ public class RepositoryResource {
 	@Path("{group}/{name}")
 	public Response create(@PathParam("group") String group, @PathParam("name") String name) {
 		Response response = _create(group, name);
+		if (response.getStatus() != Status.CREATED.getStatusCode())
+			return response;
 		Repository repo = service.get(group, name);
 		notificationService.repositoryCreated(repo).send();
 		return response;
@@ -131,13 +128,11 @@ public class RepositoryResource {
 	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
-		User currentUser = userService.getCurrentUser();
-		mappedRepo.put("userCanDelete", currentUser.admin || accessService.canDelete(currentUser, repo.toId()));
-		mappedRepo.put("userCanWrite", currentUser.admin || accessService.canWrite(currentUser, repo.toId()));
-		mappedRepo.put("userCanMove", currentUser.admin || accessService.canMove(currentUser, repo.toId()));
-		mappedRepo.put("userCanClone", currentUser.admin || accessService.canWrite(currentUser, repo.group));
-		mappedRepo.put("userCanEditMembers",
-				currentUser.admin || accessService.canEditMembers(currentUser, repo.toId()));
+		mappedRepo.put("userCanDelete", accessService.canDelete(repo.toId()));
+		mappedRepo.put("userCanWrite", accessService.canWrite(repo.toId()));
+		mappedRepo.put("userCanMove", accessService.canMove(repo.toId()));
+		mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
+		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(repo.toId()));
 		return Respond.ok(mappedRepo);
 	}
 

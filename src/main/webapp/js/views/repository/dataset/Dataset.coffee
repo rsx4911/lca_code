@@ -1,0 +1,293 @@
+define([
+				'backbone'
+				'open-layers'
+				'cs!utils/DataQuality'
+				'cs!utils/Events'
+				'cs!utils/Format'
+				'cs!utils/Icons'
+				'cs!utils/Layers'
+				'cs!utils/LocalStorage'
+				'cs!utils/ModelTypes'
+				'cs!utils/Renderer'
+				'cs!views/repository/dataset/Comments'
+				'cs!views/repository/dataset/DatasetPrepare'
+				'cs!views/repository/dataset/DataQualityLayer'
+				'cs!app/Router'
+				'templates/views/repository/dataset/project'
+				'templates/views/repository/dataset/product-system'
+				'templates/views/repository/dataset/impact-method'
+				'templates/views/repository/dataset/parameter'
+				'templates/views/repository/dataset/process'
+				'templates/views/repository/dataset/flow'
+				'templates/views/repository/dataset/social-indicator'
+				'templates/views/repository/dataset/flow-property'
+				'templates/views/repository/dataset/unit-group'
+				'templates/views/repository/dataset/currency'
+				'templates/views/repository/dataset/source'
+				'templates/views/repository/dataset/actor'
+				'templates/views/repository/dataset/location'
+				'templates/views/repository/dataset/dq-system'
+				'templates/views/repository/dataset/impact-factor-rows'
+				'templates/views/repository/dataset/nw-factor-rows'
+				'tablesorter'
+			]
+
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+
+		class RepositoryDataset extends Backbone.View
+
+			getTemplate: () ->
+				switch @type
+					when 'PROJECT' then return project
+					when 'PRODUCT_SYSTEM' then return productSystem
+					when 'IMPACT_METHOD' then return impactMethod
+					when 'PARAMETER' then return parameter
+					when 'PROCESS' then return process
+					when 'FLOW' then return flow
+					when 'SOCIAL_INDICATOR' then return socialIndicator
+					when 'FLOW_PROPERTY' then return flowProperty
+					when 'UNIT_GROUP' then return unitGroup
+					when 'CURRENCY' then return currency
+					when 'SOURCE' then return source
+					when 'ACTOR' then return actor
+					when 'LOCATION' then return location
+					when 'DQ_SYSTEM' then return dqSystem
+
+			loadDataset: (callback) ->
+				urlPart = @getUrlPart()
+				commitId = @commitId or 'null'
+				$.ajax
+					type: 'GET'
+					url: "ws/public/browse/#{urlPart}/#{commitId}" 
+					success: callback
+
+			loadCommitHistory: (callback) ->
+				urlPart = @getUrlPart()
+				$.ajax
+					type: 'GET'
+					url: "ws/history/#{urlPart}"
+					success: callback
+
+			getDownloadUrl: () ->
+				urlPart = @getUrlPart()
+				commitId = @commitId or 'null'
+				return "ws/download/prepare/#{urlPart}/#{commitId}" 
+
+			getFileBaseUrl: () ->
+				urlPart = @getUrlPart()
+				commitId = @commitId or 'null'
+				return "ws/fetch/file/#{urlPart}/#{commitId}" 
+
+			getUrlPart: (type, refId) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				type = type or @type
+				refId = refId or @refId
+				return "#{group}/#{name}/#{type}/#{refId}"
+
+			downloadData: (event) ->
+				@$('iframe').remove()
+				$.ajax
+					type: 'GET'
+					url: @getDownloadUrl()
+					success: (token) =>
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'
+
+			className: 'repository-dataset'
+
+			events: 
+				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
+				'click [data-action=download-data]': (event) -> @downloadData event
+				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
+				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
+				'click a[data-action=show-data-quality]': (event) ->
+					target = $ Events.target event
+					entry = target.attr 'data-entry'
+					schemaId = target.attr 'data-schema'
+					DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
+				'change #commitId': (event) -> 
+					repo = @repository.toJSON()
+					type = @type
+					refId = @refId
+					commitId = $(Events.target(event)).val()
+					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+
+			initialize: (options) ->
+				{@repository, @type, @refId, @commitId} = options
+
+			render: (renderOptions) ->
+				template = @getTemplate()
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				@loadDataset (dataset) =>
+					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
+					if @commitId isnt dataset.commitId
+						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
+							trigger: false
+							replace: true
+					@commitId = dataset.commitId
+					@loadCommitHistory (commits) =>
+						DatasetPrepare.applyTo dataset
+						@$el.html template 
+							dataset: dataset
+							baseUrl: "#{group}/#{name}/dataset"
+							formatDate: Format.dateTime
+							getLabel: @getLabel
+							getValue: (object, path) => @getValue object, path
+							getIcon: Icons.get
+							getTypeAsEnum: (type) => @getTypeAsEnum(type)
+							getTypeLabel: (type) => ModelTypes[type]
+							getUncertaintyLabel: @getUncertaintyLabel
+							getDQColor: DataQuality.getColor 
+							noToStr: Format.number
+							fileBaseUrl: @getFileBaseUrl()
+							commits: commits
+							commitId: @commitId or commits[0].id
+							formatCommitDescription: Format.formatCommitDescription
+							reviewMode: LocalStorage.getValue('reviewMode')
+						Renderer.render @, renderOptions
+						if dataset.type is 'Location' # and dataset.geometry
+							@initMap dataset
+						if dataset.type is 'ImpactMethod'
+							@loadImpactCategory () =>
+								@loadNwSet () =>
+									@initTableSorting()
+									Comments.init @$el, 
+										repository: @repository, 
+										type: @type, 
+										refId: @refId, 
+										commitId: @commitId
+						else
+							@initTableSorting()
+							Comments.init @$el,
+								repository: @repository, 
+								type: @type, 
+								refId: @refId, 
+								commitId: @commitId
+						if dataset.type is 'DQSystem'
+							@initDataQualityPopups(dataset)
+
+			initTableSorting: () ->
+				tables = @$('table:not(.no-head)')
+				for table in tables
+					options = {headers: {}}
+					for th, index in $('thead > tr > th', table)
+						if $(th).is(':empty') or $('a', th).length
+							options.headers[index] = {sorter: false}
+					$(table).tablesorter options
+
+			getLabel: (type, value) ->
+				switch type 
+					when 'FlowPropertyType'
+						switch value
+							when 'ECONOMIC_QUANTITY' then return 'Economic flow property'
+							when 'PHYSICAL_QUANTITY' then return 'Physical flow property'
+					when 'FlowType'
+						switch value
+							when 'ELEMENTARY_FLOW' then return 'Elementary flow'
+							when 'PRODUCT_FLOW' then return 'Product flow'
+							when 'WASTE_FLOW' then return 'Waste flow'
+					when 'ProcessType'
+						switch value
+							when 'UNIT_PROCESS' then return 'Unit process'
+							when 'LCI_RESULT' then return 'System process'
+				return ''
+
+			getValue: (object, path) ->
+				unless path
+					return null
+				unless object
+					return null
+				if path.indexOf('.') is -1 and path.indexOf('[') is -1
+					return object[path]
+				subpath = path
+				if subpath.indexOf('.') isnt -1 
+					subpath = path.substring 0, path.indexOf('.')
+				arrayPos = null
+				if subpath.indexOf('[') isnt -1
+					arrayPos = subpath.substring(subpath.indexOf('[') + 1, subpath.indexOf(']'))
+					subpath = subpath.substring 0, subpath.indexOf('[')
+				object = object[subpath]
+				if (arrayPos and (parseInt(arrayPos) is NaN or parseInt(arrayPos) > 0)) or parseInt(arrayPos) is 0
+					object = object[arrayPos]
+				if path.indexOf('.') is -1
+					return object
+				path = path.substring path.indexOf('.') + 1
+				return @getValue object, path
+
+			isCapital: (char) ->
+				asInt = char.charCodeAt(0)
+				if asInt < 65 or asInt > 90
+					return false
+				return true
+
+			getTypeAsEnum: (type) ->
+				asEnum = ''
+				first = true
+				for char, index in type 
+					if !first and @isCapital(char) and !@isCapital(type[index + 1])
+						asEnum += '_'
+					first = false
+					asEnum += char
+				return asEnum.toUpperCase()
+
+			initMap: (dataset) ->
+				map = new OpenLayers.Map
+					layers: [
+						new OpenLayers.layer.Tile
+							source: new OpenLayers.source.OSM()
+					]
+					target: 'map'
+					view: new OpenLayers.View
+						center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
+						zoom: 5
+
+			loadImpactCategory: (callback) ->
+				commitId = @commitId or 'null'
+				selectedImpactCategory = $('#impact-category option:selected').attr 'id'
+				if selectedImpactCategory
+					urlPart = @getUrlPart 'IMPACT_CATEGORY', selectedImpactCategory
+					$.ajax
+						type: 'GET'
+						url: "ws/public/browse/#{urlPart}/#{commitId}"
+						success: (impactCategory) =>
+							DatasetPrepare.applyTo impactCategory
+							@$('#impact-category-description').html impactCategory.description
+							@$('#impact-category-unit').html impactCategory.referenceUnitName
+							@$('#impact-factors tbody').empty()
+							@$('#impact-factors tbody').append impactFactorsTemplate 
+								impactCategory: impactCategory
+							callback()
+
+			loadNwSet: (callback) ->
+				commitId = @commitId or 'null'
+				selectedNwSet = $('#nw-set option:selected').attr 'id'
+				if selectedNwSet
+					urlPart = @getUrlPart 'NW_SET', selectedNwSet
+					$.ajax
+						type: 'GET'
+						url: "ws/public/browse/#{urlPart}/#{commitId}"
+						success: (nwSet) =>
+							DatasetPrepare.applyTo nwSet
+							@$('#nw-set-unit').html nwSet.weightedScoreUnit
+							@$('#nw-factors tbody').empty()
+							@$('#nw-factors tbody').append nwFactorsTemplate 
+								nwSet: nwSet
+							callback()
+
+			initDataQualityPopups: (dataset) ->
+				@$('table.data-quality td').on 'click', (event) ->
+					target = $ Events.target event
+					span = $ 'span', target
+					if span.css('display') is 'none'
+						iIndex = target.attr('data-indicator') - 1
+						sIndex = target.attr('data-score') - 1
+						indicator = dataset.indicators[iIndex]
+						score = indicator.scores[sIndex]
+						iName = if indicator.name then indicator.name else indicator.position
+						sName = if score.label then score.label else score.position
+						Layers.showMessageInLayer
+							title: "#{iName} - #{sName}"
+							body: score.description
+
+)

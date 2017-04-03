@@ -37,12 +37,16 @@ public class GroupService {
 	}
 
 	public boolean exists(String group) {
-		if (!new File(getPath(group)).exists())
+		File root = new File(this.root);
+		if (root.list() == null)
 			return false;
-		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canRead(currentUser, group))
-			throw new UnauthorizedAccessException(group, "READ");
-		return true;
+		for (String child : root.list())
+			if (child.equalsIgnoreCase(group))
+				if (!accessService.canRead(group))
+					throw new UnauthorizedAccessException(group, "READ");
+				else
+					return true;
+		return false;
 	}
 
 	public boolean isUserNamespace(String group) {
@@ -72,8 +76,7 @@ public class GroupService {
 	public boolean delete(String group) {
 		if (!exists(group))
 			return false;
-		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canDelete(currentUser, group))
+		if (!accessService.canDelete(group))
 			throw new UnauthorizedAccessException(group, "DELETE");
 		File groupDir = new File(getPath(group));
 		for (File repo : groupDir.listFiles())
@@ -97,8 +100,7 @@ public class GroupService {
 	}
 
 	public void setAvatar(String group, InputStream file) {
-		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canWrite(currentUser, group))
+		if (!accessService.canWrite(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
 		File avatarFile = new File(root, group + File.separator + "avatar");
 		if (file != null)
@@ -115,8 +117,7 @@ public class GroupService {
 		return getAll(adminArea).size();
 	}
 
-	public PagedResult<String> getAll(int page, String filter,
-			boolean adminArea) {
+	public PagedResult<String> getAll(int page, String filter, boolean adminArea) {
 		List<String> accessible = getAll(adminArea);
 		return PagedResult.pagedAndFiltered(page, filter, accessible);
 	}
@@ -124,12 +125,10 @@ public class GroupService {
 	private List<String> getAll(boolean adminArea) {
 		File root = new File(this.root);
 		List<String> groups = new ArrayList<>();
-		User currentUser = userService.getCurrentUser();
-		boolean isAdmin = adminArea && currentUser.admin;
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
-			if (!isAdmin && !accessService.canRead(currentUser, group.getName()))
+			if (!accessService.canRead(group.getName(), !adminArea))
 				continue;
 			if (isUserNamespace(group.getName()))
 				continue;

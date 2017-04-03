@@ -57,6 +57,20 @@ CREATE TABLE version(
 	version INTEGER NOT NULL DEFAULT 1
 );
 
+CREATE TABLE comments(
+	id BIGINT NOT NULL,
+	repository_path VARCHAR(255) NOT NULL,
+	ds_type VARCHAR(255) NOT NULL,
+	ds_ref_id VARCHAR(36) NOT NULL,
+	ds_commit_id VARCHAR(36) NOT NULL,
+	ds_path VARCHAR(4000) NOT NULL,
+	f_user BIGINT,
+	date TIMESTAMP NOT NULL,
+	text VARCHAR(4000),
+	restricted_to_role VARCHAR(255),
+	f_reply_to BIGINT
+);
+
 INSERT INTO version VALUES (2);
 
 INSERT INTO users VALUES (

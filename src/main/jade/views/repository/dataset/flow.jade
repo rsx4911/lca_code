@@ -1,0 +1,43 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					- var getFlowTypeLabel = function (flowType) { getLabel('FlowType',flowType); };
+					+field-row('Type', 'flowType', false, getFlowTypeLabel)
+					+field-row('CAS number', 'casNumber', true)
+					+field-row('Formula', 'formula', true)
+					if (dataset.synonyms && dataset.synonyms.length) || reviewMode
+						+field-row('Synonyms')
+							.comma-separated(data-path='synonyms')
+								if dataset.synonyms
+									each synonym in dataset.synonyms
+										span=synonym
+					+ref-row('Location', 'location')
+					+field-row('Infrastructure flow')
+						span(data-path='infrastructureFlow')
+							img.icon-small(src='images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
+			if (dataset.flowProperties && dataset.flowProperties.length) || reviewMode
+				h4(data-path='flowProperties') Flow properties
+				if dataset.flowProperties && dataset.flowProperties.length
+					table.table.flow-properties
+						thead
+							tr
+								th Name
+								th Formula
+						tbody
+							- var referenceFactor = null;
+							each factor in dataset.flowProperties
+								if factor.referenceFlowProperty
+									- referenceFactor = factor
+							each factor, index in dataset.flowProperties
+								if factor.flowProperty
+									tr(class=factor.referenceFlowProperty?'reference':null)
+										td: +ref('flowProperties[' + index + '].flowProperty')
+										td(data-path='flowProperties[' + index + '].conversionFactor') 1 #{referenceFactor.referenceUnit} = #{factor.conversionFactor} #{factor.referenceUnit}
+	+meta
+	.clear

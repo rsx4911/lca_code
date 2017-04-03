@@ -81,8 +81,7 @@ class Dao<T extends AbstractEntity> {
 		return query.getResultList();
 	}
 
-	public <RT> List<RT> getAttributes(String jpql,
-			Map<String, ? extends Object> parameters, Class<RT> resultClass) {
+	public <RT> List<RT> getAttributes(String jpql, Map<String, ? extends Object> parameters, Class<RT> resultClass) {
 		EntityManager em = createManager();
 		TypedQuery<RT> query = em.createQuery(jpql, resultClass);
 		if (parameters != null)
@@ -92,10 +91,18 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	public List<T> getForAttribute(String attribute, Object value) {
-		return getForAttributes(Collections.singletonMap(attribute, value));
+		return getForAttribute(attribute, value, false);
+	}
+
+	public List<T> getForAttribute(String attribute, Object value, boolean ignoreCase) {
+		return getForAttributes(Collections.singletonMap(attribute, value), ignoreCase);
 	}
 
 	public List<T> getForAttributes(Map<String, Object> parameters) {
+		return getForAttributes(parameters, false);
+	}
+
+	public List<T> getForAttributes(Map<String, Object> parameters, boolean ignoreCase) {
 		String jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
 		if (parameters != null && parameters.size() > 0) {
 			jpql += " WHERE ";
@@ -111,8 +118,12 @@ class Dao<T extends AbstractEntity> {
 					comparator = "IN";
 				if (value == null)
 					jpql += "o." + parameter.getKey() + " IS NULL";
-				else
-					jpql += "o." + parameter.getKey() + " " + comparator + " :p" + ++count;
+				else {
+					if (ignoreCase && value instanceof String)
+						jpql += "LOWER(o." + parameter.getKey() + ") " + comparator + " :p" + ++count;
+					else
+						jpql += "o." + parameter.getKey() + " " + comparator + " :p" + ++count;
+				}
 				if (value != null && value.getClass().isArray()) {
 					Set<Object> values = new HashSet<>();
 					for (Object object : (Object[]) value)
@@ -120,7 +131,10 @@ class Dao<T extends AbstractEntity> {
 					value = values;
 				}
 				if (value != null)
-					internal.put("p" + count, value);
+					if (value instanceof String && ignoreCase)
+						internal.put("p" + count, value.toString().toLowerCase());
+					else
+						internal.put("p" + count, value);
 			}
 			parameters = internal;
 		}
@@ -136,11 +150,19 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	public T getFirstForAttribute(String attribute, Object value) {
-		return getFirstForAttributes(Collections.singletonMap(attribute, value));
+		return getFirstForAttribute(attribute, value, false);
+	}
+
+	public T getFirstForAttribute(String attribute, Object value, boolean ignoreCase) {
+		return getFirstForAttributes(Collections.singletonMap(attribute, value), ignoreCase);
 	}
 
 	public T getFirstForAttributes(Map<String, Object> parameters) {
-		List<T> list = getForAttributes(parameters);
+		return getFirstForAttributes(parameters, false);
+	}
+
+	public T getFirstForAttributes(Map<String, Object> parameters, boolean ignoreCase) {
+		List<T> list = getForAttributes(parameters, ignoreCase);
 		if (list.isEmpty())
 			return null;
 		else

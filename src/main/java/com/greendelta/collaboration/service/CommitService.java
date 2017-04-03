@@ -1,17 +1,19 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
-import org.openlca.cloud.api.data.CommitReader;
+import org.openlca.cloud.api.data.ModelStreamReader;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
@@ -22,8 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.model.User;
 
 public class CommitService {
 
@@ -34,7 +34,7 @@ public class CommitService {
 	private final AccessService accessService;
 	private final RepositoryIndices repositoryIndices;
 	private final DataAccessor dataAccessor;
-	
+
 	@Inject
 	public CommitService(UserService userService, RepositoryIndices repositoryIndices, AccessService accessService,
 			DataAccessor dataAccessor) {
@@ -45,16 +45,12 @@ public class CommitService {
 	}
 
 	public String put(Repository repo, InputStream data) {
-		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canWrite(currentUser, repo.toId()))
+		if (!accessService.canWrite(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
 		Path dir = null;
-		CommitReader reader = null;
+		ModelStreamReader reader = null;
 		try {
-			dir = Files.createTempDirectory("commitReader");
-			File zip = new File(dir.toFile(), "commit.zip");
-			Files.copy(data, zip.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			reader = new CommitReader(zip);
+			reader = new ModelStreamReader(data);
 			String commitId = UUID.randomUUID().toString();
 			write(repo, commitId, reader);
 			return commitId;
@@ -73,20 +69,18 @@ public class CommitService {
 		}
 	}
 
-	private void write(Repository repo, String commitId, CommitReader reader)
-			throws IOException {
-		Commit commit = writeCommit(repo, commitId, reader);
-		writeDatasets(repo, commit, reader);
-		writeReferences(repo, commitId, reader.getDescriptors());
+	private void write(Repository repo, String commitId, ModelStreamReader reader) throws IOException {
+		Commit commit = writeCommit(repo, commitId, reader.readNextPartAsString());
+		List<Dataset> datasets = writeDatasets(repo, commit, reader);
+		writeReferences(repo, commitId, datasets);
 	}
 
-	private Commit writeCommit(Repository repo, String commitId,
-			CommitReader reader) {
+	private Commit writeCommit(Repository repo, String commitId, String commitMessage) {
 		String username = userService.getCurrentUser().username;
 		long timestamp = Calendar.getInstance().getTimeInMillis();
 		Commit commit = new Commit();
 		commit.id = commitId;
-		commit.message = reader.getCommitMessage();
+		commit.message = commitMessage;
 		commit.user = username;
 		commit.timestamp = timestamp;
 		File historyFile = repo.getHistoryFile(true);
@@ -94,24 +88,34 @@ public class CommitService {
 		return commit;
 	}
 
-	private void writeDatasets(Repository repo, Commit commit,
-			CommitReader reader) throws IOException {
-		List<Dataset> datasets = reader.getDescriptors();
-		DatasetIndex index = repositoryIndices.get(repo);
-		for (Dataset dataset : datasets) {
+	private List<Dataset> writeDatasets(Repository repo, Commit commit, ModelStreamReader reader) throws IOException {
+		List<Dataset> datasets = new ArrayList<>();
+		while (reader.hasMore()) {
+			Dataset dataset = reader.readNextPartAsDataset();
+			datasets.add(dataset);
 			ModelType type = dataset.type;
 			String refId = dataset.refId;
 			File file = repo.getDatasetFile(type, refId, commit.id, true);
-			String data = reader.getData(dataset);
-			dataAccessor.writeDataset(file, data);
+			try (OutputStream out = new FileOutputStream(file)) {
+				reader.readNextPartToStream(out);
+			}
 			File binDir = repo.getBinDir(type, refId, commit.id, false);
-			reader.copyBinaries(dataset, binDir);
+			int count = 0;
+			int noOfFiles = reader.readNextInt();
+			while (count++ < noOfFiles) {
+				String path = reader.readNextPartAsString();
+				File binFile = new File(binDir, path);
+				binFile.getParentFile().mkdirs();
+				try (OutputStream out = new FileOutputStream(binFile)) {
+					reader.readNextPartToStream(out);
+				}
+			}
 		}
-		index.index(datasets, commit);
+		repositoryIndices.get(repo).index(datasets, commit);
+		return datasets;
 	}
 
-	private void writeReferences(Repository repo, String commitId,
-			List<Dataset> datasets) throws IOException {
+	private void writeReferences(Repository repo, String commitId, List<Dataset> datasets) throws IOException {
 		File file = repo.getCommitFile(commitId, true);
 		String json = new Gson().toJson(datasets);
 		Files.write(file.toPath(), json.getBytes(), StandardOpenOption.CREATE);

@@ -4,6 +4,8 @@ public enum Permission {
 
 	READ,
 	
+	COMMENT,
+	
 	WRITE,
 
 	MOVE,
@@ -11,5 +13,5 @@ public enum Permission {
 	DELETE,
 	
 	EDIT_MEMBERS;
-	
+		
 }

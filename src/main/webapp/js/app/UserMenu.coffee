@@ -2,6 +2,7 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Layers'
+				'cs!utils/LocalStorage'
 				'cs!utils/Renderer'
 				'cs!app/Router'
 				'cs!models/Conversations'
@@ -9,7 +10,7 @@ define([
 				'templates/views/user-menu'
 			]
 
-	(Backbone, Events, Layers, Renderer, Router, conversations, currentUser, template) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Router, conversations, currentUser, template) ->
 
 		class UserMenu extends Backbone.View
 
@@ -24,13 +25,7 @@ define([
 
 			toggleDebug: (event) ->
 				Events.preventDefault event
-				debugMode = false
-				if localStorage and localStorage.getItem and localStorage.setItem
-					debugMode = !(localStorage.getItem('debugMode') is 'true')
-					localStorage.setItem 'debugMode', debugMode.toString()
-				else 
-					debugMode = !(window.debugMode is 'true')
-					window.debugMode = debugMode.toString()
+				debugMode = LocalStorage.toggleValue 'debugMode'
 				icon = $ '.toggle-debug .glyphicon'
 				if debugMode
 					icon.removeClass 'glyphicon-eye-close'
@@ -41,6 +36,19 @@ define([
 					icon.addClass 'glyphicon-eye-close'
 					icon.attr 'title', 'Debugging off'
 				icon.tooltip('fixTitle').tooltip 'show'
+
+			toggleReview: (event) ->
+				Events.preventDefault event
+				reviewMode = LocalStorage.toggleValue 'reviewMode'
+				icon = $ '.toggle-review .glyphicon'
+				if reviewMode
+					icon.attr 'title', 'Review mode on'
+					icon.attr 'data-active', 'data-active'
+				else
+					icon.attr 'title', 'Review mode off'
+					icon.removeAttr 'data-active'
+				icon.tooltip('fixTitle').tooltip 'show'
+				Backbone.history.loadUrl()
 
 			onSearchKeyUp: (event) ->
 				if Events.keyCode(event) isnt 13
@@ -57,6 +65,7 @@ define([
 				'click a[href]:not([target=_blank]):not(.logout):not([data-action])': (event) -> Events.followLink event
 				'click a.logout': (event) -> @logout event
 				'click a.toggle-debug': (event) -> @toggleDebug event
+				'click a.toggle-review': (event) -> @toggleReview event
 				'click a[data-action=upgrade]': (event) -> @openUpgradeDialog event
 				'keyup #global-search': (event) -> @onSearchKeyUp event
 
@@ -88,33 +97,13 @@ define([
 				$('title').html title
 
 			render: (renderOptions) ->
-				if currentUser.isAdmin()
-					$.ajax
-						type: 'GET' 
-						url: 'ws/admin/area/upgradeAvailable'
-						success: (upgradeAvailable) =>
-							@doRender renderOptions, upgradeAvailable
-				else
-					@doRender renderOptions
-
-			doRender: (renderOptions, upgradeAvailable) ->
 				@$el.html template 
 					isAdmin: currentUser.isAdmin()
-					upgradeAvailable: upgradeAvailable is 'true'
 					unreadMessages: conversations.getUnreadMessages()
 					websocketSupported: (window.WebSocket isnt undefined)
-					debugMode: localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
+					debugMode: LocalStorage.getValue('debugMode')
+					reviewMode: LocalStorage.getValue('reviewMode')
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 
-			openUpgradeDialog: (event) ->
-				Events.preventDefault event
-				loc = window.location
-				schema = if loc.protocol is 'https' then 'wss' else 'ws'
-				host = loc.host
-				Layers.showProgressInLayer 
-					title: 'Upgrading repositories' 
-					url: "#{schema}://#{host}/sockets/admin/upgrade"
-					message: 'Some repositories need to be upgraded to be used with the current version.'
-					pageReloadOnClose: true
 )

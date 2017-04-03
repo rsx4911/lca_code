@@ -1,0 +1,62 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			if dataset.variants
+				ul.nav.nav-tabs(role='tablist')
+					li.active(role='presentation') 
+						a(href='#variants' aria-controls='variants' role='tab' data-toggle='tab' data-path='variants') Variants
+					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
+						li(role='presentation') 
+							a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab') Parameters
+				.tab-content
+					#variants.tab-pane.active(role='tabpanel')
+						table.table
+							thead
+								tr
+									th Name
+									th Product system
+									th Allocation method
+									th Amount
+							tbody
+								each variant, index in dataset.variants
+									tr
+										td(data-path='variants[' + index + '].name')=variant.name
+										td: +ref('variants[' + index + '].productSystem')
+										td(data-path='variants[' + index + '].allocationMethod')=variant.allocationMethod
+										td 
+											span(data-path='variants[' + index + '].amount')=variant.amount
+											|  
+											span(data-path='variants[' + index + '].unit')
+												if variant.unit
+													| #{variant.unit.name}
+					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
+						#parameters.tab-pane(role='tabpanel')
+							table.table
+								thead
+									tr
+										th Parameter
+										th Context
+										each variant in dataset.variants
+											th=variant.name
+								tbody
+									each parameter in dataset.parameterRedefs
+										tr
+											td(data-path=parameter.path + '.name')=parameter.name
+											td(data-path=parameter.path + '.context')
+												if parameter.context
+													+ref(parameter.context)
+												else
+													| Global
+											each entry in parameter.values
+												td(data-path=entry.path)=entry.value
+	+meta
+		hr
+		strong Impact method
+		div: +ref('impactMethod', null, false, '-')
+		strong Normalization & Weighting set
+		div(data-path='nwSet')=dataset.nwSet?dataset.nwSet.name:'-'
+	.clear

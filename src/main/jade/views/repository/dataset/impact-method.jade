@@ -1,0 +1,73 @@
+include ./mixins.jade
+
+mixin impact-category-selection()
+	+select('impact-category', 'Impact category')
+		if dataset.impactCategories
+			each ic in dataset.impactCategories
+				option(id=ic.id)=ic.name
+	div#impact-category-description(data-path='description')
+	| Reference unit: 
+	span#impact-category-unit(data-path='referenceUnitName')
+
+mixin impact-factor-table()
+	h4(data-path='impactFactors') Impact factors
+	table#impact-factors.table
+		thead
+			tr
+				th Flow
+				th Category
+				th Factor
+				th Uncertainty
+		tbody
+
+mixin nw-set-selection()
+	+select('nw-set', 'Normalization and weighting set')
+		each set in dataset.nwSets
+			option(id=set.id) #{set.name}
+
+mixin nw-factor-table()
+	h4(data-path='factors') Normalization and weighting factors
+	table#nw-factors.table
+		thead
+			tr
+				th Impact category
+				th Normalization factor
+				th Weighting factor
+		tbody
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			ul.nav.nav-tabs(role='tablist')
+				li.active(role='presentation') 
+					a(href='#categories' aria-controls='categories' role='tab' data-toggle='tab' data-path='impactCategories') Impact factors
+				if (dataset.nwSets && dataset.nwSets.length) || reviewMode
+					li(role='presentation') 
+						a(href='#nwsets' aria-controls='nwsets' role='tab' data-toggle='tab' data-path='nwSets') Normalization and weighting
+				if (dataset.parameters && dataset.parameters.length) || reviewMode
+					li(role='presentation') 
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters') Parameters
+			.tab-content
+				#categories.tab-pane.active(role='tabpanel')
+					if dataset.impactCategories && dataset.impactCategories.length
+						+impact-category-selection
+						hr
+						+impact-factor-table
+				if (dataset.nwSets && dataset.nwSets.length) || reviewMode
+					#nwsets.tab-pane(role='tabpanel')
+						if dataset.nwSets && dataset.nwSets.length
+							+nw-set-selection
+						| Reference unit: 
+						span#nw-set-unit(data-path='weightedScoreUnit')
+						if dataset.nwSets && dataset.nwSets.length
+							hr
+							+nw-factor-table
+				if (dataset.parameters && dataset.parameters.length) || reviewMode
+					#parameters.tab-pane(role='tabpanel')
+						if dataset.parameters && dataset.parameters.length
+							+parameter-table('parameters', true)
+							+parameter-table('parameters', false)
+	+meta
+	.clear

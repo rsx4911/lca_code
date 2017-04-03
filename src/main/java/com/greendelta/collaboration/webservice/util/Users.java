@@ -2,7 +2,6 @@ package com.greendelta.collaboration.webservice.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.openlca.cloud.util.ObjectMap;
 
@@ -15,21 +14,21 @@ public class Users {
 		// only static access
 	}
 
-	public static List<Map<String, Object>> mapForSelfOrAdmin(List<User> users) {
-		List<Map<String, Object>> all = new ArrayList<>();
+	public static List<ObjectMap> mapForSelfOrAdmin(List<User> users) {
+		List<ObjectMap> all = new ArrayList<>();
 		for (User user : users)
 			all.add(mapForSelf(user));
 		return all;
 	}
 
-	public static List<Map<String, Object>> mapForOthers(List<User> users) {
-		List<Map<String, Object>> all = new ArrayList<>();
+	public static List<ObjectMap> mapForOthers(List<User> users) {
+		List<ObjectMap> all = new ArrayList<>();
 		for (User user : users)
 			all.add(mapForOthers(user));
 		return all;
 	}
 
-	public static Map<String, Object> mapForSelf(User user) {
+	public static ObjectMap mapForSelf(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.remove("hash", "salt", "avatar", "twoFactorSecret");
 		if (!Strings.isNullOrEmpty(user.twoFactorSecret))
@@ -38,7 +37,7 @@ public class Users {
 		return map;
 	}
 
-	public static Map<String, Object> mapForOthers(User user) {
+	public static ObjectMap mapForOthers(User user) {
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.removeAllBut("name", "username");
 		return map;

@@ -2,8 +2,9 @@ package com.greendelta.collaboration.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
+
+import org.openlca.cloud.util.ObjectMap;
 
 public class PagedResult<T> {
 
@@ -32,7 +33,7 @@ public class PagedResult<T> {
 		this.data = data;
 	}
 
-	public PagedResult<Map<String, Object>> toClient(Function<List<T>, List<Map<String, Object>>> mapper) {
+	public PagedResult<ObjectMap> toClient(Function<List<T>, List<ObjectMap>> mapper) {
 		return new PagedResult<>(page, filter, total, subTotal, mapper.apply(data));
 	}
 

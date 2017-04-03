@@ -1,0 +1,14 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+ref-row('Unit group', 'unitGroup')
+					+field-row('Flow property type')
+						span(data-path='flowPropertyType')=getLabel('FlowPropertyType', dataset.flowPropertyType)
+	+meta
+	.clear

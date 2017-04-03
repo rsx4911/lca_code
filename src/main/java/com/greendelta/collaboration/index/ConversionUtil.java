@@ -31,7 +31,7 @@ class ConversionUtil {
 		Document document = new Document();
 		IndexUtil.addField(document, "refId", dataset.refId);
 		IndexUtil.addField(document, "commitId", commit.id);
-		IndexUtil.addField(document, "type", dataset.type.name());
+		IndexUtil.addField(document, "type", dataset.type);
 		IndexUtil.addField(document, "categoryRefId", dataset.categoryRefId);
 		IndexUtil.addField(document, "categoryType", dataset.categoryType);
 		IndexUtil.addField(document, "lastUpdate", commit.timestamp);
@@ -39,6 +39,21 @@ class ConversionUtil {
 		IndexUtil.addTextField(document, "fullPath", dataset.fullPath);
 		IndexUtil.addTextField(document, "name", dataset.name);
 		IndexUtil.addTextField(document, "commitMessage", commit.message);
+		return document;
+	}
+
+	static Document convert(DatasetIndexEntry entry) {
+		Document document = new Document();
+		IndexUtil.addField(document, "refId", entry.refId);
+		IndexUtil.addField(document, "commitId", entry.commitId);
+		IndexUtil.addField(document, "type", entry.type);
+		IndexUtil.addField(document, "categoryRefId", entry.categoryRefId);
+		IndexUtil.addField(document, "categoryType", entry.categoryType);
+		IndexUtil.addField(document, "lastUpdate", entry.lastUpdate);
+		IndexUtil.addField(document, "repositoryId", entry.repositoryId);
+		IndexUtil.addTextField(document, "fullPath", entry.fullPath);
+		IndexUtil.addTextField(document, "name", entry.name);
+		IndexUtil.addTextField(document, "commitMessage", entry.commitMessage);
 		return document;
 	}
 

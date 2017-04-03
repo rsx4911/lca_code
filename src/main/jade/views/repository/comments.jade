@@ -1,0 +1,8 @@
+include comment-entry.jade
+
+.header-box
+.content-box
+	if !comments.length
+		.no-content-message No comments yet
+	each comment, index in comments
+		+comment-entry(comment, index, null, true)

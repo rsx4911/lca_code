@@ -11,6 +11,7 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Notification;
 import com.greendelta.collaboration.model.Team;
@@ -109,12 +110,33 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
+	public NotificationJob fieldCommented(Comment comment) {
+		User currentUser = userService.getCurrentUser();
+		String repoUrl = baseUrl + "/" + comment.repositoryPath;
+		String commentUrl = repoUrl + "/comments";
+		String datasetUrl = repoUrl + "/dataset/" + comment.field.modelType.name() + "/" + comment.field.refId + "/"
+				+ comment.field.commitId;
+		String subject = "A field was commented";
+		String message = "The user " + currentUser.name + " added a comment '<a href=\"" + commentUrl + "\">"
+				+ comment.text + "</a>' in <a href=\"" + repoUrl
+				+ "\">" + comment.repositoryPath
+				+ "</a> on <a href=\"" + datasetUrl + "\">dataset</a>";
+		String group = comment.repositoryPath.substring(0, comment.repositoryPath.indexOf('/'));
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(subject, message,
+				getMemberUsers(Notification.FIELD_COMMENTED, comment.repositoryPath)));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.FIELD_COMMENTED, group)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.FIELD_COMMENTED, false)));
+		return new NotificationJob(emails);
+	}
+
 	public NotificationJob memberAdded(String group, User member) {
 		User currentUser = userService.getCurrentUser();
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "You were added to a group";
 		String othersSubject = "A member was added to a group";
-		String personalMessage = "You were added to group <a href=\"" + url + "\">" + group + "</a> by the user  " + currentUser.name;
+		String personalMessage = "You were added to group <a href=\"" + url + "\">" + group + "</a> by the user  "
+				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to group <a href=\"" + url + "\">" + group
 				+ "</a> by the user  "
 				+ currentUser.name;
@@ -128,12 +150,13 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
-	public NotificationJob roleChanged(String group, User member)  {
+	public NotificationJob roleChanged(String group, User member) {
 		User currentUser = userService.getCurrentUser();
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "Your role in a group was changed";
 		String othersSubject = "A role was changed in a group";
-		String personalMessage = "Your role in group <a href=\"" + url + "\">" + group + "</a> was changed by the user  " + currentUser.name;
+		String personalMessage = "Your role in group <a href=\"" + url + "\">" + group
+				+ "</a> was changed by the user  " + currentUser.name;
 		String othersMessage = "The role of user " + member.name + " for group <a href=\"" + url + "\">" + group
 				+ "</a> was changed by the user  "
 				+ currentUser.name;
@@ -167,14 +190,15 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
-	public NotificationJob roleChanged(String group, Team member)  {
+	public NotificationJob roleChanged(String group, Team member) {
 		User currentUser = userService.getCurrentUser();
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "The role of a team you are in was changed for a group";
 		String othersSubject = "The role of a team was changed for a group";
 		String personalMessage = "The role of a team you are in was changed for group <a href=\"" + url + "\">" + group
 				+ "</a> by the user  " + currentUser.name;
-		String othersMessage = "The role of team " + member.name + " was changed for group <a href=\"" + url + "\">" + group
+		String othersMessage = "The role of team " + member.name + " was changed for group <a href=\"" + url + "\">"
+				+ group
 				+ "</a> by the user  "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
@@ -245,7 +269,7 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
-	public NotificationJob roleChanged(Repository repo, User member)  {
+	public NotificationJob roleChanged(Repository repo, User member) {
 		User currentUser = userService.getCurrentUser();
 		String path = repo.toId();
 		String url = baseUrl + "/" + path;
@@ -265,7 +289,7 @@ public class NotificationService {
 				getAdminUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
-	
+
 	public NotificationJob memberAdded(Repository repo, Team member) {
 		User currentUser = userService.getCurrentUser();
 		String path = repo.toId();
@@ -286,7 +310,7 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
-	public NotificationJob roleChanged(Repository repo, Team member)  {
+	public NotificationJob roleChanged(Repository repo, Team member) {
 		User currentUser = userService.getCurrentUser();
 		String path = repo.toId();
 		String url = baseUrl + "/" + path;
@@ -381,7 +405,7 @@ public class NotificationService {
 				getAdminUsers(Notification.REMOVED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
-	
+
 	public NotificationJob userCreated(User user, String password) {
 		User currentUser = userService.getCurrentUser();
 		String adminMessage = "The user " + user.name + " was created by the user  " + currentUser.name;

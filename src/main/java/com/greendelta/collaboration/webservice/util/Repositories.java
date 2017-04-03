@@ -3,7 +3,6 @@ package com.greendelta.collaboration.webservice.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openlca.cloud.util.ObjectMap;
 
@@ -15,14 +14,14 @@ public class Repositories {
 		// only static access
 	}
 
-	public static List<Map<String, Object>> map(List<Repository> repos) {
-		List<Map<String, Object>> all = new ArrayList<>();
+	public static List<ObjectMap> map(List<Repository> repos) {
+		List<ObjectMap> all = new ArrayList<>();
 		for (Repository repo : repos)
 			all.add(map(repo, null));
 		return all;
 	}
 
-	public static Map<String, Object> map(Repository repo, Boolean groupIsUserNamespace) {
+	public static ObjectMap map(Repository repo, Boolean groupIsUserNamespace) {
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 		map.put("group", repo.group);
 		map.put("name", repo.name);

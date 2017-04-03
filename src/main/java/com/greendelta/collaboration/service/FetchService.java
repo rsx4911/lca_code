@@ -1,11 +1,23 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.ws.rs.core.StreamingOutput;
+
+import org.openlca.cloud.api.data.ModelStream;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FetchRequestData;
+import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
@@ -54,11 +66,86 @@ public class FetchService {
 
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		File file = repo.getDatasetFile(type, refId, commitId, false);
-		return dataAccessor.readDataset(file);
+		byte[] data = dataAccessor.read(file);
+		if (data == null)
+			return null;
+		return new String(data, Charset.forName("utf-8"));
 	}
 
 	public File getBinDir(Repository repo, ModelType type, String refId, String commitId) {
 		return repo.getBinDir(type, refId, commitId, false);
 	}
 
+	public StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits) {
+		return prepareData(repo, requested, commits, false);
+	}
+
+	public StreamingOutput prepareData(Repository repo, List<Commit> commits) {
+		return prepareData(repo, null, commits, true);
+	}
+
+	private StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits,
+			boolean skipEmpty) {
+		Collections.reverse(commits);
+		Set<Dataset> empty = new HashSet<>();
+		Set<Dataset> datasets = new HashSet<>();
+		Map<Dataset, String> dsToCommit = new HashMap<>();
+		for (Commit commit : commits) {
+			for (Dataset dataset : historyService.getReferences(repo, commit.id)) {
+				if (requested != null && !requested.contains(dataset.asFileReference()))
+					continue;
+				if (skipEmpty && empty.contains(dataset))
+					continue;
+				if (datasets.contains(dataset))
+					continue;
+				if (skipEmpty && !hasDataset(repo, dataset.type, dataset.refId, commit.id)) {
+					empty.add(dataset);
+					continue;
+				}
+				dsToCommit.put(dataset, commit.id);
+				datasets.add(dataset);
+			}
+		}
+		if (datasets.isEmpty())
+			return null;
+		return new StreamingOutput() {
+
+			@Override
+			public void write(OutputStream output) throws IOException {
+				int read = -1;
+				String commitId = commits.get(0).id;
+				try (FetchStream stream = new FetchStream(repo, commitId, datasets, dsToCommit)) {
+					while ((read = stream.read()) != -1) {
+						output.write(read);
+					}
+				}
+			}
+		};
+
+	}
+
+	private class FetchStream extends ModelStream {
+
+		private final Repository repo;
+		private final Map<Dataset, String> dsToCommitId;
+
+		private FetchStream(Repository repo, String commitId, Set<Dataset> datasets, Map<Dataset, String> dsToCommitId) {
+			super(commitId, datasets);
+			this.repo = repo;
+			this.dsToCommitId = dsToCommitId;
+		}
+
+		@Override
+		protected byte[] getData(Dataset dataset) throws IOException {
+			String data = getDataset(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
+			if (data == null)
+				return new byte[0];
+			return data.getBytes(ModelStream.CHARSET);
+		}
+
+		@Override
+		protected File getBinaryFilesLocation(Dataset dataset) {
+			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
+		}
+	}
 }

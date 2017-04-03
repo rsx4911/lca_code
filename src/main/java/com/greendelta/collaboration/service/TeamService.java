@@ -22,7 +22,7 @@ public class TeamService {
 	}
 
 	public Team getForTeamname(String teamname) {
-		return dao.getFirstForAttribute("teamname", teamname);
+		return dao.getFirstForAttribute("teamname", teamname, true);
 	}
 
 	public Team insert(Team team) {

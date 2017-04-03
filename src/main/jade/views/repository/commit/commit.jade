@@ -1,0 +1,9 @@
+include ../../mixins/user-info.jade
+
+.header-box
+	h4 
+		div #{commit.message}
+		small #{commit.id}
+	+user-info(commit.user, commit.userDisplayName)(class='concealed')
+		|  on #{formatDate(commit.timestamp)}
+.file-references.content-box

@@ -5,15 +5,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static com.greendelta.collaboration.model.Permission.*;
+
 public enum Role {
 
 	NONE(1),
 
-	READER(2, Permission.READ),
+	READER(2, READ),
 
-	CONTRIBUTOR(3, Permission.READ, Permission.WRITE),
+	CONTRIBUTOR(3, READ, WRITE),
 
-	OWNER(4, Permission.READ, Permission.WRITE, Permission.MOVE, Permission.DELETE, Permission.EDIT_MEMBERS);
+	REVIEWER(4, READ, WRITE, COMMENT),
+
+	OWNER(5, READ, COMMENT, WRITE, MOVE, DELETE, EDIT_MEMBERS);
 
 	private List<Permission> permissions;
 	private int level;
@@ -32,5 +36,5 @@ public enum Role {
 			return r1;
 		return r2;
 	}
-	
+
 }

@@ -398,7 +398,7 @@
 							<goal>exec</goal>
 						</goals>
 						<configuration>
-							<executable>node_modules/gulp/bin/gulp.js</executable>
+							<executable>gulp</executable>
 							<arguments>
 								<argument>build</argument>
 							</arguments>

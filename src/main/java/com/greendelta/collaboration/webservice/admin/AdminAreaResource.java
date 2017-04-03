@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.TeamService;
-import com.greendelta.collaboration.service.UpgradeService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.webservice.Respond;
 
@@ -24,16 +23,14 @@ public class AdminAreaResource {
 	private final UserService userService;
 	private final GroupService groupService;
 	private final TeamService teamService;
-	private final UpgradeService upgradeService;
 
 	@Inject
 	public AdminAreaResource(RepositoryService repoService, UserService service, GroupService groupService,
-			TeamService teamService, UpgradeService upgradeService) {
+			TeamService teamService) {
 		this.repoService = repoService;
 		this.userService = service;
 		this.groupService = groupService;
 		this.teamService = teamService;
-		this.upgradeService = upgradeService;
 	}
 
 	@GET
@@ -48,12 +45,4 @@ public class AdminAreaResource {
 		return Respond.ok(result);
 	}
 
-	@GET
-	@Path("upgradeAvailable")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response upgradeAvailable() {
-		if (!upgradeService.upgradeAvailable())
-			return Respond.ok("false");
-		return Respond.ok("true");
-	}
 }

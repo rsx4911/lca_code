@@ -9,7 +9,12 @@
 		padding 18px 13px 18px 0
 	
 	a
-		margin-left 20px
+
+		@media(min-width 992px)
+			margin-left 20px
+		
+		@media(max-width 991px)
+			margin-left 15px
 
 	.glyphicon
 		color rgb(84, 86, 91)
@@ -17,7 +22,7 @@
 		
 	.search-link-icon		
 
-			@media(min-width 768px)
+			@media(min-width 992px)
 				display none
 
 	.toggle-debug 
@@ -28,17 +33,25 @@
 		.glyphicon-eye-close
 			color rgb(221, 221, 221)
 
-	.user-menu-actions
-		margin-top 4px
+	.toggle-review .glyphicon
+		color rgb(221, 221, 221)
+		
+		&[data-active]
+			color rgb(68, 157, 68)
 	
 	#global-search-group
 		
-		@media(max-width 767px)
+		@media(max-width 991px)
 			display none
 		
 		.form-control-feedback
 			font-size 12px
-				
+		
+		@media(max-width 1199px)
+	
+			input
+				width 150px
+
 	#message-icon.new-messages
 		color rgb(240, 68, 23)
 
@@ -48,3 +61,23 @@
 		left -13px
 		font-size 10px
 		color white
+	
+	.user-menu-actions
+		margin-top 4px
+
+		.default-menu
+			display inline-block
+
+		@media(max-width 767px)
+			
+			.default-menu
+				display none
+
+		@media(min-width 768px)
+		
+			.glyphicon-cog
+				display none
+			
+			.dropdown-menu
+				display none !important
+						

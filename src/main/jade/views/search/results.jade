@@ -9,10 +9,16 @@ include ../mixins/paging.jade
 			option All
 			each type in modelTypes
 				option(value='#{type}' selected=type===filteredType)=getTypeLabel(type)
+	.clear
 .content-box
 	each dataset in data
 		.result
-			a(href='#{dataset.repositoryId}/dataset/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}')
+			- var url = dataset.repositoryId + '/dataset';
+			if dataset.type === 'CATEGORY'
+				- url += 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
+			else
+				- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
+			a(href=url)
 				if dataset.type === 'CATEGORY'
 					img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
 				else

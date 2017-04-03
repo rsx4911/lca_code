@@ -1,0 +1,20 @@
+define () ->
+
+	getValue: (key) ->
+		localStorage?.getItem?('reviewMode') is 'true' or window.reviewMode is 'true'
+
+	setValue: (key, value) ->
+		if localStorage and localStorage.getItem and localStorage.setItem
+			localStorage.setItem key, value.toString()
+		else
+			window[key] = value.toString()
+
+	toggleValue: (key) ->
+		value = false
+		if localStorage and localStorage.getItem and localStorage.setItem
+			value = !(localStorage.getItem(key) is 'true')
+			localStorage.setItem key, value.toString()
+		else 
+			value = !(window[key] is 'true')
+			window[key] = value.toString()
+		return value

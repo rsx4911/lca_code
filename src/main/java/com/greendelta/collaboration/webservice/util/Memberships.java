@@ -3,7 +3,6 @@ package com.greendelta.collaboration.webservice.util;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.openlca.cloud.util.ObjectMap;
@@ -17,7 +16,7 @@ public class Memberships {
 		// only static access
 	}
 
-	public static List<Map<String, Object>> map(List<Membership> memberships) {
+	public static List<ObjectMap> map(List<Membership> memberships) {
 		// each user of a team has a membership, but the teams also hold each
 		// user so only one team membership needs to remain for display purposes
 		Set<String> repoPlusTeam = new HashSet<>();
@@ -33,13 +32,13 @@ public class Memberships {
 			repoPlusTeam.add(key);
 			return false;
 		});
-		List<Map<String, Object>> maps = new ArrayList<>();
+		List<ObjectMap> maps = new ArrayList<>();
 		for (Membership membership : memberships)
 			maps.add(map(membership));
 		return maps;
 	}
 
-	private static Map<String, Object> map(Membership membership) {
+	private static ObjectMap map(Membership membership) {
 		ObjectMap map = ObjectMap.fromObject(membership);
 		map.remove("id");
 		if (membership.team != null) {

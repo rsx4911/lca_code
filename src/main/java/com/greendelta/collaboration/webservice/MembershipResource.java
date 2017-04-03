@@ -14,23 +14,20 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.error.UnauthorizedAccessException;
-
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
+import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.webservice.util.Memberships;
 
 @Path("membership")
@@ -39,18 +36,15 @@ public class MembershipResource {
 
 	private final MembershipService service;
 	private final RepositoryService repoService;
-	private final AccessService accessService;
 	private final UserService userService;
 	private final TeamService teamService;
 	private final NotificationService notificationService;
 
 	@Inject
-	public MembershipResource(MembershipService service, RepositoryService repoService, AccessService accessService,
-			UserService userService,
+	public MembershipResource(MembershipService service, RepositoryService repoService, UserService userService,
 			TeamService teamService, NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
-		this.accessService = accessService;
 		this.userService = userService;
 		this.teamService = teamService;
 		this.notificationService = notificationService;
@@ -85,7 +79,7 @@ public class MembershipResource {
 				notificationService.memberAdded(group, team).send();
 		return Respond.ok(Collections.singletonMap("added", added));
 	}
-	
+
 	@PUT
 	@Path("{group}/{repo}/user/{username}/{role}")
 	public Response updateUserRole(@PathParam("group") String group, @PathParam("repo") String repo,
@@ -165,9 +159,6 @@ public class MembershipResource {
 		String path = group;
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
-		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !accessService.canEditMembers(currentUser, path))
-			throw new UnauthorizedAccessException(path, "CHANGE_ROLE");
 		return path;
 	}
 

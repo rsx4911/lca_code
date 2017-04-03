@@ -1,0 +1,32 @@
+.change-visibility
+	display inline-block
+
+.comment-visibility
+	color rgb(51, 122, 173)
+
+.comment-entry
+	
+	#new-comment-group
+		margin-top 15px
+		margin-left 42px
+
+	&.reply, .comment-text, .dataset-info
+		margin-left 42px
+	
+	.reply-to[data-active]
+		color rgb(68, 157, 68) !important
+		font-weight bold
+
+.comments-view
+	
+	.comment-entry
+		padding 0 20px
+		
+		&:first-child
+			padding-top 10px
+			
+		&:last-child
+			padding-bottom 10px
+	
+		& + hr
+			margin 10px 0

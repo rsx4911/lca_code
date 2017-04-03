@@ -1,0 +1,240 @@
+include ./mixins.jade
+
+mixin exchange-row(exchange, index)
+	tr(class=exchange.quantitativeReference?'reference':null)
+		td(data-path='exchanges[' + index + '].input'): img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
+		td: +ref('exchanges[' + index + '].flow')
+		td 
+			if exchange.flow.category
+				- var path = exchange.flow.category.split('/');
+				| #{path[path.length - 1]}
+				if path.length > 1
+					|  / #{path[path.length - 2]}
+		td
+			span(data-path='exchanges[' + index + '].amount')=exchange.amount
+			span(data-path='exchanges[' + index + '].unit')
+				if exchange.unit
+					|  #{exchange.unit.name}
+		td
+			span(data-path='exchanges[' + index + '].costValue')=exchange.costValue
+			span(data-path='exchanges[' + index + '].currency')
+				if exchange.currency
+					|  #{exchange.currency.name}
+		td(data-path='exchanges[' + index + '].uncertainty'): +uncertainty(exchange.uncertainty, true)
+		td(data-path='exchanges[' + index + '].dqEntry')
+			if exchange.dqEntry
+				if dataset.exchangeDqSystem
+					a(href='#' data-action='show-data-quality' data-entry=exchange.dqEntry data-schema=dataset.exchangeDqSystem.id)=exchange.dqEntry
+				else
+					| #{exchange.dqEntry}
+		td
+			if exchange.input
+				+ref('exchanges[' + index + '].defaultProvider')
+			else
+				span(data-path='exchanges[' + index + '].avoidedProduct')
+					if exchange.avoidedProduct
+						img.icon-small(src='images/check_true.png')
+
+mixin exchange-table(input)
+	table.table(class=input?'inputs':'outputs')
+		thead
+			tr
+				th
+				th Flow
+				th Category
+				th Amount
+				th Costs
+				th Uncertainty
+				th Data quality
+				th #{input?'Provider':'Avoided product'}
+		tbody
+			each exchange, index in dataset.exchanges
+				if exchange.input === input
+					+exchange-row(exchange, index)
+
+mixin non-causal-allocation-table()
+	h4 Physical & Economic allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th Product
+				th Physical
+				th Economic
+		tbody
+			each factor in dataset.nonCausalAllocationFactors
+				tr
+					td
+					td: +ref(factor.product)
+					td(data-path='allocationFactors[' + factor.physical.index + ']')=factor.physical.value
+					td(data-path='allocationFactors[' + factor.economic.index + ']')=factor.economic.value
+
+mixin causal-allocation-table()
+	h4 Causal allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th Flow
+				each product in dataset.causalAllocationFactors[0].products
+					th: +ref(product.product)
+		tbody
+			each factor in dataset.causalAllocationFactors
+				tr
+					td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
+					td: +ref(factor.exchange.flow)
+					each product in factor.products
+						td(data-path='allocationFactors[' + product.index + ']')=product.value
+
+mixin social-aspect-table()
+		table.table.social-aspects
+			thead
+				tr
+					th Name
+					th Raw value
+					th Risk level
+					th Activity variable
+					th Data quality
+					th Comment
+					th Source
+			tbody
+				each aspect, index in dataset.socialAspects
+					tr
+						td: +ref('socialAspects[' + index + '].socialIndicator')
+						td
+							span(data-path='socialAspects[' + index + '].rawAmount')=aspect.rawAmount
+							|  
+							span(data-path='socialAspects[' + index + '].unitOfMeasurement')
+								if aspect.socialIndicator.unitOfMeasurement
+									| [#{aspect.socialIndicator.unitOfMeasurement}]
+						td(data-path='socialAspects[' + index + '].riskLevel')=aspect.riskLevel
+						td
+							span(data-path='socialAspects[' + index + '].activityValue')=aspect.activityValue
+							span(data-path='socialAspects[' + index + '].activityUnit')
+								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+									| #{aspect.socialIndicator.activityUnit.name}, 
+							span(data-path='socialAspects[' + index + '].activityVariable')
+								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+									| #{aspect.socialIndicator.activityVariable}]
+						td(data-path='socialAspects[' + index + '].quality')
+							if aspect.quality
+								if dataset.socialDqSystem
+									a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dataset.socialDqSystem.id)=aspect.quality
+								else
+									| #{aspect.quality}
+						td(data-path='socialAspects[' + index + '].comment')=aspect.comment
+						td: +ref('socialAspects[' + index + '].source')
+
+- var doc = dataset.processDocumentation
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			ul.nav.nav-tabs(role='tablist')
+				li.active(role='presentation') 
+					a(href='#exchanges' aria-controls='exchange' role='tab' data-toggle='tab' data-path='exchanges') Inputs/Outputs
+				if doc || reviewMode
+					li(role='presentation') 
+						a(href='#documentation' aria-controls='documentation' role='tab' data-toggle='tab') Documentation
+				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors.length) || reviewMode
+					li(role='presentation') 
+						a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab' data-path='allocationFactors') Allocation
+				if (dataset.socialAspects && dataset.socialAspects.length) || reviewMode
+					li(role='presentation') 
+						a(href='#social' aria-controls='social' role='tab' data-toggle='tab' data-path='socialAspects') Social aspects
+				if (dataset.parameters && dataset.parameters.length) || reviewMode
+					li(role='presentation') 
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters') Parameters
+			.tab-content
+				#exchanges.tab-pane.active(role='tabpanel')
+					if dataset.exchanges
+						+exchange-table(true)
+						+exchange-table(false)
+				if doc || reviewMode
+					#documentation.tab-pane(role='tabpanel')
+						table.table.no-head
+							tbody
+								+field-row('Intended application', 'processDocumentation.intendedApplication', true)
+								+ref-row('Data set owner', 'processDocumentation.dataSetOwner')
+								+ref-row('Data generator', 'processDocumentation.dataGenerator')
+								+ref-row('Data documentor', 'processDocumentation.dataDocumentor')
+								+ref-row('Publication', 'processDocumentation.publication')
+								+ref-row('Reviewer', 'processDocumentation.reviewer')
+								+field-row('Review details', 'processDocumentation.reviewDetails', true)
+								+field-row('Access & use restrictions', 'processDocumentation.restrictionsDescription', true)
+								+field-row('Project', 'processDocumentation.project', true)
+								+field-row('Creation date', 'processDocumentation.creationDate', true, formatDate)
+								+field-row('Copyright protected')
+									span(data-path='copyright')
+										img.icon-small(src='images/check_' + (dataset.copyright?'true':'false') + '.png')
+								+field-row('LCI method', 'processDocumentation.inventoryMethodDescription', true)
+								+field-row('Modeling constants', 'processDocumentation.modelingConstantsDescription', true)
+								+field-row('Data completeness', 'processDocumentation.completenessDescription', true)
+								+field-row('Data selection', 'processDocumentation.dataSelectionDescription', true)
+								+field-row('Data treatment', 'processDocumentation.dataTreatmentDescription', true)
+								+field-row('Sampling procedure', 'processDocumentation.samplingDescription', true)
+								+field-row('Data collection period', 'processDocumentation.dataCollectionDescription', true)
+								if (doc && doc.sources) || reviewMode
+									+field-row('Sources')
+										span(data-path='processDocumentation.sources')
+											if doc && doc.sources
+												each source, index in doc.sources
+													div: +ref('processDocumentation.sources[' + index + ']')
+				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors) || reviewMode
+					#allocation.tab-pane(role='tabpanel')
+						if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length)
+							+non-causal-allocation-table()
+						if (dataset.causalAllocationFactors && dataset.causalAllocationFactors.length)
+							+causal-allocation-table()
+				if (dataset.socialAspects && dataset.socialAspects.length) || reviewMode
+					#social.tab-pane(role='tabpanel')
+						if (dataset.socialAspects && dataset.socialAspects.length)
+							+social-aspect-table()
+				if (dataset.parameters && dataset.parameters.length) || reviewMode
+					#parameters.tab-pane(role='tabpanel')
+						+parameter-table('parameters', true)
+						+parameter-table('parameters', false)
+	+meta
+		hr
+		strong Quantitative reference
+		div
+			- var flow = null;
+			- var eIndex = -1;
+			if dataset.exchanges
+				each exchange, index in dataset.exchanges
+					if exchange.quantitativeReference
+						- flow = exchange.flow;
+						- eIndex = index;
+			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, false, '-', true)
+		strong Location
+		div: +ref('location', null, false, '-')
+		hr
+		strong Valid from
+		div(data-path='processDocumentation.validFrom')=doc&&doc.validFrom?formatDate(doc.validFrom):'-'
+		strong Valid until
+		div(data-path='processDocumentation.validUntil')=doc&&doc.validUntil?formatDate(doc.validUntil):'-'
+		hr
+		strong Time description
+		div(data-path='processDocumentation.timeDescription')=doc&&doc.timeDescription?doc.timeDescription:'-'
+		strong Geography description
+		div(data-path='processDocumentation.geographyDescription')=doc&&doc.geographyDescription?doc.geographyDescription:'-'
+		strong Technology description
+		div(data-path='processDocumentation.technologyDescription')=doc&&doc.technologyDescription?doc.technologyDescription:'-'
+		hr
+		strong Process data quality schema
+		div: +ref('dqSystem', null, false, '-')
+		strong Input/Output data quality schema
+		div: +ref('exchangeDqSystem', null, false, '-')
+		strong Social data quality schema
+		div: +ref('socialDqSystem', null, false, '-')
+		strong Process data quality
+		div
+			if dataset.dqEntry
+				if dataset.dqSystem
+					a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-schema=dataset.dqSystem.id data-path='dqEntry')=dataset.dqEntry
+				else
+					span(data-path='dqEntry')=dataset.dqEntry
+			else
+				span(data-path='dqEntry') -
+	.clear

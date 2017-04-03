@@ -1,0 +1,171 @@
+include ../../mixins/category-breadcrumb.jade
+include ../../mixins/forms.jade
+include ../../mixins/user-info.jade
+
+mixin menubar()
+	.header-box
+		- var currentCommit = null;
+		+select('commitId', 'Version', null, null, true)
+			each commit, i in commits
+				if commit.id === commitId
+					- currentCommit = commit;
+				option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
+				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
+		button.btn.btn-success.pull-right(data-action='download-data')
+			span.glyphicon.glyphicon-download
+			span.text Download
+		.clear
+		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='')
+			|  on #{formatDate(currentCommit.timestamp)}
+
+mixin header()
+	.title
+		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
+		div
+			h3(data-path='name')=dataset.name
+			.category(data-path='category')
+				if dataset.category
+					- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
+					- var url = baseUrl + 's' + '/' + typeLabel
+					+category-breadcrumb(url, dataset.category.name, true)
+			h3: small: span(data-path='description')=dataset.description
+	block
+	hr
+
+mixin meta() 
+	.model-right-content.content-box
+		.meta-info
+			div
+				strong Version
+				div(data-path='version')=dataset.version
+			div
+				strong Last change
+				div(data-path='lastChange')
+					if dataset.lastChange
+						| #{formatDate(dataset.lastChange)}
+					else
+						| -
+			div
+				strong UUID
+				div(data-path='id')=dataset.id
+			block
+
+mixin field-row(label, path, checkValue, formatter)
+	- var value = getValue(dataset, path);
+	if !checkValue || value || reviewMode
+		tr
+			td=label
+			td(data-path=path) 
+				if value
+					| #{value?formatter?formatter(value):value:''}
+				block
+
+mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
+	- var ref = getValue(dataset, path);
+	span(data-path=noPath?null:path)
+		if ref
+			if !noImage
+				img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
+			if commitId
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
+			else
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
+		else if defaultLabel
+			| #{defaultLabel}
+
+mixin ref-row(label, path, additionalTypeInfo, noImage)
+	if getValue(dataset, path) || reviewMode
+		tr
+			td=label
+			td: +ref(path, additionalTypeInfo, noImage)
+
+mixin uncertainty(uncertainty, round)
+	if uncertainty
+		if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
+			| Lognormal distribution
+			br
+			| Geom. mean: #{noToStr(uncertainty.geomMean, round)}
+			br
+			| Geom. SD: #{noToStr(uncertainty.geomSd, round)}
+		else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
+			| Normal distribution 
+			br
+			| Mean: #{noToStr(uncertainty.mean, round)} 
+			br
+			| SD: #{noToStr(uncertainty.sd, round)}
+		else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
+			| Triangle distribution
+			br
+			| Min: #{noToStr(uncertainty.minimum, round)}
+			br
+			| Mode: #{noToStr(uncertainty.mode, round)}
+			br
+			| Max: #{noToStr(uncertainty.maximum, round)}
+		else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
+			| Uniform distribution 
+			br
+			| Min: #{noToStr(uncertainty.minimum, round)}
+			br
+			| Max: #{noToStr(uncertainty.maximum, round)}
+		else
+			| No distribution
+	else
+		| No distribution
+
+mixin parameter-table(path, input)
+	- var parameters = getValue(dataset, path);
+	- var isEmpty = true;
+	- var putPath = true;
+	if parameters
+		each parameter in parameters
+			if parameter.inputParameter && !input
+				- putPath = false;
+			if parameter.inputParameter === input
+				- isEmpty = false;
+	if !isEmpty
+		h4=input?'Input parameters':'Dependant parameters'
+		table.table.table-parameters
+			thead
+				tr
+					th Parameter
+					th Description
+					if input
+						th Uncertainty
+			tbody
+				each parameter, index in parameters
+					if parameter.inputParameter === input
+						tr
+							td(data-path=path + '[' + index + '].name')
+								| #{parameter.name}
+								unless input
+									|  = #{parameter.formula}
+								|  = #{parameter.value}
+							td(data-path=path + '[' + index + '].description')=parameter.description
+							if input
+								td(data-path=path + '[' + index + '].uncertainty')
+									+uncertainty(parameter.uncertainty)
+
+mixin data-quality-matrix(system, uncertainties, entries)
+	if system.indicators && system.indicators.length
+		- clazz = ''
+		if uncertainties
+			- clazz += 'uncertainties'
+		else if entries
+			- clazz += 'center-inline'
+		table.data-quality.no-head(class=clazz?clazz:null)
+			thead
+				tr
+					th
+					each score, index in system.indicators[0].scores
+						th(data-path=uncertainties?null:'indicators[0].scores[' + index + ']')=score.label?score.label:score.position
+			tbody
+				each indicator, iIndex in system.indicators
+					tr
+						td(data-path=uncertainties?null:'indicators[' + iIndex + ']')=indicator.name?indicator.name:indicator.position
+						each score, sIndex in indicator.scores
+							if uncertainties
+								td(data-path='indicators[' + iIndex + '].scores[' + sIndex + '].uncertainty')=score.uncertainty
+							else
+								td(style='background-color:#{getDQColor(system, indicator, score, entries)}' data-indicator=indicator.position data-score=score.position)
+									span(data-path='indicators[' + iIndex + '].scores[' + sIndex + '].description')=score.description
+

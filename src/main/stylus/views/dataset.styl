@@ -2,6 +2,10 @@
 	padding 0
 
 .repository-dataset
+
+	[data-action='comment']
+		margin-left 5px
+		cursor pointer
 	
 	.header-box
 		
@@ -28,7 +32,6 @@
 		border-bottom 1px solid rgb(221, 221, 221)
 
 		@media(min-width 768px)
-			float left
 			width 75%
 			border-right 1px solid rgb(221, 221, 221)
 			border-bottom 0
@@ -62,7 +65,7 @@
 		#impact-category-group
 			margin-bottom 5px
 			
-		.impact-category-description
+		#impact-category-description
 			margin-top 0
 			color rgb(119, 119, 119)
 
@@ -139,9 +142,11 @@
 		padding 25px
 
 		@media(min-width 768px)
-			float right
 			width 25%
 
 		strong
 			color rgb(80, 80, 80)
+			
+		.meta-info
+			width 100%
 	

@@ -1,0 +1,53 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			ul.nav.nav-tabs(role='tablist')
+				li.active(role='presentation') 
+					a(href='#overview' aria-controls='overview' role='tab' data-toggle='tab') Overview
+				if dataset.parameterRedefs && dataset.parameterRedefs.length
+					li(role='presentation') 
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameterRedefs') Parameters
+			.tab-content
+				#overview.tab-pane.active(role='tabpanel')
+					table.table.no-head
+						tbody
+							+ref-row('Reference process', 'referenceProcess')
+							if dataset.referenceExchange || reviewMode
+								+ref-row('Reference product', 'referenceExchange.flow', 'PRODUCT_FLOW')
+							+ref-row('Target flow property', 'targetFlowProperty')
+							if dataset.targetUnit || reviewMode
+								+field-row('Target unit', 'targetUnit.name')
+							+field-row('Target amount', 'targetAmount', true)
+				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
+					#parameters.tab-pane(role='tabpanel')
+						table.table
+							thead
+								tr
+									th Context
+									th Name
+									th Value
+									th Uncertainty
+							tbody
+								each parameter, index in dataset.parameterRedefs
+									tr
+										td 
+											if parameter.context
+												+ref('parameterRedefs[' + index + '].context')
+											else
+												| Global
+										td(data-path='parameterRedefs[' + index + '].name')=parameter.name
+										td(data-path='parameterRedefs[' + index + '].value')=parameter.value
+										td(data-path='parameterRedefs[' + index + '].uncertainty')
+											if parameter.inputParameter
+												+uncertainty(parameter.uncertainty)
+	+meta
+		hr
+		strong No. of processes
+		div(data-path='processes')=dataset.processes?dataset.processes.length:0
+		strong No. of links
+		div(data-path='processLinks')=dataset.processLinks?dataset.processLinks.length:0
+	.clear

@@ -1,0 +1,14 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+field-row('Currency code', 'code')
+					+field-row('Conversion factor', 'conversionFactor')
+					+ref-row('Reference currency', 'referenceCurrency')
+	+meta
+	.clear

@@ -1,0 +1,19 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+field-row('DOI', 'doi', true)
+					+field-row('Text reference', 'textReference', true)
+					+field-row('Year', 'year', true)
+					if dataset.externalFile || reviewMode
+						+field-row('External file')
+							span(data-path='externalFile')
+								if dataset.externalFile
+									a(href='#{fileBaseUrl}/#{dataset.externalFile}' target='_blank')=dataset.externalFile
+	+meta
+	.clear

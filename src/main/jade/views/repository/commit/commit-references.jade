@@ -1,0 +1,16 @@
+include ../../mixins/paging.jade
+
+each dataset in data
+	if dataset.type !== 'IMPACT_CATEGORY' && dataset.type !== 'NW_SET'
+		.file-reference(id=dataset.id)
+			- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '/' + commitId;
+			if dataset.type === 'CATEGORY'
+				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
+			a(href=url)
+				.header
+					if dataset.type === 'CATEGORY'
+						img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+					else
+						img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
+					span=dataset.fullPath
++paging(page, Math.ceil(total/pageSize))

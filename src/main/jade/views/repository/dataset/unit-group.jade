@@ -1,0 +1,34 @@
+include ./mixins.jade
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+ref-row('Default flow property', 'defaultFlowProperty')
+			h4(data-path='units') Units
+			table.table.units
+				thead
+					tr
+						th Name
+						th Description
+						th Synonyms
+						th Formula
+				tbody
+					- var referenceUnit = null;
+					each unit in dataset.units
+						if unit.referenceUnit
+							- referenceUnit = unit
+					each unit, index in dataset.units
+						tr(class=unit.referenceUnit?'reference':null)
+							td(data-path='units[' + index + '].name')=unit.name
+							td(data-path='units[' + index + '].description')=unit.description
+							td.comma-separated(data-path='units[' + index + '].synonyms')
+								if unit.synonyms
+									each synonym in unit.synonyms
+										.span #{synonym}
+							td(data-path='units[' + index + '].conversionFactor') 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
+	+meta
+	.clear

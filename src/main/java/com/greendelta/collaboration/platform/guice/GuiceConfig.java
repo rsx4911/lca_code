@@ -28,7 +28,8 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
-import com.greendelta.collaboration.platform.upgrade.Upgrades;
+import com.greendelta.collaboration.platform.upgrade.database.Upgrades;
+import com.greendelta.collaboration.service.RepositoryUpgrades;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
@@ -91,21 +92,23 @@ public class GuiceConfig extends GuiceServletContextListener {
 	}
 
 	private void checkAndCreateDatabase(String databasePath, String repositoriesPath) {
+		File databaseDir = new File(databasePath);
+		File repositoriesDir = new File(repositoriesPath);
 		try {
 			DriverManager.registerDriver(new EmbeddedDriver());
 		} catch (SQLException e) {
 			log.error("Error registering sql driver", e);
 		}
-		if (!new File(databasePath).exists()) {
-			checkAndCreateDirectories(new File(databasePath).getParent());
+		if (!databaseDir.exists()) {
+			checkAndCreateDirectories(databaseDir.getParent());
 			createDatabase(databasePath);
-			new File(repositoriesPath, "admin").mkdir();
+			new File(repositoriesDir, "admin").mkdir();
 		} else {
 			Upgrades.run(databasePath);
 		}
+		RepositoryUpgrades.upgrade(repositoriesPath);
 		shutdownDatabase(databasePath);
 	}
-
 
 	private void checkAndCreateDirectories(String path) {
 		if (!new File(path).exists())
@@ -137,7 +140,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		} catch (SQLException e) {
 			// Derby 10.9.1.0 shutdown raises a SQLException with state "XJ015"
 			if (!"XJ015".equals(e.getSQLState())) {
-				log.error("Error shutting down database", e);
+				log.debug("Error shutting down database", e);
 			}
 		}
 	}
@@ -151,6 +154,5 @@ public class GuiceConfig extends GuiceServletContextListener {
 		private Set<StartupListener> startupListeners;
 
 	}
-
 
 }

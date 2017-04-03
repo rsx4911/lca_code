@@ -20,6 +20,7 @@ define () ->
 	ADDED_REPOSITORY_MEMBER: 'A member was added to a repository'
 	REPOSITORY_ROLE_OF_MEMBER_CHANGED: 'A members role in a repository was changed'
 	REMOVED_REPOSITORY_MEMBER: 'A member was removed from a repository'
+	FIELD_COMMENTED: 'A comment was made on a data set'
 
 	# own membership notifications
 	ADDED_TO_TEAM_MEMBERS: 'I was added to a team'
@@ -44,7 +45,7 @@ define () ->
 				group = 'Group'
 			else if $.inArray(key, ['REPOSITORY_MOVED', 'REPOSITORY_DELETED', 'DATA_COMMITTED', 'ADDED_TO_REPOSITORY_MEMBERS', 'REPOSITORY_ROLE_CHANGED', 'REMOVED_FROM_REPOSITORY_MEMBERS', 'ADDED_REPOSITORY_MEMBER', 'REPOSITORY_ROLE_OF_MEMBER_CHANGED', 'REMOVED_REPOSITORY_MEMBER']) isnt -1
 				group = 'Repository'
-			else if $.inArray(key, ['ADDED_TO_TEAM_MEMBERS', 'REMOVED_FROM_TEAM_MEMBERS', 'ADDED_TEAM_MEMBER', 'REMOVED_TEAM_MEMBER']) isnt -1
+			else if $.inArray(key, ['ADDED_TO_TEAM_MEMBERS', 'REMOVED_FROM_TEAM_MEMBERS', 'ADDED_TEAM_MEMBER', 'REMOVED_TEAM_MEMBER', 'FIELD_COMMENTED']) isnt -1
 				group = 'Team'
 			else if $.inArray(key, ['USER_CREATED', 'USER_DELETED', 'TEAM_CREATED', 'TEAM_DELETED', 'GROUP_CREATED', 'NOTIFY_FOR_ALL']) isnt -1
 				group = 'Admin'

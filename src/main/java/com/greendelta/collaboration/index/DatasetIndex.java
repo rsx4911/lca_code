@@ -19,6 +19,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.KeyGen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +60,37 @@ public class DatasetIndex {
 		}
 	}
 
+	public void updateCategoryRefIds() {
+		List<DatasetIndexEntry> entries = getAll(ModelType.CATEGORY);
+		IndexWriter writer = IndexUtil.getWriter(directory, false);
+		try {
+			for (DatasetIndexEntry e : entries) {
+				String newRefId = KeyGen.get((e.categoryType.name() + "/" + e.fullPath).split("/"));
+				if (e.refId.equals(newRefId))
+					continue;
+				DatasetIndexEntry updated = new DatasetIndexEntry(e.type, newRefId, e.name, e.categoryType,
+						e.categoryRefId, e.commitId, e.commitMessage, e.fullPath, e.lastUpdate, e.repositoryId);
+				writer.updateDocument(new Term("refId", e.refId), ConversionUtil.convert(updated));
+				List<DatasetIndexEntry> elements = getForCategory(e.refId, null);
+				for (DatasetIndexEntry el : elements) {
+					updated = new DatasetIndexEntry(el.type, el.refId, el.name, el.categoryType, newRefId, el.commitId,
+							el.commitMessage, el.fullPath, el.lastUpdate, el.repositoryId);
+					writer.updateDocument(new Term("refId", el.refId), ConversionUtil.convert(updated));
+				}
+			}
+			writer.close();
+		} catch (IOException e) {
+			log.error("Error indexing dataset identifiers", e);
+		}
+	}
+
 	public DatasetIndexEntry getForId(String refId, String commitId) {
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return null;
 		try {
 			Term term1 = new Term("refId", refId);
-			Term term2 = new Term("commitId", refId);
+			Term term2 = new Term("commitId", commitId);
 			Query query = IndexUtil.andQuery(term1, term2);
 			TopDocs topDocs = searcher.search(query, 1);
 			if (topDocs.totalHits == 0)

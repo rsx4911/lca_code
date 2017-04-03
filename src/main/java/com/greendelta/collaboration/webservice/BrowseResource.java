@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -44,18 +45,24 @@ public class BrowseResource {
 	}
 
 	@GET
-	@Path("{group}/{name}/{categoryRefId}")
+	@Path("{group}/{name}")
 	public Response getCategoryContent(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("categoryRefId") String categoryRefId, @QueryParam("filter") String filter) {
+			@QueryParam("categoryPath") String categoryPath, @QueryParam("filter") String filter) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
-		if ("null".equals(categoryRefId) || categoryRefId == null)
+		if (Strings.isNullOrEmpty(categoryPath))
 			content = getRootContent(repo);
 		else
-			content = getCategoryContent(repo, categoryRefId, filter);
+			content = getCategoryContent(repo, toId(categoryPath), filter);
 		if (content == null)
 			return Respond.notFound();
-		return Respond.ok(appendParentRefId(repo, content));
+		return Respond.ok(Collections.singletonMap("entries", content));
+	}
+
+	private String toId(String categoryPath) {
+		if (categoryPath.contains("/"))
+			return KeyGen.get(categoryPath.split("/"));
+		return categoryPath;
 	}
 
 	private List<ModelType> getRootContent(Repository repo) {
@@ -92,6 +99,10 @@ public class BrowseResource {
 			return Respond.notFound(message);
 		}
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
+		if (dataset == null) {
+			String message = notFoundMessage(type, refId, null);
+			return Respond.notFound(message);
+		}
 		ObjectMap map = ObjectMap.fromJson(dataset);
 		if (map.containsKey("category"))
 			map.put("category.name", getFullPath(repo, ModelType.CATEGORY, map.get("category.@id"), commitId));
@@ -185,6 +196,7 @@ public class BrowseResource {
 			return "";
 		if (commitId == null)
 			return "";
+		commitId = getLastCommitId(repo, type, refId, commitId);
 		DatasetIndexEntry entry = service.getDataset(repo, type, refId, commitId);
 		if (entry == null)
 			return "";
@@ -214,27 +226,6 @@ public class BrowseResource {
 		if (commitId == null)
 			return base;
 		return base + " for commit id " + commitId;
-	}
-
-	private Map<String, Object> appendParentRefId(Repository repo, List<?> entries) {
-		String parentRefId = entries.size() == 0 ? null : getParentRefId(repo, entries.get(0));
-		Map<String, Object> clientData = new HashMap<>();
-		clientData.put("entries", entries);
-		clientData.put("parentRefId", parentRefId);
-		return clientData;
-	}
-
-	private String getParentRefId(Repository repo, Object obj) {
-		if (!(obj instanceof DatasetIndexEntry))
-			return null;
-		DatasetIndexEntry entry = (DatasetIndexEntry) obj;
-		if (Strings.isNullOrEmpty(entry.categoryRefId))
-			return null;
-		String parent = fetchService.getDataset(repo, ModelType.CATEGORY, entry.categoryRefId, entry.commitId);
-		String parentRefId = ObjectMap.fromJson(parent).get("category.@id");
-		if (parentRefId == null)
-			return entry.categoryType.name();
-		return parentRefId;
 	}
 
 }
