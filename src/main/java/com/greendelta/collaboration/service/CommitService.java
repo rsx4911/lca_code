@@ -96,9 +96,12 @@ public class CommitService {
 			ModelType type = dataset.type;
 			String refId = dataset.refId;
 			File file = repo.getDatasetFile(type, refId, commit.id, true);
+			boolean hadData = false;
 			try (OutputStream out = new FileOutputStream(file)) {
-				reader.readNextPartToStream(out);
+				hadData = reader.readNextPartToStream(out);
 			}
+			if (!hadData)
+				continue;
 			File binDir = repo.getBinDir(type, refId, commit.id, false);
 			int count = 0;
 			int noOfFiles = reader.readNextInt();

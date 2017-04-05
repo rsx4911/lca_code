@@ -160,8 +160,7 @@ public class RepositoryResource {
 			return Respond.error("Unexpected error during cloning");
 		}
 		DatasetIndex index = indices.get(to);
-		for (Commit commit : commits)
-			index.index(historyService.getReferences(to, commit.id), commit);
+		index.clone(indices.get(from), commits);
 		return response;
 	}
 

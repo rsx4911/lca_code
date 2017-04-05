@@ -56,6 +56,7 @@ define([
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						if result.entries?.length
 							@$('.no-content-message').hide()
+							@$('.table-browse').show()
 						else
 							@$('.no-content-message').show()
 							@$('.table-browse').hide()

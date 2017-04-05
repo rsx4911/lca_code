@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -74,15 +75,25 @@ public class BrowseResource {
 			if (!type.name().equals(categoryRefId))
 				continue;
 			List<DatasetIndexEntry> content = service.getCategoryContent(repo, type, filter);
-			return content;
+			return filterDeleted(repo, content);
 		}
 		List<DatasetIndexEntry> content = service.getCategoryContent(repo, categoryRefId, filter);
 		if (content.isEmpty())
 			if (service.categoryExists(repo, categoryRefId))
-				return content;
+				return filterDeleted(repo, content);
 			else
 				return null;
-		return content;
+		return filterDeleted(repo, content);
+	}
+
+	private List<DatasetIndexEntry> filterDeleted(Repository repo, List<DatasetIndexEntry> entries) {
+		List<DatasetIndexEntry> notDeleted = new ArrayList<>();
+		for (DatasetIndexEntry entry : entries) {
+			if (!fetchService.hasDataset(repo, entry.type, entry.refId, entry.commitId))
+				continue;
+			notDeleted.add(entry);
+		}
+		return notDeleted;
 	}
 
 	@GET
@@ -99,7 +110,7 @@ public class BrowseResource {
 			return Respond.notFound(message);
 		}
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
-		if (dataset == null) {
+		if (Strings.isNullOrEmpty(dataset)) {
 			String message = notFoundMessage(type, refId, null);
 			return Respond.notFound(message);
 		}
