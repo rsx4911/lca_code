@@ -34,7 +34,7 @@ public class SearchResource {
 	public Response search(@QueryParam("query") @DefaultValue("") String filter,
 			@QueryParam("page") @DefaultValue("1") int page, @QueryParam("type") ModelType type) {
 		PagedResult<DatasetIndexEntry> result = service.search(page, filter, type);
-		PagedResult<ObjectMap> mapped = result.toClient((entries) -> {
+		PagedResult<ObjectMap> mapped = result.toClient2((entries) -> {
 			List<ObjectMap> list = new ArrayList<>();
 			for (DatasetIndexEntry entry : entries)
 				list.add(ObjectMap.fromObject(entry));

@@ -1,6 +1,5 @@
 define([
 				'backbone'
-				'cs!utils/Data'
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Layers'
@@ -15,7 +14,7 @@ define([
 				'select2'
 			]
 
-	(Backbone, Data, Events, Format, Layers, Renderer, Status, Conversation, conversations, currentUser, template, conversationTemplate, messageTemplate) ->
+	(Backbone, Events, Format, Layers, Renderer, Status, Conversation, conversations, currentUser, template, conversationTemplate, messageTemplate) ->
 
 		class MessagesView extends Backbone.View
 
@@ -198,30 +197,20 @@ define([
 				@activateConversation conversations.getFor type, id
 				@scrollDown()
 
-			openSelection: () ->
-				Data.getUsersAndTeams 'messaging', (users, teams) =>
-					users = Data.usersToOptions users, [{username: currentUser.get('username')}], true
-					teams = Data.teamsToOptions teams
-					Layers.showTemplateInLayer
-						template: 'messaging/select-user'
-						title: "Start new conversation"
-						model: {users: users, teams: teams}
-						buttons: [{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () => @onSelection()}]
-						callback: () -> $('.modal #name').select2 {theme: 'bootstrap', placeholder: 'Test'}
-
-			onSelection: () ->
-				selection = $ '#name option:selected'
-				type = selection.attr 'data-group-id'
-				id = selection.val()
-				conversation = conversations.getFor type, id
-				if conversation
-					@activateConversation conversation
-				else
-					recipient = {type: type, id: id, username: id, name: selection.text()}
-					conversation = new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
-					conversations.add conversation
-					conversations.pingUser conversation
-				Layers.closeActive()
+			openSelection: () ->				
+				Layers.selectUser
+					title: 'Start new conversation'
+					module: 'messaging'
+					excludeSelf: true
+					callback: (selection) => 
+						conversation = conversations.getFor selection.type, selection.id
+						if conversation
+							@activateConversation conversation
+						else
+							recipient = {type: selection.type, id: selection.id, username: selection.id, name: selection.displayName}
+							conversation = new Conversation {messages: [], unreadMessages: 0, recipient: recipient}
+							conversations.add conversation
+							conversations.pingUser conversation
 
 			blockUser: () ->
 				unless @conversation

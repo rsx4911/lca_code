@@ -52,16 +52,24 @@
 			input
 				width 150px
 
-	#message-icon.new-messages
-		color rgb(240, 68, 23)
+	.message-icon.new-messages
+		color rgb(68, 157, 68)
 
-	#message-count
+	.message-count, .task-count
 		position relative
 		top -7px
-		left -13px
+		left -15px
 		font-size 10px
+		
+		&[data-count='0'],&[data-count='1'],&[data-count='2'],&[data-count='3'],&[data-count='4'],&[data-count='5'],&[data-count='6'],&[data-count='7'],&[data-count='8'],&[data-count='9']
+			left -13px
+
+	.message-count
 		color white
-	
+
+	.task-count
+		font-weight bold
+
 	.user-menu-actions
 		margin-top 4px
 

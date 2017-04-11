@@ -17,10 +17,14 @@ import com.greendelta.collaboration.model.User;
 public class MessagingService {
 
 	private final Dao<Message> dao;
+	private final UserService userService;
+	private final TeamService teamService;
 
 	@Inject
-	public MessagingService(Dao<Message> dao) {
+	public MessagingService(Dao<Message> dao, UserService userService, TeamService teamService) {
 		this.dao = dao;
+		this.userService = userService;
+		this.teamService = teamService;
 	}
 
 	public Message insert(Message message) {
@@ -105,6 +109,34 @@ public class MessagingService {
 			message.read = Calendar.getInstance().getTime();
 		}
 		dao.update(messages);
+	}
+
+	public List<User> filterUsers(List<User> users) {
+		User currentUser = userService.getCurrentUser();
+		if (currentUser.admin)
+			return users;
+		List<Team> teams = teamService.getTeamsFor(currentUser);
+		return com.greendelta.collaboration.util.Collections.filter(users, (user) -> {
+			if (currentUser.settings.blockedUsers.contains(user))
+				return true;
+			if (!user.settings.messagingEnabled)
+				return true;
+			if (!user.settings.messagingRestricted)
+				return false;
+			for (Team team : teams)
+				if (team.users.contains(user))
+					return false;
+			return true;
+		});
+	}
+
+	public List<Team> filterTeams(List<Team> teams) {
+		User currentUser = userService.getCurrentUser();
+		if (currentUser.admin)
+			return teams;
+		return com.greendelta.collaboration.util.Collections.filter(teams, (team) -> {
+			return team.users.contains(currentUser);
+		});
 	}
 
 	public class ConversationDescriptor {

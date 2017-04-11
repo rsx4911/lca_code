@@ -204,6 +204,10 @@ class Dao<T extends AbstractEntity> {
 	}
 
 	private long getNewId() {
+		return getNewId(entityType);
+	}
+
+	long getNewId(Class<? extends AbstractEntity> entityType) {
 		String query = "SELECT o FROM " + entityType.getSimpleName() + " o ORDER BY o.id DESC";
 		T value = getFirst(query, Collections.emptyMap());
 		if (value == null)

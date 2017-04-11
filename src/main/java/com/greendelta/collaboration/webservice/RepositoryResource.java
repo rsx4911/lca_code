@@ -32,7 +32,9 @@ import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
+import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.multipart.FormDataParam;
@@ -102,6 +104,7 @@ public class RepositoryResource {
 		if (!successful)
 			return Respond.error("Repository could not be moved");
 		Repository newRepo = service.get(newGroup, newName);
+		indices.get(newRepo).updateRepoId();
 		notificationService.repositoryMoved(repo, newRepo).send();
 		return Respond.ok(newRepo);
 	}
@@ -137,10 +140,22 @@ public class RepositoryResource {
 	}
 
 	@GET
-	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("filter") @DefaultValue("") String filter, @QueryParam("group") @DefaultValue("") String group) {
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("group") @DefaultValue("") String group,
+			@QueryParam("module") Module module) {
 		PagedResult<Repository> result = service.getAll(page, filter, true);
-		return Respond.ok(result.toClient(Repositories::map));
+		if (module == null)
+			return Respond.ok(result.toClient(Repositories::map));
+		List<Repository> repositories = result.data;
+		switch (module) {
+		case REVIEW:
+			repositories = Collections.filter(repositories, (repo) -> !accessService.canManageTaskIn(repo.toId()));
+		default:
+			break;
+		}
+		return Respond.ok(Client.map(repositories, Repositories::map));
 	}
 
 	@POST

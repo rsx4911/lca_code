@@ -29,7 +29,7 @@ public class Messages {
 		if (message.team != null)
 			map.put("team", Teams.mapForOthers(message.team));
 		map.put("date", message.date.getTime());
-		if (!message.showReadReceipt && message.from.equals(currentUser)) 
+		if (!message.showReadReceipt && message.from.equals(currentUser))
 			map.remove("read");
 		return map;
 	}

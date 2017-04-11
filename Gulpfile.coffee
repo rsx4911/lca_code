@@ -34,7 +34,7 @@ gulp.task 'default', [], (callback) ->
 	runSequence 'clearTemplates', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
-	runSequence 'default', 'copySelect2Images', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
+	runSequence 'default', 'copySprites', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
 
 gulp.task 'clearTemplates', () ->
 	gulp.src('./src/main/webapp/js/templates', {read: false})
@@ -76,8 +76,8 @@ gulp.task 'fontBuild', () ->
 	gulp.src('./src/main/webapp/css/fonts/**/*.*')
 		.pipe gulp.dest './target/require-build/css/fonts'
 
-gulp.task 'copySelect2Images', () ->
-	gulp.src(['./src/main/webapp/css/libs/select2.png', './src/main/webapp/css/libs/select2-spinner.gif'])
+gulp.task 'copySprites', () ->
+	gulp.src(['./src/main/webapp/css/libs/*.png', './src/main/webapp/css/libs/*.gif'])
 		.pipe gulp.dest './target/require-build/css/libs'
 
 gulp.task 'collectDependencies', () ->

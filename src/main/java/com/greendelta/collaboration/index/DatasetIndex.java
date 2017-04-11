@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
@@ -30,13 +31,12 @@ import com.greendelta.collaboration.service.Repository;
 public class DatasetIndex {
 
 	private final static Logger log = LoggerFactory.getLogger(DatasetIndex.class);
-	private final HistoryService historyService;
+	private HistoryService historyService;
 	final Directory directory;
 	final Repository repo;
 	final File indexDir;
 
-	public DatasetIndex(Repository repo, File indexDirectory, HistoryService historyService) {
-		this.historyService = historyService;
+	public DatasetIndex(Repository repo, File indexDirectory) {
 		this.indexDir = indexDirectory;
 		Directory directory = null;
 		try {
@@ -46,6 +46,10 @@ public class DatasetIndex {
 		}
 		this.directory = directory;
 		this.repo = repo;
+	}
+
+	public void setHistoryService(HistoryService historyService) {
+		this.historyService = historyService;
 	}
 
 	public void index(List<Dataset> datasets, Commit commit) {
@@ -74,6 +78,26 @@ public class DatasetIndex {
 		}
 	}
 
+	private List<DatasetIndexEntry> getAll() {
+		IndexSearcher searcher = IndexUtil.getSearcher(directory);
+		if (searcher == null)
+			return new ArrayList<>();
+		List<DatasetIndexEntry> all = new ArrayList<>();
+		try {
+			MatchAllDocsQuery query = new MatchAllDocsQuery();
+			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
+			if (topDocs.totalHits == 0)
+				return new ArrayList<>();
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				all.add(entry);
+			}
+		} catch (IOException e) {
+			log.error("Error retrieving dataset identifiers", e);
+		}
+		return all;
+	}
+
 	private List<DatasetIndexEntry> getAll(String commitId) {
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
@@ -81,10 +105,13 @@ public class DatasetIndex {
 		List<DatasetIndexEntry> all = new ArrayList<>();
 		try {
 			Query query = new TermQuery(new Term("commitId", commitId));
-			TopDocs topDocs = searcher.search(query, 1);
+			TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
 			if (topDocs.totalHits == 0)
-				return null;
-			all.add(ConversionUtil.convert(searcher.doc(topDocs.scoreDocs[0].doc)));
+				return new ArrayList<>();
+			for (ScoreDoc doc : topDocs.scoreDocs) {
+				DatasetIndexEntry entry = ConversionUtil.convert(searcher.doc(doc.doc));
+				all.add(entry);
+			}
 		} catch (IOException e) {
 			log.error("Error retrieving dataset identifiers", e);
 		}
@@ -240,4 +267,25 @@ public class DatasetIndex {
 			return false;
 		}
 	}
+
+	public void updateRepoId() {
+		IndexWriter writer = IndexUtil.getWriter(directory, false);
+		try {
+			for (DatasetIndexEntry e : getAll()) {
+				writer.updateDocument(new Term("refId", e.refId), ConversionUtil.convert(e, repo.toId()));
+			}
+			writer.close();
+		} catch (IOException e) {
+			log.error("Error indexing dataset identifiers", e);
+		}
+	}
+
+	public void close() {
+		try {
+			directory.close();
+		} catch (IOException e) {
+			log.error("Error closing index directory", e);
+		}
+	}
+
 }

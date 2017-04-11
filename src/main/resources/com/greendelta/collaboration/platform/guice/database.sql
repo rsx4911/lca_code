@@ -71,6 +71,29 @@ CREATE TABLE comments(
 	f_reply_to BIGINT
 );
 
+CREATE TABLE task_assignments(
+	id BIGINT NOT NULL,
+	comment VARCHAR(4000),
+	start_date TIMESTAMP NOT NULL,
+	end_date TIMESTAMP,
+	iteration BIGINT NOT NULL DEFAULT 1,
+	canceled BOOLEAN NOT NULL DEFAULT false,
+	f_assigned_to BIGINT NOT NULL,
+	f_ended_by BIGINT,
+	f_task BIGINT NOT NULL
+);
+
+CREATE TABLE reviews(
+	id BIGINT NOT NULL,
+	name VARCHAR(255),
+	repository_path VARCHAR(255) NOT NULL,
+	state VARCHAR(255) NOT NULL,
+	comment VARCHAR(4000),
+	start_date TIMESTAMP NOT NULL,
+	end_date TIMESTAMP,
+	f_initiator BIGINT NOT NULL
+);
+
 INSERT INTO version VALUES (2);
 
 INSERT INTO users VALUES (

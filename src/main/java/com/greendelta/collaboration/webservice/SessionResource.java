@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.webservice.util.Users;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -34,13 +35,14 @@ public class SessionResource {
 
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;
+	private final TaskService taskService;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider,
-			UserService userService) {
+	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
+		this.taskService = taskService;
 	}
 
 	@POST
@@ -98,7 +100,9 @@ public class SessionResource {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
 			return Respond.conflict("Not logged in");
-		return Respond.ok(Users.mapForSelf(userService.getCurrentUser()));
+		User currentUser = userService.getCurrentUser();
+		ObjectMap mapped = Users.mapForSelf(currentUser);
+		mapped.put("noOfTasks", taskService.getAllActiveFor(currentUser).size());
+		return Respond.ok(mapped);
 	}
-
 }

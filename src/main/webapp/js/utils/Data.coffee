@@ -1,21 +1,25 @@
 define () ->
 
-	getUsersAndTeams: (module, callback) ->
-		@getUsers module, (users) =>
-			@getTeams module, (teams) =>
+	getUsersAndTeams: (module, repositoryPath, callback) ->
+		@getUsers module, repositoryPath, (users) =>
+			@getTeams module, repositoryPath, (teams) =>
 				callback users, teams
 
-	getUsers: (module, callback) ->
+	getUsers: (module, repositoryPath, callback) ->
+		unless repositoryPath 
+			repositoryPath = ''
 		$.ajax
 			type: 'GET'
-			url: "ws/user?module=#{module.toUpperCase()}"
+			url: "ws/user?module=#{module.toUpperCase()}&repositoryPath=#{repositoryPath}"
 			success: (users) =>
 				callback users
 
-	getTeams: (module, callback) ->
+	getTeams: (module, repositoryPath, callback) ->
+		unless repositoryPath 
+			repositoryPath = ''
 		$.ajax
 			type: 'GET'
-			url: "ws/team?module=#{module.toUpperCase()}"
+			url: "ws/team?module=#{module.toUpperCase()}&repositoryPath=#{repositoryPath}"
 			success: (teams) =>
 				callback teams
 

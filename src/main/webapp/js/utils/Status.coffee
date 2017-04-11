@@ -24,8 +24,9 @@ define([
 			statusBarHtml += "</div>"
 			statusBar = $ statusBarHtml
 			$('body').append statusBar
-			statusBar.on 'click', () =>
+			$('body').on 'click.statusbar', () =>
 				hide statusBar
+				$('body').off 'click.statusbar'
 			statusBar.animate
 				top: 0
 			, 500 

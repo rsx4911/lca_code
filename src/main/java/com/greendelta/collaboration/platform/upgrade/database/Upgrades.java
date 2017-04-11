@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 public class Upgrades {
 
 	private static final Logger log = LoggerFactory.getLogger(Upgrades.class);
-	private static final IUpgrade[] upgrades = { new Upgrade1() , new Upgrade2()};
+	private static final IUpgrade[] upgrades = { new Upgrade1() , new Upgrade2(), new Upgrade3()};
 
 	public static void run(String dbPath) {
 		try (DbUtil dbUtil = new DbUtil(dbPath)) {

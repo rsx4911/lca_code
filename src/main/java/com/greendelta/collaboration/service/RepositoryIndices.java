@@ -1,5 +1,8 @@
 package com.greendelta.collaboration.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.greendelta.collaboration.index.DatasetIndex;
@@ -8,6 +11,7 @@ import com.greendelta.collaboration.index.DatasetIndex;
 public class RepositoryIndices {
 
 	private final HistoryService historyService;
+	private final Map<String, DatasetIndex> indices = new HashMap<>();
 
 	@Inject
 	public RepositoryIndices(HistoryService historyService) {
@@ -15,7 +19,13 @@ public class RepositoryIndices {
 	}
 
 	public DatasetIndex get(Repository repo) {
-		return new DatasetIndex(repo, repo.getIndexDir(), historyService);
+		DatasetIndex index = indices.get(repo.toId());
+		if (index == null) {
+			index = new DatasetIndex(repo, repo.getIndexDir());
+			indices.put(repo.toId(), index);
+		}
+		index.setHistoryService(historyService);
+		return index;
 	}
 
 }

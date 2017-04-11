@@ -84,7 +84,7 @@ public class GroupResource {
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
 		PagedResult<String> result = service.getAll(page, filter, true);
-		return Respond.ok(result.toClient((groups) -> {
+		return Respond.ok(result.toClient2((groups) -> {
 			List<ObjectMap> maps = new ArrayList<>();
 			for (String group : groups) {
 				if (onlyIfCanWrite && !accessService.canWrite(group))

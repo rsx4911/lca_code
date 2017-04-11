@@ -24,7 +24,9 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.MembershipService;
+import com.greendelta.collaboration.service.MessagingService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
@@ -35,6 +37,7 @@ import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Password;
+import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Users;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -47,15 +50,20 @@ public class UserResource {
 	private final RepositoryService repoService;
 	private final NotificationService notificationService;
 	private final MembershipService memberService;
+	private final MessagingService messagingService;
+	private final AccessService accessService;
 
 	@Inject
 	public UserResource(UserService service, TeamService teamService, RepositoryService repoService,
-			NotificationService notificationService, MembershipService memberService) {
+			NotificationService notificationService, MembershipService memberService,
+			MessagingService messagingService, AccessService accessService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.notificationService = notificationService;
 		this.teamService = teamService;
 		this.memberService = memberService;
+		this.messagingService = messagingService;
+		this.accessService = accessService;
 	}
 
 	@GET
@@ -74,35 +82,25 @@ public class UserResource {
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("0") int page,
 			@QueryParam("filter") @DefaultValue("") String filter,
-			@QueryParam("module") Module module) {
+			@QueryParam("module") Module module,
+			@QueryParam("repositoryPath") String repositoryPath) {
 		PagedResult<User> result = service.getAll(page, filter);
 		if (module == null)
 			return Respond.ok(result.toClient(Users::mapForOthers));
+		List<User> users = result.data;
 		switch (module) {
 		case MESSAGING:
-			User currentUser = service.getCurrentUser();
-			if (currentUser.admin)
-				return Respond.ok(Users.mapForOthers(result.data));
-			List<Team> teams = teamService.getTeamsFor(currentUser);
-			List<User> users = Collections.filter(result.data,
-					(user) -> filterForMessaging(user, teams, currentUser.settings.blockedUsers));
-			return Respond.ok(Users.mapForOthers(users));
+			users = messagingService.filterUsers(result.data);
+			break;
+		case REVIEW:
+			if (repositoryPath == null)
+				return Respond.badRequest("No repository specified");
+			users = Collections.filter(result.data, (user) -> !accessService.canReviewIn(user, repositoryPath));
+			break;
 		default:
-			return Respond.ok(Users.mapForOthers(result.data));
+			break;
 		}
-	}
-
-	public boolean filterForMessaging(User user, List<Team> teams, List<User> blocked) {
-		if (blocked.contains(user))
-			return true;
-		if (!user.settings.messagingEnabled)
-			return true;
-		if (!user.settings.messagingRestricted)
-			return false;
-		for (Team team : teams)
-			if (team.users.contains(user))
-				return false;
-		return true;
+		return Respond.ok(Client.map(users, Users::mapForOthers));
 	}
 
 	@GET
@@ -175,6 +173,7 @@ public class UserResource {
 			return Respond.notFound();
 		service.setPassword(user, password);
 		service.update(user);
+		service.clearCache();
 		return Respond.ok(new HashMap<>());
 	}
 

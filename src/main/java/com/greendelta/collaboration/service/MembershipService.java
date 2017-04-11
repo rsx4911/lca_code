@@ -231,7 +231,7 @@ public class MembershipService {
 					result.remove(m);
 				else if (m.user != null && !m.user.name.toLowerCase().contains(filter))
 					result.remove(m);
-		return new PagedResult<Membership>(filter, result.size(), result.size(), result);
+		return new PagedResult<Membership>(0, filter, result.size(), result.size(), result);
 	}
 
 	public List<Membership> getMemberships(String groupOrRepo) {

@@ -144,8 +144,6 @@ public class FetchResource {
 		if (commits.isEmpty())
 			return Respond.noContent();
 		StreamingOutput data = service.prepareData(repo, requested, commits);
-		if (data == null)
-			return Respond.noContent();
 		return Respond.ok(data);
 	}
 

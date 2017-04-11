@@ -115,8 +115,6 @@ public class FetchService {
 				datasets.add(dataset);
 			}
 		}
-		if (datasets.isEmpty())
-			return null;
 		return new StreamingOutput() {
 
 			@Override
@@ -156,5 +154,6 @@ public class FetchService {
 		protected File getBinaryFilesLocation(Dataset dataset) {
 			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
 		}
+				
 	}
 }

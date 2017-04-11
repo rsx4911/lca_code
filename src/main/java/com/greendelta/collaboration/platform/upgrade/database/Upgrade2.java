@@ -23,11 +23,6 @@ class Upgrade2 implements IUpgrade {
 				"text VARCHAR(4000)",
 				"restricted_to_role VARCHAR(255)",
 				"f_reply_to BIGINT");
-		updateDirectoryStructure();
 	}
-	
-	private void updateDirectoryStructure() {
 
-	}
-	
 }

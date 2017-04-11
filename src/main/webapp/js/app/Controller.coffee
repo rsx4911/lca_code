@@ -43,6 +43,9 @@ define([
 						{href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
 						{href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
 					]
+					when 'tasks' then return [
+						{href: @concatUrl(prefix, 'tasks'), imageSrc: 'images/tasks.png', label: 'Overview', id: 'overview'}
+					]
 					when 'messaging' then return [
 						{href: @concatUrl(prefix, 'messages'), imageSrc: 'images/inbox.png', label: 'Inbox', id: 'inbox'}
 					]
@@ -74,7 +77,8 @@ define([
 					noAnimation: true
 
 			initializeUserMenu: () ->
-				@userMenu = new UserMenu().render 
+				@userMenu = new UserMenu()
+				@userMenu.render 
 					container: '#user-menu'
 					noAnimation: true
 
@@ -165,6 +169,22 @@ define([
 					nav: 
 						type: 'dashboard'
 						active: 'groups'
+				@router.registerUserRoute 'tasks', () -> 
+					@showView 
+						view: 'tasks/Overview'
+						title: 'Tasks'
+						nav: 
+							type: 'tasks'
+							active: 'overview'
+						viewOptions:
+							userMenu: @userMenu
+				@router.registerUserRoute 'reviewManage', (id) -> 
+					@showView 
+						view: 'tasks/ManageReview'
+						title: 'Manage review task'
+						viewOptions:
+							id: id
+							userMenu: @userMenu
 				@router.registerUserRoute 'messages', (username) -> 
 					unless window.WebSocket
 						@router.navigate 'error/404', {trigger: true, replace: true}

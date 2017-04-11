@@ -1,0 +1,61 @@
+include ../mixins/forms.jade
+
+mixin assignments(assignments, type, noContentMessage)
+	.flex-column
+		.flex-container.task-assignments
+			.header-box=type
+				if type === 'Active' && !closed
+					button.btn.btn-lg.btn-success.pull-right(data-action='assign-task') Add
+			.content-box
+				if !assignments || !assignments.length
+					.no-content-message=noContentMessage
+				else
+					each assignment in assignments
+						- var user = assignment.assignedTo;
+						p 
+							if !assignment.endDate && type === 'Active' && !closed
+								button.btn.btn-xs.btn-danger(title='Cancel assignment' data-username=user.username data-user-displayname=user.name data-action='cancel-assignment')
+									span.glyphicon.glyphicon-minus
+							|  #{user.name} (
+							span(title=formatDateTime(assignment.startDate))=formatDate(assignment.startDate)
+							if assignment.endDate
+								|  to 
+								span(title=formatDateTime(assignment.endDate))=formatDate(assignment.endDate)
+							| )
+
+.header-box Review info
+- var isInitiator = review && review.initiator.username === currentUser;
+- var closed = review.state === 'COMPLETED' || review.state === 'CANCELED'
+.content-box
+	if isInitiator || !review
+		form#review-form
+			#review-form-general-message-group.alert(role='alert'): span.message
+			if review
+				+hidden('id', review.id)
+			+hidden('type', 'REVIEW')
+			+input('name', 'Name')
+			if !review
+				+select('repositoryPath', 'Repository', repositories)
+			else
+				+static('repositoryPath', 'Repository', review.repositoryPath, review.repositoryPath)
+			+textarea('comment', 'Comment')(rows=5)
+			if !closed
+				button.btn.btn-lg.btn-success.pull-right(data-action='create-task')=review?'Save':'Create'
+				if review
+					button.btn.btn-lg.btn-success.pull-right(data-action='complete-task') Complete
+					button.btn.btn-lg.btn-danger.pull-right(data-action='cancel-task') Cancel
+			.clear
+	else
+		+static('name', 'Name', review.name)
+		+static('repositoryPath', 'Repository', review.repositoryPath, review.repositoryPath)
+		+static('comment', 'Comment', review.comment)
+		if hasAssignment && !closed
+			button.btn.btn-lg.btn-success.pull-right(data-action='complete-assignment' data-username=currentUser) Complete
+			button.btn.btn-lg.btn-danger.pull-right(data-action='cancel-assignment' data-username=currentUser) Cancel
+			.clear
+
+if isInitiator
+	.flex-layout.three-columns
+		+assignments(activeAssignments, 'Active', 'This task is currently not assigned to any user.')
+		+assignments(completedAssignments, 'Completed', 'This task has no completed assignments yet.')
+		+assignments(canceledAssignments, 'Canceled', 'This task has no canceled assignments.')

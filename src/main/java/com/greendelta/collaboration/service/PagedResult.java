@@ -6,6 +6,8 @@ import java.util.function.Function;
 
 import org.openlca.cloud.util.ObjectMap;
 
+import com.greendelta.collaboration.webservice.util.Client;
+
 public class PagedResult<T> {
 
 	public final long page;
@@ -15,26 +17,29 @@ public class PagedResult<T> {
 	public final long pageSize;
 	public final List<T> data;
 
-	public PagedResult(long page, String filter, long total, long subTotal, List<T> data) {
+	public PagedResult(long page, long pageSize, String filter, long total, long subTotal, List<T> data) {
 		this.page = page;
-		this.pageSize = 10;
+		this.pageSize = pageSize;
 		this.filter = filter;
 		this.total = total;
 		this.subTotal = subTotal;
 		this.data = data;
 	}
 
-	public PagedResult(String filter, long total, long subTotal, List<T> data) {
-		this.page = -1;
-		this.pageSize = -1;
-		this.filter = filter;
-		this.total = total;
-		this.subTotal = subTotal;
-		this.data = data;
+	public PagedResult(long page, String filter, long total, long subTotal, List<T> data) {
+		this(page, 10, filter, total, subTotal, data);
 	}
 
-	public PagedResult<ObjectMap> toClient(Function<List<T>, List<ObjectMap>> mapper) {
-		return new PagedResult<>(page, filter, total, subTotal, mapper.apply(data));
+	public PagedResult(List<T> data) {
+		this(0, data.size(), null, data.size(), data.size(), data);
+	}
+
+	public PagedResult<ObjectMap> toClient(Function<T, ObjectMap> mapper) {
+		return new PagedResult<>(page, pageSize, filter, total, subTotal, Client.map(data, mapper));
+	}
+
+	public PagedResult<ObjectMap> toClient2(Function<List<T>, List<ObjectMap>> mapper) {
+		return new PagedResult<>(page, pageSize, filter, total, subTotal, mapper.apply(data));
 	}
 
 	static <T> PagedResult<T> pagedAndFiltered(int page, String filter, List<T> toFilter) {

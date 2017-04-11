@@ -152,7 +152,7 @@ public class MembershipResource {
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
 		PagedResult<Membership> memberships = service.getMemberships(path, filter);
-		return Respond.ok(memberships.toClient(Memberships::map));
+		return Respond.ok(memberships.toClient2(Memberships::map));
 	}
 
 	private String getAuthorizedPath(String group, String repo) {

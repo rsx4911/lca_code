@@ -19,11 +19,12 @@ import org.apache.shiro.authz.UnauthorizedException;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.MessagingService;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Bytes;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Teams;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -32,11 +33,13 @@ public class TeamResource {
 
 	private final TeamService service;
 	private final UserService userService;
+	private final MessagingService messagingService;
 
 	@Inject
-	public TeamResource(TeamService service, UserService userService) {
+	public TeamResource(TeamService service, UserService userService, MessagingService messagingService) {
 		this.service = service;
 		this.userService = userService;
+		this.messagingService = messagingService;
 	}
 
 	@GET
@@ -48,16 +51,15 @@ public class TeamResource {
 		PagedResult<Team> result = service.getAll(page, filter);
 		if (module == null)
 			return Respond.ok(result.toClient(Teams::mapForOthers));
+		List<Team> teams = result.data;
 		switch (module) {
 		case MESSAGING:
-			User currentUser = userService.getCurrentUser();
-			if (currentUser.admin)
-				return Respond.ok(Teams.mapForOthers(result.data));
-			List<Team> teams = Collections.filter(result.data, (team) -> team.users.contains(currentUser));
-			return Respond.ok(Teams.mapForOthers(teams));
+			teams = messagingService.filterTeams(teams);
+			break;
 		default:
-			return Respond.ok(Teams.mapForOthers(result.data));
+			break;
 		}
+		return Respond.ok(Client.map(teams, Teams::mapForOthers));
 	}
 
 	@PUT
