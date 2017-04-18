@@ -33,10 +33,17 @@ define([
 
 			assignTask: (event) ->
 				Events.preventDefault event
+				assignedUsers = []
+				for assignment in @review.assignments
+					if assignment.endDate
+						continue
+					assignedUsers.push assignment.assignedTo
 				Layers.selectUser
 					title: 'Assign user to task'
 					module: 'review'
 					repository: @review.repositoryPath
+					exclude: assignedUsers
+					excludeSelf: true
 					teams: false
 					callback: (selection) =>
 						taskId = @id
@@ -140,6 +147,12 @@ define([
 					formatDateTime: Format.dateTime
 					hasAssignment: @hasAssignment(review)
 				Renderer.render @, renderOptions
+				Layers.selectModel 
+					repositoryPath: review.repositoryPath
+					callback: (selection) -> 
+						console.log selection
+						Layers.closeActive()
+						Backbone.history.loadUrl()
 
 			hasAssignment: (review) ->
 				unless review

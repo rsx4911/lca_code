@@ -10,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
@@ -52,6 +53,10 @@ public class ReviewResource {
 	@POST
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response start(Review review) {
+		if (Strings.isNullOrEmpty(review.name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (Strings.isNullOrEmpty(review.repositoryPath))
+			return Respond.invalid("repositoryPath", "Missing input: Repository path");
 		service.start(review);
 		return createResponse();
 	}

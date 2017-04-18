@@ -1,4 +1,5 @@
 define([
+				'cs!utils/ModelTree'
 				'cs!utils/Data'
 				'cs!utils/Events'
 				'cs!utils/Model'
@@ -8,7 +9,7 @@ define([
 				'bootstrap'
 			]
 
-	(Data, Events, Model, currentUser, template, progressIndicatorTemplate) ->
+	(ModelTree, Data, Events, Model, currentUser, template, progressIndicatorTemplate) ->
 
 		Layers = () ->
 
@@ -164,6 +165,24 @@ define([
 								options.callback {type: type, id: id, displayName: displayName}
 							}
 						]
+
+			selectModel: (options) ->
+				unless options
+					return []
+				unless options.repositoryPath 
+					return []
+				unless options.callback
+					return []
+				@showMessageInLayer
+					title: 'Select data set'
+					body: '<div id="model-tree"></div>'
+					buttons: [
+						{text: 'Cancel', callback: () => @closeActive()}
+						{text: 'Select', className: 'btn-success', callback: -> 
+							options.callback ModelTree.getSelection '#model-tree'
+						}
+					]
+				ModelTree.init '#model-tree', options.repositoryPath
 
 			askQuestion: (options) ->
 				unless options.question

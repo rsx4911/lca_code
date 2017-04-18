@@ -25,7 +25,7 @@ mixin assignments(assignments, type, noContentMessage)
 
 .header-box Review info
 - var isInitiator = review && review.initiator.username === currentUser;
-- var closed = review.state === 'COMPLETED' || review.state === 'CANCELED'
+- var closed = review && (review.state === 'COMPLETED' || review.state === 'CANCELED')
 .content-box
 	if isInitiator || !review
 		form#review-form
