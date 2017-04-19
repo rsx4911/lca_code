@@ -1,5 +1,11 @@
 package com.greendelta.collaboration.webservice.task;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -10,12 +16,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.core.model.ModelType;
+import org.openlca.util.KeyGen;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.index.DatasetIndex;
+import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.AccessService;
+import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryIndices;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.ReviewService;
 import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
@@ -24,25 +40,32 @@ import com.greendelta.collaboration.webservice.util.Reviews;
 
 @Path("task/review")
 @Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
 public class ReviewResource {
 
 	private final ReviewService service;
 	private final TaskService taskService;
 	private final UserService userService;
 	private final AccessService accessService;
+	private final HistoryService historyService;
+	private final RepositoryService repoService;
+	private final RepositoryIndices indices;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
-			AccessService accessService) {
+			AccessService accessService, HistoryService historyService, RepositoryService repoService,
+			RepositoryIndices indices) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
+		this.historyService = historyService;
+		this.repoService = repoService;
+		this.indices = indices;
 	}
 
 	@GET
 	@Path("{id}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response get(@PathParam("id") long id) {
 		Review review = service.get(id);
 		if (review == null)
@@ -51,38 +74,111 @@ public class ReviewResource {
 	}
 
 	@POST
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response start(Review review) {
-		if (Strings.isNullOrEmpty(review.name))
-			return Respond.invalid("name", "Missing input: Name");
-		if (Strings.isNullOrEmpty(review.repositoryPath))
-			return Respond.invalid("repositoryPath", "Missing input: Repository path");
+		Response invalid = checkValidity(review);
+		if (invalid != null)
+			return invalid;
 		service.start(review);
 		return createResponse();
 	}
 
 	@PUT
 	@Path("{id}")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response update(Review review) {
+		Response invalid = checkValidity(review);
+		if (invalid != null)
+			return invalid;
 		service.merge(review);
 		return createResponse();
 	}
 
+	private Response checkValidity(Review review) {
+		if (Strings.isNullOrEmpty(review.name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (Strings.isNullOrEmpty(review.repositoryPath))
+			return Respond.invalid("repositoryPath", "Missing input: Repository path");
+		return null;
+	}
+
+	@PUT
+	@Path("{id}/references")
+	public Response setReferences(@PathParam("id") long id, List<Reference> references) {
+		Review review = service.get(id);
+		if (review == null)
+			return Respond.notFound("No review with id " + id + " found");
+		if (!review.assignments.isEmpty())
+			return Respond.invalid("", "References can not be changed after reviewer were already assigned");
+		Set<ReviewReference> all = new HashSet<>();
+		String[] split = review.repositoryPath.split("/");
+		Repository repo = repoService.get(split[0], split[1]);
+		if (repo == null)
+			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
+		DatasetIndex index = indices.get(repo);
+		for (Reference reference : references) {
+			if (reference.type != null && Strings.isNullOrEmpty(reference.id)) {
+				all.addAll(collectForType(index, reference.type));
+			} else if (reference.type == ModelType.CATEGORY && !Strings.isNullOrEmpty(reference.id)) {
+				all.addAll(collectForCategory(index, toId(reference.id)));
+			} else {
+				all.add(convert(index, repo, reference));
+			}
+		}
+		service.setReferences(id, all);
+		return createResponse();
+	}
+
+	private List<ReviewReference> collectForType(DatasetIndex index, ModelType type) {
+		return convert(index, index.getAll(type));
+	}
+
+	private List<ReviewReference> collectForCategory(DatasetIndex index, String id) {
+		return convert(index, index.getForCategory(id, null));
+	}
+
+	private String toId(String categoryPath) {
+		return KeyGen.get(categoryPath.split("/"));
+	}
+
+	private List<ReviewReference> convert(DatasetIndex index, List<DatasetIndexEntry> entries) {
+		List<ReviewReference> references = new ArrayList<>();
+		for (DatasetIndexEntry entry : entries) {
+			ReviewReference ref = new ReviewReference();
+			if (ref.type == ModelType.CATEGORY) {
+				references.addAll(convert(index, index.getForCategory(ref.refId, null)));
+			} else {
+				ref.type = entry.type;
+				ref.refId = entry.refId;
+				ref.commitId = entry.commitId;
+				ref.name = entry.name;
+				references.add(ref);
+			}
+		}
+		return references;
+	}
+
+	private ReviewReference convert(DatasetIndex index, Repository repo, Reference ref) {
+		ReviewReference reference = new ReviewReference();
+		reference.type = ref.type;
+		reference.refId = ref.id;
+		reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
+		reference.name = index.getForId(ref.id, reference.commitId).name;
+		return reference;
+	}
+
 	@PUT
 	@Path("{id}/assign/{username}")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response assignReviewer(@PathParam("id") long id, @PathParam("username") String username) {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
+		if (review.references.isEmpty())
+			return Respond.invalid("", "Please select data set references before assigning a user");
 		service.startAssignment(review, username, (user, repo) -> accessService.canReviewIn(user, repo.toId()));
 		return createResponse();
 	}
 
 	@PUT
 	@Path("{id}/complete/{username}")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response completeAssignment(@PathParam("id") long id, @PathParam("username") String username) {
 		Review review = service.get(id);
 		if (review == null)
@@ -93,7 +189,6 @@ public class ReviewResource {
 
 	@PUT
 	@Path("{id}/cancel/{username}")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response cancelAssignment(@PathParam("id") long id, @PathParam("username") String username) {
 		Review review = service.get(id);
 		if (review == null)
@@ -104,7 +199,6 @@ public class ReviewResource {
 
 	@PUT
 	@Path("{id}/complete")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response closeReview(@PathParam("id") long id) {
 		Review review = service.get(id);
 		if (review == null)
@@ -115,7 +209,6 @@ public class ReviewResource {
 
 	@PUT
 	@Path("{id}/cancel")
-	@Produces(MediaType.TEXT_PLAIN)
 	public Response cancelReview(@PathParam("id") long id) {
 		Review review = service.get(id);
 		if (review == null)
@@ -127,7 +220,14 @@ public class ReviewResource {
 	private Response createResponse() {
 		User user = userService.getCurrentUser();
 		int activeTasks = taskService.getAllActiveFor(user).size();
-		return Respond.ok(Integer.toString(activeTasks));
+		return Respond.ok(Collections.singletonMap("activeTasks", Integer.toString(activeTasks)));
+	}
+
+	private static class Reference {
+
+		public String id;
+		public ModelType type;
+
 	}
 
 }

@@ -14,7 +14,7 @@ import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 
-abstract class TaskExecutionService<T extends Task> {
+public abstract class TaskExecutionService<T extends Task> {
 
 	private final Dao<T> dao;
 	private final UserService userService;
@@ -114,7 +114,7 @@ abstract class TaskExecutionService<T extends Task> {
 		return update(task);
 	}
 
-	private Repository getRepository(String path) {
+	protected Repository getRepository(String path) {
 		if (Strings.isNullOrEmpty(path))
 			throw new RepositoryNotFoundException("");
 		if (!path.contains("/"))
@@ -138,10 +138,11 @@ abstract class TaskExecutionService<T extends Task> {
 	}
 
 	private void setTaskAssignmentIds(T task) {
+		long lastId = dao.getLastId(TaskAssignment.class);
 		for (TaskAssignment assignment : task.assignments) {
 			if (assignment.hasId())
 				continue;
-			assignment.setId(dao.getNewId(TaskAssignment.class));
+			assignment.setId(++lastId);
 		}
 	}
 

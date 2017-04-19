@@ -50,8 +50,8 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: "ws/task/review/#{taskId}/assign/#{selection.id}"
-							success: (activeTasks) =>
-								@userMenu.updateNoOfTasks activeTasks
+							success: (response) =>
+								@userMenu.updateNoOfTasks response.activeTasks
 								Backbone.history.loadUrl()
 
 			cancel: (event) ->
@@ -72,8 +72,8 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: "ws/task/review/#{taskId}/cancel/#{user}"
-							success: (activeTasks) => 
-								@userMenu.updateNoOfTasks activeTasks
+							success: (response) => 
+								@userMenu.updateNoOfTasks response.activeTasks
 								Router.navigate 'tasks'
 
 			complete: (event) ->
@@ -84,9 +84,27 @@ define([
 				$.ajax
 					type: 'PUT'
 					url: "ws/task/review/#{taskId}/complete/#{user}"
-					success: (activeTasks) => 
-						@userMenu.updateNoOfTasks activeTasks
+					success: (response) => 
+						@userMenu.updateNoOfTasks response.activeTasks
 						Router.navigate 'tasks'
+
+			selectReferences: (event) ->
+				Events.preventDefault event
+				taskId = @id
+				Layers.selectModel
+					repositoryPath: @review.repositoryPath
+					callback: (selection) -> 
+						Layers.showProgressIndicator 'Updating...'
+						$.ajax
+							type: 'PUT'
+							url: "ws/task/review/#{taskId}/references"
+							contentType: 'application/json'
+							data: JSON.stringify(selection)
+							success: (response) ->
+								Layers.closeActive()
+								Status.success 'Successfully updated review task'
+								Backbone.history.loadUrl()
+								Layers.hideProgressIndicator()
 
 			className: 'tasks-view multi-box-view'
 
@@ -98,6 +116,7 @@ define([
 				'click [data-action=complete-assignment]': (event) -> @complete event
 				'click [data-action=cancel-task]': (event) -> @cancel event
 				'click [data-action=complete-task]': (event) -> @complete event
+				'click [data-action=select-references]': (event) -> @selectReferences event
 
 			initialize: (options) ->
 				{@id, @userMenu} = options
@@ -136,9 +155,20 @@ define([
 				@sort activeAssignments, 'startDate'
 				@sort completedAssignments, 'endDate'
 				@sort canceledAssignments, 'endDate'
+				referencesMap = {}				
+				if review?.references?.length
+					for ref in review.references
+						forType = referencesMap[ref.type] or []
+						forType.push ref
+						referencesMap[ref.type] = forType
+				references = []
+				for type in Object.keys(referencesMap)
+					@sort referencesMap[type], 'name', 'asc'
+					references.push {type: type, references: referencesMap[type]}
 				@$el.html template
 					repositories: repositories
 					review: review
+					references: references
 					activeAssignments: activeAssignments
 					completedAssignments: completedAssignments
 					canceledAssignments: canceledAssignments
@@ -147,12 +177,6 @@ define([
 					formatDateTime: Format.dateTime
 					hasAssignment: @hasAssignment(review)
 				Renderer.render @, renderOptions
-				Layers.selectModel 
-					repositoryPath: review.repositoryPath
-					callback: (selection) -> 
-						console.log selection
-						Layers.closeActive()
-						Backbone.history.loadUrl()
 
 			hasAssignment: (review) ->
 				unless review
@@ -162,12 +186,15 @@ define([
 						return true
 				return false
 
-			sort: (assignments, field) ->
-				assignments.sort (a, b) -> 
-					if a[field] > b[field]
-						return -1
-					else if a[field] < b[field]
-						return 1
+			sort: (elements, field, order = 'desc') ->
+				factor = if order is 'asc' then -1 else 1
+				elements.sort (a, b) ->
+					valueA = if field then a[field] else a
+					valueB = if field then b[field] else b
+					if valueA > valueB
+						return -1 * factor
+					else if valueA < valueB
+						return 1 * factor
 					return 0
 
 

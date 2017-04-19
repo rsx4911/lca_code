@@ -80,7 +80,7 @@ CREATE TABLE task_assignments(
 	canceled BOOLEAN NOT NULL DEFAULT false,
 	f_assigned_to BIGINT NOT NULL,
 	f_ended_by BIGINT,
-	f_task BIGINT NOT NULL
+	f_task BIGINT
 );
 
 CREATE TABLE reviews(
@@ -92,6 +92,15 @@ CREATE TABLE reviews(
 	start_date TIMESTAMP NOT NULL,
 	end_date TIMESTAMP,
 	f_initiator BIGINT NOT NULL
+);
+
+CREATE TABLE review_references(
+	id BIGINT NOT NULL,
+	ds_type VARCHAR(255) NOT NULL,
+	ds_ref_id VARCHAR(36) NOT NULL,
+	ds_commit_id VARCHAR(36) NOT NULL,
+	ds_name VARCHAR(255) NOT NULL,
+	f_review BIGINT
 );
 
 INSERT INTO version VALUES (2);

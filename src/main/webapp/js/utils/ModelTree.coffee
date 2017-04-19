@@ -48,7 +48,7 @@ define([
 
 		# returns elements in three different types:
 		# 1) ModelType elements, e.g. {type: 'FLOW'}
-		# 2) Category elements, e.g. {id: '1234-...', type: 'CATEGORY', categoryType: 'FLOW'}
+		# 2) Category elements, e.g. {id: $path, type: 'CATEGORY'}
 		# 3) Model elements, e.g. {id: '4321-...', type: 'FLOW'}
 		# if a parent is already in the elements to be returned, child elements will not be added
 		# because the tree is lazy loaded, the calling code must add missing (not selected in UI) elements anyway
@@ -60,13 +60,13 @@ define([
 			for e in selected
 				if !e.original.type 
 					types.push e.original.id
-					elements.push {id: e.original.id}
+					elements.push {type: e.original.id, id: null}
 			for e in selected
 				if e.original.type is 'CATEGORY'
 					if $.inArray(e.original.categoryType, types) isnt -1
 						continue
 					paths.push e.original.id
-					elements.push {id: e.original.id, type: 'CATEGORY', categoryType: e.original.categoryType}
+					elements.push {type: 'CATEGORY', id: e.original.id}
 			for e in selected
 				if e.original.type && e.original.type isnt 'CATEGORY'
 					if $.inArray(e.original.type, types) isnt -1
@@ -78,7 +78,7 @@ define([
 							break
 					if skip
 						continue
-					elements.push {id: e.original.id, type: e.original.type}
-			console.log elements
+					elements.push {type: e.original.type, id: e.original.id}
+			return elements
  
 )
