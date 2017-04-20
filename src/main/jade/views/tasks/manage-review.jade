@@ -44,9 +44,10 @@ mixin review-info()
 					button.btn.btn-lg.btn-danger.pull-right(data-action='cancel-task') Cancel
 				.clear
 		else
+			- var comment = review.comment || '-';
 			+static('name', 'Name', review.name)
 			+static('repositoryPath', 'Repository', review.repositoryPath, review.repositoryPath)
-			+static('comment', 'Comment', review.comment)
+			+static('comment', 'Comment', comment)
 			if hasAssignment && !closed
 				button.btn.btn-lg.btn-success.pull-right(data-action='complete-assignment' data-username=currentUser) Complete
 				button.btn.btn-lg.btn-danger.pull-right(data-action='cancel-assignment' data-username=currentUser) Cancel
