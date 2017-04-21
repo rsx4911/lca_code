@@ -17,7 +17,8 @@ define([
 					title = if path then "Comment '#{label}'" else 'Comment data set'
 					visible = LocalStorage.getValue('reviewMode') or comments[path]
 					style = if visible then '' else 'style="display:none" '
-					$(element).append '<img ' + style + 'title="' + title + '" src="images/comment.png" data-action="comment"></a>'
+					highlight = comments[path]
+					$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
 				$('[data-path] [data-action=comment]', parent).on 'click', (event) => 
 					Events.preventDefault event
 					target = $ Events.target event
@@ -151,6 +152,7 @@ define([
 				success: (comment) => 
 					@comments[path].push comment
 					Layers.closeActive()
+					Backbone.history.loadUrl()
 
 		toLabel: (path) ->
 			if path.indexOf('.') isnt -1

@@ -62,7 +62,7 @@ define([
 						{href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
 						{href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
 						{href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
-						{href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comment.png', label: 'Comments', id: 'comments'}
+						{href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
 						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 					]
 					when 'admin' then return [
