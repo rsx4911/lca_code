@@ -37,5 +37,10 @@ public class Upgrade3 implements IUpgrade {
 				"ds_commit_id VARCHAR(36) NOT NULL",
 				"ds_name VARCHAR(255) NOT NULL",
 				"f_review BIGINT");
+		// Remove NOT NULL constraint
+		dbUtil.update("ALTER TABLE messages ADD COLUMN f_team2 BIGINT");
+		dbUtil.update("UPDATE messages SET f_team2 = f_team");
+		dbUtil.update("ALTER TABLE messages DROP COLUMN f_team");
+		dbUtil.update("RENAME COLUMN messages.f_team2 TO f_team");
 	}
 }

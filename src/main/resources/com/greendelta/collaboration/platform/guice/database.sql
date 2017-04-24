@@ -41,7 +41,7 @@ CREATE TABLE messages(
 	id BIGINT NOT NULL,
 	f_from_user BIGINT NOT NULL,
 	f_to_user BIGINT NOT NULL,
-	f_team BIGINT NOT NULL,
+	f_team BIGINT,
 	date TIMESTAMP NOT NULL,
 	text VARCHAR(4000) NOT NULL,
 	read_date TIMESTAMP,
