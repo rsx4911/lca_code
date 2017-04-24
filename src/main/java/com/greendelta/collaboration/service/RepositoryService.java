@@ -83,7 +83,7 @@ public class RepositoryService {
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
 		Repository repo = get(group, name);
-		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER);
+		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER, true);
 		return repo;
 	}
 

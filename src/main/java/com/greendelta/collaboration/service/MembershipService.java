@@ -30,7 +30,12 @@ public class MembershipService {
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {
-		checkCanEdit(groupOrRepo);
+		return addMembership(user, groupOrRepo, role, false);
+	}
+
+	public boolean addMembership(User user, String groupOrRepo, Role role, boolean skipAccessCheck) {
+		if (!skipAccessCheck)
+			checkCanEdit(groupOrRepo);
 		if (getDirectMembership(user, groupOrRepo) != null)
 			return false;
 		Membership member = new Membership();
