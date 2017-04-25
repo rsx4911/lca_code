@@ -16,22 +16,33 @@ mixin comment-visibility(restrictedToRole, roles)
 					each role in roles
 						li: a(href='#' data-role=role.id)=role.name
 
+mixin comment-info(comment, roles, showDatasetInfo)
+	span: small &nbsp;wrote on #{formatDate(comment.date)} 
+	if canChangeVisibility
+		+comment-visibility(comment.restrictedToRole, roles)
+	if !comment.replyTo && currentUser && currentUser.canComment
+		|  | 
+		a.default-link.reply-to(href='#' data-comment-id=comment.id)
+			small Reply
+	if showDatasetInfo
+		- var field = comment.field;
+		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId) 
+			img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
+			small #{comment.dsPath} - #{getLabel(field.modelType, field.path)}
+
 mixin comment-entry(comment, index, roles, showDatasetInfo)
 	- var canChangeVisibility = currentUser && currentUser.canComment && (currentUser.admin || currentUser.username === comment.user.username)
 	.comment-entry(class=comment.replyTo?'reply':null data-comment-id=comment.id)
-		+user-info(comment.user.username, comment.user.name)
-		span: small  wrote on #{formatDate(comment.date)} 
-		if canChangeVisibility
-			+comment-visibility(comment.restrictedToRole, roles)
-		if !comment.replyTo && currentUser && currentUser.canComment
-			|  | 
-			a.default-link.reply-to(href='#' data-comment-id=comment.id)
-				small Reply
-		if showDatasetInfo && !comment.replyTo
-			|  | 
-			- var field = comment.field;
-			a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId) 
-				small Go to data set 
-		.comment-text=comment.text
+		if showDatasetInfo
+			.pull-left
+				img.avatar.avatar-small(src='ws/user/avatar/#{comment.user.username}')
+			.comment-info-container
+				strong=comment.user.name
+				+comment-info(comment, roles, true)
+			.clear
+		else
+			+user-info(comment.user.username, comment.user.name)
+			+comment-info(comment, roles, false)
+		.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
 	if index < comments.length - 1
 		hr

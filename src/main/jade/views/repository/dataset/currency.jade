@@ -7,8 +7,8 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+field-row('Currency code', 'code')
-					+field-row('Conversion factor', 'conversionFactor')
-					+ref-row('Reference currency', 'referenceCurrency')
+					+field-row('code', true, true)
+					+field-row('conversionFactor', true, true)
+					+ref-row('referenceCurrency')
 	+meta
 	.clear

@@ -2,12 +2,13 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Format'
+				'cs!utils/Labels'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'templates/views/repository/comments'
 			]
 
-	(Backbone, Events, Format, ModelTypes, Renderer, template) ->
+	(Backbone, Events, Format, Labels, ModelTypes, Renderer, template) ->
 
 		class CommentsView extends Backbone.View
 
@@ -25,6 +26,7 @@ define([
 						comments: comments
 						formatDate: Format.dateTime
 						formatModelType: (type) -> return ModelTypes[type]
+						getLabel: (path) -> return Labels.get path
 					Renderer.render @, renderOptions
 
 			loadComments: (callback) ->

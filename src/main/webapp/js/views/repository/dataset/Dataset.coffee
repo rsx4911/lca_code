@@ -5,6 +5,7 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Icons'
+				'cs!utils/Labels'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/ModelTypes'
@@ -32,7 +33,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -132,11 +133,12 @@ define([
 							dataset: dataset
 							baseUrl: "#{group}/#{name}/dataset"
 							formatDate: Format.dateTime
-							getLabel: @getLabel
-							getValue: (object, path) => @getValue object, path
+							getSpecificTypeLabel: @getSpecificTypeLabel
+							getValue: (object, path) => return @getValue object, path
 							getIcon: Icons.get
-							getTypeAsEnum: (type) => @getTypeAsEnum(type)
-							getTypeLabel: (type) => ModelTypes[type]
+							getTypeAsEnum: (type) => return @getTypeAsEnum(type)
+							getTypeLabel: (type) => return ModelTypes[type]
+							getLabel: (path) => return Labels.get @getTypeAsEnum(dataset.type), path
 							getUncertaintyLabel: @getUncertaintyLabel
 							getDQColor: DataQuality.getColor 
 							noToStr: Format.number
@@ -176,7 +178,7 @@ define([
 							options.headers[index] = {sorter: false}
 					$(table).tablesorter options
 
-			getLabel: (type, value) ->
+			getSpecificTypeLabel: (type, value) ->
 				switch type 
 					when 'FlowPropertyType'
 						switch value
@@ -257,7 +259,10 @@ define([
 							@$('#impact-factors tbody').empty()
 							@$('#impact-factors tbody').append impactFactorsTemplate 
 								impactCategory: impactCategory
+								noToStr: Format.number
 							callback()
+				else
+					callback()
 
 			loadNwSet: (callback) ->
 				commitId = @commitId or 'null'
@@ -273,7 +278,10 @@ define([
 							@$('#nw-factors tbody').empty()
 							@$('#nw-factors tbody').append nwFactorsTemplate 
 								nwSet: nwSet
+								noToStr: Format.number
 							callback()
+				else
+					callback()
 
 			initDataQualityPopups: (dataset) ->
 				@$('table.data-quality td').on 'click', (event) ->

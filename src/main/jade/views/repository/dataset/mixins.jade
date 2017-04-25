@@ -36,28 +36,26 @@ mixin meta()
 	.model-right-content.content-box
 		.meta-info
 			div
-				strong Version
+				strong=getLabel('version')
 				div(data-path='version')=dataset.version
 			div
-				strong Last change
+				strong=getLabel('lastChange')
 				div(data-path='lastChange')
 					if dataset.lastChange
 						| #{formatDate(dataset.lastChange)}
 					else
 						| -
 			div
-				strong UUID
+				strong=getLabel('id')
 				div(data-path='id')=dataset.id
 			block
 
-mixin field-row(label, path, checkValue, formatter)
-	- var value = getValue(dataset, path);
+mixin field-row(path, showValue, checkValue, formatter, noDataPath)
+	- var value = showValue ? getValue(dataset, path) : null;
 	if !checkValue || value || reviewMode
 		tr
-			td=label
-			td(data-path=path) 
-				if value
-					| #{value?formatter?formatter(value):value:''}
+			td=getLabel(path)
+			td(data-path=noDataPath?null:path)=formatter?formatter(value):value
 				block
 
 mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
@@ -73,10 +71,10 @@ mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
 		else if defaultLabel
 			| #{defaultLabel}
 
-mixin ref-row(label, path, additionalTypeInfo, noImage)
+mixin ref-row(path, additionalTypeInfo, noImage)
 	if getValue(dataset, path) || reviewMode
 		tr
-			td=label
+			td=getLabel(path)
 			td: +ref(path, additionalTypeInfo, noImage)
 
 mixin uncertainty(uncertainty, round)
@@ -127,10 +125,10 @@ mixin parameter-table(path, input)
 		table.table.table-parameters
 			thead
 				tr
-					th Parameter
-					th Description
+					th=getLabel(path + '[' + index + '].name')
+					th=getLabel(path + '[' + index + '].description')
 					if input
-						th Uncertainty
+						th=getLabel(path + '[' + index + '].uncertainty')
 			tbody
 				each parameter, index in parameters
 					if parameter.inputParameter === input

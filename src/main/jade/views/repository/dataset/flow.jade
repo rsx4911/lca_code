@@ -7,28 +7,28 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					- var getFlowTypeLabel = function (flowType) { getLabel('FlowType',flowType); };
-					+field-row('Type', 'flowType', false, getFlowTypeLabel)
-					+field-row('CAS number', 'casNumber', true)
-					+field-row('Formula', 'formula', true)
+					- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType',flowType); };
+					+field-row('flowType', true, false, getFlowTypeLabel)
+					+field-row('cas', true, true)
+					+field-row('formula', true, true)
 					if (dataset.synonyms && dataset.synonyms.length) || reviewMode
-						+field-row('Synonyms')
-							.comma-separated(data-path='synonyms')
+						+field-row('synonyms')
+							.comma-separated
 								if dataset.synonyms
 									each synonym in dataset.synonyms
 										span=synonym
-					+ref-row('Location', 'location')
-					+field-row('Infrastructure flow')
-						span(data-path='infrastructureFlow')
+					+ref-row('location')
+					+field-row('infrastructureFlow')
+						span
 							img.icon-small(src='images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
 			if (dataset.flowProperties && dataset.flowProperties.length) || reviewMode
-				h4(data-path='flowProperties') Flow properties
+				h4(data-path='flowProperties')=getLabel('flowProperties')
 				if dataset.flowProperties && dataset.flowProperties.length
 					table.table.flow-properties
 						thead
 							tr
-								th Name
-								th Formula
+								th=getLabel('flowProperties.name')
+								th=getLabel('flowProperties.formula')
 						tbody
 							- var referenceFactor = null;
 							each factor in dataset.flowProperties

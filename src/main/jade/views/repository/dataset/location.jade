@@ -7,9 +7,9 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+field-row('Code', 'code')
-					+field-row('Longitude', 'longitude')
-					+field-row('Latitude', 'latitude')
+					+field-row('code', true, true)
+					+field-row('longitude', true, true)
+					+field-row('latitude', true, true)
 			#map.map
 	+meta
 	.clear

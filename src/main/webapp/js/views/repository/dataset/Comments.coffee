@@ -1,19 +1,20 @@
 define([
 				'cs!utils/Events'
 				'cs!utils/Format'
+				'cs!utils/Labels'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/Roles'
 				'cs!models/CurrentUser'
 			]
 
-	(Events, Format, Layers, LocalStorage, Roles, currentUser) ->
+	(Events, Format, Labels, Layers, LocalStorage, Roles, currentUser) ->
 
 		init: (parent, dataset) ->
 			@loadComments dataset, (comments) =>
 				for element in $('[data-path]', parent)
 					path = $(element).attr 'data-path'
-					label = @toLabel path
+					label = Labels.get dataset.type, path
 					title = if path then "Comment '#{label}'" else 'Comment data set'
 					visible = LocalStorage.getValue('reviewMode') or comments[path]
 					style = if visible then '' else 'style="display:none" '
@@ -51,7 +52,7 @@ define([
 
 		showComments: (dataset, path) ->
 			comments = @sortAndFilter @comments[path]
-			field = @toLabel path
+			field = Labels.get dataset.type, path
 			buttons = []
 			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
 			if @canComment
@@ -153,27 +154,6 @@ define([
 					@comments[path].push comment
 					Layers.closeActive()
 					Backbone.history.loadUrl()
-
-		toLabel: (path) ->
-			if path.indexOf('.') isnt -1
-				path = path.substring path.indexOf('.') + 1
-			if path.indexOf('[') isnt -1
-				path = path.substring 0, path.indexOf('[')
-				if path is 'impactCategories'
-					path = 'impactCategory'
-				else if path is 'processes'
-					path = 'process'
-				else if path.charAt(path.length - 1) is 's'
-					path = path.substring 0, path.length - 1
-			result = ''
-			for character, index in path
-				if index is 0
-					result = character.toUpperCase()
-				else if character.toLowerCase() is character
-					result += character
-				else 
-					result += ' ' + character.toLowerCase()
-			return result
 
 		sortAndFilter: (comments) ->
 			comments.sort (a, b) -> return b.date - a.date

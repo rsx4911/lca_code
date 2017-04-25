@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,6 +21,8 @@ import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.index.DatasetIndex;
+import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
@@ -27,6 +30,7 @@ import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.CommentService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
 
@@ -39,15 +43,17 @@ public class CommentResource {
 	private final UserService userService;
 	private final AccessService accessService;
 	private final NotificationService notificationService;
+	private final RepositoryIndices indices;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, NotificationService notificationService) {
+			AccessService accessService, NotificationService notificationService, RepositoryIndices indices) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
+		this.indices = indices;
 	}
 
 	@GET
@@ -63,9 +69,21 @@ public class CommentResource {
 		Repository repository = repoService.get(group, name);
 		List<Comment> comments = service.getAllFor(repository, type, refId, commitId);
 		Map<String, Object> result = new HashMap<>();
-		result.put("comments", comments);
+		result.put("comments", map(repository, comments));
 		result.put("canComment", accessService.canCommentIn(repository.toId()));
 		return Respond.ok(result);
+	}
+
+	private List<Map<String, Object>> map(Repository repository, List<Comment> comments) {
+		List<Map<String, Object>> mapped = new ArrayList<>();
+		DatasetIndex index = indices.get(repository);
+		for (Comment comment : comments) {
+			ObjectMap map = ObjectMap.fromObject(comment);
+			DatasetIndexEntry ds = index.getForId(comment.field.refId, comment.field.commitId);
+			map.put("dsPath", ds.fullPath);
+			mapped.add(map);
+		}
+		return mapped;
 	}
 
 	@POST

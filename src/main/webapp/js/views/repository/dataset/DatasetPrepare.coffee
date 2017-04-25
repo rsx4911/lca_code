@@ -20,8 +20,9 @@ define([
 					Sort.projectVariants dataset
 					@prepareParameterRedefs dataset
 					Sort.parameterRedefs dataset
-					for variant in dataset.variants
-						variant.allocationMethod = Allocation[variant.allocationMethod]
+					if dataset.variants
+						for variant in dataset.variants
+							variant.allocationMethod = Allocation[variant.allocationMethod]
 				when 'ProductSystem'
 					Sort.parameterRedefs dataset
 				when 'Process'
@@ -64,7 +65,7 @@ define([
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
 						f = nonCausalAllocationFactors[factor.product.id]
 						unless f
-							f = {product: flowMap[factor.product.id]}
+							f = {product: flowMap[factor.product.id], index: index}
 							nonCausalAllocationFactors[factor.product.id] = f
 						if factor.allocationType is 'PHYSICAL_ALLOCATION'
 							f.physical = {value: factor.value, index: index}

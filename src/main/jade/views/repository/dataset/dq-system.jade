@@ -5,14 +5,14 @@ include ./mixins.jade
 	.model-left-content
 		+header
 		.content
-			h4(data-path='indicators') Indicators
+			h4(data-path='indicators')=getLabel('indicators')
 			+data-quality-matrix(dataset, false)
 			if dataset.hasUncertainties
 				hr
-				h4 Uncertainties
+				h4=getLabel('uncertainties')
 				+data-quality-matrix(dataset, true)
 	+meta
 		hr
-		strong Source
+		strong=getLabel('source')
 		div: +ref('source', null, false, '-')
 	.clear
