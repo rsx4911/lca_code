@@ -29,7 +29,7 @@ public abstract class TaskExecutionService<T extends Task> {
 		this.accessService = accessService;
 	}
 
-	public T start(T task) {
+	public void start(T task) {
 		Repository repo = getRepository(task.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
@@ -39,24 +39,26 @@ public abstract class TaskExecutionService<T extends Task> {
 		task.initiator = user;
 		task.startDate = Calendar.getInstance().getTime();
 		task.state = TaskState.CREATED;
-		return insert(task);
+		insert(task);
 	}
 
-	public T merge(T task) {
+	public void merge(T task) {
 		T fromDb = get(task.getId());
 		Repository repo = getRepository(fromDb.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		fromDb.name = task.name;
 		fromDb.comment = task.comment;
-		return update(fromDb);
+		update(fromDb);
 	}
 
-	public T startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
+	public void startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
 		User user = userService.getForUsername(username);
 		Repository repo = getRepository(task.repositoryPath);
 		if (!accessCheck.canBeAssigned(user, repo))
 			throw new UnauthorizedAccessException(repo.toId(), task.getClass().getSimpleName().toUpperCase());
+		if (!accessService.canManageTaskIn(repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		TaskAssignment assignment = new TaskAssignment();
 		assignment.assignedTo = user;
 		assignment.startDate = Calendar.getInstance().getTime();
@@ -71,13 +73,17 @@ public abstract class TaskExecutionService<T extends Task> {
 		}
 		task.assignments.add(assignment);
 		task.state = TaskState.PROCESSING;
-		return update(task);
+		update(task);
 	}
 
-	public T endAssignment(T task, String username, boolean canceled) {
+	public void endAssignment(T task, String username, boolean canceled) {
 		if (task.state != TaskState.PROCESSING)
 			throw new ServerException(Status.CONFLICT, "Task is not in process state");
 		User user = userService.getForUsername(username);
+		User currentUser = userService.getCurrentUser();
+		Repository repo = getRepository(task.repositoryPath);
+		if (!user.equals(currentUser) && !accessService.canManageTaskIn(repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		TaskAssignment assignment = null;
 		boolean isLastOpen = true;
 		for (TaskAssignment a : task.assignments) {
@@ -97,21 +103,21 @@ public abstract class TaskExecutionService<T extends Task> {
 		if (isLastOpen) {
 			task.state = TaskState.VERIFYING;
 		}
-		return update(task);
+		update(task);
 	}
 
-	public T end(T task, TaskState state) {
+	public void end(T task, TaskState state) {
 		Repository repo = getRepository(task.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		task.state = state;
 		User currentUser = userService.getCurrentUser();
-		for (TaskAssignment assignment: task.assignments) {
+		for (TaskAssignment assignment : task.assignments) {
 			assignment.endDate = Calendar.getInstance().getTime();
 			assignment.canceled = true;
 			assignment.endedBy = currentUser;
 		}
-		return update(task);
+		update(task);
 	}
 
 	protected Repository getRepository(String path) {
@@ -124,7 +130,14 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public T get(long id) {
-		return dao.get(id);
+		T task = dao.get(id);
+		User currentUser = userService.getCurrentUser();
+		if (currentUser.equals(task.initiator))
+			return task;
+		for (TaskAssignment assignment : task.assignments)
+			if (assignment.assignedTo.equals(currentUser))
+				return task;
+		return null;
 	}
 
 	private T insert(T task) {

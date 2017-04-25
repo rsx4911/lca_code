@@ -178,6 +178,17 @@ public class ReviewResource {
 	}
 
 	@PUT
+	@Path("{id}/markAsReviewed/{referenceId}/{value}")
+	public Response markAsReviewed(@PathParam("id") long id, @PathParam("referenceId") long referenceId,
+			@PathParam("value") boolean value) {
+		Review review = service.get(id);
+		if (review == null)
+			return Respond.notFound("No review with id " + id + " found");
+		service.markAsReviewed(id, referenceId, value);
+		return createResponse();
+	}
+
+	@PUT
 	@Path("{id}/complete/{username}")
 	public Response completeAssignment(@PathParam("id") long id, @PathParam("username") String username) {
 		Review review = service.get(id);

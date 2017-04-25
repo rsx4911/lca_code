@@ -106,6 +106,17 @@ define([
 								Backbone.history.loadUrl()
 								Layers.hideProgressIndicator()
 
+			markAsReviewed: (event) ->
+				target = $ Events.target event, 'input'
+				refId = target.attr('id') or ''
+				value = target.is ':checked'
+				taskId = @id
+				$.ajax
+					type: 'PUT'
+					url: "ws/task/review/#{taskId}/markAsReviewed/#{refId}/#{value}"
+					success: (response) => 
+						@userMenu.updateNoOfTasks response.activeTasks
+
 			className: 'tasks-view multi-box-view'
 
 			events: 
@@ -117,6 +128,7 @@ define([
 				'click [data-action=cancel-task]': (event) -> @cancel event
 				'click [data-action=complete-task]': (event) -> @complete event
 				'click [data-action=select-references]': (event) -> @selectReferences event
+				'click [data-action=mark-as-reviewed]': (event) -> @markAsReviewed event
 
 			initialize: (options) ->
 				{@id, @userMenu} = options

@@ -12,16 +12,18 @@ public class ReviewService extends TaskExecutionService<Review> {
 
 	private final Dao<Review> dao;
 	private final AccessService accessService;
+	private final UserService userService;
 
 	@Inject
 	public ReviewService(Dao<Review> dao, UserService userService, RepositoryService repoService,
 			AccessService accessService) {
 		super(dao, userService, repoService, accessService);
 		this.dao = dao;
+		this.userService = userService;
 		this.accessService = accessService;
 	}
 
-	public Review setReferences(long reviewId, Set<ReviewReference> references) {
+	public void setReferences(long reviewId, Set<ReviewReference> references) {
 		Review fromDb = get(reviewId);
 		Repository repo = getRepository(fromDb.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
@@ -33,7 +35,27 @@ public class ReviewService extends TaskExecutionService<Review> {
 				continue;
 			reference.setId(++lastId);
 		}
-		return dao.update(fromDb);
+		dao.update(fromDb);
+	}
+
+	public void markAsReviewed(long reviewId, long referenceId, boolean value) {
+		Review fromDb = get(reviewId);
+		for (ReviewReference reference : fromDb.references) {
+			if (reference.getId() != referenceId)
+				continue;
+			if (value && reference.reviewer != null)
+				// already marked
+				return;
+			if (!value && reference.reviewer == null)
+				// already not marked
+				return;
+			if (value) {
+				reference.reviewer = userService.getCurrentUser();
+			} else {
+				reference.reviewer = null;
+			}
+			dao.update(fromDb);
+		}
 	}
 
 }

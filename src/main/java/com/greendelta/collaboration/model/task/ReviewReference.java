@@ -5,12 +5,15 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.AbstractEntity;
+import com.greendelta.collaboration.model.User;
 
 @Entity
 @Table(name = "review_references")
@@ -33,6 +36,10 @@ public class ReviewReference extends AbstractEntity {
 	@Column(name = "ds_name")
 	public String name;
 
+	@OneToOne
+	@JoinColumn(name = "f_reviewer")
+	public User reviewer;
+	
 	@Override
 	public long getId() {
 		return id;

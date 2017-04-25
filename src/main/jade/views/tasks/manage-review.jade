@@ -54,13 +54,15 @@ mixin review-info()
 				.clear
 
 mixin data-set-column(elements, col)
-	.flex-column
+	.flex-column.data-set-reference
 		.flex-container
 			each reference, index in elements
 				if index % 3 === col - 1
-					.overflow-ellipsis: a(href='#{review.repositoryPath}/dataset/#{reference.type}/#{reference.refId}/#{reference.commitId}' title=reference.name)
-						img.model-icon-small(src='images/model/small/#{reference.type.toLowerCase()}.png')
-						strong=reference.name
+					.overflow-ellipsis
+						input(type='checkbox' id=reference.id data-action='mark-as-reviewed' checked=!!reference.reviewer)
+						a(href='#{review.repositoryPath}/dataset/#{reference.type}/#{reference.refId}/#{reference.commitId}' title=reference.name)
+							img.model-icon-small(src='images/model/small/#{reference.type.toLowerCase()}.png')
+							strong=reference.name
 
 mixin data-set-selection()
 	.header-box Data sets to be reviewed

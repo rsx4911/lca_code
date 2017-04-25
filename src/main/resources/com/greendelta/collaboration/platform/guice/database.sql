@@ -100,6 +100,7 @@ CREATE TABLE review_references(
 	ds_ref_id VARCHAR(36) NOT NULL,
 	ds_commit_id VARCHAR(36) NOT NULL,
 	ds_name VARCHAR(255) NOT NULL,
+	f_reviewer BIGINT,
 	f_review BIGINT
 );
 
