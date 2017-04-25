@@ -69,7 +69,7 @@ public class GroupService {
 		if (!created)
 			return false;
 		if (!userGroup)
-			membershipService.addMembership(currentUser, group, Role.OWNER);
+			membershipService.addMembership(currentUser, group, Role.OWNER, true);
 		return true;
 	}
 
