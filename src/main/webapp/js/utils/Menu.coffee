@@ -8,6 +8,7 @@ define([
 			menu = $(element)
 			@activateActiveBar menu
 			@activateHoverBar menu
+			return menu
 
 		getX: (menu, elem) ->
 			margin = 0
@@ -24,14 +25,13 @@ define([
 			height = $(li).height()
 			bar.css 'margin', margin + 'px 0 0 0'
 			bar.css 'height', height + 'px'
-			self = @
-			$('li', menu).click () ->
-				bar.css 'transition', 'height .5s ease, margin .3s ease'
-				self.onClick menu, @
 
 		onClick: (menu, li) ->
+			console.log menu
+			console.log li
 			bar = $('.menu-active-bar', menu) 
-			margin = @getX(menu, li)
+			bar.css 'transition', 'height .5s ease, margin .3s ease'
+			margin = @getX menu, li[0]
 			height = $(li).height()
 			bar.css 'margin', margin + 'px 0 0 0'
 			bar.css 'height', height + 'px'
