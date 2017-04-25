@@ -28,7 +28,7 @@ mixin comment-info(comment, roles, showDatasetInfo)
 		- var field = comment.field;
 		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId) 
 			img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
-			small #{comment.dsPath} - #{getLabel(field.modelType, field.path)}
+			small #{comment.dsPath} - #{getLabel(field)}
 
 mixin comment-entry(comment, index, roles, showDatasetInfo)
 	- var canChangeVisibility = currentUser && currentUser.canComment && (currentUser.admin || currentUser.username === comment.user.username)

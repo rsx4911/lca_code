@@ -26,7 +26,7 @@ define([
 						comments: comments
 						formatDate: Format.dateTime
 						formatModelType: (type) -> return ModelTypes[type]
-						getLabel: (path) -> return Labels.get path
+						getLabel: (field) -> return Labels.get field.modelType, field.path
 					Renderer.render @, renderOptions
 
 			loadComments: (callback) ->
