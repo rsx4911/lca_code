@@ -1,4 +1,5 @@
 define([
+				'cs!app/Router'
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Labels'
@@ -8,9 +9,9 @@ define([
 				'cs!models/CurrentUser'
 			]
 
-	(Events, Format, Labels, Layers, LocalStorage, Roles, currentUser) ->
+	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, currentUser) ->
 
-		init: (parent, dataset) ->
+		init: (parent, dataset, callback) ->
 			@loadComments dataset, (comments) =>
 				for element in $('[data-path]', parent)
 					path = $(element).attr 'data-path'
@@ -23,13 +24,36 @@ define([
 				$('[data-path] [data-action=comment]', parent).on 'click', (event) => 
 					Events.preventDefault event
 					target = $ Events.target event
-					while !target.attr('data-path')
+					while !target.attr('data-path') and !target.is('body')
 						target = target.parent()
+					if !target.attr('data-path') and !target.attr('data-path') is ''
+						return
 					path = target.attr 'data-path'
 					unless comments[path]
 						comments[path] = []
 					@comments = comments
 					@showComments dataset, path
+				@openComment dataset.commentPath
+
+		openComment: (path) ->
+			unless path
+				return
+			if path = '-'
+				path = ''
+			fragment = Backbone.history.fragment
+			Router.navigate fragment.substring(0, fragment.lastIndexOf('/')), {trigger: false, replace: true}
+			elem = $("[data-path='#{path}']", '.tab-content')
+			if elem?.length
+				while !elem.hasClass('tab-pane') and !elem.is('body')
+					elem = elem.parent()
+				unless elem.is('body')
+					tabId = elem.attr 'id'
+					$("[href=##{tabId}]").click()
+			commentElement = $ "[data-path='#{path}'] [data-action=comment]"
+			pos = commentElement.offset().top - 85
+			if pos > 0
+				$(window).scrollTop pos
+			commentElement.click()
 
 		loadComments: (dataset, callback) ->
 			$.ajax 
@@ -52,13 +76,14 @@ define([
 
 		showComments: (dataset, path) ->
 			comments = @sortAndFilter @comments[path]
-			field = Labels.get dataset.type, path
+			if path
+				field = Labels.get dataset.type, path
 			buttons = []
 			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
 			if @canComment
 				buttons.push {text: 'Add comment', className: 'btn-success', callback: => @addComment dataset, path}
 			Layers.showTemplateInLayer
-				title: "Comments on '#{field}'"
+				title: if field then "Comments on '#{field}'" else 'Comments on data set'
 				template: 'repository/dataset/comment-layer'
 				model: 
 					path: path

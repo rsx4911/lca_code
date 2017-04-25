@@ -103,6 +103,8 @@ public class CommentResource {
 		comment.field.refId = refId;
 		comment.field.commitId = commitId;
 		comment.field.path = map.getString("path");
+		if (comment.field.path == null)
+			comment.field.path = "";
 		comment.restrictedToRole = parseRole(map);
 		comment.date = Calendar.getInstance().getTime();
 		comment.replyTo = service.get(map.getLong("replyTo"));

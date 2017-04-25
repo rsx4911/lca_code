@@ -27,7 +27,7 @@ define
 	':group/:name': 'repositoryInfo'
 	':group/:name/datasets': 'repositoryDatasets'
 	':group/:name/datasets/*categoryPath': 'repositoryDatasets'
-	':group/:name/dataset/:type/:refId(/:commitId)': 'repositoryDataset'
+	':group/:name/dataset/:type/:refId(/:commitId)(/:commentPath)': 'repositoryDataset'
 	':group/:name/commits': 'repositoryCommits'
 	':group/:name/commit/:commitId': 'repositoryCommit'
 	':group/:name/comments': 'repositoryComments'

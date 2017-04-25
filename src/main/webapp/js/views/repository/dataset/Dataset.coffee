@@ -114,7 +114,7 @@ define([
 					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
 
 			initialize: (options) ->
-				{@repository, @type, @refId, @commitId} = options
+				{@repository, @type, @refId, @commitId, @commentPath} = options
 
 			render: (renderOptions) ->
 				template = @getTemplate()
@@ -159,6 +159,7 @@ define([
 										type: @type, 
 										refId: @refId, 
 										commitId: @commitId
+										commentPath: @commentPath
 						else
 							@initTableSorting()
 							Comments.init @$el,
@@ -166,8 +167,9 @@ define([
 								type: @type, 
 								refId: @refId, 
 								commitId: @commitId
+								commentPath: @commentPath
 						if dataset.type is 'DQSystem'
-							@initDataQualityPopups(dataset)
+							@initDataQualityPopups dataset
 
 			initTableSorting: () ->
 				tables = @$('table:not(.no-head)')

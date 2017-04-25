@@ -28,7 +28,6 @@ define([
 					return prefix
 				return "#{prefix}/#{part}"
 
-
 			getNav: (options) ->
 				unless options
 					return
@@ -241,7 +240,7 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						categoryPath: categoryPath
-				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId) -> @showView 
+				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId, commentPath) -> @showView 
 					view: 'repository/dataset/Dataset'
 					title: "#{group}/#{name} | Data sets"
 					nav: 
@@ -253,6 +252,7 @@ define([
 						type: type
 						refId: refId
 						commitId: commitId
+						commentPath: commentPath
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name} | Commits"

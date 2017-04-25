@@ -26,9 +26,12 @@ mixin comment-info(comment, roles, showDatasetInfo)
 			small Reply
 	if showDatasetInfo
 		- var field = comment.field;
-		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId) 
+		- var label = getLabel(field);
+		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId + '/' + (field.path || '-')) 
 			img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
-			small #{comment.dsPath} - #{getLabel(field)}
+			small #{comment.dsPath} 
+				if label
+					| - #{label}
 
 mixin comment-entry(comment, index, roles, showDatasetInfo)
 	- var canChangeVisibility = currentUser && currentUser.canComment && (currentUser.admin || currentUser.username === comment.user.username)
