@@ -128,7 +128,7 @@ define([
 				element.remove()
 				@addConversation conversation, (if keepPosition then prev else null)
 				@$("#conversations [data-id]").hide()
-				setTimeout () -> # TODO fix this, have to add little timeout, otherwise badge will not be repositioned
+				setTimeout () -> # TODO fix this, had to add little timeout, otherwise badge will not be repositioned
 					@$("#conversations [data-id]").show()
 				, 2
 
@@ -174,6 +174,7 @@ define([
 					@renderMessage message
 				if conversation.get('messages').length is 1
 					conversation.loadPrevious()
+				conversations.markAsRead conversation
 
 			scrollDown: () ->
 				@$('#conversation-messages').scrollTop @$('#conversation-messages').prop 'scrollHeight'
