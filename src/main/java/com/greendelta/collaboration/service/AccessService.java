@@ -68,6 +68,8 @@ public class AccessService {
 			return true;
 		if (!canRead(comment.repositoryPath))
 			return false;
+		if (comment.replyTo.user.equals(user))
+			return true;
 		if (comment.restrictedToRole != null) {
 			Role role = membershipService.getRole(user, comment.repositoryPath);
 			return comment.restrictedToRole.ordinal() <= role.ordinal();
