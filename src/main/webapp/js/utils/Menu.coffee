@@ -27,8 +27,6 @@ define([
 			bar.css 'height', height + 'px'
 
 		onClick: (menu, li) ->
-			console.log menu
-			console.log li
 			bar = $('.menu-active-bar', menu) 
 			bar.css 'transition', 'height .5s ease, margin .3s ease'
 			margin = @getX menu, li[0]
