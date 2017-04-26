@@ -15,7 +15,7 @@ mixin menubar()
 			span.glyphicon.glyphicon-download
 			span.text Download
 		.clear
-		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='')
+		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
 			|  on #{formatDate(currentCommit.timestamp)}
 
 mixin header()

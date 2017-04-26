@@ -21,6 +21,7 @@ define([
 					style = if visible then '' else 'style="display:none" '
 					highlight = comments[path]
 					$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
+				@comments = comments
 				$('[data-path] [data-action=comment]', parent).on 'click', (event) => 
 					Events.preventDefault event
 					target = $ Events.target event
@@ -29,17 +30,14 @@ define([
 					if !target.attr('data-path') and !target.attr('data-path') is ''
 						return
 					path = target.attr 'data-path'
-					unless comments[path]
-						comments[path] = []
-					@comments = comments
+					unless @comments[path]
+						@comments[path] = []
 					@showComments dataset, path
 				@openComment dataset.commentPath
 
 		openComment: (path) ->
 			unless path
 				return
-			if path = '-'
-				path = ''
 			fragment = Backbone.history.fragment
 			Router.navigate fragment.substring(0, fragment.lastIndexOf('/')), {trigger: false, replace: true}
 			elem = $("[data-path='#{path}']", '.tab-content')
@@ -63,7 +61,9 @@ define([
 					@canComment = data.canComment
 					map = {}
 					for comment in data.comments
-						path = comment.field.path or ''
+						path = comment.field.path
+						unless path
+							path = 'null'
 						unless map[path]
 							map[path] = []
 						map[path].push comment
@@ -170,6 +170,8 @@ define([
 			text = $('.modal #new-comment').val()
 			unless text
 				return
+			if path is 'null'
+				path = ''
 			$.ajax
 				type: 'POST'
 				url: @getUrl(dataset)

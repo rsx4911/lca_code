@@ -27,7 +27,7 @@ mixin comment-info(comment, roles, showDatasetInfo)
 	if showDatasetInfo
 		- var field = comment.field;
 		- var label = getLabel(field);
-		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId + '/' + (field.path || '-')) 
+		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId + '/' + (field.path || 'null')) 
 			img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
 			small #{comment.dsPath} 
 				if label
