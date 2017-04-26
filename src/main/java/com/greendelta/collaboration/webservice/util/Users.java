@@ -21,6 +21,8 @@ public class Users {
 	}
 
 	public static ObjectMap mapForOthers(User user) {
+		if (user == null)
+			return null;
 		ObjectMap map = ObjectMap.fromObject(user);
 		map.removeAllBut("name", "username");
 		return map;

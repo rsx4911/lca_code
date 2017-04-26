@@ -5,10 +5,12 @@ define([
 				'cs!utils/Labels'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!views/repository/CommentActions'
+				'cs!models/CurrentUser'
 				'templates/views/repository/comments'
 			]
 
-	(Backbone, Events, Format, Labels, ModelTypes, Renderer, template) ->
+	(Backbone, Events, Format, Labels, ModelTypes, Renderer, Actions, currentUser, template) ->
 
 		class CommentsView extends Backbone.View
 
@@ -16,15 +18,19 @@ define([
 
 			events: 
 				'click a[href]:not([href=#])': (event) -> Events.followLink event
+				'click a.release': (event) -> Actions.release event
+				'click a.remove': (event) -> Actions.remove event
 
 			initialize: (options) ->
 				{@repository} = options
 
 			render: (renderOptions) ->
-				@loadComments (comments) =>
+				@loadComments (data) =>
 					@$el.html template 
-						comments: comments
+						comments: @sortAndFilter data.comments
+						canApprove: data.canApprove
 						formatDate: Format.dateTime
+						currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
 						formatModelType: (type) -> return ModelTypes[type]
 						getLabel: (field) -> return Labels.get field.modelType, field.path
 					Renderer.render @, renderOptions
@@ -36,7 +42,7 @@ define([
 					type: 'GET'
 					url: "ws/comment/#{group}/#{name}"
 					success: (data) =>
-						callback @sortAndFilter data.comments
+						callback data
 
 			sortAndFilter: (comments) ->
 				comments.sort (a, b) -> return b.date - a.date

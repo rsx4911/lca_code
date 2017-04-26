@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -33,6 +34,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.webservice.util.Comments;
 
 @Path("comment")
 @Produces(MediaType.APPLICATION_JSON)
@@ -71,6 +73,7 @@ public class CommentResource {
 		Map<String, Object> result = new HashMap<>();
 		result.put("comments", map(repository, comments));
 		result.put("canComment", accessService.canCommentIn(repository.toId()));
+		result.put("canApprove", accessService.canManageCommentsIn(repository.toId()));
 		return Respond.ok(result);
 	}
 
@@ -78,7 +81,7 @@ public class CommentResource {
 		List<Map<String, Object>> mapped = new ArrayList<>();
 		DatasetIndex index = indices.get(repository);
 		for (Comment comment : comments) {
-			ObjectMap map = ObjectMap.fromObject(comment);
+			ObjectMap map = Comments.map(comment);
 			DatasetIndexEntry ds = index.getForId(comment.field.refId, comment.field.commitId);
 			map.put("dsPath", ds.fullPath);
 			mapped.add(map);
@@ -114,11 +117,25 @@ public class CommentResource {
 	}
 
 	@PUT
-	@Path("{id}/{role}")
+	@Path("{id}/visibility/{role}")
 	public Response changeVisibility(@PathParam("id") long id, @PathParam("role") String roleString) {
 		Role role = "null".equals(roleString) ? null : Role.valueOf(roleString);
 		boolean changed = service.changeVisibility(id, role);
 		return Respond.ok(Collections.singletonMap("changed", changed));
+	}
+
+	@PUT
+	@Path("{id}/release")
+	public Response release(@PathParam("id") long id) {
+		Comment comment = service.release(id);
+		return Respond.ok(comment);
+	}
+
+	@DELETE
+	@Path("{id}")
+	public Response delete(@PathParam("id") long id) {
+		service.delete(id);
+		return Respond.ok(Collections.emptyMap());
 	}
 
 	private Role parseRole(ObjectMap data) {

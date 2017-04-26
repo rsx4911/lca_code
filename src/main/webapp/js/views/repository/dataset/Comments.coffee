@@ -6,10 +6,11 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/Roles'
+				'cs!views/repository/CommentActions'
 				'cs!models/CurrentUser'
 			]
 
-	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, currentUser) ->
+	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, Actions, currentUser) ->
 
 		init: (parent, dataset, callback) ->
 			@loadComments dataset, (comments) =>
@@ -17,7 +18,7 @@ define([
 					path = $(element).attr 'data-path'
 					label = Labels.get dataset.type, path
 					title = if path then "Comment '#{label}'" else 'Comment data set'
-					visible = LocalStorage.getValue('reviewMode') or comments[path]
+					visible = (LocalStorage.getValue('reviewMode') and @canComment) or comments[path]
 					style = if visible then '' else 'style="display:none" '
 					highlight = comments[path]
 					$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
@@ -59,6 +60,7 @@ define([
 				url: @getUrl(dataset)
 				success: (data) =>
 					@canComment = data.canComment
+					@canApprove = data.canApprove
 					map = {}
 					for comment in data.comments
 						path = comment.field.path
@@ -89,14 +91,18 @@ define([
 					path: path
 					comments: comments or []
 					formatDate: Format.dateTime
-					currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin(), canComment: @canComment}
+					currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
+					canComment: @canComment
+					canApprove: @canApprove
 					roles: Roles.getAll()
 					getRoleLabel: (role) -> Roles[role].name
 				buttons: buttons
 				callback: () =>
 					@initSubMenues()
 					$('.modal .reply-to').on 'click', (event) => @setReplyTo event
-					$('.modal [data-comment-id] .change-visibility a[data-role]').on 'click', (event) => @setVisibility event, path
+					$('.modal .release').on 'click', (event) => Actions.release event, @comments[path]
+					$('.modal .remove').on 'click', (event) => Actions.remove event, @comments[path]
+					$('.modal [data-comment-id] .change-visibility a[data-role]').on 'click', (event) => Actions.setVisibility event, @comments[path]
 					$('.modal .new-comment-wrapper .change-visibility a[data-role]').on 'click', (event) => 
 						Events.preventDefault event
 						target = $ Events.target event, 'a'
@@ -140,31 +146,6 @@ define([
 				replyTo = target.attr 'data-comment-id'
 				$(".comment-entry[data-comment-id=#{replyTo}]").append textarea
 			@replyTo = replyTo
-
-		setVisibility: (event, path) ->
-			Events.preventDefault event
-			target = $ Events.target event, 'a'
-			role = target.attr 'data-role'
-			while !target.attr('data-comment-id')
-				target = target.parent()
-			commentId = parseInt target.attr 'data-comment-id'
-			$.ajax
-				type: 'PUT'
-				url: "ws/comment/#{commentId}/#{role}"
-				success: () =>
-					visibility = $ ".modal [data-comment-id=#{commentId}] .comment-visibility"
-					visibility.removeClass 'glyphicon-lock glyphicon-globe'
-					for comment in @comments[path]
-						if comment.id is commentId
-							if role is 'null'
-								comment.restrictedToRole = null
-								visibility.addClass 'glyphicon-globe'
-								visibility.attr 'title', 'Visible to everybody'
-							else
-								comment.restrictedToRole = role
-								visibility.addClass 'glyphicon-lock'
-								visibility.attr 'title', 'Only visible for users with role \'' + Roles[comment.restrictedToRole].name + '\' or higher';
-					$('.dropdown.open > a').click()
 
 		addComment: (dataset, path) ->
 			text = $('.modal #new-comment').val()

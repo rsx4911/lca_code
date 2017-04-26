@@ -17,13 +17,24 @@ mixin comment-visibility(restrictedToRole, roles)
 						li: a(href='#' data-role=role.id)=role.name
 
 mixin comment-info(comment, roles, showDatasetInfo)
-	span: small &nbsp;wrote on #{formatDate(comment.date)} 
+	span: small &nbsp;wrote on #{formatDate(comment.date)}
 	if canChangeVisibility
 		+comment-visibility(comment.restrictedToRole, roles)
-	if !comment.replyTo && currentUser && currentUser.canComment
+	if (!comment.released && comment.user.username === currentUser.username) || (!comment.approvedBy && canApprove)
+		span.release-container
+			|  | 
+			a.default-link.release(href='#')
+				small=!comment.released?'Release':'Approve'
+	if comment.released && !comment.approvedBy && !canApprove
 		|  | 
-		a.default-link.reply-to(href='#' data-comment-id=comment.id)
+		i Approval pending
+	if !comment.replyTo && canComment && comment.released && comment.approvedBy
+		|  | 
+		a.default-link.reply-to(href='#')
 			small Reply
+	if !comment.released || !comment.approvedBy
+		|  
+		a.remove(href='#'): span.glyphicon.glyphicon-remove
 	if showDatasetInfo
 		- var field = comment.field;
 		- var label = getLabel(field);
@@ -34,8 +45,23 @@ mixin comment-info(comment, roles, showDatasetInfo)
 					| - #{label}
 
 mixin comment-entry(comment, index, roles, showDatasetInfo)
-	- var canChangeVisibility = currentUser && currentUser.canComment && (currentUser.admin || currentUser.username === comment.user.username)
-	.comment-entry(class=comment.replyTo?'reply':null data-comment-id=comment.id)
+	- var canChangeVisibility = canComment && (currentUser.admin || currentUser.username === comment.user.username);
+	- var classes = [];
+	if comment.replyTo
+		- classes.push('reply');
+	if comment.released 
+		if comment.approvedBy
+			- classes.push('approved');
+		else
+			- classes.push('released');
+	- var addClass = null;
+	if classes.length
+		- addClass = '';
+		each c, index in classes
+			if index > 0
+				- addClass += ' '
+			- addClass += c;
+	.comment-entry(class=addClass data-comment-id=comment.id)
 		if showDatasetInfo
 			.pull-left
 				img.avatar.avatar-small(src='ws/user/avatar/#{comment.user.username}')

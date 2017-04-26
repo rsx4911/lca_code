@@ -68,6 +68,8 @@ CREATE TABLE comments(
 	date TIMESTAMP NOT NULL,
 	text VARCHAR(4000),
 	restricted_to_role VARCHAR(255),
+	released BOOLEAN NOT NULL DEFAULT false,
+	f_approved_by BIGINT,
 	f_reply_to BIGINT
 );
 

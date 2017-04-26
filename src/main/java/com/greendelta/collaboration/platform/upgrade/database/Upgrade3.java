@@ -43,5 +43,7 @@ public class Upgrade3 implements IUpgrade {
 		dbUtil.update("UPDATE messages SET f_team2 = f_team");
 		dbUtil.update("ALTER TABLE messages DROP COLUMN f_team");
 		dbUtil.update("RENAME COLUMN messages.f_team2 TO f_team");
+		dbUtil.addColumn("comments", "released", "BOOLEAN NOT NULL DEFAULT false");
+		dbUtil.addColumn("comments", "f_approved_by", "BOOLEAN NOT NULL DEFAULT false");
 	}
 }

@@ -68,13 +68,33 @@ public class AccessService {
 			return true;
 		if (!canRead(comment.repositoryPath))
 			return false;
-		if (comment.replyTo.user.equals(user))
+		if (!comment.released)
+			return false;
+		if (comment.approvedBy == null && !canManageCommentsIn(comment.repositoryPath))
+			return false;
+		if (comment.replyTo != null && comment.replyTo.user.equals(user))
 			return true;
 		if (comment.restrictedToRole != null) {
 			Role role = membershipService.getRole(user, comment.repositoryPath);
 			return comment.restrictedToRole.ordinal() <= role.ordinal();
 		}
 		return true;
+	}
+
+	public boolean canManage(Comment comment) {
+		User user = userService.getCurrentUser();
+		if (comment.user.equals(user))
+			return true;
+		return canManageCommentsIn(comment.repositoryPath);
+	}
+
+	public boolean canManageCommentsIn(String repositoryPath) {
+		User user = userService.getCurrentUser();
+		if (user.admin)
+			return true;
+		if (!canRead(repositoryPath))
+			return false;
+		return hasPermissionTo(user, Permission.MANAGE_COMMENTS, repositoryPath);
 	}
 
 	public boolean canCommentIn(String repositoryPath) {

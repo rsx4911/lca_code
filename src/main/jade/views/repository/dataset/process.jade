@@ -225,12 +225,12 @@ mixin local-ref(path)
 			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, false, '-', true)
 		+local-ref('location')
 		hr
-		+local-field('processDocumentation.validFrom', formatDate)
-		+local-field('processDocumentation.validUntil', formatDate)
+		+local-field('processDocumentation.validFrom', formatDate, '-')
+		+local-field('processDocumentation.validUntil', formatDate, '-')
 		hr
-		+local-field('processDocumentation.timeDescription')
-		+local-field('processDocumentation.geographyDescription')
-		+local-field('processDocumentation.technologyDescription')
+		+local-field('processDocumentation.timeDescription', null, '-')
+		+local-field('processDocumentation.geographyDescription', null, '-')
+		+local-field('processDocumentation.technologyDescription', null, '-')
 		hr
 		+local-ref('dqSystem')
 		+local-ref('exchangeDqSystem')
