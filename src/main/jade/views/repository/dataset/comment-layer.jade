@@ -1,4 +1,4 @@
-include ../comment-entry.jade
+include ../comment-entry-mixins.jade
 
 if canComment
 	.new-comment-wrapper
@@ -10,4 +10,6 @@ if comments && comments.length && canComment
 	hr
 .comments
 	each comment, index in comments
-		+comment-entry(comment, index, roles)
+		+comment-entry(comment, roles, false)
+		if index < comments.length - 1
+			hr

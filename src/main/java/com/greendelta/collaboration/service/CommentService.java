@@ -67,16 +67,24 @@ public class CommentService {
 			throw new UnauthorizedAccessException(comment.repositoryPath, "COMMENT");
 		return dao.insert(comment);
 	}
-
-	public boolean changeVisibility(long commentId, Role role) {
+	
+	public Comment update(long commentId, String text) {
 		Comment comment = dao.get(commentId);
 		if (comment == null)
-			return false;
+			return null;
+		comment.text = text;
+		return dao.update(comment);
+	}
+
+	public Comment changeVisibility(long commentId, Role role) {
+		Comment comment = dao.get(commentId);
+		if (comment == null)
+			return null;
 		if (!accessService.canManage(comment))
 			throw new UnauthorizedAccessException(comment.repositoryPath, "MANAGE_COMMENT");
 		comment.restrictedToRole = role;
 		dao.update(comment);
-		return true;
+		return comment;
 	}
 
 	public Comment release(long commentId) {

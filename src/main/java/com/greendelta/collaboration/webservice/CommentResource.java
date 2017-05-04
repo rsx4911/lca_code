@@ -81,10 +81,7 @@ public class CommentResource {
 		List<Map<String, Object>> mapped = new ArrayList<>();
 		DatasetIndex index = indices.get(repository);
 		for (Comment comment : comments) {
-			ObjectMap map = Comments.map(comment);
-			DatasetIndexEntry ds = index.getForId(comment.field.refId, comment.field.commitId);
-			map.put("dsPath", ds.fullPath);
-			mapped.add(map);
+			mapped.add(map(comment, index));
 		}
 		return mapped;
 	}
@@ -92,7 +89,7 @@ public class CommentResource {
 	@POST
 	@Path("{group}/{name}/{type}/{refId}/{commitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response addComment(@PathParam("group") String group, @PathParam("name") String name,
+	public Response add(@PathParam("group") String group, @PathParam("name") String name,
 			@PathParam("type") ModelType type, @PathParam("refId") String refId,
 			@PathParam("commitId") String commitId, Map<String, Object> data) {
 		ObjectMap map = ObjectMap.fromMap(data);
@@ -113,22 +110,39 @@ public class CommentResource {
 		comment.replyTo = service.get(map.getLong("replyTo"));
 		comment = service.insert(comment);
 		notificationService.fieldCommented(comment).send();
-		return Respond.ok(comment);
+		return Respond.ok(map(comment, indices.get(repository)));
+	}
+
+	@PUT
+	@Path("{id}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response edit(@PathParam("id") long id, Map<String, Object> data) {
+		Comment comment = service.update(id, data.get("text").toString());
+		if (comment == null)
+			return Respond.notFound();
+		Repository repository = getRepository(comment);
+		return Respond.ok(map(comment, indices.get(repository)));
 	}
 
 	@PUT
 	@Path("{id}/visibility/{role}")
 	public Response changeVisibility(@PathParam("id") long id, @PathParam("role") String roleString) {
 		Role role = "null".equals(roleString) ? null : Role.valueOf(roleString);
-		boolean changed = service.changeVisibility(id, role);
-		return Respond.ok(Collections.singletonMap("changed", changed));
+		Comment comment = service.changeVisibility(id, role);
+		if (comment == null)
+			return Respond.notFound();
+		Repository repository = getRepository(comment);
+		return Respond.ok(map(comment, indices.get(repository)));
 	}
 
 	@PUT
 	@Path("{id}/release")
 	public Response release(@PathParam("id") long id) {
 		Comment comment = service.release(id);
-		return Respond.ok(comment);
+		if (comment == null)
+			return Respond.notFound();
+		Repository repository = getRepository(comment);
+		return Respond.ok(map(comment, indices.get(repository)));
 	}
 
 	@DELETE
@@ -136,6 +150,19 @@ public class CommentResource {
 	public Response delete(@PathParam("id") long id) {
 		service.delete(id);
 		return Respond.ok(Collections.emptyMap());
+	}
+
+	private ObjectMap map(Comment comment, DatasetIndex index) {
+		ObjectMap map = Comments.map(comment);
+		DatasetIndexEntry ds = index.getForId(comment.field.refId, comment.field.commitId);
+		map.put("dsPath", ds.fullPath);
+		return map;
+	}
+
+	private Repository getRepository(Comment comment) {
+		String group = comment.repositoryPath.split("/")[0];
+		String name = comment.repositoryPath.split("/")[1];
+		return repoService.get(group, name);
 	}
 
 	private Role parseRole(ObjectMap data) {

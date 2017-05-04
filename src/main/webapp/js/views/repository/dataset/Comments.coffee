@@ -77,6 +77,50 @@ define([
 			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}"
 
 		showComments: (dataset, path) ->
+			clickEvents = 
+				'.edit': (event) => 
+					console.log event
+					Events.preventDefault event
+					target = $ Events.target event, 'a'
+					@setEdit target
+				'.reply-to': (event) => 
+					Events.preventDefault event
+					target = $ Events.target event, 'a'
+					@setReplyTo target
+				'.release': (event) => 
+					if @edit
+						@setEdit $('.modal [data-active]')
+					else if @replyTo
+						@setReplyTo $('.modal [data-active]')
+					Actions.release event, renderData
+				'.remove': (event) => 
+					if @edit
+						@setEdit $('.modal [data-active]')
+					else if @replyTo
+						@setReplyTo $('.modal [data-active]')
+					Actions.remove event, (commentId) =>
+						fieldComments = @updateComment commentId
+						if fieldComments?.length is 0
+							Layers.closeActive()
+							Backbone.history.loadUrl()
+				'[data-comment-id] .change-visibility a[data-role]': (event) => 
+					Actions.setVisibility event, renderData
+				'.new-comment-wrapper .change-visibility a[data-role]': (event) => 
+					Events.preventDefault event
+					target = $ Events.target event, 'a'
+					@role = target.attr 'data-role'
+					if @role is 'null'
+						@role = null
+					visibility = $ '.modal .new-comment-wrapper .comment-visibility'
+					visibility.removeClass 'glyphicon-lock glyphicon-globe'
+					if @role
+						visibility.addClass 'glyphicon-lock'
+						visibility.attr 'title', 'Only visible for users with role \'' + Roles[@role].name + '\' or higher';
+					else
+						visibility.addClass 'glyphicon-globe'
+						visibility.attr 'title', 'Visible to everybody'
+					$('.dropdown.open > a').click()
+			renderData = {canComment: @canComment, canApprove: @canApprove, canEdit: true, roles: Roles.getAll(), clickEvents: clickEvents, callback: (commentId, comment) => @updateComment commentId, comment}
 			comments = @sortAndFilter @comments[path]
 			if path
 				field = Labels.get dataset.type, path
@@ -94,30 +138,15 @@ define([
 					currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
 					canComment: @canComment
 					canApprove: @canApprove
+					canEdit: true
 					roles: Roles.getAll()
-					getRoleLabel: (role) -> Roles[role].name
+					getRoleLabel: (role) -> return Roles[role].name
+					getLabel: (field) -> return Labels.get field.modelType, field.path
 				buttons: buttons
 				callback: () =>
 					@initSubMenues()
-					$('.modal .reply-to').on 'click', (event) => @setReplyTo event
-					$('.modal .release').on 'click', (event) => Actions.release event, @comments[path]
-					$('.modal .remove').on 'click', (event) => Actions.remove event, @comments[path]
-					$('.modal [data-comment-id] .change-visibility a[data-role]').on 'click', (event) => Actions.setVisibility event, @comments[path]
-					$('.modal .new-comment-wrapper .change-visibility a[data-role]').on 'click', (event) => 
-						Events.preventDefault event
-						target = $ Events.target event, 'a'
-						@role = target.attr 'data-role'
-						if @role is 'null'
-							@role = null
-						visibility = $ '.modal .new-comment-wrapper .comment-visibility'
-						visibility.removeClass 'glyphicon-lock glyphicon-globe'
-						if @role
-							visibility.addClass 'glyphicon-lock'
-							visibility.attr 'title', 'Only visible for users with role \'' + Roles[@role].name + '\' or higher';
-						else
-							visibility.addClass 'glyphicon-globe'
-							visibility.attr 'title', 'Visible to everybody'
-						$('.dropdown.open > a').click()
+					for key in Object.keys(clickEvents)
+						$('.modal ' + key).on 'click', clickEvents[key]
 
 		initSubMenues: () ->
 			$('.modal .dropdown > .dropdown-menu > li').mouseenter (event) ->
@@ -131,21 +160,37 @@ define([
 				$('.dropdown-menu:first-of-type', element).show()
 				element.parent().parent().on('hide.bs.dropdown', () -> $('.dropdown-menu:first-of-type', element).hide())
 
-		setReplyTo: (event) ->
-			Events.preventDefault event
-			target = $ Events.target event, 'a'
+		setReplyTo: (target) ->
+			@replyTo = @moveTextarea target
+			$('.modal-footer button:last-child').html 'Add comment'
+
+		setEdit: (target) ->
+			@edit = @moveTextarea target
+			if @edit
+				$('.modal-footer button:last-child').html 'Edit comment'
+				$(".modal [data-comment-id=#{@edit}] .comment-text, .modal #new-comment-group label").hide()
+				while !target.attr 'data-comment-id'
+					target = target.parent()
+				$('.modal #new-comment-group textarea').val($('.comment-text', target).text())
+			else
+				$('.modal-footer button:last-child').html 'Add comment'
+
+		moveTextarea: (target) ->
+			$('.modal .comment-text, .modal #new-comment-group label').show()
 			textarea = $('.modal #new-comment-group')
 			textarea.remove()
-			isActive = target.attr 'data-active'
-			$('.modal .reply-to[data-active]').removeAttr 'data-active'
-			if isActive
-				replyTo = null
-				$('.new-comment-wrapper').append textarea
+			wasActive = target.attr 'data-active'
+			$('.modal [data-active]').removeAttr 'data-active'
+			activeId = null
+			if wasActive
+				$('.modal .new-comment-wrapper').append textarea
 			else
 				target.attr 'data-active', 'data-active'
-				replyTo = target.attr 'data-comment-id'
-				$(".comment-entry[data-comment-id=#{replyTo}]").append textarea
-			@replyTo = replyTo
+				while !target.attr 'data-comment-id'
+					target = target.parent()
+				activeId = target.attr 'data-comment-id'
+				$(".modal .comment-entry[data-comment-id=#{activeId}]").append textarea
+			return activeId
 
 		addComment: (dataset, path) ->
 			text = $('.modal #new-comment').val()
@@ -154,14 +199,39 @@ define([
 			if path is 'null'
 				path = ''
 			$.ajax
-				type: 'POST'
-				url: @getUrl(dataset)
+				type: if @edit then 'PUT' else 'POST'
+				url: if @edit then "ws/comment/#{@edit}" else @getUrl(dataset)
 				contentType: 'application/json'
 				data: JSON.stringify({path: path, text: text, replyTo: @replyTo, restrictedToRole: @role})
 				success: (comment) => 
-					@comments[path].push comment
-					Layers.closeActive()
-					Backbone.history.loadUrl()
+					if @edit
+						@updateComment comment.id, comment
+						$(".modal [data-comment-id=#{comment.id}] .comment-text").html comment.text
+						@setEdit $('.modal [data-active]')
+						$('.modal #new-comment-group textarea').val('')
+					else
+						@comments[path].push comment
+						@replyTo = null
+						Layers.closeActive()
+						Backbone.history.loadUrl()
+
+		updateComment: (commentId, comment) ->
+			path = null
+			newComments = []
+			for key in Object.keys(@comments)
+				for c in @comments[key]
+					if c.id is commentId
+						path = key
+			unless path
+				return []
+			for c in @comments[path]
+				if c.id is commentId
+					if comment
+						newComments.push comment
+				else
+					newComments.push c
+			@comments[path] = newComments
+			return newComments
 
 		sortAndFilter: (comments) ->
 			comments.sort (a, b) -> return b.date - a.date

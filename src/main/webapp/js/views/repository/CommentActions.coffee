@@ -1,68 +1,35 @@
 define([
 				'cs!utils/Events'
+				'cs!utils/Format'
+				'cs!utils/Labels'
+				'cs!utils/ModelTypes'
+				'cs!utils/Roles'
+				'cs!models/CurrentUser'
+				'templates/views/repository/comment-entry'
 			]
 
-	(Events) ->
+	(Events, Format, Labels, ModelTypes, Roles, currentUser, template) ->
 
-		release: (event, comments) ->
+		release: (event, renderData) ->
 			Events.preventDefault event
-			element = $ Events.target event, 'a'
-			commentId = @getCommentId element
+			target = $ Events.target event, 'a'
+			commentId = @getCommentId target
 			$.ajax
 				type: 'PUT'
 				url: "ws/comment/#{commentId}/release"
-				success: (comment) =>
-					if comments
-						for c in comments
-							if c.id is commentId
-								c.released = comment.released
-								c.approvedBy = comment.approvedBy
-					if comment.released && comment.approvedBy
-						while !element.hasClass('release-container')
-							element = element.parent()
-						element.next('.remove').remove()
-						parent = element.parent()
-						while !parent.hasClass('comment-entry') 
-							parent = parent.parent()
-						parent.addClass 'released approved'
-						element.remove()
-					else if comment.released
-						parent = element.parent()
-						parent.append '<small><i>Approval pending</i></small>'
-						while !parent.hasClass('comment-entry') 
-							parent = parent.parent()
-						parent.addClass 'released'
-						element.remove()
+				success: (comment) => @rerender @getContainer(target), comment, renderData
 
-		setVisibility: (event, comments) ->
+		setVisibility: (event, renderData) ->
 			Events.preventDefault event
 			target = $ Events.target event, 'a'
 			role = target.attr 'data-role'
-			commentId = @getCommentId element
+			commentId = @getCommentId target
 			$.ajax
 				type: 'PUT'
 				url: "ws/comment/#{commentId}/visibility/#{role}"
-				success: () =>
-					comment = null
-					if comments
-						for c in comments
-							if c.id is commentId
-								comment = c
-					unless comment
-						return
-					visibility = $ ".modal [data-comment-id=#{commentId}] .comment-visibility"
-					visibility.removeClass 'glyphicon-lock glyphicon-globe'
-					if role is 'null'
-						comment.restrictedToRole = null
-						visibility.addClass 'glyphicon-globe'
-						visibility.attr 'title', 'Visible to everybody'
-					else
-						comment.restrictedToRole = role
-						visibility.addClass 'glyphicon-lock'
-						visibility.attr 'title', 'Only visible for users with role \'' + Roles[comment.restrictedToRole].name + '\' or higher';
-					$('.dropdown.open > a').click()
+				success: (comment) => @rerender @getContainer(target), comment, renderData
 
-		remove: (event, comments) ->
+		remove: (event, callback) ->
 			Events.preventDefault event
 			target = $ Events.target event, 'a'
 			commentId = @getCommentId target
@@ -70,10 +37,6 @@ define([
 				type: 'DELETE'
 				url: "ws/comment/#{commentId}"
 				success: () =>
-					if comments
-						for c, index in comments
-							if c.id is commentId
-								comments.splice(index, 1);
 					container = @getContainer target
 					if container.next().is('hr')
 						container.next().remove()
@@ -84,6 +47,23 @@ define([
 					if container.is(':empty')
 						container.prev().remove()
 						container.remove()
+					callback?(commentId)
+
+		rerender: (container, comment, renderData) ->
+			container.replaceWith template
+				comment: comment
+				roles: renderData.roles
+				canComment: renderData.canComment
+				canApprove: renderData.canApprove
+				canEdit: renderData.canEdit
+				currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
+				formatDate: Format.dateTime
+				formatModelType: (type) -> return ModelTypes[type]
+				getRoleLabel: (role) -> return Roles[role].name
+				getLabel: (field) -> return Labels.get field.modelType, field.path
+			for key in Object.keys(renderData.clickEvents)
+				$(key, "[data-comment-id=#{comment.id}]").on 'click', renderData.clickEvents[key]
+			renderData.callback?(comment.id, comment)
 
 		getCommentId: (element) ->
 			container = @getContainer element

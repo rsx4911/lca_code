@@ -18,14 +18,15 @@ define([
 
 			events: 
 				'click a[href]:not([href=#])': (event) -> Events.followLink event
-				'click a.release': (event) -> Actions.release event
-				'click a.remove': (event) -> Actions.remove event
+				'click a.release': (event) -> Actions.release event, @renderData
+				'click a.remove': (event) -> Actions.remove event, @renderData
 
 			initialize: (options) ->
 				{@repository} = options
 
 			render: (renderOptions) ->
 				@loadComments (data) =>
+					@renderData = {canApprove: data.canApprove, canComment: false}
 					@$el.html template 
 						comments: @sortAndFilter data.comments
 						canApprove: data.canApprove
