@@ -76,51 +76,60 @@ define([
 			name = dataset.repository.get 'name'
 			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}"
 
+		onEdit: (event) ->
+			Events.preventDefault event
+			target = $ Events.target event, 'a'
+			@setEdit target
+
+		onReplyTo: (event) ->
+			Events.preventDefault event
+			target = $ Events.target event, 'a'
+			@setReplyTo target
+
+		onRelease: (event) ->
+			if @edit
+				@setEdit $('.modal [data-active]')
+			else if @replyTo
+				@setReplyTo $('.modal [data-active]')
+			Actions.release event, @renderData
+
+		onRemove: (event) ->
+			if @edit
+				@setEdit $('.modal [data-active]')
+			else if @replyTo
+				@setReplyTo $('.modal [data-active]')
+			Actions.remove event, (commentId) =>
+				fieldComments = @updateComment commentId
+				if fieldComments?.length is 0
+					Layers.closeActive()
+					Backbone.history.loadUrl()
+
+		onChangeVisibility: (event) ->
+			Events.preventDefault event
+			target = $ Events.target event, 'a'
+			@role = target.attr 'data-role'
+			if @role is 'null'
+				@role = null
+			visibility = $ '.modal .new-comment-wrapper .comment-visibility'
+			visibility.removeClass 'glyphicon-lock glyphicon-globe'
+			if @role
+				visibility.addClass 'glyphicon-lock'
+				visibility.attr 'title', 'Only visible for users with role \'' + Roles[@role].name + '\' or higher';
+			else
+				visibility.addClass 'glyphicon-globe'
+				visibility.attr 'title', 'Visible to everybody'
+			$('.dropdown.open > a').click()
+
 		showComments: (dataset, path) ->
+			@renderData = {canComment: @canComment, canApprove: @canApprove, canEdit: true, roles: Roles.getAll(), callback: (commentId, comment) => @updateComment commentId, comment}
 			clickEvents = 
-				'.edit': (event) => 
-					console.log event
-					Events.preventDefault event
-					target = $ Events.target event, 'a'
-					@setEdit target
-				'.reply-to': (event) => 
-					Events.preventDefault event
-					target = $ Events.target event, 'a'
-					@setReplyTo target
-				'.release': (event) => 
-					if @edit
-						@setEdit $('.modal [data-active]')
-					else if @replyTo
-						@setReplyTo $('.modal [data-active]')
-					Actions.release event, renderData
-				'.remove': (event) => 
-					if @edit
-						@setEdit $('.modal [data-active]')
-					else if @replyTo
-						@setReplyTo $('.modal [data-active]')
-					Actions.remove event, (commentId) =>
-						fieldComments = @updateComment commentId
-						if fieldComments?.length is 0
-							Layers.closeActive()
-							Backbone.history.loadUrl()
-				'[data-comment-id] .change-visibility a[data-role]': (event) => 
-					Actions.setVisibility event, renderData
-				'.new-comment-wrapper .change-visibility a[data-role]': (event) => 
-					Events.preventDefault event
-					target = $ Events.target event, 'a'
-					@role = target.attr 'data-role'
-					if @role is 'null'
-						@role = null
-					visibility = $ '.modal .new-comment-wrapper .comment-visibility'
-					visibility.removeClass 'glyphicon-lock glyphicon-globe'
-					if @role
-						visibility.addClass 'glyphicon-lock'
-						visibility.attr 'title', 'Only visible for users with role \'' + Roles[@role].name + '\' or higher';
-					else
-						visibility.addClass 'glyphicon-globe'
-						visibility.attr 'title', 'Visible to everybody'
-					$('.dropdown.open > a').click()
-			renderData = {canComment: @canComment, canApprove: @canApprove, canEdit: true, roles: Roles.getAll(), clickEvents: clickEvents, callback: (commentId, comment) => @updateComment commentId, comment}
+				'.edit': (event) => @onEdit event
+				'.reply-to': (event) => @onReplyTo event
+				'.release': (event) => @onRelease event
+				'.remove': (event) => @onRemove event
+				'[data-comment-id] .change-visibility a[data-role]': (event) => Actions.setVisibility event, @renderData
+				'.new-comment-wrapper .change-visibility a[data-role]': (event) => @onChangeVisibility event
+			@renderData.clickEvents = clickEvents
 			comments = @sortAndFilter @comments[path]
 			if path
 				field = Labels.get dataset.type, path

@@ -17,19 +17,19 @@ mixin comment-visibility(restrictedToRole, roles)
 						li: a(href='#' data-role=role.id)=role.name
 
 mixin comment-info(comment, roles, showDatasetInfo)
-	span: small &nbsp;wrote on #{formatDate(comment.date)}
+	- var canChangeVisibility = canComment && (currentUser.admin || currentUser.username === comment.user.username);
+	span: small wrote on #{formatDate(comment.date)}
 	if canChangeVisibility
+		| &nbsp;
 		+comment-visibility(comment.restrictedToRole, roles)
 	if (!comment.released && comment.user.username === currentUser.username) || (!comment.approvedBy && canApprove)
-		span.release-container
-			|  | 
-			a.default-link.release(href='#')
-				small=!comment.released?'Release':'Approve'
+		|  | 
+		a.default-link.release(href='#')
+			small=!comment.released?'Release':'Approve'
 	if comment.released && !comment.approvedBy && !canApprove
 		|  | 
 		i: small Approval pending
-	- var enableReply = !comment.replyTo && canComment && comment.released && !!comment.approvedBy;
-	span(style=enableReply?null:'display:none')
+	if !comment.replyTo && canComment && comment.released && !!comment.approvedBy
 		|  | 
 		a.default-link.reply-to(href='#')
 			small Reply
@@ -49,7 +49,6 @@ mixin comment-info(comment, roles, showDatasetInfo)
 					| - #{label}
 
 mixin comment-entry(comment, roles, showDatasetInfo)
-	- var canChangeVisibility = canComment && (currentUser.admin || currentUser.username === comment.user.username);
 	- var classes = [];
 	if comment.replyTo
 		- classes.push('reply');
