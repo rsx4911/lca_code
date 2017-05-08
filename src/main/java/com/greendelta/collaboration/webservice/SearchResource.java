@@ -11,13 +11,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.SearchService;
+import com.greendelta.collaboration.util.ObjectMap;
 
 @Path("search")
 public class SearchResource {

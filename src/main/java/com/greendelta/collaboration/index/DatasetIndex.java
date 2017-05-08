@@ -78,7 +78,7 @@ public class DatasetIndex {
 		}
 	}
 
-	private List<DatasetIndexEntry> getAll() {
+	public List<DatasetIndexEntry> getAll() {
 		IndexSearcher searcher = IndexUtil.getSearcher(directory);
 		if (searcher == null)
 			return new ArrayList<>();

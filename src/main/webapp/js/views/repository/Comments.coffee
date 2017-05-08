@@ -58,7 +58,7 @@ define([
 					added.push comment.id
 					replies = []
 					for c in comments
-						if c.replyTo and c.replyTo.id is comment.id
+						if c.replyTo and c.replyTo is comment.id
 							replies.push c
 							added.push c.id
 					replies.sort (a, b) -> return a.date - b.date

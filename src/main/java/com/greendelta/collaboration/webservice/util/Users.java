@@ -1,9 +1,8 @@
 package com.greendelta.collaboration.webservice.util;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.google.common.base.Strings;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class Users {
 

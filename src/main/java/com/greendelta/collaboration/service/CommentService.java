@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,35 +26,22 @@ public class CommentService {
 	}
 
 	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId) {
-		String jpql = "SELECT c FROM Comment c "
-				+ "WHERE c.repositoryPath = :repositoryPath ";
-		if (type != null) {
-			jpql += "AND c.field.modelType = :modelType ";
-		}
-		if (refId != null) {
-			jpql += "AND c.field.refId = :refId ";
-		}
-		if (commitId != null) {
-			jpql += "AND c.field.commitId = :commitId";
-		}
+		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath ";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
 		if (type != null) {
+			jpql += "AND c.field.modelType = :modelType ";
 			attributes.put("modelType", type);
 		}
 		if (refId != null) {
+			jpql += "AND c.field.refId = :refId ";
 			attributes.put("refId", refId);
 		}
 		if (commitId != null) {
+			jpql += "AND c.field.commitId = :commitId";
 			attributes.put("commitId", commitId);
 		}
-		List<Comment> accessible = new ArrayList<>();
-		for (Comment comment : dao.getAll(jpql, attributes)) {
-			if (!accessService.canRead(comment))
-				continue;
-			accessible.add(comment);
-		}
-		return accessible;
+		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public Comment get(long id) {
@@ -67,7 +53,7 @@ public class CommentService {
 			throw new UnauthorizedAccessException(comment.repositoryPath, "COMMENT");
 		return dao.insert(comment);
 	}
-	
+
 	public Comment update(long commentId, String text) {
 		Comment comment = dao.get(commentId);
 		if (comment == null)

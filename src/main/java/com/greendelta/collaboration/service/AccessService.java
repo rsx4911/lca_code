@@ -1,6 +1,10 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
@@ -60,25 +64,35 @@ public class AccessService {
 		return hasPermissionTo(Permission.WRITE, group);
 	}
 
-	public boolean canRead(Comment comment) {
+	public List<Comment> filterCanRead(List<Comment> comments) {
+		List<Comment> canRead = new ArrayList<>();
 		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
-		if (comment.user.equals(user))
-			return true;
-		if (!canRead(comment.repositoryPath))
-			return false;
-		if (!comment.released)
-			return false;
-		if (comment.approvedBy == null && !canManageCommentsIn(comment.repositoryPath))
-			return false;
-		if (comment.replyTo != null && comment.replyTo.user.equals(user))
-			return true;
-		if (comment.restrictedToRole != null) {
-			Role role = membershipService.getRole(user, comment.repositoryPath);
-			return comment.restrictedToRole.ordinal() <= role.ordinal();
+		Map<String, Role> userRoles = new HashMap<>();
+		for (Comment comment : comments) {
+			if (user.admin || comment.user.equals(user)) {
+				canRead.add(comment);
+				continue;
+			}
+			if (!canRead(comment.repositoryPath))
+				continue;
+			if (!comment.released)
+				continue;
+			if (comment.approvedBy == null && !canManageCommentsIn(comment.repositoryPath))
+				continue;
+			if ((comment.replyTo != null && comment.replyTo.user.equals(user)) || comment.restrictedToRole == null) {
+				canRead.add(comment);
+				continue;
+			}
+			Role role = userRoles.get(comment.repositoryPath);
+			if (role == null) {
+				role = membershipService.getRole(user, comment.repositoryPath);
+				userRoles.put(comment.repositoryPath, role);
+			}
+			if (comment.restrictedToRole.ordinal() > role.ordinal())
+				continue;
+			canRead.add(comment);
 		}
-		return true;
+		return canRead;
 	}
 
 	public boolean canManage(Comment comment) {

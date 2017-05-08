@@ -15,7 +15,6 @@ import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
-import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
@@ -26,6 +25,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.ObjectMap;
 
 @Path("history")
 public class HistoryResource {

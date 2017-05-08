@@ -6,10 +6,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.google.inject.Inject;
 import com.greendelta.collaboration.platform.Imprint;
+import com.greendelta.collaboration.util.ObjectMap;
 
 @Path("public/imprint")
 public class ImprintResource {

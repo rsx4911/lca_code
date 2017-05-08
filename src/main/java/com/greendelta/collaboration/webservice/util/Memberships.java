@@ -5,10 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class Memberships {
 

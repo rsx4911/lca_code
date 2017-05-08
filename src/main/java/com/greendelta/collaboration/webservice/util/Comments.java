@@ -1,8 +1,7 @@
 package com.greendelta.collaboration.webservice.util;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class Comments {
 
@@ -14,7 +13,9 @@ public class Comments {
 		ObjectMap map = ObjectMap.fromObject(comment);
 		map.put("user", Users.mapForOthers(comment.user));
 		map.put("approvedBy", Users.mapForOthers(comment.approvedBy));
+		if (comment.replyTo != null) {
+			map.put("replyTo", comment.replyTo.getId());
+		}
 		return map;
 	}
-
 }

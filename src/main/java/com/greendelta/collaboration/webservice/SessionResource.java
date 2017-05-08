@@ -14,7 +14,6 @@ import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
-import org.openlca.cloud.util.ObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ import com.google.inject.Provider;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Users;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 

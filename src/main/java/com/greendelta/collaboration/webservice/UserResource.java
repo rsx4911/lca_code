@@ -18,7 +18,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.shiro.authz.UnauthorizedException;
-import org.openlca.cloud.util.ObjectMap;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -36,6 +35,7 @@ import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Users;

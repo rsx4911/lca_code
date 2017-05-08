@@ -22,7 +22,7 @@ mixin comment-info(comment, roles, showDatasetInfo)
 	if canChangeVisibility
 		| &nbsp;
 		+comment-visibility(comment.restrictedToRole, roles)
-	if (!comment.released && comment.user.username === currentUser.username) || (!comment.approvedBy && canApprove)
+	if (!comment.released && comment.user.username === currentUser.username) || (comment.released && !comment.approvedBy && canApprove)
 		|  | 
 		a.default-link.release(href='#')
 			small=!comment.released?'Release':'Approve'
@@ -39,14 +39,6 @@ mixin comment-info(comment, roles, showDatasetInfo)
 			small Edit
 		|  
 		a.remove(href='#'): span.glyphicon.glyphicon-remove
-	if showDatasetInfo
-		- var field = comment.field;
-		- var label = getLabel(field);
-		.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId + '/' + (field.path || 'null')) 
-			img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
-			small #{comment.dsPath} 
-				if label
-					| - #{label}
 
 mixin comment-entry(comment, roles, showDatasetInfo)
 	- var classes = [];
@@ -70,7 +62,15 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 				img.avatar.avatar-small(src='ws/user/avatar/#{comment.user.username}')
 			.comment-info-container
 				strong=comment.user.name
+				|  
 				+comment-info(comment, roles, true)
+				- var field = comment.field;
+				- var label = getLabel(field);
+				.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId + '/' + (field.path || 'null')) 
+					img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
+					small #{comment.dsPath} 
+						if label
+							| - #{label}
 			.clear
 		else
 			+user-info(comment.user.username, comment.user.name)

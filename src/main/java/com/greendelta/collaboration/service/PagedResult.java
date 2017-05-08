@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import org.openlca.cloud.util.ObjectMap;
-
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Client;
 
 public class PagedResult<T> {

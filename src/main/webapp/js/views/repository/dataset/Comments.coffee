@@ -74,7 +74,7 @@ define([
 		getUrl: (dataset) ->
 			group = dataset.repository.get 'group'
 			name = dataset.repository.get 'name'
-			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}/#{dataset.commitId}"
+			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}"
 
 		onEdit: (event) ->
 			Events.preventDefault event

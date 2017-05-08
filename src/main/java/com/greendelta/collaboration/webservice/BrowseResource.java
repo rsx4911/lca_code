@@ -14,7 +14,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.KeyGen;
 
@@ -26,6 +25,7 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.util.ObjectMap;
 
 @Path("public/browse")
 @Produces(MediaType.APPLICATION_JSON)

@@ -13,18 +13,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
 import com.greendelta.collaboration.service.MessagingService;
+import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.util.Beans;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Conversations;
 import com.greendelta.collaboration.webservice.util.Messages;
 

@@ -1,8 +1,7 @@
 package com.greendelta.collaboration.webservice.util;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.greendelta.collaboration.model.Team;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class Teams {
 

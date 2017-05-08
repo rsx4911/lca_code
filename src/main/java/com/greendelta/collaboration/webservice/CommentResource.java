@@ -18,7 +18,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.util.ObjectMap;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
@@ -34,6 +33,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Comments;
 
 @Path("comment")
@@ -65,6 +65,13 @@ public class CommentResource {
 	}
 
 	@GET
+	@Path("{group}/{name}/{type}/{refId}")
+	public Response getForDataset(@PathParam("group") String group, @PathParam("name") String name,
+			@PathParam("type") ModelType type, @PathParam("refId") String refId) {
+		return getForDataset(group, name, type, refId, null);
+	}
+
+	@GET
 	@Path("{group}/{name}/{type}/{refId}/{commitId}")
 	public Response getForDataset(@PathParam("group") String group, @PathParam("name") String name,
 			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
@@ -80,9 +87,19 @@ public class CommentResource {
 	private List<Map<String, Object>> map(Repository repository, List<Comment> comments) {
 		List<Map<String, Object>> mapped = new ArrayList<>();
 		DatasetIndex index = indices.get(repository);
-		for (Comment comment : comments) {
-			mapped.add(map(comment, index));
+		Map<String, String> modelTypeAndIdToPath = new HashMap<>();
+		for (DatasetIndexEntry entry : index.getAll()) {
+			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId, entry.fullPath);
 		}
+		long t = Calendar.getInstance().getTimeInMillis();
+		for (Comment comment : comments) {
+			ObjectMap map = Comments.map(comment);
+			String key = comment.field.modelType.name() + "_" + comment.field.refId;
+			map.put("dsPath", modelTypeAndIdToPath.get(key));
+			mapped.add(map);
+		}
+		System.out.println((Calendar.getInstance().getTimeInMillis() - t) + "ms");
+		System.out.println();
 		return mapped;
 	}
 

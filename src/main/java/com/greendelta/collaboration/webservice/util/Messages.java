@@ -3,10 +3,9 @@ package com.greendelta.collaboration.webservice.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class Messages {
 

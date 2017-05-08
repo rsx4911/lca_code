@@ -20,8 +20,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.AccessService;
@@ -30,6 +28,7 @@ import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.util.Names;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("group")

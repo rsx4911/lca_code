@@ -1,8 +1,7 @@
 package com.greendelta.collaboration.webservice.util;
 
-import org.openlca.cloud.util.ObjectMap;
-
 import com.greendelta.collaboration.model.task.TaskAssignment;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class TaskAssignments {
 
