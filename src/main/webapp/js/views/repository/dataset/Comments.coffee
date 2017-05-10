@@ -209,7 +209,7 @@ define([
 				path = ''
 			$.ajax
 				type: if @edit then 'PUT' else 'POST'
-				url: if @edit then "ws/comment/#{@edit}" else @getUrl(dataset)
+				url: if @edit then "ws/comment/#{@edit}" else @getUrl(dataset) + '/' + dataset.commitId
 				contentType: 'application/json'
 				data: JSON.stringify({path: path, text: text, replyTo: @replyTo, restrictedToRole: @role})
 				success: (comment) => 
