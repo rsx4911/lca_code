@@ -11,9 +11,14 @@ mixin menubar()
 					- currentCommit = commit;
 				option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
 				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
-		button.btn.btn-success.pull-right(data-action='download-data')
-			span.glyphicon.glyphicon-download
-			span.text Download
+		.dropdown.pull-right
+			button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+				span.glyphicon.glyphicon-download
+				span.text Download 
+				span.caret
+			ul.dropdown-menu
+				li: a(href='#' data-format='json') as JSON-LD
+				li: a(href='#' data-format='ilcd') as ILCD
 		.clear
 		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
 			|  on #{formatDate(currentCommit.timestamp)}

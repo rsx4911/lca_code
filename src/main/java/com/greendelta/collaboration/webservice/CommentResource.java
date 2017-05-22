@@ -91,15 +91,12 @@ public class CommentResource {
 		for (DatasetIndexEntry entry : index.getAll()) {
 			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId, entry.fullPath);
 		}
-		long t = Calendar.getInstance().getTimeInMillis();
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
 			String key = comment.field.modelType.name() + "_" + comment.field.refId;
 			map.put("dsPath", modelTypeAndIdToPath.get(key));
 			mapped.add(map);
 		}
-		System.out.println((Calendar.getInstance().getTimeInMillis() - t) + "ms");
-		System.out.println();
 		return mapped;
 	}
 

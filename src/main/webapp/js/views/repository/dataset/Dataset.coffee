@@ -69,10 +69,10 @@ define([
 					url: "ws/history/#{urlPart}"
 					success: callback
 
-			getDownloadUrl: () ->
+			getDownloadUrl: (format = 'json') ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "ws/download/prepare/#{urlPart}/#{commitId}" 
+				return "ws/download/#{format}/prepare/#{urlPart}/#{commitId}" 
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
@@ -88,17 +88,19 @@ define([
 
 			downloadData: (event) ->
 				@$('iframe').remove()
+				target = $ Events.target event
+				format = target.attr('data-format') or 'json'
 				$.ajax
 					type: 'GET'
-					url: @getDownloadUrl()
+					url: @getDownloadUrl(format)
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + format + '/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
 
 			events: 
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
-				'click [data-action=download-data]': (event) -> @downloadData event
+				'click [data-format]': (event) -> @downloadData event
 				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
 				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
 				'click a[data-action=show-data-quality]': (event) ->

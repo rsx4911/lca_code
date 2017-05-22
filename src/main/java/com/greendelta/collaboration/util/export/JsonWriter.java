@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.util;
+package com.greendelta.collaboration.util.export;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 
-public class DatasetWriter {
+public class JsonWriter implements DatasetWriter {
 
 	private final FetchService fetchService;
 	private final HistoryService historyService;
@@ -27,7 +27,7 @@ public class DatasetWriter {
 	private final File tmpFile;
 	private final Set<String> written = new HashSet<>();
 
-	public DatasetWriter(FetchService fetchService, HistoryService historyService, Repository repo) throws IOException {
+	public JsonWriter(FetchService fetchService, HistoryService historyService, Repository repo) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.repo = repo;
@@ -36,6 +36,7 @@ public class DatasetWriter {
 		this.zipStore = ZipStore.open(tmpFile);
 	}
 
+	@Override
 	public void write(ModelType type, String refId, String commitId) throws IOException {
 		if (written.contains(type.name() + refId))
 			return;
@@ -48,8 +49,10 @@ public class DatasetWriter {
 				zipStore.putBin(type, refId, file.getName(), Files.readAllBytes(file.toPath()));
 		written.add(type.name() + refId);
 		writeReferences(json, commitId);
+		// TODO export global parameters
 	}
 
+	@Override
 	public File close() throws IOException {
 		zipStore.close();
 		return tmpFile;
