@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,9 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.greendelta.collaboration.index.DatasetIndex;
+import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryIndices;
 
 public class IlcdWriter implements DatasetWriter {
 
@@ -30,6 +37,7 @@ public class IlcdWriter implements DatasetWriter {
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final Repository repo;
+	private final DatasetIndex index;
 	private final JsonStore jsonStore;
 	private final DataStore ilcdStore;
 	private final Json2IlcdStore converter;
@@ -38,10 +46,12 @@ public class IlcdWriter implements DatasetWriter {
 	private String currentCommitId;
 	private Set<Ref> collectedRefs;
 
-	public IlcdWriter(FetchService fetchService, HistoryService historyService, Repository repo) throws IOException {
+	public IlcdWriter(FetchService fetchService, HistoryService historyService, Repository repo,
+			RepositoryIndices indices) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.repo = repo;
+		this.index = indices.get(repo);
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, UUID.randomUUID().toString() + ".zip");
 		this.ilcdStore = new ZipStore(tmpFile);
@@ -123,8 +133,45 @@ public class IlcdWriter implements DatasetWriter {
 
 		@Override
 		public List<JsonObject> getGlobalParameters() {
-			// TODO return parameters;
-			return new ArrayList<>();
+			List<JsonObject> parameters = new ArrayList<>();
+			List<DatasetIndexEntry> entries = index.getAll(ModelType.PARAMETER);
+			Set<String> added = new HashSet<>();
+			List<Commit> commits = historyService.getCommitsUntil(repo, currentCommitId);
+			List<DatasetIndexEntry> filtered = new ArrayList<>();
+			for (DatasetIndexEntry entry : entries) {
+				for (Commit commit : commits) {
+					if (entry.commitId.equals(commit.id)) {
+						filtered.add(entry);
+					}
+				}
+			}
+			Collections.sort(filtered, new EntryComparator(commits));
+			for (DatasetIndexEntry entry : filtered) {
+				if (added.contains(entry.refId))
+					continue;
+				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);
+				parameters.add(gson.fromJson(data, JsonObject.class));
+				added.add(entry.refId);
+			}
+			return parameters;
+		}
+
+	}
+
+	private class EntryComparator implements Comparator<DatasetIndexEntry> {
+
+		private Map<String, Integer> commitOrder = new HashMap<>();
+
+		private EntryComparator(List<Commit> commits) {
+			int count = 1;
+			for (Commit commit : commits) {
+				commitOrder.put(commit.id, count++);
+			}
+		}
+
+		@Override
+		public int compare(DatasetIndexEntry o1, DatasetIndexEntry o2) {
+			return commitOrder.get(o2.commitId) - commitOrder.get(o1.commitId);
 		}
 
 	}

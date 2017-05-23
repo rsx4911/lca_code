@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.util.export.DatasetWriter;
 import com.greendelta.collaboration.util.export.IlcdWriter;
@@ -24,12 +25,15 @@ public class DownloadIlcdResource extends DownloadResource {
 
 	private final HistoryService historyService;
 	private final FetchService fetchService;
+	private final RepositoryIndices indices;
 
 	@Inject
-	public DownloadIlcdResource(RepositoryService repoService, HistoryService historyService, FetchService fetchService) {
+	public DownloadIlcdResource(RepositoryService repoService, HistoryService historyService,
+			FetchService fetchService, RepositoryIndices indices) {
 		super(repoService, historyService);
 		this.fetchService = fetchService;
 		this.historyService = historyService;
+		this.indices = indices;
 	}
 
 	@GET
@@ -50,7 +54,7 @@ public class DownloadIlcdResource extends DownloadResource {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo) throws IOException {
-		return new IlcdWriter(fetchService, historyService, repo);
+		return new IlcdWriter(fetchService, historyService, repo, indices);
 	}
 
 }
