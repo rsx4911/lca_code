@@ -24,11 +24,14 @@ if isAdmin
 	.flex-layout.two-columns
 		+notification-group('Group')
 		+notification-group('Repository')
-	.flex-layout.two-columns
+	.flex-layout.three-columns
 		+notification-group('Team')
+		+notification-group('Task')
 		+notification-group('Admin')
 else
-	.flex-layout.three-columns
+	.flex-layout.two-columns
 		+notification-group('Group')
 		+notification-group('Repository')
+	.flex-layout.two-columns
 		+notification-group('Team')
+		+notification-group('Task')

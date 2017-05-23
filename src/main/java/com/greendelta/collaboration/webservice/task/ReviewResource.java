@@ -26,9 +26,11 @@ import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
+import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -48,18 +50,20 @@ public class ReviewResource {
 	private final UserService userService;
 	private final AccessService accessService;
 	private final HistoryService historyService;
+	private final NotificationService notificationService;
 	private final RepositoryService repoService;
 	private final RepositoryIndices indices;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
-			AccessService accessService, HistoryService historyService, RepositoryService repoService,
-			RepositoryIndices indices) {
+			AccessService accessService, HistoryService historyService, NotificationService notificationService,
+			RepositoryService repoService, RepositoryIndices indices) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.historyService = historyService;
+		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.indices = indices;
 	}
@@ -78,7 +82,10 @@ public class ReviewResource {
 		Response invalid = checkValidity(review);
 		if (invalid != null)
 			return invalid;
+		String[] path = review.repositoryPath.split("/");
+		Repository repo = repoService.get(path[0], path[1]);
 		service.start(review);
+		notificationService.taskStarted(repo, review).send();
 		return createResponse();
 	}
 
@@ -173,7 +180,11 @@ public class ReviewResource {
 			return Respond.notFound("No review with id " + id + " found");
 		if (review.references.isEmpty())
 			return Respond.invalid("", "Please select data set references before assigning a user");
-		service.startAssignment(review, username, (user, repo) -> accessService.canReviewIn(user, repo.toId()));
+		String[] path = review.repositoryPath.split("/");
+		Repository repository = repoService.get(path[0], path[1]);
+		TaskAssignment assignment = service.startAssignment(review, username,
+				(user, repo) -> accessService.canReviewIn(user, repo.toId()));
+		notificationService.taskAssigned(repository, review, assignment).send();
 		return createResponse();
 	}
 
@@ -194,7 +205,10 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		service.endAssignment(review, username, false);
+		String[] path = review.repositoryPath.split("/");
+		Repository repo = repoService.get(path[0], path[1]);
+		TaskAssignment assignment = service.endAssignment(review, username, false);
+		notificationService.taskCompleted(repo, review, assignment);
 		return createResponse();
 	}
 
@@ -204,7 +218,10 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		service.endAssignment(review, username, true);
+		String[] path = review.repositoryPath.split("/");
+		Repository repo = repoService.get(path[0], path[1]);
+		TaskAssignment assignment = service.endAssignment(review, username, true);
+		notificationService.taskRevoked(repo, review, assignment);
 		return createResponse();
 	}
 
@@ -214,7 +231,10 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
+		String[] path = review.repositoryPath.split("/");
+		Repository repo = repoService.get(path[0], path[1]);
 		service.end(review, TaskState.COMPLETED);
+		notificationService.taskCompleted(repo, review).send();
 		return createResponse();
 	}
 
@@ -224,7 +244,10 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
+		String[] path = review.repositoryPath.split("/");
+		Repository repo = repoService.get(path[0], path[1]);
 		service.end(review, TaskState.CANCELED);
+		notificationService.taskCanceled(repo, review).send();
 		return createResponse();
 	}
 

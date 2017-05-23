@@ -52,7 +52,7 @@ public abstract class TaskExecutionService<T extends Task> {
 		update(fromDb);
 	}
 
-	public void startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
+	public TaskAssignment startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
 		User user = userService.getForUsername(username);
 		Repository repo = getRepository(task.repositoryPath);
 		if (!accessCheck.canBeAssigned(user, repo))
@@ -74,9 +74,10 @@ public abstract class TaskExecutionService<T extends Task> {
 		task.assignments.add(assignment);
 		task.state = TaskState.PROCESSING;
 		update(task);
+		return assignment;
 	}
 
-	public void endAssignment(T task, String username, boolean canceled) {
+	public TaskAssignment endAssignment(T task, String username, boolean canceled) {
 		if (task.state != TaskState.PROCESSING)
 			throw new ServerException(Status.CONFLICT, "Task is not in process state");
 		User user = userService.getForUsername(username);
@@ -104,6 +105,7 @@ public abstract class TaskExecutionService<T extends Task> {
 			task.state = TaskState.VERIFYING;
 		}
 		update(task);
+		return assignment;
 	}
 
 	public void end(T task, TaskState state) {
