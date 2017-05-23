@@ -54,7 +54,7 @@ define () ->
 				group = 'Repository'
 			else if $.inArray(key, ['ADDED_TO_TEAM_MEMBERS', 'REMOVED_FROM_TEAM_MEMBERS', 'ADDED_TEAM_MEMBER', 'REMOVED_TEAM_MEMBER', 'FIELD_COMMENTED']) isnt -1
 				group = 'Team'
-			else if $.inArray(key, ['TASK_ASSIGNED', 'TASK_REVOKED', 'TASK_CANCELED', 'TASK_COMPLETED']) isnt -1
+			else if $.inArray(key, ['TASK_ASSIGNED', 'TASK_REVOKED', 'TASK_CANCELED', 'TASK_COMPLETED', 'TASK_STARTED']) isnt -1
 				group = 'Task'
 			else if $.inArray(key, ['USER_CREATED', 'USER_DELETED', 'TEAM_CREATED', 'TEAM_DELETED', 'GROUP_CREATED', 'NOTIFY_FOR_ALL']) isnt -1
 				group = 'Admin'
