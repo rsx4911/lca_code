@@ -7,6 +7,7 @@ import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.guice.web.ShiroWebModule;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.web.filter.authz.RolesAuthorizationFilter;
 import org.openlca.cloud.util.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +20,13 @@ import com.google.inject.servlet.SessionScoped;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
 import com.greendelta.collaboration.platform.shiro.AuthenticationFilter;
 import com.greendelta.collaboration.platform.shiro.JpaRealm;
+import com.greendelta.collaboration.util.Names;
 
 class ShiroModule extends ShiroWebModule {
 
 	private static final Logger log = LoggerFactory.getLogger(ShiroModule.class);
+	private static final Key<RolesAuthorizationFilter> ADMIN_USER = config(ROLES, "admin");
+	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);
@@ -36,19 +40,15 @@ class ShiroModule extends ShiroWebModule {
 		expose(JpaRealm.class);
 		expose(Subject.class);
 		expose(CloudSession.class);
-		addFilterChain("/ws/admin/**", ROLES, config(ROLES, "admin"));
-		addFilterChain("/sockets/admin/**", ROLES, config(ROLES, "admin"));
-		addFilterChain("/login", ANON);
-		addFilterChain("/imprint", ANON);
-		addFilterChain("/public/**", ANON);
 		addFilterChain("/ws/public/**", ANON);
+		addFilterChain("/ws/admin/**", ROLES, ADMIN_USER);
+		addFilterChain("/ws/**", LOGGED_IN_USER);
 		addFilterChain("/sockets/public/**", ANON);
-		for (String sr : WebappModule.STATIC_RESOURCES)
-			if (sr.endsWith("/"))
-				addFilterChain("/" + sr + "/**", ANON);
-			else
-				addFilterChain("/" + sr, ANON);
-		addFilterChain("/**", Key.get(AuthenticationFilter.class));
+		addFilterChain("/sockets/admin/**", ROLES, ADMIN_USER);
+		addFilterChain("/sockets/**", LOGGED_IN_USER);
+		for (String userRoute : Names.getUserRoutes())
+			addFilterChain("/" + userRoute + "/**", LOGGED_IN_USER);
+		addFilterChain("/**", ANON);
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}
 

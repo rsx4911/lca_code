@@ -26,9 +26,11 @@ define([
 
 			constructor: Router
 
-			initialize: () ->
+			initialize: (userRoutes) ->
 				AppRouter = Backbone.Router.extend
 					routes: Routes
+				@userRoutes = userRoutes
+				@userRoutes.push ''
 				@routeRewrites = {}
 				@router = new AppRouter
 
@@ -37,6 +39,9 @@ define([
 
 			registerUserRoute: (route, callback) ->
 				wrappedCallback = () =>
+					if !currentUser.isLoggedIn() and $.inArray(Backbone.history.fragment, @userRoutes) isnt -1
+						window.location.href = 'login'
+						return
 					@rewriteIfNecessary route
 					@checkAccess route, callback, @routeContext, null, arguments 
 				@router.on "route:#{route}", wrappedCallback
@@ -56,7 +61,6 @@ define([
 				@router.navigate route, 
 					trigger: trigger
 					replace: options?.replace
-
 
 		)()
 				

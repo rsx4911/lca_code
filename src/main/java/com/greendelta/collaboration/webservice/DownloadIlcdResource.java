@@ -20,7 +20,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.util.export.DatasetWriter;
 import com.greendelta.collaboration.util.export.IlcdWriter;
 
-@Path("download/ilcd")
+@Path("public/download/ilcd")
 public class DownloadIlcdResource extends DownloadResource {
 
 	private final HistoryService historyService;

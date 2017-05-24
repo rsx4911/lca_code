@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -24,6 +24,7 @@ import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Conversations;
 import com.greendelta.collaboration.webservice.util.Messages;
 

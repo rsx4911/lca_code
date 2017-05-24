@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
 import java.util.List;
@@ -24,6 +24,8 @@ import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Bytes;
+import com.greendelta.collaboration.webservice.Module;
+import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Teams;
 import com.sun.jersey.multipart.FormDataParam;

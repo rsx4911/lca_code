@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +26,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.webservice.Respond;
 
 @Path("history")
 public class HistoryResource {

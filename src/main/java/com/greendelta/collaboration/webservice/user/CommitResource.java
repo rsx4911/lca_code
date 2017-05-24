@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
 
@@ -20,6 +20,7 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.webservice.Respond;
 
 @Path("commit")
 public class CommitResource {

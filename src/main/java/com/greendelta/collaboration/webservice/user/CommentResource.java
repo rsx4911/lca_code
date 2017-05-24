@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +34,7 @@ import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Comments;
 
 @Path("comment")

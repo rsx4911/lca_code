@@ -21,6 +21,7 @@ public class Repository {
 	final File repoDir;
 	public final String group;
 	public final String name;
+	public final boolean publicAccess;
 
 	static Repository get(String root, String group, String name) {
 		Repository repo = new Repository(root, group, name);
@@ -37,8 +38,10 @@ public class Repository {
 		this.name = name;
 		String path = root + File.separator + toId();
 		repoDir = new File(path);
-		if (repoDir.exists())
+		if (repoDir.exists()) {
+			publicAccess = new File(repoDir, ".public").exists();
 			return;
+		}
 		throw new RepositoryNotFoundException(toId());
 	}
 

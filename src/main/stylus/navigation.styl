@@ -6,6 +6,9 @@ nav
 	margin-top 65px
 	color rgb(197, 208, 222)
 	font-size 15px
+
+	&.public-mode
+		display none
 		
 	@media(min-width 992px)
 		width 230px
@@ -92,3 +95,6 @@ nav
 
 				@media(max-width 991px)
 					display none
+
+body.public-mode nav
+	width 65px

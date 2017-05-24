@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +18,7 @@ import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.webservice.Respond;
 
 @Path("search")
 public class SearchResource {

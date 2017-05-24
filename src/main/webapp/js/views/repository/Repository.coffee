@@ -97,7 +97,8 @@ define([
 					url: 'ws/group?onlyIfCanWrite=true'
 					success: (result) =>
 						options = []
-						options.push currentUser.get 'username'
+						if currentUser.get('username')
+							options.push currentUser.get 'username'
 						for group in result.data
 							options.push group.name
 						callback options

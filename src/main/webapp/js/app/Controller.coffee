@@ -187,6 +187,7 @@ define([
 				@router.registerUserRoute 'messages', (username) -> 
 					unless window.WebSocket
 						@router.navigate 'error/404', {trigger: true, replace: true}
+						return
 					@showView 
 						view: 'messaging/Messages'
 						title: 'Messages' 
@@ -209,7 +210,8 @@ define([
 						group: new Group({name: group})
 				@router.registerUserRoute 'groupMembers', (group) -> @showView 
 					view: 'members/Members'
-					title: "#{group} | Members"
+					title: "#{group}"
+					subTitle: 'Members'
 					nav: 
 						type: 'group'
 						active: 'members'
@@ -221,18 +223,23 @@ define([
 					title: 'New repository' 
 					viewOptions: 
 						groupName: groupName
-				@router.registerUserRoute 'repositoryInfo', (group, name) -> @showView 
-					view: 'repository/Repository'
-					title: "#{group}/#{name}"
-					nav: 
-						type: 'repository'
-						active: 'repository'
-						urlPrefix: "#{group}/#{name}"
-					viewOptions: 
-						repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
+					unless currentUser.isLoggedIn()
+						@router.navigate "#{group}/#{name}/datasets"
+						return
+					@showView
+						view: 'repository/Repository'
+						title: "#{group}/#{name}"
+						nav: 
+							type: 'repository'
+							active: 'repository'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryPath) -> @showView 
 					view: 'repository/dataset/Datasets'
-					title: "#{group}/#{name} | Data sets"
+					title: "#{group}/#{name}"
+					subTitle: 'Data sets'
 					nav: 
 						type: 'repository'
 						active: 'datasets'
@@ -242,7 +249,8 @@ define([
 						categoryPath: categoryPath
 				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId, commentPath) -> @showView 
 					view: 'repository/dataset/Dataset'
-					title: "#{group}/#{name} | Data sets"
+					title: "#{group}/#{name}"
+					subTitle: 'Data sets'
 					nav: 
 						type: 'repository'
 						active: 'datasets'
@@ -255,7 +263,8 @@ define([
 						commentPath: commentPath
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
-					title: "#{group}/#{name} | Commits"
+					title: "#{group}/#{name}"
+					subTitle: 'Commits'
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -264,7 +273,8 @@ define([
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryCommit', (group, name, commitId) -> @showView 
 					view: 'repository/commit/Commit'
-					title: "#{group}/#{name} | Commits"
+					title: "#{group}/#{name}"
+					subTitle: 'Commits'
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -274,7 +284,8 @@ define([
 						commitId: commitId
 				@router.registerUserRoute 'repositoryComments', (group, name) -> @showView 
 					view: 'repository/Comments'
-					title: "#{group}/#{name} | Comments"
+					title: "#{group}/#{name}"
+					subTitle: 'Comments'
 					nav: 
 						type: 'repository'
 						active: 'comments'
@@ -283,7 +294,8 @@ define([
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryMembers', (group, name) -> @showView 
 					view: 'members/Members'
-					title: "#{group}/#{name} | Members"
+					title: "#{group}/#{name}"
+					subTitle: 'Members'
 					nav: 
 						type: 'repository'
 						active: 'members'
@@ -298,8 +310,10 @@ define([
 				Events.setRouter router
 				$('#main .center').empty();
 				$('a').on 'click', (event) -> Events.followLink event
-				@initializeNavigation()
-				@initializeUserMenu()
+				if currentUser.isLoggedIn()
+					$('body').removeClass 'public-mode'
+					@initializeNavigation()
+					@initializeUserMenu()
 				@registerRoutes()
 
 			splitQuery: (query) ->
@@ -326,7 +340,7 @@ define([
 
 			getDocumentTitle: (value) ->
 				unread = 0
-				if window.WebSocket
+				if window.WebSocket and currentUser.isLoggedIn()
 					unread = conversations.getUnreadMessages()
 				if value.indexOf('|') is -1 
 					if unread
@@ -344,12 +358,22 @@ define([
 			showView: (options) ->
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main .center').empty()
-					$('#header-title').html options.title.replace('|', '-')
-					$('#header-title').attr 'title', options.title.replace('|', '-')
-					document.title = @getDocumentTitle options.title
-					if typeof options.nav is 'string'
-						options.nav = {type: options.nav}
-					@navigation.setItems options.nav?.type, @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
+					title1 = options.title
+					title2 = options.title
+					if options.title and options.subTitle and currentUser.isLoggedIn()
+						title1 += ' - ' + options.subTitle
+						title2 += ' | ' + options.subTitle
+					if currentUser.isLoggedIn()
+						$('#header-title').html title1
+					else
+						$('#header-title').html '<a href="' + title1 + '">' + title1 + '</a>'
+						$('#header-title a').on 'click', (event) -> Events.followLink event
+					$('#header-title').attr 'title', title1
+					document.title = @getDocumentTitle title2
+					if currentUser.isLoggedIn()
+						if typeof options.nav is 'string'
+							options.nav = {type: options.nav}
+						@navigation.setItems options.nav?.type, @getNav(options.nav), options.nav?.active, options.viewOptions?.repository?.toJSON(),
 					require ["cs!views/#{options.view}"], (View) =>
 						view = new View options.viewOptions
 						view.render
@@ -358,7 +382,8 @@ define([
 			showError: (statuscode) ->
 				Layers.hideProgressIndicator()
 				$('#header-title').empty()
-				@navigation.setItems []
+				if @navigation
+					@navigation.setItems []
 				message = localStorage?.getItem?('errorMessage')
 				localStorage?.removeItem?('errorMessage')
 				isStacktrace = (!statuscode or statuscode is 500) and currentUser.isAdmin()

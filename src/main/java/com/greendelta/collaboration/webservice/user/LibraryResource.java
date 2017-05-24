@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.webservice.Respond;
 
 @Path("library")
 public class LibraryResource {

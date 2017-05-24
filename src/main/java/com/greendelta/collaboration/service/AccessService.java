@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
@@ -14,11 +15,14 @@ import com.greendelta.collaboration.model.User;
 
 public class AccessService {
 
+	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
-
+	
 	@Inject
-	public AccessService(UserService userService, MembershipService membershipService) {
+	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
+			MembershipService membershipService) {
+		this.repositoryPath = repositoryPath;
 		this.userService = userService;
 		this.membershipService = membershipService;
 	}
@@ -28,6 +32,8 @@ public class AccessService {
 	}
 
 	public boolean canRead(String groupOrRepo, boolean ignoreAdmin) {
+		if (isPublic(groupOrRepo))
+			return true;
 		User user = userService.getCurrentUser();
 		if (!ignoreAdmin && user.admin)
 			return true;
@@ -150,6 +156,13 @@ public class AccessService {
 
 	private boolean isGroup(String groupOrRepo) {
 		return !groupOrRepo.contains(File.separator);
+	}
+
+	private boolean isPublic(String groupOrRepo) {
+		File dir = new File(repositoryPath, groupOrRepo);
+		if (new File(dir, ".public").exists())
+			return true;
+		return false;
 	}
 
 }

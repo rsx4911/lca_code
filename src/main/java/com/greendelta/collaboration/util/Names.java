@@ -5,42 +5,59 @@ import java.util.List;
 
 public class Names {
 
-	private final static List<String> reservedNames;
+	private final static List<String> RESERVED;
+	private final static List<String> USER_ROUTES;
 	private final static String REGEX_NAME = "^[a-zA-Z0-9_]+$";
 
 	static {
-		reservedNames = new ArrayList<>();
-		reservedNames.add("null");
-		reservedNames.add("undefined");
-		reservedNames.add("user");
-		reservedNames.add("users");
-		reservedNames.add("team");
-		reservedNames.add("teams");
-		reservedNames.add("repository");
-		reservedNames.add("repositories");
-		reservedNames.add("public");
-		reservedNames.add("images");
-		reservedNames.add("fonts");
-		reservedNames.add("sockets");
-		reservedNames.add("group");
-		reservedNames.add("groups");
-		reservedNames.add("dashboard");
-		reservedNames.add("administration");
-		reservedNames.add("members");
-		reservedNames.add("member");
-		reservedNames.add("search");
-		reservedNames.add("references");
-		reservedNames.add("settings");
-		reservedNames.add("messaging");
-		reservedNames.add("messages");
-		reservedNames.add("block");
-		reservedNames.add("unblock");
-		reservedNames.add("error");
-		reservedNames.add("tasks");
+		USER_ROUTES = new ArrayList<>();
+		USER_ROUTES.add("repository");
+		USER_ROUTES.add("search");
+		USER_ROUTES.add("user");
+		USER_ROUTES.add("dashboard");
+		USER_ROUTES.add("administration");
+		USER_ROUTES.add("messages");
+		USER_ROUTES.add("tasks");
+		USER_ROUTES.add("group");
+		USER_ROUTES.add("groups");
+		USER_ROUTES.add("error");
+
+		RESERVED = new ArrayList<>();
+		RESERVED.add("null");
+		RESERVED.add("undefined");
+		RESERVED.add("users");
+		RESERVED.add("team");
+		RESERVED.add("teams");
+		RESERVED.add("repositories");
+		RESERVED.add("public");
+		RESERVED.add("images");
+		RESERVED.add("fonts");
+		RESERVED.add("ws");
+		RESERVED.add("sockets");
+		RESERVED.add("group");
+		RESERVED.add("groups");
+		RESERVED.add("dashboard");
+		RESERVED.add("members");
+		RESERVED.add("member");
+		RESERVED.add("references");
+		RESERVED.add("settings");
+		RESERVED.add("messaging");
+		RESERVED.add("block");
+		RESERVED.add("unblock");
+		RESERVED.add("login");
+		RESERVED.add("imprint");
+	}
+
+	public static boolean isUserRoute(String name) {
+		return USER_ROUTES.contains(name);
+	}
+
+	public static String[] getUserRoutes() {
+		return USER_ROUTES.toArray(new String[USER_ROUTES.size()]);
 	}
 
 	public static boolean isReserved(String name) {
-		return reservedNames.contains(name.toLowerCase());
+		return isUserRoute(name) || RESERVED.contains(name.toLowerCase());
 	}
 
 	public static boolean isValid(String name) {

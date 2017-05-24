@@ -18,7 +18,7 @@ define([
 				return d1 < d2
 
 			initSocket: () ->
-				unless window.WebSocket
+				unless window.WebSocket and currentUser.isLoggedIn()
 					return
 				loc = window.location
 				schema = if loc.protocol is 'https' or loc.protocol is 'https:' then 'wss' else 'ws'

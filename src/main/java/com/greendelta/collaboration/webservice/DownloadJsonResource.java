@@ -19,7 +19,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.util.export.DatasetWriter;
 import com.greendelta.collaboration.util.export.JsonWriter;
 
-@Path("download/json")
+@Path("public/download/json")
 public class DownloadJsonResource extends DownloadResource {
 
 	private final HistoryService historyService;

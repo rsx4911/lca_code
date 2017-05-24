@@ -13,6 +13,9 @@ define([
 	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, Actions, currentUser) ->
 
 		init: (parent, dataset, callback) ->
+			unless currentUser.isLoggedIn()
+				callback?()
+				return
 			@loadComments dataset, (comments) =>
 				for element in $('[data-path]', parent)
 					path = $(element).attr 'data-path'

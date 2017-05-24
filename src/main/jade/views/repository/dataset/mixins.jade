@@ -2,44 +2,57 @@ include ../../mixins/category-breadcrumb.jade
 include ../../mixins/forms.jade
 include ../../mixins/user-info.jade
 
+mixin download-dropdown()
+	.dropdown.pull-right
+		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+			span.glyphicon.glyphicon-download
+			span.text Download
+			span  
+			span.caret
+		ul.dropdown-menu
+			li: a(href='#' data-format='json') as JSON-LD
+			li: a(href='#' data-format='ilcd') as ILCD
+
 mixin menubar()
-	.header-box
-		- var currentCommit = null;
-		+select('commitId', 'Version', null, null, true)
-			each commit, i in commits
-				if commit.id === commitId
-					- currentCommit = commit;
-				option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
-				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
-		.dropdown.pull-right
-			button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
-				span.glyphicon.glyphicon-download
-				span.text Download 
-				span.caret
-			ul.dropdown-menu
-				li: a(href='#' data-format='json') as JSON-LD
-				li: a(href='#' data-format='ilcd') as ILCD
-		.clear
-		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
-			|  on #{formatDate(currentCommit.timestamp)}
+	if !isPublic
+		.header-box
+			- var currentCommit = null;
+			+select('commitId', 'Version', null, null, true)
+				each commit, i in commits
+					if commit.id === commitId
+						- currentCommit = commit;
+					option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
+					optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
+			+download-dropdown
+			.clear
+			+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
+				|  on #{formatDate(currentCommit.timestamp)}
 
 mixin header()
-	.title
+	.title(class=isPublic?'header-box':null)
 		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
 		div
 			h3(data-path='name')=dataset.name
 			.category(data-path='category')
+				- var url = null;
+				- var path = null;
 				if dataset.category
 					- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
-					- var url = baseUrl + 's' + '/' + typeLabel
-					+category-breadcrumb(url, dataset.category.name, true)
+					- url = baseUrl + 's' + '/' + typeLabel;
+					- path = dataset.category.name;
+				+category-breadcrumb(url, path, true)
 			h3: small: span(data-path='description')=dataset.description
 	block
-	hr
+	if !isPublic
+		hr
+	else
+		p &nbsp;
 
 mixin meta() 
 	.model-right-content.content-box
 		.meta-info
+			if isPublic
+				+download-dropdown
 			div
 				strong=getLabel('version')
 				div(data-path='version')=dataset.version

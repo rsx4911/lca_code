@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.UserService;
 
-@Path("error")
+@Path("public/error")
 public class ClientErrorResource {
 
 	private final Logger log = LoggerFactory.getLogger(ClientErrorResource.class);

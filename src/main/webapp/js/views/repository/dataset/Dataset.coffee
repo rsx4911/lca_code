@@ -14,6 +14,7 @@ define([
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DataQualityLayer'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
 				'templates/views/repository/dataset/product-system'
 				'templates/views/repository/dataset/impact-method'
@@ -33,7 +34,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -63,6 +64,9 @@ define([
 					success: callback
 
 			loadCommitHistory: (callback) ->
+				unless currentUser.isLoggedIn()
+					callback()
+					return
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'
@@ -72,12 +76,12 @@ define([
 			getDownloadUrl: (format = 'json') ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "ws/download/#{format}/prepare/#{urlPart}/#{commitId}" 
+				return "ws/public/download/#{format}/prepare/#{urlPart}/#{commitId}" 
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "ws/fetch/file/#{urlPart}/#{commitId}" 
+				return "ws/public/repository/file/#{urlPart}/#{commitId}" 
 
 			getUrlPart: (type, refId) ->
 				group = @repository.get 'group'
@@ -94,7 +98,7 @@ define([
 					type: 'GET'
 					url: @getDownloadUrl(format)
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + format + '/' + token + '"></iframe>'
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
 
@@ -146,9 +150,10 @@ define([
 							noToStr: Format.number
 							fileBaseUrl: @getFileBaseUrl()
 							commits: commits
-							commitId: @commitId or commits[0].id
+							commitId: @commitId or commits?[0]?.id
 							formatCommitDescription: Format.formatCommitDescription
 							reviewMode: LocalStorage.getValue('reviewMode')
+							isPublic: !currentUser.isLoggedIn()
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset

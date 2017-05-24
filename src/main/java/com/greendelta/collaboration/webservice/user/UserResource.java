@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -37,6 +37,8 @@ import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.Password;
+import com.greendelta.collaboration.webservice.Module;
+import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Users;
 import com.sun.jersey.multipart.FormDataParam;

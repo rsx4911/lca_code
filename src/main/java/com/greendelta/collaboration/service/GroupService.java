@@ -37,12 +37,16 @@ public class GroupService {
 	}
 
 	public boolean exists(String group) {
+		return exists(group, false);
+	}
+
+	public boolean exists(String group, boolean skipAccessCheck) {
 		File root = new File(this.root);
 		if (root.list() == null)
 			return false;
 		for (String child : root.list())
 			if (child.equalsIgnoreCase(group))
-				if (!accessService.canRead(group))
+				if (!skipAccessCheck && !accessService.canRead(group))
 					throw new UnauthorizedAccessException(group, "READ");
 				else
 					return true;
@@ -50,7 +54,11 @@ public class GroupService {
 	}
 
 	public boolean isUserNamespace(String group) {
-		if (!exists(group))
+		return isUserNamespace(group, false);
+	}
+
+	public boolean isUserNamespace(String group, boolean skipAccessCheck) {
+		if (!exists(group, skipAccessCheck))
 			return false;
 		return userService.exists(group);
 	}

@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -29,6 +29,7 @@ import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.webservice.Respond;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("group")

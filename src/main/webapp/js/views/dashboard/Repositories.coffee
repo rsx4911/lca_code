@@ -28,7 +28,7 @@ define([
 
 			render: (renderOptions) ->
 				@$el.html template
-					canCreateRepositories: (currentUser.get('settings').canCreateRepositories or currentUser.get('admin'))
+					canCreateRepositories: (currentUser.get('settings')?.canCreateRepositories or currentUser.get('admin'))
 				Renderer.render @, renderOptions
 				@filter.init()
 

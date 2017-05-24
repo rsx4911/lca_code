@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -99,7 +100,7 @@ public class SessionResource {
 	public Response getCurrentUser() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
-			return Respond.conflict("Not logged in");
+			return Respond.ok(Collections.singletonMap("id", 0));
 		User currentUser = userService.getCurrentUser();
 		ObjectMap mapped = Users.mapForSelf(currentUser);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(currentUser).size());

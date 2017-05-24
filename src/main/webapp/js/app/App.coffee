@@ -6,7 +6,7 @@ define([
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
 				'cs!models/Conversations'
-				'cs!app/DynamicDependencies'
+				#'cs!app/DynamicDependencies'
 			]
 
 	(Backbone, Controller, Router, Layers, Model, currentUser, conversations) ->
@@ -32,7 +32,7 @@ define([
 				window.inErrorHandling = true
 				$.ajax
 					type: 'POST'
-					url: 'ws/error'
+					url: 'ws/public/error'
 					contentType: 'text/plain'
 					data: error.stack
 					complete: () -> 
@@ -53,14 +53,24 @@ define([
 					$(@).addClass('animated ' + animationName).one animationEnd, () -> 
 						$(@).removeClass 'animated ' + animationName
 			@initializeErrorHandling()
-			Model.fetchAll [currentUser, conversations], () ->
-				conversations.initSocket()
-				Router.initialize()
-				Controller.initialize Router
-				Backbone.history.start
-					pushState: true
-					root: $('base').attr('href') or '/'
+			@fetchModels () ->
+				$.ajax
+					type: 'GET'
+					url: 'ws/public/config/userRoutes'
+					success: (userRoutes) ->
+						Router.initialize userRoutes
+						Controller.initialize Router
+						Backbone.history.start
+							pushState: true
+							root: $('base').attr('href') or '/'
 
-
+		fetchModels: (callback) ->
+			Model.fetch currentUser, success: () ->
+				if currentUser.isLoggedIn()
+					Model.fetch conversations, success: () ->
+						conversations.initSocket()
+						callback()
+				else
+					callback()
 				
 )

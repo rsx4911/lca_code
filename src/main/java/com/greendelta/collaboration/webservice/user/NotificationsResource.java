@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Notification;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.webservice.Respond;
 
 @Path("notifications")
 public class NotificationsResource {
