@@ -48,6 +48,7 @@ class ShiroModule extends ShiroWebModule {
 		addFilterChain("/sockets/**", LOGGED_IN_USER);
 		for (String userRoute : Names.getUserRoutes())
 			addFilterChain("/" + userRoute + "/**", LOGGED_IN_USER);
+		addFilterChain("/", LOGGED_IN_USER);		
 		addFilterChain("/**", ANON);
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}

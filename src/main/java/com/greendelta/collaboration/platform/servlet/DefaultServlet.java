@@ -42,8 +42,9 @@ public class DefaultServlet extends HttpServlet {
 			}
 		} else {
 			String redirectUrl = sessionProvider.get().redirectUrl;
-			if (!Strings.isNullOrEmpty(redirectUrl)) {
-				sessionProvider.get().redirectUrl = null;
+			sessionProvider.get().redirectUrl = null;
+			Subject subject = subjectProvider.get();
+			if (subject != null && subject.isAuthenticated() && !Strings.isNullOrEmpty(redirectUrl)) {
 				response.sendRedirect(redirectUrl);
 			} else {
 				forward("/index.html", request, response);
