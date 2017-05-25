@@ -28,7 +28,7 @@ include ./mixins.jade
 							td.comma-separated(data-path='units[' + index + '].synonyms')
 								if unit.synonyms
 									each synonym in unit.synonyms
-										.span #{synonym}
+										span #{synonym}
 							td(data-path='units[' + index + '].conversionFactor') 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
 	+meta
 	.clear

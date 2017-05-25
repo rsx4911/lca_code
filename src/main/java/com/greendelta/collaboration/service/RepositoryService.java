@@ -120,6 +120,20 @@ public class RepositoryService {
 				membershipService.addMembership(membership.user, toRepo.toId(), membership.role);
 	}
 
+	public boolean setPublic(Repository repo, boolean value) {
+		File file = new File(repo.repoDir, ".public");
+		if (value && !file.exists()) {
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				log.error("Error making repository public", e);
+			}
+		} else if (file.exists()) {
+			file.delete();
+		}
+		return file.exists();
+	}
+
 	public boolean cloneContents(Repository from, Repository to, List<Commit> commits) {
 		if (!accessService.canWrite(to.group))
 			throw new UnauthorizedAccessException(to.group, "WRITE");

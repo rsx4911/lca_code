@@ -18,7 +18,11 @@ define([
 						unless currentUser.get('inLoginProcess')
 							Layers.showLoginLayer()
 					when 403
-						localStorage?.setItem?('errorMessage', 'Sorry, but you do not have access to this page.')
+						if currentUser.isLoggedIn()
+							localStorage?.setItem?('errorMessage', 'Sorry, but you do not have access to this page.')
+						else
+							window.location.href = '/login'
+							return
 					when 406
 						localStorage?.setItem?('errorMessage', 'Sorry, the repository schema version is not compatible with the current collaboration server version.')
 					else

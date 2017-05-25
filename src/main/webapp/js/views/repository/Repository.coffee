@@ -25,6 +25,7 @@ define([
 				'click [data-action=reset-avatar]': (event) -> 
 					Events.preventDefault event
 					Avatar.upload 'repository', @repository.get('group') + '/' + @repository.get('name')
+				'change input#publicAccess': (event) -> @togglePublicAccess event
 				'click [data-action=delete-repository]': (event) -> @deleteRepository event
 				'click [data-action=clone-repository]': (event) -> @openCloneLayer event
 				'click [data-action=move-repository]': (event) -> @openMoveLayer event
@@ -36,6 +37,7 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
+				@$('#publicAccess').prop('checked', repository.publicAccess);
 				Renderer.render @, renderOptions
 				view = @
 				$('#avatar').on 'change', () ->
@@ -44,6 +46,15 @@ define([
 						reader.onload = (e) ->
 							 view.openCropper.call view, e.target.result
 						reader.readAsDataURL @files[0]
+
+			togglePublicAccess: (event) ->
+				target = $ Events.target event
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				value = target.is ':checked'
+				$.ajax
+					type: 'PUT'
+					url: "ws/repository/public/#{fullPath}/#{value}"
 
 			deleteRepository: (event) ->
 				repository = @repository.toJSON()

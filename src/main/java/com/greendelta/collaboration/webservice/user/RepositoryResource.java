@@ -121,6 +121,15 @@ public class RepositoryResource {
 		return Respond.ok(new HashMap<>());
 	}
 
+	@PUT
+	@Path("public/{group}/{name}/{value}")
+	public Response togglePublicAccess(@PathParam("group") String group, @PathParam("name") String name,
+			@PathParam("value") boolean value) {
+		Repository repo = service.get(group, name);
+		boolean isPublic = service.setPublic(repo, value);
+		return Respond.ok(java.util.Collections.singletonMap("public", isPublic));
+	}
+
 	@GET
 	@Path("{group}/{name}")
 	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
