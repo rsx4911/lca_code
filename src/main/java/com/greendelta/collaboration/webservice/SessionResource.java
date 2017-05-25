@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -14,7 +15,6 @@ import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
-import org.openlca.cloud.util.ObjectMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,9 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Users;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
@@ -34,13 +36,14 @@ public class SessionResource {
 
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;
+	private final TaskService taskService;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider,
-			UserService userService) {
+	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
+		this.taskService = taskService;
 	}
 
 	@POST
@@ -97,8 +100,10 @@ public class SessionResource {
 	public Response getCurrentUser() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
-			return Respond.conflict("Not logged in");
-		return Respond.ok(Users.mapForSelf(userService.getCurrentUser()));
+			return Respond.ok(Collections.singletonMap("id", 0));
+		User currentUser = userService.getCurrentUser();
+		ObjectMap mapped = Users.mapForSelf(currentUser);
+		mapped.put("noOfTasks", taskService.getAllActiveFor(currentUser).size());
+		return Respond.ok(mapped);
 	}
-
 }

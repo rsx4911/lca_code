@@ -2,62 +2,78 @@ include ../../mixins/category-breadcrumb.jade
 include ../../mixins/forms.jade
 include ../../mixins/user-info.jade
 
-mixin menubar()
-	.header-box
-		- var currentCommit = null;
-		+select('commitId', 'Version', null, null, true)
-			each commit, i in commits
-				if commit.id === commitId
-					- currentCommit = commit;
-				option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
-				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
-		button.btn.btn-success.pull-right(data-action='download-data')
+mixin download-dropdown()
+	.dropdown.pull-right
+		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
 			span.glyphicon.glyphicon-download
 			span.text Download
-		.clear
-		+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='')
-			|  on #{formatDate(currentCommit.timestamp)}
+			span  
+			span.caret
+		ul.dropdown-menu
+			li: a(href='#' data-format='json') as JSON-LD
+			li: a(href='#' data-format='ilcd') as ILCD
+
+mixin menubar()
+	if !isPublic
+		.header-box
+			- var currentCommit = null;
+			+select('commitId', 'Version', null, null, true)
+				each commit, i in commits
+					if commit.id === commitId
+						- currentCommit = commit;
+					option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
+					optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
+			+download-dropdown
+			.clear
+			+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
+				|  on #{formatDate(currentCommit.timestamp)}
 
 mixin header()
-	.title
+	.title(class=isPublic?'header-box':null)
 		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
 		div
 			h3(data-path='name')=dataset.name
 			.category(data-path='category')
+				- var url = null;
+				- var path = null;
 				if dataset.category
 					- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
-					- var url = baseUrl + 's' + '/' + typeLabel
-					+category-breadcrumb(url, dataset.category.name, true)
+					- url = baseUrl + 's' + '/' + typeLabel;
+					- path = dataset.category.name;
+				+category-breadcrumb(url, path, true)
 			h3: small: span(data-path='description')=dataset.description
 	block
-	hr
+	if !isPublic
+		hr
+	else
+		p &nbsp;
 
 mixin meta() 
 	.model-right-content.content-box
 		.meta-info
+			if isPublic
+				+download-dropdown
 			div
-				strong Version
+				strong=getLabel('version')
 				div(data-path='version')=dataset.version
 			div
-				strong Last change
+				strong=getLabel('lastChange')
 				div(data-path='lastChange')
 					if dataset.lastChange
 						| #{formatDate(dataset.lastChange)}
 					else
 						| -
 			div
-				strong UUID
+				strong=getLabel('id')
 				div(data-path='id')=dataset.id
 			block
 
-mixin field-row(label, path, checkValue, formatter)
-	- var value = getValue(dataset, path);
+mixin field-row(path, showValue, checkValue, formatter, noDataPath)
+	- var value = showValue ? getValue(dataset, path) : null;
 	if !checkValue || value || reviewMode
 		tr
-			td=label
-			td(data-path=path) 
-				if value
-					| #{value?formatter?formatter(value):value:''}
+			td=getLabel(path)
+			td(data-path=noDataPath?null:path)=formatter?formatter(value):value
 				block
 
 mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
@@ -73,10 +89,10 @@ mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
 		else if defaultLabel
 			| #{defaultLabel}
 
-mixin ref-row(label, path, additionalTypeInfo, noImage)
+mixin ref-row(path, additionalTypeInfo, noImage)
 	if getValue(dataset, path) || reviewMode
 		tr
-			td=label
+			td=getLabel(path)
 			td: +ref(path, additionalTypeInfo, noImage)
 
 mixin uncertainty(uncertainty, round)
@@ -127,10 +143,10 @@ mixin parameter-table(path, input)
 		table.table.table-parameters
 			thead
 				tr
-					th Parameter
-					th Description
+					th=getLabel(path + '[' + index + '].name')
+					th=getLabel(path + '[' + index + '].description')
 					if input
-						th Uncertainty
+						th=getLabel(path + '[' + index + '].uncertainty')
 			tbody
 				each parameter, index in parameters
 					if parameter.inputParameter === input

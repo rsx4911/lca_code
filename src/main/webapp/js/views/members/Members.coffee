@@ -33,18 +33,18 @@ define([
 						existingTeams.push member.team
 					else
 						existingUsers.push member.user
-				Data.getUsersAndTeams 'members', (users, teams) =>
+				Data.getUsersAndTeams 'members', null, (users, teams) =>
 					Layers.showTemplateInLayer
 						template: 'members/set-role'
 						title: "Add #{type} members"
 						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll()}
 						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
-						callback: () -> $('.modal #name').select2 {theme: 'bootstrap'}
+						callback: () -> $('.modal #user-selection-name').select2 {theme: 'bootstrap'}
 
 			addMembers: () ->
 				users = []
 				teams = []
-				selection = $('#set-role-form #name option:selected')
+				selection = $('#set-role-form #user-selection-name option:selected')
 				role = $('#set-role-form #role').val()
 				for option in selection
 					option = $ option

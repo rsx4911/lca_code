@@ -43,6 +43,10 @@ class ConversionUtil {
 	}
 
 	static Document convert(DatasetIndexEntry entry) {
+		return convert(entry, entry.repositoryId);
+	}
+
+	static Document convert(DatasetIndexEntry entry, String repoId) {
 		Document document = new Document();
 		IndexUtil.addField(document, "refId", entry.refId);
 		IndexUtil.addField(document, "commitId", entry.commitId);
@@ -50,7 +54,7 @@ class ConversionUtil {
 		IndexUtil.addField(document, "categoryRefId", entry.categoryRefId);
 		IndexUtil.addField(document, "categoryType", entry.categoryType);
 		IndexUtil.addField(document, "lastUpdate", entry.lastUpdate);
-		IndexUtil.addField(document, "repositoryId", entry.repositoryId);
+		IndexUtil.addField(document, "repositoryId", repoId);
 		IndexUtil.addTextField(document, "fullPath", entry.fullPath);
 		IndexUtil.addTextField(document, "name", entry.name);
 		IndexUtil.addTextField(document, "commitMessage", entry.commitMessage);

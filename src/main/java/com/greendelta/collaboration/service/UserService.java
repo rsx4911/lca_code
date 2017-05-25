@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.persistence.EntityManager;
+
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
@@ -29,12 +31,15 @@ public class UserService {
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
 	private final String servername;
+	private final Provider<EntityManager> entityManagerProvider;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server,
+			Provider<EntityManager> entityManagerProvider) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.servername = server;
+		this.entityManagerProvider = entityManagerProvider;
 	}
 
 	public User getForUsername(String username) {
@@ -157,6 +162,10 @@ public class UserService {
 		return dao.update(user);
 	}
 
+	public void clearCache() {
+		entityManagerProvider.get().getEntityManagerFactory().getCache().evict(User.class);
+	}
+	
 	public boolean logout() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())

@@ -28,8 +28,9 @@ public class DefaultServlet extends HttpServlet {
 
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		boolean isLoginUrl = request.getRequestURL().toString().endsWith("/login");
-		boolean isImprintUrl = request.getRequestURL().toString().endsWith("/imprint");
+		String url = request.getRequestURL().toString();
+		boolean isLoginUrl = url.endsWith("/login");
+		boolean isImprintUrl = url.endsWith("/imprint");
 		if (isImprintUrl) {
 			forward("/imprint.html", request, response);
 		} else if (isLoginUrl) {
@@ -41,8 +42,9 @@ public class DefaultServlet extends HttpServlet {
 			}
 		} else {
 			String redirectUrl = sessionProvider.get().redirectUrl;
-			if (!Strings.isNullOrEmpty(redirectUrl)) {
-				sessionProvider.get().redirectUrl = null;
+			sessionProvider.get().redirectUrl = null;
+			Subject subject = subjectProvider.get();
+			if (subject != null && subject.isAuthenticated() && !Strings.isNullOrEmpty(redirectUrl)) {
 				response.sendRedirect(redirectUrl);
 			} else {
 				forward("/index.html", request, response);
@@ -54,5 +56,5 @@ public class DefaultServlet extends HttpServlet {
 			throws ServletException, IOException {
 		request.getRequestDispatcher(path).forward(request, response);
 	}
-
+	
 }

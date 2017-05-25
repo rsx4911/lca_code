@@ -18,7 +18,7 @@ define([
 					items: items
 					active: active
 					repository: repository
-				Menu.init @$('.menu-left')
+				@menu = Menu.init @$('.menu-left')
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
@@ -32,7 +32,9 @@ define([
 					@doRender items, active, repository
 				else
 					@$('li.active').removeClass 'active'
-					@$("li[data-nav-id=#{active}]").addClass 'active'
+					activeLi = @$ "li[data-nav-id=#{active}]"
+					activeLi.addClass 'active'
+					Menu.onClick @menu, activeLi
 				@lastType = type
 				@lastRepository = repository
 

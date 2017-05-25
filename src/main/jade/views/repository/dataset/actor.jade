@@ -7,7 +7,7 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+field-row('Address')
+					+field-row('address', false, false, null, true)
 						if dataset.address
 							div(data-path='address')=dataset.address
 						if dataset.zipCode || dataset.city || reviewMode
@@ -16,18 +16,16 @@ include ./mixins.jade
 								|  
 								span(data-path='city')=dataset.city 
 						if dataset.country || reviewMode
-							div(data-path='country') #{dataset.country}
-					+field-row('Phone', 'telephone', true)
-					+field-row('Fax', 'telefax', true)
+							div(data-path='country')=dataset.country
+					+field-row('telephone', true, true)
+					+field-row('telefax', true, true)
 					if dataset.email || reviewMode
-						+field-row('Email')
-							span(data-path='email')
-								if dataset.email
-									a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
+						+field-row('email')
+							if dataset.email
+								a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
 					if dataset.website || reviewMode
-						+field-row('Website')
-							span(data-path='website')
-								if dataset.website
-									a(href=dataset.website target='_blank')=dataset.website
+						+field-row('website')
+							if dataset.website
+								a(href=dataset.website target='_blank')=dataset.website
 	+meta
 	.clear

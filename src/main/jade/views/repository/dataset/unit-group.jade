@@ -7,15 +7,15 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+ref-row('Default flow property', 'defaultFlowProperty')
-			h4(data-path='units') Units
+					+ref-row('defaultFlowProperty')
+			h4(data-path='units')=getLabel('units')
 			table.table.units
 				thead
 					tr
-						th Name
-						th Description
-						th Synonyms
-						th Formula
+						th=getLabel('units.name')
+						th=getLabel('units.description')
+						th=getLabel('units.synonyms')
+						th=getLabel('units.formula')
 				tbody
 					- var referenceUnit = null;
 					each unit in dataset.units
@@ -28,7 +28,7 @@ include ./mixins.jade
 							td.comma-separated(data-path='units[' + index + '].synonyms')
 								if unit.synonyms
 									each synonym in unit.synonyms
-										.span #{synonym}
+										span #{synonym}
 							td(data-path='units[' + index + '].conversionFactor') 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
 	+meta
 	.clear

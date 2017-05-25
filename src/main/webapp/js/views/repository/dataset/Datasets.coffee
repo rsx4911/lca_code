@@ -19,7 +19,6 @@ define([
 
 			events: 
 				'click a': (event) -> Events.followLink event
-				'click [data-action=download]': (event) -> @downloadRepository event
 
 			initialize: (options) ->
 				{@repository, @categoryPath} = options
@@ -56,23 +55,12 @@ define([
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						if result.entries?.length
 							@$('.no-content-message').hide()
+							@$('.table-browse').show()
 						else
 							@$('.no-content-message').show()
 							@$('.table-browse').hide()
 						@initialized = true
 				
-			downloadRepository: (event) ->
-				group = @repository.get 'group'
-				name = @repository.get 'name'
-				@$('iframe').remove()
-				Layers.showProgressIndicator 'Preparing'
-				$.ajax
-					type: 'GET'
-					url: "ws/download/prepare/#{group}/#{name}/"
-					success: (token) =>
-						Layers.hideProgressIndicator()
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'						
-
 			render: (renderOptions) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'

@@ -29,7 +29,12 @@ public enum Notification {
 	REPOSITORY_ROLE_CHANGED,
 	REPOSITORY_ROLE_OF_MEMBER_CHANGED,
 	NOTIFY_FOR_ALL, // also notify about above events when not member
-	FIELD_COMMENTED;
+	FIELD_COMMENTED,
+	TASK_STARTED,
+	TASK_ASSIGNED,
+	TASK_REVOKED,
+	TASK_CANCELED,
+	TASK_COMPLETED;
 
 	public boolean isOneOf(Notification... notifications) {
 		if (notifications == null)

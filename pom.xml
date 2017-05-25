@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greendelta</groupId>
 	<artifactId>lca-collaboration</artifactId>
-	<version>1.6.0</version>
+	<version>1.6.3</version>
 	<packaging>war</packaging>
 	<name>LCA Collaboration Server</name>
 
@@ -211,19 +211,25 @@
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-core</artifactId>
-			<version>1.6.0</version>
+			<version>1.6.3</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-jsonld</artifactId>
-			<version>1.6.0</version>
+			<version>1.6.3</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-cloud</artifactId>
-			<version>1.6.0</version>
+			<version>1.6.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.openlca</groupId>
+			<artifactId>olca-jsonld-2-ilcd</artifactId>
+			<version>1.6.3</version>
 		</dependency>
 
 		<!-- Others -->

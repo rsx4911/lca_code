@@ -1,37 +1,3 @@
-include ../mixins/user-info.jade
+include comment-entry-mixins.jade
 
-mixin comment-visibility(restrictedToRole, roles)
-	- var title = 'Visible to everybody';
-	if restrictedToRole
-		- title = 'Only visible for users with role \'' + getRoleLabel(restrictedToRole) + '\' or higher';
-	.change-visibility.dropdown
-		a(href='#' data-toggle='dropdown')
-			span.comment-visibility.glyphicon(class=!restrictedToRole?'glyphicon-globe':'glyphicon-lock' title=title)
-		ul.dropdown-menu
-			li: a(href='#' data-role='null') Everybody
-			li.dropdown-submenu
-				a(href='#') Specific role 
-					.caret.right
-				ul.dropdown-menu
-					each role in roles
-						li: a(href='#' data-role=role.id)=role.name
-
-mixin comment-entry(comment, index, roles, showDatasetInfo)
-	- var canChangeVisibility = currentUser && currentUser.canComment && (currentUser.admin || currentUser.username === comment.user.username)
-	.comment-entry(class=comment.replyTo?'reply':null data-comment-id=comment.id)
-		+user-info(comment.user.username, comment.user.name)
-		span: small  wrote on #{formatDate(comment.date)} 
-		if canChangeVisibility
-			+comment-visibility(comment.restrictedToRole, roles)
-		if !comment.replyTo && currentUser && currentUser.canComment
-			|  | 
-			a.default-link.reply-to(href='#' data-comment-id=comment.id)
-				small Reply
-		if showDatasetInfo && !comment.replyTo
-			|  | 
-			- var field = comment.field;
-			a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + '/' + field.commitId) 
-				small Go to data set 
-		.comment-text=comment.text
-	if index < comments.length - 1
-		hr
++comment-entry(comment, roles, !roles)

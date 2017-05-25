@@ -24,6 +24,9 @@ define([
 			Synchronized.forEach load, models, callback
 
 		fetch: (model, options) ->
+			unless model
+				options?.success?()
+				return
 			options = options or {}
 			if model.fetched and not options.force
 					options.success?()
@@ -42,6 +45,9 @@ define([
 							options.error?()
 
 		save: (model, options) ->
+			unless model
+				options?.success?()
+				return
 			options = options or {}
 			if model.syncing
 				setTimeout (() => @save(model, options)), 10

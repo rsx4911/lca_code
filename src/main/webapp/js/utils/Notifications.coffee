@@ -28,6 +28,13 @@ define () ->
 	ADDED_TEAM_MEMBER: 'A member was added to a team'
 	REMOVED_TEAM_MEMBER: 'A member removed from a team'
 
+	# task notifications
+	TASK_STARTED: 'A task was started'
+	TASK_ASSIGNED: 'A task was assigned to me'
+	TASK_REVOKED: 'A task assignment was revoked from me'
+	TASK_CANCELED: 'A task I participate in was canceled'
+	TASK_COMPLETED: 'A task I participate in was completed'
+
 	# admin notifications
 	USER_CREATED: 'A user was created'
 	USER_DELETED: 'A user was deleted'
@@ -47,6 +54,8 @@ define () ->
 				group = 'Repository'
 			else if $.inArray(key, ['ADDED_TO_TEAM_MEMBERS', 'REMOVED_FROM_TEAM_MEMBERS', 'ADDED_TEAM_MEMBER', 'REMOVED_TEAM_MEMBER', 'FIELD_COMMENTED']) isnt -1
 				group = 'Team'
+			else if $.inArray(key, ['TASK_ASSIGNED', 'TASK_REVOKED', 'TASK_CANCELED', 'TASK_COMPLETED', 'TASK_STARTED']) isnt -1
+				group = 'Task'
 			else if $.inArray(key, ['USER_CREATED', 'USER_DELETED', 'TEAM_CREATED', 'TEAM_DELETED', 'GROUP_CREATED', 'NOTIFY_FOR_ALL']) isnt -1
 				group = 'Admin'
 			else

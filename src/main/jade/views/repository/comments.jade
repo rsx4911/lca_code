@@ -1,8 +1,10 @@
-include comment-entry.jade
+include comment-entry-mixins.jade
 
 .header-box
 .content-box
 	if !comments.length
 		.no-content-message No comments yet
 	each comment, index in comments
-		+comment-entry(comment, index, null, true)
+		+comment-entry(comment, null, true)
+		if index < comments.length-1
+			hr

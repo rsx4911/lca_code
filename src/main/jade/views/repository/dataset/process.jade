@@ -1,4 +1,5 @@
 include ./mixins.jade
+include ../../mixins/category-breadcrumb.jade
 
 mixin exchange-row(exchange, index)
 	tr(class=exchange.quantitativeReference?'reference':null)
@@ -6,10 +7,8 @@ mixin exchange-row(exchange, index)
 		td: +ref('exchanges[' + index + '].flow')
 		td 
 			if exchange.flow.category
-				- var path = exchange.flow.category.split('/');
-				| #{path[path.length - 1]}
-				if path.length > 1
-					|  / #{path[path.length - 2]}
+				- var url = baseUrl + 's/Flows';
+				+category-breadcrumb(url, exchange.flow.category, true)
 		td
 			span(data-path='exchanges[' + index + '].amount')=exchange.amount
 			span(data-path='exchanges[' + index + '].unit')
@@ -40,13 +39,16 @@ mixin exchange-table(input)
 		thead
 			tr
 				th
-				th Flow
-				th Category
-				th Amount
-				th Costs
-				th Uncertainty
-				th Data quality
-				th #{input?'Provider':'Avoided product'}
+				th=getLabel('exchanges.flow')
+				th=getLabel('exchanges.flow.category')
+				th=getLabel('exchanges.amount')
+				th=getLabel('exchanges.costs')
+				th=getLabel('exchanges.uncertainty')
+				th=getLabel('exchanges.dqEntry')
+				if input
+					th=getLabel('exchanges.defaultProvider')
+				else
+					th=getLabel('exchanges.avoidedProduct')
 		tbody
 			each exchange, index in dataset.exchanges
 				if exchange.input === input
@@ -58,16 +60,16 @@ mixin non-causal-allocation-table()
 		thead
 			tr
 				th
-				th Product
-				th Physical
-				th Economic
+				th=getLabel('allocationFactors.product')
+				th=getLabel('allocationFactors.physical')
+				th=getLabel('allocationFactors.economic')
 		tbody
 			each factor in dataset.nonCausalAllocationFactors
 				tr
 					td
-					td: +ref(factor.product)
-					td(data-path='allocationFactors[' + factor.physical.index + ']')=factor.physical.value
-					td(data-path='allocationFactors[' + factor.economic.index + ']')=factor.economic.value
+					td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
+					td(data-path='allocationFactors[' + factor.physical.index + '].value')=factor.physical.value
+					td(data-path='allocationFactors[' + factor.economic.index + '].value')=factor.economic.value
 
 mixin causal-allocation-table()
 	h4 Causal allocation
@@ -75,28 +77,28 @@ mixin causal-allocation-table()
 		thead
 			tr
 				th
-				th Flow
+				th=getLabel('allocationFactors.product')
 				each product in dataset.causalAllocationFactors[0].products
-					th: +ref(product.product)
+					th: +ref('allocationFactors[' + product.index + '].product', 'PRODUCT_FLOW', false, null, true)
 		tbody
 			each factor in dataset.causalAllocationFactors
 				tr
 					td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
-					td: +ref(factor.exchange.flow)
+					td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, true)
 					each product in factor.products
-						td(data-path='allocationFactors[' + product.index + ']')=product.value
+						td(data-path='allocationFactors[' + product.index + '].value')=product.value
 
 mixin social-aspect-table()
 		table.table.social-aspects
 			thead
 				tr
-					th Name
-					th Raw value
-					th Risk level
-					th Activity variable
-					th Data quality
-					th Comment
-					th Source
+					th=getLabel('socialAspects.socialIndicator.name')
+					th=getLabel('socialAspects.rawValue')
+					th=getLabel('socialAspects.riskLevel')
+					th=getLabel('socialAspects.acitivityVariable')
+					th=getLabel('socialAspects.quality')
+					th=getLabel('socialAspects.comment')
+					th=getLabel('socialAspects.source')
 			tbody
 				each aspect, index in dataset.socialAspects
 					tr
@@ -115,7 +117,7 @@ mixin social-aspect-table()
 									| #{aspect.socialIndicator.activityUnit.name}, 
 							span(data-path='socialAspects[' + index + '].activityVariable')
 								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
-									| #{aspect.socialIndicator.activityVariable}]
+									| #{aspect.socialIndicator.activityVariable}
 						td(data-path='socialAspects[' + index + '].quality')
 							if aspect.quality
 								if dataset.socialDqSystem
@@ -125,6 +127,19 @@ mixin social-aspect-table()
 						td(data-path='socialAspects[' + index + '].comment')=aspect.comment
 						td: +ref('socialAspects[' + index + '].source')
 
+mixin local-field(path, formatter, defaultValue)
+	strong=getLabel(path)
+	- var value = getValue(dataset, path);
+	if !value && defaultValue
+		- value = defaultValue
+	else if formatter
+		- value = formatter(value);
+	div(data-path=path)=value
+
+mixin local-ref(path)
+	strong=getLabel(path)
+	div: +ref(path, null, false, '-')
+
 - var doc = dataset.processDocumentation
 +menubar
 .content-box
@@ -133,19 +148,19 @@ mixin social-aspect-table()
 		.content
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
-					a(href='#exchanges' aria-controls='exchange' role='tab' data-toggle='tab' data-path='exchanges') Inputs/Outputs
+					a(href='#exchanges' aria-controls='exchange' role='tab' data-toggle='tab' data-path='exchanges')=getLabel('exchanges')
 				if doc || reviewMode
 					li(role='presentation') 
-						a(href='#documentation' aria-controls='documentation' role='tab' data-toggle='tab') Documentation
+						a(href='#documentation' aria-controls='documentation' role='tab' data-toggle='tab')=getLabel('documentation')
 				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors.length) || reviewMode
 					li(role='presentation') 
-						a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab' data-path='allocationFactors') Allocation
+						a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab' data-path='allocationFactors')=getLabel('allocationFactors')
 				if (dataset.socialAspects && dataset.socialAspects.length) || reviewMode
 					li(role='presentation') 
-						a(href='#social' aria-controls='social' role='tab' data-toggle='tab' data-path='socialAspects') Social aspects
+						a(href='#social' aria-controls='social' role='tab' data-toggle='tab' data-path='socialAspects')=getLabel('socialAspects')
 				if (dataset.parameters && dataset.parameters.length) || reviewMode
 					li(role='presentation') 
-						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters') Parameters
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters')=getLabel('parameters')
 			.tab-content
 				#exchanges.tab-pane.active(role='tabpanel')
 					if dataset.exchanges
@@ -155,29 +170,29 @@ mixin social-aspect-table()
 					#documentation.tab-pane(role='tabpanel')
 						table.table.no-head
 							tbody
-								+field-row('Intended application', 'processDocumentation.intendedApplication', true)
-								+ref-row('Data set owner', 'processDocumentation.dataSetOwner')
-								+ref-row('Data generator', 'processDocumentation.dataGenerator')
-								+ref-row('Data documentor', 'processDocumentation.dataDocumentor')
-								+ref-row('Publication', 'processDocumentation.publication')
-								+ref-row('Reviewer', 'processDocumentation.reviewer')
-								+field-row('Review details', 'processDocumentation.reviewDetails', true)
-								+field-row('Access & use restrictions', 'processDocumentation.restrictionsDescription', true)
-								+field-row('Project', 'processDocumentation.project', true)
-								+field-row('Creation date', 'processDocumentation.creationDate', true, formatDate)
-								+field-row('Copyright protected')
-									span(data-path='copyright')
+								+field-row('processDocumentation.intendedApplication', true, true)
+								+ref-row('processDocumentation.dataSetOwner')
+								+ref-row('processDocumentation.dataGenerator')
+								+ref-row('processDocumentation.dataDocumentor')
+								+ref-row('processDocumentation.publication')
+								+ref-row('processDocumentation.reviewer')
+								+field-row('processDocumentation.reviewDetails', true, true)
+								+field-row('processDocumentation.restrictionsDescription', true, true)
+								+field-row('processDocumentation.projectDescription', true, true)
+								+field-row('processDocumentation.creationDate', true, true, formatDate)
+								+field-row('copyright')
+									span
 										img.icon-small(src='images/check_' + (dataset.copyright?'true':'false') + '.png')
-								+field-row('LCI method', 'processDocumentation.inventoryMethodDescription', true)
-								+field-row('Modeling constants', 'processDocumentation.modelingConstantsDescription', true)
-								+field-row('Data completeness', 'processDocumentation.completenessDescription', true)
-								+field-row('Data selection', 'processDocumentation.dataSelectionDescription', true)
-								+field-row('Data treatment', 'processDocumentation.dataTreatmentDescription', true)
-								+field-row('Sampling procedure', 'processDocumentation.samplingDescription', true)
-								+field-row('Data collection period', 'processDocumentation.dataCollectionDescription', true)
+								+field-row('processDocumentation.inventoryMethodDescription', true, true)
+								+field-row('processDocumentation.modelingConstantsDescription', true, true)
+								+field-row('processDocumentation.completenessDescription', true, true)
+								+field-row('processDocumentation.dataSelectionDescription', true, true)
+								+field-row('processDocumentation.dataTreatmentDescription', true, true)
+								+field-row('processDocumentation.samplingDescription', true, true)
+								+field-row('processDocumentation.dataCollectionDescription', true, true)
 								if (doc && doc.sources) || reviewMode
-									+field-row('Sources')
-										span(data-path='processDocumentation.sources')
+									+field-row('sources')
+										span
 											if doc && doc.sources
 												each source, index in doc.sources
 													div: +ref('processDocumentation.sources[' + index + ']')
@@ -197,7 +212,7 @@ mixin social-aspect-table()
 						+parameter-table('parameters', false)
 	+meta
 		hr
-		strong Quantitative reference
+		strong=getLabel('quantitativeReference')
 		div
 			- var flow = null;
 			- var eIndex = -1;
@@ -207,28 +222,19 @@ mixin social-aspect-table()
 						- flow = exchange.flow;
 						- eIndex = index;
 			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, false, '-', true)
-		strong Location
-		div: +ref('location', null, false, '-')
+		+local-ref('location')
 		hr
-		strong Valid from
-		div(data-path='processDocumentation.validFrom')=doc&&doc.validFrom?formatDate(doc.validFrom):'-'
-		strong Valid until
-		div(data-path='processDocumentation.validUntil')=doc&&doc.validUntil?formatDate(doc.validUntil):'-'
+		+local-field('processDocumentation.validFrom', formatDate, '-')
+		+local-field('processDocumentation.validUntil', formatDate, '-')
 		hr
-		strong Time description
-		div(data-path='processDocumentation.timeDescription')=doc&&doc.timeDescription?doc.timeDescription:'-'
-		strong Geography description
-		div(data-path='processDocumentation.geographyDescription')=doc&&doc.geographyDescription?doc.geographyDescription:'-'
-		strong Technology description
-		div(data-path='processDocumentation.technologyDescription')=doc&&doc.technologyDescription?doc.technologyDescription:'-'
+		+local-field('processDocumentation.timeDescription', null, '-')
+		+local-field('processDocumentation.geographyDescription', null, '-')
+		+local-field('processDocumentation.technologyDescription', null, '-')
 		hr
-		strong Process data quality schema
-		div: +ref('dqSystem', null, false, '-')
-		strong Input/Output data quality schema
-		div: +ref('exchangeDqSystem', null, false, '-')
-		strong Social data quality schema
-		div: +ref('socialDqSystem', null, false, '-')
-		strong Process data quality
+		+local-ref('dqSystem')
+		+local-ref('exchangeDqSystem')
+		+local-ref('socialDqSystem')
+		strong=getLabel('dqEntry')
 		div
 			if dataset.dqEntry
 				if dataset.dqSystem

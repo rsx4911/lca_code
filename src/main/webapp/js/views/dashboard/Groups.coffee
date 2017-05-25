@@ -28,7 +28,7 @@ define([
 
 			render: (renderOptions) ->
 				@$el.html template
-					canCreateGroups: (currentUser.get('settings').canCreateGroups or currentUser.get('admin'))
+					canCreateGroups: (currentUser.get('settings')?.canCreateGroups or currentUser.get('admin'))
 				Renderer.render @, renderOptions
 				@filter.init()
 

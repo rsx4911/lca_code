@@ -1,4 +1,4 @@
-mixin static(id, label, value, inline)
+mixin static(id, label, value, href)
 	- var clazz = null;
 	if inline
 		- clazz = 'form-inline';
@@ -6,8 +6,12 @@ mixin static(id, label, value, inline)
 		- clazz = 'form-group';
 	div(id='#{id}-group' class=clazz)
 		if label
-			label.control-label(for='#{id}') #{label}
-		div.form-value #{value}
+			label.control-label(for=id)=label
+		div.form-value
+			if href
+				a(href=href)=value
+			else
+				| #{value}
 		block
 
 mixin input(id, label, type, inline, required, hide)
@@ -23,17 +27,20 @@ mixin input(id, label, type, inline, required, hide)
 		- type = 'text'
 	div(id='#{id}-group' class=clazz)
 		if label
-			label.control-label(for='#{id}') #{label}
+			label.control-label(for=id)=label
 				if required
 					sup *
-		input.form-control(id='#{id}' name='#{id}' type='#{type}')&attributes(attributes)
+		input.form-control(id=id name=id type=type)&attributes(attributes)
 		block
+
+mixin hidden(id, value)
+	input(id=id name=id value=value type='hidden')
 
 mixin select(id, label, options, defaultSelection, inline)
 	div(id='#{id}-group' class=inline?'form-inline':'form-group')
 		if label
-			label.control-label(for='#{id}') #{label}
-		select.form-control(id='#{id}' name='#{id}')&attributes(attributes)
+			label.control-label(for=id)=label
+		select.form-control(id=id name=id)&attributes(attributes)
 			if options
 				+options(options, defaultSelection)
 			else
@@ -58,16 +65,16 @@ mixin options(options, defaultSelection, groupId)
 		- 	}
 		- }
 		if defaultSelection === value
-			option(value='#{value}' selected data-group-id=groupId) #{label}
+			option(value=value selected data-group-id=groupId)=label
 		else
-			option(value='#{value}' disabled=disabled data-group-id=groupId) #{label}
+			option(value=value disabled=disabled data-group-id=groupId)=label
 
 mixin checkbox(id, label, type)
 	if !type
 		- type = 'success'
 	.checkbox(class='checkbox-#{type}')
-		input(id='#{id}' name='#{id}' type='checkbox')&attributes(attributes)
-		label(for='#{id}')
+		input(id=id name=id type='checkbox')&attributes(attributes)
+		label(for=id)
 			if label
 				| #{label}
 			else
@@ -79,8 +86,8 @@ mixin radio(group, id, label, type)
 	if !type
 		- type = 'success'
 	.radio(class='radio-#{type}')
-		input(id='#{id}' name='#{group}' type='radio')&attributes(attributes)
-		label(for='#{id}')
+		input(id=id name=group type='radio')&attributes(attributes)
+		label(for=id)
 			if label
 				| #{label}
 			else
@@ -97,8 +104,8 @@ mixin radios(group, options)
 			- 	id = option[0];
 			- 	label = option[1];
 			- }
-			label(for='#{id}')
-				input(id='#{id}' name='#{group}' type='radio')&attributes(attributes)
+			label(for=id)
+				input(id=id name=group type='radio')&attributes(attributes)
 				| #{label}
 				| &nbsp;
 			block
@@ -106,13 +113,20 @@ mixin radios(group, options)
 mixin textarea(id, label)
 	.form-group(id='#{id}-group')
 		if label
-			label.control-label(for='#{id}') #{label}
-		textarea.form-control(id='#{id}' name='#{id}')&attributes(attributes)
+			label.control-label(for=id)=label
+		textarea.form-control(id=id name=id)&attributes(attributes)
 			block
 
 mixin member-selection(multiple)
-	+select('name', 'User/Team')(multiple=multiple class='member-selection')
-		if users
+	if users && users.length && teams && teams.length
+		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')
 			+optgroup('User', users, null, 'user')
-		if teams
 			+optgroup('Team', teams, null, 'team')
+	else if users && users.length
+		+select('user-selection-name', 'User')(multiple=multiple class='member-selection')
+			+options(users, null, 'user')
+	else if teams && teams.length
+		+select('user-selection-name', 'Team')(multiple=multiple class='member-selection')
+			+options(teams, null, 'team')
+	else
+		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')

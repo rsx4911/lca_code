@@ -5,6 +5,7 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Icons'
+				'cs!utils/Labels'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/ModelTypes'
@@ -13,6 +14,7 @@ define([
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DataQualityLayer'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
 				'templates/views/repository/dataset/product-system'
 				'templates/views/repository/dataset/impact-method'
@@ -32,7 +34,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -62,21 +64,24 @@ define([
 					success: callback
 
 			loadCommitHistory: (callback) ->
+				unless currentUser.isLoggedIn()
+					callback()
+					return
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'
 					url: "ws/history/#{urlPart}"
 					success: callback
 
-			getDownloadUrl: () ->
+			getDownloadUrl: (format = 'json') ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "ws/download/prepare/#{urlPart}/#{commitId}" 
+				return "ws/public/download/#{format}/prepare/#{urlPart}/#{commitId}" 
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
 				commitId = @commitId or 'null'
-				return "ws/fetch/file/#{urlPart}/#{commitId}" 
+				return "ws/public/repository/file/#{urlPart}/#{commitId}" 
 
 			getUrlPart: (type, refId) ->
 				group = @repository.get 'group'
@@ -87,17 +92,19 @@ define([
 
 			downloadData: (event) ->
 				@$('iframe').remove()
+				target = $ Events.target event
+				format = target.attr('data-format') or 'json'
 				$.ajax
 					type: 'GET'
-					url: @getDownloadUrl()
+					url: @getDownloadUrl(format)
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/download/' + token + '"></iframe>'
+						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
 
 			events: 
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
-				'click [data-action=download-data]': (event) -> @downloadData event
+				'click [data-format]': (event) -> @downloadData event
 				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
 				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
 				'click a[data-action=show-data-quality]': (event) ->
@@ -113,7 +120,7 @@ define([
 					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
 
 			initialize: (options) ->
-				{@repository, @type, @refId, @commitId} = options
+				{@repository, @type, @refId, @commitId, @commentPath} = options
 
 			render: (renderOptions) ->
 				template = @getTemplate()
@@ -132,19 +139,21 @@ define([
 							dataset: dataset
 							baseUrl: "#{group}/#{name}/dataset"
 							formatDate: Format.dateTime
-							getLabel: @getLabel
-							getValue: (object, path) => @getValue object, path
+							getSpecificTypeLabel: @getSpecificTypeLabel
+							getValue: (object, path) => return @getValue object, path
 							getIcon: Icons.get
-							getTypeAsEnum: (type) => @getTypeAsEnum(type)
-							getTypeLabel: (type) => ModelTypes[type]
+							getTypeAsEnum: (type) => return @getTypeAsEnum(type)
+							getTypeLabel: (type) => return ModelTypes[type]
+							getLabel: (path) => return Labels.get @getTypeAsEnum(dataset.type), path
 							getUncertaintyLabel: @getUncertaintyLabel
 							getDQColor: DataQuality.getColor 
 							noToStr: Format.number
 							fileBaseUrl: @getFileBaseUrl()
 							commits: commits
-							commitId: @commitId or commits[0].id
+							commitId: @commitId or commits?[0]?.id
 							formatCommitDescription: Format.formatCommitDescription
 							reviewMode: LocalStorage.getValue('reviewMode')
+							isPublic: !currentUser.isLoggedIn()
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
 							@initMap dataset
@@ -157,6 +166,7 @@ define([
 										type: @type, 
 										refId: @refId, 
 										commitId: @commitId
+										commentPath: @commentPath
 						else
 							@initTableSorting()
 							Comments.init @$el,
@@ -164,8 +174,9 @@ define([
 								type: @type, 
 								refId: @refId, 
 								commitId: @commitId
+								commentPath: @commentPath
 						if dataset.type is 'DQSystem'
-							@initDataQualityPopups(dataset)
+							@initDataQualityPopups dataset
 
 			initTableSorting: () ->
 				tables = @$('table:not(.no-head)')
@@ -176,7 +187,7 @@ define([
 							options.headers[index] = {sorter: false}
 					$(table).tablesorter options
 
-			getLabel: (type, value) ->
+			getSpecificTypeLabel: (type, value) ->
 				switch type 
 					when 'FlowPropertyType'
 						switch value
@@ -257,7 +268,10 @@ define([
 							@$('#impact-factors tbody').empty()
 							@$('#impact-factors tbody').append impactFactorsTemplate 
 								impactCategory: impactCategory
+								noToStr: Format.number
 							callback()
+				else
+					callback()
 
 			loadNwSet: (callback) ->
 				commitId = @commitId or 'null'
@@ -273,7 +287,10 @@ define([
 							@$('#nw-factors tbody').empty()
 							@$('#nw-factors tbody').append nwFactorsTemplate 
 								nwSet: nwSet
+								noToStr: Format.number
 							callback()
+				else
+					callback()
 
 			initDataQualityPopups: (dataset) ->
 				@$('table.data-quality td').on 'click', (event) ->

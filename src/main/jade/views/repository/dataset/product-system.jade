@@ -8,46 +8,47 @@ include ./mixins.jade
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
 					a(href='#overview' aria-controls='overview' role='tab' data-toggle='tab') Overview
-				if dataset.parameterRedefs && dataset.parameterRedefs.length
+				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 					li(role='presentation') 
-						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameterRedefs') Parameters
+						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameterRedefs')=getLabel('parameterRedefs')
 			.tab-content
 				#overview.tab-pane.active(role='tabpanel')
 					table.table.no-head
 						tbody
-							+ref-row('Reference process', 'referenceProcess')
+							+ref-row('referenceProcess')
 							if dataset.referenceExchange || reviewMode
-								+ref-row('Reference product', 'referenceExchange.flow', 'PRODUCT_FLOW')
-							+ref-row('Target flow property', 'targetFlowProperty')
+								+ref-row('referenceExchange.flow', 'PRODUCT_FLOW')
+							+ref-row('targetFlowProperty')
 							if dataset.targetUnit || reviewMode
-								+field-row('Target unit', 'targetUnit.name')
-							+field-row('Target amount', 'targetAmount', true)
+								+field-row('targetUnit.name', true, true)
+							+field-row('targetAmount', true, true)
 				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 					#parameters.tab-pane(role='tabpanel')
-						table.table
-							thead
-								tr
-									th Context
-									th Name
-									th Value
-									th Uncertainty
-							tbody
-								each parameter, index in dataset.parameterRedefs
+						if dataset.parameterRedefs && dataset.parameterRedefs.length
+							table.table
+								thead
 									tr
-										td 
-											if parameter.context
-												+ref('parameterRedefs[' + index + '].context')
-											else
-												| Global
-										td(data-path='parameterRedefs[' + index + '].name')=parameter.name
-										td(data-path='parameterRedefs[' + index + '].value')=parameter.value
-										td(data-path='parameterRedefs[' + index + '].uncertainty')
-											if parameter.inputParameter
-												+uncertainty(parameter.uncertainty)
+										th=getLabel('parameterRedefs.context')
+										th=getLabel('parameterRedefs.name')
+										th=getLabel('parameterRedefs.value')
+										th=getLabel('parameterRedefs.uncertainty')
+								tbody
+									each parameter, index in dataset.parameterRedefs
+										tr
+											td 
+												if parameter.context
+													+ref('parameterRedefs[' + index + '].context')
+												else
+													span(data-path='parameterRedefs[' + index + '].context') Global
+											td(data-path='parameterRedefs[' + index + '].name')=parameter.name
+											td(data-path='parameterRedefs[' + index + '].value')=parameter.value
+											td(data-path='parameterRedefs[' + index + '].uncertainty')
+												if parameter.inputParameter
+													+uncertainty(parameter.uncertainty)
 	+meta
 		hr
-		strong No. of processes
+		strong=getLabel('processes')
 		div(data-path='processes')=dataset.processes?dataset.processes.length:0
-		strong No. of links
+		strong=getLabel('processLinks')
 		div(data-path='processLinks')=dataset.processLinks?dataset.processLinks.length:0
 	.clear

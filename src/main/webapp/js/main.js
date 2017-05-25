@@ -18,6 +18,7 @@ require.config({
 		'open-layers': 'libs/open-layers',
 		'qrcode': 'libs/qrcode',
 		'select2': 'libs/select2',
+		'jstree': 'libs/jstree',
 		'cropper': 'libs/cropper',
 		'requireLib': 'libs/require'
 	},
@@ -31,6 +32,10 @@ require.config({
 			'select2': {
 				deps: ['jquery'],
 				exports: '$.fn.select2'
+			},
+			'jstree': {
+				deps: ['jquery'],
+				exports: '$.fn.jstree'
 			}
 	} 
 })

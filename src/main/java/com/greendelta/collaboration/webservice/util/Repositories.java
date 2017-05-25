@@ -1,12 +1,9 @@
 package com.greendelta.collaboration.webservice.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-
-import org.openlca.cloud.util.ObjectMap;
 
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.util.ObjectMap;
 
 public class Repositories {
 
@@ -14,17 +11,15 @@ public class Repositories {
 		// only static access
 	}
 
-	public static List<ObjectMap> map(List<Repository> repos) {
-		List<ObjectMap> all = new ArrayList<>();
-		for (Repository repo : repos)
-			all.add(map(repo, null));
-		return all;
+	public static ObjectMap map(Repository repo) {
+		return map(repo, null);
 	}
 
 	public static ObjectMap map(Repository repo, Boolean groupIsUserNamespace) {
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 		map.put("group", repo.group);
 		map.put("name", repo.name);
+		map.put("publicAccess", repo.publicAccess);
 		if (groupIsUserNamespace != null)
 			map.put("groupIsUserNamespace", groupIsUserNamespace);
 		return map;

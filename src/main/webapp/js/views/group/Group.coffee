@@ -7,11 +7,10 @@ define([
 				'cs!utils/Renderer'
 				'cs!utils/Status'
 				'cs!app/Router'
-				'cs!models/CurrentUser'
 				'templates/views/group/group'
 			]
 
-	(Backbone, Avatar, Events, Forms, Layers, Renderer, Status, Router, currentUser, template) ->
+	(Backbone, Avatar, Events, Forms, Layers, Renderer, Status, Router, template) ->
 
 		class GroupView extends Backbone.View
 

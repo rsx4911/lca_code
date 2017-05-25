@@ -203,7 +203,11 @@ class Dao<T extends AbstractEntity> {
 		return getCount(jpql, parameters);
 	}
 
-	private long getNewId() {
+	private long getLastId() {
+		return getLastId(entityType);
+	}
+
+	long getLastId(Class<? extends AbstractEntity> entityType) {
 		String query = "SELECT o FROM " + entityType.getSimpleName() + " o ORDER BY o.id DESC";
 		T value = getFirst(query, Collections.emptyMap());
 		if (value == null)
@@ -215,7 +219,7 @@ class Dao<T extends AbstractEntity> {
 	public T insert(T entity) {
 		if (entity == null)
 			return null;
-		entity.setId(getNewId());
+		entity.setId(getLastId() + 1);
 		EntityManager em = createManager();
 		em.persist(entity);
 		return entity;

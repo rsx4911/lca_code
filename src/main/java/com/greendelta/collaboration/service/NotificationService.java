@@ -14,8 +14,12 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Notification;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.model.task.Task;
+import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.platform.Imprint;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
@@ -42,7 +46,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String url = baseUrl + "/groups/" + group;
 		String subject = "A new group was created";
-		String message = "A new group <a href=\"" + url + "\">" + group + "</a> was created by the user  "
+		String message = "A new group <a href=\"" + url + "\">" + group + "</a> was created by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.GROUP_CREATED, true)));
@@ -52,7 +56,7 @@ public class NotificationService {
 	public NotificationJob groupDeleted(String group) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A group was deleted";
-		String message = "The group " + group + " was deleted by the user  " + currentUser.name;
+		String message = "The group " + group + " was deleted by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.GROUP_DELETED, group)));
 		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.GROUP_DELETED, false)));
@@ -64,7 +68,7 @@ public class NotificationService {
 		String url = baseUrl + "/" + repo.toId();
 		String subject = "A new repository was created";
 		String message = "A new repository <a href=\"" + url + "\">" + repo.toId()
-				+ "</a> was created by the user  "
+				+ "</a> was created by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_CREATED, repo.group)));
@@ -77,7 +81,7 @@ public class NotificationService {
 		String url = baseUrl + "/" + newRepo.toId();
 		String subject = "A repository was moved";
 		String message = "The repository " + oldRepo.toId() + " was moved to a href=\"" + url + "\">" + newRepo.toId()
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_MOVED, newRepo.toId())));
 		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_MOVED, false)));
@@ -87,7 +91,7 @@ public class NotificationService {
 	public NotificationJob repositoryDeleted(Repository repo) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A repository was deleted";
-		String message = "The repository " + repo.toId() + " was deleted by the user  " + currentUser.name;
+		String message = "The repository " + repo.toId() + " was deleted by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_DELETED, repo.toId())));
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_DELETED, repo.group)));
@@ -101,7 +105,7 @@ public class NotificationService {
 		String commitUrl = baseUrl + "/" + repo.toId() + "/commit/" + commit.id;
 		String subject = "Data was committed";
 		String message = "Data was committed to <a href=\"" + repoUrl + "\">" + repo.toId()
-				+ "</a> by the user  "
+				+ "</a> by the user "
 				+ currentUser.name + " with message <a href=\"" + commitUrl + "\">" + commit.message + "</a>";
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.toId())));
@@ -135,10 +139,10 @@ public class NotificationService {
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "You were added to a group";
 		String othersSubject = "A member was added to a group";
-		String personalMessage = "You were added to group <a href=\"" + url + "\">" + group + "</a> by the user  "
+		String personalMessage = "You were added to group <a href=\"" + url + "\">" + group + "</a> by the user "
 				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to group <a href=\"" + url + "\">" + group
-				+ "</a> by the user  "
+				+ "</a> by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_GROUP_MEMBERS))
@@ -156,9 +160,9 @@ public class NotificationService {
 		String personalSubject = "Your role in a group was changed";
 		String othersSubject = "A role was changed in a group";
 		String personalMessage = "Your role in group <a href=\"" + url + "\">" + group
-				+ "</a> was changed by the user  " + currentUser.name;
+				+ "</a> was changed by the user " + currentUser.name;
 		String othersMessage = "The role of user " + member.name + " for group <a href=\"" + url + "\">" + group
-				+ "</a> was changed by the user  "
+				+ "</a> was changed by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.GROUP_ROLE_CHANGED))
@@ -176,9 +180,9 @@ public class NotificationService {
 		String personalSubject = "A team you are in was added to a group";
 		String othersSubject = "A team was added to a group";
 		String personalMessage = "A team you are in was added to group <a href=\"" + url + "\">" + group
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		String othersMessage = "The team " + member.name + " was added to group <a href=\"" + url + "\">" + group
-				+ "</a> by the user  "
+				+ "</a> by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
@@ -196,10 +200,10 @@ public class NotificationService {
 		String personalSubject = "The role of a team you are in was changed for a group";
 		String othersSubject = "The role of a team was changed for a group";
 		String personalMessage = "The role of a team you are in was changed for group <a href=\"" + url + "\">" + group
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		String othersMessage = "The role of team " + member.name + " was changed for group <a href=\"" + url + "\">"
 				+ group
-				+ "</a> by the user  "
+				+ "</a> by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
@@ -218,7 +222,7 @@ public class NotificationService {
 		String othersSubject = "A member was removed from a group";
 		String personalMessage = "You were removed from group " + group + " by the user  " + currentUser.name;
 		String othersMessage = "The user " + member.name + " was removed from group <a href=\"" + url + "\">" + group
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_GROUP_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
@@ -234,10 +238,10 @@ public class NotificationService {
 		String url = baseUrl + "/groups/" + group;
 		String personalSubject = "A team you are in was removed from a group";
 		String othersSubject = "A team was removed from a group";
-		String personalMessage = "A team you are in was removed from group " + group + " by the user  "
+		String personalMessage = "A team you are in was removed from group " + group + " by the user "
 				+ currentUser.name;
 		String othersMessage = "The team " + member.name + " was removed from group <a href=\"" + url + "\">" + group
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
 				getTeamUsers(Notification.REMOVED_FROM_GROUP_MEMBERS, member)));
@@ -255,10 +259,10 @@ public class NotificationService {
 		String personalSubject = "You were added to a repository";
 		String othersSubject = "A member was added to a repository";
 		String personalMessage = "You were added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by the user  "
+				+ "</a> by the user "
 				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_REPOSITORY_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
@@ -276,9 +280,9 @@ public class NotificationService {
 		String personalSubject = "Your role in a repository was changed";
 		String othersSubject = "A role was changed in a repository ";
 		String personalMessage = "Your role in repository <a href=\"" + url + "\">" + path
-				+ "</a> was changed by the user  " + currentUser.name;
+				+ "</a> was changed by the user " + currentUser.name;
 		String othersMessage = "The role of user " + member.name + " for repository <a href=\"" + url + "\">" + path
-				+ "</a> was changed by the user  "
+				+ "</a> was changed by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REPOSITORY_ROLE_CHANGED))
@@ -297,9 +301,9 @@ public class NotificationService {
 		String personalSubject = "A team you are in was added to a repository";
 		String othersSubject = "A team was added to a repository";
 		String personalMessage = "A team you are in was added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		String othersMessage = "The team " + member.name + " was added to repository <a href=\"" + url + "\">" + path
-				+ "</a> by the user  " + currentUser.name;
+				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
 				getTeamUsers(Notification.ADDED_TO_REPOSITORY_MEMBERS, member)));
@@ -317,9 +321,9 @@ public class NotificationService {
 		String personalSubject = "The role of a team you are in was changed for a repository";
 		String othersSubject = "The role of a team was changed in a repository ";
 		String personalMessage = "The role of a team you are in for repository <a href=\"" + url + "\">" + path
-				+ "</a> was changed by the user  " + currentUser.name;
+				+ "</a> was changed by the user " + currentUser.name;
 		String othersMessage = "The role of team " + member.name + " for repository <a href=\"" + url + "\">" + path
-				+ "</a> was changed by the user  "
+				+ "</a> was changed by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
@@ -337,10 +341,10 @@ public class NotificationService {
 		String url = baseUrl + "/" + path;
 		String personalSubject = "You were removed from a repository";
 		String othersSubject = "A member was removed from a repository";
-		String personalMessage = "You were removed from repository " + path + " by the user  "
+		String personalMessage = "You were removed from repository " + path + " by the user "
 				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was removed from repository <a href=\"" + url + "\">"
-				+ path + "</a> by the user  "
+				+ path + "</a> by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_REPOSITORY_MEMBERS))
@@ -358,10 +362,10 @@ public class NotificationService {
 		String url = baseUrl + "/" + path;
 		String personalSubject = "A team you are in was removed from a repository";
 		String othersSubject = "A team was removed from a repository";
-		String personalMessage = "A team you are in was removed from repository " + path + " by the user  "
+		String personalMessage = "A team you are in was removed from repository " + path + " by the user "
 				+ currentUser.name;
 		String othersMessage = "The team " + member.name + " was removed from repository <a href=\"" + url + "\">"
-				+ path + "</a> by the user  " + currentUser.name;
+				+ path + "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(personalSubject, personalMessage,
 				getTeamUsers(Notification.REMOVED_FROM_REPOSITORY_MEMBERS, member)));
@@ -376,9 +380,9 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String personalSubject = "You were added to a team";
 		String othersSubject = "A member was added to a team";
-		String personalMessage = "You were added to team " + team.name + " by the user  " + currentUser.name;
+		String personalMessage = "You were added to team " + team.name + " by the user " + currentUser.name;
 		String othersMessage = "The user " + member.name + " was added to team " + team.name
-				+ " by the user  "
+				+ " by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
@@ -392,10 +396,10 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String personalSubject = "You were removed from a team";
 		String othersSubject = "A member was removed from a team";
-		String personalMessage = "You were removed from team " + team.name + " by the user  "
+		String personalMessage = "You were removed from team " + team.name + " by the user "
 				+ currentUser.name;
 		String othersMessage = "The user " + member.name + " was removed from team " + team.name
-				+ " by the user  "
+				+ " by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		if (member.isEnabled(Notification.REMOVED_FROM_TEAM_MEMBERS))
@@ -423,7 +427,7 @@ public class NotificationService {
 	public NotificationJob userDeleted(User user) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A user was deleted";
-		String message = "The user " + user.name + " was deleted by the user  " + currentUser.name;
+		String message = "The user " + user.name + " was deleted by the user " + currentUser.name;
 		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.USER_DELETED, true));
 		return new NotificationJob(emails);
 	}
@@ -431,7 +435,7 @@ public class NotificationService {
 	public NotificationJob teamCreated(Team team) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A team was created";
-		String message = "The team " + team.name + " was created by the user  " + currentUser.name;
+		String message = "The team " + team.name + " was created by the user " + currentUser.name;
 		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.TEAM_CREATED, true));
 		return new NotificationJob(emails);
 	}
@@ -439,8 +443,108 @@ public class NotificationService {
 	public NotificationJob teamDeleted(Team team) {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A team was deleted";
-		String message = "The team " + team.name + " was deleted by the user  " + currentUser.name;
+		String message = "The team " + team.name + " was deleted by the user " + currentUser.name;
 		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.TEAM_DELETED, true));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob taskStarted(Repository repo, Task task) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = repo.toId();
+		String repoUrl = baseUrl + "/" + repoId;
+		String taskUrl = baseUrl + "/tasks/" + getUrlPart(task) + task.getId();
+		String subject = "A task was started";
+		String message = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> was started in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> by the user " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(subject, message, getTaskUsers(Notification.TASK_STARTED, repoId, task)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_STARTED, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob taskCompleted(Repository repo, Task task) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = repo.toId();
+		String repoUrl = baseUrl + "/" + repoId;
+		String taskUrl = baseUrl + "/tasks/" + getUrlPart(task) + task.getId();
+		String subject = "A task was completed";
+		String message = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was completed by the user " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(subject, message, getTaskUsers(Notification.TASK_COMPLETED, repoId, task)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_COMPLETED, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob taskCanceled(Repository repo, Task task) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = repo.toId();
+		String repoUrl = baseUrl + "/" + repoId;
+		String taskUrl = baseUrl + "/tasks/" + getUrlPart(task) + task.getId();
+		String subject = "A task was canceled";
+		String message = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was canceled by the user " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(subject, message, getTaskUsers(Notification.TASK_CANCELED, repoId, task)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_CANCELED, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob taskAssigned(Repository repo, Task task, TaskAssignment assignment) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = repo.toId();
+		String repoUrl = baseUrl + "/" + repoId;
+		String taskUrl = baseUrl + "/tasks/" + getUrlPart(task) + task.getId();
+		String personalSubject = "A task was assigned to you";
+		String otherSubject = "A task was assigned to a user";
+		String personalMessage = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was assigned to you by the user " + currentUser.name;
+		String otherMessage = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was assigned to the user " + assignment.assignedTo.name
+				+ " by the user " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		if (assignment.assignedTo.isEnabled(Notification.TASK_ASSIGNED))
+			emails.add(createEmail(personalSubject, personalMessage, assignment.assignedTo));
+		emails.addAll(createEmails(otherSubject, otherMessage,
+				getMemberUsers(Notification.TASK_ASSIGNED, repoId, Permission.MANAGE_TASK)));
+		emails.addAll(createEmails(otherSubject, otherMessage, getAdminUsers(Notification.TASK_ASSIGNED, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob taskCompleted(Repository repo, Task task, TaskAssignment assignment) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = repo.toId();
+		String repoUrl = baseUrl + "/" + repoId;
+		String taskUrl = baseUrl + "/tasks/" + getUrlPart(task) + task.getId();
+		String subject = "A task assignment was completed by a user";
+		String message = "The assignment to task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was completed by the user " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		emails.addAll(createEmails(subject, message,
+				getMemberUsers(Notification.TASK_COMPLETED, repoId, Permission.MANAGE_TASK)));
+		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_COMPLETED, false)));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob taskRevoked(Repository repo, Task task, TaskAssignment assignment) {
+		User currentUser = userService.getCurrentUser();
+		String repoId = repo.toId();
+		String repoUrl = baseUrl + "/" + repoId;
+		String taskUrl = baseUrl + "/tasks/" + getUrlPart(task) + task.getId();
+		String personalSubject = "A task assignment was revoked from you";
+		String otherSubject = "A task assignment was revoked from a user";
+		String personalMessage = "The assignment to task <a href=\"" + taskUrl + "\">" + task.name
+				+ "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was revoked from you by the user " + currentUser.name;
+		String otherMessage = "The assignment to task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
+				+ repoUrl + "\">" + repoId + "</a> was revoked from the user " + assignment.assignedTo.name
+				+ " by the user " + currentUser.name;
+		Set<EmailJob> emails = new HashSet<>();
+		if (assignment.assignedTo.isEnabled(Notification.TASK_REVOKED))
+			emails.add(createEmail(personalSubject, personalMessage, assignment.assignedTo));
+		emails.addAll(createEmails(otherSubject, otherMessage,
+				getMemberUsers(Notification.TASK_REVOKED, repoId, Permission.MANAGE_TASK)));
+		emails.addAll(createEmails(otherSubject, otherMessage, getAdminUsers(Notification.TASK_REVOKED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -473,6 +577,10 @@ public class NotificationService {
 	}
 
 	private Set<User> getMemberUsers(Notification notification, String path) {
+		return getMemberUsers(notification, path, null);
+	}
+
+	private Set<User> getMemberUsers(Notification notification, String path, Permission permission) {
 		Set<User> users = new HashSet<>();
 		User currentUser = userService.getCurrentUser();
 		for (Membership member : membershipService.getMemberships(path)) {
@@ -481,6 +589,8 @@ public class NotificationService {
 			if (!member.user.isEnabled(notification))
 				continue;
 			if (currentUser.equals(member.user))
+				continue;
+			if (permission != null && (member.role == null || !member.role.getPermissions().contains(permission)))
 				continue;
 			users.add(member.user);
 		}
@@ -494,6 +604,20 @@ public class NotificationService {
 			if (!user.isEnabled(notification))
 				continue;
 			if (currentUser.equals(user))
+				continue;
+			users.add(user);
+		}
+		return users;
+	}
+
+	private Set<User> getTaskUsers(Notification notification, String repoId, Task task) {
+		Set<User> users = getMemberUsers(notification, repoId, Permission.MANAGE_TASK);
+		User currentUser = userService.getCurrentUser();
+		for (TaskAssignment assignment : task.assignments) {
+			User user = assignment.assignedTo;
+			if (user == null || currentUser.equals(user))
+				continue;
+			if (!user.isEnabled(notification))
 				continue;
 			users.add(user);
 		}
@@ -514,6 +638,12 @@ public class NotificationService {
 			users.add(admin);
 		}
 		return users;
+	}
+
+	private String getUrlPart(Task task) {
+		if (task instanceof Review)
+			return "review/";
+		return "";
 	}
 
 	public class NotificationJob {

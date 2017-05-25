@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,7 +62,15 @@ public class FetchService {
 	}
 
 	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
-		return repo.getDatasetFile(type, refId, commitId, false).exists();
+		File file = repo.getDatasetFile(type, refId, commitId, false);
+		if (!file.exists())
+			return false;
+		try {
+			long size = Files.size(file.toPath());
+			return size > 0;
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
@@ -106,8 +115,6 @@ public class FetchService {
 				datasets.add(dataset);
 			}
 		}
-		if (datasets.isEmpty())
-			return null;
 		return new StreamingOutput() {
 
 			@Override
@@ -147,5 +154,6 @@ public class FetchService {
 		protected File getBinaryFilesLocation(Dataset dataset) {
 			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
 		}
+				
 	}
 }

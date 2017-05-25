@@ -7,8 +7,8 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+ref-row('Unit group', 'unitGroup')
-					+field-row('Flow property type')
-						span(data-path='flowPropertyType')=getLabel('FlowPropertyType', dataset.flowPropertyType)
+					+ref-row('unitGroup')
+					+field-row('flowPropertyType')
+						span=getSpecificTypeLabel('FlowPropertyType', dataset.flowPropertyType)
 	+meta
 	.clear

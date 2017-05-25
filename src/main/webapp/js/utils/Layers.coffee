@@ -1,12 +1,15 @@
 define([
+				'cs!utils/ModelTree'
+				'cs!utils/Data'
 				'cs!utils/Events'
 				'cs!utils/Model'
+				'cs!models/CurrentUser'
 				'templates/views/layer'
 				'templates/views/progress-indicator'
 				'bootstrap'
 			]
 
-	(Events, Model, template, progressIndicatorTemplate) ->
+	(ModelTree, Data, Events, Model, currentUser, template, progressIndicatorTemplate) ->
 
 		Layers = () ->
 
@@ -130,16 +133,69 @@ define([
 						{id: 'login', text: 'Login', className: 'btn-primary', callback: 'login'}
 					]
 
+			selectUser: (options) ->
+				unless options
+					options = {users: true, teams: true}
+				options.users = if options.users is false then false else true
+				options.teams = if options.teams is false then false else true
+				if !options.users and !options.teams
+					return
+				dataFunction = Data.getUsersAndTeams
+				if !options.users
+					dataFunction = Data.getTeams
+				else if !options.teams
+					dataFunction = Data.getUsers
+				dataFunction.call Data, options.module, options.repository, (users, teams) =>
+					existing = options.exclude or []
+					if options.excludeSelf
+						existing.push username: currentUser.get('username')
+					users = if !options.users then [] else Data.usersToOptions users, existing, (options.excludeSelf or options.exclude)
+					teams = if !options.teams then [] else Data.teamsToOptions teams
+					@showTemplateInLayer
+						template: 'select-user'
+						title: if options.title then options.title else 'Select user'
+						model: {users: users, teams: teams}
+						buttons: [
+							{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () =>
+								selection = $ '.modal #user-selection-name option:selected'
+								type = selection.attr 'data-group-id'
+								id = selection.val()
+								displayName = selection.text()
+								@closeActive()
+								options.callback {type: type, id: id, displayName: displayName}
+							}
+						]
+
+			selectModel: (options) ->
+				unless options
+					return []
+				unless options.repositoryPath 
+					return []
+				unless options.callback
+					return []
+				@showMessageInLayer
+					title: 'Select data set'
+					body: '<div id="model-tree"></div>'
+					buttons: [
+						{text: 'Cancel', callback: () => @closeActive()}
+						{text: 'Select', className: 'btn-success', callback: -> 
+							options.callback ModelTree.getSelection '#model-tree'
+						}
+					]
+				ModelTree.init '#model-tree', options.repositoryPath
+
 			askQuestion: (options) ->
 				unless options.question
 					return
 				unless options.answers?.length
 					return
+				unless options.type
+					options.type = 'success'
 				buttons = []
 				for answer, index in options.answers
 					buttons.push
 						text: answer
-						className: (if index is (options.answers.length - 1) then 'btn-success' else 'btn-default')
+						className: (if index is (options.answers.length - 1) then "btn-#{options.type}" else 'btn-default')
 						callback: (@_ wrapIndex) options.onAnswer, index
 				@showMessageInLayer
 					body: options.question

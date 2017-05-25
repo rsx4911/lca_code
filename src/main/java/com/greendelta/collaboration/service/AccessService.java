@@ -1,8 +1,13 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
@@ -10,11 +15,14 @@ import com.greendelta.collaboration.model.User;
 
 public class AccessService {
 
+	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
-
+	
 	@Inject
-	public AccessService(UserService userService, MembershipService membershipService) {
+	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
+			MembershipService membershipService) {
+		this.repositoryPath = repositoryPath;
 		this.userService = userService;
 		this.membershipService = membershipService;
 	}
@@ -24,6 +32,8 @@ public class AccessService {
 	}
 
 	public boolean canRead(String groupOrRepo, boolean ignoreAdmin) {
+		if (isPublic(groupOrRepo))
+			return true;
 		User user = userService.getCurrentUser();
 		if (!ignoreAdmin && user.admin)
 			return true;
@@ -32,83 +42,109 @@ public class AccessService {
 		if (isGroup(groupOrRepo))
 			if (membershipService.hasMembershipInAnyRepoInGroup(user, groupOrRepo))
 				return true;
-		Role role = membershipService.getRole(user, groupOrRepo);
-		return role.getPermissions().contains(Permission.READ);
+		return hasPermissionTo(user, Permission.READ, groupOrRepo, ignoreAdmin);
 	}
 
 	public boolean canWrite(String groupOrRepo) {
-		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
-		if (isOwnNamespace(user, groupOrRepo))
-			return true;
-		Role role = membershipService.getRole(user, groupOrRepo);
-		return role.getPermissions().contains(Permission.WRITE);
+		return hasPermissionTo(Permission.WRITE, groupOrRepo);
 	}
 
 	public boolean canMove(String repository) {
-		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
 		if (isGroup(repository))
 			return false; // can not move groups
-		Role role = membershipService.getRole(user, repository);
-		return role.getPermissions().contains(Permission.MOVE);
+		return hasPermissionTo(Permission.MOVE, repository);
 	}
 
 	public boolean canDelete(String groupOrRepo) {
-		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
-		if (isOwnNamespace(user, groupOrRepo))
-			return true;
-		Role role = membershipService.getRole(user, groupOrRepo);
-		return role.getPermissions().contains(Permission.DELETE);
+		return hasPermissionTo(Permission.DELETE, groupOrRepo);
 	}
 
 	public boolean canEditMembersOf(String groupOrRepo) {
-		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
-		if (isOwnNamespace(user, groupOrRepo))
-			return true;
-		Role role = membershipService.getRole(user, groupOrRepo);
-		return role.getPermissions().contains(Permission.EDIT_MEMBERS);
+		return hasPermissionTo(Permission.EDIT_MEMBERS, groupOrRepo);
 	}
 
 	public boolean canCreateRepositoryIn(String group) {
 		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
 		if (isOwnNamespace(user, group))
 			return user.settings.canCreateRepositories;
-		Role role = membershipService.getRole(user, group);
-		return role.getPermissions().contains(Permission.WRITE);
+		return hasPermissionTo(Permission.WRITE, group);
 	}
 
-	public boolean canRead(Comment comment) {
+	public List<Comment> filterCanRead(List<Comment> comments) {
+		List<Comment> canRead = new ArrayList<>();
 		User user = userService.getCurrentUser();
-		if (user.admin)
-			return true;
+		Map<String, Role> userRoles = new HashMap<>();
+		for (Comment comment : comments) {
+			if (user.admin || comment.user.equals(user)) {
+				canRead.add(comment);
+				continue;
+			}
+			if (!canRead(comment.repositoryPath))
+				continue;
+			if (!comment.released)
+				continue;
+			if (comment.approvedBy == null && !canManageCommentsIn(comment.repositoryPath))
+				continue;
+			if ((comment.replyTo != null && comment.replyTo.user.equals(user)) || comment.restrictedToRole == null) {
+				canRead.add(comment);
+				continue;
+			}
+			Role role = userRoles.get(comment.repositoryPath);
+			if (role == null) {
+				role = membershipService.getRole(user, comment.repositoryPath);
+				userRoles.put(comment.repositoryPath, role);
+			}
+			if (comment.restrictedToRole.ordinal() > role.ordinal())
+				continue;
+			canRead.add(comment);
+		}
+		return canRead;
+	}
+
+	public boolean canManage(Comment comment) {
+		User user = userService.getCurrentUser();
 		if (comment.user.equals(user))
 			return true;
-		if (!canRead(comment.repositoryPath))
-			return false;
-		if (comment.restrictedToRole != null) {
-			Role role = membershipService.getRole(user, comment.repositoryPath);
-			return comment.restrictedToRole.ordinal() <= role.ordinal();
-		}
-		return true;
+		return canManageCommentsIn(comment.repositoryPath);
 	}
 
-	public boolean canCommentIn(String repositoryPath) {
+	public boolean canManageCommentsIn(String repositoryPath) {
 		User user = userService.getCurrentUser();
 		if (user.admin)
 			return true;
 		if (!canRead(repositoryPath))
 			return false;
-		Role role = membershipService.getRole(user, repositoryPath);
-		return role.getPermissions().contains(Permission.COMMENT);
+		return hasPermissionTo(user, Permission.MANAGE_COMMENTS, repositoryPath);
+	}
+
+	public boolean canCommentIn(String repositoryPath) {
+		return hasPermissionTo(Permission.COMMENT, repositoryPath);
+	}
+
+	public boolean canReviewIn(User user, String repositoryPath) {
+		return hasPermissionTo(user, Permission.REVIEW, repositoryPath);
+	}
+
+	public boolean canManageTaskIn(String repositoryPath) {
+		return hasPermissionTo(Permission.MANAGE_TASK, repositoryPath);
+	}
+
+	private boolean hasPermissionTo(Permission permission, String groupOrRepo) {
+		User user = userService.getCurrentUser();
+		return hasPermissionTo(user, permission, groupOrRepo);
+	}
+
+	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo) {
+		return hasPermissionTo(user, permission, groupOrRepo, false);
+	}
+
+	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo, boolean ignoreAdmin) {
+		if (!ignoreAdmin && user.admin)
+			return true;
+		if (isOwnNamespace(user, groupOrRepo))
+			return true;
+		Role role = membershipService.getRole(user, groupOrRepo);
+		return role.getPermissions().contains(permission);
 	}
 
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
@@ -120,6 +156,13 @@ public class AccessService {
 
 	private boolean isGroup(String groupOrRepo) {
 		return !groupOrRepo.contains(File.separator);
+	}
+
+	private boolean isPublic(String groupOrRepo) {
+		File dir = new File(repositoryPath, groupOrRepo);
+		if (new File(dir, ".public").exists())
+			return true;
+		return false;
 	}
 
 }

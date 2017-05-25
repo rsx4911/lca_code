@@ -83,7 +83,7 @@ public class RepositoryService {
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
 		Repository repo = get(group, name);
-		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER);
+		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER, true);
 		return repo;
 	}
 
@@ -120,6 +120,20 @@ public class RepositoryService {
 				membershipService.addMembership(membership.user, toRepo.toId(), membership.role);
 	}
 
+	public boolean setPublic(Repository repo, boolean value) {
+		File file = new File(repo.repoDir, ".public");
+		if (value && !file.exists()) {
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				log.error("Error making repository public", e);
+			}
+		} else if (file.exists()) {
+			file.delete();
+		}
+		return file.exists();
+	}
+
 	public boolean cloneContents(Repository from, Repository to, List<Commit> commits) {
 		if (!accessService.canWrite(to.group))
 			throw new UnauthorizedAccessException(to.group, "WRITE");
@@ -143,13 +157,15 @@ public class RepositoryService {
 		if (!modelDir.exists())
 			return;
 		Set<String> commitIds = toIds(commits);
-		for (File datasetDir : modelDir.listFiles()) {
-			for (File file : datasetDir.listFiles()) {
-				String commitId = file.getName().substring(0, file.getName().indexOf(".json"));
-				if (!commitIds.contains(commitId))
-					continue;
-				File copy = to.getDatasetFile(type, datasetDir.getName(), commitId, true);
-				Files.copy(file, copy);
+		for (File subDir : modelDir.listFiles()) {
+			for (File datasetDir : subDir.listFiles()) {
+				for (File file : datasetDir.listFiles()) {
+					String commitId = file.getName().substring(0, file.getName().indexOf(".json"));
+					if (!commitIds.contains(commitId))
+						continue;
+					File copy = to.getDatasetFile(type, datasetDir.getName(), commitId, true);
+					Files.copy(file, copy);
+				}
 			}
 		}
 	}
@@ -160,19 +176,21 @@ public class RepositoryService {
 		if (!binModelDir.exists())
 			return;
 		Set<String> commitIds = toIds(commits);
-		for (File datasetDir : binModelDir.listFiles()) {
-			for (File dir : datasetDir.listFiles()) {
-				String commitId = dir.getName();
-				if (!commitIds.contains(commitId))
-					continue;
-				File[] files = dir.listFiles();
-				if (files == null || files.length == 0)
-					continue;
-				File copyDir = to.getBinDir(type, datasetDir.getName(), commitId, true);
-				for (File file : files) {
-					File copy = new File(copyDir, file.getName());
-					copy.createNewFile();
-					Files.copy(file, copy);
+		for (File subDir : binModelDir.listFiles()) {
+			for (File datasetDir : subDir.listFiles()) {
+				for (File dir : datasetDir.listFiles()) {
+					String commitId = dir.getName();
+					if (!commitIds.contains(commitId))
+						continue;
+					File[] files = dir.listFiles();
+					if (files == null || files.length == 0)
+						continue;
+					File copyDir = to.getBinDir(type, datasetDir.getName(), commitId, true);
+					for (File file : files) {
+						File copy = new File(copyDir, file.getName());
+						copy.createNewFile();
+						Files.copy(file, copy);
+					}
 				}
 			}
 		}
@@ -250,6 +268,8 @@ public class RepositoryService {
 
 	public PagedResult<Repository> getAll(int page, String filter, boolean adminArea) {
 		List<Repository> accessible = getAll(adminArea);
+		if (page == 0)
+			return new PagedResult<>(accessible);
 		return PagedResult.pagedAndFiltered(page, filter, accessible, (repo) -> {
 			return repo.toId();
 		});
@@ -312,4 +332,7 @@ public class RepositoryService {
 			avatarFile.delete();
 	}
 
+	public File getBinDir(Repository repo, ModelType type, String refId, String commitId) {
+		return repo.getBinDir(type, refId, commitId, false);
+	}
 }

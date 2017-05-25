@@ -80,14 +80,14 @@ define([
 				, 'usermenu'
 
 			increaseCounter: (val = 1) ->
-				counter = @$ '#message-count' 
-				count = parseInt(counter.text()) + val
+				counter = @$ '.message-count' 
+				count = parseInt($(counter[0]).text()) + val
 				counter.html count
 				if count
-					@$('#message-icon').addClass 'new-messages' 
+					@$('.message-icon').addClass 'new-messages' 
 					counter.removeClass 'hidden'
 				else
-					@$('#message-icon').removeClass 'new-messages' 
+					@$('.message-icon').removeClass 'new-messages' 
 					counter.addClass 'hidden'
 				title = $('title').text()
 				if title.indexOf('(') is 0
@@ -96,6 +96,10 @@ define([
 					title = "(#{count}) #{title}"
 				$('title').html title
 
+			updateNoOfTasks: (noOfTasks) ->
+				@$('.task-count').removeClass 'hidden'
+				@$('.task-count').html noOfTasks
+
 			render: (renderOptions) ->
 				@$el.html template 
 					isAdmin: currentUser.isAdmin()
@@ -103,6 +107,7 @@ define([
 					websocketSupported: (window.WebSocket isnt undefined)
 					debugMode: LocalStorage.getValue('debugMode')
 					reviewMode: LocalStorage.getValue('reviewMode')
+					activeTasks: currentUser.get('noOfTasks')
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 

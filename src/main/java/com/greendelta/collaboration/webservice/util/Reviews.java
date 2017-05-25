@@ -1,0 +1,16 @@
+package com.greendelta.collaboration.webservice.util;
+
+import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.util.ObjectMap;
+
+public class Reviews {
+
+	private Reviews() {
+		// only static access
+	}
+
+	public static ObjectMap map(Review review) {
+		return Tasks.map(review);
+	}
+
+}

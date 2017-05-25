@@ -1,15 +1,18 @@
 define([
 				'backbone'
+				'cs!models/CurrentUser'
 			]
 
-	(Backbone) ->
+	(Backbone, currentUser) ->
 
 		class Repository extends Backbone.Model
 
 			url: () ->
 				group = @get 'group'
 				name = @get 'name'
-				return "ws/repository/#{group}/#{name}"
+				if currentUser.isLoggedIn()
+					return "ws/repository/#{group}/#{name}"
+				return "ws/public/repository/#{group}/#{name}"
 
 			isNew: () ->
 				isNew = @get 'isNew'

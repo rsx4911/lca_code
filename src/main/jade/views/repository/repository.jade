@@ -11,5 +11,6 @@ include ../mixins/avatar-box.jade
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
+	+checkbox('publicAccess', 'This repository can be accessed publicly')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)

@@ -3,15 +3,21 @@ package com.greendelta.collaboration.model;
 public enum Permission {
 
 	READ,
-	
-	COMMENT,
-	
+		
 	WRITE,
+
+	COMMENT,
+
+	REVIEW,
 
 	MOVE,
 
 	DELETE,
 	
-	EDIT_MEMBERS;
+	EDIT_MEMBERS,
+
+	MANAGE_COMMENTS,
+
+	MANAGE_TASK;
 		
 }

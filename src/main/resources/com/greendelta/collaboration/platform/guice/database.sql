@@ -41,7 +41,7 @@ CREATE TABLE messages(
 	id BIGINT NOT NULL,
 	f_from_user BIGINT NOT NULL,
 	f_to_user BIGINT NOT NULL,
-	f_team BIGINT NOT NULL,
+	f_team BIGINT,
 	date TIMESTAMP NOT NULL,
 	text VARCHAR(4000) NOT NULL,
 	read_date TIMESTAMP,
@@ -68,7 +68,42 @@ CREATE TABLE comments(
 	date TIMESTAMP NOT NULL,
 	text VARCHAR(4000),
 	restricted_to_role VARCHAR(255),
+	released BOOLEAN NOT NULL DEFAULT false,
+	f_approved_by BIGINT,
 	f_reply_to BIGINT
+);
+
+CREATE TABLE task_assignments(
+	id BIGINT NOT NULL,
+	comment VARCHAR(4000),
+	start_date TIMESTAMP NOT NULL,
+	end_date TIMESTAMP,
+	iteration BIGINT NOT NULL DEFAULT 1,
+	canceled BOOLEAN NOT NULL DEFAULT false,
+	f_assigned_to BIGINT NOT NULL,
+	f_ended_by BIGINT,
+	f_task BIGINT
+);
+
+CREATE TABLE reviews(
+	id BIGINT NOT NULL,
+	name VARCHAR(255),
+	repository_path VARCHAR(255) NOT NULL,
+	state VARCHAR(255) NOT NULL,
+	comment VARCHAR(4000),
+	start_date TIMESTAMP NOT NULL,
+	end_date TIMESTAMP,
+	f_initiator BIGINT NOT NULL
+);
+
+CREATE TABLE review_references(
+	id BIGINT NOT NULL,
+	ds_type VARCHAR(255) NOT NULL,
+	ds_ref_id VARCHAR(36) NOT NULL,
+	ds_commit_id VARCHAR(36) NOT NULL,
+	ds_name VARCHAR(255) NOT NULL,
+	f_reviewer BIGINT,
+	f_review BIGINT
 );
 
 INSERT INTO version VALUES (2);

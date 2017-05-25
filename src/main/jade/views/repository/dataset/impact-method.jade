@@ -59,11 +59,11 @@ mixin nw-factor-table()
 					#nwsets.tab-pane(role='tabpanel')
 						if dataset.nwSets && dataset.nwSets.length
 							+nw-set-selection
-						| Reference unit: 
-						span#nw-set-unit(data-path='weightedScoreUnit')
-						if dataset.nwSets && dataset.nwSets.length
-							hr
-							+nw-factor-table
+							| Reference unit: 
+							span#nw-set-unit(data-path='weightedScoreUnit')
+							if dataset.nwSets && dataset.nwSets.length
+								hr
+								+nw-factor-table
 				if (dataset.parameters && dataset.parameters.length) || reviewMode
 					#parameters.tab-pane(role='tabpanel')
 						if dataset.parameters && dataset.parameters.length
