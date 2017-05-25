@@ -137,13 +137,13 @@ public class BrowseResource {
 				continue;
 			Map<String, Object> flow = (Map<String, Object>) exchange.get("flow");
 			String refId = (String) flow.get("@id");
-
+			String name = (String) flow.get("name");
 			// last element in path is the flow name itself
 			String flowCommitId = getLastCommitId(repo, ModelType.FLOW, refId, commitId);
 			String fullPath = getFullPath(repo, ModelType.FLOW, refId, flowCommitId);
 			if (!fullPath.contains("/"))
 				continue;
-			fullPath = fullPath.substring(0, fullPath.lastIndexOf("/"));
+			fullPath = fullPath.substring(0, fullPath.length() - name.length() - 1);
 			flow.put("category", fullPath);
 		}
 	}

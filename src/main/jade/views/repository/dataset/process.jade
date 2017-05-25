@@ -1,4 +1,5 @@
 include ./mixins.jade
+include ../../mixins/category-breadcrumb.jade
 
 mixin exchange-row(exchange, index)
 	tr(class=exchange.quantitativeReference?'reference':null)
@@ -6,10 +7,8 @@ mixin exchange-row(exchange, index)
 		td: +ref('exchanges[' + index + '].flow')
 		td 
 			if exchange.flow.category
-				- var path = exchange.flow.category.split('/');
-				| #{path[path.length - 1]}
-				if path.length > 1
-					|  / #{path[path.length - 2]}
+				- var url = baseUrl + 's/Flows';
+				+category-breadcrumb(url, exchange.flow.category, true)
 		td
 			span(data-path='exchanges[' + index + '].amount')=exchange.amount
 			span(data-path='exchanges[' + index + '].unit')
