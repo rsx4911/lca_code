@@ -18,7 +18,7 @@ public class AccessService {
 	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
-	
+
 	@Inject
 	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
 			MembershipService membershipService) {
@@ -39,7 +39,7 @@ public class AccessService {
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
-		if (isGroup(groupOrRepo))
+		if (isGroup(groupOrRepo)) 
 			if (membershipService.hasMembershipInAnyRepoInGroup(user, groupOrRepo))
 				return true;
 		return hasPermissionTo(user, Permission.READ, groupOrRepo, ignoreAdmin);
@@ -47,6 +47,10 @@ public class AccessService {
 
 	public boolean canWrite(String groupOrRepo) {
 		return hasPermissionTo(Permission.WRITE, groupOrRepo);
+	}
+
+	public boolean canSetPublic(String groupOrRepo) {
+		return hasPermissionTo(Permission.SET_PUBLIC, groupOrRepo);
 	}
 
 	public boolean canMove(String repository) {
@@ -160,8 +164,16 @@ public class AccessService {
 
 	private boolean isPublic(String groupOrRepo) {
 		File dir = new File(repositoryPath, groupOrRepo);
-		if (new File(dir, ".public").exists())
-			return true;
+		if (!isGroup(groupOrRepo)) {
+			if (new File(dir, ".public").exists())
+				return true;
+			return false;
+		}
+		if (!dir.isDirectory() || dir.listFiles() == null)
+			return false;
+		for (File child : dir.listFiles())
+			if (new File(child, ".public").exists())
+				return true;
 		return false;
 	}
 

@@ -121,6 +121,8 @@ public class RepositoryService {
 	}
 
 	public boolean setPublic(Repository repo, boolean value) {
+		if (!accessService.canWrite(repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "SET_PUBLIC");
 		File file = new File(repo.repoDir, ".public");
 		if (value && !file.exists()) {
 			try {

@@ -72,10 +72,17 @@ public class ClientErrorResource {
 			} else {
 				ref = part.trim();
 			}
-			ref = ref.substring(0, ref.lastIndexOf(":"));
-			String file = ref.substring(0, ref.lastIndexOf(":"));
-			String linePart = ref.substring(ref.lastIndexOf(":") + 1);
-			int line = Integer.parseInt(linePart);
+			if (ref.indexOf(':') != -1) {
+				ref = ref.substring(0, ref.lastIndexOf(":"));
+			}
+			int index = ref.lastIndexOf(":");
+			int line = 0;
+			String file = null;
+			if (index != -1) {
+				file = ref.substring(0, index);
+				String linePart = ref.substring(index + 1);
+				line = Integer.parseInt(linePart);
+			}
 			stackTrace[i - 1] = new StackTraceElement(clazz, method, file, line);
 		}
 		t.setStackTrace(stackTrace);

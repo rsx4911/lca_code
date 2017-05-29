@@ -18,6 +18,8 @@ public enum Permission {
 
 	MANAGE_COMMENTS,
 
-	MANAGE_TASK;
+	MANAGE_TASK,
+	
+	SET_PUBLIC;
 		
 }

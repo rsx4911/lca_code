@@ -135,11 +135,13 @@ public class RepositoryResource {
 	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
-		mappedRepo.put("userCanDelete", accessService.canDelete(repo.toId()));
-		mappedRepo.put("userCanWrite", accessService.canWrite(repo.toId()));
-		mappedRepo.put("userCanMove", accessService.canMove(repo.toId()));
+		String id = repo.toId();
+		mappedRepo.put("userCanDelete", accessService.canDelete(id));
+		mappedRepo.put("userCanWrite", accessService.canWrite(id));
+		mappedRepo.put("userCanMove", accessService.canMove(id));
 		mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
-		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(repo.toId()));
+		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(id));
+		mappedRepo.put("userCanSetPublic", accessService.canSetPublic(id));
 		return Respond.ok(mappedRepo);
 	}
 
