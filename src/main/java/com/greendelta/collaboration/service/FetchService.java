@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -95,7 +94,6 @@ public class FetchService {
 
 	private StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits,
 			boolean skipEmpty) {
-		Collections.reverse(commits);
 		Set<Dataset> empty = new HashSet<>();
 		Set<Dataset> datasets = new HashSet<>();
 		Map<Dataset, String> dsToCommit = new HashMap<>();
@@ -120,7 +118,7 @@ public class FetchService {
 			@Override
 			public void write(OutputStream output) throws IOException {
 				int read = -1;
-				String commitId = commits.get(0).id;
+				String commitId = commits.get(commits.size() - 1).id;
 				try (FetchStream stream = new FetchStream(repo, commitId, datasets, dsToCommit)) {
 					while ((read = stream.read()) != -1) {
 						output.write(read);

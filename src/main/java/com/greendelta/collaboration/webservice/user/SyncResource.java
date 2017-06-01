@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,7 +58,7 @@ public class SyncResource {
 	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
 		List<FetchRequestData> result = new ArrayList<>();
 		Set<Dataset> alreadyAdded = new HashSet<>();
-		Collections.reverse(commits);
+//		Collections.reverse(commits);
 		for (Commit commit : commits) {
 			List<Dataset> descriptors = historyService.getReferences(repo, commit.id);
 			for (Dataset descriptor : descriptors) {
