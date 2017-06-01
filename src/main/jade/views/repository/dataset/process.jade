@@ -8,7 +8,7 @@ mixin exchange-row(exchange, index)
 		td 
 			if exchange.flow.category
 				- var url = baseUrl + 's/Flows';
-				+category-breadcrumb(url, exchange.flow.category, true)
+				+category-breadcrumb(url, exchange.flow.category, true, 2)
 		td
 			span(data-path='exchanges[' + index + '].amount')=exchange.amount
 			span(data-path='exchanges[' + index + '].unit')
