@@ -92,9 +92,8 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}")
 	public Response update(Review review) {
-		Response invalid = checkValidity(review);
-		if (invalid != null)
-			return invalid;
+		if (Strings.isNullOrEmpty(review.name))
+			return Respond.invalid("name", "Missing input: Name");
 		service.merge(review);
 		return createResponse();
 	}
