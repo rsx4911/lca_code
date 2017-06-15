@@ -32,7 +32,7 @@ mixin review-info()
 				if review
 					+hidden('id', review.id)
 				+hidden('type', 'REVIEW')
-				+input('name', 'Name')
+				+input('name', 'Review Task Name')
 				if !review
 					+select('repositoryPath', 'Repository', repositories)
 				else
