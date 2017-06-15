@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.user;
+package com.greendelta.collaboration.webservice;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,9 +25,8 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.webservice.Respond;
 
-@Path("sync")
+@Path("public/sync")
 public class SyncResource {
 
 	private final FetchService fetchService;
@@ -58,7 +57,6 @@ public class SyncResource {
 	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
 		List<FetchRequestData> result = new ArrayList<>();
 		Set<Dataset> alreadyAdded = new HashSet<>();
-//		Collections.reverse(commits);
 		for (Commit commit : commits) {
 			List<Dataset> descriptors = historyService.getReferences(repo, commit.id);
 			for (Dataset descriptor : descriptors) {
@@ -82,7 +80,7 @@ public class SyncResource {
 		List<Commit> commits = getCommits(repo, untilCommitId);
 		if (commits.isEmpty())
 			return Respond.noContent();
-		StreamingOutput data = fetchService.prepareData(repo, requested, commits);
+		StreamingOutput data = getData(repo, commits, requested);
 		if (data == null)
 			return Respond.noContent();
 		return Respond.ok(data);
@@ -92,6 +90,12 @@ public class SyncResource {
 		if (untilCommitId.equals("null"))
 			return historyService.getCommits(repo);
 		return historyService.getCommitsUntil(repo, untilCommitId);
+	}
+
+	private StreamingOutput getData(Repository repo, List<Commit> commits, List<FileReference> requested) {
+		if (requested == null || requested.isEmpty())
+			return fetchService.prepareData(repo, commits);
+		return fetchService.prepareData(repo, requested, commits);
 	}
 
 }
