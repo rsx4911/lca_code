@@ -62,6 +62,8 @@ define([
 					flowMap[e.flow.id] = e.flow
 			if dataset.allocationFactors?.length
 				for factor, index in dataset.allocationFactors
+					unless factor.product?.id
+						continue
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
 						f = nonCausalAllocationFactors[factor.product.id]
 						unless f
@@ -72,6 +74,8 @@ define([
 						else if factor.allocationType is 'ECONOMIC_ALLOCATION'
 							f.economic = {value: factor.value, index: index}
 					else if factor.allocationType is 'CAUSAL_ALLOCATION'
+						unless factor.exchange?.id 
+							continue
 						f = causalAllocationFactors[factor.exchange.id]
 						unless f
 							f = {exchange: exchangeMap[factor.exchange.id], products: []}
