@@ -45,4 +45,57 @@ define([
 				error: (response) -> 
 					Forms.handleError 'avatar-form', response
 
+		initCropper: (type, id) ->
+			at = @
+			$('#avatar').on 'change', () ->
+				if @files and @files[0]
+					reader = new FileReader()
+					reader.onload = (e) ->
+						at.openCropper e.target.result, type, id
+					reader.readAsDataURL @files[0]
+
+		openCropper: (data, type, id) ->
+			Layers.showMessageInLayer
+				title: 'Avatar selection'
+				body: '<img class="image-crop" src="' + data + '">'
+				buttons: [
+					{text: 'Cancel', callback: () => @resetForm()}
+					{text: 'Save', className: 'btn-success', callback: () => @onSave(type, id)}
+				]
+			@cropper = $('.image-crop').cropper 
+				aspectRatio: 1
+				dragMode: 'move'
+
+		onSave: (type, id) ->
+			formData = @toFormData @cropper.cropper('getCroppedCanvas')
+			Layers.closeActive()
+			@uploadData type, id, formData
+
+		resetForm: () ->
+			$('form#avatar-form')[0].reset()
+			Layers.closeActive()
+
+		toFormData: (canvas) ->
+			url = canvas.toDataURL('image/jpeg', 0.05)
+			data = url.substring(url.indexOf(';') + 8)
+			formData = new FormData()
+			formData.append 'file', @base64toBlob data
+			return formData
+
+		base64toBlob: (data, contentType = 'image/jpeg', sliceSize = 512) ->
+			byteCharacters = atob data
+			byteArrays = []
+			offset = 0
+			while offset < byteCharacters.length
+				slice = byteCharacters.slice offset, offset + sliceSize
+				byteNumbers = new Array slice.length
+				i = 0
+				while i < slice.length
+					byteNumbers[i] = slice.charCodeAt i++
+				byteArray = new Uint8Array byteNumbers
+				byteArrays.push byteArray
+				offset += sliceSize
+			return new Blob byteArrays, {type: contentType}
+
+
 )

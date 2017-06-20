@@ -40,6 +40,7 @@ define([
 						group: @group.toJSON()
 						repositories: repositories.data
 					Renderer.render @, renderOptions
+					Avatar.initCropper 'group', @group.get('name')
 
 			deleteGroup: (event) ->
 				name = @group.get 'name'
