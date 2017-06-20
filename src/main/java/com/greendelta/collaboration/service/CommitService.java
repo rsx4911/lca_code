@@ -80,7 +80,7 @@ public class CommitService {
 		long timestamp = Calendar.getInstance().getTimeInMillis();
 		Commit commit = new Commit();
 		commit.id = commitId;
-		commit.message = commitMessage;
+		commit.message = commitMessage.replace("\r\n", " ").replace("\n", " ").replace("\r", " ");
 		commit.user = username;
 		commit.timestamp = timestamp;
 		File historyFile = repo.getHistoryFile(true);
