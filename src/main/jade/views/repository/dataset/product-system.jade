@@ -8,6 +8,11 @@ include ./mixins.jade
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
 					a(href='#overview' aria-controls='overview' role='tab' data-toggle='tab') Overview
+				if dataset.processLinks && dataset.processLinks.length
+					li(role='presentation')
+						a(href='#process-tree' aria-controls='process-tree' role='tab' data-toggle='tab') Supply chain
+					li(role='presentation')
+						a(href='#process-graph' aria-controls='process-graph' role='tab' data-toggle='tab') Graph
 				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 					li(role='presentation') 
 						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameterRedefs')=getLabel('parameterRedefs')
@@ -22,6 +27,10 @@ include ./mixins.jade
 							if dataset.targetUnit || reviewMode
 								+field-row('targetUnit.name', true, true)
 							+field-row('targetAmount', true, true)
+				if dataset.processLinks && dataset.processLinks.length
+					#process-tree.tab-pane(role='tabpanel')
+					#process-graph.tab-pane(role='tabpanel')
+						iframe(src='graph/graph.html' width='100%' height='500px')
 				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 					#parameters.tab-pane(role='tabpanel')
 						if dataset.parameterRedefs && dataset.parameterRedefs.length

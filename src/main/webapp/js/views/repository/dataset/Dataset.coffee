@@ -13,6 +13,7 @@ define([
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DataQualityLayer'
+				'cs!views/repository/dataset/Graph'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
@@ -34,7 +35,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Graph, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -91,14 +92,14 @@ define([
 				return "#{group}/#{name}/#{type}/#{refId}"
 
 			downloadData: (event) ->
-				@$('iframe').remove()
+				@$('iframe#download-frame').remove()
 				target = $ Events.target event
 				format = target.attr('data-format') or 'json'
 				$.ajax
 					type: 'GET'
 					url: @getDownloadUrl(format)
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
 
 			className: 'repository-dataset'
 
@@ -118,6 +119,13 @@ define([
 					refId = @refId
 					commitId = $(Events.target(event)).val()
 					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+				'click [href=#process-graph]': (event) ->
+					setTimeout () =>
+						frameWindow = $('iframe')[0].contentWindow
+						frameWindow.processes = Graph.getModel @dataset 
+						frameWindow.modelIds = Object.keys(frameWindow.processes)
+						frameWindow.render('2d', 15)
+					, 100
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options
@@ -127,6 +135,7 @@ define([
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				@loadDataset (dataset) =>
+					@dataset = dataset
 					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
 					if @commitId isnt dataset.commitId
 						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
