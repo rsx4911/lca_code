@@ -84,8 +84,8 @@ public class HistoryService {
 	}
 
 	public boolean isLastCommit(DatasetIndexEntry entry) {
-		String group = entry.repositoryId.split(File.separator)[0];
-		String name = entry.repositoryId.split(File.separator)[1];
+		String group = entry.repositoryId.substring(0, entry.repositoryId.indexOf("/"));
+		String name = entry.repositoryId.substring(entry.repositoryId.indexOf("/") + 1);
 		Repository repo = repoService.get(group, name);
 		Commit commit = getLastCommit(repo, entry.type, entry.refId);
 		if (commit == null)

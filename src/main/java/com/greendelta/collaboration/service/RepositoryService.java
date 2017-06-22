@@ -260,7 +260,7 @@ public class RepositoryService {
 		if (!userDirectory.exists())
 			return;
 		for (File repoDir : userDirectory.listFiles())
-			membershipService.removeMemberships(userDirectory.getName() + File.separator + repoDir.getName());
+			membershipService.removeMemberships(userDirectory.getName() + "/" + repoDir.getName());
 		Directories.delete(userDirectory);
 	}
 

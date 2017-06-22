@@ -44,8 +44,8 @@ public class LibraryService {
 	}
 
 	private void initRefIds(String libraryName) {
-		String path = libraryPath + File.separator + libraryName + ".txt";
-		try (InputStream s = new FileInputStream(path);
+		File file = getFile(libraryName);
+		try (InputStream s = new FileInputStream(file);
 				InputStreamReader r = new InputStreamReader(s);
 				BufferedReader reader = new BufferedReader(r)) {
 			Set<String> ids = new HashSet<>();
@@ -76,7 +76,7 @@ public class LibraryService {
 	public void putLibrary(String name, Collection<String> refIds) {
 		removeLibrary(name);
 		this.refIds.put(name, new HashSet<>(refIds));
-		File file = new File(libraryPath + File.separator + name + ".txt");
+		File file = getFile(name);
 		try {
 			file.createNewFile();
 			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
@@ -93,7 +93,7 @@ public class LibraryService {
 
 	public void removeLibrary(String name) {
 		refIds.remove(name);
-		File file = new File(libraryPath + File.separator + name + ".txt");
+		File file = getFile(name);
 		if (!file.exists())
 			return;
 		file.delete();
@@ -103,4 +103,8 @@ public class LibraryService {
 		return refIds.get(library);
 	}
 
+	private File getFile(String libraryName) {
+		return new File(libraryPath + File.separator + libraryName + ".txt");
+	}
+	
 }

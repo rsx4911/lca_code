@@ -36,7 +36,7 @@ public class Repository {
 	private Repository(String root, String group, String name) {
 		this.group = group;
 		this.name = name;
-		String path = root + File.separator + toId();
+		String path = root + File.separator + group + File.separator + name;
 		repoDir = new File(path);
 		if (repoDir.exists()) {
 			publicAccess = new File(repoDir, ".public").exists();
@@ -50,7 +50,7 @@ public class Repository {
 	}
 
 	public static String toId(String group, String name) {
-		return group + File.separator + name;
+		return group + "/" + name;
 	}
 
 	public String getSchemaVersion() {
