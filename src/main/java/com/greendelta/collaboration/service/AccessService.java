@@ -154,12 +154,12 @@ public class AccessService {
 	private boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equalsIgnoreCase(user.username);
-		String group = groupOrRepo.substring(0, groupOrRepo.indexOf(File.separator));
+		String group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
 		return group.equalsIgnoreCase(user.username);
 	}
 
 	private boolean isGroup(String groupOrRepo) {
-		return !groupOrRepo.contains(File.separator);
+		return !groupOrRepo.contains("/");
 	}
 
 	private boolean isPublic(String groupOrRepo) {

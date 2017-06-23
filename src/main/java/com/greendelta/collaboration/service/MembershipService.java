@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -188,8 +187,8 @@ public class MembershipService {
 
 	private Membership getBestMembership(User user, String groupOrRepo) {
 		List<Membership> members = getMemberships(user, groupOrRepo);
-		if (groupOrRepo.contains(File.separator)) {
-			String group = groupOrRepo.substring(0, groupOrRepo.indexOf(File.separator));
+		if (groupOrRepo.contains("/")) {
+			String group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
 			members.addAll(getMemberships(user, group));
 		}
 		if (members.isEmpty())
