@@ -120,6 +120,9 @@ define([
 					commitId = $(Events.target(event)).val()
 					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
 				'click [href=#process-graph]': (event) ->
+					if @graphInitialized
+						return
+					@graphInitialized = true
 					setTimeout () =>
 						frameWindow = $('iframe')[0].contentWindow
 						frameWindow.processes = Graph.getModel @dataset 
