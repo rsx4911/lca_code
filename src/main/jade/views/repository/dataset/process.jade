@@ -65,11 +65,12 @@ mixin non-causal-allocation-table()
 				th=getLabel('allocationFactors.economic')
 		tbody
 			each factor in dataset.nonCausalAllocationFactors
-				tr
-					td
-					td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
-					td(data-path='allocationFactors[' + factor.physical.index + '].value')=factor.physical.value
-					td(data-path='allocationFactors[' + factor.economic.index + '].value')=factor.economic.value
+				if factor.index && factor.physical && factor.economic
+					tr
+						td
+						td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
+						td(data-path='allocationFactors[' + factor.physical.index + '].value')=factor.physical.value
+						td(data-path='allocationFactors[' + factor.economic.index + '].value')=factor.economic.value
 
 mixin causal-allocation-table()
 	h4 Causal allocation
