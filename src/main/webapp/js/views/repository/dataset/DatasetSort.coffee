@@ -65,12 +65,12 @@ define () ->
 		if dataset.causalAllocationFactors
 			order = {}
 			for exchange, i in dataset.exchanges
-				order[exchange.id] = i
+				order[exchange.internalId] = i
 			dataset.causalAllocationFactors.sort (f1, f2) ->
-				return order[f1.exchange.id] - order[f2.exchange.id]
+				return order[f1.exchange.internalId] - order[f2.exchange.internalId]
 			order = {}
 			for exchange, i in dataset.exchanges
-				order[exchange.flow.id] = i
+				order[exchange.internalId] = i
 			for factor in dataset.causalAllocationFactors
 				factor.products.sort (p1, p2) ->
 					return order[p1.product.id] - order[p2.product.id]
