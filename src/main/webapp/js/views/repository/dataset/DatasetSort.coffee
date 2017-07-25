@@ -55,9 +55,6 @@ define () ->
 	allocationFactors: (dataset) ->
 		unless dataset.exchanges
 			return
-		order = {}
-		for exchange, i in dataset.exchanges
-			order[exchange.id] = i
 		if dataset.nonCausalAllocationFactors
 			dataset.nonCausalAllocationFactors.sort (f1, f2) ->
 				if f1.product.name.toLowerCase() < f2.product.name.toLowerCase()
@@ -66,11 +63,17 @@ define () ->
 					return 1
 				return 0
 		if dataset.causalAllocationFactors
+			order = {}
+			for exchange, i in dataset.exchanges
+				order[exchange.id] = i
 			dataset.causalAllocationFactors.sort (f1, f2) ->
 				return order[f1.exchange.id] - order[f2.exchange.id]
-		for factor in dataset.causalAllocationFactors
-			factor.products.sort (p1, p2) ->
-				return order[p1.product.id] - order[p2.product.id]
+			order = {}
+			for exchange, i in dataset.exchanges
+				order[exchange.flow.id] = i
+			for factor in dataset.causalAllocationFactors
+				factor.products.sort (p1, p2) ->
+					return order[p1.product.id] - order[p2.product.id]
 
 	socialAspects: (dataset) ->
 		@sortByName dataset.socialAspects, 'socialIndicator'

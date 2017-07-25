@@ -74,7 +74,9 @@ define([
 						else if factor.allocationType is 'ECONOMIC_ALLOCATION'
 							f.economic = {value: factor.value, index: index}
 					else if factor.allocationType is 'CAUSAL_ALLOCATION'
-						unless factor.exchange?.id 
+						unless factor.exchange?.id
+							continue
+						unless exchangeMap[factor.exchange.id]
 							continue
 						f = causalAllocationFactors[factor.exchange.id]
 						unless f
