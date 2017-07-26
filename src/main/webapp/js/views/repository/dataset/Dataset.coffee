@@ -14,6 +14,7 @@ define([
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DataQualityLayer'
 				'cs!views/repository/dataset/Graph'
+				'cs!views/repository/dataset/Tree'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
@@ -35,7 +36,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Graph, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Graph, Tree, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -129,6 +130,11 @@ define([
 						frameWindow.modelIds = Object.keys(frameWindow.processes)
 						frameWindow.render('2d', 15)
 					, 100
+				'click [href=#process-tree]': (event) ->
+					if @treeInitialized
+						return
+					@treeInitialized = true
+					Tree.init @repository, @dataset, @commitId
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options

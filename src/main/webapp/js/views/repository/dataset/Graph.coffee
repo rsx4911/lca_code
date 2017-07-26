@@ -11,7 +11,6 @@ define () ->
 			return model[process.id]
 		model[process.id] = {id: process.id, name: process.name, incoming: [], outgoing: [], isRef: isRef}
 		for link in dataset.processLinks
-			console.log 1
 			if link.process.id is process.id
 				if $.inArray(link.provider.id, model[process.id].incoming) is -1
 					model[process.id].incoming.push link.provider.id 
