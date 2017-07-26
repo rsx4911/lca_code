@@ -65,7 +65,7 @@ mixin non-causal-allocation-table()
 				th=getLabel('allocationFactors.economic')
 		tbody
 			each factor in dataset.nonCausalAllocationFactors
-				if factor.index && factor.physical && factor.economic
+				if (factor.index || factor.index === 0) && factor.physical && factor.economic
 					tr
 						td
 						td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
@@ -83,11 +83,13 @@ mixin causal-allocation-table()
 					th: +ref('allocationFactors[' + product.index + '].product', 'PRODUCT_FLOW', false, null, true)
 		tbody
 			each factor in dataset.causalAllocationFactors
-				tr
-					td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
-					td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, true)
-					each product in factor.products
-						td(data-path='allocationFactors[' + product.index + '].value')=product.value
+				if factor.exchange && factor.products && factor.products.length && factor.exchange.flow
+					tr
+						td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
+						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, true)
+						each product in factor.products
+							if product.index || product.index === 0
+								td(data-path='allocationFactors[' + product.index + '].value')=product.value
 
 mixin social-aspect-table()
 		table.table.social-aspects

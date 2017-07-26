@@ -58,7 +58,7 @@ define([
 			flowMap = {}
 			if dataset.exchanges
 				for e in dataset.exchanges
-					exchangeMap[e.id] = e
+					exchangeMap[e.internalId] = e
 					flowMap[e.flow.id] = e.flow
 			if dataset.allocationFactors?.length
 				for factor, index in dataset.allocationFactors
@@ -74,19 +74,21 @@ define([
 						else if factor.allocationType is 'ECONOMIC_ALLOCATION'
 							f.economic = {value: factor.value, index: index}
 					else if factor.allocationType is 'CAUSAL_ALLOCATION'
-						unless factor.exchange?.id 
+						unless factor.exchange?.internalId
 							continue
-						f = causalAllocationFactors[factor.exchange.id]
+						unless exchangeMap[factor.exchange.internalId]
+							continue
+						f = causalAllocationFactors[factor.exchange.internalId]
 						unless f
-							f = {exchange: exchangeMap[factor.exchange.id], products: []}
-							causalAllocationFactors[factor.exchange.id] = f
+							f = {exchange: exchangeMap[factor.exchange.internalId], products: []}
+							causalAllocationFactors[factor.exchange.internalId] = f
 						f.products.push {product: flowMap[factor.product.id], value: factor.value, index: index}
 			dataset.nonCausalAllocationFactors = []
 			dataset.causalAllocationFactors = []
 			for key in Object.keys(nonCausalAllocationFactors)
 				dataset.nonCausalAllocationFactors.push nonCausalAllocationFactors[key]
 			for key in Object.keys(causalAllocationFactors)
-				dataset.causalAllocationFactors.push causalAllocationFactors[key]
+				dataset.causalAllocationFactors.push caus
 			Sort.allocationFactors dataset
 
 		prepareParameterRedefs: (dataset) ->
