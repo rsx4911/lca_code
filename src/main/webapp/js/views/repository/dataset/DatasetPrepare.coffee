@@ -88,7 +88,7 @@ define([
 			for key in Object.keys(nonCausalAllocationFactors)
 				dataset.nonCausalAllocationFactors.push nonCausalAllocationFactors[key]
 			for key in Object.keys(causalAllocationFactors)
-				dataset.causalAllocationFactors.push caus
+				dataset.causalAllocationFactors.push causalAllocationFactors[key]
 			Sort.allocationFactors dataset
 
 		prepareParameterRedefs: (dataset) ->
