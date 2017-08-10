@@ -23,11 +23,11 @@ define([
 			className: 'profile-view multi-box-view'
 
 			events:
-				'submit #user-form': (event) -> @saveUser event
-				'change #admin, #settings-canCreateGroups': (event) -> @updateRights()
-				'submit #password-form': (event) -> @savePassword event
-				'click [data-action=delete-user]': (event) -> @deleteUser event
-				'click [data-action=generate-password]': (event) -> @generatePassword()
+				'submit #user-form': 'saveUser'
+				'change #admin, #settings-canCreateGroups': 'updateRights'
+				'submit #password-form': 'savePassword'
+				'click [data-action=delete-user]': 'deleteUser'
+				'click [data-action=generate-password]': 'generatePassword'
 				'click [data-action=show-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication ''
 				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication true
 				'submit #avatar-form': (event) -> 
