@@ -15,9 +15,9 @@ define([
 
 			events: 
 				'click a[href]': (event) -> Events.followLink event
-				'change .checkbox': (event) -> @changeNotificationState event
 				'click .check-all': (event) -> @setGroupState event, true
 				'click .uncheck-all': (event) -> @setGroupState event, false
+				'change .checkbox': 'changeNotificationState'
 
 			render: (renderOptions) ->
 				$.ajax

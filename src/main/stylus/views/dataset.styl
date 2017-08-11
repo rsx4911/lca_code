@@ -37,10 +37,37 @@
 			border-bottom 0
 
 		.nav-tabs > li
-			
+
 			@media(max-width 479px)
 				float none
 			
+			&.maximize-content
+				float right
+
+				a
+					cursor pointer
+					color initial
+					
+					&:hover, &:focus
+						border-color transparent
+						background-color transparent
+
+					&:hover
+						font-size 15px
+						padding-bottom 9px
+						padding-left 14px
+						
+		.tab-pane.modal-content
+			position fixed
+			top 0
+			left 0
+			margin 2% 5% 1% 5%
+			padding 25px
+			z-index 10000
+			width 90%
+			height 90%
+			overflow auto
+    			
 		.title h3:first-child
 			margin-bottom 0
 		

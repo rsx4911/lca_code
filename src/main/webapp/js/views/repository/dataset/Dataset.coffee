@@ -13,6 +13,8 @@ define([
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DataQualityLayer'
+				'cs!views/repository/dataset/Graph'
+				'cs!views/repository/dataset/Tree'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
@@ -34,7 +36,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Graph, Tree, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -91,33 +93,73 @@ define([
 				return "#{group}/#{name}/#{type}/#{refId}"
 
 			downloadData: (event) ->
-				@$('iframe').remove()
+				@$('iframe#download-frame').remove()
 				target = $ Events.target event
 				format = target.attr('data-format') or 'json'
+				Layers.showProgressIndicator 'Collecting<br>data sets'
 				$.ajax
 					type: 'GET'
 					url: @getDownloadUrl(format)
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+						Layers.hideProgressIndicator()
+						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+
+			showDataQuality: (event) ->
+				target = $ Events.target event
+				entry = target.attr 'data-entry'
+				schemaId = target.attr 'data-schema'
+				DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
+
+			switchCommit: (event) ->
+				repo = @repository.toJSON()
+				type = @type
+				refId = @refId
+				commitId = $(Events.target(event)).val()
+				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+
+			initProcessGraph: (event) ->
+				if @graphInitialized
+					return
+				@graphInitialized = true
+				setTimeout () =>
+					frameWindow = $('iframe')[0].contentWindow
+					frameWindow.processes = Graph.getModel @dataset 
+					frameWindow.modelIds = Object.keys(frameWindow.processes)
+					frameWindow.render('2d', 15)
+				, 100
+
+			initProcessTree: (event) ->
+				if @treeInitialized
+					return
+				@treeInitialized = true
+				Tree.init @repository, @dataset, @commitId
+
+			maximizeContent: (event) ->
+				pane = @$('.tab-pane.active')
+				pane.addClass 'modal-content'
+				$('body').append '<div class="modal-backdrop in"></div>'
+				$('.modal-backdrop').on 'click', (event) => @restoreContent event
+
+			restoreContent: (event) ->
+				pane = @$('.tab-pane.active')
+				pane.css 'position', ''
+				pane.css 'top', ''
+				pane.css 'left', ''
+				pane.removeClass 'modal-content'
+				$('.modal-backdrop').remove()
 
 			className: 'repository-dataset'
 
 			events: 
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
-				'click [data-format]': (event) -> @downloadData event
+				'click [data-format]': 'downloadData'
+				'click a[data-action=show-data-quality]': 'showDataQuality'
+				'click [href=#process-graph]': 'initProcessGraph'
+				'click [href=#process-tree]': 'initProcessTree'
+				'click .maximize-content > a': 'maximizeContent'
+				'change #commitId': 'switchCommit'
 				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
 				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
-				'click a[data-action=show-data-quality]': (event) ->
-					target = $ Events.target event
-					entry = target.attr 'data-entry'
-					schemaId = target.attr 'data-schema'
-					DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
-				'change #commitId': (event) -> 
-					repo = @repository.toJSON()
-					type = @type
-					refId = @refId
-					commitId = $(Events.target(event)).val()
-					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options
@@ -127,6 +169,7 @@ define([
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				@loadDataset (dataset) =>
+					@dataset = dataset
 					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
 					if @commitId isnt dataset.commitId
 						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 

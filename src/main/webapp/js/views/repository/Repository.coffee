@@ -22,10 +22,10 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'repository', @repository.get('group') + '/' + @repository.get('name')
-				'change input#publicAccess': (event) -> @togglePublicAccess event
-				'click [data-action=delete-repository]': (event) -> @deleteRepository event
-				'click [data-action=clone-repository]': (event) -> @openCloneLayer event
-				'click [data-action=move-repository]': (event) -> @openMoveLayer event
+				'change input#publicAccess': 'togglePublicAccess'
+				'click [data-action=delete-repository]': 'deleteRepository'
+				'click [data-action=clone-repository]': 'openCloneLayer'
+				'click [data-action=move-repository]': 'openMoveLayer'
 
 			initialize: (options) ->
 				{@repository} = options

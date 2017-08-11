@@ -29,7 +29,7 @@ define([
 				return false
 
 			events:
-				'click [data-action=create-group]': (event) -> @createGroup event
+				'click [data-action=create-group]': 'createGroup'
 
 			initialize: (options) ->
 				@group = new Group()

@@ -42,7 +42,7 @@ define([
 			className: 'repository-view multi-box-view'
 
 			events:
-				'click [data-action=create-repository]': (event) -> @createRepository event
+				'click [data-action=create-repository]': 'createRepository'
 
 			initialize: (options) ->
 				{@groupName} = options

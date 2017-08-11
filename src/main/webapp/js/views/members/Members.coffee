@@ -20,9 +20,9 @@ define([
 
 			events: 
 				'click [data-route]': (event) -> Events.followRoute event
-				'click [data-action=add-members]': (event) -> @showAddMembersLayer event
-				'click [data-action=set-role]': (event) -> @showSetRoleLayer event
-				'click [data-action=remove-member]': (event) -> @removeMember event
+				'click [data-action=add-members]': 'showAddMembersLayer'
+				'click [data-action=set-role]': 'showSetRoleLayer'
+				'click [data-action=remove-member]': 'removeMember'
 
 			showAddMembersLayer: (event) ->
 				type = if @group then 'group' else 'repository'

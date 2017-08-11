@@ -11,7 +11,7 @@ define([
 		class LoginLayer extends Backbone.View
 
 			events: 
-				'submit #login': (event) -> @login event
+				'submit #login': 'login'
 
 			render: (renderOptions) ->
 				@$el.html template()

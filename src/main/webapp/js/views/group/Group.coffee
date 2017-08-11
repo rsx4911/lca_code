@@ -29,7 +29,7 @@ define([
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
-				'click [data-action=delete-group]': (event) -> @deleteGroup event
+				'click [data-action=delete-group]': 'deleteGroup'
 
 			initialize: (options) ->
 				{@group} = options

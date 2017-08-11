@@ -42,8 +42,8 @@ define([
 
 			events: 
 				'click .result a': (event) -> Events.followLink event
-				'click a[data-page]': (event) -> @doPage event
-				'change #type': (event) -> @doFilterType event
+				'click a[data-page]': 'doPage'
+				'change #type': 'doFilterType'
 
 			initialize: (options) ->
 				{@query, @page, @type} = options

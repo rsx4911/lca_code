@@ -36,6 +36,7 @@ html(lang='en')
 		script.
 			$('#year').html(new Date().getFullYear());
 			$('#login').on('submit', function(event) {
+				$('#login-general-message').hide();
 				var data = {username: $('#username').val(), password: $('#password').val()};
 				if ($('#token').is(':visible')) {
 					data.token = $('#token').val();

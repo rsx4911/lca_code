@@ -20,6 +20,7 @@ import com.google.inject.servlet.SessionScoped;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
 import com.greendelta.collaboration.platform.shiro.AuthenticationFilter;
 import com.greendelta.collaboration.platform.shiro.JpaRealm;
+import com.greendelta.collaboration.platform.shiro.RepoAccessFilter;
 import com.greendelta.collaboration.util.Names;
 
 class ShiroModule extends ShiroWebModule {
@@ -27,6 +28,7 @@ class ShiroModule extends ShiroWebModule {
 	private static final Logger log = LoggerFactory.getLogger(ShiroModule.class);
 	private static final Key<RolesAuthorizationFilter> ADMIN_USER = config(ROLES, "admin");
 	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
+	private static final Key<RepoAccessFilter> REPO_ACCESS = Key.get(RepoAccessFilter.class);
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);
@@ -48,8 +50,12 @@ class ShiroModule extends ShiroWebModule {
 		addFilterChain("/sockets/**", LOGGED_IN_USER);
 		for (String userRoute : Names.getUserRoutes())
 			addFilterChain("/" + userRoute + "/**", LOGGED_IN_USER);
-		addFilterChain("/", LOGGED_IN_USER);		
-		addFilterChain("/**", ANON);
+		addFilterChain("/login", ANON);
+		addFilterChain("/imprint", ANON);
+		for (String staticResource : WebappModule.STATIC_RESOURCES)
+			addFilterChain("/" + staticResource + "/**", ANON);
+		addFilterChain("/*", LOGGED_IN_USER); // group urls
+		addFilterChain("/**", REPO_ACCESS); // repository urls
 		log.debug("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
