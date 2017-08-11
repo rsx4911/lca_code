@@ -10,8 +10,6 @@ define([
 			@dataset = dataset
 			@commitId = commitId
 			@nodeCount = {}
-			@providers = {}
-			@putProviders dataset.referenceProcess
 			$('#process-tree-container').jstree 
 				plugins: ['contextmenu', 'sort', 'state']
 				contextmenu: 
@@ -36,24 +34,11 @@ define([
 							element.state = opened: true
 							elements.push element
 						else
-							providers = @providers[@toId(id)]
-							if providers
-								for provider in providers
-									elements.push @toElement provider
+							id = id.substring 0, id.indexOf('@')
+							for link in @dataset.processLinks
+								if link.process.id is id
+									elements.push @toElement link.provider
 						callback elements
-
-		putProviders: (process) ->
-			unless process
-				return
-			if @providers[process.id]
-				return
-			providers = []
-			for link in @dataset.processLinks
-				if link.process.id is process.id
-					providers.push link.provider
-			@providers[process.id] = providers
-			for provider in providers
-				@putProviders provider
 
 		toElement: (process) ->
 			count = @nodeCount[process.id]
@@ -64,7 +49,7 @@ define([
 			element =
 				id: process.id + '@' + count
 				text: process.name
-				children: !!@providers[process.id]?.length
+				children: true # todo
 				icon: "images/model/small/process.png"
 			return element
 

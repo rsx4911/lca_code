@@ -13,6 +13,9 @@ mixin download-dropdown()
 			li: a(href='#' data-format='json') as JSON-LD
 			li: a(href='#' data-format='ilcd') as ILCD
 
+mixin maximize-icon()
+	li.maximize-content: a(href='#'): span.glyphicon.glyphicon-fullscreen
+
 mixin menubar()
 	if !isPublic
 		.header-box

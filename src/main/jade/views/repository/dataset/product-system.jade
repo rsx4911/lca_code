@@ -16,6 +16,7 @@ include ./mixins.jade
 				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 					li(role='presentation') 
 						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameterRedefs')=getLabel('parameterRedefs')
+				+maximize-icon
 			.tab-content
 				#overview.tab-pane.active(role='tabpanel')
 					table.table.no-head
@@ -29,7 +30,6 @@ include ./mixins.jade
 							+field-row('targetAmount', true, true)
 				if dataset.processLinks && dataset.processLinks.length
 					#process-tree.tab-pane(role='tabpanel')
-						#process-tree-search
 						#process-tree-container
 					#process-graph.tab-pane(role='tabpanel')
 						iframe(src='graph/graph.html' width='100%' height='500px')
