@@ -96,45 +96,70 @@ define([
 				@$('iframe#download-frame').remove()
 				target = $ Events.target event
 				format = target.attr('data-format') or 'json'
+				Layers.showProgressIndicator 'Collecting<br>data sets'
 				$.ajax
 					type: 'GET'
 					url: @getDownloadUrl(format)
 					success: (token) =>
+						Layers.hideProgressIndicator()
 						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+
+			showDataQuality: (event) ->
+				target = $ Events.target event
+				entry = target.attr 'data-entry'
+				schemaId = target.attr 'data-schema'
+				DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
+
+			switchCommit: (event) ->
+				repo = @repository.toJSON()
+				type = @type
+				refId = @refId
+				commitId = $(Events.target(event)).val()
+				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+
+			initProcessGraph: (event) ->
+				if @graphInitialized
+					return
+				@graphInitialized = true
+				setTimeout () =>
+					frameWindow = $('iframe')[0].contentWindow
+					frameWindow.processes = Graph.getModel @dataset 
+					frameWindow.modelIds = Object.keys(frameWindow.processes)
+					frameWindow.render('2d', 15)
+				, 100
+
+			initProcessTree: (event) ->
+				if @treeInitialized
+					return
+				@treeInitialized = true
+				Tree.init @repository, @dataset, @commitId
+
+			maximizeContent: (event) ->
+				pane = @$('.tab-pane.active')
+				pane.addClass 'modal-content'
+				$('body').append '<div class="modal-backdrop in"></div>'
+				$('.modal-backdrop').on 'click', (event) => @restoreContent event
+
+			restoreContent: (event) ->
+				pane = @$('.tab-pane.active')
+				pane.css 'position', ''
+				pane.css 'top', ''
+				pane.css 'left', ''
+				pane.removeClass 'modal-content'
+				$('.modal-backdrop').remove()
 
 			className: 'repository-dataset'
 
 			events: 
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
-				'click [data-format]': (event) -> @downloadData event
+				'click [data-format]': 'downloadData'
+				'click a[data-action=show-data-quality]': 'showDataQuality'
+				'click [href=#process-graph]': 'initProcessGraph'
+				'click [href=#process-tree]': 'initProcessTree'
+				'click .maximize-content > a': 'maximizeContent'
+				'change #commitId': 'switchCommit'
 				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
 				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
-				'click a[data-action=show-data-quality]': (event) ->
-					target = $ Events.target event
-					entry = target.attr 'data-entry'
-					schemaId = target.attr 'data-schema'
-					DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
-				'change #commitId': (event) -> 
-					repo = @repository.toJSON()
-					type = @type
-					refId = @refId
-					commitId = $(Events.target(event)).val()
-					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
-				'click [href=#process-graph]': (event) ->
-					if @graphInitialized
-						return
-					@graphInitialized = true
-					setTimeout () =>
-						frameWindow = $('iframe')[0].contentWindow
-						frameWindow.processes = Graph.getModel @dataset 
-						frameWindow.modelIds = Object.keys(frameWindow.processes)
-						frameWindow.render('2d', 15)
-					, 100
-				'click [href=#process-tree]': (event) ->
-					if @treeInitialized
-						return
-					@treeInitialized = true
-					Tree.init @repository, @dataset, @commitId
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options
