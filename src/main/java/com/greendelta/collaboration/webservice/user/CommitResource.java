@@ -74,6 +74,8 @@ public class CommitResource {
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
 		String commitId = service.put(repo, commitData);
+		if (commitId == null)
+			return Respond.error("Error reading commit data");
 		Commit commit = historyService.getCommit(repo, commitId);
 		notificationService.dataCommitted(repo, commit).send();
 		return Respond.created(commitId);
