@@ -13,7 +13,7 @@ import com.greendelta.collaboration.platform.servlet.DefaultServlet;
 
 class WebappModule extends ServletModule {
 
-	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "graph/", "favicon.ico"};
+	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "graph/"};
 	private static final Logger log = LoggerFactory.getLogger(WebappModule.class);
 
 	@Override
