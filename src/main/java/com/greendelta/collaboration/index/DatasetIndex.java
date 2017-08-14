@@ -26,17 +26,16 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
 
 public class DatasetIndex {
 
 	private final static Logger log = LoggerFactory.getLogger(DatasetIndex.class);
 	private HistoryService historyService;
 	final Directory directory;
-	final Repository repo;
+	final String repoId;
 	final File indexDir;
 
-	public DatasetIndex(Repository repo, File indexDirectory) {
+	public DatasetIndex(String repoId, File indexDirectory) {
 		this.indexDir = indexDirectory;
 		Directory directory = null;
 		try {
@@ -45,7 +44,7 @@ public class DatasetIndex {
 			log.error("Error creating dataset indexer", e);
 		}
 		this.directory = directory;
-		this.repo = repo;
+		this.repoId = repoId;
 	}
 
 	public void setHistoryService(HistoryService historyService) {
@@ -56,7 +55,7 @@ public class DatasetIndex {
 		IndexWriter writer = IndexUtil.getWriter(directory, false);
 		try {
 			for (Dataset dataset : datasets)
-				writer.addDocument(ConversionUtil.convert(repo, dataset, commit));
+				writer.addDocument(ConversionUtil.convert(repoId, dataset, commit));
 			writer.close();
 		} catch (IOException e) {
 			log.error("Error indexing dataset identifiers", e);
@@ -69,7 +68,7 @@ public class DatasetIndex {
 			for (Commit commit : commits) {
 				List<DatasetIndexEntry> entries = index.getAll(commit.id);
 				for (DatasetIndexEntry entry : entries) {
-					writer.addDocument(ConversionUtil.convert(entry, repo.toId()));
+					writer.addDocument(ConversionUtil.convert(entry, repoId));
 				}
 			}
 			writer.close();
@@ -272,7 +271,7 @@ public class DatasetIndex {
 		IndexWriter writer = IndexUtil.getWriter(directory, false);
 		try {
 			for (DatasetIndexEntry e : getAll()) {
-				writer.updateDocument(new Term("refId", e.refId), ConversionUtil.convert(e, repo.toId()));
+				writer.updateDocument(new Term("refId", e.refId), ConversionUtil.convert(e, repoId));
 			}
 			writer.close();
 		} catch (IOException e) {
@@ -287,5 +286,5 @@ public class DatasetIndex {
 			log.error("Error closing index directory", e);
 		}
 	}
-
+	
 }

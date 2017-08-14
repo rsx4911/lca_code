@@ -21,7 +21,7 @@ public class RepositoryIndices {
 	public DatasetIndex get(Repository repo) {
 		DatasetIndex index = indices.get(repo.toId());
 		if (index == null) {
-			index = new DatasetIndex(repo, repo.getIndexDir());
+			index = new DatasetIndex(repo.toId(), repo.getIndexDir());
 			indices.put(repo.toId(), index);
 		}
 		index.setHistoryService(historyService);

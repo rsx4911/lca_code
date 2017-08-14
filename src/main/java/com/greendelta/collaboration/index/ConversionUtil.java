@@ -6,7 +6,6 @@ import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.base.Strings;
-import com.greendelta.collaboration.service.Repository;
 
 class ConversionUtil {
 
@@ -27,7 +26,7 @@ class ConversionUtil {
 				categoryRefId, commitId, commitMessage, fullPath, lastUpdate, repositoryId);
 	}
 
-	static Document convert(Repository repo, Dataset dataset, Commit commit) {
+	static Document convert(String repoId, Dataset dataset, Commit commit) {
 		Document document = new Document();
 		IndexUtil.addField(document, "refId", dataset.refId);
 		IndexUtil.addField(document, "commitId", commit.id);
@@ -35,7 +34,7 @@ class ConversionUtil {
 		IndexUtil.addField(document, "categoryRefId", dataset.categoryRefId);
 		IndexUtil.addField(document, "categoryType", dataset.categoryType);
 		IndexUtil.addField(document, "lastUpdate", commit.timestamp);
-		IndexUtil.addField(document, "repositoryId", repo.toId());
+		IndexUtil.addField(document, "repositoryId", repoId);
 		IndexUtil.addTextField(document, "fullPath", dataset.fullPath);
 		IndexUtil.addTextField(document, "name", dataset.name);
 		IndexUtil.addTextField(document, "commitMessage", commit.message);
