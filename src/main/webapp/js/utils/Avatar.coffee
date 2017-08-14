@@ -76,8 +76,12 @@ define([
 			Layers.closeActive()
 
 		toFormData: (canvas) ->
-			url = canvas.toDataURL('image/jpeg', 0.05)
-			data = url.substring(url.indexOf(';') + 8)
+			data = []
+			compression = 1
+			while !data.length or data.length > 256000
+				url = canvas.toDataURL('image/jpeg', compression)
+				data = url.substring(url.indexOf(';') + 8)
+				compression *= 0.95
 			formData = new FormData()
 			formData.append 'file', @base64toBlob data
 			return formData
