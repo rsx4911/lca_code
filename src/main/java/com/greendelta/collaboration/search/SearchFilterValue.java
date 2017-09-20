@@ -1,11 +1,11 @@
 package com.greendelta.collaboration.search;
 
-public class SearchParameterValue {
+public class SearchFilterValue {
 
 	public final String value;
 	public final Type type;
 
-	public SearchParameterValue(String value, Type type) {
+	public SearchFilterValue(String value, Type type) {
 		this.value = value;
 		this.type = type;
 	}

@@ -8,15 +8,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.greendelta.collaboration.search.SearchParameter.Conjunction;
+import com.greendelta.collaboration.search.SearchFilter.Conjunction;
 import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 
 public class SearchQuery {
 
 	public final static int DEFAULT_PAGE_SIZE = 10;
 	private final Set<SearchAggregation> aggregations;
-	private final List<SearchParameter> parameters = new ArrayList<>();
-	private final List<SearchParameter> filters = new ArrayList<>();
+	private final List<SearchFilter> filters = new ArrayList<>();
 	private final Map<String, SearchSorting> sortBy = new HashMap<>();
 	private String query;
 	private int page;
@@ -29,22 +28,17 @@ public class SearchQuery {
 			this.aggregations = new HashSet<>();
 	}
 
-	void addParameter(String name, Set<SearchParameterValue> values, Conjunction type) {
-		SearchParameter parameter = null;
-		for (SearchParameter param : parameters) {
+	void addFilter(String name, Set<SearchFilterValue> values, Conjunction type) {
+		SearchFilter parameter = null;
+		for (SearchFilter param : filters) {
 			if (param.name.equals(name)) {
 				parameter = param;
 				break;
 			}
 		}
 		if (parameter == null)
-			parameters.add(parameter = new SearchParameter(name, type));
+			filters.add(parameter = new SearchFilter(name, type));
 		parameter.addAll(values);
-	}
-
-	void setFilters(List<SearchParameter> filters) {
-		this.filters.clear();
-		this.filters.addAll(filters);
 	}
 
 	void setSortBy(Map<String, SearchSorting> sortBy) {
@@ -60,11 +54,18 @@ public class SearchQuery {
 		return aggregations;
 	}
 
-	public List<SearchParameter> getParameters() {
-		return parameters;
+	public SearchAggregation getAggregation(String name) {
+		for (SearchAggregation aggregation : aggregations)
+			if (aggregation.name.equals(name))
+				return aggregation;
+		return null;
 	}
 
-	public List<SearchParameter> getFilters() {
+	public boolean hasAggregation(String name) {
+		return getAggregation(name) != null;
+	}
+
+	public List<SearchFilter> getFilters() {
 		return filters;
 	}
 
@@ -93,7 +94,8 @@ public class SearchQuery {
 		String s = "{page=" + page + ", ";
 		s += "pageSize=" + pageSize + ", ";
 		s += "query=" + (query != null ? query : "");
-		s += "aggregations=" + joinAggregations() + ", ";
+		s += "aggregations=" + joinFilters(true) + ", ";
+		s += "fitlers=" + joinFilters(false) + ", ";
 		return s + "sortBy=" + joinSortBy() + "}";
 	}
 
@@ -110,10 +112,12 @@ public class SearchQuery {
 		return s + "]";
 	}
 
-	private String joinAggregations() {
+	private String joinFilters(boolean aggregations) {
 		String s = "[";
 		int i = 0;
-		for (SearchParameter value : filters) {
+		for (SearchFilter value : filters) {
+			if (hasAggregation(value.name) != aggregations)
+				continue;
 			s += value.name + "=" + join(value.values);
 			i++;
 			if (i < filters.size()) {
@@ -123,14 +127,14 @@ public class SearchQuery {
 		return s + "]";
 	}
 
-	private String join(Set<SearchParameterValue> list) {
+	private String join(Set<SearchFilterValue> list) {
 		if (list.isEmpty())
 			return "";
 		if (list.size() == 1)
 			return list.iterator().next().value;
 		String s = "[";
 		int i = 0;
-		for (SearchParameterValue value : list) {
+		for (SearchFilterValue value : list) {
 			s += value.value;
 			i++;
 			if (i < list.size()) {

@@ -1,22 +1,21 @@
 package com.greendelta.collaboration.search;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import com.greendelta.collaboration.search.SearchParameter.Conjunction;
-import com.greendelta.collaboration.search.SearchParameterValue.Type;
+import com.greendelta.collaboration.search.SearchFilter.Conjunction;
+import com.greendelta.collaboration.search.SearchFilterValue.Type;
 import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 
 public class SearchQueryBuilder {
 
 	private String query;
-	private Map<String, SearchParameter> filters = new HashMap<>();
 	private int page = 0;
 	private int pageSize = SearchQuery.DEFAULT_PAGE_SIZE;
+	private Map<String, SearchFilter> filters = new HashMap<>();
 	private Set<SearchAggregation> aggregations = new HashSet<>();
 	private Map<String, SearchSorting> sortBy = new HashMap<>();
 
@@ -42,20 +41,29 @@ public class SearchQueryBuilder {
 	public SearchQueryBuilder aggregation(SearchAggregation aggregation, String value) {
 		if (aggregation == null)
 			return this;
-		this.aggregations.add(aggregation);
+		if (!hasAggregation(aggregation.name)) {
+			this.aggregations.add(aggregation);
+		}
 		if (value == null)
 			return this;
-		filter(aggregation.name, value);
+		filter(aggregation.name, value, Type.PHRASE);
 		return this;
 	}
 
-	public SearchQueryBuilder filter(String field, String value) {
+	private boolean hasAggregation(String name) {
+		for (SearchAggregation aggregation : aggregations)
+			if (aggregation.name.equals(name))
+				return true;
+		return false;
+	}
+
+	public SearchQueryBuilder filter(String field, String value, Type type) {
 		if (field == null || value == null)
 			return this;
-		SearchParameter values = this.filters.get(field);
+		SearchFilter values = this.filters.get(field);
 		if (values == null)
-			this.filters.put(field, values = new SearchParameter(field, Conjunction.OR));
-		values.add(new SearchParameterValue(value, Type.PHRASE));
+			this.filters.put(field, values = new SearchFilter(field, Conjunction.OR));
+		values.add(new SearchFilterValue(value, type));
 		return this;
 	}
 
@@ -77,31 +85,31 @@ public class SearchQueryBuilder {
 			searchQuery.setPageSize(pageSize);
 		}
 		if (query != null) {
-			searchQuery.addParameter("_all", split(query), queryConjunctionType);
+			searchQuery.addFilter("_all", split(query), queryConjunctionType);
 			searchQuery.setQuery(query);
 		}
-		searchQuery.setFilters(new ArrayList<>(filters.values()));
+		for (SearchFilter filter : filters.values()) {
+			searchQuery.addFilter(filter.name, filter.values, filter.type);
+		}
 		searchQuery.setSortBy(sortBy);
 		return searchQuery;
 	}
 
-	private static Set<SearchParameterValue> split(String query) {
-		Set<SearchParameterValue> splitted = new HashSet<>();
+	private static Set<SearchFilterValue> split(String query) {
+		Set<SearchFilterValue> splitted = new HashSet<>();
 		StringTokenizer splitter = new StringTokenizer(query, "\"", true);
 		boolean escaped = false;
 		while (splitter.hasMoreTokens()) {
 			String token = splitter.nextToken();
-			if ("\"".equals(token))
+			if ("\"".equals(token)) {
 				escaped = !escaped;
-			else if (escaped)
-				splitted.add(new SearchParameterValue(token, Type.PHRASE));
-			else {
+			} else if (escaped) {
+				splitted.add(new SearchFilterValue(token, Type.PHRASE));
+			} else {
 				token = token.replace("@", " ");
-				for (String word : token.trim().split("\\s+"))
-					if (word.contains("-"))
-						splitted.add(new SearchParameterValue(word, Type.PHRASE));
-					else
-						splitted.add(new SearchParameterValue(word, Type.WILDCART));
+				for (String word : token.trim().split("\\s+")) {
+					splitted.add(new SearchFilterValue(word, Type.PHRASE));
+				}
 			}
 		}
 		return splitted;

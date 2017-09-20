@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.util;
 
+import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 import com.greendelta.collaboration.search.aggregations.TermsAggregation;
 
 public interface Aggregations {
@@ -9,5 +10,7 @@ public interface Aggregations {
 	TermsAggregation CATEGORY_TYPE = new TermsAggregation("Category type", "categoryType");
 	TermsAggregation CATEGORY = new TermsAggregation("Category", "categoryRefId");
 	TermsAggregation REF_ID = new TermsAggregation("Ref id", "refId");
-	
+
+	SearchAggregation[] ALL = new SearchAggregation[] { REPOSITORY, MODEL_TYPE, CATEGORY_TYPE, CATEGORY, REF_ID };
+
 }

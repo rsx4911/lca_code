@@ -11,27 +11,41 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.search.SearchClient;
+import com.greendelta.collaboration.search.SearchFilterValue.Type;
 import com.greendelta.collaboration.search.SearchQuery;
 import com.greendelta.collaboration.search.SearchQueryBuilder;
 import com.greendelta.collaboration.search.SearchResult;
+import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class SearchService {
 
 	private final SearchClient client;
+	private final RepositoryService repoService;
 
 	@Inject
-	public SearchService(SearchClient searchClient) {
+	public SearchService(SearchClient searchClient, RepositoryService repoService) {
 		this.client = searchClient;
+		this.repoService = repoService;
 	}
 
 	public void initializeIndex() {
 		client.initialize();
 	}
 
-	public SearchResult search(SearchQuery query) {
-		return client.search(query);
+	public SearchResult search(String query, int page) {
+		SearchQueryBuilder builder = new SearchQueryBuilder();
+		for (SearchAggregation aggregation : Aggregations.ALL) {
+			builder.aggregation(aggregation);
+		}
+		for (Repository repo : repoService.getAllAccessible()) {
+			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
+		}
+		builder.query(query);
+		builder.page(page);
+		builder.pageSize(SearchQuery.DEFAULT_PAGE_SIZE);
+		return client.search(builder.build());
 	}
 
 	public List<DatasetIndexEntry> getAll(Repository repo) {
@@ -42,15 +56,15 @@ public class SearchService {
 		return getAll(repo, type, null);
 	}
 
-	public List<DatasetIndexEntry> getAll(Repository repo, ModelType type, String filter) {
+	public List<DatasetIndexEntry> getAll(Repository repo, ModelType type, String nameFilter) {
 		SearchQueryBuilder builder = builder(repo);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 		}
-		if (!Strings.isNullOrEmpty(filter)) {
-			builder.query(filter);
+		if (!Strings.isNullOrEmpty(nameFilter)) {
+			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
 		}
-		return parse(search(builder.build()));
+		return parse(client.search(builder.build()));
 	}
 
 	public List<DatasetIndexEntry> getUncategorized(Repository repo, ModelType type, String nameFilter) {
@@ -67,9 +81,9 @@ public class SearchService {
 			builder.aggregation(Aggregations.CATEGORY, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.query(nameFilter);
+			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
 		}
-		return parse(search(builder.build()));
+		return parse(client.search(builder.build()));
 	}
 
 	private List<DatasetIndexEntry> getRootCategories(Repository repo, ModelType type, String nameFilter) {
@@ -80,9 +94,9 @@ public class SearchService {
 			builder.aggregation(Aggregations.CATEGORY, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.query(nameFilter);
+			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
 		}
-		return parse(search(builder.build()));
+		return parse(client.search(builder.build()));
 	}
 
 	public List<DatasetIndexEntry> getForCategory(Repository repo, String id) {
@@ -93,9 +107,9 @@ public class SearchService {
 		SearchQueryBuilder builder = builder(repo)
 				.aggregation(Aggregations.CATEGORY, id);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.query(nameFilter);
+			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
 		}
-		return parse(search(builder.build()));
+		return parse(client.search(builder.build()));
 	}
 
 	private SearchQueryBuilder builder(Repository repo) {
@@ -107,7 +121,7 @@ public class SearchService {
 	public boolean contains(Repository repo, String refId) {
 		SearchQueryBuilder builder = builder(repo)
 				.aggregation(Aggregations.REF_ID, refId);
-		return !search(builder.build()).data.isEmpty();
+		return !client.search(builder.build()).data.isEmpty();
 	}
 
 	public DatasetIndexEntry get(Repository repo, String refId, String commitId) {

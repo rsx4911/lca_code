@@ -3,9 +3,6 @@ package com.greendelta.collaboration.search.elasticsearch;
 import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
 import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -23,10 +20,10 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.greendelta.collaboration.search.SearchParameter;
-import com.greendelta.collaboration.search.SearchParameter.Conjunction;
-import com.greendelta.collaboration.search.SearchParameterValue;
-import com.greendelta.collaboration.search.SearchParameterValue.Type;
+import com.greendelta.collaboration.search.SearchFilter;
+import com.greendelta.collaboration.search.SearchFilter.Conjunction;
+import com.greendelta.collaboration.search.SearchFilterValue;
+import com.greendelta.collaboration.search.SearchFilterValue.Type;
 import com.greendelta.collaboration.search.SearchQuery;
 import com.greendelta.collaboration.search.SearchResult;
 import com.greendelta.collaboration.search.SearchResult.ResultInfo;
@@ -71,46 +68,32 @@ class EsSearch {
 
 	static private void setupQuery(SearchRequestBuilder request, SearchQuery searchQuery) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
-		setupParameters(query, searchQuery.getParameters());
-		setupAggregations(request, searchQuery, query);
+		setupFilters(request, searchQuery, query);
 		if (query.hasClauses())
 			request.setQuery(query);
 		else
 			request.setQuery(QueryBuilders.matchAllQuery());
 	}
 
-	static private void setupParameters(BoolQueryBuilder query, List<SearchParameter> parameters) {
-		for (SearchParameter parameter : parameters) {
-			BoolQueryBuilder q = toQuery(null, parameter);
+	static private void setupFilters(SearchRequestBuilder request, SearchQuery searchQuery, BoolQueryBuilder query) {
+		for (SearchFilter filter : searchQuery.getFilters()) {
+			SearchAggregation aggregation = searchQuery.getAggregation(filter.name);
+			BoolQueryBuilder q = toQuery(filter, aggregation);
 			if (q == null)
 				continue;
 			query.must(q);
-		}
-	}
-
-	static private void setupAggregations(SearchRequestBuilder request, SearchQuery searchQuery, BoolQueryBuilder query) {
-		Map<String, SearchAggregation> aggregations = new HashMap<>();
-		for (SearchAggregation aggregation : searchQuery.getAggregations()) {
-			request.addAggregation(EsAggregations.getBuilder(aggregation));
-			aggregations.put(aggregation.name, aggregation);
-		}
-		for (SearchParameter filter : searchQuery.getFilters()) {
-			SearchAggregation aggregation = aggregations.get(filter.name);
 			if (aggregation == null)
 				continue;
-			BoolQueryBuilder q = toQuery(aggregation, filter);
-			if (q == null)
-				continue;
-			query.must(q);
+			request.addAggregation(EsAggregations.getBuilder(aggregation));
 		}
 	}
 
-	static private BoolQueryBuilder toQuery(SearchAggregation aggregation, SearchParameter parameter) {
+	static private BoolQueryBuilder toQuery(SearchFilter parameter, SearchAggregation aggregation) {
 		if (parameter.values.isEmpty())
 			return null;
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 		boolean isRelevant = false;
-		for (SearchParameterValue value : parameter.values) {
+		for (SearchFilterValue value : parameter.values) {
 			if (value.value.length() < 3)
 				continue;
 			isRelevant = true;

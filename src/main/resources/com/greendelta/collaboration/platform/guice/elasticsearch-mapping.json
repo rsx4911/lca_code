@@ -2,19 +2,40 @@
 	"datasets": {
 		"properties": {
 			"repositoryId": {
-				"type": "keyword"
+				"type": "keyword",
+				"include_in_all": false
 			},
 			"refId": {
-				"type": "keyword"
+				"type": "keyword",
+				"include_in_all": false
 			},
 			"type": {
-				"type": "keyword"
+				"type": "keyword",
+				"include_in_all": false
+			},
+			"name": {
+				type: "text"
 			},
 			"categoryRefId": {
-				"type": "keyword"
+				"type": "keyword",
+				"include_in_all": false
 			},
 			"categoryType": {
-				"type": "keyword"
+				"type": "keyword",
+				"include_in_all": false
+			},
+			"commitId": {
+				"type": "keyword",
+				"include_in_all": false
+			},
+			"commitMessage": {
+				type: "text"
+			},
+			"fullPath": {
+				index: false
+			},
+			"lastUpdate": {
+				index: false
 			}
 		}
 	}
