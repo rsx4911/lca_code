@@ -1,0 +1,21 @@
+{
+	"datasets": {
+		"properties": {
+			"repositoryId": {
+				"type": "keyword"
+			},
+			"refId": {
+				"type": "keyword"
+			},
+			"type": {
+				"type": "keyword"
+			},
+			"categoryRefId": {
+				"type": "keyword"
+			},
+			"categoryType": {
+				"type": "keyword"
+			}
+		}
+	}
+}

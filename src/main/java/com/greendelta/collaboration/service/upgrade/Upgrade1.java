@@ -7,9 +7,9 @@ import org.openlca.core.model.ModelType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SearchService;
 
 public class Upgrade1 implements IUpgrade {
 
@@ -24,8 +24,8 @@ public class Upgrade1 implements IUpgrade {
 	}
 
 	@Override
-	public void run(Repository repo, DatasetIndex repoIndex, GetJson getJson, PutJson putJson) {
-		List<DatasetIndexEntry> entries = repoIndex.getAll(ModelType.PROCESS);
+	public void run(Repository repo, SearchService searchService, GetJson getJson, PutJson putJson) {
+		List<DatasetIndexEntry> entries = searchService.getAll(repo, ModelType.PROCESS);
 		for (DatasetIndexEntry entry : entries) {
 			JsonObject json = getJson.apply(repo, entry);
 			process(json);

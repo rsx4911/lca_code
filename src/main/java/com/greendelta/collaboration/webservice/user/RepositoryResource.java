@@ -22,7 +22,7 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.index.DatasetIndex;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
@@ -30,8 +30,8 @@ import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.webservice.Module;
@@ -50,17 +50,17 @@ public class RepositoryResource {
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 	private final HistoryService historyService;
-	private final RepositoryIndices indices;
+	private final SearchService searchService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
-			NotificationService notificationService, HistoryService historyService, RepositoryIndices indices) {
+			NotificationService notificationService, HistoryService historyService, SearchService searchService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 		this.historyService = historyService;
-		this.indices = indices;
+		this.searchService = searchService;
 	}
 
 	@POST
@@ -106,9 +106,18 @@ public class RepositoryResource {
 		if (!successful)
 			return Respond.error("Repository could not be moved");
 		Repository newRepo = service.get(newGroup, newName);
-		indices.get(newRepo).updateRepoId();
+		updateRepoId(repo, newRepo);
 		notificationService.repositoryMoved(repo, newRepo).send();
 		return Respond.ok(newRepo);
+	}
+
+	private void updateRepoId(Repository oldRepo, Repository newRepo) {
+		List<DatasetIndexEntry> entries = searchService.getAll(oldRepo);
+		searchService.remove(entries);
+		for (DatasetIndexEntry entry : entries) {
+			entry.repositoryId = newRepo.toId();
+		}
+		searchService.index(entries);
 	}
 
 	@DELETE
@@ -195,8 +204,7 @@ public class RepositoryResource {
 			service.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		DatasetIndex index = indices.get(to);
-		index.clone(indices.get(from), commits);
+		
 		return response;
 	}
 

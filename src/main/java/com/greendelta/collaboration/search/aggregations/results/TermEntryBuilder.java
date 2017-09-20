@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.search.aggregations;
+package com.greendelta.collaboration.search.aggregations.results;
 
 import java.util.HashMap;
 

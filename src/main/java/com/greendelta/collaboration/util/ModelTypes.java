@@ -1,0 +1,40 @@
+package com.greendelta.collaboration.util;
+
+import java.util.Comparator;
+
+import org.openlca.core.model.ModelType;
+
+public class ModelTypes {
+
+	public static final ModelType[] SORTED = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM,
+			ModelType.IMPACT_METHOD, ModelType.PARAMETER,
+			ModelType.PROCESS, ModelType.FLOW, ModelType.SOCIAL_INDICATOR,
+			ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP,
+			ModelType.CURRENCY, ModelType.SOURCE, ModelType.ACTOR,
+			ModelType.LOCATION, ModelType.DQ_SYSTEM };
+
+	private static int getIndex(ModelType type) {
+		for (int i = 0; i < SORTED.length; i++)
+			if (SORTED[i] == type)
+				return i;
+		return Integer.MAX_VALUE;
+	}
+
+	public static Comparator<ModelType> getComparator() {
+		return new TypeComparator();
+	}
+
+	public static int compare(ModelType t1, ModelType t2) {
+		return Integer.compare(getIndex(t1), getIndex(t2));
+	}
+
+	private static class TypeComparator implements Comparator<ModelType> {
+
+		@Override
+		public int compare(ModelType t1, ModelType t2) {
+			return compare(t1, t2);
+		}
+
+	}
+
+}

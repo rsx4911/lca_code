@@ -113,10 +113,6 @@ public class Repository {
 		return getDir(binDir, commitId, create);
 	}
 
-	File getIndexDir() {
-		return new File(repoDir, "ds_index");
-	}
-
 	File getAvatarFile() {
 		return new File(repoDir, "avatar");
 	}

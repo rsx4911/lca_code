@@ -21,8 +21,7 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
@@ -32,9 +31,9 @@ import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.ReviewService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.webservice.Respond;
@@ -52,12 +51,12 @@ public class ReviewResource {
 	private final HistoryService historyService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
-	private final RepositoryIndices indices;
+	private final SearchService searchService;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, HistoryService historyService, NotificationService notificationService,
-			RepositoryService repoService, RepositoryIndices indices) {
+			RepositoryService repoService, SearchService searchService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
@@ -65,7 +64,7 @@ public class ReviewResource {
 		this.historyService = historyService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
-		this.indices = indices;
+		this.searchService = searchService;
 	}
 
 	@GET
@@ -119,38 +118,37 @@ public class ReviewResource {
 		Repository repo = repoService.get(split[0], split[1]);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
-		DatasetIndex index = indices.get(repo);
 		for (Reference reference : references) {
 			if (reference.type != null && Strings.isNullOrEmpty(reference.id)) {
-				all.addAll(collectForType(index, reference.type));
+				all.addAll(collectForType(repo, reference.type));
 			} else if (reference.type == ModelType.CATEGORY && !Strings.isNullOrEmpty(reference.id)) {
-				all.addAll(collectForCategory(index, toId(reference.id)));
+				all.addAll(collectForCategory(repo, toId(reference.id)));
 			} else {
-				all.add(convert(index, repo, reference));
+				all.add(convert(repo, reference));
 			}
 		}
 		service.setReferences(id, all);
 		return createResponse();
 	}
 
-	private List<ReviewReference> collectForType(DatasetIndex index, ModelType type) {
-		return convert(index, index.getAll(type));
+	private List<ReviewReference> collectForType(Repository repo, ModelType type) {
+		return convert(repo, searchService.getAll(repo, type));
 	}
 
-	private List<ReviewReference> collectForCategory(DatasetIndex index, String id) {
-		return convert(index, index.getForCategory(id, null));
+	private List<ReviewReference> collectForCategory(Repository repo, String id) {
+		return convert(repo, searchService.getForCategory(repo, id));
 	}
 
 	private String toId(String categoryPath) {
 		return KeyGen.get(categoryPath.split("/"));
 	}
 
-	private List<ReviewReference> convert(DatasetIndex index, List<DatasetIndexEntry> entries) {
+	private List<ReviewReference> convert(Repository repo, List<DatasetIndexEntry> entries) {
 		List<ReviewReference> references = new ArrayList<>();
 		for (DatasetIndexEntry entry : entries) {
 			ReviewReference ref = new ReviewReference();
 			if (ref.type == ModelType.CATEGORY) {
-				references.addAll(convert(index, index.getForCategory(ref.refId, null)));
+				references.addAll(convert(repo, searchService.getForCategory(repo, ref.refId)));
 			} else {
 				ref.type = entry.type;
 				ref.refId = entry.refId;
@@ -162,12 +160,12 @@ public class ReviewResource {
 		return references;
 	}
 
-	private ReviewReference convert(DatasetIndex index, Repository repo, Reference ref) {
+	private ReviewReference convert(Repository repo, Reference ref) {
 		ReviewReference reference = new ReviewReference();
 		reference.type = ref.type;
 		reference.refId = ref.id;
 		reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
-		reference.name = index.getForId(ref.id, reference.commitId).name;
+		reference.name = searchService.get(repo, ref.id, reference.commitId).name;
 		return reference;
 	}
 

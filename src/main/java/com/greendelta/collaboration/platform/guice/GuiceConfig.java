@@ -29,7 +29,6 @@ import com.google.inject.servlet.GuiceServletContextListener;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
 import com.greendelta.collaboration.platform.upgrade.database.Upgrades;
-import com.greendelta.collaboration.service.RepositoryUpgrades;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
@@ -88,7 +87,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroModule(servletContext), jpaModule,
 				new JerseyModule(resourcePackages), new EhCacheModule(),
-				new PropertiesModule(), new MailModule() };
+				new PropertiesModule(), new MailModule(), new ElasticSearchModule() };
 	}
 
 	private void checkAndCreateDatabase(String databasePath, String repositoriesPath) {
@@ -106,7 +105,6 @@ public class GuiceConfig extends GuiceServletContextListener {
 		} else {
 			Upgrades.run(databasePath);
 		}
-		RepositoryUpgrades.upgrade(repositoriesPath);
 		shutdownDatabase(databasePath);
 	}
 

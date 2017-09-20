@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 
 public class CommitService {
 
@@ -32,14 +33,14 @@ public class CommitService {
 
 	private final UserService userService;
 	private final AccessService accessService;
-	private final RepositoryIndices repositoryIndices;
+	private final SearchService searchService;
 	private final DataAccessor dataAccessor;
 
 	@Inject
-	public CommitService(UserService userService, RepositoryIndices repositoryIndices, AccessService accessService,
+	public CommitService(UserService userService, AccessService accessService, SearchService searchService,
 			DataAccessor dataAccessor) {
 		this.userService = userService;
-		this.repositoryIndices = repositoryIndices;
+		this.searchService = searchService;
 		this.accessService = accessService;
 		this.dataAccessor = dataAccessor;
 	}
@@ -114,8 +115,26 @@ public class CommitService {
 				}
 			}
 		}
-		repositoryIndices.get(repo).index(datasets, commit);
+		index(repo, datasets, commit);
 		return datasets;
+	}
+
+	private void index(Repository repo, List<Dataset> datasets, Commit commit) {
+		List<DatasetIndexEntry> entries = new ArrayList<>();
+		for (Dataset dataset : datasets) {
+			DatasetIndexEntry entry = new DatasetIndexEntry();
+			entry.repositoryId = repo.toId();
+			entry.type = dataset.type;
+			entry.refId = dataset.refId;
+			entry.name = dataset.name;
+			entry.categoryRefId = dataset.categoryRefId;
+			entry.fullPath = dataset.fullPath;
+			entry.categoryType = dataset.categoryType;
+			entry.commitId = commit.id;
+			entry.commitMessage = commit.message;
+			entries.add(entry);
+		}
+		searchService.index(entries);
 	}
 
 	private void writeReferences(Repository repo, String commitId, List<Dataset> datasets) throws IOException {

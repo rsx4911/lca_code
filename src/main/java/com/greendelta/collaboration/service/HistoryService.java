@@ -11,6 +11,7 @@ import java.util.List;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,14 +19,15 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.servlet.SessionScoped;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.service.DataAccessor.Filter;
+import com.greendelta.collaboration.util.ModelTypes;
 
 /* Commits are stored in text files, this way the repository is always independent from any database 
  * and can e.g. also be copied from one server to another without any other migration 
  * (except user rights on the new server)
  * 
- * Since the commit references are often read and can be quite big a cache is used to enhance read performance 
+ * Since the commit references are often read and can be quite big, a cache is used to enhance read performance 
  * in the web UI. This was added because of heavy performance issues in the data set browsing
 
  * The cache is session scoped. Singleton scope could lead to a memory problem for bigger cloud instances, 
@@ -138,6 +140,17 @@ public class HistoryService {
 			String json = new String(Files.readAllBytes(file.toPath()), charset);
 			List<Dataset> references = new Gson().fromJson(json, new TypeToken<List<Dataset>>() {
 			}.getType());
+			Collections.sort(references, (r1, r2) -> {
+				int v = ModelTypes.compare(r1.type, r2.type);
+				if (v != 0)
+					return v;
+				if (r1.type == ModelType.CATEGORY) {
+					v = ModelTypes.compare(r1.categoryType, r2.categoryType);
+					if (v != 0)
+						return v;
+				}
+				return Strings.compare(r1.name, r2.name);
+			});
 			referencesCache.put(key, references);
 			return references;
 		} catch (IOException e) {

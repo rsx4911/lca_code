@@ -24,20 +24,19 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryIndices;
+import com.greendelta.collaboration.service.SearchService;
 
 public class IlcdWriter implements DatasetWriter {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final FetchService fetchService;
 	private final HistoryService historyService;
+	private final SearchService searchService;
 	private final Repository repo;
-	private final DatasetIndex index;
 	private final JsonStore jsonStore;
 	private final DataStore ilcdStore;
 	private final Json2IlcdStore converter;
@@ -46,12 +45,12 @@ public class IlcdWriter implements DatasetWriter {
 	private String currentCommitId;
 	private Set<Ref> collectedRefs;
 
-	public IlcdWriter(FetchService fetchService, HistoryService historyService, Repository repo,
-			RepositoryIndices indices) throws IOException {
+	public IlcdWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
+			Repository repo) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
+		this.searchService = searchService;
 		this.repo = repo;
-		this.index = indices.get(repo);
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, UUID.randomUUID().toString() + ".zip");
 		this.ilcdStore = new ZipStore(tmpFile);
@@ -134,7 +133,7 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<DatasetIndexEntry> entries = index.getAll(ModelType.PARAMETER);
+			List<DatasetIndexEntry> entries = searchService.getAll(repo, ModelType.PARAMETER);
 			Set<String> added = new HashSet<>();
 			List<Commit> commits = historyService.getCommitsUntil(repo, currentCommitId);
 			List<DatasetIndexEntry> filtered = new ArrayList<>();

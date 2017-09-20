@@ -19,12 +19,13 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
 @Path("public/browse")
@@ -71,7 +72,7 @@ public class BrowseResource {
 	}
 
 	private List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryRefId, String filter) {
-		for (ModelType type : ModelType.values()) {
+		for (ModelType type : ModelTypes.SORTED) {
 			if (!type.name().equals(categoryRefId))
 				continue;
 			List<DatasetIndexEntry> content = service.getCategoryContent(repo, type, filter);

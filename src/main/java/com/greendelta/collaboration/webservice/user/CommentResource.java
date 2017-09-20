@@ -21,17 +21,16 @@ import javax.ws.rs.core.Response;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.index.DatasetIndex;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
+import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.CommentService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryIndices;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.Respond;
@@ -46,17 +45,17 @@ public class CommentResource {
 	private final UserService userService;
 	private final AccessService accessService;
 	private final NotificationService notificationService;
-	private final RepositoryIndices indices;
+	private final SearchService searchService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, NotificationService notificationService, RepositoryIndices indices) {
+			AccessService accessService, NotificationService notificationService, SearchService searchService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
-		this.indices = indices;
+		this.searchService = searchService;
 	}
 
 	@GET
@@ -87,9 +86,8 @@ public class CommentResource {
 
 	private List<Map<String, Object>> map(Repository repository, List<Comment> comments) {
 		List<Map<String, Object>> mapped = new ArrayList<>();
-		DatasetIndex index = indices.get(repository);
 		Map<String, String> modelTypeAndIdToPath = new HashMap<>();
-		for (DatasetIndexEntry entry : index.getAll()) {
+		for (DatasetIndexEntry entry : searchService.getAll(repository)) {
 			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId, entry.fullPath);
 		}
 		for (Comment comment : comments) {
@@ -125,7 +123,7 @@ public class CommentResource {
 		comment.replyTo = service.get(map.getLong("replyTo"));
 		comment = service.insert(comment);
 		notificationService.fieldCommented(comment).send();
-		return Respond.ok(map(comment, indices.get(repository)));
+		return Respond.ok(map(comment, repository));
 	}
 
 	@PUT
@@ -136,7 +134,7 @@ public class CommentResource {
 		if (comment == null)
 			return Respond.notFound();
 		Repository repository = getRepository(comment);
-		return Respond.ok(map(comment, indices.get(repository)));
+		return Respond.ok(map(comment, repository));
 	}
 
 	@PUT
@@ -147,7 +145,7 @@ public class CommentResource {
 		if (comment == null)
 			return Respond.notFound();
 		Repository repository = getRepository(comment);
-		return Respond.ok(map(comment, indices.get(repository)));
+		return Respond.ok(map(comment, repository));
 	}
 
 	@PUT
@@ -157,7 +155,7 @@ public class CommentResource {
 		if (comment == null)
 			return Respond.notFound();
 		Repository repository = getRepository(comment);
-		return Respond.ok(map(comment, indices.get(repository)));
+		return Respond.ok(map(comment, repository));
 	}
 
 	@DELETE
@@ -167,9 +165,9 @@ public class CommentResource {
 		return Respond.ok(Collections.emptyMap());
 	}
 
-	private ObjectMap map(Comment comment, DatasetIndex index) {
+	private ObjectMap map(Comment comment, Repository repository) {
 		ObjectMap map = Comments.map(comment);
-		DatasetIndexEntry ds = index.getForId(comment.field.refId, comment.field.commitId);
+		DatasetIndexEntry ds = searchService.get(repository, comment.field.refId, comment.field.commitId);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

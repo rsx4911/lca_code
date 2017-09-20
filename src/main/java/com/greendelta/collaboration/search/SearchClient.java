@@ -4,20 +4,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface SearchClient<I extends SearchIndex, Q extends SearchQuery<?>> {
+public interface SearchClient {
 
-	SearchResult search(I index, Q searchQuery);
+	SearchResult search(SearchQuery searchQuery);
 	
-	void initialize(I index);
+	void initialize();
 	
-	void index(String id, Map<String, Object> content, I index);
+	void index(String id, Map<String, Object> content);
 
-	void remove(String id, I index);
+	void remove(String id);
 
-	Map<String, Object> get(String id, I index);
+	Map<String, Object> get(String id);
 	
-	List<Map<String, Object>> get(Set<String> ids, I index);
+	List<Map<String, Object>> get(Set<String> ids);
 
-	void clear(I index);
+	void clear();
 	
 }
