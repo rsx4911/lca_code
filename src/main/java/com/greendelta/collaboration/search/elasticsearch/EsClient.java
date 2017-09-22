@@ -25,17 +25,17 @@ import com.greendelta.collaboration.search.SearchResult;
 
 public class EsClient implements SearchClient {
 
+	public static interface SETTINGS {
+		String CONFIG = "config";
+		String MAPPINGS = "mappings";
+	}
+
 	private static final String INDEX_NAME = "datasets";
-	private static final String INDEX_TYPE = "datasets";
 
 	private final Client client;
-	private final String settings;
-	private final String mapping;
 
-	public EsClient(Client client, String settings, String mapping) {
+	public EsClient(Client client) {
 		this.client = client;
-		this.settings = settings;
-		this.mapping = mapping;
 	}
 
 	@Override
@@ -44,33 +44,37 @@ public class EsClient implements SearchClient {
 	}
 
 	@Override
-	public void initialize() {
+	public void create(Map<String, Object> settings) {
 		boolean exists = client.admin().indices().prepareExists(INDEX_NAME).execute().actionGet().isExists();
 		if (exists)
 			return;
+		String indexSettings = EsSettings.getConfig(settings);
 		CreateIndexRequest createRequest = new CreateIndexRequest(INDEX_NAME).settings(Settings.builder()
-				.loadFromSource(settings, XContentType.JSON).put("number_of_shards", 1));
+				.loadFromSource(indexSettings, XContentType.JSON).put("number_of_shards", 1));
 		client.admin().indices().create(createRequest).actionGet();
-		PutMappingRequest mappingRequest = Requests.putMappingRequest(INDEX_NAME).type(INDEX_TYPE)
-				.source(mapping, XContentType.JSON);
-		client.admin().indices().putMapping(mappingRequest).actionGet();
+		Map<String, String> mappings = EsSettings.getMappings(settings);
+		for (String indexType : mappings.keySet()) {
+			PutMappingRequest mappingRequest = Requests.putMappingRequest(INDEX_NAME).type(indexType)
+					.source(mappings.get(indexType), XContentType.JSON);
+			client.admin().indices().putMapping(mappingRequest).actionGet();
+		}
 	}
 
 	@Override
-	public void index(String id, Map<String, Object> content) {
-		IndexRequest request = client.prepareIndex(INDEX_NAME, INDEX_TYPE, id).setOpType(OpType.INDEX)
+	public void index(String indexType, String id, Map<String, Object> content) {
+		IndexRequest request = client.prepareIndex(INDEX_NAME, indexType, id).setOpType(OpType.INDEX)
 				.setSource(content).request();
 		client.index(request).actionGet();
 	}
 
 	@Override
-	public void remove(String id) {
-		client.prepareDelete(INDEX_NAME, INDEX_TYPE, id).execute().actionGet();
+	public void remove(String indexType, String id) {
+		client.prepareDelete(INDEX_NAME, indexType, id).execute().actionGet();
 	}
 
 	@Override
-	public Map<String, Object> get(String id) {
-		GetResponse response = client.prepareGet(INDEX_NAME, INDEX_TYPE, id).execute().actionGet();
+	public Map<String, Object> get(String indexType, String id) {
+		GetResponse response = client.prepareGet(INDEX_NAME, indexType, id).execute().actionGet();
 		if (response == null)
 			return null;
 		Map<String, Object> source = response.getSource();
@@ -80,8 +84,8 @@ public class EsClient implements SearchClient {
 	}
 
 	@Override
-	public List<Map<String, Object>> get(Set<String> ids) {
-		MultiGetResponse response = client.prepareMultiGet().add(INDEX_NAME, INDEX_TYPE, ids).execute().actionGet();
+	public List<Map<String, Object>> get(String indexType, Set<String> ids) {
+		MultiGetResponse response = client.prepareMultiGet().add(INDEX_NAME, indexType, ids).execute().actionGet();
 		if (response == null)
 			return null;
 		List<Map<String, Object>> results = new ArrayList<>();
@@ -99,7 +103,7 @@ public class EsClient implements SearchClient {
 	}
 
 	@Override
-	public void clear() {
+	public void delete() {
 		DeleteIndexRequest request = new DeleteIndexRequest(INDEX_NAME);
 		client.admin().indices().delete(request).actionGet();
 	}

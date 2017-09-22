@@ -38,7 +38,7 @@ public class BrowseService {
 	}
 
 	public DatasetIndexEntry getDataset(Repository repo, ModelType type, String refId, String commitId) {
-		return searchService.get(repo, refId, commitId);
+		return searchService.get(repo, type, refId, commitId);
 	}
 
 	public boolean categoryExists(Repository repo, String categoryId) {

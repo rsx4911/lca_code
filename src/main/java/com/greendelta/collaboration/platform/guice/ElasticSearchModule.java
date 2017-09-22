@@ -1,16 +1,15 @@
 package com.greendelta.collaboration.platform.guice;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.logging.log4j.core.util.IOUtils;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeValidationException;
+import org.openlca.core.model.ModelType;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -22,8 +21,11 @@ import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
 import com.greendelta.collaboration.search.SearchClient;
 import com.greendelta.collaboration.search.elasticsearch.EsClient;
+import com.greendelta.collaboration.search.elasticsearch.EsSettings;
 import com.greendelta.collaboration.service.RepositoryUpgrades;
 import com.greendelta.collaboration.service.SearchService;
+import com.greendelta.collaboration.util.ModelTypes;
+import com.greendelta.collaboration.util.Resources;
 
 class ElasticSearchModule extends AbstractModule {
 
@@ -54,20 +56,7 @@ class ElasticSearchModule extends AbstractModule {
 	@Provides
 	@Singleton
 	public SearchClient provideSearchClient(Client client) {
-		String settings = getResource("elasticsearch-settings.json");
-		String mapping = getResource("elasticsearch-mapping.json");
-		return new EsClient(client, settings, mapping);
-	}
-
-	private String getResource(String name) {
-		InputStream stream = getClass().getResourceAsStream(name);
-		StringWriter writer = new StringWriter();
-		try {
-			IOUtils.copy(new InputStreamReader(stream), writer);
-		} catch (IOException e) {
-			return "{}";
-		}
-		return writer.toString();
+		return new EsClient(client);
 	}
 
 	private static class NodeStartupListener implements StartupListener {
@@ -89,10 +78,20 @@ class ElasticSearchModule extends AbstractModule {
 			} catch (NodeValidationException e) {
 				e.printStackTrace();
 			}
-			searchService.initializeIndex();
+			Map<String, Object> settings = new HashMap<>();
+			settings.put(EsSettings.CONFIG, Resources.get(getClass(), "es-settings.json"));
+			Map<String, String> mappings = new HashMap<>();
+			for (ModelType type : ModelTypes.SORTED) {
+				String typeName = type.name().toLowerCase();
+				String mapping = new EsMapping(typeName).build();
+				mappings.put(typeName, mapping);
+			}
+			settings.put(EsSettings.MAPPINGS, mappings);
+			searchService.createIndex(settings);
 			String repoPath = PropertiesModule.getProperties().getProperty("repository.path");
 			RepositoryUpgrades.upgrade(repoPath, searchService);
 		}
+
 	}
 
 	private static class NodeShutdownListener implements ShutdownListener {

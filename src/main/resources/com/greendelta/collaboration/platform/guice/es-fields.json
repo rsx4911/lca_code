@@ -1,0 +1,40 @@
+{
+	"repositoryId": {
+		"type": "keyword",
+		"include_in_all": false
+	},
+	"refId": {
+		"type": "keyword",
+		"include_in_all": false
+	},
+	"type": {
+		"type": "keyword",
+		"include_in_all": false
+	},
+	"name": {
+		type: "text"
+	},
+	"categoryRefId": {
+		"type": "keyword",
+		"include_in_all": false
+	},
+	"categoryType": {
+		"type": "keyword",
+		"include_in_all": false
+	},
+	"commitId": {
+		"type": "keyword",
+		"include_in_all": false
+	},
+	"commitMessage": {
+		type: "text"
+	},
+	"fullPath": {
+		type: "text",
+		index: false
+	},
+	"lastUpdate": {
+		type: "text",
+		index: false
+	}
+}

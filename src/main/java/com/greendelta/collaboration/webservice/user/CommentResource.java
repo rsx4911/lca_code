@@ -167,7 +167,8 @@ public class CommentResource {
 
 	private ObjectMap map(Comment comment, Repository repository) {
 		ObjectMap map = Comments.map(comment);
-		DatasetIndexEntry ds = searchService.get(repository, comment.field.refId, comment.field.commitId);
+		DatasetField field = comment.field;
+		DatasetIndexEntry ds = searchService.get(repository, field.modelType, field.refId, field.commitId);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

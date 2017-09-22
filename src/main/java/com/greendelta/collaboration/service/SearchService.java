@@ -30,8 +30,8 @@ public class SearchService {
 		this.repoService = repoService;
 	}
 
-	public void initializeIndex() {
-		client.initialize();
+	public void createIndex(Map<String, Object> settings) {
+		client.create(settings);
 	}
 
 	public SearchResult search(String query, int page) {
@@ -124,9 +124,9 @@ public class SearchService {
 		return !client.search(builder.build()).data.isEmpty();
 	}
 
-	public DatasetIndexEntry get(Repository repo, String refId, String commitId) {
+	public DatasetIndexEntry get(Repository repo, ModelType type, String refId, String commitId) {
 		String id = repo.toId() + "/" + refId + "/" + commitId;
-		return parse(client.get(id));
+		return parse(client.get(type.name().toLowerCase(), id));
 	}
 
 	public List<DatasetIndexEntry> parse(SearchResult result) {
@@ -188,7 +188,7 @@ public class SearchService {
 			}
 		}
 		Map<String, Object> map = ObjectMap.fromObject(entry);
-		client.index(id, map);
+		client.index(entry.type.name().toLowerCase(), id, map);
 	}
 
 	public void remove(Collection<DatasetIndexEntry> entries) {
@@ -199,7 +199,7 @@ public class SearchService {
 
 	public void remove(DatasetIndexEntry entry) {
 		String id = entry.repositoryId + "/" + entry.refId + "/" + entry.commitId;
-		client.remove(id);
+		client.remove(entry.type.name().toLowerCase(), id);
 	}
 
 }

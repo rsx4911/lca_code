@@ -165,7 +165,7 @@ public class ReviewResource {
 		reference.type = ref.type;
 		reference.refId = ref.id;
 		reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
-		reference.name = searchService.get(repo, ref.id, reference.commitId).name;
+		reference.name = searchService.get(repo, ref.type, ref.id, reference.commitId).name;
 		return reference;
 	}
 
