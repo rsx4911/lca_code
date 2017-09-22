@@ -21,13 +21,14 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.AccessService;
+import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
@@ -52,11 +53,12 @@ public class ReviewResource {
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
 	private final SearchService searchService;
+	private final BrowseService browseService;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, HistoryService historyService, NotificationService notificationService,
-			RepositoryService repoService, SearchService searchService) {
+			RepositoryService repoService, SearchService searchService, BrowseService browseService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
@@ -65,6 +67,7 @@ public class ReviewResource {
 		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.searchService = searchService;
+		this.browseService = browseService;
 	}
 
 	@GET
@@ -132,23 +135,23 @@ public class ReviewResource {
 	}
 
 	private List<ReviewReference> collectForType(Repository repo, ModelType type) {
-		return convert(repo, searchService.getAll(repo, type));
+		return convert(repo, browseService.getAll(repo, type));
 	}
 
 	private List<ReviewReference> collectForCategory(Repository repo, String id) {
-		return convert(repo, searchService.getForCategory(repo, id));
+		return convert(repo, browseService.getForCategory(repo, id));
 	}
 
 	private String toId(String categoryPath) {
 		return KeyGen.get(categoryPath.split("/"));
 	}
 
-	private List<ReviewReference> convert(Repository repo, List<DatasetIndexEntry> entries) {
+	private List<ReviewReference> convert(Repository repo, List<IndexEntry> entries) {
 		List<ReviewReference> references = new ArrayList<>();
-		for (DatasetIndexEntry entry : entries) {
+		for (IndexEntry entry : entries) {
 			ReviewReference ref = new ReviewReference();
 			if (ref.type == ModelType.CATEGORY) {
-				references.addAll(convert(repo, searchService.getForCategory(repo, ref.refId)));
+				references.addAll(convert(repo, browseService.getForCategory(repo, ref.refId)));
 			} else {
 				ref.type = entry.type;
 				ref.refId = entry.refId;

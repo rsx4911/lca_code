@@ -13,14 +13,22 @@ import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 public class SearchQueryBuilder {
 
 	private String query;
+	private String[] queryFields;
 	private int page = 0;
 	private int pageSize = SearchQuery.DEFAULT_PAGE_SIZE;
 	private Map<String, SearchFilter> filters = new HashMap<>();
 	private Set<SearchAggregation> aggregations = new HashSet<>();
 	private Map<String, SearchSorting> sortBy = new HashMap<>();
 
-	public SearchQueryBuilder query(String query) {
+	public SearchQueryBuilder query(String query, String queryField) {
+		return query(query, new String[] { queryField });
+	}
+
+	public SearchQueryBuilder query(String query, String[] queryFields) {
+		if (queryFields == null || queryFields.length == 0)
+			return this;
 		this.query = query;
+		this.queryFields = queryFields;
 		return this;
 	}
 
@@ -60,10 +68,13 @@ public class SearchQueryBuilder {
 	public SearchQueryBuilder filter(String field, String value, Type type) {
 		if (field == null || value == null)
 			return this;
-		SearchFilter values = this.filters.get(field);
-		if (values == null)
-			this.filters.put(field, values = new SearchFilter(field, Conjunction.OR));
-		values.add(new SearchFilterValue(value, type));
+		SearchFilter filter = this.filters.get(field);
+		SearchFilterValue filterValue = new SearchFilterValue(value, type);
+		if (filter == null) {
+			this.filters.put(field, filter = new SearchFilter(field, filterValue));
+		} else {
+			filter.values.add(filterValue);
+		}
 		return this;
 	}
 
@@ -85,11 +96,13 @@ public class SearchQueryBuilder {
 			searchQuery.setPageSize(pageSize);
 		}
 		if (query != null) {
-			searchQuery.addFilter("_all", split(query), queryConjunctionType);
+			for (String field : queryFields) {
+				searchQuery.addFilter(field, split(query), queryConjunctionType);
+			}
 			searchQuery.setQuery(query);
 		}
 		for (SearchFilter filter : filters.values()) {
-			searchQuery.addFilter(filter.name, filter.values, filter.type);
+			searchQuery.addFilter(filter.field, filter.values, filter.conjunction);
 		}
 		searchQuery.setSortBy(sortBy);
 		return searchQuery;

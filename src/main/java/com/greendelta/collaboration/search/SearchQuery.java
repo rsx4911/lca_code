@@ -28,17 +28,18 @@ public class SearchQuery {
 			this.aggregations = new HashSet<>();
 	}
 
-	void addFilter(String name, Set<SearchFilterValue> values, Conjunction type) {
-		SearchFilter parameter = null;
-		for (SearchFilter param : filters) {
-			if (param.name.equals(name)) {
-				parameter = param;
+	void addFilter(String field, Set<SearchFilterValue> values, Conjunction type) {
+		SearchFilter filter = null;
+		for (SearchFilter f : filters) {
+			if (f.field.equals(field)) {
+				filter = f;
 				break;
 			}
 		}
-		if (parameter == null)
-			filters.add(parameter = new SearchFilter(name, type));
-		parameter.addAll(values);
+		if (filter == null)
+			filters.add(filter = new SearchFilter(field, values, type));
+		else
+			filter.values.addAll(values);
 	}
 
 	void setSortBy(Map<String, SearchSorting> sortBy) {
@@ -115,10 +116,10 @@ public class SearchQuery {
 	private String joinFilters(boolean aggregations) {
 		String s = "[";
 		int i = 0;
-		for (SearchFilter value : filters) {
-			if (hasAggregation(value.name) != aggregations)
+		for (SearchFilter filter : filters) {
+			if (hasAggregation(filter.field) != aggregations)
 				continue;
-			s += value.name + "=" + join(value.values);
+			s += filter.field + "=" + join(filter.values);
 			i++;
 			if (i < filters.size()) {
 				s += ", ";

@@ -22,7 +22,7 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
@@ -112,9 +112,9 @@ public class RepositoryResource {
 	}
 
 	private void updateRepoId(Repository oldRepo, Repository newRepo) {
-		List<DatasetIndexEntry> entries = searchService.getAll(oldRepo);
+		List<IndexEntry> entries = searchService.getAll(oldRepo);
 		searchService.remove(entries);
-		for (DatasetIndexEntry entry : entries) {
+		for (IndexEntry entry : entries) {
 			entry.repositoryId = newRepo.toId();
 		}
 		searchService.index(entries);

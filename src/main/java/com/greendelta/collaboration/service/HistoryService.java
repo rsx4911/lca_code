@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.servlet.SessionScoped;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DataAccessor.Filter;
 import com.greendelta.collaboration.util.ModelTypes;
 
@@ -85,7 +85,7 @@ public class HistoryService {
 		return commits.get(commits.size() - 1);
 	}
 
-	public boolean isLastCommit(DatasetIndexEntry entry) {
+	public boolean isLastCommit(IndexEntry entry) {
 		String group = entry.repositoryId.substring(0, entry.repositoryId.indexOf("/"));
 		String name = entry.repositoryId.substring(entry.repositoryId.indexOf("/") + 1);
 		Repository repo = repoService.get(group, name);

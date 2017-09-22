@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.greendelta.collaboration.util.IndexEntryCreator;
 
 public class CommitService {
 
@@ -91,6 +91,7 @@ public class CommitService {
 
 	private List<Dataset> writeDatasets(Repository repo, Commit commit, ModelStreamReader reader) throws IOException {
 		List<Dataset> datasets = new ArrayList<>();
+		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
 		while (reader.hasMore()) {
 			Dataset dataset = reader.readNextPartAsDataset();
 			datasets.add(dataset);
@@ -101,8 +102,15 @@ public class CommitService {
 			try (OutputStream out = new FileOutputStream(file)) {
 				hadData = reader.readNextPartToStream(out);
 			}
-			if (!hadData)
+			if (!hadData) {
+				// TODO remove from index or mark as deleted
 				continue;
+			}
+			if (type != ModelType.PROCESS) {
+				searchService.index(indexEntryCreator.generic(dataset));
+			} else {
+				searchService.index(indexEntryCreator.process(dataset, file));
+			}
 			File binDir = repo.getBinDir(type, refId, commit.id, false);
 			int count = 0;
 			int noOfFiles = reader.readNextInt();
@@ -115,26 +123,7 @@ public class CommitService {
 				}
 			}
 		}
-		index(repo, datasets, commit);
 		return datasets;
-	}
-
-	private void index(Repository repo, List<Dataset> datasets, Commit commit) {
-		List<DatasetIndexEntry> entries = new ArrayList<>();
-		for (Dataset dataset : datasets) {
-			DatasetIndexEntry entry = new DatasetIndexEntry();
-			entry.repositoryId = repo.toId();
-			entry.type = dataset.type;
-			entry.refId = dataset.refId;
-			entry.name = dataset.name;
-			entry.categoryRefId = dataset.categoryRefId;
-			entry.fullPath = dataset.fullPath;
-			entry.categoryType = dataset.categoryType;
-			entry.commitId = commit.id;
-			entry.commitMessage = commit.message;
-			entries.add(entry);
-		}
-		searchService.index(entries);
 	}
 
 	private void writeReferences(Repository repo, String commitId, List<Dataset> datasets) throws IOException {

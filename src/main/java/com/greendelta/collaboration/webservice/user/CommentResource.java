@@ -23,8 +23,8 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.CommentService;
 import com.greendelta.collaboration.service.NotificationService;
@@ -87,12 +87,12 @@ public class CommentResource {
 	private List<Map<String, Object>> map(Repository repository, List<Comment> comments) {
 		List<Map<String, Object>> mapped = new ArrayList<>();
 		Map<String, String> modelTypeAndIdToPath = new HashMap<>();
-		for (DatasetIndexEntry entry : searchService.getAll(repository)) {
-			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId, entry.fullPath);
+		for (IndexEntry entry : searchService.getAll(repository)) {
+			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId + "_" + entry.commitId, entry.fullPath);
 		}
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
-			String key = comment.field.modelType.name() + "_" + comment.field.refId;
+			String key = comment.field.modelType.name() + "_" + comment.field.refId + "_" + comment.field.commitId;
 			map.put("dsPath", modelTypeAndIdToPath.get(key));
 			mapped.add(map);
 		}
@@ -168,7 +168,7 @@ public class CommentResource {
 	private ObjectMap map(Comment comment, Repository repository) {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
-		DatasetIndexEntry ds = searchService.get(repository, field.modelType, field.refId, field.commitId);
+		IndexEntry ds = searchService.get(repository, field.modelType, field.refId, field.commitId);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

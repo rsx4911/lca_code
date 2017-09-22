@@ -1,8 +1,8 @@
-package com.greendelta.collaboration.model;
+package com.greendelta.collaboration.model.index;
 
 import org.openlca.core.model.ModelType;
 
-public class DatasetIndexEntry {
+public class IndexEntry {
 
 	public ModelType type;
 	public String refId;

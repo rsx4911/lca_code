@@ -1,7 +1,7 @@
 package com.greendelta.collaboration.service.upgrade;
 
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SearchService;
 
@@ -15,13 +15,13 @@ public interface IUpgrade {
 
 	public static interface GetJson {
 
-		JsonObject apply(Repository repo, DatasetIndexEntry entry);
+		JsonObject apply(Repository repo, IndexEntry entry);
 
 	}
 
 	public static interface PutJson {
 
-		void apply(Repository repo, DatasetIndexEntry entry, JsonObject json);
+		void apply(Repository repo, IndexEntry entry, JsonObject json);
 
 	}
 }

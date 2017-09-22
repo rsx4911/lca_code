@@ -43,10 +43,7 @@ public class FetchService {
 	}
 
 	private boolean wasDeleted(Repository repo, ModelType type, String refId, String commitId) {
-		String data = getDataset(repo, type, refId, commitId);
-		if (data == null)
-			return true;
-		return data.isEmpty();
+		return !hasDataset(repo, type, refId, commitId);
 	}
 
 	private boolean wasAdded(Repository repo, ModelType type, String refId, String commitId) {
@@ -54,10 +51,7 @@ public class FetchService {
 		if (previous.isEmpty())
 			return true;
 		Commit commit = previous.get(previous.size() - 1);
-		String previousData = getDataset(repo, type, refId, commit.id);
-		if (previousData == null)
-			return true;
-		return previousData.isEmpty();
+		return !hasDataset(repo, type, refId, commit.id);
 	}
 
 	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
@@ -75,7 +69,7 @@ public class FetchService {
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		File file = repo.getDatasetFile(type, refId, commitId, false);
 		byte[] data = dataAccessor.read(file);
-		if (data == null)
+		if (data == null || data.length == 0)
 			return null;
 		return new String(data, Charset.forName("utf-8"));
 	}
@@ -152,6 +146,6 @@ public class FetchService {
 		protected File getBinaryFilesLocation(Dataset dataset) {
 			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
 		}
-				
+
 	}
 }

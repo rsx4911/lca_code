@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
@@ -133,11 +133,11 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<DatasetIndexEntry> entries = searchService.getAll(repo, ModelType.PARAMETER);
+			List<IndexEntry> entries = searchService.getAll(repo, ModelType.PARAMETER);
 			Set<String> added = new HashSet<>();
 			List<Commit> commits = historyService.getCommitsUntil(repo, currentCommitId);
-			List<DatasetIndexEntry> filtered = new ArrayList<>();
-			for (DatasetIndexEntry entry : entries) {
+			List<IndexEntry> filtered = new ArrayList<>();
+			for (IndexEntry entry : entries) {
 				for (Commit commit : commits) {
 					if (entry.commitId.equals(commit.id)) {
 						filtered.add(entry);
@@ -145,10 +145,12 @@ public class IlcdWriter implements DatasetWriter {
 				}
 			}
 			Collections.sort(filtered, new EntryComparator(commits));
-			for (DatasetIndexEntry entry : filtered) {
+			for (IndexEntry entry : filtered) {
 				if (added.contains(entry.refId))
 					continue;
 				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);
+				if (data == null)
+					continue;
 				parameters.add(gson.fromJson(data, JsonObject.class));
 				added.add(entry.refId);
 			}
@@ -157,7 +159,7 @@ public class IlcdWriter implements DatasetWriter {
 
 	}
 
-	private class EntryComparator implements Comparator<DatasetIndexEntry> {
+	private class EntryComparator implements Comparator<IndexEntry> {
 
 		private Map<String, Integer> commitOrder = new HashMap<>();
 
@@ -169,7 +171,7 @@ public class IlcdWriter implements DatasetWriter {
 		}
 
 		@Override
-		public int compare(DatasetIndexEntry o1, DatasetIndexEntry o2) {
+		public int compare(IndexEntry o1, IndexEntry o2) {
 			return commitOrder.get(o2.commitId) - commitOrder.get(o1.commitId);
 		}
 

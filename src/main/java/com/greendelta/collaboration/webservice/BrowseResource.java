@@ -19,7 +19,7 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
@@ -71,14 +71,14 @@ public class BrowseResource {
 		return service.getRootContent(repo);
 	}
 
-	private List<DatasetIndexEntry> getCategoryContent(Repository repo, String categoryRefId, String filter) {
+	private List<IndexEntry> getCategoryContent(Repository repo, String categoryRefId, String filter) {
 		for (ModelType type : ModelTypes.SORTED) {
 			if (!type.name().equals(categoryRefId))
 				continue;
-			List<DatasetIndexEntry> content = service.getCategoryContent(repo, type, filter);
+			List<IndexEntry> content = service.getUncategorized(repo, type, filter);
 			return filterDeleted(repo, content);
 		}
-		List<DatasetIndexEntry> content = service.getCategoryContent(repo, categoryRefId, filter);
+		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, filter);
 		if (content.isEmpty())
 			if (service.categoryExists(repo, categoryRefId))
 				return filterDeleted(repo, content);
@@ -87,9 +87,9 @@ public class BrowseResource {
 		return filterDeleted(repo, content);
 	}
 
-	private List<DatasetIndexEntry> filterDeleted(Repository repo, List<DatasetIndexEntry> entries) {
-		List<DatasetIndexEntry> notDeleted = new ArrayList<>();
-		for (DatasetIndexEntry entry : entries) {
+	private List<IndexEntry> filterDeleted(Repository repo, List<IndexEntry> entries) {
+		List<IndexEntry> notDeleted = new ArrayList<>();
+		for (IndexEntry entry : entries) {
 			if (!fetchService.hasDataset(repo, entry.type, entry.refId, entry.commitId))
 				continue;
 			notDeleted.add(entry);
@@ -209,7 +209,7 @@ public class BrowseResource {
 		if (commitId == null)
 			return "";
 		commitId = getLastCommitId(repo, type, refId, commitId);
-		DatasetIndexEntry entry = service.getDataset(repo, type, refId, commitId);
+		IndexEntry entry = service.getDataset(repo, type, refId, commitId);
 		if (entry == null)
 			return "";
 		return entry.fullPath;

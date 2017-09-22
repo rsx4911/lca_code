@@ -77,7 +77,7 @@ class EsSearch {
 
 	static private void setupFilters(SearchRequestBuilder request, SearchQuery searchQuery, BoolQueryBuilder query) {
 		for (SearchFilter filter : searchQuery.getFilters()) {
-			SearchAggregation aggregation = searchQuery.getAggregation(filter.name);
+			SearchAggregation aggregation = searchQuery.getAggregation(filter.field);
 			BoolQueryBuilder q = toQuery(filter, aggregation);
 			if (q == null)
 				continue;
@@ -88,26 +88,26 @@ class EsSearch {
 		}
 	}
 
-	static private BoolQueryBuilder toQuery(SearchFilter parameter, SearchAggregation aggregation) {
-		if (parameter.values.isEmpty())
+	static private BoolQueryBuilder toQuery(SearchFilter filter, SearchAggregation aggregation) {
+		if (filter.values.isEmpty())
 			return null;
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 		boolean isRelevant = false;
-		for (SearchFilterValue value : parameter.values) {
+		for (SearchFilterValue value : filter.values) {
 			if (value.value.length() < 3)
 				continue;
 			isRelevant = true;
 			QueryBuilder inner = null;
 			if (aggregation == null)
 				if (value.type == Type.PHRASE)
-					inner = matchPhraseQuery(parameter.name, "\"" + value.value + "\"");
+					inner = matchPhraseQuery(filter.field, "\"" + value.value + "\"");
 				else
-					inner = wildcardQuery(parameter.name, value.value.toLowerCase());
+					inner = wildcardQuery(filter.field, value.value.toLowerCase());
 			else
 				inner = EsAggregations.getQuery(aggregation, value.value);
-			if (parameter.type == Conjunction.AND)
+			if (filter.conjunction == Conjunction.AND)
 				query.must(inner);
-			else if (parameter.type == Conjunction.OR)
+			else if (filter.conjunction == Conjunction.OR)
 				query.should(inner);
 		}
 		if (!isRelevant)

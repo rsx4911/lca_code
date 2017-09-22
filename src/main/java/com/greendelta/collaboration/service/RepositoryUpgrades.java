@@ -1,11 +1,14 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
@@ -24,9 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.model.DatasetIndexEntry;
+import com.google.gson.reflect.TypeToken;
+import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.service.upgrade.IUpgrade;
 import com.greendelta.collaboration.service.upgrade.Upgrade1;
+import com.greendelta.collaboration.util.IndexEntryCreator;
 
 public class RepositoryUpgrades {
 
@@ -48,7 +54,7 @@ public class RepositoryUpgrades {
 				// restructure repository directory if old version
 				File oldIndexDir = new File(name, "ds_index");
 				if (oldIndexDir.exists()) {
-					IndexConversion.runOn(oldIndexDir, searchService);
+					IndexConversion.runOn(repo, oldIndexDir, searchService);
 					Directories.delete(oldIndexDir);
 				}
 				Restructuring.restructure(repo, searchService);
@@ -73,7 +79,7 @@ public class RepositoryUpgrades {
 		}
 	}
 
-	private static JsonObject getJson(Repository repo, DatasetIndexEntry indexEntry) {
+	private static JsonObject getJson(Repository repo, IndexEntry indexEntry) {
 		File dsFile = repo.getDatasetFile(indexEntry.type, indexEntry.refId, indexEntry.commitId, false);
 		if (dsFile == null)
 			return null;
@@ -84,7 +90,7 @@ public class RepositoryUpgrades {
 		return new Gson().fromJson(json, JsonObject.class);
 	}
 
-	private static void putJson(Repository repo, DatasetIndexEntry indexEntry, JsonObject obj) {
+	private static void putJson(Repository repo, IndexEntry indexEntry, JsonObject obj) {
 		File dsFile = repo.getDatasetFile(indexEntry.type, indexEntry.refId, indexEntry.commitId, false);
 		dataAccessor.write(dsFile, new Gson().toJson(obj).getBytes(Charset.forName("utf-8")));
 	}
@@ -142,20 +148,30 @@ public class RepositoryUpgrades {
 		}
 
 		private static void updateCategoryRefIds(Repository repo, SearchService searchService) {
-			List<DatasetIndexEntry> entries = searchService.getAll(repo, ModelType.CATEGORY);
-			List<DatasetIndexEntry> referencing = new ArrayList<>();
-			for (DatasetIndexEntry entry : entries) {
+			List<IndexEntry> entries = searchService.getAll(repo);
+			Map<String, List<IndexEntry>> byCategoryId = new HashMap<>();
+			for (IndexEntry entry : entries) {
+				if (Strings.nullOrEmpty(entry.categoryRefId))
+					continue;
+				List<IndexEntry> list = byCategoryId.get(entry.categoryRefId);
+				if (list == null) {
+					byCategoryId.put(entry.categoryRefId, list = new ArrayList<>());
+				}
+				list.add(entry);
+			}
+			List<IndexEntry> referencing = new ArrayList<>();
+			for (IndexEntry entry : entries) {
 				String newRefId = KeyGen.get((entry.categoryType.name() + "/" + entry.fullPath).split("/"));
 				if (entry.refId.equals(newRefId))
 					continue;
+				List<IndexEntry> elements = byCategoryId.get(entry.refId);
 				entry.refId = newRefId;
-				List<DatasetIndexEntry> elements = searchService.getForCategory(repo, entry.refId);
-				for (DatasetIndexEntry element : elements) {
+				for (IndexEntry element : elements) {
 					element.categoryRefId = newRefId;
 				}
 				referencing.addAll(elements);
 			}
-			List<DatasetIndexEntry> all = new ArrayList<>();
+			List<IndexEntry> all = new ArrayList<>();
 			all.addAll(entries);
 			all.addAll(referencing);
 			searchService.index(all);
@@ -165,15 +181,17 @@ public class RepositoryUpgrades {
 
 	private static class IndexConversion {
 
-		private static void runOn(File indexDir, SearchService searchService) {
-			List<DatasetIndexEntry> entries = getIndexEntries(indexDir);
+		private static final Gson gson = new Gson();
+
+		private static void runOn(Repository repo, File indexDir, SearchService searchService) {
+			List<IndexEntry> entries = getIndexEntries(repo, indexDir);
 			if (entries.isEmpty())
 				return;
 			searchService.index(entries);
 		}
 
-		private static List<DatasetIndexEntry> getIndexEntries(File indexDir) {
-			List<DatasetIndexEntry> all = new ArrayList<>();
+		private static List<IndexEntry> getIndexEntries(Repository repo, File indexDir) {
+			List<IndexEntry> all = new ArrayList<>();
 			try {
 				IndexSearcher searcher = getSearcher(indexDir);
 				if (searcher == null)
@@ -183,7 +201,7 @@ public class RepositoryUpgrades {
 				if (topDocs.totalHits == 0)
 					return new ArrayList<>();
 				for (ScoreDoc doc : topDocs.scoreDocs) {
-					DatasetIndexEntry entry = convert(searcher.doc(doc.doc));
+					IndexEntry entry = convert(repo, searcher.doc(doc.doc));
 					all.add(entry);
 				}
 			} catch (IOException e) {
@@ -192,10 +210,11 @@ public class RepositoryUpgrades {
 			return all;
 		}
 
-		private static DatasetIndexEntry convert(Document document) {
-			DatasetIndexEntry entry = new DatasetIndexEntry();
+		private static IndexEntry convert(Repository repo, Document document) {
+			ModelType type = ModelType.valueOf(document.get("type"));
+			IndexEntry entry = type == ModelType.PROCESS ? new ProcessIndexEntry() : new IndexEntry();
 			entry.refId = document.get("refId");
-			entry.type = ModelType.valueOf(document.get("type"));
+			entry.type = type;
 			entry.name = document.get("name");
 			entry.categoryRefId = document.get("categoryRefId");
 			if (!Strings.nullOrEmpty(document.get("categoryType")))
@@ -205,7 +224,27 @@ public class RepositoryUpgrades {
 			entry.fullPath = document.get("fullPath");
 			entry.lastUpdate = Long.parseLong(document.get("lastUpdate"));
 			entry.repositoryId = document.get("repositoryId");
+			if (type == ModelType.PROCESS) {
+				putProcessMetaInfo(repo, (ProcessIndexEntry) entry);
+			}
 			return entry;
+		}
+
+		private static void putProcessMetaInfo(Repository repo, ProcessIndexEntry entry) {
+			File file = repo.getDatasetFile(entry.type, entry.refId, entry.commitId, false);
+			if (file == null || !file.exists())
+				return;
+			IndexEntryCreator.fillProcess(entry, readData(file));
+		}
+
+		private static Map<String, Object> readData(File file) {
+			try {
+				return gson.fromJson(new FileReader(file), new TypeToken<Map<String, Object>>() {
+				}.getType());
+			} catch (IOException e) {
+				e.printStackTrace();
+				return new HashMap<>();
+			}
 		}
 
 		public static IndexSearcher getSearcher(File indexDir) throws IOException {
