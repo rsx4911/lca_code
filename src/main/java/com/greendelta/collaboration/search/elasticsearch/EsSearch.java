@@ -49,46 +49,53 @@ class EsSearch {
 		}
 	}
 
-	static private void setupPaging(SearchRequestBuilder request, SearchQuery searchQuery) {
-		int start = searchQuery.getPage() * searchQuery.getPageSize();
-		if (start > 0)
+	private static void setupPaging(SearchRequestBuilder request, SearchQuery searchQuery) {
+		int start = (searchQuery.getPage() - 1) * searchQuery.getPageSize();
+		if (start > 0) {
 			request.setFrom(start);
-		if (searchQuery.getPage() > -1 && searchQuery.getPageSize() > 0)
-			request.setSize(searchQuery.getPageSize());
-		else
+		}
+		if (!searchQuery.isPaged()) {
 			request.setSize(10000);
+		} else {
+			if (searchQuery.getPageSize() > 0) {
+				request.setSize(searchQuery.getPageSize());
+			} else {
+				request.setSize(SearchQuery.DEFAULT_PAGE_SIZE);
+			}
+		}
 	}
 
-	static private void setupSorting(SearchRequestBuilder request, SearchQuery searchQuery) {
+	private static void setupSorting(SearchRequestBuilder request, SearchQuery searchQuery) {
 		for (Entry<String, SearchSorting> entry : searchQuery.getSortBy().entrySet()) {
 			SortOrder value = entry.getValue() == SearchSorting.ASC ? SortOrder.ASC : SortOrder.DESC;
 			request.addSort(entry.getKey(), value);
 		}
 	}
 
-	static private void setupQuery(SearchRequestBuilder request, SearchQuery searchQuery) {
+	private static void setupQuery(SearchRequestBuilder request, SearchQuery searchQuery) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 		setupFilters(request, searchQuery, query);
-		if (query.hasClauses())
+		if (query.hasClauses()) {
 			request.setQuery(query);
-		else
+		} else {
 			request.setQuery(QueryBuilders.matchAllQuery());
+		}
 	}
 
-	static private void setupFilters(SearchRequestBuilder request, SearchQuery searchQuery, BoolQueryBuilder query) {
+	private static void setupFilters(SearchRequestBuilder request, SearchQuery searchQuery, BoolQueryBuilder query) {
 		for (SearchFilter filter : searchQuery.getFilters()) {
 			SearchAggregation aggregation = searchQuery.getAggregation(filter.field);
+			if (aggregation != null) {
+				request.addAggregation(EsAggregations.getBuilder(aggregation));
+			}
 			BoolQueryBuilder q = toQuery(filter, aggregation);
 			if (q == null)
 				continue;
 			query.must(q);
-			if (aggregation == null)
-				continue;
-			request.addAggregation(EsAggregations.getBuilder(aggregation));
 		}
 	}
 
-	static private BoolQueryBuilder toQuery(SearchFilter filter, SearchAggregation aggregation) {
+	private static BoolQueryBuilder toQuery(SearchFilter filter, SearchAggregation aggregation) {
 		if (filter.values.isEmpty())
 			return null;
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
@@ -98,24 +105,27 @@ class EsSearch {
 				continue;
 			isRelevant = true;
 			QueryBuilder inner = null;
-			if (aggregation == null)
-				if (value.type == Type.PHRASE)
+			if (aggregation == null) {
+				if (value.type == Type.PHRASE) {
 					inner = matchPhraseQuery(filter.field, "\"" + value.value + "\"");
-				else
+				} else {
 					inner = wildcardQuery(filter.field, value.value.toLowerCase());
-			else
+				}
+			} else {
 				inner = EsAggregations.getQuery(aggregation, value.value);
-			if (filter.conjunction == Conjunction.AND)
+			}
+			if (filter.conjunction == Conjunction.AND) {
 				query.must(inner);
-			else if (filter.conjunction == Conjunction.OR)
+			} else if (filter.conjunction == Conjunction.OR) {
 				query.should(inner);
+			}
 		}
 		if (!isRelevant)
 			return null;
 		return query;
 	}
 
-	static private SearchResult search(SearchRequestBuilder request, SearchQuery searchQuery) {
+	private static SearchResult search(SearchRequestBuilder request, SearchQuery searchQuery) {
 		StopWatch watch = new StopWatch();
 		watch.start();
 		SearchResult result = new SearchResult(searchQuery);
@@ -123,14 +133,16 @@ class EsSearch {
 		boolean doContinue = true;
 		long totalHits = 0;
 		while (doContinue) {
-			request.setFrom(result.data.size());
+			if (!searchQuery.isPaged()) {
+				request.setFrom(result.data.size());
+			}
 			response = request.execute().actionGet();
 			SearchHit[] hits = response.getHits().getHits();
 			for (SearchHit hit : hits) {
 				result.data.add(hit.getSource());
 			}
 			totalHits = response.getHits().getTotalHits();
-			doContinue = searchQuery.getPage() == 0 && result.data.size() != totalHits;
+			doContinue = !searchQuery.isPaged() && result.data.size() != totalHits;
 		}
 		for (Aggregation aggregation : response.getAggregations().asList()) {
 			result.aggregations.add(toResult(aggregation));
@@ -141,14 +153,14 @@ class EsSearch {
 		return result;
 	}
 
-	static private AggregationResult toResult(Aggregation aggregation) {
+	private static AggregationResult toResult(Aggregation aggregation) {
 		AggregationResultBuilder builder = new AggregationResultBuilder();
 		builder.name(aggregation.getName()).type(aggregation.getType());
 		putSpecificData(aggregation, builder);
 		return builder.build();
 	}
 
-	static private void putSpecificData(Aggregation aggregation, AggregationResultBuilder builder) {
+	private static void putSpecificData(Aggregation aggregation, AggregationResultBuilder builder) {
 		switch (aggregation.getType()) {
 		case StringTerms.NAME:
 			StringTerms terms = (StringTerms) aggregation;
@@ -164,7 +176,7 @@ class EsSearch {
 		}
 	}
 
-	static private void extendResultInfo(ResultInfo info, long totalHits, long searchTime, SearchQuery searchQuery) {
+	private static void extendResultInfo(ResultInfo info, long totalHits, long searchTime, SearchQuery searchQuery) {
 		info.totalCount = totalHits;
 		info.searchMillis = searchTime;
 		info.currentPage = searchQuery.getPage();
@@ -172,8 +184,9 @@ class EsSearch {
 		long totalCount = info.totalCount;
 		if (searchQuery.getPageSize() != 0) {
 			int pageCount = (int) totalCount / searchQuery.getPageSize();
-			if ((totalCount % searchQuery.getPageSize()) != 0)
+			if ((totalCount % searchQuery.getPageSize()) != 0) {
 				pageCount = 1 + pageCount;
+			}
 			info.pageCount = pageCount;
 		}
 	}

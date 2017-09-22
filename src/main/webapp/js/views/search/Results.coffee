@@ -15,16 +15,9 @@ define([
 				Events.preventDefault event
 				target = $ Events.target event
 				page = target.attr 'data-page'
-				Router.navigate @getUrl @query, page, @type
+				Router.navigate @getUrl @query, page
 
-			doFilterType: (event) ->
-				target = $ Events.target event
-				type = target.val()
-				if type is 'All'
-					type = null
-				Router.navigate @getUrl @query, null, type
-
-			getUrl: (query, page, type) ->
+			getUrl: (query, page) ->
 				url = 'search/'
 				if query
 					url += "query=#{query}"
@@ -32,10 +25,6 @@ define([
 					if query
 						url += '&'
 					url += "page=#{page}"
-				if type
-					if query or page
-						url += '&'
-					url += "type=#{type}"
 				return url
 
 			className: 'search-view'
@@ -43,10 +32,9 @@ define([
 			events: 
 				'click .result a': (event) -> Events.followLink event
 				'click a[data-page]': 'doPage'
-				'change #type': 'doFilterType'
 
 			initialize: (options) ->
-				{@query, @page, @type} = options
+				{@query, @page} = options
 				unless @query
 					@query = ''
 				unless @page
@@ -54,13 +42,12 @@ define([
 
 			render: (renderOptions) ->
 				url = 'ws/search?query=' + @query + '&page=' + @page
-				if @type
-					url += '&type=' + @type
 				$.ajax
 					type: 'GET'
 					url: url
 					success: (result) =>
 						result.getTypeLabel = (type) -> return ModelTypes[type]
+						result.originalQuery.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
 						if result.filter

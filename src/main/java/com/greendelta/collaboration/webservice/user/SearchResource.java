@@ -8,8 +8,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.core.model.ModelType;
-
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
@@ -27,7 +25,7 @@ public class SearchResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response search(@QueryParam("query") @DefaultValue("") String query,
-			@QueryParam("page") @DefaultValue("0") int page, @QueryParam("type") ModelType type) {
+			@QueryParam("page") @DefaultValue("1") int page) {
 		return Respond.ok(service.search(query, page));
 	}
 }

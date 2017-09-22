@@ -11,6 +11,8 @@ public class Resources {
 
 	public static String get(Class<?> clazz, String name) {
 		InputStream stream = clazz.getResourceAsStream(name);
+		if (stream == null)
+			return null;
 		StringWriter writer = new StringWriter();
 		try {
 			IOUtils.copy(new InputStreamReader(stream), writer);

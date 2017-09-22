@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.platform.guice;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.gson.Gson;
@@ -29,6 +30,8 @@ class EsMapping {
 
 	private Map<String, Object> loadFieldMap(String name) {
 		String json = Resources.get(getClass(), name);
+		if (json == null)
+			return new HashMap<>();
 		return gson.fromJson(json, new TypeToken<Map<String, Object>>() {
 		}.getType());
 	}

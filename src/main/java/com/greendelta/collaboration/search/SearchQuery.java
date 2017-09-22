@@ -22,10 +22,7 @@ public class SearchQuery {
 	private int pageSize;
 
 	SearchQuery(Set<SearchAggregation> aggregations) {
-		if (aggregations != null)
-			this.aggregations = aggregations;
-		else
-			this.aggregations = new HashSet<>();
+		this.aggregations = aggregations != null ? aggregations : new HashSet<>();
 	}
 
 	void addFilter(String field, Set<SearchFilterValue> values, Conjunction type) {
@@ -36,10 +33,11 @@ public class SearchQuery {
 				break;
 			}
 		}
-		if (filter == null)
+		if (filter == null) {
 			filters.add(filter = new SearchFilter(field, values, type));
-		else
+		} else {
 			filter.values.addAll(values);
+		}
 	}
 
 	void setSortBy(Map<String, SearchSorting> sortBy) {
@@ -88,6 +86,10 @@ public class SearchQuery {
 
 	void setPageSize(int pageSize) {
 		this.pageSize = pageSize;
+	}
+
+	public boolean isPaged() {
+		return page > 0;
 	}
 
 	@Override

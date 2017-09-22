@@ -1,15 +1,7 @@
 include ../mixins/forms.jade
 include ../mixins/paging.jade
 
-.header-box #{total} results for '#{filter}'
-	if filteredType
-		|  and type '#{getTypeLabel(filteredType)}'
-	.pull-right
-		+select('type', 'Type', null, null, true)
-			option All
-			each type in modelTypes
-				option(value='#{type}' selected=type===filteredType)=getTypeLabel(type)
-	.clear
+.header-box #{resultInfo.totalCount} results for '#{originalQuery.query}'
 .content-box
 	each dataset in data
 		.result
@@ -30,4 +22,4 @@ include ../mixins/paging.jade
 				div Commit: 
 					a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
 						span.result-text #{dataset.commitMessage} (#{dataset.commitId})
-	+paging(page, Math.ceil(total/pageSize))
+	+paging(resultInfo.currentPage, resultInfo.pageCount)

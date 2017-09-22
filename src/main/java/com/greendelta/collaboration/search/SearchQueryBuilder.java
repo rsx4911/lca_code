@@ -91,7 +91,7 @@ public class SearchQueryBuilder {
 
 	public SearchQuery build(Conjunction queryConjunctionType) {
 		SearchQuery searchQuery = new SearchQuery(aggregations);
-		if (page >= 0) {
+		if (page > 0) {
 			searchQuery.setPage(page);
 			searchQuery.setPageSize(pageSize);
 		}

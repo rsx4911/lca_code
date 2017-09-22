@@ -166,10 +166,12 @@ public class RepositoryUpgrades {
 					continue;
 				List<IndexEntry> elements = byCategoryId.get(entry.refId);
 				entry.refId = newRefId;
-				for (IndexEntry element : elements) {
-					element.categoryRefId = newRefId;
+				if (elements != null) {
+					for (IndexEntry element : elements) {
+						element.categoryRefId = newRefId;
+					}
+					referencing.addAll(elements);
 				}
-				referencing.addAll(elements);
 			}
 			List<IndexEntry> all = new ArrayList<>();
 			all.addAll(entries);
