@@ -1,25 +1,43 @@
 include ../mixins/forms.jade
 include ../mixins/paging.jade
 
-.header-box #{resultInfo.totalCount} results for '#{originalQuery.query}'
-.content-box
-	each dataset in data
-		.result
-			- var url = dataset.repositoryId + '/dataset';
-			if dataset.type === 'CATEGORY'
-				- url += 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
-			else
-				- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
-			a(href=url)
+.col-lg-9
+	.header-box #{resultInfo.totalCount} results for '#{originalQuery.query}'
+	.content-box
+		each dataset in data
+			.result
+				- var url = dataset.repositoryId + '/dataset';
 				if dataset.type === 'CATEGORY'
-					img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+					- url += 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
 				else
-					img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
-				span.result-text=dataset.fullPath
-			.details
-				div Repository: 
-					a(href='#{dataset.repositoryId}')=dataset.repositoryId
-				div Commit: 
-					a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
-						span.result-text #{dataset.commitMessage} (#{dataset.commitId})
-	+paging(resultInfo.currentPage, resultInfo.pageCount)
+					- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
+				a(href=url)
+					if dataset.type === 'CATEGORY'
+						img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+					else
+						img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
+					span.result-text=dataset.fullPath
+				.details
+					div Repository: 
+						a(href='#{dataset.repositoryId}')=dataset.repositoryId
+					div Commit: 
+						a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
+							span.result-text #{dataset.commitMessage} (#{dataset.commitId})
+		+paging(resultInfo.currentPage, resultInfo.pageCount, getPagingUrl)
+.col-lg-3
+	.aggregations
+		.header-box Filters
+		.content-box
+			each aggregation in aggregations
+				.aggregation
+					div: strong #{aggregation.name}
+					each entry in aggregation.entries
+						- var key = entry.key;
+						if aggregation.name === 'Model type'
+							- key = getTypeLabel(key);
+						div
+							if aggregation.entries.length > 1
+								a(href='#' data-aggregation=aggregation.name data-value=entry.key) #{key} (#{entry.count})
+							else
+								| #{key} (#{entry.count})
+.clear

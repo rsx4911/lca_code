@@ -159,8 +159,11 @@ public class RepositoryUpgrades {
 				}
 				list.add(entry);
 			}
-			List<IndexEntry> referencing = new ArrayList<>();
+			List<IndexEntry> all = new ArrayList<>();
 			for (IndexEntry entry : entries) {
+				if (entry.type != ModelType.CATEGORY)
+					continue;
+				all.add(entry);
 				String newRefId = KeyGen.get((entry.categoryType.name() + "/" + entry.fullPath).split("/"));
 				if (entry.refId.equals(newRefId))
 					continue;
@@ -170,12 +173,9 @@ public class RepositoryUpgrades {
 					for (IndexEntry element : elements) {
 						element.categoryRefId = newRefId;
 					}
-					referencing.addAll(elements);
+					all.addAll(elements);
 				}
 			}
-			List<IndexEntry> all = new ArrayList<>();
-			all.addAll(entries);
-			all.addAll(referencing);
 			searchService.index(all);
 		}
 

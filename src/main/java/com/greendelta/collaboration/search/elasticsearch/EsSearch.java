@@ -83,11 +83,11 @@ class EsSearch {
 	}
 
 	private static void setupFilters(SearchRequestBuilder request, SearchQuery searchQuery, BoolQueryBuilder query) {
+		for (SearchAggregation aggregation : searchQuery.getAggregations()) {
+			request.addAggregation(EsAggregations.getBuilder(aggregation));
+		}
 		for (SearchFilter filter : searchQuery.getFilters()) {
 			SearchAggregation aggregation = searchQuery.getAggregation(filter.field);
-			if (aggregation != null) {
-				request.addAggregation(EsAggregations.getBuilder(aggregation));
-			}
 			BoolQueryBuilder q = toQuery(filter, aggregation);
 			if (q == null)
 				continue;

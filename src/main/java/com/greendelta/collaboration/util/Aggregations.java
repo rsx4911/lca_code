@@ -12,5 +12,6 @@ public interface Aggregations {
 	TermsAggregation REF_ID = new TermsAggregation("Ref id", "refId");
 
 	SearchAggregation[] ALL = new SearchAggregation[] { REPOSITORY, MODEL_TYPE, CATEGORY_TYPE, CATEGORY, REF_ID };
+	SearchAggregation[] FILTERS = new SearchAggregation[] { REPOSITORY, MODEL_TYPE};
 
 }

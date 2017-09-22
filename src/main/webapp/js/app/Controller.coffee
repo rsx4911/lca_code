@@ -137,6 +137,7 @@ define([
 				@router.registerUserRoute 'search', (query) => @showView 
 					view: 'search/Results'
 					title: 'Search' 
+					fullWidth: true
 					viewOptions: @splitQuery query
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
@@ -358,6 +359,10 @@ define([
 			showView: (options) ->
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main .center').empty()
+					if options.fullWidth
+						$('#main .full-size').addClass 'full-width'
+					else
+						$('#main .full-size').removeClass 'full-width'
 					title1 = options.title
 					title2 = options.title
 					if options.title and options.subTitle and currentUser.isLoggedIn()

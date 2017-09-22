@@ -11,32 +11,16 @@ define([
 
 		class SearchResultsView extends Backbone.View
 
-			doPage: (event) ->
-				Events.preventDefault event
-				target = $ Events.target event
-				page = target.attr 'data-page'
-				Router.navigate @getUrl @query, page
-
-			getUrl: (query, page) ->
-				url = 'search/'
-				if query
-					url += "query=#{query}"
-				if page
-					if query
-						url += '&'
-					url += "page=#{page}"
-				return url
-
 			className: 'search-view'
 
 			events: 
-				'click .result a': (event) -> Events.followLink event
-				'click a[data-page]': 'doPage'
+				'click a:not([href=#])': (event) -> Events.followLink event
 
 			initialize: (options) ->
 				{@query, @page} = options
 				unless @query
 					@query = ''
+				console.log @page
 				unless @page
 					@page = 1
 
@@ -47,12 +31,13 @@ define([
 					url: url
 					success: (result) =>
 						result.getTypeLabel = (type) -> return ModelTypes[type]
+						result.getPagingUrl = (page) => return @getPagingUrl page 
 						result.originalQuery.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
-						if result.filter
+						if @query
 							for textElement in $('.search-view .content-box .result-text')
-								@highlight result.filter, $(textElement)
+								@highlight @query, $(textElement)
 
 			highlight: (word, element) ->
 				word = word.toLowerCase()
@@ -65,5 +50,12 @@ define([
 					next = text.toLowerCase().indexOf word, next
 				replaced += text
 				element.html replaced
+
+			getPagingUrl: (page) ->
+				url = 'search/'
+				if @query
+					url += 'query=' + @query + '&'
+				url += "page=#{page}"
+				return url
 
 )

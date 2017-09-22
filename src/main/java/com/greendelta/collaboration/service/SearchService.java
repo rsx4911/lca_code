@@ -37,7 +37,7 @@ public class SearchService {
 
 	public SearchResult search(String query, int page) {
 		SearchQueryBuilder builder = new SearchQueryBuilder();
-		for (SearchAggregation aggregation : Aggregations.ALL) {
+		for (SearchAggregation aggregation : Aggregations.FILTERS) {
 			builder.aggregation(aggregation);
 		}
 		for (Repository repo : repoService.getAllAccessible()) {
