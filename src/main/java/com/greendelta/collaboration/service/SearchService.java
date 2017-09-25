@@ -3,6 +3,7 @@ package com.greendelta.collaboration.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
@@ -35,20 +36,44 @@ public class SearchService {
 		client.create(settings);
 	}
 
-	public SearchResult search(String query, int page) {
+	public SearchResult search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
 		SearchQueryBuilder builder = new SearchQueryBuilder();
-		for (SearchAggregation aggregation : Aggregations.FILTERS) {
+		ModelType type = getFilteredModelType(filters.get(Aggregations.MODEL_TYPE.name));
+		for (SearchAggregation aggregation : Aggregations.getFilters(type)) {
+			Set<String> filterValues = filters.get(aggregation.name);
+			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
+				putRepositoryFilter(builder, filterValues);
+			} else if (filterValues != null && !filterValues.isEmpty()) {
+				for (String filterValue : filterValues) {
+					builder.aggregation(aggregation, filterValue);
+				}
+			}
 			builder.aggregation(aggregation);
 		}
-		for (Repository repo : repoService.getAllAccessible()) {
-			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
+		if (!Strings.isNullOrEmpty(query)) {
+			builder.query(query, "name");
 		}
-		builder.query(query, "name");
 		builder.page(page);
 		builder.pageSize(SearchQuery.DEFAULT_PAGE_SIZE);
 		return client.search(builder.build());
 	}
 	
+	private ModelType getFilteredModelType(Set<String> values) {
+		if (values == null)
+			return null;
+		if (values.size() > 1)
+			return null;
+		return ModelType.valueOf(values.iterator().next());
+	}
+
+	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values) {
+		for (Repository repo : repoService.getAllAccessible()) {
+			if (values != null && !values.contains(repo.toId()))
+				continue;
+			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
+		}
+	}
+
 	List<IndexEntry> search(SearchQuery query) {
 		return parser.parse(client.search(query));
 	}

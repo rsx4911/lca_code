@@ -324,7 +324,11 @@ define([
 				result = {}
 				for param in params
 					param = param.split '='
-					result[param[0]] = param[1]
+					if result[param[0]]
+						result[param[0]] = [result[param[0]]]
+						result[param[0]].push param[1]
+					else 
+						result[param[0]] = param[1]
 				return result
 
 			checkGroupOrRepositoryExists: (options, callback) ->
@@ -357,6 +361,7 @@ define([
 				return reversed
 
 			showView: (options) ->
+				$('#global-search').val options?.viewOptions?.query	
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main .center').empty()
 					if options.fullWidth

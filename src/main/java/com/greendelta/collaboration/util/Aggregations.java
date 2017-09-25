@@ -1,17 +1,35 @@
 package com.greendelta.collaboration.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.openlca.core.model.ModelType;
+
 import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 import com.greendelta.collaboration.search.aggregations.TermsAggregation;
 
-public interface Aggregations {
+public class Aggregations {
 
-	TermsAggregation REPOSITORY = new TermsAggregation("Repository", "repositoryId");
-	TermsAggregation MODEL_TYPE = new TermsAggregation("Model type", "type");
-	TermsAggregation CATEGORY_TYPE = new TermsAggregation("Category type", "categoryType");
-	TermsAggregation CATEGORY = new TermsAggregation("Category", "categoryRefId");
-	TermsAggregation REF_ID = new TermsAggregation("Ref id", "refId");
-
-	SearchAggregation[] ALL = new SearchAggregation[] { REPOSITORY, MODEL_TYPE, CATEGORY_TYPE, CATEGORY, REF_ID };
-	SearchAggregation[] FILTERS = new SearchAggregation[] { REPOSITORY, MODEL_TYPE};
+	public static final TermsAggregation REPOSITORY = new TermsAggregation("Repository", "repositoryId");
+	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("Model type", "type");
+	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("Category type", "categoryType");
+	public static final TermsAggregation CATEGORY = new TermsAggregation("Category", "categoryRefId");
+	public static final TermsAggregation REF_ID = new TermsAggregation("Ref id", "refId");
+	// process specific aggregations
+	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("Process type", "processType");
+	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("Modelling approach", "modellingApproach");
+	
+	public static final SearchAggregation[] ALL = new SearchAggregation[] { REPOSITORY, MODEL_TYPE, CATEGORY_TYPE, CATEGORY, REF_ID};
+	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] { REPOSITORY, MODEL_TYPE };
+	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] { PROCESS_TYPE, MODELLING_APPROACH};
+	
+	public static final SearchAggregation[] getFilters(ModelType modelType) {
+		List<SearchAggregation> filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
+		if (modelType == ModelType.PROCESS) {
+			filters.addAll(Arrays.asList(PROCESS_FILTERS));
+		}
+		return filters.toArray(new SearchAggregation[filters.size()]);
+ 	}
 
 }

@@ -8,7 +8,7 @@ include ../mixins/paging.jade
 			.result
 				- var url = dataset.repositoryId + '/dataset';
 				if dataset.type === 'CATEGORY'
-					- url += 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
+					- url += 's/' + getLabel('Model type', dataset.categoryType) + '/' + dataset.fullPath;
 				else
 					- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
 				a(href=url)
@@ -29,15 +29,16 @@ include ../mixins/paging.jade
 		.header-box Filters
 		.content-box
 			each aggregation in aggregations
-				.aggregation
-					div: strong #{aggregation.name}
-					each entry in aggregation.entries
-						- var key = entry.key;
-						if aggregation.name === 'Model type'
-							- key = getTypeLabel(key);
-						div
-							if aggregation.entries.length > 1
-								a(href='#' data-aggregation=aggregation.name data-value=entry.key) #{key} (#{entry.count})
-							else
-								| #{key} (#{entry.count})
+				if aggregation.entries && aggregation.entries.length
+					.aggregation
+						div: strong #{aggregation.name}
+						each entry in aggregation.entries
+							- var label = getLabel(aggregation.name, entry.key);
+							div
+								if aggregation.entries.length > 1
+									a(href=getAggregationUrl(aggregation.name, entry.key)) #{label} (#{entry.count})
+								else
+									| #{label} (#{entry.count}) 
+									if isSelectedAggregationValue(aggregation.name, entry.key)
+										a(href=getAggregationUrl(aggregation.name, entry.key, true)): span.glyphicon.glyphicon-remove
 .clear

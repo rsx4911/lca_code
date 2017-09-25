@@ -17,27 +17,67 @@ define([
 				'click a:not([href=#])': (event) -> Events.followLink event
 
 			initialize: (options) ->
-				{@query, @page} = options
-				unless @query
-					@query = ''
-				console.log @page
-				unless @page
-					@page = 1
+				@aggregations = {}
+				for option in Object.keys(options)	
+					if option is 'query'
+						@query = options[option]
+					else if option is 'page'
+						@page = options[option]
+					else
+						values = options[option]
+						if $.isArray(values)
+							@aggregations[option] = values							
+						else
+							@aggregations[option] = [values]
 
 			render: (renderOptions) ->
-				url = 'ws/search?query=' + @query + '&page=' + @page
+				url = @getUrlPart 'ws/search?', @query, @page, @aggregations
 				$.ajax
 					type: 'GET'
 					url: url
 					success: (result) =>
-						result.getTypeLabel = (type) -> return ModelTypes[type]
-						result.getPagingUrl = (page) => return @getPagingUrl page 
+						result.getLabel = (type, value) => @getLabel type, value
+						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @aggregations, result
+						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $(value, @aggregations[type]) isnt -1
+						result.getAggregationUrl = (type, value, without = false) => 
+							aggregations = if without then @aggreagtionsWithout(type, value, result) else @aggreagtionsWith(type, value, result)
+							return @getUrlPart 'search/', @query, @page, aggregations, result
 						result.originalQuery.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
 						if @query
 							for textElement in $('.search-view .content-box .result-text')
 								@highlight @query, $(textElement)
+
+			aggreagtionsWithout: (type, value, result) ->
+				copy = {}
+				keys = Object.keys(@aggregations)
+				for key in keys
+					copy[key] = []
+					for v in @aggregations[key]
+						if type is key and v is value
+							continue
+						copy[key].push v
+				return copy
+
+			aggreagtionsWith: (type, value, result) ->
+				copy = {}
+				unless @aggregations[type]
+					@aggregations[type] = []
+				keys = Object.keys(@aggregations)
+				for key in keys
+					copy[key] = []
+					for v in @aggregations[key]
+						copy[key].push v
+					if type is key and $.inArray(value, copy[key]) is -1
+						copy[key].push value
+				return copy
+
+			isInResult: (key, result) ->
+				for aggregation in result.aggregations
+					if aggregation.name is key
+						return true
+				return false
 
 			highlight: (word, element) ->
 				word = word.toLowerCase()
@@ -51,11 +91,53 @@ define([
 				replaced += text
 				element.html replaced
 
-			getPagingUrl: (page) ->
-				url = 'search/'
-				if @query
-					url += 'query=' + @query + '&'
-				url += "page=#{page}"
+			getUrlPart: (base, query, page, aggregations, result) ->
+				url = base
+				isFirst = true
+				if query
+					url += "query=#{encodeURIComponent(query)}"
+					isFirst = false
+				if page
+					unless isFirst
+						url += '&'
+					url += "page=#{page}"
+					isFirst = false
+				if aggregations and Object.keys(aggregations).length
+					for key in Object.keys(aggregations)
+						if result and !@isInResult(key, result)
+							continue
+						for value in aggregations[key]
+							unless isFirst
+								url += '&'
+							url += "#{encodeURIComponent(key)}=#{encodeURIComponent(value)}"
+							isFirst = false
+				if url.indexOf('/', url.length - 1) isnt -1
+					url = url.substring(0, url.length - 1)
+				if url.indexOf('?', url.length - 1) isnt -1
+					url = url.substring(0, url.length - 1)
 				return url
+
+			getLabel: (type, value) ->
+				if type is 'Model type'
+					return ModelTypes[value]
+				if type is 'Modelling approach'
+					if value is 'PHYSICAL'
+						return 'Phsycial allocation'
+					else if value is 'ECONOMIC'
+						return 'Economic allocation'
+					else if value is 'CAUSAL'
+						return 'Causal allocation'
+					else if value is 'NONE'
+						return 'No allocation'
+					else if value is 'UNKNOWN'
+						return 'Unknown'
+				if type is 'Process type'
+					if value is 'UNIT'
+						return 'Unit process'
+					else if value is 'SYSTEM'
+						return 'System process'
+					else if value is 'UNKNOWN'
+						return 'Unknown'
+				return value
 
 )
