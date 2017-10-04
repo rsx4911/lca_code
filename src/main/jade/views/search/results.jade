@@ -2,7 +2,7 @@ include ../mixins/forms.jade
 include ../mixins/paging.jade
 
 .col-lg-9
-	.header-box #{resultInfo.totalCount} results for '#{originalQuery.query}'
+	.header-box #{resultInfo.totalCount} results for '#{query}'
 	.content-box
 		each dataset in data
 			.result

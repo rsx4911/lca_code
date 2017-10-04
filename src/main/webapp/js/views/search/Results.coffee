@@ -42,7 +42,7 @@ define([
 						result.getAggregationUrl = (type, value, without = false) => 
 							aggregations = if without then @aggreagtionsWithout(type, value, result) else @aggreagtionsWith(type, value, result)
 							return @getUrlPart 'search/', @query, @page, aggregations, result
-						result.originalQuery.query = @query
+						result.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
 						if @query

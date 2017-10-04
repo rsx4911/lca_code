@@ -9,10 +9,10 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.search.SearchQueryBuilder;
-import com.greendelta.collaboration.search.SearchFilterValue.Type;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ModelTypes;
+import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchQueryBuilder;
 
 public class BrowseService {
 

@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.openlca.core.model.ModelType;
 
-import com.greendelta.collaboration.search.aggregations.SearchAggregation;
-import com.greendelta.collaboration.search.aggregations.TermsAggregation;
+import com.greendelta.lca.search.aggregations.SearchAggregation;
+import com.greendelta.lca.search.aggregations.TermsAggregation;
 
 public class Aggregations {
 

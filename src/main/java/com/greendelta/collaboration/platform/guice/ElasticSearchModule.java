@@ -19,13 +19,13 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.platform.guice.util.BindUtils;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
-import com.greendelta.collaboration.search.SearchClient;
-import com.greendelta.collaboration.search.elasticsearch.EsClient;
-import com.greendelta.collaboration.search.elasticsearch.EsSettings;
 import com.greendelta.collaboration.service.RepositoryUpgrades;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.Resources;
+import com.greendelta.lca.search.SearchClient;
+import com.greendelta.lca.search.elasticsearch.EsClient;
+import com.greendelta.lca.search.elasticsearch.EsSettings;
 
 class ElasticSearchModule extends AbstractModule {
 

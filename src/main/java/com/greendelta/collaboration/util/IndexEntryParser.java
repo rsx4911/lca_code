@@ -16,7 +16,7 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingAppro
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingPrinciple;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.Nomenclature;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
-import com.greendelta.collaboration.search.SearchResult;
+import com.greendelta.lca.search.SearchResult;
 
 public class IndexEntryParser {
 

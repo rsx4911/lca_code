@@ -10,15 +10,15 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.search.SearchClient;
-import com.greendelta.collaboration.search.SearchFilterValue.Type;
-import com.greendelta.collaboration.search.SearchQuery;
-import com.greendelta.collaboration.search.SearchQueryBuilder;
-import com.greendelta.collaboration.search.SearchResult;
-import com.greendelta.collaboration.search.aggregations.SearchAggregation;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.IndexEntryParser;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.lca.search.SearchClient;
+import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchQuery;
+import com.greendelta.lca.search.SearchQueryBuilder;
+import com.greendelta.lca.search.SearchResult;
+import com.greendelta.lca.search.aggregations.SearchAggregation;
 
 public class SearchService {
 

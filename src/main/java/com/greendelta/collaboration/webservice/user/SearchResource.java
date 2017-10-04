@@ -17,9 +17,9 @@ import javax.ws.rs.core.UriInfo;
 import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.search.SearchQuery;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.lca.search.SearchQuery;
 import com.sun.jersey.api.uri.UriComponent;
 
 @Path("search")
