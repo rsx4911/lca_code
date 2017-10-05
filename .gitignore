@@ -14,3 +14,4 @@
 /src/main/webapp/js/app/DynamicDependencies.coffee
 /deploy.sh
 /.externalToolBuilders/
+/update-libs.sh

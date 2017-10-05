@@ -36,6 +36,7 @@ define([
 					type: 'GET'
 					url: url
 					success: (result) =>
+						result.getAggregationLabel = (type) => @getAggregationLabel type
 						result.getLabel = (type, value) => @getLabel type, value
 						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @aggregations, result
 						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $(value, @aggregations[type]) isnt -1
@@ -118,9 +119,9 @@ define([
 				return url
 
 			getLabel: (type, value) ->
-				if type is 'Model type'
+				if type is 'type'
 					return ModelTypes[value]
-				if type is 'Modelling approach'
+				if type is 'modellingApproach'
 					if value is 'PHYSICAL'
 						return 'Phsycial allocation'
 					else if value is 'ECONOMIC'
@@ -131,7 +132,7 @@ define([
 						return 'No allocation'
 					else if value is 'UNKNOWN'
 						return 'Unknown'
-				if type is 'Process type'
+				if type is 'processType'
 					if value is 'UNIT'
 						return 'Unit process'
 					else if value is 'SYSTEM'
@@ -139,5 +140,19 @@ define([
 					else if value is 'UNKNOWN'
 						return 'Unknown'
 				return value
+
+			getAggregationLabel: (type) ->
+				if type is 'repositoryId'
+					return 'Repository'
+				if type is 'type'
+					return 'Model type'
+				if type is 'categoryType'
+					return 'Category type'
+				if type is 'categoryRefId'
+					return 'Category'
+				if type is 'processType'
+					return 'Process type'
+				if type is 'modellingApproach'
+					return 'Modelling approach'
 
 )

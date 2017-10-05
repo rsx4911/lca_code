@@ -8,7 +8,7 @@ include ../mixins/paging.jade
 			.result
 				- var url = dataset.repositoryId + '/dataset';
 				if dataset.type === 'CATEGORY'
-					- url += 's/' + getLabel('Model type', dataset.categoryType) + '/' + dataset.fullPath;
+					- url += 's/' + getLabel('modelType', dataset.categoryType) + '/' + dataset.fullPath;
 				else
 					- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
 				a(href=url)
@@ -31,7 +31,7 @@ include ../mixins/paging.jade
 			each aggregation in aggregations
 				if aggregation.entries && aggregation.entries.length
 					.aggregation
-						div: strong #{aggregation.name}
+						div: strong=getAggregationLabel(aggregation.name)
 						each entry in aggregation.entries
 							- var label = getLabel(aggregation.name, entry.key);
 							div

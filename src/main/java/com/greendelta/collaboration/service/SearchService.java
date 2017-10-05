@@ -19,6 +19,7 @@ import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
 import com.greendelta.lca.search.aggregations.SearchAggregation;
+import com.greendelta.lca.search.aggregations.results.AggregationResultBuilder;
 
 public class SearchService {
 
@@ -37,27 +38,41 @@ public class SearchService {
 	}
 
 	public SearchResult search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
+		List<Repository> repos = repoService.getAllAccessible();
+		if (repos.isEmpty())
+			return buildEmptyResult(page, pageSize);
 		SearchQueryBuilder builder = new SearchQueryBuilder();
 		ModelType type = getFilteredModelType(filters.get(Aggregations.MODEL_TYPE.name));
 		for (SearchAggregation aggregation : Aggregations.getFilters(type)) {
 			Set<String> filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
-				putRepositoryFilter(builder, filterValues);
+				putRepositoryFilter(builder, filterValues, repos);
 			} else if (filterValues != null && !filterValues.isEmpty()) {
 				for (String filterValue : filterValues) {
 					builder.aggregation(aggregation, filterValue);
 				}
+			} else {
+				builder.aggregation(aggregation);
 			}
-			builder.aggregation(aggregation);
 		}
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, "name");
 		}
 		builder.page(page);
-		builder.pageSize(SearchQuery.DEFAULT_PAGE_SIZE);
+		builder.pageSize(pageSize);
 		return client.search(builder.build());
 	}
-	
+
+	private SearchResult buildEmptyResult(int page, int pageSize) {
+		SearchResult result = new SearchResult();
+		result.resultInfo.currentPage = page;
+		result.resultInfo.pageSize = pageSize;
+		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {
+			result.aggregations.add(new AggregationResultBuilder().type(aggr.type).name(aggr.name).build());
+		}
+		return result;
+	}
+
 	private ModelType getFilteredModelType(Set<String> values) {
 		if (values == null)
 			return null;
@@ -66,8 +81,8 @@ public class SearchService {
 		return ModelType.valueOf(values.iterator().next());
 	}
 
-	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values) {
-		for (Repository repo : repoService.getAllAccessible()) {
+	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> repos) {
+		for (Repository repo : repos) {
 			if (values != null && !values.contains(repo.toId()))
 				continue;
 			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
@@ -99,7 +114,7 @@ public class SearchService {
 
 	SearchQueryBuilder builder(Repository repo) {
 		return new SearchQueryBuilder()
-				.page(-1)
+				.page(0)
 				.aggregation(Aggregations.REPOSITORY, repo.toId());
 	}
 

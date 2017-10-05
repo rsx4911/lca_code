@@ -123,7 +123,7 @@ public class RepositoryUpgrades {
 
 		private static boolean restructure(File dir) {
 			for (File child : getFiles(dir)) {
-				if (child.length() == 2)
+				if (child.getName().length() == 2)
 					// This was already done in this repository, so stop
 					// searching
 					return true;

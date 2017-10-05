@@ -11,14 +11,14 @@ import com.greendelta.lca.search.aggregations.TermsAggregation;
 
 public class Aggregations {
 
-	public static final TermsAggregation REPOSITORY = new TermsAggregation("Repository", "repositoryId");
-	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("Model type", "type");
-	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("Category type", "categoryType");
-	public static final TermsAggregation CATEGORY = new TermsAggregation("Category", "categoryRefId");
-	public static final TermsAggregation REF_ID = new TermsAggregation("Ref id", "refId");
+	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId");
+	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type");
+	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("categoryType");
+	public static final TermsAggregation CATEGORY = new TermsAggregation("categoryRefId");
+	public static final TermsAggregation REF_ID = new TermsAggregation("refId");
 	// process specific aggregations
-	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("Process type", "processType");
-	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("Modelling approach", "modellingApproach");
+	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
+	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");
 	
 	public static final SearchAggregation[] ALL = new SearchAggregation[] { REPOSITORY, MODEL_TYPE, CATEGORY_TYPE, CATEGORY, REF_ID};
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] { REPOSITORY, MODEL_TYPE };
