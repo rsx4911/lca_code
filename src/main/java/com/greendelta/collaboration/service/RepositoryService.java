@@ -29,6 +29,8 @@ import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.util.Dirs;
+import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.lca.search.SearchResult;
 
 public class RepositoryService {
 
@@ -255,13 +257,9 @@ public class RepositoryService {
 		return getAll(adminArea).size();
 	}
 
-	public PagedResult<Repository> getAll(int page, String filter, boolean adminArea) {
+	public SearchResult<Repository> getAll(int page, String filter, boolean adminArea) {
 		List<Repository> accessible = getAll(adminArea);
-		if (page == 0)
-			return new PagedResult<>(accessible);
-		return PagedResult.pagedAndFiltered(page, filter, accessible, (repo) -> {
-			return repo.toId();
-		});
+		return SearchResults.pagedAndFiltered(page, filter, accessible, (repo) -> repo.toId());
 	}
 
 	public List<Repository> getAllAccessible() {

@@ -21,7 +21,7 @@ import com.greendelta.lca.search.SearchResult;
 
 class IndexEntryParser {
 
-	List<IndexEntry> parse(SearchResult result) {
+	List<IndexEntry> parse(SearchResult<Map<String, Object>> result) {
 		List<IndexEntry> parsed = new ArrayList<>();
 		for (Map<String, Object> entry : result.data) {
 			parsed.add(parse(entry));

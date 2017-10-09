@@ -117,29 +117,35 @@ public class RepositoryUpgrades {
 	private static class Restructuring {
 
 		private static void restructure(Repository repo, SearchService searchService) {
+			boolean restructured = false;
 			for (ModelType type : ModelType.values()) {
-				boolean changedBefore = restructure(repo.getModelDir(type, false));
-				if (changedBefore)
-					return;
+				boolean wasRestructured = restructure(repo.getModelDir(type, false));
+				if (!wasRestructured)
+					continue;
 				restructure(repo.getBinDir(type, false));
+				restructured = true;
+
 			}
-			updateCategoryRefIds(repo, searchService);
+			if (restructured) {
+				updateCategoryRefIds(repo, searchService);
+			}
 		}
 
 		private static boolean restructure(File dir) {
-			for (File child : getFiles(dir)) {
+			File[] children = getChildren(dir);
+			for (File child : children) {
 				if (child.getName().length() == 2)
 					// This was already done in this repository, so stop
 					// searching
-					return true;
+					return false;
 				File moveTo = new File(child.getParentFile(), child.getName().substring(0, 2));
 				moveTo.mkdir();
 				child.renameTo(new File(moveTo, child.getName()));
 			}
-			return false;
+			return children.length > 0;
 		}
 
-		private static File[] getFiles(File dir) {
+		private static File[] getChildren(File dir) {
 			if (dir == null)
 				return new File[0];
 			if (!dir.exists())
@@ -236,7 +242,8 @@ public class RepositoryUpgrades {
 			return all;
 		}
 
-		private IndexEntry convert(Document document, Map<String, Commit> commits, Map<String, Map<String, Dataset>> references) throws IOException {
+		private IndexEntry convert(Document document, Map<String, Commit> commits,
+				Map<String, Map<String, Dataset>> references) throws IOException {
 			ModelType type = ModelType.valueOf(document.get("type"));
 			IndexEntry entry = type == ModelType.PROCESS ? new ProcessIndexEntry() : new IndexEntry();
 			entry.refId = document.get("refId");

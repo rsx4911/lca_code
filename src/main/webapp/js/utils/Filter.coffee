@@ -25,9 +25,7 @@ define([
 					callback.apply @, [result]
 
 			append: (result) ->
-				model = result
-				model.pageCount = Math.ceil(result.subTotal / result.pageSize)
-				$(@container).html @template model
+				$(@container).html @template result
 				$(@container + ' a.page').on 'click', (event) => @applyFilter event
 
 			applyFilter: (event) ->

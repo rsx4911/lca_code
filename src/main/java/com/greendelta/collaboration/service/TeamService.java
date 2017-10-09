@@ -9,6 +9,8 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.lca.search.SearchResult;
 
 public class TeamService {
 
@@ -73,18 +75,17 @@ public class TeamService {
 		return dao.getCount();
 	}
 
-	public PagedResult<Team> getAll(int page, String filter) {
+	public SearchResult<Team> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		long total = dao.getCount();
 		String query = createQuery(filter, true);
 		long subTotal = dao.getCount(query, parameters);
 		int start = page == 0 ? 0 : 1 + (page - 1) * 10;
 		int limit = page == 0 ? 0 : 10;
 		query = createQuery(filter, false);
 		List<Team> data = dao.getAll(query, parameters, start, limit);
-		return new PagedResult<>(page, filter, total, subTotal, data);
+		return SearchResults.from(data, page, 10, subTotal);
 	}
 
 	private String createQuery(String filter, boolean forCount) {

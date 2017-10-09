@@ -1,10 +1,8 @@
 package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -26,10 +24,11 @@ import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.lca.search.SearchResult;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("group")
@@ -83,15 +82,9 @@ public class GroupResource {
 	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
-		PagedResult<String> result = service.getAll(page, filter, true);
-		return Respond.ok(result.toClient2((groups) -> {
-			List<ObjectMap> maps = new ArrayList<>();
-			for (String group : groups) {
-				if (onlyIfCanWrite && !accessService.canWrite(group))
-					continue;
-				maps.add(ObjectMap.fromMap(Collections.singletonMap("name", group)));
-			}
-			return maps;
+		SearchResult<String> result = service.getAll(page, filter, true, onlyIfCanWrite);
+		return Respond.ok(SearchResults.convert(result, (String group) -> {
+			return ObjectMap.fromMap(Collections.singletonMap("name", group));
 		}));
 	}
 

@@ -13,10 +13,6 @@ public class Aggregations {
 
 	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId");
 	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type");
-	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("categoryType");
-	public static final TermsAggregation CATEGORY = new TermsAggregation("categoryRefId");
-	public static final TermsAggregation REF_ID = new TermsAggregation("refId");
-	public static final TermsAggregation COMMIT_ID = new TermsAggregation("commitId");
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
 	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");

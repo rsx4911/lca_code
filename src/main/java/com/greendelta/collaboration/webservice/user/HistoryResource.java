@@ -14,7 +14,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
@@ -22,14 +21,18 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchQuery;
+import com.greendelta.lca.search.SearchQueryBuilder;
+import com.greendelta.lca.search.SearchResult;
 
 @Path("history")
 public class HistoryResource {
@@ -115,15 +118,22 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		List<IndexEntry> all = searchService.getAll(repo, commit);
-		List<IndexEntry> categorized = Collections.filter(all, (ds) -> !ds.type.isCategorized()
-				|| ds.action == IndexAction.DELETE);
-		List<Dataset> refs = new ArrayList<>();
-		for (int i = (page - 1) * 10; i < page * 10; i++)
-			if (categorized.size() > i)
-				refs.add(categorized.get(i).asDataset());
-		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, categorized.size(), refs.size(), refs);
-		return Respond.ok(result);
+		SearchQuery query = createReferencesQuery(repo, commit, page);
+		SearchResult<IndexEntry> result = searchService.search(query);
+		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asDataset()));
+	}
+
+	private SearchQuery createReferencesQuery(Repository repo, Commit commit, int page) {
+		SearchQueryBuilder builder = new SearchQueryBuilder()
+				.page(page)
+				.pageSize(SearchQuery.DEFAULT_PAGE_SIZE)
+				.filter(Aggregations.REPOSITORY.name, Type.PHRASE, repo.toId())
+				.filter("commitId", Type.PHRASE, commit.id)
+				.filter("action", Type.PHRASE, IndexAction.ADD.name(), IndexAction.UPDATE.name());
+		for (ModelType type : ModelType.categorized()) {
+			builder.filter("type", Type.PHRASE, type.name());
+		}
+		return builder.build();
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {

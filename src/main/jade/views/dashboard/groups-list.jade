@@ -6,4 +6,4 @@ include ../mixins/paging.jade
 			img.avatar(src='ws/group/avatar/#{group.name}')
 			a.follow(href='groups/#{group.name}')
 				strong=group.name
-	+paging(page, pageCount)
+	+paging(resultInfo)

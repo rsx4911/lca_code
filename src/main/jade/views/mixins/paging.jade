@@ -1,4 +1,6 @@
-mixin paging(page, pageCount, getUrl)
+mixin paging(resultInfo, getUrl)
+	- var page = resultInfo.currentPage;
+	- var pageCount = resultInfo.pageCount;
 	if !getUrl
 		- getUrl = function() {return '#';};
 	if pageCount > 1

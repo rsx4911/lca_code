@@ -24,4 +24,5 @@ public class Repositories {
 			map.put("groupIsUserNamespace", groupIsUserNamespace);
 		return map;
 	}
+	
 }

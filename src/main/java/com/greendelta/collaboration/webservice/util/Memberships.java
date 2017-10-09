@@ -37,7 +37,7 @@ public class Memberships {
 		return maps;
 	}
 
-	private static ObjectMap map(Membership membership) {
+	public static ObjectMap map(Membership membership) {
 		ObjectMap map = ObjectMap.fromObject(membership);
 		map.remove("id");
 		if (membership.team != null) {

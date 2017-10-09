@@ -23,13 +23,14 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Memberships;
+import com.greendelta.lca.search.SearchResult;
 
 @Path("membership")
 @Produces(MediaType.APPLICATION_JSON)
@@ -152,8 +153,8 @@ public class MembershipResource {
 		String path = group;
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
-		PagedResult<Membership> memberships = service.getMemberships(path, filter);
-		return Respond.ok(memberships.toClient2(Memberships::map));
+		SearchResult<Membership> memberships = service.getMemberships(path, filter);
+		return Respond.ok(SearchResults.convert(memberships, Memberships::map));
 	}
 
 	private String getAuthorizedPath(String group, String repo) {

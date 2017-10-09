@@ -49,12 +49,12 @@ public class BrowseService {
 		SearchQueryBuilder builder = searchService.builder(repo);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-			builder.aggregation(Aggregations.CATEGORY, type.name());
+			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
-		List<IndexEntry> result = searchService.search(builder.build());
+		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filterDeleted(result);
 	}
 
@@ -62,13 +62,13 @@ public class BrowseService {
 		SearchQueryBuilder builder = searchService.builder(repo);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
-			builder.aggregation(Aggregations.CATEGORY_TYPE, type.name());
-			builder.aggregation(Aggregations.CATEGORY, type.name());
+			builder.filter("categoryType", Type.PHRASE, type.name());
+			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
-		List<IndexEntry> result = searchService.search(builder.build());
+		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filterDeleted(result);
 	}
 
@@ -78,11 +78,11 @@ public class BrowseService {
 
 	public List<IndexEntry> getForCategory(Repository repo, String id, String nameFilter) {
 		SearchQueryBuilder builder = searchService.builder(repo)
-				.aggregation(Aggregations.CATEGORY, id);
+				.filter("categoryRefId", Type.PHRASE, id);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
-		List<IndexEntry> result = searchService.search(builder.build());
+		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filterDeleted(result);
 	}
 

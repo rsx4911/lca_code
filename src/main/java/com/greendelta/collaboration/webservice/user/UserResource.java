@@ -28,7 +28,6 @@ import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.MessagingService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
@@ -37,10 +36,12 @@ import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.Password;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Users;
+import com.greendelta.lca.search.SearchResult;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("user")
@@ -86,9 +87,9 @@ public class UserResource {
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module,
 			@QueryParam("repositoryPath") String repositoryPath) {
-		PagedResult<User> result = service.getAll(page, filter);
+		SearchResult<User> result = service.getAll(page, filter);
 		if (module == null)
-			return Respond.ok(result.toClient(Users::mapForOthers));
+			return Respond.ok(SearchResults.convert(result, Users::mapForOthers));
 		List<User> users = result.data;
 		switch (module) {
 		case MESSAGING:

@@ -16,6 +16,7 @@ import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.lca.search.SearchClient;
 import com.greendelta.lca.search.SearchFilterValue.Type;
 import com.greendelta.lca.search.SearchQuery;
@@ -41,7 +42,7 @@ public class SearchService {
 		client.create(settings);
 	}
 
-	public SearchResult search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
+	public SearchResult<IndexEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
 		List<Repository> repos = repoService.getAllAccessible();
 		if (repos.isEmpty())
 			return buildEmptyResult(page, pageSize);
@@ -66,11 +67,11 @@ public class SearchService {
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
 		builder.pageSize(pageSize);
-		return client.search(builder.build());
+		return SearchResults.convert(client.search(builder.build()), parser::parse);
 	}
 
-	private SearchResult buildEmptyResult(int page, int pageSize) {
-		SearchResult result = new SearchResult();
+	private SearchResult<IndexEntry> buildEmptyResult(int page, int pageSize) {
+		SearchResult<IndexEntry> result = new SearchResult<>();
 		result.resultInfo.currentPage = page;
 		result.resultInfo.pageSize = pageSize;
 		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {
@@ -95,8 +96,8 @@ public class SearchService {
 		}
 	}
 
-	List<IndexEntry> search(SearchQuery query) {
-		return parser.parse(client.search(query));
+	public SearchResult<IndexEntry> search(SearchQuery query) {
+		return SearchResults.convert(client.search(query), parser::parse);
 	}
 
 	public List<IndexEntry> getAll(Repository repo) {
@@ -121,7 +122,7 @@ public class SearchService {
 
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
 		SearchQueryBuilder builder = builder(repo);
-		builder.aggregation(Aggregations.COMMIT_ID, commit.id);
+		builder.filter("commitId", Type.PHRASE, commit.id);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return parser.parse(client.search(builder.build()));
 	}
@@ -139,9 +140,9 @@ public class SearchService {
 
 	public IndexEntry getLast(Repository repo, String refId) {
 		SearchQueryBuilder builder = builder(repo);
-		builder.aggregation(Aggregations.REF_ID, refId);
+		builder.filter("refId", Type.PHRASE, refId);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
-		SearchResult result = client.search(builder.build());
+		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (result.data.isEmpty())
 			return null;
 		return parser.parse(result.data.get(0));

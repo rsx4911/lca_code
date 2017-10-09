@@ -16,6 +16,8 @@ import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.lca.search.SearchResult;
 
 public class MembershipService {
 
@@ -226,18 +228,21 @@ public class MembershipService {
 		return dao.getFirstForAttributes(attributes);
 	}
 
-	public PagedResult<Membership> getMemberships(String groupOrRepo, String filter) {
+	public SearchResult<Membership> getMemberships(String groupOrRepo, String filter) {
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("memberOf", groupOrRepo);
-		List<Membership> result = dao.getForAttributes(attributes);
+		List<Membership> members = dao.getForAttributes(attributes);
 		filter = filter.toLowerCase();
-		if (!Strings.isNullOrEmpty(filter))
-			for (Membership m : new ArrayList<>(result))
-				if (m.team != null && !m.team.name.toLowerCase().contains(filter))
-					result.remove(m);
-				else if (m.user != null && !m.user.name.toLowerCase().contains(filter))
-					result.remove(m);
-		return new PagedResult<Membership>(0, filter, result.size(), result.size(), result);
+		if (!Strings.isNullOrEmpty(filter)) {
+			for (Membership m : new ArrayList<>(members)) {
+				if (m.team != null && !m.team.name.toLowerCase().contains(filter)) {
+					members.remove(m);
+				} else if (m.user != null && !m.user.name.toLowerCase().contains(filter)) {
+					members.remove(m);
+				}
+			}
+		}
+		return SearchResults.from(members);
 	}
 
 	public List<Membership> getMemberships(String groupOrRepo) {

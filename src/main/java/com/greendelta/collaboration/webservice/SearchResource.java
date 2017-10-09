@@ -66,7 +66,7 @@ public class SearchResource {
 		return Respond.ok(search(query, page, pageSize, parameters));
 	}
 
-	private SearchResult search(String query, int page, int pageSize, Map<String, Set<String>> parameters) {
+	private SearchResult<Map<String, Object>> search(String query, int page, int pageSize, Map<String, Set<String>> parameters) {
 		SearchQueryBuilder builder = new SearchQueryBuilder();
 		List<SearchAggregation> aggregations = new ArrayList<>(Arrays.asList(Aggregations.PROCESS_FILTERS));
 		aggregations.add(Aggregations.REPOSITORY);
@@ -93,12 +93,12 @@ public class SearchResource {
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
-		SearchResult result = client.search(builder.build());
+		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		prepareResult(result);
 		return result;
 	}
 
-	private void prepareResult(SearchResult result) {
+	private void prepareResult(SearchResult<Map<String, Object>> result) {
 		for (AggregationResult aggreagtion : new ArrayList<>(result.aggregations)) {
 			if (aggreagtion.name.equals(Aggregations.REPOSITORY.name)) {
 				result.aggregations.remove(aggreagtion);
@@ -124,8 +124,8 @@ public class SearchResource {
 		}
 	}
 
-	private SearchResult buildEmptyResult(int page, int pageSize) {
-		SearchResult result = new SearchResult();
+	private SearchResult<Map<String, Object>> buildEmptyResult(int page, int pageSize) {
+		SearchResult<Map<String, Object>> result = new SearchResult<>();
 		result.resultInfo.currentPage = page;
 		result.resultInfo.pageSize = pageSize;
 		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {

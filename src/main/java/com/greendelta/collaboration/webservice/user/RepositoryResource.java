@@ -28,16 +28,17 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
+import com.greendelta.lca.search.SearchResult;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -175,9 +176,9 @@ public class RepositoryResource {
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("group") @DefaultValue("") String group,
 			@QueryParam("module") Module module) {
-		PagedResult<Repository> result = service.getAll(page, filter, true);
+		SearchResult<Repository> result = service.getAll(page, filter, true);
 		if (module == null)
-			return Respond.ok(result.toClient(Repositories::map));
+			return Respond.ok(SearchResults.convert(result, Repositories::map));
 		List<Repository> repositories = result.data;
 		switch (module) {
 		case REVIEW:

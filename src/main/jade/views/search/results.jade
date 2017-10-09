@@ -23,7 +23,7 @@ include ../mixins/paging.jade
 					div Commit: 
 						a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
 							span.result-text #{dataset.commitMessage} (#{dataset.commitId})
-		+paging(resultInfo.currentPage, resultInfo.pageCount, getPagingUrl)
+		+paging(resultInfo, getPagingUrl)
 .col-lg-3
 	.aggregations
 		.header-box Filters
