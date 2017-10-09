@@ -19,10 +19,13 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -32,12 +35,15 @@ import com.greendelta.collaboration.webservice.Respond;
 public class HistoryResource {
 
 	private final HistoryService service;
+	private final SearchService searchService;
 	private final RepositoryService repoService;
 	private final UserService userService;
 
 	@Inject
-	public HistoryResource(HistoryService service, RepositoryService repoService, UserService userService) {
+	public HistoryResource(HistoryService service, SearchService searchService, RepositoryService repoService,
+			UserService userService) {
 		this.service = service;
+		this.searchService = searchService;
 		this.repoService = repoService;
 		this.userService = userService;
 	}
@@ -109,12 +115,13 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		List<Dataset> all = service.getReferences(repo, commitId);
-		List<Dataset> categorized = Collections.filter(all, (ds) -> !ds.type.isCategorized());
+		List<IndexEntry> all = searchService.getAll(repo, commit);
+		List<IndexEntry> categorized = Collections.filter(all, (ds) -> !ds.type.isCategorized()
+				|| ds.action == IndexAction.DELETE);
 		List<Dataset> refs = new ArrayList<>();
 		for (int i = (page - 1) * 10; i < page * 10; i++)
 			if (categorized.size() > i)
-				refs.add(categorized.get(i));
+				refs.add(categorized.get(i).asDataset());
 		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, categorized.size(), refs.size(), refs);
 		return Respond.ok(result);
 	}

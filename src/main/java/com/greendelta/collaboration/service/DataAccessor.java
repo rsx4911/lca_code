@@ -59,7 +59,7 @@ class DataAccessor {
 				if (entry.trim().isEmpty())
 					continue;
 				Commit commit = Commit.parse(entry);
-				if (!filter.filter(commit))
+				if (filter == null || !filter.filter(commit))
 					commits.add(commit);
 			}
 			return commits;

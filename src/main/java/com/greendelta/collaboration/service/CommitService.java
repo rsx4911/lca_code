@@ -5,9 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -22,9 +20,9 @@ import org.openlca.core.model.ModelType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.util.IndexEntryCreator;
+import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 
 public class CommitService {
 
@@ -33,16 +31,16 @@ public class CommitService {
 
 	private final UserService userService;
 	private final AccessService accessService;
+	private final BrowseService browseService;
 	private final SearchService searchService;
-	private final DataAccessor dataAccessor;
+	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public CommitService(UserService userService, AccessService accessService, SearchService searchService,
-			DataAccessor dataAccessor) {
+	public CommitService(UserService userService, AccessService accessService, BrowseService browseService, SearchService searchService) {
 		this.userService = userService;
 		this.searchService = searchService;
+		this.browseService = browseService;
 		this.accessService = accessService;
-		this.dataAccessor = dataAccessor;
 	}
 
 	public String put(Repository repo, InputStream data) {
@@ -52,9 +50,8 @@ public class CommitService {
 		ModelStreamReader reader = null;
 		try {
 			reader = new ModelStreamReader(data);
-			String commitId = UUID.randomUUID().toString();
-			write(repo, commitId, reader);
-			return commitId;
+			Commit commit = write(repo, reader);
+			return commit.id;
 		} catch (IOException e) {
 			log.error("Error reading commit data", e);
 			return null;
@@ -70,27 +67,28 @@ public class CommitService {
 		}
 	}
 
-	private void write(Repository repo, String commitId, ModelStreamReader reader) throws IOException {
-		Commit commit = writeCommit(repo, commitId, reader.readNextPartAsString());
-		List<Dataset> datasets = writeDatasets(repo, commit, reader);
-		writeReferences(repo, commitId, datasets);
-	}
-
-	private Commit writeCommit(Repository repo, String commitId, String commitMessage) {
-		String username = userService.getCurrentUser().username;
-		long timestamp = Calendar.getInstance().getTimeInMillis();
-		Commit commit = new Commit();
-		commit.id = commitId;
-		commit.message = commitMessage.replace("\r\n", " ").replace("\n", " ").replace("\r", " ");
-		commit.user = username;
-		commit.timestamp = timestamp;
+	private Commit write(Repository repo, ModelStreamReader reader) throws IOException {
+		Commit commit = createCommit(repo, reader.readNextPartAsString());
+		writeDatasets(repo, commit, reader);
 		File historyFile = repo.getHistoryFile(true);
 		dataAccessor.appendToHistory(historyFile, commit);
 		return commit;
 	}
 
+	private Commit createCommit(Repository repo, String commitMessage) {
+		String username = userService.getCurrentUser().username;
+		long timestamp = Calendar.getInstance().getTimeInMillis();
+		Commit commit = new Commit();
+		commit.id = UUID.randomUUID().toString();
+		commit.message = commitMessage.replace("\r\n", " ").replace("\n", " ").replace("\r", " ");
+		commit.user = username;
+		commit.timestamp = timestamp;
+		return commit;
+	}
+
 	private List<Dataset> writeDatasets(Repository repo, Commit commit, ModelStreamReader reader) throws IOException {
 		List<Dataset> datasets = new ArrayList<>();
+		List<IndexEntry> indexEntries = new ArrayList<>();
 		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
 		while (reader.hasMore()) {
 			Dataset dataset = reader.readNextPartAsDataset();
@@ -103,14 +101,19 @@ public class CommitService {
 				hadData = reader.readNextPartToStream(out);
 			}
 			if (!hadData) {
-				// TODO remove from index or mark as deleted
+				IndexEntry entry = indexEntryCreator.generic(dataset);
+				entry.action = IndexAction.DELETE;
+				indexEntries.add(entry);
 				continue;
 			}
-			if (type != ModelType.PROCESS) {
-				searchService.index(indexEntryCreator.generic(dataset));
+			IndexEntry entry = null;
+			if (type == ModelType.PROCESS) {
+				entry = indexEntryCreator.process(dataset, file);
 			} else {
-				searchService.index(indexEntryCreator.process(dataset, file));
+				entry = indexEntryCreator.generic(dataset);
 			}
+			entry.action = browseService.hasDataset(repo, refId) ? IndexAction.UPDATE : IndexAction.ADD;
+			indexEntries.add(entry);
 			File binDir = repo.getBinDir(type, refId, commit.id, false);
 			int count = 0;
 			int noOfFiles = reader.readNextInt();
@@ -123,13 +126,7 @@ public class CommitService {
 				}
 			}
 		}
+		searchService.index(indexEntries);
 		return datasets;
 	}
-
-	private void writeReferences(Repository repo, String commitId, List<Dataset> datasets) throws IOException {
-		File file = repo.getCommitFile(commitId, true);
-		String json = new Gson().toJson(datasets);
-		Files.write(file.toPath(), json.getBytes(), StandardOpenOption.CREATE);
-	}
-
 }

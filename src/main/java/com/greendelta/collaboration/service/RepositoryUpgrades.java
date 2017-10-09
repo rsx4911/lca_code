@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +15,14 @@ import java.util.Map;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
+import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
@@ -28,11 +33,12 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.service.upgrade.IUpgrade;
 import com.greendelta.collaboration.service.upgrade.Upgrade1;
-import com.greendelta.collaboration.util.IndexEntryCreator;
+import com.greendelta.collaboration.util.ModelTypes;
 
 public class RepositoryUpgrades {
 
@@ -54,8 +60,7 @@ public class RepositoryUpgrades {
 				// restructure repository directory if old version
 				File oldIndexDir = new File(name, "ds_index");
 				if (oldIndexDir.exists()) {
-					IndexConversion.runOn(repo, oldIndexDir, searchService);
-					Directories.delete(oldIndexDir);
+					new IndexConversion(repo, oldIndexDir, searchService).run();
 				}
 				Restructuring.restructure(repo, searchService);
 				if (repo.getSchemaVersion().equals(Schema.URI))
@@ -184,62 +189,128 @@ public class RepositoryUpgrades {
 	private static class IndexConversion {
 
 		private static final Gson gson = new Gson();
+		private final Repository repo;
+		private final File indexDir;
+		private final SearchService searchService;
 
-		private static void runOn(Repository repo, File indexDir, SearchService searchService) {
-			List<IndexEntry> entries = getIndexEntries(repo, indexDir);
+		private IndexConversion(Repository repo, File indexDir, SearchService searchService) {
+			this.repo = repo;
+			this.indexDir = indexDir;
+			this.searchService = searchService;
+		}
+
+		private void run() {
+			List<IndexEntry> entries = getIndexEntries();
 			if (entries.isEmpty())
 				return;
 			searchService.index(entries);
 		}
 
-		private static List<IndexEntry> getIndexEntries(Repository repo, File indexDir) {
+		private List<IndexEntry> getIndexEntries() {
+			File hFile = repo.getHistoryFile(false);
+			Map<String, Commit> commitMap = new HashMap<>();
+			List<Commit> commits = dataAccessor.readHistory(hFile, null);
+			for (Commit commit : commits) {
+				commitMap.put(commit.id, commit);
+			}
+			Map<String, Map<String, Dataset>> references = getReferences(commits);
 			List<IndexEntry> all = new ArrayList<>();
 			try {
-				IndexSearcher searcher = getSearcher(indexDir);
+				IndexSearcher searcher = getSearcher();
 				if (searcher == null)
 					return new ArrayList<>();
-				MatchAllDocsQuery query = new MatchAllDocsQuery();
-				TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
-				if (topDocs.totalHits == 0)
-					return new ArrayList<>();
-				for (ScoreDoc doc : topDocs.scoreDocs) {
-					IndexEntry entry = convert(repo, searcher.doc(doc.doc));
-					all.add(entry);
+				for (Commit commit : commits) {
+					TermQuery query = new TermQuery(new Term("commitId", commit.id));
+					TopDocs topDocs = searcher.search(query, Integer.MAX_VALUE);
+					if (topDocs.totalHits == 0)
+						continue;
+					for (ScoreDoc doc : topDocs.scoreDocs) {
+						IndexEntry entry = convert(searcher.doc(doc.doc), commitMap, references);
+						all.add(entry);
+					}
 				}
 			} catch (IOException e) {
 				LoggerFactory.getLogger(RepositoryUpgrades.class).error("Error retrieving dataset identifiers", e);
 			}
+			Directories.delete(indexDir);
 			return all;
 		}
 
-		private static IndexEntry convert(Repository repo, Document document) {
+		private IndexEntry convert(Document document, Map<String, Commit> commits, Map<String, Map<String, Dataset>> references) throws IOException {
 			ModelType type = ModelType.valueOf(document.get("type"));
 			IndexEntry entry = type == ModelType.PROCESS ? new ProcessIndexEntry() : new IndexEntry();
 			entry.refId = document.get("refId");
 			entry.type = type;
 			entry.name = document.get("name");
 			entry.categoryRefId = document.get("categoryRefId");
-			if (!Strings.nullOrEmpty(document.get("categoryType")))
+			if (!Strings.nullOrEmpty(document.get("categoryType")) && entry.type == ModelType.CATEGORY)
 				entry.categoryType = ModelType.valueOf(document.get("categoryType"));
 			entry.commitId = document.get("commitId");
 			entry.commitMessage = document.get("commitMessage");
 			entry.fullPath = document.get("fullPath");
-			entry.lastUpdate = Long.parseLong(document.get("lastUpdate"));
 			entry.repositoryId = document.get("repositoryId");
+			Dataset ds = references.get(entry.commitId).get(entry.refId);
+			entry.version = ds.version;
+			entry.lastChange = ds.lastChange;
+			IndexEntry last = searchService.getLast(repo, entry.refId);
+			entry.action = last != null ? IndexAction.UPDATE : IndexAction.ADD;
+			entry.commitTimestamp = commits.get(entry.commitId).timestamp;
+			File dsFile = repo.getDatasetFile(type, entry.refId, entry.commitId, false);
+			if (Files.size(dsFile.toPath()) == 0)
+				entry.action = IndexAction.DELETE;
 			if (type == ModelType.PROCESS) {
-				putProcessMetaInfo(repo, (ProcessIndexEntry) entry);
+				putProcessMetaInfo((ProcessIndexEntry) entry);
 			}
 			return entry;
 		}
 
-		private static void putProcessMetaInfo(Repository repo, ProcessIndexEntry entry) {
+		private Map<String, Map<String, Dataset>> getReferences(List<Commit> commits) {
+			Map<String, Map<String, Dataset>> references = new HashMap<>();
+			for (Commit commit : commits) {
+				File file = getCommitFile(commit.id);
+				try {
+					String json = new String(Files.readAllBytes(file.toPath()), Charset.forName("utf-8"));
+					List<Dataset> datasets = new Gson().fromJson(json, new TypeToken<List<Dataset>>() {
+					}.getType());
+					Collections.sort(datasets, (r1, r2) -> {
+						int v = ModelTypes.compare(r1.type, r2.type);
+						if (v != 0)
+							return v;
+						if (r1.type == ModelType.CATEGORY) {
+							v = ModelTypes.compare(r1.categoryType, r2.categoryType);
+							if (v != 0)
+								return v;
+						}
+						return Strings.compare(r1.name, r2.name);
+					});
+					Map<String, Dataset> map = new HashMap<>();
+					for (Dataset ds : datasets) {
+						map.put(ds.refId, ds);
+					}
+					references.put(commit.id, map);
+					file.delete();
+				} catch (IOException e) {
+					LoggerFactory.getLogger(RepositoryUpgrades.class).error("Error retrieving references", e);
+				}
+			}
+			return references;
+		}
+
+		private File getCommitFile(String commitId) {
+			File historyDir = repo.getHistoryDir(false);
+			String filename = commitId + ".txt";
+			return repo.getFile(historyDir, filename, false);
+
+		}
+
+		private void putProcessMetaInfo(ProcessIndexEntry entry) {
 			File file = repo.getDatasetFile(entry.type, entry.refId, entry.commitId, false);
 			if (file == null || !file.exists())
 				return;
 			IndexEntryCreator.fillProcess(entry, readData(file));
 		}
 
-		private static Map<String, Object> readData(File file) {
+		private Map<String, Object> readData(File file) {
 			try {
 				return gson.fromJson(new FileReader(file), new TypeToken<Map<String, Object>>() {
 				}.getType());
@@ -249,7 +320,7 @@ public class RepositoryUpgrades {
 			}
 		}
 
-		public static IndexSearcher getSearcher(File indexDir) throws IOException {
+		public IndexSearcher getSearcher() throws IOException {
 			IndexReader reader = DirectoryReader.open(FSDirectory.open(indexDir.toPath()));
 			if (reader == null)
 				return null;

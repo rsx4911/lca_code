@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.util;
+package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.FileReader;
@@ -10,6 +10,7 @@ import org.elasticsearch.common.Strings;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.AllocationMethod;
+import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
@@ -18,20 +19,20 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingApproach;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.util.ObjectMap;
 
-public class IndexEntryCreator {
+class IndexEntryCreator {
 
 	private static final Gson gson = new Gson();
 	private final Repository repo;
 	private final Commit commit;
 
-	public IndexEntryCreator(Repository repo, Commit commit) {
+	IndexEntryCreator(Repository repo, Commit commit) {
 		this.repo = repo;
 		this.commit = commit;
 	}
 
-	public IndexEntry generic(Dataset dataset) {
+	IndexEntry generic(Dataset dataset) {
 		IndexEntry entry = new IndexEntry();
 		fillGeneric(entry, dataset);
 		return entry;
@@ -44,20 +45,24 @@ public class IndexEntryCreator {
 		entry.name = dataset.name;
 		entry.categoryRefId = dataset.categoryRefId;
 		entry.fullPath = dataset.fullPath;
-		entry.categoryType = dataset.categoryType;
+		if (entry.type == ModelType.CATEGORY) {
+			entry.categoryType = dataset.categoryType;
+		}
 		entry.commitId = commit.id;
 		entry.commitMessage = commit.message;
-		entry.lastUpdate = dataset.lastChange;
+		entry.commitTimestamp = commit.timestamp;
+		entry.lastChange = dataset.lastChange;
+		entry.version = dataset.version;
 	}
 
-	public ProcessIndexEntry process(Dataset dataset, File dataFile) {
+	ProcessIndexEntry process(Dataset dataset, File dataFile) {
 		ProcessIndexEntry entry = new ProcessIndexEntry();
 		fillGeneric(entry, dataset);
 		fillProcess(entry, readData(dataFile));
 		return entry;
 	}
 
-	public static void fillProcess(ProcessIndexEntry entry, Map<String, Object> map) {
+	static void fillProcess(ProcessIndexEntry entry, Map<String, Object> map) {
 		ObjectMap data = ObjectMap.fromMap(map);
 		entry.processType = getProcessType(data.getString("processType"));
 		entry.completeness = data.getString("processDocumentation.completenessDescription");
@@ -74,7 +79,7 @@ public class IndexEntryCreator {
 		entry.contact = entry.copyrightHolder;
 		entry.description = data.getString("description");
 	}
-	
+
 	private static ProcessType getProcessType(String value) {
 		if (value == null)
 			return ProcessType.UNKNOWN;

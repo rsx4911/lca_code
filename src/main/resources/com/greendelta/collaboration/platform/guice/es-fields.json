@@ -12,7 +12,7 @@
 		"include_in_all": false
 	},
 	"name": {
-		type: "text"
+		"type": "text"
 	},
 	"categoryRefId": {
 		"type": "keyword",
@@ -27,14 +27,22 @@
 		"include_in_all": false
 	},
 	"commitMessage": {
-		type: "text"
+		"type": "text"
+	},
+	"commitTimestamp": {
+		"type": "long",
+		"include_in_all": false
 	},
 	"fullPath": {
-		type: "text",
-		index: false
+		"type": "text",
+		"include_in_all": false
 	},
 	"lastUpdate": {
-		type: "text",
-		index: false
+		"type": "text",
+		"include_in_all": false
+	},
+	"action": {
+		"type": "keyword",
+		"include_in_all": false		
 	}
 }

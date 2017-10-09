@@ -84,9 +84,8 @@ public class SearchResource {
 		for (String filter : parameters.keySet()) {
 			Set<String> filterValues = parameters.get(filter);
 			if (filterValues != null && !filterValues.isEmpty()) {
-				for (String filterValue : filterValues) {
-					builder.filter(filter, filterValue, Type.WILDCART);
-				}
+				String[] values = filterValues.toArray(new String[filterValues.size()]);
+				builder.filter(filter, Type.WILDCART, values);
 			}
 		}
 		if (!Strings.isNullOrEmpty(query)) {

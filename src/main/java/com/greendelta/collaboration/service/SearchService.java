@@ -1,23 +1,27 @@
 package com.greendelta.collaboration.service;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.common.Strings;
+import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.IndexEntryParser;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.lca.search.SearchClient;
 import com.greendelta.lca.search.SearchFilterValue.Type;
 import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
+import com.greendelta.lca.search.SearchSorting;
 import com.greendelta.lca.search.aggregations.SearchAggregation;
 import com.greendelta.lca.search.aggregations.results.AggregationResultBuilder;
 
@@ -55,9 +59,11 @@ public class SearchService {
 				builder.aggregation(aggregation);
 			}
 		}
+		builder.filter("action", Type.PHRASE, IndexAction.ADD.name(), IndexAction.UPDATE.name());
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, "name");
 		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
 		builder.pageSize(pageSize);
 		return client.search(builder.build());
@@ -107,8 +113,16 @@ public class SearchService {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
+			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
+		return parser.parse(client.search(builder.build()));
+	}
+
+	public List<IndexEntry> getAll(Repository repo, Commit commit) {
+		SearchQueryBuilder builder = builder(repo);
+		builder.aggregation(Aggregations.COMMIT_ID, commit.id);
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return parser.parse(client.search(builder.build()));
 	}
 
@@ -118,45 +132,65 @@ public class SearchService {
 				.aggregation(Aggregations.REPOSITORY, repo.toId());
 	}
 
-	public boolean contains(Repository repo, String refId) {
-		SearchQueryBuilder builder = builder(repo)
-				.aggregation(Aggregations.REF_ID, refId);
-		return !client.search(builder.build()).data.isEmpty();
-	}
-
 	public IndexEntry get(Repository repo, ModelType type, String refId, String commitId) {
 		String id = repo.toId() + "/" + refId + "/" + commitId;
 		return parser.parse(client.get(type.name().toLowerCase(), id));
 	}
 
+	public IndexEntry getLast(Repository repo, String refId) {
+		SearchQueryBuilder builder = builder(repo);
+		builder.aggregation(Aggregations.REF_ID, refId);
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
+		SearchResult result = client.search(builder.build());
+		if (result.data.isEmpty())
+			return null;
+		return parser.parse(result.data.get(0));
+	}
+
 	public void index(Collection<IndexEntry> entries) {
+		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
-			index(entry);
+			setDummyCategoryId(entry);
+			Map<String, Object> content = ObjectMap.fromObject(entry);
+			Map<String, Map<String, Object>> contentsById = contentsByIdByType.get(entry.type.name());
+			if (contentsById == null) {
+				contentsByIdByType.put(entry.type.name(), contentsById = new HashMap<>());
+			}
+			contentsById.put(entry.toIndexId(), content);
 		}
+		client.index(contentsByIdByType);
 	}
 
 	public void index(IndexEntry entry) {
-		String id = entry.repositoryId + "/" + entry.refId + "/" + entry.commitId;
-		if (Strings.isNullOrEmpty(entry.categoryRefId)) {
-			if (entry.type == ModelType.CATEGORY) {
-				entry.categoryRefId = entry.categoryType.name();
-			} else {
-				entry.categoryRefId = entry.type.name();
-			}
+		setDummyCategoryId(entry);
+		Map<String, Object> content = ObjectMap.fromObject(entry);
+		client.index(entry.type.name().toLowerCase(), entry.toIndexId(), content);
+	}
+
+	private void setDummyCategoryId(IndexEntry entry) {
+		if (!Strings.isNullOrEmpty(entry.categoryRefId))
+			return;
+		if (entry.type == ModelType.CATEGORY) {
+			entry.categoryRefId = entry.categoryType.name();
+		} else {
+			entry.categoryRefId = entry.type.name();
 		}
-		Map<String, Object> map = ObjectMap.fromObject(entry);
-		client.index(entry.type.name().toLowerCase(), id, map);
 	}
 
 	public void remove(Collection<IndexEntry> entries) {
+		Map<String, Set<String>> idsByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
-			remove(entry);
+			Set<String> ids = idsByType.get(entry.type.name());
+			if (ids == null) {
+				idsByType.put(entry.type.name(), ids = new HashSet<>());
+			}
+			ids.add(entry.toIndexId());
 		}
+		client.remove(idsByType);
 	}
 
 	public void remove(IndexEntry entry) {
-		String id = entry.repositoryId + "/" + entry.refId + "/" + entry.commitId;
-		client.remove(entry.type.name().toLowerCase(), id);
+		client.remove(entry.type.name().toLowerCase(), entry.toIndexId());
 	}
 
 }

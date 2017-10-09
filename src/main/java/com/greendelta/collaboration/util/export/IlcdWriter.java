@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
@@ -138,6 +139,8 @@ public class IlcdWriter implements DatasetWriter {
 			List<Commit> commits = historyService.getCommitsUntil(repo, currentCommitId);
 			List<IndexEntry> filtered = new ArrayList<>();
 			for (IndexEntry entry : entries) {
+				if (entry.action == IndexAction.DELETE)
+					continue;
 				for (Commit commit : commits) {
 					if (entry.commitId.equals(commit.id)) {
 						filtered.add(entry);

@@ -16,11 +16,11 @@ public class Aggregations {
 	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("categoryType");
 	public static final TermsAggregation CATEGORY = new TermsAggregation("categoryRefId");
 	public static final TermsAggregation REF_ID = new TermsAggregation("refId");
+	public static final TermsAggregation COMMIT_ID = new TermsAggregation("commitId");
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
 	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");
 	
-	public static final SearchAggregation[] ALL = new SearchAggregation[] { REPOSITORY, MODEL_TYPE, CATEGORY_TYPE, CATEGORY, REF_ID};
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] { REPOSITORY, MODEL_TYPE };
 	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] { PROCESS_TYPE, MODELLING_APPROACH};
 	

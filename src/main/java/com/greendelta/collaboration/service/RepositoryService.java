@@ -38,17 +38,15 @@ public class RepositoryService {
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
-	private final DataAccessor dataAccessor;
+	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
-			AccessService accessService, MembershipService membershipService, UserService userService,
-			DataAccessor dataAccessor) {
+			AccessService accessService, MembershipService membershipService, UserService userService) {
 		this.root = repositoryPath;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
-		this.dataAccessor = dataAccessor;
 	}
 
 	public Repository get(String group, String name) {
@@ -202,17 +200,6 @@ public class RepositoryService {
 		File historyDir = from.getHistoryDir(false);
 		if (!historyDir.exists())
 			return;
-		File historyFile = from.getHistoryFile(false);
-		Set<String> commitIds = toIds(commits);
-		for (File file : historyDir.listFiles()) {
-			if (file.equals(historyFile))
-				continue;
-			String commitId = file.getName().substring(0, file.getName().indexOf(".txt"));
-			if (!commitIds.contains(commitId))
-				continue;
-			File copy = to.getCommitFile(commitId, true);
-			Files.copy(file, copy);
-		}
 		File copy = to.getHistoryFile(true);
 		for (Commit commit : commits)
 			dataAccessor.appendToHistory(copy, commit);

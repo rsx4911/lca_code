@@ -19,6 +19,7 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.FetchService;
@@ -80,7 +81,7 @@ public class BrowseResource {
 		}
 		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, filter);
 		if (content.isEmpty())
-			if (service.categoryExists(repo, categoryRefId))
+			if (service.hasDataset(repo, categoryRefId))
 				return filterDeleted(repo, content);
 			else
 				return null;
@@ -90,7 +91,7 @@ public class BrowseResource {
 	private List<IndexEntry> filterDeleted(Repository repo, List<IndexEntry> entries) {
 		List<IndexEntry> notDeleted = new ArrayList<>();
 		for (IndexEntry entry : entries) {
-			if (!fetchService.hasDataset(repo, entry.type, entry.refId, entry.commitId))
+			if (entry.action == IndexAction.DELETE)
 				continue;
 			notDeleted.add(entry);
 		}

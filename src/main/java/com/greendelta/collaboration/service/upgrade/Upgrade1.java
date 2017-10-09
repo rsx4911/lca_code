@@ -7,6 +7,7 @@ import org.openlca.core.model.ModelType;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SearchService;
@@ -27,6 +28,8 @@ public class Upgrade1 implements IUpgrade {
 	public void run(Repository repo, SearchService searchService, GetJson getJson, PutJson putJson) {
 		List<IndexEntry> entries = searchService.getAll(repo, ModelType.PROCESS);
 		for (IndexEntry entry : entries) {
+			if (entry.action == IndexAction.DELETE)
+				continue;
 			JsonObject json = getJson.apply(repo, entry);
 			process(json);
 			putJson.apply(repo, entry, json);

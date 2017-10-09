@@ -95,12 +95,6 @@ public class Repository {
 		return getFile(historyDir, "history.txt", create);
 	}
 
-	File getCommitFile(String commitId, boolean create) {
-		File historyDir = getHistoryDir(create);
-		String filename = commitId + ".txt";
-		return getFile(historyDir, filename, create);
-	}
-
 	File getDatasetFile(ModelType type, String refId, String commitId,
 			boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
@@ -146,7 +140,7 @@ public class Repository {
 		return getDir(repoDir, "history", true);
 	}
 
-	private File getFile(File dir, String name, boolean create) {
+	File getFile(File dir, String name, boolean create) {
 		File file = new File(dir, name);
 		if (create && !file.exists())
 			try {

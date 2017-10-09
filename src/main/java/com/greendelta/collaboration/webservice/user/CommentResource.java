@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.CommentService;
@@ -88,6 +89,8 @@ public class CommentResource {
 		List<Map<String, Object>> mapped = new ArrayList<>();
 		Map<String, String> modelTypeAndIdToPath = new HashMap<>();
 		for (IndexEntry entry : searchService.getAll(repository)) {
+			if (entry.action == IndexAction.DELETE)
+				continue;
 			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId + "_" + entry.commitId, entry.fullPath);
 		}
 		for (Comment comment : comments) {

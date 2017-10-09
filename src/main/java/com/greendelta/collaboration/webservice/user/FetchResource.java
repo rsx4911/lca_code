@@ -19,17 +19,19 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FetchRequestData;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("fetch")
@@ -38,12 +40,15 @@ public class FetchResource {
 	private final FetchService service;
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
+	private final SearchService searchService;
 
 	@Inject
-	public FetchResource(FetchService service, RepositoryService repoService, HistoryService historyService) {
+	public FetchResource(FetchService service, RepositoryService repoService, HistoryService historyService,
+			SearchService searchService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.historyService = historyService;
+		this.searchService = searchService;
 	}
 
 	@GET
@@ -120,15 +125,16 @@ public class FetchResource {
 
 	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
 		List<FetchRequestData> result = new ArrayList<>();
-		Set<Dataset> alreadyAdded = new HashSet<>();
+		Set<IndexEntry> alreadyAdded = new HashSet<>();
 		Collections.reverse(commits);
 		for (Commit commit : commits) {
-			List<Dataset> descriptors = historyService.getReferences(repo, commit.id);
-			for (Dataset descriptor : descriptors) {
+			List<IndexEntry> descriptors = searchService.getAll(repo, commit);
+			for (IndexEntry descriptor : descriptors) {
+				if (descriptor.action == IndexAction.DELETE)
+					continue;
 				if (alreadyAdded.contains(descriptor))
 					continue;
-				FetchRequestData value = service.toRequestData(repo, commit.id, descriptor);
-				result.add(value);
+				result.add(descriptor.asFetchRequestData());
 				alreadyAdded.add(descriptor);
 			}
 		}
@@ -155,13 +161,17 @@ public class FetchResource {
 			@PathParam("name") String name,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		List<Dataset> datasets = historyService.getReferences(repo, commitId);
+		Commit commit = historyService.getCommit(repo, commitId);
+		if (commit == null)
+			return Respond.notFound("Commit with id " + commitId + " not found");
+		List<IndexEntry> datasets = searchService.getAll(repo, commit);
 		if (datasets.isEmpty())
 			return Respond.notFound("Commit with id " + commitId + " not found");
 		List<FetchRequestData> resultData = new ArrayList<>();
-		for (Dataset dataset : datasets) {
-			FetchRequestData value = service.toRequestData(repo, commitId, dataset);
-			resultData.add(value);
+		for (IndexEntry entry : datasets) {
+			if (entry.action == IndexAction.DELETE)
+				continue;
+			resultData.add(entry.asFetchRequestData());
 		}
 		return Respond.ok(resultData);
 	}

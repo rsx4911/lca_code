@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.util;
+package com.greendelta.collaboration.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,6 +8,7 @@ import java.util.Map;
 import org.openlca.core.model.ModelType;
 import org.slf4j.LoggerFactory;
 
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.AggregationType;
@@ -18,9 +19,9 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.Nomenclature;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.lca.search.SearchResult;
 
-public class IndexEntryParser {
+class IndexEntryParser {
 
-	public List<IndexEntry> parse(SearchResult result) {
+	List<IndexEntry> parse(SearchResult result) {
 		List<IndexEntry> parsed = new ArrayList<>();
 		for (Map<String, Object> entry : result.data) {
 			parsed.add(parse(entry));
@@ -28,7 +29,7 @@ public class IndexEntryParser {
 		return parsed;
 	}
 
-	public IndexEntry parse(Map<String, Object> entry) {
+	IndexEntry parse(Map<String, Object> entry) {
 		if (entry == null)
 			return null;
 		IndexEntry e = new IndexEntry();
@@ -41,10 +42,13 @@ public class IndexEntryParser {
 		e.commitId = toString(entry.get("commitId"));
 		e.commitMessage = toString(entry.get("commitMessage"));
 		e.fullPath = toString(entry.get("fullPath"));
-		e.lastUpdate = toLong(entry.get("lastUpdate"));
+		e.lastChange = toLong(entry.get("lastChange"));
 		e.name = toString(entry.get("name"));
 		e.refId = toString(entry.get("refId"));
 		e.repositoryId = toString(entry.get("repositoryId"));
+		e.version = toString(entry.get("version"));
+		e.commitTimestamp = toLong(entry.get("commitTimestamp"));
+		e.action = toAction(entry.get("action"));
 		e.type = type;
 		return e;
 	}
@@ -154,6 +158,12 @@ public class IndexEntryParser {
 		if (o == null)
 			return null;
 		return ModelType.valueOf(o.toString().toUpperCase());
+	}
+
+	private IndexAction toAction(Object o) {
+		if (o == null)
+			return null;
+		return IndexAction.valueOf(o.toString().toUpperCase());
 	}
 
 }

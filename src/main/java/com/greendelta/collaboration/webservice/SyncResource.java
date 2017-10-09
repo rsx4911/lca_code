@@ -16,27 +16,32 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FetchRequestData;
 import org.openlca.cloud.model.data.FileReference;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 
 @Path("public/sync")
 public class SyncResource {
 
 	private final FetchService fetchService;
 	private final HistoryService historyService;
+	private final SearchService searchService;
 	private final RepositoryService repoService;
 
 	@Inject
-	public SyncResource(FetchService fetchService, HistoryService historyService, RepositoryService repoService) {
+	public SyncResource(FetchService fetchService, HistoryService historyService, SearchService searchService,
+			RepositoryService repoService) {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
+		this.searchService = searchService;
 		this.repoService = repoService;
 	}
 
@@ -56,14 +61,15 @@ public class SyncResource {
 
 	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
 		List<FetchRequestData> result = new ArrayList<>();
-		Set<Dataset> alreadyAdded = new HashSet<>();
+		Set<IndexEntry> alreadyAdded = new HashSet<>();
 		for (Commit commit : commits) {
-			List<Dataset> descriptors = historyService.getReferences(repo, commit.id);
-			for (Dataset descriptor : descriptors) {
+			List<IndexEntry> descriptors = searchService.getAll(repo, commit);
+			for (IndexEntry descriptor : descriptors) {
+				if (descriptor.action == IndexAction.DELETE)
+					continue;
 				if (alreadyAdded.contains(descriptor))
 					continue;
-				FetchRequestData value = fetchService.toRequestData(repo, commit.id, descriptor);
-				result.add(value);
+				result.add(descriptor.asFetchRequestData());
 				alreadyAdded.add(descriptor);
 			}
 		}

@@ -3,6 +3,7 @@ package com.greendelta.collaboration.model.index;
 
 public class ProcessIndexEntry extends IndexEntry {
 
+	private static final long serialVersionUID = 2145646252325642438L;
 	public ProcessType processType = ProcessType.UNKNOWN;
 	public String completeness;
 	public String sampleRepresentativeness;

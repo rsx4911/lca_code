@@ -8,6 +8,7 @@ import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -17,14 +18,10 @@ import com.greendelta.lca.search.SearchQueryBuilder;
 public class BrowseService {
 
 	private final SearchService searchService;
-	private final HistoryService historyService;
-	private final FetchService fetchService;
 
 	@Inject
-	public BrowseService(SearchService searchService, HistoryService historyService, FetchService fetchService) {
+	public BrowseService(SearchService searchService) {
 		this.searchService = searchService;
-		this.historyService = historyService;
-		this.fetchService = fetchService;
 	}
 
 	public List<ModelType> getRootContent(Repository repo) {
@@ -38,7 +35,7 @@ public class BrowseService {
 	}
 
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
-		return onlyIfExists(repo, onlyLast(searchService.getAll(repo, type)));
+		return filterDeleted(searchService.getAll(repo, type));
 	}
 
 	public List<IndexEntry> getUncategorized(Repository repo, ModelType type, String nameFilter) {
@@ -55,10 +52,10 @@ public class BrowseService {
 			builder.aggregation(Aggregations.CATEGORY, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
+			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build());
-		return onlyIfExists(repo, onlyLast(result));
+		return filterDeleted(result);
 	}
 
 	private List<IndexEntry> getRootCategories(Repository repo, ModelType type, String nameFilter) {
@@ -69,10 +66,10 @@ public class BrowseService {
 			builder.aggregation(Aggregations.CATEGORY, type.name());
 		}
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
+			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build());
-		return onlyIfExists(repo, onlyLast(result));
+		return filterDeleted(result);
 	}
 
 	public List<IndexEntry> getForCategory(Repository repo, String id) {
@@ -83,26 +80,16 @@ public class BrowseService {
 		SearchQueryBuilder builder = searchService.builder(repo)
 				.aggregation(Aggregations.CATEGORY, id);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
+			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build());
-		return onlyIfExists(repo, onlyLast(result));
+		return filterDeleted(result);
 	}
 
-	private List<IndexEntry> onlyLast(List<IndexEntry> entries) {
+	private List<IndexEntry> filterDeleted(List<IndexEntry> entries) {
 		List<IndexEntry> filtered = new ArrayList<>();
 		for (IndexEntry entry : entries) {
-			if (!historyService.isLastCommit(entry))
-				continue;
-			filtered.add(entry);
-		}
-		return filtered;
-	}
-
-	private List<IndexEntry> onlyIfExists(Repository repo, List<IndexEntry> entries) {
-		List<IndexEntry> filtered = new ArrayList<>();
-		for (IndexEntry entry : entries) {
-			if (!fetchService.hasDataset(repo, entry.type, entry.refId, entry.commitId))
+			if (entry.action == IndexAction.DELETE)
 				continue;
 			filtered.add(entry);
 		}
@@ -113,8 +100,9 @@ public class BrowseService {
 		return searchService.get(repo, type, refId, commitId);
 	}
 
-	public boolean categoryExists(Repository repo, String categoryId) {
-		return searchService.contains(repo, categoryId);
+	public boolean hasDataset(Repository repo, String refId) {
+		IndexEntry entry = searchService.getLast(repo, refId);
+		return entry != null && entry.action != IndexAction.DELETE;
 	}
 
 }

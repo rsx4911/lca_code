@@ -1,18 +1,50 @@
 package com.greendelta.collaboration.model.index;
 
-import org.openlca.core.model.ModelType;
+import org.openlca.cloud.model.data.Dataset;
+import org.openlca.cloud.model.data.FetchRequestData;
 
-public class IndexEntry {
+public class IndexEntry extends Dataset {
 
-	public ModelType type;
-	public String refId;
-	public String name;
-	public ModelType categoryType;
-	public String categoryRefId;
+	private static final long serialVersionUID = 1982606052315691498L;
+	public String repositoryId;
 	public String commitId;
 	public String commitMessage;
-	public String fullPath;
-	public long lastUpdate;
-	public String repositoryId;
+	public long commitTimestamp;
+	public IndexAction action;
+
+	public String toIndexId() {
+		return repositoryId + "/" + refId + "/" + commitId;
+	}
+
+	public Dataset asDataset() {
+		Dataset d = new Dataset();
+		d.refId = refId;
+		d.type = type;
+		d.version = version;
+		d.lastChange = lastChange;
+		d.name = name;
+		d.fullPath = fullPath;
+		d.categoryRefId = categoryRefId;
+		d.categoryType = categoryType;
+		return d;
+	}
+
+	public FetchRequestData asFetchRequestData() {
+		FetchRequestData d = new FetchRequestData();
+		d.refId = refId;
+		d.type = type;
+		d.version = version;
+		d.lastChange = lastChange;
+		d.name = name;
+		d.fullPath = fullPath;
+		d.categoryRefId = categoryRefId;
+		d.categoryType = categoryType;
+		if (action == IndexAction.ADD) {
+			d.setAdded(true);
+		} else if (action == IndexAction.DELETE) {
+			d.setDeleted(true);
+		}
+		return d;
+	}
 
 }

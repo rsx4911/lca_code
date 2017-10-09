@@ -1,68 +1,68 @@
 {
 	"processType": {
-		type: "keyword"
+		"type": "keyword"
 	},
 	"completeness": {
-		type: "text"
+		"type": "text"
 	},
 	"sampleRepresentativeness": {
-		type: "text"
+		"type": "text"
 	},
 	"samplingProcedure": {
-		type: "text"
+		"type": "text"
 	},
 	"validFrom": {
-		type: "date"
+		"type": "date"
 	},
 	"validUntil": {
-		type: "date"
+		"type": "date"
 	},
 	"location": {
-		type: "text"
+		"type": "text"
 	},
 	"technology": {
-		type: "text"
+		"type": "text"
 	},
 	"supportedNomenclatures": {
-		type: "keyword"
+		"type": "keyword"
 	},
 	"representativeness": {
-		type: "text"
+		"type": "text"
 	},
 	"modellingPrinciple": {
-		type: "keyword"
+		"type": "keyword"
 	},
 	"modellingApproach": {
-		type: "keyword"
+		"type": "keyword"
 	},
 	"biogenicCarbon": {
-		type: "text"
+		"type": "text"
 	},
 	"reviewed": {
-		type: "boolean"
+		"type": "boolean"
 	},
 	"reviewer": {
-		type: "text"
+		"type": "text"
 	},
 	"aggregationType": {
-		type: "keyword"
+		"type": "keyword"
 	},
 	"copyrightProtected": {
-		type: "boolean"
+		"type": "boolean"
 	},
 	"copyrightHolder": {
-		type: "text"
+		"type": "text"
 	},
 	"licenseType": {
-		type: "keyword"
+		"type": "keyword"
 	},
 	"license": {
-		type: "text"
+		"type": "text"
 	},
 	"contact": {
-		type: "text"
+		"type": "text"
 	},
 	"description": {
-		type: "text"
+		"type": "text"
 	}
 }

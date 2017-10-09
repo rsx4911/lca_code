@@ -16,42 +16,21 @@ import javax.ws.rs.core.StreamingOutput;
 import org.openlca.cloud.api.data.ModelStream;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
-import org.openlca.cloud.model.data.FetchRequestData;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 
 public class FetchService {
 
-	private final HistoryService historyService;
-	private final DataAccessor dataAccessor;
+	private final SearchService searchService;
+	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
-	public FetchService(HistoryService historyService, DataAccessor dataAccessor) {
-		this.historyService = historyService;
-		this.dataAccessor = dataAccessor;
-	}
-
-	public FetchRequestData toRequestData(Repository repo, String commitId, Dataset dataset) {
-		FetchRequestData value = new FetchRequestData(dataset);
-		ModelType type = dataset.type;
-		String refId = dataset.refId;
-		value.setDeleted(wasDeleted(repo, type, refId, commitId));
-		value.setAdded(wasAdded(repo, type, refId, commitId));
-		return value;
-	}
-
-	private boolean wasDeleted(Repository repo, ModelType type, String refId, String commitId) {
-		return !hasDataset(repo, type, refId, commitId);
-	}
-
-	private boolean wasAdded(Repository repo, ModelType type, String refId, String commitId) {
-		List<Commit> previous = historyService.getCommitsBefore(repo, type, refId, commitId);
-		if (previous.isEmpty())
-			return true;
-		Commit commit = previous.get(previous.size() - 1);
-		return !hasDataset(repo, type, refId, commit.id);
+	public FetchService(SearchService searchService) {
+		this.searchService = searchService;
 	}
 
 	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
@@ -88,23 +67,23 @@ public class FetchService {
 
 	private StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits,
 			boolean skipEmpty) {
-		Set<Dataset> empty = new HashSet<>();
+		Set<FileReference> empty = new HashSet<>();
 		Set<Dataset> datasets = new HashSet<>();
 		Map<Dataset, String> dsToCommit = new HashMap<>();
 		for (Commit commit : commits) {
-			for (Dataset dataset : historyService.getReferences(repo, commit.id)) {
-				if (requested != null && !requested.contains(dataset.asFileReference()))
+			for (IndexEntry entry : searchService.getAll(repo, commit)) {
+				if (requested != null && !requested.contains(entry))
 					continue;
-				if (skipEmpty && empty.contains(dataset))
+				if (skipEmpty && empty.contains(entry))
 					continue;
-				if (datasets.contains(dataset))
+				if (datasets.contains(entry))
 					continue;
-				if (skipEmpty && !hasDataset(repo, dataset.type, dataset.refId, commit.id)) {
-					empty.add(dataset);
+				if (skipEmpty && entry.action == IndexAction.DELETE) {
+					empty.add(entry);
 					continue;
 				}
-				dsToCommit.put(dataset, commit.id);
-				datasets.add(dataset);
+				dsToCommit.put(entry, commit.id);
+				datasets.add(entry);
 			}
 		}
 		return new StreamingOutput() {
