@@ -78,7 +78,7 @@ define([
 							break
 					if skip
 						continue
-					elements.push {type: e.original.type, id: e.original.id}
+					elements.push {type: e.original.type, id: e.original.id, name: e.original.text}
 			return elements
  
 )

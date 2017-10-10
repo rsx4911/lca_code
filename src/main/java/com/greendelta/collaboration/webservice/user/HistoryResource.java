@@ -33,6 +33,7 @@ import com.greendelta.lca.search.SearchFilterValue.Type;
 import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
+import com.greendelta.lca.search.SearchSorting;
 
 @Path("history")
 public class HistoryResource {
@@ -113,26 +114,34 @@ public class HistoryResource {
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getReferences(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("commitId") String commitId, @QueryParam("page") @DefaultValue("1") int page) {
+			@PathParam("commitId") String commitId, @QueryParam("type") ModelType type,
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("filter") @DefaultValue("") String filter) {
 		Repository repo = repoService.get(group, name);
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		SearchQuery query = createReferencesQuery(repo, commit, page);
+		SearchQuery query = createReferencesQuery(repo, commit, type, page, filter);
 		SearchResult<IndexEntry> result = searchService.search(query);
 		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asDataset()));
 	}
 
-	private SearchQuery createReferencesQuery(Repository repo, Commit commit, int page) {
+	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, String filter) {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
 				.pageSize(SearchQuery.DEFAULT_PAGE_SIZE)
 				.filter(Aggregations.REPOSITORY.name, Type.PHRASE, repo.toId())
 				.filter("commitId", Type.PHRASE, commit.id)
-				.filter("action", Type.PHRASE, IndexAction.ADD.name(), IndexAction.UPDATE.name());
-		for (ModelType type : ModelType.categorized()) {
-			builder.filter("type", Type.PHRASE, type.name());
+				.filter("action", Type.PHRASE, IndexAction.ADD.name(), IndexAction.UPDATE.name())
+				.filter("name", Type.PHRASE, filter);
+		if (type != null) {
+			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+		} else {
+			for (ModelType categorized : ModelType.categorized()) {
+				builder.aggregation(Aggregations.MODEL_TYPE, categorized.name());
+			}
 		}
+		builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		return builder.build();
 	}
 

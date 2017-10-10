@@ -34,7 +34,6 @@ import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.ReviewService;
-import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.webservice.Respond;
@@ -52,13 +51,12 @@ public class ReviewResource {
 	private final HistoryService historyService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
-	private final SearchService searchService;
 	private final BrowseService browseService;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, HistoryService historyService, NotificationService notificationService,
-			RepositoryService repoService, SearchService searchService, BrowseService browseService) {
+			RepositoryService repoService, BrowseService browseService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
@@ -66,7 +64,6 @@ public class ReviewResource {
 		this.historyService = historyService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
-		this.searchService = searchService;
 		this.browseService = browseService;
 	}
 
@@ -168,7 +165,7 @@ public class ReviewResource {
 		reference.type = ref.type;
 		reference.refId = ref.id;
 		reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
-		reference.name = searchService.get(repo, ref.type, ref.id, reference.commitId).name;
+		reference.name = ref.name;
 		return reference;
 	}
 
@@ -261,7 +258,8 @@ public class ReviewResource {
 
 		public String id;
 		public ModelType type;
-
+		public String name;
+		
 	}
 
 }

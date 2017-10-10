@@ -25,12 +25,23 @@ define([
 				commitId = @commitId
 				@filter = new Filter
 					container: '.file-references'
+					filterId: 'filter'
 					template: refTemplate
-					callback: (type, result) -> 
+					callback: (type, result) => 
 						result.commitId = commitId
 						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
 						result.getTypeLabel = (type) -> return ModelTypes[type]
-					url: (page) -> "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
+					url: (page, filter) => @getUrl page, filter
+
+			getUrl: (page, filter) ->
+				repo = @repository.toJSON()
+				commitId = @commitId
+				url = "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
+				if @type
+					url += '&type=' + @type
+				if filter
+					url += "&filter=#{filter}"
+				return url
 
 			render: (renderOptions) ->
 				repo = @repository.toJSON()
@@ -41,7 +52,7 @@ define([
 						commit: commit
 						formatDate: Format.dateTime
 						getIcon: Icons.get
-					@filter.init()
+					@filter.init (result) => @setModelFilters result.aggregations
 				Renderer.render @, renderOptions
 
 			loadCommit: (callback) ->
@@ -51,5 +62,25 @@ define([
 					type: 'GET'
 					url: "ws/history/commit/#{repo.group}/#{repo.name}/#{commitId}"
 					success: callback
+
+			setModelFilters: (aggregations) ->
+				modelFilters = []
+				for aggregation in aggregations
+					if aggregation.name is 'type'
+						for entry in aggregation.entries
+							modelFilters.push [entry.key, ModelTypes[entry.key]]
+				modelFilters.sort (a, b) ->
+					return ModelTypes.ordinal(a[0]) - ModelTypes.ordinal(b[0])
+				select = @$ '#type'
+				select.append '<option value="">All</option>'
+				for filter in modelFilters
+					select.append '<option value="' + filter[0] + '">' + filter[1] + '</option>'
+				select.off 'change'
+				select.on 'change', (event) =>
+					target = $ Events.target event
+					@type = target.val()
+					@filter.page = 1
+					@filter.load (result) =>
+						@filter.append result
 
 )

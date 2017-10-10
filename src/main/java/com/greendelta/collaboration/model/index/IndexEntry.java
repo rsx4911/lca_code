@@ -11,6 +11,7 @@ public class IndexEntry extends Dataset {
 	public String commitMessage;
 	public long commitTimestamp;
 	public IndexAction action;
+	public int typeOrdinal;
 
 	public String toIndexId() {
 		return repositoryId + "/" + refId + "/" + commitId;

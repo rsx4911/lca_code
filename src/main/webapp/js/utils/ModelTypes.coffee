@@ -15,3 +15,9 @@ define () ->
 	PARAMETER: 'Parameters'
 	CATEGORY: 'Category'
 	DQ_SYSTEM: 'Data quality systems'
+
+	ordinal: (type) ->
+		for key, index in Object.keys(@)
+			if key is type
+				return index
+		return -1

@@ -11,6 +11,10 @@
 		"type": "keyword",
 		"include_in_all": false
 	},
+	"typeOrdinal": {
+		"type": "integer",
+		"include_in_all": false
+	},
 	"name": {
 		"type": "text"
 	},

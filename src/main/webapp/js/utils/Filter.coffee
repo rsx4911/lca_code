@@ -12,16 +12,16 @@ define([
 				@page = 1
 				@filter = ''
 
-			init: () ->
+			init: (callback) ->
 				@load (result) =>
 					$('#' + @filterId).on 'keyup', (event) => @applyFilter event
 					@append result
+					callback?(result)
 
 			load: (callback) ->
 				url = @url.apply @, [@page, @filter]
 				$.get url, (result) => 
-					if @callback
-						@callback @type, result
+					@callback?(@type, result)
 					callback.apply @, [result]
 
 			append: (result) ->

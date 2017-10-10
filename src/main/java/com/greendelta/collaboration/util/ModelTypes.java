@@ -6,12 +6,16 @@ import org.openlca.core.model.ModelType;
 
 public class ModelTypes {
 
-	public static final ModelType[] SORTED = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM,
-			ModelType.IMPACT_METHOD, ModelType.PARAMETER,
-			ModelType.PROCESS, ModelType.FLOW, ModelType.SOCIAL_INDICATOR,
-			ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP,
-			ModelType.CURRENCY, ModelType.SOURCE, ModelType.ACTOR,
-			ModelType.LOCATION, ModelType.DQ_SYSTEM };
+	public static final ModelType[] SORTED = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM, ModelType.IMPACT_METHOD,
+			ModelType.PROCESS, ModelType.FLOW, ModelType.SOCIAL_INDICATOR, ModelType.FLOW_PROPERTY,
+			ModelType.UNIT_GROUP, ModelType.CURRENCY, ModelType.SOURCE, ModelType.ACTOR, ModelType.LOCATION,
+			ModelType.DQ_SYSTEM, ModelType.PARAMETER };
+
+	public static int getOrdinal(ModelType type, ModelType categoryType) {
+		if (categoryType != null) 
+			return SORTED.length - getIndex(categoryType);
+		return (SORTED.length * 2) - getIndex(type);
+	}
 
 	private static int getIndex(ModelType type) {
 		for (int i = 0; i < SORTED.length; i++)
