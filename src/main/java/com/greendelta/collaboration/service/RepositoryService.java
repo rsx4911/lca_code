@@ -28,6 +28,7 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.lca.search.SearchResult;
@@ -40,7 +41,6 @@ public class RepositoryService {
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
-	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
 	public RepositoryService(@Named("repository.path") String repositoryPath,
@@ -204,7 +204,7 @@ public class RepositoryService {
 			return;
 		File copy = to.getHistoryFile(true);
 		for (Commit commit : commits)
-			dataAccessor.appendToHistory(copy, commit);
+			Bytes.appendTo(copy, commit.toString());
 	}
 
 	private void cloneDirectFiles(Repository from, Repository to) throws IOException {

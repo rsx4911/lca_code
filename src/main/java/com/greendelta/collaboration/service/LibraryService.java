@@ -1,13 +1,8 @@
 package com.greendelta.collaboration.service;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,14 +40,10 @@ public class LibraryService {
 
 	private void initRefIds(String libraryName) {
 		File file = getFile(libraryName);
-		try (InputStream s = new FileInputStream(file);
-				InputStreamReader r = new InputStreamReader(s);
-				BufferedReader reader = new BufferedReader(r)) {
-			Set<String> ids = new HashSet<>();
-			String line = null;
-			while ((line = reader.readLine()) != null)
-				if (!line.trim().isEmpty())
-					ids.add(line);
+		if (!file.exists())
+			return;
+		try {
+			Set<String> ids = new HashSet<>(Files.readAllLines(file.toPath()));
 			refIds.put(libraryName, ids);
 		} catch (IOException e) {
 			String m = "Error loading ref ids of library " + libraryName;
@@ -78,16 +69,9 @@ public class LibraryService {
 		this.refIds.put(name, new HashSet<>(refIds));
 		File file = getFile(name);
 		try {
-			file.createNewFile();
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-			for (String refId : refIds) {
-				writer.write(refId);
-				writer.newLine();
-			}
-			writer.close();
+			Files.write(file.toPath(), refIds);
 		} catch (IOException e) {
-			String m = "Error saving ref ids of library " + name;
-			log.error(m, e);
+			log.error("Error saving ref ids of library " + name, e);
 		}
 	}
 
@@ -106,5 +90,5 @@ public class LibraryService {
 	private File getFile(String libraryName) {
 		return new File(libraryPath + File.separator + libraryName + ".txt");
 	}
-	
+
 }

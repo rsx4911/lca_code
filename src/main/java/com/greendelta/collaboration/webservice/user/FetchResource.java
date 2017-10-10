@@ -54,9 +54,13 @@ public class FetchResource {
 	@GET
 	@Path("file/{group}/{name}/{type}/{refId}/{commitId}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getFile(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId,
-			@PathParam("commitId") String commitId, @PathParam("filename") String filename) throws IOException {
+	public Response getFile(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type, 
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId, 
+			@PathParam("filename") String filename) throws IOException {
 		Repository repo = repoService.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
@@ -73,8 +77,12 @@ public class FetchResource {
 	@GET
 	@Path("data/{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getData(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
+	public Response getData(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type, 
+			@PathParam("refId") String refId, 
+			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
@@ -111,7 +119,9 @@ public class FetchResource {
 	@GET
 	@Path("request/{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response request(@PathParam("group") String group, @PathParam("name") String name,
+	public Response request(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = getCommits(repo, lastCommitId);
@@ -144,8 +154,11 @@ public class FetchResource {
 	@POST
 	@Path("{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetch(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId, List<FileReference> requested) {
+	public Response fetch(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("lastCommitId") String lastCommitId, 
+			List<FileReference> requested) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = getCommits(repo, lastCommitId);
 		if (commits.isEmpty())
@@ -157,7 +170,8 @@ public class FetchResource {
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getReferences(@PathParam("group") String group,
+	public Response getReferences(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);

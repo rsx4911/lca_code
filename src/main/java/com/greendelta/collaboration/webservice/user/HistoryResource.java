@@ -55,7 +55,8 @@ public class HistoryResource {
 	@GET
 	@Path("{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(@PathParam("group") String group,
+	public Response getCommitHistory(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
@@ -71,9 +72,11 @@ public class HistoryResource {
 	@GET
 	@Path("{group}/{name}/{type}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(@PathParam("group") String group,
+	public Response getCommitHistory(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId) {
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = service.getCommits(repo, type, refId);
 		if (commits.size() == 0)
@@ -85,7 +88,8 @@ public class HistoryResource {
 	@GET
 	@Path("commit/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommit(@PathParam("group") String group,
+	public Response getCommit(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
@@ -99,8 +103,12 @@ public class HistoryResource {
 	@GET
 	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response getPreviousReference(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
+	public Response getPreviousReference(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
 		if (commitId == "null")
 			commitId = null;
@@ -113,8 +121,11 @@ public class HistoryResource {
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getReferences(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("commitId") String commitId, @QueryParam("type") ModelType type,
+	public Response getReferences(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("commitId") String commitId,
+			@QueryParam("type") ModelType type,
 			@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		Repository repo = repoService.get(group, name);

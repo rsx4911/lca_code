@@ -38,6 +38,7 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.service.upgrade.IUpgrade;
 import com.greendelta.collaboration.service.upgrade.Upgrade1;
+import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.ModelTypes;
 
 public class RepositoryUpgrades {
@@ -45,7 +46,6 @@ public class RepositoryUpgrades {
 	private static final List<IUpgrade> UPGRADES = Arrays.asList(new IUpgrade[] {
 			new Upgrade1()
 	});
-	private static final DataAccessor dataAccessor = new DataAccessor();
 
 	private static List<Repository> getOutdated(String rootPath, SearchService searchService) {
 		File root = new File(rootPath);
@@ -88,7 +88,7 @@ public class RepositoryUpgrades {
 		File dsFile = repo.getDatasetFile(indexEntry.type, indexEntry.refId, indexEntry.commitId, false);
 		if (dsFile == null)
 			return null;
-		byte[] data = dataAccessor.read(dsFile);
+		byte[] data = Bytes.read(dsFile);
 		if (data == null || data.length == 0)
 			return null;
 		String json = new String(data, Charset.forName("utf-8"));
@@ -97,7 +97,7 @@ public class RepositoryUpgrades {
 
 	private static void putJson(Repository repo, IndexEntry indexEntry, JsonObject obj) {
 		File dsFile = repo.getDatasetFile(indexEntry.type, indexEntry.refId, indexEntry.commitId, false);
-		dataAccessor.write(dsFile, new Gson().toJson(obj).getBytes(Charset.forName("utf-8")));
+		Bytes.write(dsFile, new Gson().toJson(obj).getBytes(Charset.forName("utf-8")));
 	}
 
 	private static List<IUpgrade> getUpgrades(String repoSchema) {
@@ -213,9 +213,8 @@ public class RepositoryUpgrades {
 		}
 
 		private List<IndexEntry> getIndexEntries() {
-			File hFile = repo.getHistoryFile(false);
 			Map<String, Commit> commitMap = new HashMap<>();
-			List<Commit> commits = dataAccessor.readHistory(hFile, null);
+			List<Commit> commits = new HistoryService(searchService).getCommits(repo);
 			for (Commit commit : commits) {
 				commitMap.put(commit.id, commit);
 			}

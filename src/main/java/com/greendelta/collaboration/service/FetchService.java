@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,32 +21,20 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.util.Bytes;
 
 public class FetchService {
 
 	private final SearchService searchService;
-	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
 	public FetchService(SearchService searchService) {
 		this.searchService = searchService;
 	}
 
-	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
-		File file = repo.getDatasetFile(type, refId, commitId, false);
-		if (!file.exists())
-			return false;
-		try {
-			long size = Files.size(file.toPath());
-			return size > 0;
-		} catch (IOException e) {
-			return false;
-		}
-	}
-
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		File file = repo.getDatasetFile(type, refId, commitId, false);
-		byte[] data = dataAccessor.read(file);
+		byte[] data = Bytes.read(file);
 		if (data == null || data.length == 0)
 			return null;
 		return new String(data, Charset.forName("utf-8"));

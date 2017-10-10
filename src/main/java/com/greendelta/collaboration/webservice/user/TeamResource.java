@@ -69,7 +69,9 @@ public class TeamResource {
 	@Path("avatar/{teamname}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("teamname") String teamname, @FormDataParam("file") InputStream file) {
+	public Response setAvatar(
+			@PathParam("teamname") String teamname, 
+			@FormDataParam("file") InputStream file) {
 		Team team = authorizedGetTeam(teamname);
 		if (team == null)
 			return Respond.notFound();

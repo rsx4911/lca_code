@@ -66,7 +66,9 @@ public class RepositoryResource {
 
 	@POST
 	@Path("{group}/{name}")
-	public Response create(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response create(
+			@PathParam("group") String group, 
+			@PathParam("name") String name) {
 		Response response = _create(group, name);
 		if (response.getStatus() != Status.CREATED.getStatusCode())
 			return response;
@@ -95,8 +97,11 @@ public class RepositoryResource {
 
 	@POST
 	@Path("move/{group}/{name}/{newGroup}/{newName}")
-	public Response move(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("newGroup") String newGroup, @PathParam("newName") String newName) {
+	public Response move(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("newGroup") String newGroup, 
+			@PathParam("newName") String newName) {
 		if (!group.equals(newGroup))
 			if (!groupService.exists(newGroup))
 				return Respond.invalid("newGroup", "Specified group does not exist");
@@ -123,7 +128,9 @@ public class RepositoryResource {
 
 	@DELETE
 	@Path("{group}/{name}")
-	public Response delete(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response delete(
+			@PathParam("group") String group, 
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		NotificationJob notification = notificationService.repositoryDeleted(repo);
 		service.delete(repo);
@@ -133,7 +140,9 @@ public class RepositoryResource {
 
 	@PUT
 	@Path("public/{group}/{name}/{value}")
-	public Response togglePublicAccess(@PathParam("group") String group, @PathParam("name") String name,
+	public Response togglePublicAccess(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
 			@PathParam("value") boolean value) {
 		Repository repo = service.get(group, name);
 		boolean isPublic = service.setPublic(repo, value);
@@ -142,7 +151,9 @@ public class RepositoryResource {
 
 	@GET
 	@Path("{group}/{name}")
-	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response get(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
 		String id = repo.toId();
@@ -158,14 +169,18 @@ public class RepositoryResource {
 	@GET
 	@Path("avatar/{group}/{name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getAvatar(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response getAvatar(
+			@PathParam("group") String group, 
+			@PathParam("name") String name) {
 		byte[] avatar = service.getAvatar(group, name);
 		return Respond.ok(avatar, "avatar-repository.png");
 	}
 
 	@GET
 	@Path("meta/{group}/{name}")
-	public Response getMeta(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response getMeta(
+			@PathParam("group") String group, 
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		return Respond.ok("{\"schemaVersion\": \"" + repo.getSchemaVersion() + "\"}");
 	}
@@ -191,8 +206,11 @@ public class RepositoryResource {
 
 	@POST
 	@Path("clone/{group}/{name}/{commitId}/{newGroup}/{newName}")
-	public Response clone(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("commitId") String commitId, @PathParam("newGroup") String newGroup,
+	public Response clone(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("commitId") String commitId, 
+			@PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
 		Response response = _create(newGroup, newName);
 		if (response.getStatus() != Status.CREATED.getStatusCode())
@@ -213,7 +231,9 @@ public class RepositoryResource {
 	@Path("avatar/{group}/{name}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("group") String group, @PathParam("name") String name,
+	public Response setAvatar(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
 			@FormDataParam("file") InputStream file) {
 		service.get(group, name); // to ensure repo exists and user has access
 		service.setAvatar(group, name, file);

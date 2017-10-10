@@ -28,8 +28,9 @@ public class BrowseService {
 		List<ModelType> types = new ArrayList<>();
 		for (ModelType type : ModelTypes.SORTED) {
 			File dir = repo.getModelDir(type, false);
-			if (dir.exists())
-				types.add(type);
+			if (!dir.exists())
+				continue;
+			types.add(type);
 		}
 		return types;
 	}
@@ -98,6 +99,11 @@ public class BrowseService {
 
 	public IndexEntry getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		return searchService.get(repo, type, refId, commitId);
+	}
+
+	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
+		IndexEntry entry = searchService.get(repo, type, refId, commitId);
+		return entry != null && entry.action != IndexAction.DELETE;
 	}
 
 	public boolean hasDataset(Repository repo, String refId) {

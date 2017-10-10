@@ -49,8 +49,11 @@ public class BrowseResource {
 
 	@GET
 	@Path("{group}/{name}")
-	public Response getCategoryContent(@PathParam("group") String group, @PathParam("name") String name,
-			@QueryParam("categoryPath") String categoryPath, @QueryParam("filter") String filter) {
+	public Response getCategoryContent(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@QueryParam("categoryPath") String categoryPath, 
+			@QueryParam("filter") String filter) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
 		if (Strings.isNullOrEmpty(categoryPath))
@@ -101,8 +104,10 @@ public class BrowseResource {
 	@GET
 	@Path("{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getData(@PathParam("group") String group,
-			@PathParam("name") String name, @PathParam("type") ModelType type,
+	public Response getData(
+			@PathParam("group") String group,
+			@PathParam("name") String name, 
+			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
@@ -219,7 +224,7 @@ public class BrowseResource {
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
 		if (commitId.equals("null"))
 			commitId = null;
-		if (commitId != null && fetchService.hasDataset(repo, type, refId, commitId))
+		if (commitId != null && service.hasDataset(repo, type, refId, commitId))
 			return commitId;
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)

@@ -43,7 +43,8 @@ public class CommitResource {
 
 	@GET
 	@Path("request/{group}/{name}/{lastCommitId}")
-	public Response request(@PathParam("group") String group,
+	public Response request(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
@@ -66,19 +67,19 @@ public class CommitResource {
 	@POST
 	@Path("{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response commit(@PathParam("group") String group,
+	public Response commit(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("lastCommitId") String lastCommitId,
 			InputStream commitData) {
 		Repository repo = repoService.get(group, name);
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
-		String commitId = service.put(repo, commitData);
-		if (commitId == null)
+		Commit commit = service.put(repo, commitData);
+		if (commit == null)
 			return Respond.error("Error reading commit data");
-		Commit commit = historyService.getCommit(repo, commitId);
 		notificationService.dataCommitted(repo, commit).send();
-		return Respond.created(commitId);
+		return Respond.created(commit.id);
 	}
 
 }

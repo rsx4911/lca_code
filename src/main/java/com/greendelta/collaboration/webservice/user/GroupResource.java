@@ -79,7 +79,8 @@ public class GroupResource {
 	}
 
 	@GET
-	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
 		SearchResult<String> result = service.getAll(page, filter, true, onlyIfCanWrite);

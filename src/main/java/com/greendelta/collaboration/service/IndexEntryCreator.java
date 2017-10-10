@@ -15,6 +15,7 @@ import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingApproach;
@@ -33,7 +34,31 @@ class IndexEntryCreator {
 		this.commit = commit;
 	}
 
-	IndexEntry generic(Dataset dataset) {
+	IndexEntry create(Dataset dataset) {
+		return create(dataset, null, null);
+	}
+
+	IndexEntry create(Dataset dataset, IndexEntry previous, File file) {
+		if (file == null) {
+			IndexEntry entry = generic(dataset);
+			entry.action = IndexAction.DELETE;
+			return entry;
+		}
+		IndexEntry entry = null;
+		if (dataset.type == ModelType.PROCESS) {
+			entry = process(dataset, file);
+		} else {
+			entry = generic(dataset);
+		}
+		if (previous == null || previous.action != IndexAction.DELETE) {
+			entry.action = IndexAction.ADD;
+		} else {
+			entry.action = IndexAction.UPDATE;
+		}
+		return entry;
+	}
+
+	private IndexEntry generic(Dataset dataset) {
 		IndexEntry entry = new IndexEntry();
 		fillGeneric(entry, dataset);
 		return entry;
@@ -57,7 +82,7 @@ class IndexEntryCreator {
 		entry.typeOrdinal = ModelTypes.getOrdinal(dataset.type, dataset.categoryType);
 	}
 
-	ProcessIndexEntry process(Dataset dataset, File dataFile) {
+	private ProcessIndexEntry process(Dataset dataset, File dataFile) {
 		ProcessIndexEntry entry = new ProcessIndexEntry();
 		fillGeneric(entry, dataset);
 		fillProcess(entry, readData(dataFile));

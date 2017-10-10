@@ -31,8 +31,7 @@ import com.warrenstrange.googleauth.GoogleAuthenticator;
 @Path("public")
 public class SessionResource {
 
-	private final static Logger log = LoggerFactory
-			.getLogger(SessionResource.class);
+	private final static Logger log = LoggerFactory.getLogger(SessionResource.class);
 
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;

@@ -61,21 +61,30 @@ public class CommentResource {
 
 	@GET
 	@Path("{group}/{name}")
-	public Response getForRepository(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response getForRepository(
+			@PathParam("group") String group, 
+			@PathParam("name") String name) {
 		return getForDataset(group, name, null, null, null);
 	}
 
 	@GET
 	@Path("{group}/{name}/{type}/{refId}")
-	public Response getForDataset(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId) {
+	public Response getForDataset(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type, 
+			@PathParam("refId") String refId) {
 		return getForDataset(group, name, type, refId, null);
 	}
 
 	@GET
 	@Path("{group}/{name}/{type}/{refId}/{commitId}")
-	public Response getForDataset(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
+	public Response getForDataset(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type, 
+			@PathParam("refId") String refId, 
+			@PathParam("commitId") String commitId) {
 		Repository repository = repoService.get(group, name);
 		List<Comment> comments = service.getAllFor(repository, type, refId, commitId);
 		Map<String, Object> result = new HashMap<>();
@@ -105,9 +114,13 @@ public class CommentResource {
 	@POST
 	@Path("{group}/{name}/{type}/{refId}/{commitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response add(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId,
-			@PathParam("commitId") String commitId, Map<String, Object> data) {
+	public Response add(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type, 
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId, 
+			Map<String, Object> data) {
 		ObjectMap map = ObjectMap.fromMap(data);
 		Repository repository = repoService.get(group, name);
 		Comment comment = new Comment();
@@ -142,7 +155,9 @@ public class CommentResource {
 
 	@PUT
 	@Path("{id}/visibility/{role}")
-	public Response changeVisibility(@PathParam("id") long id, @PathParam("role") String roleString) {
+	public Response changeVisibility(
+			@PathParam("id") long id, 
+			@PathParam("role") String roleString) {
 		Role role = "null".equals(roleString) ? null : Role.valueOf(roleString);
 		Comment comment = service.changeVisibility(id, role);
 		if (comment == null)

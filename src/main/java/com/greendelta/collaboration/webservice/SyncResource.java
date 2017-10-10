@@ -49,7 +49,9 @@ public class SyncResource {
 	@Path("{group}/{name}/{untilCommitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response request(@PathParam("group") String group, @PathParam("name") String name,
+	public Response request(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
 			@PathParam("untilCommitId") String untilCommitId) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = getCommits(repo, untilCommitId);
@@ -80,8 +82,11 @@ public class SyncResource {
 	@Path("get/{group}/{name}/{untilCommitId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response get(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("untilCommitId") String untilCommitId, List<FileReference> requested) {
+	public Response get(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
+			@PathParam("untilCommitId") String untilCommitId, 
+			List<FileReference> requested) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = getCommits(repo, untilCommitId);
 		if (commits.isEmpty())

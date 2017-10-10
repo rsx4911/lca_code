@@ -1,20 +1,25 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.DataAccessor.Filter;
 
 public class HistoryService {
 
+	private static final Logger log = LoggerFactory.getLogger(HistoryService.class);
 	private final SearchService searchService;
-	private final DataAccessor dataAccessor = new DataAccessor();
 
 	@Inject
 	public HistoryService(SearchService searchService) {
@@ -37,7 +42,7 @@ public class HistoryService {
 
 	public Commit getLastCommit(Repository repo, ModelType type, String refId, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId,
+		List<Commit> commits = readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId,
 				false));
 		if (commits.isEmpty())
 			return null;
@@ -46,7 +51,7 @@ public class HistoryService {
 
 	public Commit getLastCommitBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId,
+		List<Commit> commits = readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId,
 				true));
 		if (commits.isEmpty())
 			return null;
@@ -55,14 +60,15 @@ public class HistoryService {
 
 	public Commit getCommit(Repository repo, String commitId) {
 		File historyFile = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(historyFile, new SpecificCommitFilter(commitId));
+		List<Commit> commits = readHistory(historyFile, new SpecificCommitFilter(commitId));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(0);
 	}
 
 	public List<Commit> getCommits(Repository repo) {
-		return getCommitsAfter(repo, null);
+		File file = repo.getHistoryFile(false);
+		return readHistory(file, null);
 	}
 
 	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
@@ -71,22 +77,50 @@ public class HistoryService {
 
 	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId) {
 		File file = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(file, new AfterCommitFilter(afterCommitId));
+		return readHistory(file, new AfterCommitFilter(afterCommitId));
 	}
 
 	public List<Commit> getCommitsBetween(Repository repo, String afterCommitId, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(file, new BetweenCommitFilter(afterCommitId, untilCommitId));
+		return readHistory(file, new BetweenCommitFilter(afterCommitId, untilCommitId));
 	}
 
 	public List<Commit> getCommitsUntil(Repository repo, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(file, new UntilCommitFilter(untilCommitId));
+		return readHistory(file, new UntilCommitFilter(untilCommitId));
 	}
 
 	public List<Commit> getCommitsBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
 		File historyFile = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(historyFile, new BeforeCommitFilter(beforeCommitId, repo, type, refId));
+		return readHistory(historyFile, new BeforeCommitFilter(beforeCommitId, repo, type, refId));
+	}
+
+	private List<Commit> readHistory(File file, Filter<Commit> filter) {
+		if (file == null)
+			return Collections.emptyList();
+		if (!file.exists())
+			return Collections.emptyList();
+		try {
+			List<String> lines = Files.readAllLines(file.toPath());
+			if (lines.isEmpty())
+				return Collections.emptyList();
+			List<Commit> commits = new ArrayList<>();
+			for (String entry : lines) {
+				if (entry.trim().isEmpty())
+					continue;
+				Commit commit = Commit.parse(entry);
+				if (filter == null || !filter.filter(commit))
+					commits.add(commit);
+			}
+			return commits;
+		} catch (IOException e) {
+			log.error("Unexpected error reading to commit history", e);
+			return Collections.emptyList();
+		}
+	}
+
+	interface Filter<T> {
+		boolean filter(T element);
 	}
 
 	private class AfterCommitFilter implements Filter<Commit> {

@@ -184,7 +184,9 @@ public class UserResource {
 	@Path("avatar/{username}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("username") String username, @FormDataParam("file") InputStream file) {
+	public Response setAvatar(
+			@PathParam("username") String username, 
+			@FormDataParam("file") InputStream file) {
 		User user = authorizedGetUser(username);
 		if (user == null)
 			return Respond.notFound();

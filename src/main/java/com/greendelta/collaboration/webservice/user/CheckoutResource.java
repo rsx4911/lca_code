@@ -36,7 +36,9 @@ public class CheckoutResource {
 	@GET
 	@Path("{group}/{name}/{untilCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response checkout(@PathParam("group") String group, @PathParam("name") String name,
+	public Response checkout(
+			@PathParam("group") String group, 
+			@PathParam("name") String name,
 			@PathParam("untilCommitId") String untilCommitId) {
 		Repository repo = repoService.get(group, name);
 		if (untilCommitId.equals("null"))

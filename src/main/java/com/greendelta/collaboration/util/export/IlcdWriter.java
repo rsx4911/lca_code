@@ -63,7 +63,9 @@ public class IlcdWriter implements DatasetWriter {
 	public void write(ModelType type, String refId, String commitId) throws IOException {
 		this.currentCommitId = commitId;
 		this.collectedRefs = new HashSet<>();
-		if (!fetchService.hasDataset(repo, type, refId, currentCommitId)) {
+		IndexEntry entry = searchService.get(repo, type, refId, commitId);
+		boolean exists = entry != null && entry.action != IndexAction.DELETE;
+		if (!exists) {
 			Commit lastCommit = historyService.getLastCommitBefore(repo, type, refId, currentCommitId);
 			if (lastCommit == null)
 				return;

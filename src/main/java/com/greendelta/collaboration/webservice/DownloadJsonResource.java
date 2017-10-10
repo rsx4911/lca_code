@@ -38,15 +38,21 @@ public class DownloadJsonResource extends DownloadResource {
 	@GET
 	@Path("prepare/{group}/{repository}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response prepare(@PathParam("group") String group, @PathParam("repository") String repository,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
+	public Response prepare(
+			@PathParam("group") String group, 
+			@PathParam("repository") String repository,
+			@PathParam("type") ModelType type, 
+			@PathParam("refId") String refId, 
+			@PathParam("commitId") String commitId) {
 		return super.prepare(group, repository, type, refId, commitId);
 	}
 
 	@PUT
 	@Path("prepare/{group}/{repository}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response prepare(@PathParam("group") String group, @PathParam("repository") String repository,
+	public Response prepare(
+			@PathParam("group") String group, 
+			@PathParam("repository") String repository,
 			List<FileReference> requested) {
 		return super.prepare(group, repository, requested);
 	}
