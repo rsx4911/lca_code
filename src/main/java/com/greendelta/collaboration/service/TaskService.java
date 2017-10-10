@@ -54,5 +54,14 @@ public class TaskService {
 		}
 		return active;
 	}
+	
 
+	Task update(Task task) {
+		return dao.update(task);
+	}
+
+	void delete(Task task) {
+		dao.delete(task);
+	}
+	
 }

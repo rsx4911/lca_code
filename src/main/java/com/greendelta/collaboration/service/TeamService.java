@@ -39,13 +39,8 @@ public class TeamService {
 		return getForTeamname(teamname) != null;
 	}
 
-	public boolean delete(long id) {
-		Team team = dao.get(id);
-		if (team == null)
-			return false;
-		membershipService.removeMemberships(team);
+	void delete(Team team) {
 		dao.delete(team);
-		return true;
 	}
 
 	public boolean addMember(User user, Team team) {

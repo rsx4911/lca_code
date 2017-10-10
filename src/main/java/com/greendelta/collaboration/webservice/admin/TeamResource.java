@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.TeamService;
@@ -39,14 +40,16 @@ public class TeamResource {
 	private final TeamService service;
 	private final UserService userService;
 	private final MembershipService membershipService;
+	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-
+	
 	@Inject
 	public TeamResource(TeamService service, UserService userService, MembershipService membershipService,
-			NotificationService notificationService) {
+			DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;
 		this.userService = userService;
 		this.membershipService = membershipService;
+		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 	}
 
@@ -104,7 +107,7 @@ public class TeamResource {
 		Team team = service.getForTeamname(teamname);
 		if (team == null)
 			return Respond.notFound();
-		service.delete(team.getId());
+		deleteService.delete(team);
 		notificationService.teamDeleted(team).send();
 		return Respond.ok(new HashMap<>());
 	}

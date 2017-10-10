@@ -83,16 +83,8 @@ public class GroupService {
 		return true;
 	}
 
-	public boolean delete(String group) {
-		if (!exists(group))
-			return false;
-		if (!accessService.canDelete(group))
-			throw new UnauthorizedAccessException(group, "DELETE");
-		File groupDir = new File(getPath(group));
-		for (File repo : groupDir.listFiles())
-			membershipService.removeMemberships(Repository.toId(group, repo.getName()));
-		membershipService.removeMemberships(group);
-		return Directories.delete(groupDir);
+	boolean delete(String group) {
+		return Directories.delete(new File(getPath(group)));
 	}
 
 	public byte[] getAvatar(String group) {

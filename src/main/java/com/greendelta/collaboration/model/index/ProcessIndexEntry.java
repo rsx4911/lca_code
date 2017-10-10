@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.model.index;
 
-
 public class ProcessIndexEntry extends IndexEntry {
 
 	private static final long serialVersionUID = 2145646252325642438L;
@@ -30,7 +29,7 @@ public class ProcessIndexEntry extends IndexEntry {
 	public enum AggregationType {
 
 		HORIZONTAL, VERTICAL, NONE, UNKNOWN;
-		
+
 	}
 
 	public enum LicenseType {
@@ -63,4 +62,37 @@ public class ProcessIndexEntry extends IndexEntry {
 
 	}
 
+	@Override
+	public IndexEntry clone() {
+		ProcessIndexEntry e = new ProcessIndexEntry();
+		fillIndexEntryInfo(e);
+		e.processType = processType;
+		e.completeness = completeness;
+		e.sampleRepresentativeness = sampleRepresentativeness;
+		e.samplingProcedure = samplingProcedure;
+		e.validFrom = validFrom;
+		e.validUntil = validUntil;
+		e.location = location;
+		e.technology = technology;
+		e.representativeness = representativeness;
+		e.modellingPrinciple = modellingPrinciple;
+		e.modellingApproach = modellingApproach;
+		e.biogenicCarbon = biogenicCarbon;
+		e.reviewed = reviewed;
+		e.reviewer = reviewer;
+		e.aggregationType = aggregationType;
+		e.copyrightProtected = copyrightProtected;
+		e.copyrightHolder = copyrightHolder;
+		e.licenseType = licenseType;
+		e.license = license;
+		e.contact = contact;
+		e.description = description;
+		if (supportedNomenclatures != null) {
+			e.supportedNomenclatures = new Nomenclature[supportedNomenclatures.length];
+			for (int i = 0; i < supportedNomenclatures.length; i++) {
+				e.supportedNomenclatures[i] = supportedNomenclatures[i];
+			}
+		}
+		return e;
+	}
 }

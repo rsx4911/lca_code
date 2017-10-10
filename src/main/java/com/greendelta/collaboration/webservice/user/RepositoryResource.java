@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.AccessService;
+import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
@@ -49,25 +51,28 @@ public class RepositoryResource {
 	private final RepositoryService service;
 	private final GroupService groupService;
 	private final AccessService accessService;
-	private final NotificationService notificationService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
+	private final DeleteService deleteService;
+	private final NotificationService notificationService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
-			NotificationService notificationService, HistoryService historyService, SearchService searchService) {
+			HistoryService historyService, SearchService searchService, DeleteService deleteService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.accessService = accessService;
-		this.notificationService = notificationService;
 		this.historyService = historyService;
 		this.searchService = searchService;
+		this.deleteService = deleteService;
+		this.notificationService = notificationService;
 	}
 
 	@POST
 	@Path("{group}/{name}")
 	public Response create(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Response response = _create(group, name);
 		if (response.getStatus() != Status.CREATED.getStatusCode())
@@ -98,9 +103,9 @@ public class RepositoryResource {
 	@POST
 	@Path("move/{group}/{name}/{newGroup}/{newName}")
 	public Response move(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("newGroup") String newGroup, 
+			@PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
 		if (!group.equals(newGroup))
 			if (!groupService.exists(newGroup))
@@ -129,11 +134,11 @@ public class RepositoryResource {
 	@DELETE
 	@Path("{group}/{name}")
 	public Response delete(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		NotificationJob notification = notificationService.repositoryDeleted(repo);
-		service.delete(repo);
+		deleteService.delete(repo);
 		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
@@ -141,7 +146,7 @@ public class RepositoryResource {
 	@PUT
 	@Path("public/{group}/{name}/{value}")
 	public Response togglePublicAccess(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("value") boolean value) {
 		Repository repo = service.get(group, name);
@@ -170,7 +175,7 @@ public class RepositoryResource {
 	@Path("avatar/{group}/{name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getAvatar(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		byte[] avatar = service.getAvatar(group, name);
 		return Respond.ok(avatar, "avatar-repository.png");
@@ -179,7 +184,7 @@ public class RepositoryResource {
 	@GET
 	@Path("meta/{group}/{name}")
 	public Response getMeta(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		return Respond.ok("{\"schemaVersion\": \"" + repo.getSchemaVersion() + "\"}");
@@ -207,9 +212,9 @@ public class RepositoryResource {
 	@POST
 	@Path("clone/{group}/{name}/{commitId}/{newGroup}/{newName}")
 	public Response clone(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("commitId") String commitId, 
+			@PathParam("commitId") String commitId,
 			@PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
 		Response response = _create(newGroup, newName);
@@ -218,12 +223,18 @@ public class RepositoryResource {
 		Repository from = service.get(group, name);
 		Repository to = service.get(newGroup, newName);
 		List<Commit> commits = historyService.getCommitsUntil(from, commitId);
-		boolean cloned = service.cloneContents(from, to, commits);
-		if (!cloned) {
-			service.delete(to);
+		if (!service.clone(from, to, commits)) {
+			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		
+		List<IndexEntry> entries = searchService.getAll(from);
+		List<IndexEntry> cloned = new ArrayList<>();
+		for (IndexEntry entry : entries) {
+			IndexEntry clone = entry.clone();
+			clone.repositoryId = to.toId();
+			cloned.add(clone);
+		}
+		searchService.index(cloned);
 		return response;
 	}
 
@@ -232,7 +243,7 @@ public class RepositoryResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response setAvatar(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@FormDataParam("file") InputStream file) {
 		service.get(group, name); // to ensure repo exists and user has access

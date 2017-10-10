@@ -151,7 +151,7 @@ public class UserService {
 		return issuer + ":" + username;
 	}
 
-	public void delete(User user) {
+	void delete(User user) {
 		dao.delete(user);
 	}
 

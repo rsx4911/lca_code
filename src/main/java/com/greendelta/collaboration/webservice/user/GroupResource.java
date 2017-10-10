@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.AccessService;
+import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
@@ -37,12 +38,15 @@ public class GroupResource {
 
 	private final GroupService service;
 	private final AccessService accessService;
+	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
 	@Inject
-	public GroupResource(GroupService service, AccessService accessService, NotificationService notificationService) {
+	public GroupResource(GroupService service, AccessService accessService, DeleteService deleteService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.accessService = accessService;
+		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 	}
 
@@ -93,7 +97,7 @@ public class GroupResource {
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {
 		NotificationJob notification = notificationService.groupDeleted(name);
-		service.delete(name);
+		deleteService.delete(name);
 		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
