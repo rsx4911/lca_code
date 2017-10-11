@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import org.openlca.cloud.error.UnauthorizedAccessException;
 
+import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
@@ -23,6 +24,7 @@ public class DeleteService {
 	private final AccessService accessService;
 	private final SearchService searchService;
 
+	@Inject
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, SearchService searchService) {
