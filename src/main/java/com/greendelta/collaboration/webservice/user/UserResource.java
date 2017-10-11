@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -23,10 +22,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.AccessService;
-import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.MessagingService;
-import com.greendelta.collaboration.service.NotificationService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.Bytes;
@@ -48,17 +44,12 @@ public class UserResource {
 	private final UserService service;
 	private final MessagingService messagingService;
 	private final AccessService accessService;
-	private final DeleteService deleteService;
-	private final NotificationService notificationService;
-
+	
 	@Inject
-	public UserResource(UserService service, MessagingService messagingService, AccessService accessService,
-			DeleteService deleteService, NotificationService notificationService) {
+	public UserResource(UserService service, MessagingService messagingService, AccessService accessService) {
 		this.service = service;
 		this.messagingService = messagingService;
 		this.accessService = accessService;
-		this.deleteService = deleteService;
-		this.notificationService = notificationService;
 	}
 
 	@GET
@@ -129,18 +120,6 @@ public class UserResource {
 		}
 		fromDb = service.update(fromDb);
 		return Respond.ok(Users.mapForSelf(fromDb));
-	}
-
-	@DELETE
-	public Response delete() {
-		User user = service.getCurrentUser();
-		if (user == null)
-			return Respond.notFound();
-		NotificationJob notification = notificationService.userDeleted(user);
-		deleteService.delete(user);
-		notification.send();
-		service.logout();
-		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT

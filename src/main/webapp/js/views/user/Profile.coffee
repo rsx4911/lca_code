@@ -52,7 +52,6 @@ define([
 				@$el.html template
 					user: user
 					adminArea: @adminArea
-					isOwnUser: (user.id is currentUser.get('id'))
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
 				@updateRights()

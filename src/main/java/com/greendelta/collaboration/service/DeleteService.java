@@ -41,7 +41,7 @@ public class DeleteService {
 
 	public void delete(User user) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !user.equals(currentUser))
+		if (!currentUser.admin)
 			throw new UnauthorizedAccessException("User " + user.getId(), "DELETE");
 		for (Repository repository : repoService.getAll(0, user.username + "/", false).data) {
 			delete(repository);

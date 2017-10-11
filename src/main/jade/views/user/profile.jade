@@ -2,7 +2,7 @@ include ../mixins/forms.jade
 include ../mixins/avatar-box.jade
 
 .header-box Account
-	if user.id && (adminArea || isOwnUser) && !user.lastAdmin
+	if user.id && adminArea && !user.lastAdmin
 		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 form#user-form.content-box
 	#user-form-general-message-group.alert(role='alert'): span.message
