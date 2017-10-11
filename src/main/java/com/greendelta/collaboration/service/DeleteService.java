@@ -9,6 +9,7 @@ import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
+import com.greendelta.collaboration.model.task.TaskState;
 
 public class DeleteService {
 
@@ -66,6 +67,20 @@ public class DeleteService {
 						task.assignments.remove(assignment);
 					}
 
+				}
+				if (task.assignments.isEmpty()) {
+					task.state = TaskState.CREATED;
+				} else {
+					boolean stillActive = false;
+					for (TaskAssignment assignment : task.assignments) {
+						if (assignment.endDate == null) {
+							stillActive = true;
+							break;
+						}
+					}
+					if (!stillActive) {
+						task.state = TaskState.PROCESSING;
+					}
 				}
 				taskService.update(task);
 			}
