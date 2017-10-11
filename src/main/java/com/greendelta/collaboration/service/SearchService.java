@@ -123,7 +123,6 @@ public class SearchService {
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
 		SearchQueryBuilder builder = builder(repo);
 		builder.filter("commitId", Type.PHRASE, commit.id);
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return parser.parse(client.search(builder.build()));
 	}
 

@@ -51,7 +51,19 @@ class IndexEntryParser {
 		e.action = toAction(entry.get("action"));
 		e.typeOrdinal = toInt(entry.get("typeOrdinal"));
 		e.type = type;
+		unsetDummyCategoryId(e);
 		return e;
+	}
+
+	// for indexing we have to set a value, this is unset here
+	private void unsetDummyCategoryId(IndexEntry entry) {
+		if (entry.type == ModelType.CATEGORY) {
+			if (entry.categoryRefId.equals(entry.categoryType.name())) {
+				entry.categoryRefId = null;
+			}
+		} else if (entry.categoryRefId.equals(entry.type.name())) {
+			entry.categoryRefId = null;
+		}
 	}
 
 	private ProcessIndexEntry parseProcessSpecific(Map<String, Object> entry) {

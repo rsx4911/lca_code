@@ -71,9 +71,7 @@ class IndexEntryCreator {
 		entry.name = dataset.name;
 		entry.categoryRefId = dataset.categoryRefId;
 		entry.fullPath = dataset.fullPath;
-		if (entry.type == ModelType.CATEGORY) {
-			entry.categoryType = dataset.categoryType;
-		}
+		entry.categoryType = dataset.categoryType;
 		entry.commitId = commit.id;
 		entry.commitMessage = commit.message;
 		entry.commitTimestamp = commit.timestamp;

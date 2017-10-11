@@ -59,18 +59,20 @@ public class FetchService {
 		Map<Dataset, String> dsToCommit = new HashMap<>();
 		for (Commit commit : commits) {
 			for (IndexEntry entry : searchService.getAll(repo, commit)) {
-				if (requested != null && !requested.contains(entry))
+				FileReference ref = entry.asFileReference();
+				if (requested != null && !requested.contains(ref))
 					continue;
-				if (skipEmpty && empty.contains(entry))
+				if (skipEmpty && empty.contains(ref))
 					continue;
-				if (datasets.contains(entry))
+				Dataset ds = entry.asDataset();
+				if (datasets.contains(ds))
 					continue;
 				if (skipEmpty && entry.action == IndexAction.DELETE) {
-					empty.add(entry);
+					empty.add(ref);
 					continue;
 				}
-				dsToCommit.put(entry, commit.id);
-				datasets.add(entry);
+				dsToCommit.put(ds, commit.id);
+				datasets.add(ds);
 			}
 		}
 		return new StreamingOutput() {

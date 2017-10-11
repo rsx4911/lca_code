@@ -249,8 +249,10 @@ public class RepositoryUpgrades {
 			entry.type = type;
 			entry.name = document.get("name");
 			entry.categoryRefId = document.get("categoryRefId");
-			if (!Strings.nullOrEmpty(document.get("categoryType")) && entry.type == ModelType.CATEGORY) {
+			if (!Strings.nullOrEmpty(document.get("categoryType"))) {
 				entry.categoryType = ModelType.valueOf(document.get("categoryType"));
+			} else {
+				entry.categoryType = type;				
 			}
 			entry.typeOrdinal = ModelTypes.getOrdinal(entry.type, entry.categoryType);
 			entry.commitId = document.get("commitId");
