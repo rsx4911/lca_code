@@ -3,7 +3,9 @@ package com.greendelta.collaboration.util.export;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -14,22 +16,27 @@ import org.openlca.jsonld.ZipStore;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SearchService;
 
 public class JsonWriter implements DatasetWriter {
 
 	private final FetchService fetchService;
 	private final HistoryService historyService;
+	private final SearchService searchService;
 	private final Repository repo;
 	private final ZipStore zipStore;
 	private final File tmpFile;
 	private final Set<String> written = new HashSet<>();
 
-	public JsonWriter(FetchService fetchService, HistoryService historyService, Repository repo) throws IOException {
+	public JsonWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
+			Repository repo) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
+		this.searchService = searchService;
 		this.repo = repo;
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, "temp.zip");
@@ -49,7 +56,28 @@ public class JsonWriter implements DatasetWriter {
 				zipStore.putBin(type, refId, file.getName(), Files.readAllBytes(file.toPath()));
 		written.add(type.name() + refId);
 		writeReferences(json, commitId);
-		// TODO export global parameters
+		for (IndexEntry entry : getGlobalParameters(commitId)) {
+			write(ModelType.PARAMETER, entry.refId, entry.commitId);
+		}
+	}
+
+	private List<IndexEntry> getGlobalParameters(String untilCommitId) {
+		Set<String> relevantCommits = new HashSet<>();
+		for (Commit commit : historyService.getCommitsUntil(repo, untilCommitId)) {
+			relevantCommits.add(commit.id);
+		}
+		List<IndexEntry> all = searchService.getAll(repo, ModelType.PARAMETER);
+		List<IndexEntry> entries = new ArrayList<>();
+		Set<String> added = new HashSet<>();
+		for (IndexEntry entry : all) {
+			if (added.contains(entry.refId))
+				continue;
+			if (!relevantCommits.contains(entry.commitId))
+				continue;
+			entries.add(entry);
+			added.add(entry.refId);
+		}
+		return entries;
 	}
 
 	@Override

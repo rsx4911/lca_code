@@ -19,20 +19,23 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.export.DatasetWriter;
 import com.greendelta.collaboration.util.export.JsonWriter;
 
 @Path("public/download/json")
 public class DownloadJsonResource extends DownloadResource {
 
-	private final HistoryService historyService;
 	private final FetchService fetchService;
+	private final HistoryService historyService;
+	private final SearchService searchService;
 
 	@Inject
-	public DownloadJsonResource(RepositoryService repoService, HistoryService historyService, FetchService fetchService) {
+	public DownloadJsonResource(RepositoryService repoService, HistoryService historyService, FetchService fetchService, SearchService searchService) {
 		super(repoService, historyService);
 		this.fetchService = fetchService;
 		this.historyService = historyService;
+		this.searchService = searchService;
 	}
 
 	@GET
@@ -67,7 +70,7 @@ public class DownloadJsonResource extends DownloadResource {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo) throws IOException {
-		return new JsonWriter(fetchService, historyService, repo);
+		return new JsonWriter(fetchService, historyService, searchService, repo);
 	}
 
 }
