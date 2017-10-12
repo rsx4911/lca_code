@@ -148,6 +148,8 @@ public class SearchService {
 	}
 
 	public void index(Collection<IndexEntry> entries) {
+		if (entries.isEmpty())
+			return;
 		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
 			setDummyCategoryId(entry);
@@ -178,6 +180,8 @@ public class SearchService {
 	}
 
 	public void remove(Collection<IndexEntry> entries) {
+		if (entries.isEmpty())
+			return;
 		Map<String, Set<String>> idsByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
 			Set<String> ids = idsByType.get(entry.type.name());
