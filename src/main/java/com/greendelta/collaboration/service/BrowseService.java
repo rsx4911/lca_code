@@ -47,27 +47,21 @@ public class BrowseService {
 	}
 
 	private List<IndexEntry> getRootModels(Repository repo, ModelType type, String nameFilter) {
-		SearchQueryBuilder builder = searchService.builder(repo);
+		SearchQueryBuilder builder = builder(repo, nameFilter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
-		}
-		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filterDeleted(result);
 	}
 
 	private List<IndexEntry> getRootCategories(Repository repo, ModelType type, String nameFilter) {
-		SearchQueryBuilder builder = searchService.builder(repo);
+		SearchQueryBuilder builder = builder(repo, nameFilter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
 			builder.filter("categoryType", Type.PHRASE, type.name());
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
-		}
-		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filterDeleted(result);
@@ -78,13 +72,21 @@ public class BrowseService {
 	}
 
 	public List<IndexEntry> getForCategory(Repository repo, String id, String nameFilter) {
-		SearchQueryBuilder builder = searchService.builder(repo)
+		SearchQueryBuilder builder = builder(repo, nameFilter)
 				.filter("categoryRefId", Type.PHRASE, id);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filterDeleted(result);
+	}
+	
+	private SearchQueryBuilder builder(Repository repo, String nameFilter) {
+		SearchQueryBuilder builder = searchService.builder(repo);
+		if (!Strings.isNullOrEmpty(nameFilter)) {
+			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
+		}
+		return builder;
 	}
 
 	private List<IndexEntry> filterDeleted(List<IndexEntry> entries) {
