@@ -47,7 +47,6 @@ define([
 					filterId: 'filter'
 					url: (page, filter) -> "#{url}filter=#{filter}"
 					callback: (type, result) =>
-						@sortEntries result
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
@@ -70,19 +69,5 @@ define([
 					getRootLabel: (type) -> return ModelTypes[type]
 				Renderer.render @, renderOptions
 				@filter.init()
-
-			sortEntries: (result) ->
-				unless result.entries?.length
-					return
-				if typeof(result.entries[0]) isnt 'object'
-					return
-				result.entries.sort (a, b) ->
-					n1 = a.name.toLowerCase();
-					n2 = b.name.toLowerCase();
-					if n1 > n2 
-						return 1
-					else if n1 < n2
-						return -1
-					return 0
-
+				
 )

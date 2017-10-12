@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.webservice;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,6 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.FetchService;
@@ -50,9 +48,9 @@ public class BrowseResource {
 	@GET
 	@Path("{group}/{name}")
 	public Response getCategoryContent(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@QueryParam("categoryPath") String categoryPath, 
+			@QueryParam("categoryPath") String categoryPath,
 			@QueryParam("filter") String filter) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
@@ -79,26 +77,12 @@ public class BrowseResource {
 		for (ModelType type : ModelTypes.SORTED) {
 			if (!type.name().equals(categoryRefId))
 				continue;
-			List<IndexEntry> content = service.getUncategorized(repo, type, filter);
-			return filterDeleted(repo, content);
+			return service.getUncategorized(repo, type, filter);
 		}
 		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, filter);
-		if (content.isEmpty())
-			if (service.hasDataset(repo, categoryRefId))
-				return filterDeleted(repo, content);
-			else
-				return null;
-		return filterDeleted(repo, content);
-	}
-
-	private List<IndexEntry> filterDeleted(Repository repo, List<IndexEntry> entries) {
-		List<IndexEntry> notDeleted = new ArrayList<>();
-		for (IndexEntry entry : entries) {
-			if (entry.action == IndexAction.DELETE)
-				continue;
-			notDeleted.add(entry);
-		}
-		return notDeleted;
+		if (!content.isEmpty() || service.hasDataset(repo, categoryRefId))
+			return content;
+		return null;
 	}
 
 	@GET
@@ -106,7 +90,7 @@ public class BrowseResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getData(
 			@PathParam("group") String group,
-			@PathParam("name") String name, 
+			@PathParam("name") String name,
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {

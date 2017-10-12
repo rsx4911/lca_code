@@ -2,6 +2,7 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.elasticsearch.common.Strings;
@@ -36,14 +37,14 @@ public class BrowseService {
 	}
 
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
-		return filterDeleted(searchService.getAll(repo, type));
+		return sort(filterDeleted(searchService.getAll(repo, type)));
 	}
 
 	public List<IndexEntry> getUncategorized(Repository repo, ModelType type, String nameFilter) {
 		List<IndexEntry> results = new ArrayList<>();
 		results.addAll(getRootCategories(repo, type, nameFilter));
 		results.addAll(getRootModels(repo, type, nameFilter));
-		return results;
+		return sort(results);
 	}
 
 	private List<IndexEntry> getRootModels(Repository repo, ModelType type, String nameFilter) {
@@ -78,7 +79,18 @@ public class BrowseService {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filterDeleted(result);
+		return sort(filterDeleted(result));
+	}
+	
+	private List<IndexEntry> sort(List<IndexEntry> entries) {
+		Collections.sort(entries, (e1, e2) -> {
+			if (e1.type == e2.type) 
+				return e1.name.toLowerCase().compareTo(e2.name.toLowerCase());
+			if (e1.type == ModelType.CATEGORY)
+				return -1;
+			return 1;
+		});
+		return entries;
 	}
 	
 	private SearchQueryBuilder builder(Repository repo, String nameFilter) {
