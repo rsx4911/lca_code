@@ -11,7 +11,8 @@ mixin download-dropdown()
 			span.caret
 		ul.dropdown-menu
 			li: a(href='#' data-format='json') as JSON-LD
-			li: a(href='#' data-format='ilcd') as ILCD
+			if $.inArray(getTypeAsEnum(dataset.type), ['ACTOR', 'SOURCE', 'UNIT_GROUP', 'FLOW_PROPERTY', 'FLOW', 'PROCESS', 'IMPACT_METHOD']) !== -1
+				li: a(href='#' data-format='ilcd') as ILCD
 
 mixin maximize-icon()
 	li.maximize-content: a(href='#'): span.glyphicon.glyphicon-fullscreen
