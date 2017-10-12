@@ -154,9 +154,9 @@ public class SearchService {
 		for (IndexEntry entry : entries) {
 			setDummyCategoryId(entry);
 			Map<String, Object> content = ObjectMap.fromObject(entry);
-			Map<String, Map<String, Object>> contentsById = contentsByIdByType.get(entry.type.name());
+			Map<String, Map<String, Object>> contentsById = contentsByIdByType.get(entry.type.name().toLowerCase());
 			if (contentsById == null) {
-				contentsByIdByType.put(entry.type.name(), contentsById = new HashMap<>());
+				contentsByIdByType.put(entry.type.name().toLowerCase(), contentsById = new HashMap<>());
 			}
 			contentsById.put(entry.toIndexId(), content);
 		}
@@ -184,9 +184,9 @@ public class SearchService {
 			return;
 		Map<String, Set<String>> idsByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
-			Set<String> ids = idsByType.get(entry.type.name());
+			Set<String> ids = idsByType.get(entry.type.name().toLowerCase());
 			if (ids == null) {
-				idsByType.put(entry.type.name(), ids = new HashSet<>());
+				idsByType.put(entry.type.name().toLowerCase(), ids = new HashSet<>());
 			}
 			ids.add(entry.toIndexId());
 		}
