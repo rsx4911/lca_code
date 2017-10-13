@@ -101,20 +101,13 @@ public class SearchService {
 	}
 
 	public List<IndexEntry> getAll(Repository repo) {
-		return getAll(repo, null, null);
+		return getAll(repo, (ModelType) null);
 	}
 
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
-		return getAll(repo, type, null);
-	}
-
-	public List<IndexEntry> getAll(Repository repo, ModelType type, String nameFilter) {
 		SearchQueryBuilder builder = builder(repo);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-		}
-		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return parser.parse(client.search(builder.build()));
@@ -122,7 +115,9 @@ public class SearchService {
 
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
 		SearchQueryBuilder builder = builder(repo);
-		builder.filter("commitId", Type.PHRASE, commit.id);
+		if (commit != null) {
+			builder.filter("commitId", Type.PHRASE, commit.id);
+		}
 		return parser.parse(client.search(builder.build()));
 	}
 
@@ -137,7 +132,7 @@ public class SearchService {
 		return parser.parse(client.get(type.name().toLowerCase(), id));
 	}
 
-	public IndexEntry getLast(Repository repo, String refId) {
+	IndexEntry getLast(Repository repo, String refId) {
 		SearchQueryBuilder builder = builder(repo);
 		builder.filter("refId", Type.PHRASE, refId);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);

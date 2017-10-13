@@ -34,6 +34,8 @@ public class BrowseService {
 			File dir = repo.getModelDir(type, false);
 			if (!dir.exists())
 				continue;
+			if (getAll(repo, type).isEmpty())
+				continue;
 			types.add(type);
 		}
 		return types;
@@ -56,7 +58,6 @@ public class BrowseService {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filter(result);
 	}
@@ -68,7 +69,6 @@ public class BrowseService {
 			builder.filter("categoryType", Type.PHRASE, type.name());
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filter(result);
 	}
@@ -83,7 +83,6 @@ public class BrowseService {
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return sort(filter(result));
 	}
@@ -104,6 +103,7 @@ public class BrowseService {
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return builder;
 	}
 
