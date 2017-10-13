@@ -35,6 +35,7 @@ define([
 											data.push 
 												id: e.refId
 												text: e.name
+												commitId: e.commitId
 												fullPath: e.fullPath
 												icon: "images/model/small/#{e.type.toLowerCase()}.png"
 												type: e.type
@@ -78,7 +79,7 @@ define([
 							break
 					if skip
 						continue
-					elements.push {type: e.original.type, id: e.original.id, name: e.original.text}
+					elements.push {type: e.original.type, id: e.original.id, name: e.original.text, commitId: e.commitId}
 			return elements
  
 )

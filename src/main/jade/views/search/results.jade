@@ -1,22 +1,30 @@
 include ../mixins/forms.jade
 include ../mixins/paging.jade
 
+mixin result-entry(dataset)
+	if dataset.type === 'CATEGORY'
+		img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+	else
+		img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
+	if dataset.action === 'DELETE'
+		del.result-text=dataset.fullPath
+	else 
+		span.result-text=dataset.fullPath
+
 .col-lg-9
 	.header-box #{resultInfo.totalCount} results for '#{query}'
 	.content-box
 		each dataset in data
 			.result
-				- var url = dataset.repositoryId + '/dataset';
-				if dataset.type === 'CATEGORY'
-					- url += 's/' + getLabel('modelType', dataset.categoryType) + '/' + dataset.fullPath;
+				if dataset.action === 'DELETE' && dataset.type === 'CATEGORY'
+					+result-entry(dataset)
 				else
-					- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
-				a(href=url)
+					- var url = dataset.repositoryId + '/dataset';
 					if dataset.type === 'CATEGORY'
-						img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+						- url += 's/' + getLabel('modelType', dataset.categoryType) + '/' + dataset.fullPath;
 					else
-						img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
-					span.result-text=dataset.fullPath
+						- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
+					a(href=url): +result-entry(dataset)
 				.details
 					div Repository: 
 						a(href='#{dataset.repositoryId}')=dataset.repositoryId

@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -102,8 +103,14 @@ public class BrowseResource {
 		}
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
 		if (Strings.isNullOrEmpty(dataset)) {
-			String message = notFoundMessage(type, refId, null);
-			return Respond.notFound(message);
+			Map<String, Object> descriptor = new HashMap<>();
+			IndexEntry entry = service.getDataset(repo, type, refId, commitId);
+			descriptor.put("@id", refId);
+			descriptor.put("@type", type.getModelClass().getSimpleName());
+			descriptor.put("name", entry.name);			
+			descriptor.put("commitId", commitId);
+			descriptor.put("deleted", true);
+			return Respond.ok(descriptor);
 		}
 		ObjectMap map = ObjectMap.fromJson(dataset);
 		if (map.containsKey("category"))
@@ -115,7 +122,7 @@ public class BrowseResource {
 			putSocialIndicators(repo, commitId, aspects);
 		} else if (type == ModelType.IMPACT_CATEGORY) {
 			List<Map<String, Object>> factors = map.get("impactFactors");
-			putFlowCategories(repo, commitId, factors);			
+			putFlowCategories(repo, commitId, factors);
 		} else if (type == ModelType.FLOW) {
 			putReferenceUnits(repo, map, commitId);
 		}
@@ -153,8 +160,10 @@ public class BrowseResource {
 			Map<String, Object> indicator = (Map<String, Object>) aspect.get("socialIndicator");
 			String refId = (String) indicator.get("@id");
 			String cId = getLastCommitId(repo, ModelType.SOCIAL_INDICATOR, refId, commitId);
-			aspect.put("socialIndicator",
-					ObjectMap.fromJson(fetchService.getDataset(repo, ModelType.SOCIAL_INDICATOR, refId, cId)));
+			String dataset = fetchService.getDataset(repo, ModelType.SOCIAL_INDICATOR, refId, cId);
+			if (dataset == null)
+				continue;
+			aspect.put("socialIndicator", ObjectMap.fromJson(dataset));
 		}
 	}
 

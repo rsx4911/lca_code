@@ -21,7 +21,6 @@ import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.BrowseService;
-import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -41,20 +40,18 @@ public class ReviewResource {
 	private final TaskService taskService;
 	private final UserService userService;
 	private final AccessService accessService;
-	private final HistoryService historyService;
 	private final BrowseService browseService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
-			AccessService accessService, HistoryService historyService, NotificationService notificationService,
-			RepositoryService repoService, BrowseService browseService) {
+			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
+			BrowseService browseService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
-		this.historyService = historyService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.browseService = browseService;
@@ -110,7 +107,7 @@ public class ReviewResource {
 		Repository repo = repoService.get(split[0], split[1]);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
-		ReferenceCollector collector = new ReferenceCollector(historyService, browseService);
+		ReferenceCollector collector = new ReferenceCollector(browseService);
 		service.setReferences(id, collector.getReferences(repo, references));
 		return createResponse();
 	}

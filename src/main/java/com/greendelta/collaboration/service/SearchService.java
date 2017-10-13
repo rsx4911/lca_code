@@ -12,9 +12,9 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.lca.search.SearchClient;
@@ -60,7 +60,6 @@ public class SearchService {
 				builder.aggregation(aggregation);
 			}
 		}
-		builder.filter("action", Type.PHRASE, IndexAction.ADD.name(), IndexAction.UPDATE.name());
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, "name");
 		}
@@ -147,8 +146,7 @@ public class SearchService {
 			return;
 		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
-			setDummyCategoryId(entry);
-			Map<String, Object> content = ObjectMap.fromObject(entry);
+			Map<String, Object> content = toMap(entry);
 			Map<String, Map<String, Object>> contentsById = contentsByIdByType.get(entry.type.name().toLowerCase());
 			if (contentsById == null) {
 				contentsByIdByType.put(entry.type.name().toLowerCase(), contentsById = new HashMap<>());
@@ -159,9 +157,15 @@ public class SearchService {
 	}
 
 	public void index(IndexEntry entry) {
-		setDummyCategoryId(entry);
-		Map<String, Object> content = ObjectMap.fromObject(entry);
+		Map<String, Object> content = toMap(entry);
 		client.index(entry.type.name().toLowerCase(), entry.toIndexId(), content);
+	}
+
+	private Map<String, Object> toMap(IndexEntry entry) {
+		setDummyCategoryId(entry);
+		Map<String, Object> map = ObjectMap.fromObject(entry);
+		map.put("typeOrdinal", ModelTypes.getOrdinal(entry.type, entry.categoryType));
+		return map;
 	}
 
 	private void setDummyCategoryId(IndexEntry entry) {

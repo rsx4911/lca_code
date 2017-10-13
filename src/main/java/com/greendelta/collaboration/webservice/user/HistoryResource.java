@@ -18,7 +18,6 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
@@ -134,7 +133,7 @@ public class HistoryResource {
 			return Respond.notFound();
 		SearchQuery query = createReferencesQuery(repo, commit, type, page, filter);
 		SearchResult<IndexEntry> result = searchService.search(query);
-		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asDataset()));
+		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asFetchRequestData()));
 	}
 
 	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, String filter) {
@@ -143,7 +142,6 @@ public class HistoryResource {
 				.pageSize(SearchQuery.DEFAULT_PAGE_SIZE)
 				.filter(Aggregations.REPOSITORY.name, Type.PHRASE, repo.toId())
 				.filter("commitId", Type.PHRASE, commit.id)
-				.filter("action", Type.PHRASE, IndexAction.ADD.name(), IndexAction.UPDATE.name())
 				.filter("name", Type.PHRASE, filter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());

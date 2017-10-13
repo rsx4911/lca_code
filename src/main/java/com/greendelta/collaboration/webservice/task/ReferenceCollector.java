@@ -12,16 +12,13 @@ import com.google.common.base.Strings;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.service.BrowseService;
-import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 
 class ReferenceCollector {
 	
-	private final HistoryService historyService;
 	private final BrowseService browseService;
 	
-	ReferenceCollector(HistoryService historyService, BrowseService browseService) {
-		this.historyService = historyService;
+	ReferenceCollector(BrowseService browseService) {
 		this.browseService = browseService;
 	}
 
@@ -72,7 +69,7 @@ class ReferenceCollector {
 		ReviewReference reference = new ReviewReference();
 		reference.type = ref.type;
 		reference.refId = ref.id;
-		reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
+		reference.commitId = ref.commitId;
 		reference.name = ref.name;
 		return reference;
 	}
@@ -82,6 +79,7 @@ class ReferenceCollector {
 		public String id;
 		public ModelType type;
 		public String name;
+		public String commitId;
 
 	}
 }

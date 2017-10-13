@@ -20,7 +20,6 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingApproach;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
 class IndexEntryCreator {
@@ -77,7 +76,6 @@ class IndexEntryCreator {
 		entry.commitTimestamp = commit.timestamp;
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
-		entry.typeOrdinal = ModelTypes.getOrdinal(dataset.type, dataset.categoryType);
 	}
 
 	private ProcessIndexEntry process(Dataset dataset, File dataFile) {

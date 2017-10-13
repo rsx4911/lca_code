@@ -254,7 +254,6 @@ public class RepositoryUpgrades {
 			} else {
 				entry.categoryType = type;				
 			}
-			entry.typeOrdinal = ModelTypes.getOrdinal(entry.type, entry.categoryType);
 			entry.commitId = document.get("commitId");
 			entry.commitMessage = document.get("commitMessage");
 			entry.fullPath = document.get("fullPath");

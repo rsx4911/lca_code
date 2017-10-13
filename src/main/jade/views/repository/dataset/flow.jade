@@ -7,7 +7,7 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType',flowType); };
+					- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType', flowType); };
 					+field-row('flowType', true, false, getFlowTypeLabel)
 					+field-row('cas', true, true)
 					+field-row('formula', true, true)

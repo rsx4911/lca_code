@@ -11,7 +11,6 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public String commitMessage;
 	public long commitTimestamp;
 	public IndexAction action;
-	public int typeOrdinal;
 
 	public String toIndexId() {
 		return repositoryId + "/" + refId + "/" + commitId;
@@ -59,6 +58,5 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.commitMessage = commitMessage;
 		e.commitTimestamp = commitTimestamp;
 		e.action = action;
-		e.typeOrdinal = typeOrdinal;
 	}
 }

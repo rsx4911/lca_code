@@ -48,6 +48,8 @@ public class JsonWriter implements DatasetWriter {
 		if (written.contains(type.name() + refId))
 			return;
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
+		if (dataset == null)
+			return;
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		zipStore.put(type, json);
 		File binDir = fetchService.getBinDir(repo, type, refId, commitId);

@@ -49,7 +49,6 @@ class IndexEntryParser {
 		e.version = toString(entry.get("version"));
 		e.commitTimestamp = toLong(entry.get("commitTimestamp"));
 		e.action = toAction(entry.get("action"));
-		e.typeOrdinal = toInt(entry.get("typeOrdinal"));
 		e.type = type;
 		unsetDummyCategoryId(e);
 		return e;
@@ -159,12 +158,6 @@ class IndexEntryParser {
 		if (o == null)
 			return 0;
 		return Long.parseLong(o.toString());
-	}
-
-	private int toInt(Object o) {
-		if (o == null)
-			return 0;
-		return Integer.parseInt(o.toString());
 	}
 
 	private boolean toBoolean(Object o) {

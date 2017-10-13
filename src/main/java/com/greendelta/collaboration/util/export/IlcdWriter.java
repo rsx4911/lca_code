@@ -111,9 +111,11 @@ public class IlcdWriter implements DatasetWriter {
 			if (data != null)
 				return gson.fromJson(data, JsonObject.class);
 			Commit lastCommit = historyService.getLastCommitBefore(repo, modelType, refId, currentCommitId);
-			if (lastCommit != null) {
-				data = fetchService.getDataset(repo, modelType, refId, currentCommitId);
-			}
+			if (lastCommit == null)
+				return null;
+			data = fetchService.getDataset(repo, modelType, refId, lastCommit.id);
+			if (data == null)
+				return null;
 			return gson.fromJson(data, JsonObject.class);
 		}
 

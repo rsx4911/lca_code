@@ -27,7 +27,10 @@ mixin menubar()
 						- currentCommit = commit;
 					option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
 					optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
-			+download-dropdown
+			if dataset.deleted
+				.badge.pull-right.deleted Deleted
+			else
+				+download-dropdown
 			.clear
 			+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
 				|  on #{formatDate(currentCommit.timestamp)}
@@ -59,7 +62,7 @@ mixin meta()
 				+download-dropdown
 			div
 				strong=getLabel('version')
-				div(data-path='version')=dataset.version
+				div(data-path='version')=dataset.version?dataset.version:'-'
 			div
 				strong=getLabel('lastChange')
 				div(data-path='lastChange')

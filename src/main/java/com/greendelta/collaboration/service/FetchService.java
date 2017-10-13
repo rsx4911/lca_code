@@ -19,7 +19,6 @@ import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Bytes;
 
@@ -44,17 +43,8 @@ public class FetchService {
 		return repo.getBinDir(type, refId, commitId, false);
 	}
 
-	public StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits) {
-		return prepareData(repo, requested, commits, false);
-	}
-
-	public StreamingOutput prepareData(Repository repo, List<Commit> commits) {
-		return prepareData(repo, null, commits, true);
-	}
-
-	private StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits,
-			boolean skipEmpty) {
-		Set<FileReference> empty = new HashSet<>();
+	public StreamingOutput prepareData(Repository repo, List<Commit> commits, List<FileReference> requested) {
+		Set<FileReference> added = new HashSet<>();
 		Set<Dataset> datasets = new HashSet<>();
 		Map<Dataset, String> dsToCommit = new HashMap<>();
 		for (Commit commit : commits) {
@@ -62,17 +52,12 @@ public class FetchService {
 				FileReference ref = entry.asFileReference();
 				if (requested != null && !requested.contains(ref))
 					continue;
-				if (skipEmpty && empty.contains(ref))
-					continue;
 				Dataset ds = entry.asDataset();
-				if (datasets.contains(ds))
+				if (added.contains(ref))
 					continue;
-				if (skipEmpty && entry.action == IndexAction.DELETE) {
-					empty.add(ref);
-					continue;
-				}
 				dsToCommit.put(ds, commit.id);
 				datasets.add(ds);
+				added.add(ref);
 			}
 		}
 		return new StreamingOutput() {
@@ -80,7 +65,7 @@ public class FetchService {
 			@Override
 			public void write(OutputStream output) throws IOException {
 				int read = -1;
-				String commitId = commits.get(commits.size() - 1).id;
+				String commitId = commits.get(0).id;
 				try (FetchStream stream = new FetchStream(repo, commitId, datasets, dsToCommit)) {
 					while ((read = stream.read()) != -1) {
 						output.write(read);
