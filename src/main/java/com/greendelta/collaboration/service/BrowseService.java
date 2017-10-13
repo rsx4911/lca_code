@@ -3,7 +3,9 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
@@ -37,7 +39,7 @@ public class BrowseService {
 	}
 
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
-		return sort(filterDeleted(searchService.getAll(repo, type)));
+		return sort(filter(searchService.getAll(repo, type)));
 	}
 
 	public List<IndexEntry> getUncategorized(Repository repo, ModelType type, String nameFilter) {
@@ -54,7 +56,7 @@ public class BrowseService {
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filterDeleted(result);
+		return filter(result);
 	}
 
 	private List<IndexEntry> getRootCategories(Repository repo, ModelType type, String nameFilter) {
@@ -65,7 +67,7 @@ public class BrowseService {
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filterDeleted(result);
+		return filter(result);
 	}
 
 	public List<IndexEntry> getForCategory(Repository repo, String id) {
@@ -79,12 +81,12 @@ public class BrowseService {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return sort(filterDeleted(result));
+		return sort(filter(result));
 	}
-	
+
 	private List<IndexEntry> sort(List<IndexEntry> entries) {
 		Collections.sort(entries, (e1, e2) -> {
-			if (e1.type == e2.type) 
+			if (e1.type == e2.type)
 				return e1.name.toLowerCase().compareTo(e2.name.toLowerCase());
 			if (e1.type == ModelType.CATEGORY)
 				return -1;
@@ -92,7 +94,7 @@ public class BrowseService {
 		});
 		return entries;
 	}
-	
+
 	private SearchQueryBuilder builder(Repository repo, String nameFilter) {
 		SearchQueryBuilder builder = searchService.builder(repo);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
@@ -101,12 +103,32 @@ public class BrowseService {
 		return builder;
 	}
 
+	private List<IndexEntry> filter(List<IndexEntry> entries) {
+		return filterDeleted(filterPrevious(entries));
+	}
+
 	private List<IndexEntry> filterDeleted(List<IndexEntry> entries) {
 		List<IndexEntry> filtered = new ArrayList<>();
 		for (IndexEntry entry : entries) {
 			if (entry.action == IndexAction.DELETE)
 				continue;
 			filtered.add(entry);
+		}
+		return filtered;
+	}
+
+	// entries are sorted descending by commit timestamp
+	// only retain the last commited element for a ref id
+	// means only retain the first element in the list
+	private List<IndexEntry> filterPrevious(List<IndexEntry> entries) {
+		Set<String> alreadyAdded = new HashSet<>();
+		List<IndexEntry> filtered = new ArrayList<>();
+		for (IndexEntry entry : entries) {
+			String key = entry.type.name() + "_" + entry.refId;
+			if (alreadyAdded.contains(key))
+				continue;
+			filtered.add(entry);
+			alreadyAdded.add(key);
 		}
 		return filtered;
 	}
