@@ -6,8 +6,8 @@ mixin category-breadcrumb(baseUrl, path, linkLast, depth)
 			if depth && paths.length > depth
 				li ...
 			each category, index in paths
+				- link += '/' + category
 				if !depth || paths.length - index <= depth				
-					- link += '/' + category
 					if index === paths.length - 1 && !linkLast
 						li.active=category
 					else
