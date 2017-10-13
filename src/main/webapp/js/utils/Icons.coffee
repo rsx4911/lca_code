@@ -16,7 +16,8 @@ define () ->
 			icon += char
 		if ref.type is 'Flow'
 			flowType = if additionalTypeInfo then additionalTypeInfo else ref.flowType
-			icon += '_' + flowType.substring(0, flowType.indexOf('_'))
+			if flowType
+				icon += '_' + flowType.substring(0, flowType.indexOf('_'))
 		if ref.type is 'Process'
 			processType = if additionalTypeInfo then additionalTypeInfo else ref.processType
 			if processType is 'LCI_RESULT'

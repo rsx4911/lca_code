@@ -1,21 +1,19 @@
 include mixins.jade
 
-if impactCategory.impactFactors
-	each factor, index in impactCategory.impactFactors
+if dataset.impactFactors
+	each factor, index in dataset.impactFactors
 		- var hasFormula = factor.formula && (isNaN(factor.formula) || parseFloat(factor.formula) !== factor.value);
 		tr
-			td(data-path='factors[' + index + '].flow')=factor.flow.name
+			td: +ref('impactFactors[' + index + '].flow')
 			td
 				if factor.flow.category
-					- var path = factor.flow.category.split('/');
-					| #{path[path.length - 1]}
-					if path.length > 1
-						|  / #{path[path.length - 2]}			
+					- var url = baseUrl + 's/Flows';
+					+category-breadcrumb(url, factor.flow.category, true, 2)
 			td 
-				- var unit = impactCategory.referenceUnitName + '/' + factor.unit.name;
+				- var unit = dataset.referenceUnitName + '/' + factor.unit.name;
 				if hasFormula
 					| #{factor.formula} #{unit} = 
-				span(data-path='factors[' + index + '].' + (hasFormula ? 'formula' : 'value'))=factor.value
+				span(data-path='impactFactors[' + index + '].' + (hasFormula ? 'formula' : 'value'))=factor.value
 				|  
-				span(data-path='factors[' + index + '].unit')=unit
-			td(data-path='factors[' + index + '].uncertainty'): +uncertainty(factor.uncertainty)
+				span(data-path='impactFactors[' + index + '].unit')=unit
+			td(data-path='impactFactors[' + index + '].uncertainty'): +uncertainty(factor.uncertainty)

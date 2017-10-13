@@ -109,8 +109,13 @@ public class BrowseResource {
 		if (map.containsKey("category"))
 			map.put("category.name", getFullPath(repo, ModelType.CATEGORY, map.get("category.@id"), commitId));
 		if (type == ModelType.PROCESS) {
-			putFlowCategories(repo, map, commitId);
-			putSocialIndicators(repo, map, commitId);
+			List<Map<String, Object>> exchanges = map.get("exchanges");
+			List<Map<String, Object>> aspects = map.get("socialAspects");
+			putFlowCategories(repo, commitId, exchanges);
+			putSocialIndicators(repo, commitId, aspects);
+		} else if (type == ModelType.IMPACT_CATEGORY) {
+			List<Map<String, Object>> factors = map.get("impactFactors");
+			putFlowCategories(repo, commitId, factors);			
 		} else if (type == ModelType.FLOW) {
 			putReferenceUnits(repo, map, commitId);
 		}
@@ -119,14 +124,13 @@ public class BrowseResource {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void putFlowCategories(Repository repo, ObjectMap map, String commitId) {
-		List<Map<String, Object>> exchanges = (List<Map<String, Object>>) map.get("exchanges");
-		if (exchanges == null)
+	private void putFlowCategories(Repository repo, String commitId, List<Map<String, Object>> elements) {
+		if (elements == null)
 			return;
-		for (Map<String, Object> exchange : exchanges) {
-			if (!exchange.containsKey("flow"))
+		for (Map<String, Object> element : elements) {
+			if (!element.containsKey("flow"))
 				continue;
-			Map<String, Object> flow = (Map<String, Object>) exchange.get("flow");
+			Map<String, Object> flow = (Map<String, Object>) element.get("flow");
 			String refId = (String) flow.get("@id");
 			String name = (String) flow.get("name");
 			// last element in path is the flow name itself
@@ -140,8 +144,7 @@ public class BrowseResource {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void putSocialIndicators(Repository repo, ObjectMap map, String commitId) {
-		List<Map<String, Object>> aspects = (List<Map<String, Object>>) map.get("socialAspects");
+	private void putSocialIndicators(Repository repo, String commitId, List<Map<String, Object>> aspects) {
 		if (aspects == null)
 			return;
 		for (Map<String, Object> aspect : aspects) {

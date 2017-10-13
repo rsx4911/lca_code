@@ -305,13 +305,20 @@ define([
 						type: 'GET'
 						url: "ws/public/browse/#{urlPart}/#{commitId}"
 						success: (impactCategory) =>
+							group = @repository.get 'group'
+							name = @repository.get 'name'
 							DatasetPrepare.applyTo impactCategory
 							@$('#impact-category-description').html impactCategory.description
 							@$('#impact-category-unit').html impactCategory.referenceUnitName
 							@$('#impact-factors tbody').empty()
 							@$('#impact-factors tbody').append impactFactorsTemplate 
-								impactCategory: impactCategory
+								dataset: impactCategory
 								noToStr: Format.number
+								getValue: (object, path) => return @getValue object, path 
+								getTypeAsEnum: (type) => return @getTypeAsEnum(type)
+								getIcon: Icons.get
+								commitId: @commitId or commits?[0]?.id
+								baseUrl: "#{group}/#{name}/dataset"
 							callback()
 				else
 					callback()
