@@ -17,6 +17,7 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.lca.search.SearchFilterValue.Type;
 import com.greendelta.lca.search.SearchQueryBuilder;
+import com.greendelta.lca.search.SearchSorting;
 
 public class BrowseService {
 
@@ -55,6 +56,7 @@ public class BrowseService {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filter(result);
 	}
@@ -66,6 +68,7 @@ public class BrowseService {
 			builder.filter("categoryType", Type.PHRASE, type.name());
 			builder.filter("categoryRefId", Type.PHRASE, type.name());
 		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filter(result);
 	}
@@ -80,6 +83,7 @@ public class BrowseService {
 		if (!Strings.isNullOrEmpty(nameFilter)) {
 			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
 		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return sort(filter(result));
 	}
