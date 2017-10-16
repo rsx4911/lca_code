@@ -10,8 +10,8 @@ import java.util.Random;
 import javax.persistence.EntityManager;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;

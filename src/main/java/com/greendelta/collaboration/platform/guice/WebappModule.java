@@ -1,7 +1,7 @@
 package com.greendelta.collaboration.platform.guice;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.openlca.cloud.util.Logs;
 

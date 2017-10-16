@@ -3,8 +3,8 @@ package com.greendelta.collaboration.platform.upgrade.database;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Upgrades {
 

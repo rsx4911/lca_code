@@ -4,8 +4,8 @@ import java.util.Map;
 
 import javax.ws.rs.Produces;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.util.Logs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

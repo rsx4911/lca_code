@@ -7,8 +7,8 @@ import java.util.Map;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.subject.Subject;
 
 import com.google.gson.Gson;
