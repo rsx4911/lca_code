@@ -49,7 +49,7 @@ class IndexEntryCreator {
 		} else {
 			entry = generic(dataset);
 		}
-		if (previous == null || previous.action != IndexAction.DELETE) {
+		if (previous == null || previous.action == IndexAction.DELETE) {
 			entry.action = IndexAction.ADD;
 		} else {
 			entry.action = IndexAction.UPDATE;
