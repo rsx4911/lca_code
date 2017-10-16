@@ -14,10 +14,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.apache.derby.jdbc.EmbeddedDriver;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.inject.Guice;
@@ -32,7 +32,7 @@ import com.greendelta.collaboration.platform.upgrade.database.Upgrades;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
-	private static final Logger log = LoggerFactory.getLogger(GuiceConfig.class);
+	private static final Logger log = LogManager.getLogger(GuiceConfig.class);
 	private volatile Set<ShutdownListener> shutdownListeners;
 	private ServletContext servletContext;
 
@@ -53,7 +53,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 	@Override
 	protected Injector getInjector() {
 		Module[] modules = getModules();
-		log.debug("Creating guice injector with modules {}",
+		log.info("Creating guice injector with modules {}",
 				Logs.collectClasses(modules));
 		Injector injector = Guice.createInjector(modules);
 		Injections injected = injector.getInstance(Injections.class);
@@ -128,7 +128,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 				}
 			}
 		} catch (Exception e) {
-			log.error("Error creating inital database", e);
+			log.debug("Error creating inital database", e);
 		}
 	}
 

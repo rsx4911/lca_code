@@ -16,16 +16,17 @@ public class Aggregations {
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
 	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");
-	
+
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] { REPOSITORY, MODEL_TYPE };
-	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] { PROCESS_TYPE, MODELLING_APPROACH};
-	
+	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] { PROCESS_TYPE,
+			MODELLING_APPROACH };
+
 	public static final SearchAggregation[] getFilters(ModelType modelType) {
 		List<SearchAggregation> filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
 		if (modelType == ModelType.PROCESS) {
 			filters.addAll(Arrays.asList(PROCESS_FILTERS));
 		}
 		return filters.toArray(new SearchAggregation[filters.size()]);
- 	}
+	}
 
 }

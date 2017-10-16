@@ -24,9 +24,9 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
+import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.webservice.Respond;
@@ -42,7 +42,7 @@ public class TeamResource {
 	private final MembershipService membershipService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-	
+
 	@Inject
 	public TeamResource(TeamService service, UserService userService, MembershipService membershipService,
 			DeleteService deleteService, NotificationService notificationService) {

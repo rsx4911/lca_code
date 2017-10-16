@@ -10,12 +10,12 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.api.data.ModelStreamReader;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
@@ -23,7 +23,7 @@ import com.greendelta.collaboration.util.Bytes;
 
 public class CommitService {
 
-	private final static Logger log = LoggerFactory.getLogger(CommitService.class);
+	private final static Logger log = LogManager.getLogger(CommitService.class);
 
 	private final UserService userService;
 	private final AccessService accessService;

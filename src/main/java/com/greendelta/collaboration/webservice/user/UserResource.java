@@ -44,7 +44,7 @@ public class UserResource {
 	private final UserService service;
 	private final MessagingService messagingService;
 	private final AccessService accessService;
-	
+
 	@Inject
 	public UserResource(UserService service, MessagingService messagingService, AccessService accessService) {
 		this.service = service;

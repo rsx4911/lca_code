@@ -59,5 +59,5 @@ public class DefaultServlet extends HttpServlet {
 			throws ServletException, IOException {
 		request.getRequestDispatcher(path).forward(request, response);
 	}
-	
+
 }

@@ -70,7 +70,7 @@ public class TeamResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response setAvatar(
-			@PathParam("teamname") String teamname, 
+			@PathParam("teamname") String teamname,
 			@FormDataParam("file") InputStream file) {
 		Team team = authorizedGetTeam(teamname);
 		if (team == null)

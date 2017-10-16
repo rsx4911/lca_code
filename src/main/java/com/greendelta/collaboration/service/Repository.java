@@ -3,13 +3,13 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.jsonld.output.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -17,7 +17,7 @@ import com.google.gson.JsonElement;
 
 public class Repository {
 
-	private final static Logger log = LoggerFactory.getLogger(Repository.class);
+	private final static Logger log = LogManager.getLogger(Repository.class);
 	final File repoDir;
 	public final String group;
 	public final String name;

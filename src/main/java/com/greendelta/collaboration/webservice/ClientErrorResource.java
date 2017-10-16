@@ -9,8 +9,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
@@ -19,7 +19,7 @@ import com.greendelta.collaboration.service.UserService;
 @Path("public/error")
 public class ClientErrorResource {
 
-	private final Logger log = LoggerFactory.getLogger(ClientErrorResource.class);
+	private final Logger log = LogManager.getLogger(ClientErrorResource.class);
 	private final UserService userService;
 
 	@Inject

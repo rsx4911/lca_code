@@ -15,9 +15,9 @@ import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.Repository;
 
 class ReferenceCollector {
-	
+
 	private final BrowseService browseService;
-	
+
 	ReferenceCollector(BrowseService browseService) {
 		this.browseService = browseService;
 	}
@@ -73,7 +73,7 @@ class ReferenceCollector {
 		reference.name = ref.name;
 		return reference;
 	}
-	
+
 	static class Reference {
 
 		public String id;

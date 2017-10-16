@@ -55,9 +55,9 @@ public class MembershipResource {
 	@POST
 	@Path("{group}/{repo}/user/{username}/{role}")
 	public Response addUserRole(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
-			@PathParam("username") String username, 
+			@PathParam("username") String username,
 			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
@@ -73,9 +73,9 @@ public class MembershipResource {
 	@POST
 	@Path("{group}/{repo}/team/{teamname}/{role}")
 	public Response addTeamRole(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
-			@PathParam("teamname") String teamname, 
+			@PathParam("teamname") String teamname,
 			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
@@ -91,9 +91,9 @@ public class MembershipResource {
 	@PUT
 	@Path("{group}/{repo}/user/{username}/{role}")
 	public Response updateUserRole(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
-			@PathParam("username") String username, 
+			@PathParam("username") String username,
 			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
@@ -109,7 +109,7 @@ public class MembershipResource {
 	@PUT
 	@Path("{group}/{repo}/team/{teamname}/{role}")
 	public Response updateTeamRole(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("teamname") String teamname,
 			@PathParam("role") Role role) {
@@ -127,7 +127,7 @@ public class MembershipResource {
 	@DELETE
 	@Path("{group}/{repo}/user/{username}")
 	public Response removeUserRole(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("username") String username) {
 		String path = getAuthorizedPath(group, repo);
@@ -146,7 +146,7 @@ public class MembershipResource {
 	@DELETE
 	@Path("{group}/{repo}/team/{teamname}")
 	public Response removeTeamRole(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("teamname") String teamname) {
 		String path = getAuthorizedPath(group, repo);
@@ -165,7 +165,7 @@ public class MembershipResource {
 	@GET
 	@Path("{group}/{repo}")
 	public Response getAll(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		String path = group;

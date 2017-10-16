@@ -9,14 +9,14 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import com.google.common.io.ByteStreams;
 
 public class Bytes {
 
-	private static final Logger log = LoggerFactory.getLogger(Bytes.class);
+	private static final Logger log = LogManager.getLogger(Bytes.class);
 
 	public static byte[] readStream(InputStream file) {
 		try {

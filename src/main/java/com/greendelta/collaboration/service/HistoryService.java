@@ -7,17 +7,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
 
 public class HistoryService {
 
-	private static final Logger log = LoggerFactory.getLogger(HistoryService.class);
+	private static final Logger log = LogManager.getLogger(HistoryService.class);
 	private final SearchService searchService;
 
 	@Inject

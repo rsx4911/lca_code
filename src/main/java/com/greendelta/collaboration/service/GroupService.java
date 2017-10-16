@@ -7,10 +7,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -23,7 +23,7 @@ import com.greendelta.lca.search.SearchResult;
 
 public class GroupService {
 
-	private final static Logger log = LoggerFactory.getLogger(GroupService.class);
+	private final static Logger log = LogManager.getLogger(GroupService.class);
 	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;

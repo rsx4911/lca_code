@@ -36,5 +36,5 @@ public class SearchResource {
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		return Respond.ok(service.search(query, page, pageSize, parameters));
 	}
-	
+
 }

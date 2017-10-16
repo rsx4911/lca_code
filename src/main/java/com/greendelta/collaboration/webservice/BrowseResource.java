@@ -107,7 +107,7 @@ public class BrowseResource {
 			IndexEntry entry = service.getDataset(repo, type, refId, commitId);
 			descriptor.put("@id", refId);
 			descriptor.put("@type", type.getModelClass().getSimpleName());
-			descriptor.put("name", entry.name);			
+			descriptor.put("name", entry.name);
 			descriptor.put("commitId", commitId);
 			descriptor.put("deleted", true);
 			return Respond.ok(descriptor);

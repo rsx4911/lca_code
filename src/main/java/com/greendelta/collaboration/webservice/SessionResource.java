@@ -11,12 +11,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authc.IncorrectCredentialsException;
 import org.apache.shiro.authc.UnknownAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -31,7 +31,7 @@ import com.warrenstrange.googleauth.GoogleAuthenticator;
 @Path("public")
 public class SessionResource {
 
-	private final static Logger log = LoggerFactory.getLogger(SessionResource.class);
+	private final static Logger log = LogManager.getLogger(SessionResource.class);
 
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;

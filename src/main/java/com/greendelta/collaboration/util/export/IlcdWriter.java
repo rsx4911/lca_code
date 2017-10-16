@@ -13,14 +13,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.convert.jsonld.ilcd.Json2IlcdStore;
 import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
 import org.openlca.ilcd.io.DataStore;
 import org.openlca.ilcd.io.ZipStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -33,7 +33,7 @@ import com.greendelta.collaboration.service.SearchService;
 
 public class IlcdWriter implements DatasetWriter {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LogManager.getLogger(getClass());
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final SearchService searchService;

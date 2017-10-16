@@ -22,5 +22,4 @@ public class Resources {
 		return writer.toString();
 	}
 
-	
 }

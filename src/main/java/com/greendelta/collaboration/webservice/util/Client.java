@@ -68,5 +68,5 @@ public class Client {
 	private static String decode(String value) {
 		return UriComponent.decode(value, UriComponent.Type.PATH_SEGMENT);
 	}
-	
+
 }

@@ -66,7 +66,8 @@ public class SearchResource {
 		return Respond.ok(search(query, page, pageSize, parameters));
 	}
 
-	private SearchResult<Map<String, Object>> search(String query, int page, int pageSize, Map<String, Set<String>> parameters) {
+	private SearchResult<Map<String, Object>> search(String query, int page, int pageSize,
+			Map<String, Set<String>> parameters) {
 		SearchQueryBuilder builder = new SearchQueryBuilder();
 		List<SearchAggregation> aggregations = new ArrayList<>(Arrays.asList(Aggregations.PROCESS_FILTERS));
 		aggregations.add(Aggregations.REPOSITORY);

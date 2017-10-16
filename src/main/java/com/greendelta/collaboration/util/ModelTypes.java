@@ -12,7 +12,7 @@ public class ModelTypes {
 			ModelType.DQ_SYSTEM, ModelType.PARAMETER };
 
 	public static int getOrdinal(ModelType type, ModelType categoryType) {
-		if (categoryType != null) 
+		if (categoryType != null)
 			return SORTED.length - getIndex(categoryType);
 		return (SORTED.length * 2) - getIndex(type);
 	}

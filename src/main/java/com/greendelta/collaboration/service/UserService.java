@@ -10,11 +10,11 @@ import java.util.Random;
 import javax.persistence.EntityManager;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -28,7 +28,7 @@ import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
 public class UserService {
 
-	private final static Logger log = LoggerFactory.getLogger(UserService.class);
+	private final static Logger log = LogManager.getLogger(UserService.class);
 	private final static Random random = new SecureRandom();
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
@@ -166,7 +166,7 @@ public class UserService {
 	public void clearCache() {
 		entityManagerProvider.get().getEntityManagerFactory().getCache().evict(User.class);
 	}
-	
+
 	public boolean logout() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())

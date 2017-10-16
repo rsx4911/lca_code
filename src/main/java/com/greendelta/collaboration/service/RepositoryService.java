@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.Directories;
@@ -14,8 +16,6 @@ import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.jsonld.output.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -32,7 +32,7 @@ import com.greendelta.lca.search.SearchResult;
 
 public class RepositoryService {
 
-	private static final Logger log = LoggerFactory.getLogger(Repository.class);
+	private static final Logger log = LogManager.getLogger(Repository.class);
 
 	private final String root;
 	private final AccessService accessService;

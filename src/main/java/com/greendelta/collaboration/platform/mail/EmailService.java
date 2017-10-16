@@ -13,8 +13,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -27,8 +27,7 @@ import com.sun.mail.smtp.SMTPMessage;
 @Singleton
 public class EmailService implements Closeable {
 
-	private static final Logger log = LoggerFactory
-			.getLogger(EmailService.class);
+	private static final Logger log = LogManager.getLogger(EmailService.class);
 
 	private final Session session;
 	private final InternetAddress defaultFrom;
@@ -71,18 +70,18 @@ public class EmailService implements Closeable {
 				TransportHolder transportHolder = null;
 				try {
 					transportHolder = pool.borrowObject();
-					log.debug("Sending mail with subject {} to {}", mail.subject, mail.recipient);
+					log.info("Sending mail with subject {} to {}", mail.subject, mail.recipient);
 					transportHolder.incrementMailsSent();
 					send(mail, transportHolder.getTransport());
 				} catch (NoSuchElementException nse) {
-					log.debug("Mail sending failed, overloaded or server down?", nse);
+					log.error("Mail sending failed, overloaded or server down?", nse);
 				} catch (Exception e) {
 					log.error("Unknow error sending mail", e);
 				} finally {
 					try {
 						pool.returnObject(transportHolder);
 					} catch (Exception e) {
-						log.debug("Error while returning transport holder to pool", e);
+						log.error("Error while returning transport holder to pool", e);
 					}
 				}
 			}
@@ -106,7 +105,7 @@ public class EmailService implements Closeable {
 			message.saveChanges();
 			transport.sendMessage(message, message.getAllRecipients());
 		} catch (Exception e) {
-			log.debug("Error: SendMailJobImpl.send()");
+			log.error("Error: SendMailJobImpl.send()", e);
 			throw e;
 		}
 	}

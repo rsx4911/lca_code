@@ -65,9 +65,9 @@ abstract class DownloadResource {
 			return Respond.ok(token);
 		} catch (IOException e) {
 			return Respond.error("Error writing data sets to tmp file");
-		}	
+		}
 	}
-	
+
 	protected String put(File file, String filename) {
 		String token = UUID.randomUUID().toString();
 		tokenToPath.put(token, file.getAbsolutePath());

@@ -41,7 +41,7 @@ public class RepositoryResource {
 	@GET
 	@Path("{group}/{name}")
 	public Response get(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group, repo.publicAccess));
@@ -52,7 +52,7 @@ public class RepositoryResource {
 	@Path("avatar/{group}/{name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getAvatar(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		byte[] avatar = service.getAvatar(group, name);
 		return Respond.ok(avatar, "avatar-repository.png");
@@ -62,11 +62,11 @@ public class RepositoryResource {
 	@Path("file/{group}/{name}/{type}/{refId}/{commitId}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getFile(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("type") ModelType type, 
+			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId, 
+			@PathParam("commitId") String commitId,
 			@PathParam("filename") String filename) throws IOException {
 		Repository repo = service.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);

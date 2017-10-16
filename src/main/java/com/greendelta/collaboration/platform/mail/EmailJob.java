@@ -9,12 +9,12 @@ import java.util.regex.Pattern;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class EmailJob {
 
-	private static final Logger log = LoggerFactory.getLogger(EmailJob.class);
+	private static final Logger log = LogManager.getLogger(EmailJob.class);
 	private static final Pattern domPattern = Pattern.compile("[^\\s>]+");
 
 	InternetAddress recipient;
@@ -118,10 +118,10 @@ public class EmailJob {
 		EmailJob job = (EmailJob) obj;
 		return job.recipient.getAddress().equals(recipient.getAddress());
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return recipient.getAddress().hashCode();
 	}
-	
+
 }

@@ -3,13 +3,13 @@ package com.greendelta.collaboration.platform.upgrade.database;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public class Upgrades {
 
-	private static final Logger log = LoggerFactory.getLogger(Upgrades.class);
-	private static final IUpgrade[] upgrades = { new Upgrade1() , new Upgrade2(), new Upgrade3()};
+	private static final Logger log = LogManager.getLogger(Upgrades.class);
+	private static final IUpgrade[] upgrades = { new Upgrade1(), new Upgrade2(), new Upgrade3() };
 
 	public static void run(String dbPath) {
 		try (DbUtil dbUtil = new DbUtil(dbPath)) {

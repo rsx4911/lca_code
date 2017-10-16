@@ -10,10 +10,10 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.authz.AuthorizationException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
@@ -22,7 +22,7 @@ import com.greendelta.collaboration.service.UserService;
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
-	private static final Logger log = LoggerFactory.getLogger(GenericExceptionMapper.class);
+	private static final Logger log = LogManager.getLogger(GenericExceptionMapper.class);
 
 	@Inject
 	private UserService userService;

@@ -26,7 +26,7 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 
 	@Inject
 	private AccessService accessService;
-	
+
 	@Override
 	protected boolean onAccessDenied(ServletRequest request, ServletResponse response) {
 		try {

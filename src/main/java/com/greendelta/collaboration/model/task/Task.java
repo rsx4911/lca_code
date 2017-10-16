@@ -30,7 +30,7 @@ import com.greendelta.collaboration.model.User;
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @Type(name = "REVIEW", value = Review.class) })
-@MappedSuperclass 
+@MappedSuperclass
 public abstract class Task extends AbstractEntity {
 
 	@Id
@@ -57,7 +57,7 @@ public abstract class Task extends AbstractEntity {
 	@Column(name = "state")
 	@Enumerated(EnumType.STRING)
 	public TaskState state;
-	
+
 	@OneToOne
 	@JoinColumn(name = "f_initiator")
 	public User initiator;

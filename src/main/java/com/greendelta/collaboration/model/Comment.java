@@ -46,12 +46,12 @@ public class Comment extends AbstractEntity {
 	@Column(name = "restricted_to_role")
 	@Enumerated(EnumType.STRING)
 	public Role restrictedToRole;
-	
-	@Column(name="released")
+
+	@Column(name = "released")
 	public boolean released;
 
 	@OneToOne
-	@JoinColumn(name="f_approved_by")
+	@JoinColumn(name = "f_approved_by")
 	public User approvedBy;
 
 	@Override

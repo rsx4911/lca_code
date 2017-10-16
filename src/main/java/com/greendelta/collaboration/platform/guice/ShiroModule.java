@@ -2,6 +2,8 @@ package com.greendelta.collaboration.platform.guice;
 
 import javax.servlet.ServletContext;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.cache.ehcache.EhCacheManager;
@@ -9,8 +11,6 @@ import org.apache.shiro.guice.web.ShiroWebModule;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.authz.RolesAuthorizationFilter;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Key;
 import com.google.inject.Provides;
@@ -25,7 +25,7 @@ import com.greendelta.collaboration.util.Names;
 
 class ShiroModule extends ShiroWebModule {
 
-	private static final Logger log = LoggerFactory.getLogger(ShiroModule.class);
+	private static final Logger log = LogManager.getLogger(ShiroModule.class);
 	private static final Key<RolesAuthorizationFilter> ADMIN_USER = config(ROLES, "admin");
 	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
 	private static final Key<RepoAccessFilter> REPO_ACCESS = Key.get(RepoAccessFilter.class);
@@ -56,7 +56,7 @@ class ShiroModule extends ShiroWebModule {
 			addFilterChain("/" + staticResource + "/**", ANON);
 		addFilterChain("/*", LOGGED_IN_USER); // group urls
 		addFilterChain("/**", REPO_ACCESS); // repository urls
-		log.debug("Successfully configured {}", Logs.simpleClassName(this));
+		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	@Provides

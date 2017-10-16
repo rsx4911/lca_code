@@ -4,9 +4,9 @@ import java.util.Map;
 
 import javax.ws.rs.Produces;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
@@ -19,7 +19,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 class JerseyModule extends JerseyServletModule {
 
-	private static final Logger log = LoggerFactory.getLogger(JerseyModule.class);
+	private static final Logger log = LogManager.getLogger(JerseyModule.class);
 
 	private String resourcePackages;
 
@@ -32,7 +32,7 @@ class JerseyModule extends JerseyServletModule {
 		Map<String, String> guiceJerseyParameter = ImmutableMap.of(PackagesResourceConfig.PROPERTY_PACKAGES,
 				resourcePackages);
 		serve("/ws/*").with(GuiceContainer.class, guiceJerseyParameter);
-		log.debug("Successfully configured {}", Logs.simpleClassName(this));
+		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	@Provides

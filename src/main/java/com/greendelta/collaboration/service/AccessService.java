@@ -39,7 +39,7 @@ public class AccessService {
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
-		if (isGroup(groupOrRepo)) 
+		if (isGroup(groupOrRepo))
 			if (membershipService.hasMembershipInAnyRepoInGroup(user, groupOrRepo))
 				return true;
 		return hasPermissionTo(user, Permission.READ, groupOrRepo, ignoreAdmin);

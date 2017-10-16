@@ -1,11 +1,20 @@
 package com.greendelta.collaboration.model;
 
+import static com.greendelta.collaboration.model.Permission.COMMENT;
+import static com.greendelta.collaboration.model.Permission.DELETE;
+import static com.greendelta.collaboration.model.Permission.EDIT_MEMBERS;
+import static com.greendelta.collaboration.model.Permission.MANAGE_COMMENTS;
+import static com.greendelta.collaboration.model.Permission.MANAGE_TASK;
+import static com.greendelta.collaboration.model.Permission.MOVE;
+import static com.greendelta.collaboration.model.Permission.READ;
+import static com.greendelta.collaboration.model.Permission.REVIEW;
+import static com.greendelta.collaboration.model.Permission.SET_PUBLIC;
+import static com.greendelta.collaboration.model.Permission.WRITE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import static com.greendelta.collaboration.model.Permission.*;
 
 public enum Role {
 

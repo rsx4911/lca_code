@@ -252,7 +252,7 @@ public class RepositoryUpgrades {
 			if (!Strings.nullOrEmpty(document.get("categoryType"))) {
 				entry.categoryType = ModelType.valueOf(document.get("categoryType"));
 			} else {
-				entry.categoryType = type;				
+				entry.categoryType = type;
 			}
 			entry.commitId = document.get("commitId");
 			entry.commitMessage = document.get("commitMessage");
