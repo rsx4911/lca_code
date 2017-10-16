@@ -56,7 +56,7 @@ public class BrowseService {
 		SearchQueryBuilder builder = builder(repo, nameFilter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-			builder.filter("categoryRefId", Type.PHRASE, type.name());
+			builder.filter("categoryRefId", type.name(), Type.PHRASE);
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filter(result);
@@ -66,8 +66,8 @@ public class BrowseService {
 		SearchQueryBuilder builder = builder(repo, nameFilter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
-			builder.filter("categoryType", Type.PHRASE, type.name());
-			builder.filter("categoryRefId", Type.PHRASE, type.name());
+			builder.filter("categoryType", type.name(), Type.PHRASE);
+			builder.filter("categoryRefId", type.name(), Type.PHRASE);
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return filter(result);
@@ -79,9 +79,9 @@ public class BrowseService {
 
 	public List<IndexEntry> getForCategory(Repository repo, String id, String nameFilter) {
 		SearchQueryBuilder builder = builder(repo, nameFilter)
-				.filter("categoryRefId", Type.PHRASE, id);
+				.filter("categoryRefId", id, Type.PHRASE);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
+			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
 		}
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return sort(filter(result));
@@ -101,7 +101,7 @@ public class BrowseService {
 	private SearchQueryBuilder builder(Repository repo, String nameFilter) {
 		SearchQueryBuilder builder = searchService.builder(repo);
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", Type.WILDCART, "*" + nameFilter + "*");
+			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return builder;

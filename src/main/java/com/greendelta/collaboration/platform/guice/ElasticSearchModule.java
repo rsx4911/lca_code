@@ -86,6 +86,8 @@ class ElasticSearchModule extends AbstractModule {
 				String mapping = new EsMapping(typeName).build();
 				mappings.put(typeName, mapping);
 			}
+			mappings.put(ModelType.CATEGORY.name().toLowerCase(),
+					new EsMapping(ModelType.CATEGORY.name().toLowerCase()).build());
 			settings.put(EsSettings.MAPPINGS, mappings);
 			searchService.createIndex(settings);
 			String repoPath = PropertiesModule.getProperties().getProperty("repository.path");

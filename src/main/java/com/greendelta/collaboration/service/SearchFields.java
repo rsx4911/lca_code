@@ -1,0 +1,26 @@
+package com.greendelta.collaboration.service;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.openlca.core.model.ModelType;
+
+public class SearchFields {
+
+	public static final String[] PROCESS_FULL_TEXT_FIELDS = {
+			"name", "completeness", "sampleRepresentativeness", "samplingProcedure", "technology",
+			"representativeness", "biogenicCarbon", "reviewer", "copyrightHolder", "contact", "description"
+	};
+
+	public static String[] get(ModelType type) {
+		Set<String> fields = new HashSet<>();
+		fields.add("name");
+		fields.add("commitMessage");
+		if (type == ModelType.PROCESS) {
+			fields.addAll(Arrays.asList(PROCESS_FULL_TEXT_FIELDS));
+		}
+		return fields.toArray(new String[fields.size()]);
+	}
+
+}

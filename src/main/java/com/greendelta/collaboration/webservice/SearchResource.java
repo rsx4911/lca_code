@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchFields;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.lca.search.SearchClient;
@@ -86,11 +87,11 @@ public class SearchResource {
 			Set<String> filterValues = parameters.get(filter);
 			if (filterValues != null && !filterValues.isEmpty()) {
 				String[] values = filterValues.toArray(new String[filterValues.size()]);
-				builder.filter(filter, Type.WILDCART, values);
+				builder.filter(filter, values, Type.WILDCART);
 			}
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, "name");
+			builder.query(query, SearchFields.PROCESS_FULL_TEXT_FIELDS);
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);

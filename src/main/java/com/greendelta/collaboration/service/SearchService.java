@@ -61,7 +61,7 @@ public class SearchService {
 			}
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, "name");
+			builder.query(query, SearchFields.get(type));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
@@ -115,7 +115,7 @@ public class SearchService {
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
 		SearchQueryBuilder builder = builder(repo);
 		if (commit != null) {
-			builder.filter("commitId", Type.PHRASE, commit.id);
+			builder.filter("commitId", commit.id, Type.PHRASE);
 		}
 		return parser.parse(client.search(builder.build()));
 	}
@@ -133,7 +133,7 @@ public class SearchService {
 
 	IndexEntry getLast(Repository repo, String refId) {
 		SearchQueryBuilder builder = builder(repo);
-		builder.filter("refId", Type.PHRASE, refId);
+		builder.filter("refId", refId, Type.PHRASE);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (result.data.isEmpty())

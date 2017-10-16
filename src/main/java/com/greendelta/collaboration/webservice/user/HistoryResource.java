@@ -140,9 +140,9 @@ public class HistoryResource {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
 				.pageSize(SearchQuery.DEFAULT_PAGE_SIZE)
-				.filter(Aggregations.REPOSITORY.name, Type.PHRASE, repo.toId())
-				.filter("commitId", Type.PHRASE, commit.id)
-				.filter("name", Type.PHRASE, filter);
+				.filter(Aggregations.REPOSITORY.name, repo.toId(), Type.PHRASE)
+				.filter("commitId", commit.id, Type.PHRASE)
+				.filter("name", filter, Type.PHRASE);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 		} else {

@@ -1,52 +1,41 @@
 {
 	"repositoryId": {
-		"type": "keyword",
-		"include_in_all": false
+		"type": "keyword"
 	},
 	"refId": {
-		"type": "keyword",
-		"include_in_all": false
+		"type": "keyword"
 	},
 	"type": {
-		"type": "keyword",
-		"include_in_all": false
+		"type": "keyword"
 	},
 	"typeOrdinal": {
-		"type": "integer",
-		"include_in_all": false
+		"type": "integer"
 	},
 	"name": {
 		"type": "text"
 	},
 	"categoryRefId": {
-		"type": "keyword",
-		"include_in_all": false
+		"type": "keyword"
 	},
 	"categoryType": {
-		"type": "keyword",
-		"include_in_all": false
+		"type": "keyword"
 	},
 	"commitId": {
-		"type": "keyword",
-		"include_in_all": false
+		"type": "keyword"
 	},
 	"commitMessage": {
 		"type": "text"
 	},
 	"commitTimestamp": {
-		"type": "long",
-		"include_in_all": false
+		"type": "long"
 	},
 	"fullPath": {
-		"type": "text",
-		"include_in_all": false
+		"type": "text"
 	},
 	"lastUpdate": {
-		"type": "text",
-		"include_in_all": false
+		"type": "text"
 	},
 	"action": {
-		"type": "keyword",
-		"include_in_all": false		
+		"type": "keyword"
 	}
 }
