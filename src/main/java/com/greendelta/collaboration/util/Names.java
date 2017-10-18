@@ -37,6 +37,8 @@ public class Names {
 		RESERVED.add("group");
 		RESERVED.add("groups");
 		RESERVED.add("dashboard");
+		RESERVED.add("commit");
+		RESERVED.add("category");
 		RESERVED.add("members");
 		RESERVED.add("member");
 		RESERVED.add("references");
@@ -46,6 +48,7 @@ public class Names {
 		RESERVED.add("unblock");
 		RESERVED.add("login");
 		RESERVED.add("imprint");
+		RESERVED.add("overlay");
 	}
 
 	public static boolean isUserRoute(String name) {

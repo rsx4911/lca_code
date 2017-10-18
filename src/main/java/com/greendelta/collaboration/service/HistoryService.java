@@ -82,8 +82,12 @@ public class HistoryService {
 	}
 
 	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId) {
+		return getCommitsAfter(repo, afterCommitId, false);
+	}
+
+	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId, boolean includeLimit) {
 		File file = repo.getHistoryFile(false);
-		return readHistory(file, new AfterCommitFilter(afterCommitId));
+		return readHistory(file, new AfterCommitFilter(afterCommitId, includeLimit));
 	}
 
 	public List<Commit> getCommitsUntil(Repository repo, String untilCommitId) {
@@ -123,10 +127,12 @@ public class HistoryService {
 
 		private String commitId;
 		private boolean reachedId;
+		private boolean includeLimit;
 
-		private AfterCommitFilter(String commitId) {
+		private AfterCommitFilter(String commitId, boolean includeLimit) {
 			this.commitId = commitId;
 			this.reachedId = commitId == null;
+			this.includeLimit = includeLimit;
 		}
 
 		@Override
@@ -135,7 +141,9 @@ public class HistoryService {
 				return false;
 			if (element.id.equals(commitId))
 				reachedId = true;
-			return true;
+			if (!includeLimit)
+				return true;
+			return !reachedId;
 		}
 
 	}

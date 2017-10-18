@@ -27,7 +27,7 @@ import com.greendelta.collaboration.service.SearchFields;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.lca.search.SearchClient;
-import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchFilterValue;
 import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
@@ -86,8 +86,11 @@ public class SearchResource {
 		for (String filter : parameters.keySet()) {
 			Set<String> filterValues = parameters.get(filter);
 			if (filterValues != null && !filterValues.isEmpty()) {
-				String[] values = filterValues.toArray(new String[filterValues.size()]);
-				builder.filter(filter, values, Type.WILDCART);
+				Set<SearchFilterValue> values = new HashSet<>();
+				for (String value : filterValues) {
+					values.add(SearchFilterValue.wildcard(value));
+				}
+				builder.filter(filter, values);
 			}
 		}
 		if (!Strings.isNullOrEmpty(query)) {

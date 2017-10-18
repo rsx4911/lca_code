@@ -28,7 +28,7 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchFilterValue;
 import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
@@ -80,6 +80,22 @@ public class HistoryResource {
 		List<Commit> commits = service.getCommits(repo, type, refId);
 		if (commits.size() == 0)
 			return Respond.noContent();
+		java.util.Collections.reverse(commits);
+		return Respond.ok(putUserName(commits));
+	}
+
+	@GET
+	@Path("category/{group}/{name}/{refId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistoryForCategory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("refId") String refId) {
+		Repository repo = repoService.get(group, name);
+		IndexEntry first = searchService.getFirst(repo.toId(), refId);
+		if (first == null)
+			return Respond.noContent();
+		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
 		java.util.Collections.reverse(commits);
 		return Respond.ok(putUserName(commits));
 	}
@@ -140,9 +156,9 @@ public class HistoryResource {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
 				.pageSize(SearchQuery.DEFAULT_PAGE_SIZE)
-				.filter(Aggregations.REPOSITORY.name, repo.toId(), Type.PHRASE)
-				.filter("commitId", commit.id, Type.PHRASE)
-				.filter("name", filter, Type.PHRASE);
+				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.phrase(repo.toId()))
+				.filter("commitId", SearchFilterValue.phrase(commit.id))
+				.filter("name", SearchFilterValue.phrase(filter));
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 		} else {
@@ -170,4 +186,5 @@ public class HistoryResource {
 			map.put("userDisplayName", commit.user);
 		return map;
 	}
+
 }

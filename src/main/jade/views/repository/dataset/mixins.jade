@@ -90,7 +90,7 @@ mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
 			if !noImage
 				img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
 			if commitId
-				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}/#{commitId}')=ref.name
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}?commitId=#{commitId}')=ref.name
 			else
 				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
 		else if defaultLabel

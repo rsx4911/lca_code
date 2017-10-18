@@ -2,93 +2,129 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.common.Strings;
+import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
-import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchFilterValue;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchSorting;
 
+// This service filters previous versions of multiple data sets, so only the latest remains
 public class BrowseService {
 
 	private final SearchService searchService;
+	private final HistoryService historyService;
 
 	@Inject
-	public BrowseService(SearchService searchService) {
+	public BrowseService(SearchService searchService, HistoryService historyService) {
 		this.searchService = searchService;
+		this.historyService = historyService;
 	}
 
-	public List<ModelType> getRootContent(Repository repo) {
-		List<ModelType> types = new ArrayList<>();
+	public List<Map<String, Object>> getRootContent(Repository repo, String untilCommitId, boolean includeDeleted) {
+		List<Map<String, Object>> types = new ArrayList<>();
 		for (ModelType type : ModelTypes.SORTED) {
 			File dir = repo.getModelDir(type, false);
 			if (!dir.exists())
 				continue;
-			if (getAll(repo, type).isEmpty())
+			if (getAll(repo, type, untilCommitId, includeDeleted).isEmpty())
 				continue;
-			types.add(type);
+			Map<String, Object> map = new HashMap<>();
+			map.put("type", type);
+			map.put("deleted", includeDeleted && getAll(repo, type, untilCommitId).isEmpty());
+			types.add(map);
 		}
 		return types;
 	}
 
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
-		return sort(filter(searchService.getAll(repo, type)));
+		return getAll(repo, type, null);
 	}
 
-	public List<IndexEntry> getUncategorized(Repository repo, ModelType type, String nameFilter) {
+	public List<IndexEntry> getAll(Repository repo, ModelType type, String untilCommitId) {
+		return getAll(repo, type, untilCommitId, false);
+	}
+
+	private List<IndexEntry> getAll(Repository repo, ModelType type, String untilCommitId, boolean includeDeleted) {
+		SearchQueryBuilder builder = searchService.builder(repo.toId());
+		if (type != null) {
+			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+		}
+		addCommitFilter(builder, repo, untilCommitId);
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
+		List<IndexEntry> result = searchService.search(builder.build()).data;
+		return sort(filter(result, repo, untilCommitId, includeDeleted));
+	}
+
+	public List<IndexEntry> getUncategorized(Repository repo, ModelType type, String untilCommitId, String nameFilter,
+			boolean includeDeleted) {
 		List<IndexEntry> results = new ArrayList<>();
-		results.addAll(getRootCategories(repo, type, nameFilter));
-		results.addAll(getRootModels(repo, type, nameFilter));
+		results.addAll(getRootCategories(repo, type, untilCommitId, nameFilter, includeDeleted));
+		results.addAll(getRootModels(repo, type, untilCommitId, nameFilter, includeDeleted));
 		return sort(results);
 	}
 
-	private List<IndexEntry> getRootModels(Repository repo, ModelType type, String nameFilter) {
+	private List<IndexEntry> getRootModels(Repository repo, ModelType type, String untilCommitId, String nameFilter,
+			boolean includeDeleted) {
 		SearchQueryBuilder builder = builder(repo, nameFilter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-			builder.filter("categoryRefId", type.name(), Type.PHRASE);
+			builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
 		}
+		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filter(result);
+		return filter(result, repo, untilCommitId, includeDeleted);
 	}
 
-	private List<IndexEntry> getRootCategories(Repository repo, ModelType type, String nameFilter) {
+	private List<IndexEntry> getRootCategories(Repository repo, ModelType type, String untilCommitId,
+			String nameFilter,
+			boolean includeDeleted) {
 		SearchQueryBuilder builder = builder(repo, nameFilter);
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
-			builder.filter("categoryType", type.name(), Type.PHRASE);
-			builder.filter("categoryRefId", type.name(), Type.PHRASE);
+			builder.filter("categoryType", SearchFilterValue.phrase(type.name()));
+			builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
 		}
+		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filter(result);
+		return filter(result, repo, untilCommitId, includeDeleted);
 	}
 
 	public List<IndexEntry> getForCategory(Repository repo, String id) {
 		return getForCategory(repo, id, null);
 	}
 
-	public List<IndexEntry> getForCategory(Repository repo, String id, String nameFilter) {
+	public List<IndexEntry> getForCategory(Repository repo, String id, String untilCommitId) {
+		return getForCategory(repo, id, untilCommitId, null, false);
+	}
+
+	public List<IndexEntry> getForCategory(Repository repo, String id, String untilCommitId, String nameFilter,
+			boolean includeDeleted) {
 		SearchQueryBuilder builder = builder(repo, nameFilter)
-				.filter("categoryRefId", id, Type.PHRASE);
+				.filter("categoryRefId", SearchFilterValue.phrase(id));
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
+			builder.filter("name", SearchFilterValue.wildcard("*" + nameFilter + "*"));
 		}
+		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return sort(filter(result));
+		return sort(filter(result, repo, untilCommitId, includeDeleted));
 	}
 
 	private List<IndexEntry> sort(List<IndexEntry> entries) {
-		Collections.sort(entries, (e1, e2) -> {
+		java.util.Collections.sort(entries, (e1, e2) -> {
 			if (e1.type == e2.type)
 				return e1.name.toLowerCase().compareTo(e2.name.toLowerCase());
 			if (e1.type == ModelType.CATEGORY)
@@ -99,56 +135,46 @@ public class BrowseService {
 	}
 
 	private SearchQueryBuilder builder(Repository repo, String nameFilter) {
-		SearchQueryBuilder builder = searchService.builder(repo);
+		SearchQueryBuilder builder = searchService.builder(repo.toId());
 		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", "*" + nameFilter + "*", Type.WILDCART);
+			builder.filter("name", SearchFilterValue.wildcard("*" + nameFilter + "*"));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return builder;
 	}
 
-	private List<IndexEntry> filter(List<IndexEntry> entries) {
-		return filterDeleted(filterPrevious(entries));
+	private void addCommitFilter(SearchQueryBuilder builder, Repository repo, String untilCommitId) {
+		if (untilCommitId == null)
+			return;
+		Commit commit = historyService.getCommit(repo, untilCommitId);
+		if (commit == null)
+			return;
+		builder.filter("commitTimestamp", SearchFilterValue.to(commit.timestamp));
 	}
 
-	private List<IndexEntry> filterDeleted(List<IndexEntry> entries) {
-		List<IndexEntry> filtered = new ArrayList<>();
-		for (IndexEntry entry : entries) {
-			if (entry.action == IndexAction.DELETE)
-				continue;
-			filtered.add(entry);
-		}
-		return filtered;
-	}
-
-	// entries are sorted descending by commit timestamp
-	// only retain the last commited element for a ref id
-	// means only retain the first element in the list
-	private List<IndexEntry> filterPrevious(List<IndexEntry> entries) {
+	private List<IndexEntry> filter(List<IndexEntry> entries, Repository repo, String untilCommitId,
+			boolean includeDeleted) {
+		// filter previous elements (only retain the newest)
 		Set<String> alreadyAdded = new HashSet<>();
-		List<IndexEntry> filtered = new ArrayList<>();
-		for (IndexEntry entry : entries) {
-			String key = entry.type.name() + "_" + entry.refId;
-			if (alreadyAdded.contains(key))
-				continue;
-			filtered.add(entry);
-			alreadyAdded.add(key);
+		entries = Collections.filter(entries, (e) -> !alreadyAdded.add(e.refId));
+		if (!includeDeleted) {
+			// filter deleted entries
+			entries = Collections.filter(entries, (e) -> e.action == IndexAction.DELETE);
 		}
-		return filtered;
+		// filter moved elements (only retain if is newest)
+		Commit commit = untilCommitId != null ? historyService.getCommit(repo, untilCommitId) : null;
+		entries = Collections.filter(entries,
+				(e) -> !e.commitId.equals(searchService.getLatest(e.repositoryId, e.refId, commit).commitId));
+		return entries;
+	}
+
+	public IndexEntry getDataset(Repository repo, String refId, String untilCommitId) {
+		Commit commit = historyService.getCommit(repo, untilCommitId);
+		return searchService.getLatest(repo.toId(), refId, commit);
 	}
 
 	public IndexEntry getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		return searchService.get(repo, type, refId, commitId);
-	}
-
-	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
-		IndexEntry entry = searchService.get(repo, type, refId, commitId);
-		return entry != null && entry.action != IndexAction.DELETE;
-	}
-
-	public boolean hasDataset(Repository repo, String refId) {
-		IndexEntry entry = searchService.getLast(repo, refId);
-		return entry != null && entry.action != IndexAction.DELETE;
 	}
 
 }

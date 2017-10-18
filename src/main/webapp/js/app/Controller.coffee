@@ -237,7 +237,7 @@ define([
 							urlPrefix: "#{group}/#{name}"
 						viewOptions: 
 							repository: new Repository({group: group, name: name})
-				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryPath) -> @showView 
+				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryPath, commitId) -> @showView 
 					view: 'repository/dataset/Datasets'
 					title: "#{group}/#{name}"
 					subTitle: 'Data sets'
@@ -248,20 +248,23 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						categoryPath: categoryPath
-				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId, commentPath) -> @showView 
-					view: 'repository/dataset/Dataset'
-					title: "#{group}/#{name}"
-					subTitle: 'Data sets'
-					nav: 
-						type: 'repository'
-						active: 'datasets'
-						urlPrefix: "#{group}/#{name}"
-					viewOptions: 
-						repository: new Repository({group: group, name: name})
-						type: type
-						refId: refId
 						commitId: commitId
-						commentPath: commentPath
+				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, query) -> 
+					params = @splitQuery query
+					@showView 
+						view: 'repository/dataset/Dataset'
+						title: "#{group}/#{name}"
+						subTitle: 'Data sets'
+						nav: 
+							type: 'repository'
+							active: 'datasets'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
+							type: type
+							refId: refId
+							commitId: params.commitId
+							commentPath: params.commentPath
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"

@@ -82,7 +82,7 @@ public class CommitService {
 				indexEntries.add(indexEntryCreator.create(dataset));
 				continue;
 			}
-			IndexEntry last = searchService.getLast(repo, dataset.refId);
+			IndexEntry last = searchService.getLatest(repo.toId(), dataset.refId);
 			indexEntries.add(indexEntryCreator.create(dataset, last, file));
 			File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
 			writeBinaries(reader, binDir);

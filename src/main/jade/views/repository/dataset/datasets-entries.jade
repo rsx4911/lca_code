@@ -11,8 +11,12 @@ if categoryPath
 each entry in entries
 	tr
 		if !categoryPath
-			td: img.model-icon-small(src='images/model/small/category/#{entry.toLowerCase()}.png')
-			td: a(href='#{baseUrl}/datasets/#{getRootLabel(entry)}'): strong  #{getRootLabel(entry)}
+			td: img.model-icon-small(src='images/model/small/category/#{entry.type.toLowerCase()}.png')
+			td: a(href='#{baseUrl}/datasets/#{getRootLabel(entry.type)}'): strong 
+				if entry.deleted
+					del  #{getRootLabel(entry.type)}
+				else
+					|  #{getRootLabel(entry.type)}
 			td
 			td
 		else
@@ -27,9 +31,13 @@ each entry in entries
 					- icon += '_system'
 			td: img.model-icon-small(src='images/model/small/#{icon}.png')
 			td
-				if entry.type === 'CATEGORY'
-					a(href='#{baseUrl}/datasets/#{categoryPath}/#{entry.name}'): strong #{entry.name}
-				else
-					a(href='#{baseUrl}/dataset/#{entry.type}/#{entry.refId}'): strong #{entry.name}
+				- var url = entry.type === 'CATEGORY' ? '/datasets/' + categoryPath + '/' + entry.name : '/dataset/' + entry.type + '/' + entry.refId;
+				if commitId
+					- url += '?commitId=' + commitId
+				a(href=baseUrl + url): strong
+					if entry.action === 'DELETE'
+						del #{entry.name}
+					else
+						| #{entry.name}
 			td #{formatLastUpdate(entry.lastUpdate)}
 			td: a(href='#{baseUrl}/commit/#{entry.commitId}') #{entry.commitMessage}

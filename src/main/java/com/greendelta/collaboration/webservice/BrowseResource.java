@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -19,6 +20,7 @@ import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.FetchService;
@@ -52,13 +54,15 @@ public class BrowseResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@QueryParam("categoryPath") String categoryPath,
-			@QueryParam("filter") String filter) {
+			@QueryParam("commitId") String commitId,
+			@QueryParam("filter") String filter,
+			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
 		if (Strings.isNullOrEmpty(categoryPath))
-			content = getRootContent(repo);
+			content = service.getRootContent(repo, commitId, showDeleted);
 		else
-			content = getCategoryContent(repo, toId(categoryPath), filter);
+			content = getCategoryContent(repo, toId(categoryPath), commitId, filter, showDeleted);
 		if (content == null)
 			return Respond.notFound();
 		return Respond.ok(Collections.singletonMap("entries", content));
@@ -70,20 +74,41 @@ public class BrowseResource {
 		return categoryPath;
 	}
 
-	private List<ModelType> getRootContent(Repository repo) {
-		return service.getRootContent(repo);
-	}
-
-	private List<IndexEntry> getCategoryContent(Repository repo, String categoryRefId, String filter) {
+	private List<IndexEntry> getCategoryContent(Repository repo, String categoryRefId, String commitId, String filter,
+			boolean includeDeleted) {
 		for (ModelType type : ModelTypes.SORTED) {
 			if (!type.name().equals(categoryRefId))
 				continue;
-			return service.getUncategorized(repo, type, filter);
+			return service.getUncategorized(repo, type, commitId, filter, includeDeleted);
 		}
-		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, filter);
-		if (!content.isEmpty() || service.hasDataset(repo, categoryRefId))
+		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, commitId, filter, includeDeleted);
+		if (!content.isEmpty() || service.getDataset(repo, categoryRefId, commitId) != null)
 			return content;
 		return null;
+	}
+
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("categoryInfo/{group}/{name}")
+	public Response categoryDeleted(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("categoryPath") String categoryPath,
+			@QueryParam("commitId") String commitId) {
+		if (categoryPath == null || categoryPath.isEmpty())
+			return Respond.ok(new HashMap<>());
+		Repository repo = repoService.get(group, name);
+		if (!categoryPath.contains("/")) {
+			if (service.getAll(repo, ModelType.valueOf(categoryPath)).isEmpty())
+				return Respond.ok(Collections.singletonMap("deleted", true));
+			return Respond.ok(Collections.singletonMap("deleted", false));
+		}
+		String refId = toId(categoryPath);
+		IndexEntry entry = service.getDataset(repo, refId, commitId);
+		Map<String, Object> result = new HashMap<>();
+		result.put("id", refId);
+		result.put("deleted", entry == null ? "false" : entry.action == IndexAction.DELETE ? "true" : "false");
+		return Respond.ok(result);
 	}
 
 	@GET
@@ -220,8 +245,12 @@ public class BrowseResource {
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
 		if (commitId.equals("null"))
 			commitId = null;
-		if (commitId != null && service.hasDataset(repo, type, refId, commitId))
-			return commitId;
+		if (commitId != null) {
+			IndexEntry entry = service.getDataset(repo, type, refId, commitId);
+			if (entry != null && entry.action != IndexAction.DELETE) {
+				return commitId;
+			}
+		}
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
 			return null;

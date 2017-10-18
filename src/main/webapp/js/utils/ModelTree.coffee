@@ -41,10 +41,10 @@ define([
 												type: e.type
 									else
 										data.push
-											id: e
-											text: ModelTypes[e]
+											id: e.type
+											text: ModelTypes[e.type]
 											children: true
-											icon: "images/model/small/category/#{e.toLowerCase()}.png"
+											icon: "images/model/small/category/#{e.type.toLowerCase()}.png"
 								callback data
 
 		# returns elements in three different types:

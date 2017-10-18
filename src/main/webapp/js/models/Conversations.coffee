@@ -18,6 +18,7 @@ define([
 				return d1 < d2
 
 			initSocket: () ->
+				return
 				unless window.WebSocket and currentUser.isLoggedIn()
 					return
 				loc = window.location

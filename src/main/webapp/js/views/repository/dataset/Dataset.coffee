@@ -115,7 +115,7 @@ define([
 				type = @type
 				refId = @refId
 				commitId = $(Events.target(event)).val()
-				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}?commitId=#{commitId}"
 
 			initProcessGraph: (event) ->
 				if @graphInitialized
@@ -172,7 +172,7 @@ define([
 					@dataset = dataset
 					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
 					if @commitId isnt dataset.commitId
-						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
+						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "?commitId=#{dataset.commitId}", 
 							trigger: false
 							replace: true
 					@commitId = dataset.commitId

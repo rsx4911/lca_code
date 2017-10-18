@@ -12,13 +12,14 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.lca.search.SearchClient;
-import com.greendelta.lca.search.SearchFilterValue.Type;
+import com.greendelta.lca.search.SearchFilterValue;
 import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
@@ -104,7 +105,7 @@ public class SearchService {
 	}
 
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
-		SearchQueryBuilder builder = builder(repo);
+		SearchQueryBuilder builder = builder(repo.toId());
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 		}
@@ -113,17 +114,17 @@ public class SearchService {
 	}
 
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
-		SearchQueryBuilder builder = builder(repo);
+		SearchQueryBuilder builder = builder(repo.toId());
 		if (commit != null) {
-			builder.filter("commitId", commit.id, Type.PHRASE);
+			builder.filter("commitId", SearchFilterValue.phrase(commit.id));
 		}
 		return parser.parse(client.search(builder.build()));
 	}
 
-	SearchQueryBuilder builder(Repository repo) {
+	SearchQueryBuilder builder(String repoId) {
 		return new SearchQueryBuilder()
 				.page(0)
-				.aggregation(Aggregations.REPOSITORY, repo.toId());
+				.aggregation(Aggregations.REPOSITORY, repoId);
 	}
 
 	public IndexEntry get(Repository repo, ModelType type, String refId, String commitId) {
@@ -131,9 +132,16 @@ public class SearchService {
 		return parser.parse(client.get(type.name().toLowerCase(), id));
 	}
 
-	IndexEntry getLast(Repository repo, String refId) {
-		SearchQueryBuilder builder = builder(repo);
-		builder.filter("refId", refId, Type.PHRASE);
+	IndexEntry getLatest(String repoId, String refId) {
+		return getLatest(repoId, refId, null);
+	}
+
+	IndexEntry getLatest(String repoId, String refId, Commit until) {
+		SearchQueryBuilder builder = builder(repoId);
+		builder.filter("refId", SearchFilterValue.phrase(refId));
+		if (until != null) {
+			builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
+		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (result.data.isEmpty())
@@ -141,6 +149,17 @@ public class SearchService {
 		return parser.parse(result.data.get(0));
 	}
 
+	public IndexEntry getFirst(String repoId, String refId) {
+		SearchQueryBuilder builder = builder(repoId);
+		builder.filter("refId", SearchFilterValue.phrase(refId));
+		builder.filter("action", SearchFilterValue.phrase(IndexAction.ADD.name()));
+		builder.sortBy("commitTimestamp", SearchSorting.ASC);
+		SearchResult<Map<String, Object>> result = client.search(builder.build());
+		if (result.data.isEmpty())
+			return null;
+		return parser.parse(result.data.get(0));		
+	}
+	
 	public void index(Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;

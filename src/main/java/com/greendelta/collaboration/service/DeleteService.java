@@ -105,7 +105,14 @@ public class DeleteService {
 			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
 		memberService.removeMemberships(repo.toId());
 		searchService.remove(searchService.getAll(repo));
+		deleteTasksOf(repo);
 		repoService.delete(repo);
+	}
+
+	private void deleteTasksOf(Repository repo) {
+		for (Task task : taskService.getAllFor(repo)) {
+			taskService.delete(task);
+		}
 	}
 
 	public void delete(String group) {

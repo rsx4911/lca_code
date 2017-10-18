@@ -56,7 +56,7 @@ define([
 		openProcess: (id) ->
 			group = @repository.get 'group'
 			name = @repository.get 'name'
-			Router.navigate "#{group}/#{name}/dataset/PROCESS/#{id}/" + @commitId
+			Router.navigate "#{group}/#{name}/dataset/PROCESS/#{id}?commitId=" + @commitId
 
 		copyName: (name) ->
 			randomId = 'id-' + Math.random()

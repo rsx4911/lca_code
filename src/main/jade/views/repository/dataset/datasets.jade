@@ -9,11 +9,27 @@ if isRoot
 		.clear
 else
 	.header-box
+		if !isPublic
+			.pull-left
+				+select('commit', 'Version', null, null, true)
+					each commit, index in commits
+						option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId)=index===0?'Latest':commit.id 
+						optgroup.additional-info(label!='&nbsp; &nbsp;' + commit.message)
+			.pull-right
+				+checkbox('show-deleted', 'Show deleted')(checked=showDeleted)
+		.clear
 		.form-group
 			input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
 		.clear
 	.header-box
-		+category-breadcrumb(baseUrl, categoryPath)
+		if deleted
+			.pull-left
+				+category-breadcrumb(baseUrl, categoryPath)
+			.badge.pull-right.deleted Deleted
+		else
+			+category-breadcrumb(baseUrl, categoryPath)
+		.clear
+
 .content-box
 	table.table.table-browse
 		thead
