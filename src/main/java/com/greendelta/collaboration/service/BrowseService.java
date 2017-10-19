@@ -66,7 +66,7 @@ public class BrowseService {
 		addCommitFilter(builder, repo, untilCommitId);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return sort(filter(result, repo, untilCommitId, includeDeleted));
+		return sort(filter(result, repo, untilCommitId, includeDeleted, false));
 	}
 
 	public List<IndexEntry> getUncategorized(Repository repo, ModelType type, String untilCommitId, String nameFilter,
@@ -80,27 +80,22 @@ public class BrowseService {
 	private List<IndexEntry> getRootModels(Repository repo, ModelType type, String untilCommitId, String nameFilter,
 			boolean includeDeleted) {
 		SearchQueryBuilder builder = builder(repo, nameFilter);
-		if (type != null) {
-			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-			builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
-		}
+		builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+		builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
 		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filter(result, repo, untilCommitId, includeDeleted);
+		return filter(result, repo, untilCommitId, includeDeleted, true);
 	}
 
 	private List<IndexEntry> getRootCategories(Repository repo, ModelType type, String untilCommitId,
-			String nameFilter,
-			boolean includeDeleted) {
+			String nameFilter, boolean includeDeleted) {
 		SearchQueryBuilder builder = builder(repo, nameFilter);
-		if (type != null) {
-			builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
-			builder.filter("categoryType", SearchFilterValue.phrase(type.name()));
-			builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
-		}
+		builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
+		builder.filter("categoryType", SearchFilterValue.phrase(type.name()));
+		builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
 		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return filter(result, repo, untilCommitId, includeDeleted);
+		return filter(result, repo, untilCommitId, includeDeleted, true);
 	}
 
 	public List<IndexEntry> getForCategory(Repository repo, String id) {
@@ -120,7 +115,7 @@ public class BrowseService {
 		}
 		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
-		return sort(filter(result, repo, untilCommitId, includeDeleted));
+		return sort(filter(result, repo, untilCommitId, includeDeleted, true));
 	}
 
 	private List<IndexEntry> sort(List<IndexEntry> entries) {
@@ -153,7 +148,7 @@ public class BrowseService {
 	}
 
 	private List<IndexEntry> filter(List<IndexEntry> entries, Repository repo, String untilCommitId,
-			boolean includeDeleted) {
+			boolean includeDeleted, boolean checkMoved) {
 		// filter previous elements (only retain the newest)
 		Set<String> alreadyAdded = new HashSet<>();
 		entries = Collections.filter(entries, (e) -> !alreadyAdded.add(e.refId));
@@ -161,10 +156,15 @@ public class BrowseService {
 			// filter deleted entries
 			entries = Collections.filter(entries, (e) -> e.action == IndexAction.DELETE);
 		}
-		// filter moved elements (only retain if is newest)
+		if (!checkMoved)
+			return entries;
+		// filter moved non-category elements (only retain if is newest)
 		Commit commit = untilCommitId != null ? historyService.getCommit(repo, untilCommitId) : null;
-		entries = Collections.filter(entries,
-				(e) -> !e.commitId.equals(searchService.getLatest(e.repositoryId, e.refId, commit).commitId));
+		List<String> refIds = Collections.convert(entries, (e) -> e.refId);
+		List<IndexEntry> latest = searchService.getLatest(repo.toId(), new HashSet<>(refIds), commit);
+		Map<String, IndexEntry> latestMap = Collections.map(latest, (e) -> e.refId);
+		entries = Collections.filter(entries, (e) -> e.type != ModelType.CATEGORY
+				&& !e.commitId.equals(latestMap.get(e.refId).commitId));
 		return entries;
 	}
 

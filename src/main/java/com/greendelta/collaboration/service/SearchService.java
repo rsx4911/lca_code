@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
@@ -137,16 +139,33 @@ public class SearchService {
 	}
 
 	IndexEntry getLatest(String repoId, String refId, Commit until) {
-		SearchQueryBuilder builder = builder(repoId);
-		builder.filter("refId", SearchFilterValue.phrase(refId));
-		if (until != null) {
-			builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
-		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
-		SearchResult<Map<String, Object>> result = client.search(builder.build());
-		if (result.data.isEmpty())
+		List<IndexEntry> latest = getLatest(repoId, java.util.Collections.singleton(refId), until);
+		if (latest == null || latest.isEmpty())
 			return null;
-		return parser.parse(result.data.get(0));
+		return latest.get(0);
+	}
+
+	List<IndexEntry> getLatest(String repoId, Set<String> refIds, Commit until) {
+		List<IndexEntry> results = new ArrayList<>();
+		Set<String> remaining = new HashSet<>(refIds);
+		while (!remaining.isEmpty()) {
+			Set<String> next = Collections.pop(remaining, 1000);
+			SearchQueryBuilder builder = builder(repoId);
+			if (next.size() == 1) {
+				builder.filter("refId", SearchFilterValue.phrase(next.iterator().next()));
+			} else {
+				builder.filter("refId", SearchFilterValue.phrase(next));
+			}
+			if (until != null) {
+				builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
+			}
+			builder.sortBy("commitTimestamp", SearchSorting.DESC);
+			SearchResult<Map<String, Object>> result = client.search(builder.build());
+			if (result.data.isEmpty())
+				return null;
+			results.addAll(parser.parse(result));
+		}
+		return results;
 	}
 
 	public IndexEntry getFirst(String repoId, String refId) {
@@ -157,9 +176,9 @@ public class SearchService {
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (result.data.isEmpty())
 			return null;
-		return parser.parse(result.data.get(0));		
+		return parser.parse(result.data.get(0));
 	}
-	
+
 	public void index(Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
