@@ -16,9 +16,9 @@ each dataset in data
 							img.model-icon-small(src='ws/public/cached/overlay/#{dataset.type}/#{action}')
 					else
 						if dataset.type === 'CATEGORY'
-							img.model-icon-small(src='images/model/small/category/#{dataset.categoryType}.png')
+							img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
 						else
-							img.model-icon-small(src='images/model/small/#{dataset.type}.png')
+							img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
 					if dataset.deleted
 						del=dataset.fullPath
 					else
