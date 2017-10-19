@@ -36,23 +36,43 @@ mixin exchange-row(exchange, index)
 
 mixin exchange-table(input)
 	table.table(class=input?'inputs':'outputs')
+		- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false};
+		each exchange, index in dataset.exchanges
+			if exchange.input === input
+				if exchange.costValue || exchange.currency
+					- show.costs = true;
+				if exchange.dqEntry
+					- show.dqEntry = true;
+				if exchange.uncertainty
+					- show.uncertainty = true;
+				if input && exchange.defaultProvider
+					- show.defaultProvider = true;
+				if !input && exchange.avoidedProduct
+					- show.avoidedProduct = true;
 		thead
 			tr
 				th
 				th=getLabel('exchanges.flow')
 				th=getLabel('exchanges.flow.category')
 				th=getLabel('exchanges.amount')
-				th=getLabel('exchanges.costs')
-				th=getLabel('exchanges.uncertainty')
-				th=getLabel('exchanges.dqEntry')
-				if input
-					th=getLabel('exchanges.defaultProvider')
-				else
-					th=getLabel('exchanges.avoidedProduct')
+				th
+					if show.costs
+						| #{getLabel('exchanges.costs')}
+				th
+					if show.uncertainty
+						| #{getLabel('exchanges.uncertainty')}
+				th
+					if show.dqEntry
+						| #{getLabel('exchanges.dqEntry')}
+				th
+					if input && show.defaultProvider
+						| #{getLabel('exchanges.defaultProvider')}
+					else if show.avoidedProduct
+						| #{getLabel('exchanges.avoidedProduct')}
 		tbody
 			each exchange, index in dataset.exchanges
 				if exchange.input === input
-					+exchange-row(exchange, index)
+					+exchange-row(exchange, index, show)
 
 mixin non-causal-allocation-table()
 	h4 Physical & Economic allocation

@@ -11,23 +11,28 @@ include ./mixins.jade
 			if dataset.units
 				h4(data-path='units')=getLabel('units')
 				table.table.units
+					- var referenceUnit = null;
+					- var showSynonyms = false;
+					each unit in dataset.units
+						if unit.referenceUnit
+							- referenceUnit = unit
+						if unit.synonyms && unit.synonyms.length
+							- showSynonyms = true;
 					thead
 						tr
 							th=getLabel('units.name')
 							th=getLabel('units.description')
-							th=getLabel('units.synonyms')
+							th
+								if showSynonyms
+									| #{getLabel('units.synonyms')}
 							th=getLabel('units.formula')
 					tbody
-						- var referenceUnit = null;
-						each unit in dataset.units
-							if unit.referenceUnit
-								- referenceUnit = unit
 						each unit, index in dataset.units
 							tr(class=unit.referenceUnit?'reference':null)
 								td(data-path='units[' + index + '].name')=unit.name
 								td(data-path='units[' + index + '].description')=unit.description
 								td.comma-separated(data-path='units[' + index + '].synonyms')
-									if unit.synonyms
+									if unit.synonyms && showSynonyms
 										each synonym in unit.synonyms
 											span #{synonym}
 								td(data-path='units[' + index + '].conversionFactor') 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}

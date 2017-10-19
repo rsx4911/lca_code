@@ -130,10 +130,6 @@ mixin uncertainty(uncertainty, round)
 			| Min: #{noToStr(uncertainty.minimum, round)}
 			br
 			| Max: #{noToStr(uncertainty.maximum, round)}
-		else
-			| No distribution
-	else
-		| No distribution
 
 mixin parameter-table(path, input)
 	- var parameters = getValue(dataset, path);

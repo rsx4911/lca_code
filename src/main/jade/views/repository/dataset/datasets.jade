@@ -18,9 +18,10 @@ else
 			.pull-right
 				+checkbox('show-deleted', 'Show deleted')(checked=showDeleted)
 		.clear
-		.form-group
-			input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
-		.clear
+		if categoryPath
+			.form-group
+				input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
+			.clear
 	.header-box
 		if deleted
 			.pull-left
