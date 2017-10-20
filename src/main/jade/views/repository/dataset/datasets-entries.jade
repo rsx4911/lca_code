@@ -12,7 +12,10 @@ each entry in entries
 	tr
 		if !categoryPath
 			td: img.model-icon-small(src='images/model/small/category/#{entry.type.toLowerCase()}.png')
-			td: a(href='#{baseUrl}/datasets/#{getRootLabel(entry.type)}'): strong 
+			- var url = baseUrl + '/datasets/' + getRootLabel(entry.type);
+			if commitId
+				- url += '?commitId=' + commitId			
+			td: a(href=url): strong 
 				if entry.deleted
 					del  #{getRootLabel(entry.type)}
 				else
