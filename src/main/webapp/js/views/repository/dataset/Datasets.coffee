@@ -31,7 +31,10 @@ define([
 					commitId = target.val()
 					group = @repository.get 'group'
 					name = @repository.get 'name'
-					path = "#{group}/#{name}/datasets/" + @categoryPath + "?commitId=#{commitId}"
+					path = "#{group}/#{name}/datasets/"
+					if @categoryPath
+						path += @categoryPath 
+					path += "?commitId=#{commitId}"
 					Router.navigate path
 
 			initialize: (options) ->

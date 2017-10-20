@@ -110,9 +110,6 @@ public class BrowseService {
 			boolean includeDeleted) {
 		SearchQueryBuilder builder = builder(repo, nameFilter)
 				.filter("categoryRefId", SearchFilterValue.phrase(id));
-		if (!Strings.isNullOrEmpty(nameFilter)) {
-			builder.filter("name", SearchFilterValue.wildcard("*" + nameFilter + "*"));
-		}
 		addCommitFilter(builder, repo, untilCommitId);
 		List<IndexEntry> result = searchService.search(builder.build()).data;
 		return sort(filter(result, repo, untilCommitId, includeDeleted, true));
@@ -163,7 +160,7 @@ public class BrowseService {
 		List<String> refIds = Collections.convert(entries, (e) -> e.refId);
 		List<IndexEntry> latest = searchService.getLatest(repo.toId(), new HashSet<>(refIds), commit);
 		Map<String, IndexEntry> latestMap = Collections.map(latest, (e) -> e.refId);
-		entries = Collections.filter(entries, (e) -> e.type != ModelType.CATEGORY
+		entries = Collections.filter(entries, (e) -> e.type == ModelType.CATEGORY
 				&& !e.commitId.equals(latestMap.get(e.refId).commitId));
 		return entries;
 	}
