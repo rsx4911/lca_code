@@ -124,9 +124,10 @@ public class FetchResource {
 	public Response request(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId) {
+			@PathParam("lastCommitId") String lastCommitId,
+			@QueryParam("sync") @DefaultValue("false") boolean sync) {
 		Repository repo = repoService.get(group, name);
-		List<Commit> commits = getCommits(repo, lastCommitId, false);
+		List<Commit> commits = getCommits(repo, lastCommitId, sync);
 		if (commits.isEmpty())
 			return Respond.noContent();
 		List<FetchRequestData> result = getData(commits, repo);
@@ -137,14 +138,14 @@ public class FetchResource {
 
 	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
 		List<FetchRequestData> result = new ArrayList<>();
-		Set<IndexEntry> alreadyAdded = new HashSet<>();
+		Set<String> alreadyAdded = new HashSet<>();
 		for (Commit commit : commits) {
 			List<IndexEntry> descriptors = searchService.getAll(repo, commit);
 			for (IndexEntry descriptor : descriptors) {
-				if (alreadyAdded.contains(descriptor))
+				if (alreadyAdded.contains(descriptor.refId))
 					continue;
 				result.add(descriptor.asFetchRequestData());
-				alreadyAdded.add(descriptor);
+				alreadyAdded.add(descriptor.refId);
 			}
 		}
 		return result;
@@ -192,11 +193,11 @@ public class FetchResource {
 		return Respond.ok(resultData);
 	}
 
-	private List<Commit> getCommits(Repository repo, String commitId, boolean download) {
+	private List<Commit> getCommits(Repository repo, String commitId, boolean until) {
 		if (commitId.equals("null"))
 			commitId = null;
 		List<Commit> commits = null;
-		if (download) {
+		if (until) {
 			commits = historyService.getCommitsUntil(repo, commitId);
 		} else {
 			commits = historyService.getCommitsAfter(repo, commitId);
@@ -204,4 +205,5 @@ public class FetchResource {
 		Collections.reverse(commits);
 		return commits;
 	}
+
 }
