@@ -1,6 +1,5 @@
 define([
 				'backbone'
-				'open-layers'
 				'cs!utils/DataQuality'
 				'cs!utils/Events'
 				'cs!utils/Format'
@@ -12,9 +11,12 @@ define([
 				'cs!utils/Renderer'
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
-				'cs!views/repository/dataset/DataQualityLayer'
-				'cs!views/repository/dataset/Graph'
-				'cs!views/repository/dataset/Tree'
+				'cs!views/repository/dataset/DQLayer'
+				'cs!views/repository/dataset/DQSystem'
+				'cs!views/repository/dataset/Flow'
+				'cs!views/repository/dataset/ImpactMethod'
+				'cs!views/repository/dataset/Location'
+				'cs!views/repository/dataset/ProductSystem'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
@@ -31,12 +33,10 @@ define([
 				'templates/views/repository/dataset/actor'
 				'templates/views/repository/dataset/location'
 				'templates/views/repository/dataset/dq-system'
-				'templates/views/repository/dataset/impact-factor-rows'
-				'templates/views/repository/dataset/nw-factor-rows'
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Graph, Tree, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DQLayer, DQSystem, Flow, ImpactMethod, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -108,7 +108,7 @@ define([
 				target = $ Events.target event
 				entry = target.attr 'data-entry'
 				schemaId = target.attr 'data-schema'
-				DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
+				DQLayer.open @repository.toJSON(), @commitId, schemaId, entry
 
 			switchCommit: (event) ->
 				repo = @repository.toJSON()
@@ -116,23 +116,6 @@ define([
 				refId = @refId
 				commitId = $(Events.target(event)).val()
 				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}?commitId=#{commitId}"
-
-			initProcessGraph: (event) ->
-				if @graphInitialized
-					return
-				@graphInitialized = true
-				setTimeout () =>
-					frameWindow = $('iframe')[0].contentWindow
-					frameWindow.processes = Graph.getModel @dataset 
-					frameWindow.modelIds = Object.keys(frameWindow.processes)
-					frameWindow.render('2d', 15)
-				, 100
-
-			initProcessTree: (event) ->
-				if @treeInitialized
-					return
-				@treeInitialized = true
-				Tree.init @repository, @dataset, @commitId
 
 			maximizeContent: (event) ->
 				pane = @$('.tab-pane.active')
@@ -154,15 +137,21 @@ define([
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
 				'click [data-format]': 'downloadData'
 				'click a[data-action=show-data-quality]': 'showDataQuality'
-				'click [href=#process-graph]': 'initProcessGraph'
-				'click [href=#process-tree]': 'initProcessTree'
 				'click .maximize-content > a': 'maximizeContent'
 				'change #commitId': 'switchCommit'
-				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
-				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
+				'change #impact-category': (event) -> ImpactMethod.initCategory @createModelForImpactMethod () => @$('#impact-factors').trigger('update')
+				'change #nw-set': (event) -> ImpactMethod.initNwSet @createModelForImpactMethod () => @$('#nw-factors').trigger('update')
+				'click [href=#process-graph]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
+				'click [href=#process-tree]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options
+
+			doInitialize: (varName, method) ->
+				if @[varName]
+					return
+				@[varName] = true
+				method()
 
 			render: (renderOptions) ->
 				template = @getTemplate()
@@ -177,6 +166,7 @@ define([
 							replace: true
 					@commitId = dataset.commitId
 					@loadCommitHistory (commits) =>
+						@commits = commits
 						DatasetPrepare.applyTo dataset
 						@$el.html template 
 							dataset: dataset
@@ -187,39 +177,42 @@ define([
 							getIcon: Icons.get
 							getTypeAsEnum: (type) => return @getTypeAsEnum(type)
 							getTypeLabel: (type) => return ModelTypes[type]
-							getLabel: (path) => return Labels.get @getTypeAsEnum(dataset.type), path
+							getLabel: (path) => return Labels.get @getTypeAsEnum(@dataset.type), path
 							getUncertaintyLabel: @getUncertaintyLabel
 							getDQColor: DataQuality.getColor 
 							noToStr: Format.number
 							fileBaseUrl: @getFileBaseUrl()
-							commits: commits
+							commits: @commits
 							commitId: @commitId or commits?[0]?.id
 							formatCommitDescription: Format.formatCommitDescription
 							reviewMode: LocalStorage.getValue('reviewMode')
 							isPublic: !currentUser.isLoggedIn()
 						Renderer.render @, renderOptions
 						if dataset.type is 'Location' # and dataset.geometry
-							@initMap dataset
+							Location.initMap @dataset
+						if dataset.type is 'Flow'
+							Flow.init @repository, @refId, @commitId
 						if dataset.type is 'ImpactMethod'
-							@loadImpactCategory () =>
-								@loadNwSet () =>
-									@initTableSorting()
-									Comments.init @$el, 
-										repository: @repository, 
-										type: @type, 
-										refId: @refId, 
-										commitId: @commitId
-										commentPath: @commentPath
+							ImpactMethod.initCategory @createModelForImpactMethod () =>
+								@initTableSorting()
+								@initComments()
 						else
 							@initTableSorting()
-							Comments.init @$el,
-								repository: @repository, 
-								type: @type, 
-								refId: @refId, 
-								commitId: @commitId
-								commentPath: @commentPath
+							@initComments()
 						if dataset.type is 'DQSystem'
-							@initDataQualityPopups dataset
+							@DQSystem.init @dataset
+
+			createModelForImpactMethod: (callback) ->
+				return {
+					repository: @repository
+					commitId: @commitId or @commits?[0]?.id
+					impactCategory: @$('#impact-category option:selected').attr 'id'
+					nwSet: @$('#nw-set option:selected').attr 'id'
+					getUrlPart: (modelType, refId) => @getUrlPart modelType, refId
+					getValue: (object, path) => return @getValue object, path
+					getTypeAsEnum: (type) => return @getTypeAsEnum type
+					callback: callback
+				}
 
 			initTableSorting: () ->
 				tables = @$('table:not(.no-head)')
@@ -229,6 +222,14 @@ define([
 						if $(th).is(':empty') or $('a', th).length
 							options.headers[index] = {sorter: false}
 					$(table).tablesorter options
+
+			initComments: () ->
+				Comments.init @$el, 
+					repository: @repository, 
+					type: @type, 
+					refId: @refId, 
+					commitId: @commitId
+					commentPath: @commentPath
 
 			getSpecificTypeLabel: (type, value) ->
 				switch type 
@@ -269,12 +270,6 @@ define([
 				path = path.substring path.indexOf('.') + 1
 				return @getValue object, path
 
-			isCapital: (char) ->
-				asInt = char.charCodeAt(0)
-				if asInt < 65 or asInt > 90
-					return false
-				return true
-
 			getTypeAsEnum: (type) ->
 				asEnum = ''
 				first = true
@@ -285,76 +280,10 @@ define([
 					asEnum += char
 				return asEnum.toUpperCase()
 
-			initMap: (dataset) ->
-				map = new OpenLayers.Map
-					layers: [
-						new OpenLayers.layer.Tile
-							source: new OpenLayers.source.OSM()
-					]
-					target: 'map'
-					view: new OpenLayers.View
-						center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
-						zoom: 5
-
-			loadImpactCategory: (callback) ->
-				commitId = @commitId or 'null'
-				selectedImpactCategory = $('#impact-category option:selected').attr 'id'
-				if selectedImpactCategory
-					urlPart = @getUrlPart 'IMPACT_CATEGORY', selectedImpactCategory
-					$.ajax
-						type: 'GET'
-						url: "ws/public/browse/#{urlPart}/#{commitId}"
-						success: (impactCategory) =>
-							group = @repository.get 'group'
-							name = @repository.get 'name'
-							DatasetPrepare.applyTo impactCategory
-							@$('#impact-category-description').html impactCategory.description
-							@$('#impact-category-unit').html impactCategory.referenceUnitName
-							@$('#impact-factors tbody').empty()
-							@$('#impact-factors tbody').append impactFactorsTemplate 
-								dataset: impactCategory
-								noToStr: Format.number
-								getValue: (object, path) => return @getValue object, path 
-								getTypeAsEnum: (type) => return @getTypeAsEnum(type)
-								getIcon: Icons.get
-								commitId: @commitId or commits?[0]?.id
-								baseUrl: "#{group}/#{name}/dataset"
-							callback()
-				else
-					callback()
-
-			loadNwSet: (callback) ->
-				commitId = @commitId or 'null'
-				selectedNwSet = $('#nw-set option:selected').attr 'id'
-				if selectedNwSet
-					urlPart = @getUrlPart 'NW_SET', selectedNwSet
-					$.ajax
-						type: 'GET'
-						url: "ws/public/browse/#{urlPart}/#{commitId}"
-						success: (nwSet) =>
-							DatasetPrepare.applyTo nwSet
-							@$('#nw-set-unit').html nwSet.weightedScoreUnit
-							@$('#nw-factors tbody').empty()
-							@$('#nw-factors tbody').append nwFactorsTemplate 
-								nwSet: nwSet
-								noToStr: Format.number
-							callback()
-				else
-					callback()
-
-			initDataQualityPopups: (dataset) ->
-				@$('table.data-quality td').on 'click', (event) ->
-					target = $ Events.target event
-					span = $ 'span', target
-					if span.css('display') is 'none'
-						iIndex = target.attr('data-indicator') - 1
-						sIndex = target.attr('data-score') - 1
-						indicator = dataset.indicators[iIndex]
-						score = indicator.scores[sIndex]
-						iName = if indicator.name then indicator.name else indicator.position
-						sName = if score.label then score.label else score.position
-						Layers.showMessageInLayer
-							title: "#{iName} - #{sName}"
-							body: score.description
+			isCapital: (char) ->
+				asInt = char.charCodeAt(0)
+				if asInt < 65 or asInt > 90
+					return false
+				return true
 
 )

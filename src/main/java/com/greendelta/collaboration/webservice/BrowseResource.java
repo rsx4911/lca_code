@@ -61,8 +61,14 @@ public class BrowseResource {
 		List<?> content = null;
 		if (Strings.isNullOrEmpty(categoryPath))
 			content = service.getRootContent(repo, commitId, showDeleted);
-		else
-			content = getCategoryContent(repo, toId(categoryPath), commitId, filter, showDeleted);
+		else {
+			ModelType type = null;
+			if (categoryPath.contains("/"))
+				type = ModelType.valueOf(categoryPath.substring(0, categoryPath.indexOf('/')));
+			else
+				type = ModelType.valueOf(categoryPath);
+			content = getCategoryContent(repo, type, toId(categoryPath), commitId, filter, showDeleted);
+		}
 		if (content == null)
 			return Respond.notFound();
 		return Respond.ok(Collections.singletonMap("entries", content));
@@ -74,17 +80,18 @@ public class BrowseResource {
 		return categoryPath;
 	}
 
-	private List<IndexEntry> getCategoryContent(Repository repo, String categoryRefId, String commitId, String filter,
+	private List<IndexEntry> getCategoryContent(Repository repo, ModelType type, String categoryRefId, String commitId,
+			String filter,
 			boolean includeDeleted) {
-		for (ModelType type : ModelTypes.SORTED) {
-			if (!type.name().equals(categoryRefId))
+		for (ModelType t : ModelTypes.SORTED) {
+			if (!t.name().equals(categoryRefId))
 				continue;
 			return service.getUncategorized(repo, type, commitId, filter, includeDeleted);
 		}
 		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, commitId, filter, includeDeleted);
-		if (!content.isEmpty() || service.getDataset(repo, categoryRefId, commitId) != null)
-			return content;
-		return null;
+		if (content.isEmpty() || service.getDataset(repo, categoryRefId, commitId) == null)
+			return null;
+		return content;
 	}
 
 	@GET

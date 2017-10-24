@@ -3,18 +3,22 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.common.Strings;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.AllocationMethod;
+import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
@@ -46,6 +50,8 @@ class IndexEntryCreator {
 		IndexEntry entry = null;
 		if (dataset.type == ModelType.PROCESS) {
 			entry = process(dataset, file);
+		} else if (dataset.type == ModelType.FLOW) {
+			entry = flow(dataset, file);
 		} else {
 			entry = generic(dataset);
 		}
@@ -78,6 +84,18 @@ class IndexEntryCreator {
 		entry.version = dataset.version;
 	}
 
+	private FlowIndexEntry flow(Dataset dataset, File dataFile) {
+		FlowIndexEntry entry = new FlowIndexEntry();
+		fillGeneric(entry, dataset);
+		fillFlow(entry, readData(dataFile));
+		return entry;
+	}
+
+	static void fillFlow(FlowIndexEntry entry, Map<String, Object> map) {
+		ObjectMap data = ObjectMap.fromMap(map);		
+		entry.flowType = Enums.getValue(data.getString("flowType"), FlowType.class);		
+	}
+
 	private ProcessIndexEntry process(Dataset dataset, File dataFile) {
 		ProcessIndexEntry entry = new ProcessIndexEntry();
 		fillGeneric(entry, dataset);
@@ -101,6 +119,26 @@ class IndexEntryCreator {
 		entry.copyrightHolder = data.getString("processDocumentation.dataSetOwner.name");
 		entry.contact = entry.copyrightHolder;
 		entry.description = data.getString("description");
+		putLinkedFlows(entry, data.get("exchanges"));
+	}
+
+	private static void putLinkedFlows(ProcessIndexEntry entry, List<Map<String, Object>> exchanges) {
+		if (exchanges == null || exchanges.isEmpty())
+			return;
+		List<String> inputs = new ArrayList<>();
+		List<String> outputs = new ArrayList<>();
+		for (Map<String, Object> e : exchanges) {
+			ObjectMap exchange = ObjectMap.fromMap(e);
+			Map<String, Object> flow = exchange.get("flow");
+			String flowRefId = ObjectMap.fromMap(flow).get("@id");
+			if (exchange.getBoolean("input")) {
+				inputs.add(flowRefId);
+			} else {
+				outputs.add(flowRefId);
+			}
+		}
+		entry.inputs = inputs.toArray(new String[inputs.size()]);
+		entry.outputs = outputs.toArray(new String[outputs.size()]);
 	}
 
 	private static ProcessType getProcessType(String value) {

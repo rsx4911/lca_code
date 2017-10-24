@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
@@ -244,7 +245,12 @@ public class RepositoryUpgrades {
 		private IndexEntry convert(Document document, Map<String, Commit> commits,
 				Map<String, Map<String, Dataset>> references) throws IOException {
 			ModelType type = ModelType.valueOf(document.get("type"));
-			IndexEntry entry = type == ModelType.PROCESS ? new ProcessIndexEntry() : new IndexEntry();
+			IndexEntry entry = new IndexEntry();
+			if (type == ModelType.PROCESS) {
+				entry = new ProcessIndexEntry();
+			} else if (type == ModelType.FLOW) {
+				entry = new FlowIndexEntry();
+			}
 			entry.refId = document.get("refId");
 			entry.type = type;
 			entry.name = document.get("name");
@@ -269,6 +275,8 @@ public class RepositoryUpgrades {
 				entry.action = IndexAction.DELETE;
 			if (type == ModelType.PROCESS) {
 				putProcessMetaInfo((ProcessIndexEntry) entry);
+			} else if (type == ModelType.FLOW) {
+				putFlowMetaInfo((FlowIndexEntry) entry);
 			}
 			return entry;
 		}
@@ -317,6 +325,13 @@ public class RepositoryUpgrades {
 			if (file == null || !file.exists())
 				return;
 			IndexEntryCreator.fillProcess(entry, readData(file));
+		}
+
+		private void putFlowMetaInfo(FlowIndexEntry entry) {
+			File file = repo.getDatasetFile(entry.type, entry.refId, entry.commitId, false);
+			if (file == null || !file.exists())
+				return;
+			IndexEntryCreator.fillFlow(entry, readData(file));
 		}
 
 		private Map<String, Object> readData(File file) {

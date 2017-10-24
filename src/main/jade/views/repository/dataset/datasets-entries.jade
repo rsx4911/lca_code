@@ -23,16 +23,8 @@ each entry in entries
 			td
 			td
 		else
-			- var icon = null;
-			if entry.type === 'CATEGORY'
-				- icon = 'category/' + entry.categoryType.toLowerCase();
-			else
-				- icon = entry.type.toLowerCase();
-				if entry.type === 'FLOW' && entry.flowType
-					- icon += '_' + entry.flowType.substring(0, entry.flowType.indexOf('_'));
-				else if entry.type === 'PROCESS' && entry.processType === 'LCI_RESULT'
-					- icon += '_system'
-			td: img.model-icon-small(src='images/model/small/#{icon}.png')
+			- var icon = getIcon(entry);
+			td: img.model-icon-small(src='images/model/small/#{icon}')
 			td
 				- var url = entry.type === 'CATEGORY' ? '/datasets/' + categoryPath + '/' + entry.name : '/dataset/' + entry.type + '/' + entry.refId;
 				if commitId

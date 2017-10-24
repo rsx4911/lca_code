@@ -1,13 +1,14 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Icons'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!app/Router'
 				'templates/views/search/results'
 			]
 
-	(Backbone, Events, ModelTypes, Renderer, Router, template) ->
+	(Backbone, Events, Icons, ModelTypes, Renderer, Router, template) ->
 
 		class SearchResultsView extends Backbone.View
 
@@ -31,18 +32,19 @@ define([
 							@aggregations[option] = [values]
 
 			render: (renderOptions) ->
-				url = @getUrlPart 'ws/search?', @query, @page, @aggregations
+				url = @getUrlPart 'ws/public/search?', @query, @page, @aggregations
 				$.ajax
 					type: 'GET'
 					url: url
 					success: (result) =>
+						result.getIcon = Icons.get
 						result.getAggregationLabel = (type) => @getAggregationLabel type
 						result.getLabel = (type, value) => @getLabel type, value
 						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @aggregations, result
 						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $(value, @aggregations[type]) isnt -1
 						result.getAggregationUrl = (type, value, without = false) => 
 							aggregations = if without then @aggreagtionsWithout(type, value, result) else @aggreagtionsWith(type, value, result)
-							return @getUrlPart 'search/', @query, @page, aggregations, result
+							return @getUrlPart 'search/', @query, 1, aggregations, result
 						result.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
@@ -139,6 +141,13 @@ define([
 						return 'System process'
 					else if value is 'UNKNOWN'
 						return 'Unknown'
+				if type is 'flowType'
+					if value is 'ELEMENTARY_FLOW'
+						return 'Resource/Emission'
+					else if value is 'WASTE_FLOW'
+						return 'Waste'
+					else if value is 'PRODUCT_FLOW'
+						return 'Product'
 				return value
 
 			getAggregationLabel: (type) ->
@@ -152,6 +161,8 @@ define([
 					return 'Category'
 				if type is 'processType'
 					return 'Process type'
+				if type is 'flowType'
+					return 'Flow type'
 				if type is 'modellingApproach'
 					return 'Modelling approach'
 

@@ -1,52 +1,45 @@
 package com.greendelta.collaboration.webservice;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.elasticsearch.common.Strings;
-import org.openlca.core.model.ModelType;
+import joptsimple.internal.Strings;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchFields;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.webservice.util.Client;
-import com.greendelta.lca.search.SearchClient;
 import com.greendelta.lca.search.SearchFilterValue;
 import com.greendelta.lca.search.SearchQuery;
 import com.greendelta.lca.search.SearchQueryBuilder;
 import com.greendelta.lca.search.SearchResult;
-import com.greendelta.lca.search.aggregations.SearchAggregation;
-import com.greendelta.lca.search.aggregations.results.AggregationResult;
-import com.greendelta.lca.search.aggregations.results.AggregationResultBuilder;
 
 @Path("public/search")
 public class SearchResource {
 
+	private final SearchService service;
 	private final RepositoryService repoService;
-	private final SearchClient client;
-	private final String baseUrl;
 
 	@Inject
-	public SearchResource(RepositoryService repoService, SearchClient client, @Named("base.url") String baseUrl) {
+	public SearchResource(SearchService service, RepositoryService repoService) {
+		this.service = service;
 		this.repoService = repoService;
-		this.client = client;
-		this.baseUrl = baseUrl;
 	}
 
 	@GET
@@ -56,86 +49,68 @@ public class SearchResource {
 		String query = Client.removeStringFilter("query", parameters);
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
-		Set<String> repoIds = new HashSet<>();
-		for (Repository repo : repoService.getAllAccessible()) {
-			repoIds.add(repo.toId());
-		}
-		if (repoIds.isEmpty())
-			return Respond.ok(buildEmptyResult(page, pageSize));
-		parameters.put(Aggregations.MODEL_TYPE.field, Collections.singleton(ModelType.PROCESS.name()));
-		parameters.put(Aggregations.REPOSITORY.field, repoIds);
-		return Respond.ok(search(query, page, pageSize, parameters));
+		return Respond.ok(service.search(query, page, pageSize, parameters));
 	}
 
-	private SearchResult<Map<String, Object>> search(String query, int page, int pageSize,
-			Map<String, Set<String>> parameters) {
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("flowLinks/{flowRefId}")
+	public Response searchFlowLinks(
+			@PathParam("flowRefId") String flowRefId,
+			@QueryParam("repositoryId") String repositoryId,
+			@QueryParam("direction") String direction,
+			@QueryParam("filter") String filter,
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize) {
 		SearchQueryBuilder builder = new SearchQueryBuilder();
-		List<SearchAggregation> aggregations = new ArrayList<>(Arrays.asList(Aggregations.PROCESS_FILTERS));
-		aggregations.add(Aggregations.REPOSITORY);
-		aggregations.add(Aggregations.MODEL_TYPE);
-		for (SearchAggregation aggregation : aggregations) {
-			Set<String> filterValues = parameters.remove(aggregation.name);
-			if (filterValues != null && !filterValues.isEmpty()) {
-				for (String filterValue : filterValues) {
-					builder.aggregation(aggregation, filterValue);
-				}
-			} else {
-				builder.aggregation(aggregation);
-			}
+		boolean hasAccess = putRepositories(builder, repositoryId);
+		if (!hasAccess)
+			return Respond.ok(buildEmptyResult(page, pageSize));
+		putDefaultFilter(builder, page, pageSize, filter);
+		putFlowFilter(builder, flowRefId, direction);
+		return Respond.ok(service.search(builder.build()));
+	}
+
+	private boolean putRepositories(SearchQueryBuilder builder, String repositoryId) {
+		List<Repository> repos = null;
+		if (Strings.isNullOrEmpty(repositoryId)) {
+			repos = repoService.getAllAccessible();
+		} else {
+			String[] repo = repositoryId.split("/");
+			repos = Collections.singletonList(repoService.get(repo[0], repo[1]));
 		}
-		for (String filter : parameters.keySet()) {
-			Set<String> filterValues = parameters.get(filter);
-			if (filterValues != null && !filterValues.isEmpty()) {
-				Set<SearchFilterValue> values = new HashSet<>();
-				for (String value : filterValues) {
-					values.add(SearchFilterValue.wildcard(value));
-				}
-				builder.filter(filter, values);
-			}
+		if (repos.isEmpty())
+			return false;
+		for (Repository repo : repos) {
+			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
 		}
-		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, SearchFields.PROCESS_FULL_TEXT_FIELDS);
+		return true;
+	}
+
+	private void putFlowFilter(SearchQueryBuilder builder, String refId, String direction) {
+		SearchFilterValue value = SearchFilterValue.phrase(refId);
+		if ("in".equals(direction)) {
+			builder.filter("inputs", value);
+		} else if ("out".equals(direction)) {
+			builder.filter("outputs", value);
+		} else {
+			builder.filter(new String[] { "inputs", "outputs" }, value);
+		}
+	}
+
+	private void putDefaultFilter(SearchQueryBuilder builder, int page, int pageSize, String filter) {
+		if (!Strings.isNullOrEmpty(filter)) {
+			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
-		SearchResult<Map<String, Object>> result = client.search(builder.build());
-		prepareResult(result);
-		return result;
 	}
 
-	private void prepareResult(SearchResult<Map<String, Object>> result) {
-		for (AggregationResult aggreagtion : new ArrayList<>(result.aggregations)) {
-			if (aggreagtion.name.equals(Aggregations.REPOSITORY.name)) {
-				result.aggregations.remove(aggreagtion);
-			} else if (aggreagtion.name.equals(Aggregations.MODEL_TYPE.name)) {
-				result.aggregations.remove(aggreagtion);
-			}
-		}
-		for (Map<String, Object> data : result.data) {
-			data.remove("type");
-			data.remove("categoryType");
-			data.remove("categoryRefId");
-			data.remove("commitMessage");
-			data.remove("lastUpdate");
-			String path = data.remove("fullPath").toString();
-			if (path.contains("/")) // full path contains name
-				path = path.substring(0, path.lastIndexOf("/"));
-			data.put("category", path);
-			String repoId = data.remove("repositoryId").toString();
-			String refId = data.get("refId").toString();
-			String commitId = data.remove("commitId").toString();
-			data.put("format", "JSON-LD");
-			data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/" + refId + "/" + commitId);
-		}
-	}
-
-	private SearchResult<Map<String, Object>> buildEmptyResult(int page, int pageSize) {
-		SearchResult<Map<String, Object>> result = new SearchResult<>();
+	private SearchResult<IndexEntry> buildEmptyResult(int page, int pageSize) {
+		SearchResult<IndexEntry> result = new SearchResult<>();
 		result.resultInfo.currentPage = page;
 		result.resultInfo.pageSize = pageSize;
-		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {
-			result.aggregations.add(new AggregationResultBuilder().type(aggr.type).name(aggr.name).build());
-		}
 		return result;
 	}
+
 }

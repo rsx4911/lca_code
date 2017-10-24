@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.slf4j.LoggerFactory;
 
+import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
@@ -36,6 +38,8 @@ class IndexEntryParser {
 		ModelType type = toModelType(entry.get("type"));
 		if (type == ModelType.PROCESS) {
 			e = parseProcessSpecific(entry);
+		} else if (type == ModelType.FLOW) {
+			e = parseFlowSpecific(entry);
 		}
 		e.categoryRefId = toString(entry.get("categoryRefId"));
 		e.categoryType = toModelType(entry.get("categoryType"));
@@ -89,6 +93,12 @@ class IndexEntryParser {
 		e.license = toString(entry.get("license"));
 		e.contact = toString(entry.get("contact"));
 		e.description = toString(entry.get("description"));
+		return e;
+	}
+
+	private FlowIndexEntry parseFlowSpecific(Map<String, Object> entry) {
+		FlowIndexEntry e = new FlowIndexEntry();
+		e.flowType = FlowType.valueOf(toString(entry.get("flowType")));
 		return e;
 	}
 

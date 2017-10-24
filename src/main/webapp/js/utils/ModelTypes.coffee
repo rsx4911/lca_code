@@ -13,7 +13,7 @@ define () ->
 	SOCIAL_INDICATOR: 'Social indicators'
 	CURRENCY: 'Currencies'
 	PARAMETER: 'Parameters'
-	CATEGORY: 'Category'
+	CATEGORY: 'Categories'
 	DQ_SYSTEM: 'Data quality systems'
 
 	ordinal: (type) ->

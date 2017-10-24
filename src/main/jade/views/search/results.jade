@@ -2,10 +2,7 @@ include ../mixins/forms.jade
 include ../mixins/paging.jade
 
 mixin result-entry(dataset)
-	if dataset.type === 'CATEGORY'
-		img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
-	else
-		img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
+	img.model-icon-small(src='images/model/small/#{getIcon(dataset)}')
 	if dataset.action === 'DELETE'
 		del.result-text=dataset.fullPath
 	else 
@@ -23,7 +20,7 @@ mixin result-entry(dataset)
 					if dataset.type === 'CATEGORY'
 						- url += 's/' + getLabel('modelType', dataset.categoryType) + '/' + dataset.fullPath;
 					else
-						- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
+						- url += '/' + dataset.type + '/' + dataset.refId + '?commitId' + dataset.commitId;
 					a(href=url): +result-entry(dataset)
 				.details
 					div Repository: 

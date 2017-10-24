@@ -60,6 +60,7 @@ define([
 						result.commitId = @commitId
 						result.getRootLabel = (t) -> return ModelTypes[t]
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
+						result.getIcon = Icons.get
 						if result.entries?.length or @categoryPath
 							@$('.no-content-message').hide()
 							@$('.table-browse').show()
@@ -102,6 +103,7 @@ define([
 									commits: commits
 									commitId: @commitId
 									getRootLabel: (type) -> return ModelTypes[type]
+									getIcon: Icons.get
 								Renderer.render @, renderOptions
 								@filter.init()
 

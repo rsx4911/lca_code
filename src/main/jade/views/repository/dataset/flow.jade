@@ -5,25 +5,34 @@ include ./mixins.jade
 	.model-left-content
 		+header
 		.content
-			table.table.no-head
-				tbody
-					- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType', flowType); };
-					+field-row('flowType', true, false, getFlowTypeLabel)
-					+field-row('cas', true, true)
-					+field-row('formula', true, true)
-					if (dataset.synonyms && dataset.synonyms.length) || reviewMode
-						+field-row('synonyms')
-							.comma-separated
-								if dataset.synonyms
-									each synonym in dataset.synonyms
-										span=synonym
-					+ref-row('location')
-					+field-row('infrastructureFlow')
-						span
-							img.icon-small(src='images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
-			if (dataset.flowProperties && dataset.flowProperties.length) || reviewMode
-				h4(data-path='flowProperties')=getLabel('flowProperties')
-				if dataset.flowProperties && dataset.flowProperties.length
+			ul.nav.nav-tabs(role='tablist')
+				li.active(role='presentation') 
+					a(href='#flow-info' aria-controls='flow-info' role='tab' data-toggle='tab') Flow info
+				li(role='presentation') 
+					a(href='#flow-properties' aria-controls='flow-properties' role='tab' data-toggle='tab' data-path='flowProperties')=getLabel('flowProperties')
+				li(role='presentation') 
+					a(href='#in' aria-controls='in' role='tab' data-toggle='tab') Used by
+				li(role='presentation') 
+					a(href='#out' aria-controls='out' role='tab' data-toggle='tab')=dataset.flowType==='ELEMENTARY_FLOW'?'Emitted by':'Produced by'
+			.tab-content
+				#flow-info.tab-pane.active(role='tabpanel')
+					table.table.no-head
+						tbody
+							- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType', flowType); };
+							+field-row('flowType', true, false, getFlowTypeLabel)
+							+field-row('cas', true, true)
+							+field-row('formula', true, true)
+							if (dataset.synonyms && dataset.synonyms.length) || reviewMode
+								+field-row('synonyms')
+									.comma-separated
+										if dataset.synonyms
+											each synonym in dataset.synonyms
+												span=synonym
+							+ref-row('location')
+							+field-row('infrastructureFlow')
+								span
+									img.icon-small(src='images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
+				#flow-properties.tab-pane(role='tabpanel')
 					table.table.flow-properties
 						thead
 							tr
@@ -31,13 +40,22 @@ include ./mixins.jade
 								th=getLabel('flowProperties.formula')
 						tbody
 							- var referenceFactor = null;
-							each factor in dataset.flowProperties
-								if factor.referenceFlowProperty
-									- referenceFactor = factor
-							each factor, index in dataset.flowProperties
-								if factor.flowProperty
-									tr(class=factor.referenceFlowProperty?'reference':null)
-										td: +ref('flowProperties[' + index + '].flowProperty')
-										td(data-path='flowProperties[' + index + '].conversionFactor') 1 #{referenceFactor.referenceUnit} = #{factor.conversionFactor} #{factor.referenceUnit}
+							if dataset.flowProperties
+								each factor in dataset.flowProperties
+									if factor.referenceFlowProperty
+										- referenceFactor = factor
+								each factor, index in dataset.flowProperties
+									if factor.flowProperty
+										tr(class=factor.referenceFlowProperty?'reference':null)
+											td: +ref('flowProperties[' + index + '].flowProperty')
+											td(data-path='flowProperties[' + index + '].conversionFactor') 1 #{referenceFactor.referenceUnit} = #{factor.conversionFactor} #{factor.referenceUnit}
+				#in.tab-pane(role='tabpanel')
+					.form-group
+						input#in-filter.form-control(type='text' placeholder='Filter by name')
+					#in-data
+				#out.tab-pane(role='tabpanel')
+					.form-group
+						input#out-filter.form-control(type='text' placeholder='Filter by name')
+					#out-data
 	+meta
 	.clear

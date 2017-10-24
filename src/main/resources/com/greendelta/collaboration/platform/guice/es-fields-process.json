@@ -64,5 +64,11 @@
 	},
 	"description": {
 		"type": "text"
+	},
+	"inputs": {
+		"type": "keyword"
+	},
+	"outputs": {
+		"type": "keyword"
 	}
 }

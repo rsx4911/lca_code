@@ -25,6 +25,8 @@ public class ProcessIndexEntry extends IndexEntry {
 	public String license;
 	public String contact;
 	public String description;
+	public String[] inputs = new String[0];
+	public String[] outputs = new String[0];
 
 	public enum AggregationType {
 
@@ -92,6 +94,14 @@ public class ProcessIndexEntry extends IndexEntry {
 			for (int i = 0; i < supportedNomenclatures.length; i++) {
 				e.supportedNomenclatures[i] = supportedNomenclatures[i];
 			}
+		}
+		e.inputs = new String[inputs.length];
+		for (int i = 0; i < inputs.length; i++) {
+			e.inputs[i] = inputs[i];
+		}
+		e.outputs = new String[outputs.length];
+		for (int i = 0; i < outputs.length; i++) {
+			e.outputs[i] = outputs[i];
 		}
 		return e;
 	}
