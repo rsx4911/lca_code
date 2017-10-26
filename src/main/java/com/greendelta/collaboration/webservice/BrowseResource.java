@@ -57,8 +57,6 @@ public class BrowseResource {
 			@QueryParam("categoryPath") String categoryPath,
 			@QueryParam("filter") String filter,
 			@QueryParam("commitId") String commitId,
-			@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
@@ -66,7 +64,7 @@ public class BrowseResource {
 			content = service.getRootContent(new BrowseParameter(repo, commitId, showDeleted));
 		} else {
 			ModelType type = getModelType(categoryPath);
-			BrowseParameter params = new BrowseParameter(repo, page, pageSize, filter, commitId, showDeleted);
+			BrowseParameter params = new BrowseParameter(repo, filter, commitId, showDeleted);
 			content = getCategoryContent(type, toId(categoryPath), params);
 		}
 		if (content == null)

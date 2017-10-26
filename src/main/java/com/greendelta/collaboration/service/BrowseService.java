@@ -42,8 +42,6 @@ public class BrowseService {
 			File dir = params.repo.getModelDir(type, false);
 			if (!dir.exists())
 				continue;
-			params.page = 1;
-			params.pageSize = 1;
 			List<ObjectMap> all = getAll(type, params);
 			if (all.isEmpty())
 				continue;
@@ -90,6 +88,7 @@ public class BrowseService {
 		builder.filter("categoryType", SearchFilterValue.phrase(type.name()));
 		builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
 		List<ObjectMap> result = filter(searchService.searchRaw(builder.build()).data, params);
+
 		Map<String, List<ObjectMap>> lastForPath = getForPath(getAll(type, params.clone().removePaging()), 1);
 		updateCommitInfo(lastForPath, result);
 		return result;
@@ -227,8 +226,8 @@ public class BrowseService {
 		});
 		return entries;
 	}
-	
-	private List<ObjectMap> convert(List<ObjectMap> entries)  {
+
+	private List<ObjectMap> convert(List<ObjectMap> entries) {
 		return Collections.convert(entries, parser::convert);
 	}
 
@@ -244,25 +243,20 @@ public class BrowseService {
 	public static class BrowseParameter implements Cloneable {
 
 		public Repository repo;
-		public int page;
-		public int pageSize;
 		public String nameFilter;
 		public String commitId;
 		public boolean includeDeleted;
 
 		public BrowseParameter(Repository repo) {
-			this(repo, 0, 0, null, null, false);
+			this(repo, null, null, false);
 		}
 
 		public BrowseParameter(Repository repo, String commitId, boolean includeDeleted) {
-			this(repo, 0, 0, null, commitId, includeDeleted);
+			this(repo, null, commitId, includeDeleted);
 		}
 
-		public BrowseParameter(Repository repo, int page, int pageSize, String nameFilter, String commitId,
-				boolean includeDeleted) {
+		public BrowseParameter(Repository repo, String nameFilter, String commitId, boolean includeDeleted) {
 			this.repo = repo;
-			this.page = page;
-			this.pageSize = pageSize;
 			this.nameFilter = nameFilter;
 			this.commitId = commitId;
 			this.includeDeleted = includeDeleted;
@@ -274,16 +268,12 @@ public class BrowseService {
 		}
 
 		public BrowseParameter removePaging() {
-			page = 0;
-			pageSize = 0;
 			return this;
 		}
 
 		@Override
 		public BrowseParameter clone() {
 			BrowseParameter p = new BrowseParameter(repo);
-			p.page = page;
-			p.pageSize = pageSize;
 			p.nameFilter = nameFilter;
 			p.commitId = commitId;
 			p.includeDeleted = includeDeleted;
