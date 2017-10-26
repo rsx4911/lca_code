@@ -119,9 +119,9 @@ public class GroupService {
 		return getAll(adminArea, false).size();
 	}
 
-	public SearchResult<String> getAll(int page, String filter, boolean adminArea, boolean onlyIfCanWrite) {
+	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea, boolean onlyIfCanWrite) {
 		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
-		return SearchResults.pagedAndFiltered(page, filter, accessible);
+		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {

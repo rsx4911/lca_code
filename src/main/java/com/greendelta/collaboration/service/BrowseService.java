@@ -88,8 +88,7 @@ public class BrowseService {
 		builder.filter("categoryType", SearchFilterValue.phrase(type.name()));
 		builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
 		List<ObjectMap> result = filter(searchService.searchRaw(builder.build()).data, params);
-
-		Map<String, List<ObjectMap>> lastForPath = getForPath(getAll(type, params.clone().removePaging()), 1);
+		Map<String, List<ObjectMap>> lastForPath = getForPath(getAll(type, params.clone().removeFilter()), 1);
 		updateCommitInfo(lastForPath, result);
 		return result;
 	}
@@ -119,8 +118,8 @@ public class BrowseService {
 		ObjectMap category = getDataset(params.repo, refId, params.commitId);
 		ModelType type = category.get("categoryType");
 		String path = category.get("fullPath");
-		List<ObjectMap> children = getAllCategoryChildren(type, path,
-				params.removePaging().includeDeleted(true));
+		List<ObjectMap> children = getAllCategoryChildren(type, path, params.clone().removeFilter()
+				.includeDeleted(true));
 		int depth = path.split("/").length + 1;
 		Map<String, List<ObjectMap>> lastForPath = getForPath(children, depth);
 		updateCommitInfo(lastForPath, result);
@@ -267,7 +266,8 @@ public class BrowseService {
 			return this;
 		}
 
-		public BrowseParameter removePaging() {
+		public BrowseParameter removeFilter() {
+			this.nameFilter = null;
 			return this;
 		}
 

@@ -24,6 +24,8 @@ define([
 						@query = options[option]
 					else if option is 'page'
 						@page = options[option]
+					else if option is 'pageSize'
+						@pageSize = options[option]
 					else
 						values = options[option]
 						if $.isArray(values)
@@ -32,7 +34,7 @@ define([
 							@aggregations[option] = [values]
 
 			render: (renderOptions) ->
-				url = @getUrlPart 'ws/public/search?', @query, @page, @aggregations
+				url = @getUrlPart 'ws/public/search?', @query, @page, @pageSize, @aggregations
 				$.ajax
 					type: 'GET'
 					url: url
@@ -40,14 +42,15 @@ define([
 						result.getIcon = Icons.get
 						result.getAggregationLabel = (type) => @getAggregationLabel type
 						result.getLabel = (type, value) => @getLabel type, value
-						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @aggregations, result
+						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @pageSize, @aggregations, result
 						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $(value, @aggregations[type]) isnt -1
 						result.getAggregationUrl = (type, value, without = false) => 
 							aggregations = if without then @aggreagtionsWithout(type, value, result) else @aggreagtionsWith(type, value, result)
-							return @getUrlPart 'search/', @query, 1, aggregations, result
+							return @getUrlPart 'search/', @query, 1, @pageSize, aggregations, result
 						result.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
+						@$('#page-size').on 'change', (event) => Router.navigate @getUrlPart 'search/', @query, 1, $(Events.target(event)).val(), @aggregations, result
 						if @query
 							for textElement in $('.search-view .content-box .result-text')
 								@highlight @query, $(textElement)
@@ -94,7 +97,7 @@ define([
 				replaced += text
 				element.html replaced
 
-			getUrlPart: (base, query, page, aggregations, result) ->
+			getUrlPart: (base, query, page, pageSize, aggregations, result) ->
 				url = base
 				isFirst = true
 				if query
@@ -104,6 +107,11 @@ define([
 					unless isFirst
 						url += '&'
 					url += "page=#{page}"
+					isFirst = false
+				if pageSize
+					unless isFirst
+						url += '&'
+					url += "pageSize=#{pageSize}"
 					isFirst = false
 				if aggregations and Object.keys(aggregations).length
 					for key in Object.keys(aggregations)

@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +69,7 @@ public class BrowseResource {
 			content = getCategoryContent(type, toId(categoryPath), params);
 		}
 		if (content == null)
-			return Respond.notFound();
+			content = new ArrayList<>();
 		return Respond.ok(Collections.singletonMap("entries", content));
 	}
 

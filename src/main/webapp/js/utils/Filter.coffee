@@ -8,8 +8,13 @@ define([
 		class Filter extends Backbone.Model
 
 			initialize: (options) ->
-				{@url, @container, @template, @filterId, @callback, @type} = options
-				@page = 1
+				{@url, @container, @template, @filterId, @callback, @type, @pageSize} = options
+				if options.noPaging
+					@page = 0
+				else
+					@page = 1
+					unless @pageSize
+						@pageSize = 10
 				@filter = ''
 
 			init: (callback) ->
@@ -18,8 +23,29 @@ define([
 					@append result
 					callback?(result)
 
+			getUrl: () ->
+				url = @url
+				if $.isFunction(@url)
+					url = @url()
+				first = true
+				if @page
+					url += if first then '' else '&'
+					url += 'page=' + @page
+					first = false
+				if @pageSize or @pageSize is 0
+					url += if first then '' else '&'
+					url += 'pageSize=' + @pageSize
+					first = false
+				if @filter
+					url += if first then '' else '&'
+					url += 'filter=' + @filter
+					first = false
+				if first
+					url = url.substring 0, url.length - 1
+				return url
+
 			load: (callback) ->
-				url = @url.apply @, [@page, @filter]
+				url = @getUrl()
 				$.get url, (result) => 
 					@callback?(@type, result)
 					callback.apply @, [result]
@@ -27,6 +53,7 @@ define([
 			append: (result) ->
 				$(@container).html @template result
 				$(@container + ' a.page').on 'click', (event) => @applyFilter event
+				$(@container + ' #page-size').on 'change', (event) => @applyFilter event
 
 			applyFilter: (event) ->
 				if event # if null it means the filter was triggered from outsite
@@ -35,6 +62,9 @@ define([
 					if target.is('input')
 						@filter = target.val()
 						@page = 1
+					else if target.is('select')
+						@page = 1
+						@pageSize = parseInt target.val()
 					else 	
 						@page = parseInt target.attr 'data-page'
 				@load (result) =>

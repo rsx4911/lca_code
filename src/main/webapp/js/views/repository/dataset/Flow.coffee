@@ -17,7 +17,8 @@ define([
 				container: "##{direction}-data"
 				filterId: "#{direction}-filter"
 				template: template
-				url: (page, filter) -> return "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&direction=#{direction}&pageSize=25&page=#{page}&filter=#{filter}"
+				pageSize: 25
+				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&direction=#{direction}&"
 				callback: (type, result) ->
 					result.getIcon = Icons.get
 					result.commitId = commitId

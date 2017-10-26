@@ -193,10 +193,11 @@ public class RepositoryResource {
 	@GET
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("group") @DefaultValue("") String group,
 			@QueryParam("module") Module module) {
-		SearchResult<Repository> result = service.getAll(page, filter, true);
+		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Repositories::map));
 		List<Repository> repositories = result.data;

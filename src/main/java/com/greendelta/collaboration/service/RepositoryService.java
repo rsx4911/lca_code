@@ -160,9 +160,9 @@ public class RepositoryService {
 		return getAll(adminArea).size();
 	}
 
-	public SearchResult<Repository> getAll(int page, String filter, boolean adminArea) {
+	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean adminArea) {
 		List<Repository> accessible = getAll(adminArea);
-		return SearchResults.pagedAndFiltered(page, filter, accessible, (repo) -> repo.toId());
+		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.toId());
 	}
 
 	public List<Repository> getAllAccessible() {

@@ -66,7 +66,7 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 				+comment-info(comment, roles, true)
 				- var field = comment.field;
 				- var label = getLabel(field);
-				.dataset-link: a.default-link(href='#{comment.repositoryPath}/dataset/#{field.modelType}/#{field.refId}?#{field.commitId}&commentPath=#{field.path||"null"}') 
+				.dataset-link: a.default-link(href='#{comment.repositoryPath}/dataset/#{field.modelType}/#{field.refId}?#{field.commitId?"commitId="+field.commitId:""}&commentPath=#{field.path||"null"}') 
 					img.model-icon-small(src='images/model/small/#{field.modelType.toLowerCase()}.png')
 					small #{comment.dsPath} 
 						if label

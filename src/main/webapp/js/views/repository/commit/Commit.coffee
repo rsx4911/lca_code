@@ -31,16 +31,14 @@ define([
 						result.commitId = commitId
 						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
 						result.getTypeLabel = (type) -> return ModelTypes[type]
-					url: (page, filter) => @getUrl page, filter
+					url: () => @getUrl()
 
-			getUrl: (page, filter) ->
+			getUrl: () ->
 				repo = @repository.toJSON()
 				commitId = @commitId
-				url = "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?page=#{page}"
+				url = "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?"
 				if @type
-					url += '&type=' + @type
-				if filter
-					url += "&filter=#{filter}"
+					url += 'type=' + @type + '&'
 				return url
 
 			render: (renderOptions) ->

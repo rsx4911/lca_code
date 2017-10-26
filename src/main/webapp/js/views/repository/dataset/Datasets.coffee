@@ -44,15 +44,16 @@ define([
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
+					noPaging: true
 					filterId: 'filter'
-					url: (page, filter) => 
+					url: () =>
 						url = "ws/public/browse/#{group}/#{name}?"
 						if @categoryPath
 							url += 'categoryPath=' + @getCategoryPath() + '&'
-						url = "#{url}filter=#{filter}&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
+						url = "#{url}showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
 						if @commitId
 							url += '&commitId=' + @commitId
-						return url
+						return url + '&'
 					callback: (type, result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"

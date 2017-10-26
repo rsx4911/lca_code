@@ -24,7 +24,7 @@ define([
 					container: '#repositories'
 					template: listTemplate
 					filterId: 'filter'
-					url: (page, filter) -> "ws/repository?page=#{page}&filter=#{filter}"
+					url: 'ws/repository?'
 
 			render: (renderOptions) ->
 				@$el.html template

@@ -85,9 +85,10 @@ public class GroupResource {
 	@GET
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
-		SearchResult<String> result = service.getAll(page, filter, true, onlyIfCanWrite);
+		SearchResult<String> result = service.getAll(page, pageSize, filter, true, onlyIfCanWrite);
 		return Respond.ok(SearchResults.convert(result, (String group) -> {
 			return ObjectMap.fromMap(Collections.singletonMap("name", group));
 		}));

@@ -13,6 +13,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import joptsimple.internal.Strings;
+
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
@@ -142,23 +144,26 @@ public class HistoryResource {
 			@PathParam("commitId") String commitId,
 			@QueryParam("type") ModelType type,
 			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		Repository repo = repoService.get(group, name);
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		SearchQuery query = createReferencesQuery(repo, commit, type, page, filter);
+		SearchQuery query = createReferencesQuery(repo, commit, type, page, pageSize, filter);
 		SearchResult<IndexEntry> result = searchService.search(query);
 		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asFetchRequestData()));
 	}
 
-	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, String filter) {
+	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize, String filter) {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
-				.pageSize(SearchQuery.DEFAULT_PAGE_SIZE)
+				.pageSize(pageSize)
 				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.phrase(repo.toId()))
-				.filter("commitId", SearchFilterValue.phrase(commit.id))
-				.filter("name", SearchFilterValue.phrase(filter));
+				.filter("commitId", SearchFilterValue.phrase(commit.id));
+		if (!Strings.isNullOrEmpty(filter)) {
+			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
+		}
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
 		} else {

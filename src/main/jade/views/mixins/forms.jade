@@ -37,7 +37,7 @@ mixin hidden(id, value)
 	input(id=id name=id value=value type='hidden')
 
 mixin select(id, label, options, defaultSelection, inline)
-	div(id='#{id}-group' class=inline?'form-inline':'form-group')
+	div(id='#{id}-group' class=inline?'form-inline':'form-group' style=inline?'display:inline-block':null)
 		if label
 			label.control-label(for=id)=label
 		select.form-control(id=id name=id)&attributes(attributes)
