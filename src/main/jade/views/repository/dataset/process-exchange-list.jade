@@ -1,0 +1,44 @@
+include ./mixins.jade
+
+mixin exchange(exchange)
+	td: span.same-size-font(title=exchange.amount) 
+		img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
+		| &nbsp;
+		if exchange.amount > 0
+			| &nbsp;
+		| #{formatScientific(exchange.amount, true)} 
+
+	td=exchange.unit.name 
+	td: +simple-ref(exchange.flow)
+
+mixin exchange-sublist(title, array)
+	if array.length
+		.exchange-list-part
+			h4=title
+			table
+				each exchange, index in array
+					if index < 10
+						tr: +exchange(exchange)
+					else
+						tr.toggleable(style='display:none'): +exchange(exchange)
+			if array.length > 10
+				a.toggle-control(href='#') Show #{array.length - 10} more
+				a.toggle-control(href='#' style='display:none') Show less
+
+mixin exchange-list(map)
+	+exchange-sublist('Reference product', [map.referenceProduct])
+	+exchange-sublist('By-products', map.byProducts)
+	+exchange-sublist('Produced waste', map.producedWaste)
+	+exchange-sublist('Used products', map.usedProducts)
+	+exchange-sublist('Recyled waste', map.recycledWaste)
+	// TODO alphabetically
+	if Object.keys(map.resources).length
+		for cat1 in Object.keys(map.resources).sort()
+			for cat2 in Object.keys(map.resources[cat1]).sort()
+				- var rLabel = cat1 + (cat2 ? ', ' + cat2 : '')
+				+exchange-sublist(rLabel, map.resources[cat1][cat2])
+	if Object.keys(map.emissions).length
+		for cat1 in Object.keys(map.emissions).sort()
+			for cat2 in Object.keys(map.emissions[cat1]).sort()
+				- var eLabel = cat1 + (cat2 ? ', ' + cat2 : '')
+				+exchange-sublist(eLabel, map.emissions[cat1][cat2])

@@ -1,0 +1,163 @@
+mixin exchange-table(input)
+	div
+		- var count = 0;
+		table.table(class=input?'inputs':'outputs')
+			- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false};
+			each exchange, index in dataset.exchanges
+				if exchange.input === input
+					if exchange.costValue || exchange.currency
+						- show.costs = true;
+					if exchange.dqEntry
+						- show.dqEntry = true;
+					if exchange.uncertainty
+						- show.uncertainty = true;
+					if input && exchange.defaultProvider
+						- show.defaultProvider = true;
+					if !input && exchange.avoidedProduct
+						- show.avoidedProduct = true;
+			thead
+				tr
+					th
+					th=getLabel('exchanges.flow')
+					th=getLabel('exchanges.flow.category')
+					th=getLabel('exchanges.amount')
+					th
+						if show.costs
+							| #{getLabel('exchanges.costs')}
+					th
+						if show.uncertainty
+							| #{getLabel('exchanges.uncertainty')}
+					th
+						if show.dqEntry
+							| #{getLabel('exchanges.dqEntry')}
+					th
+						if input && show.defaultProvider
+							| #{getLabel('exchanges.defaultProvider')}
+						else if show.avoidedProduct
+							| #{getLabel('exchanges.avoidedProduct')}
+			tbody
+				each exchange, index in dataset.exchanges
+					if exchange.input === input
+						+exchange-row(exchange, index, count)
+						- count++;
+		if count > 10
+			a.toggle-control(href='#') Show #{count - 10} more
+			a.toggle-control(href='#' style='display:none') Show less
+			if input
+				p &nbsp;
+
+mixin exchange-row(exchange, index, count)
+	- var clazz = exchange.quantitativeReference?'reference':'';
+	- var style = null;
+	if count >= 10
+		if clazz
+			- clazz += ' ';
+		- clazz += 'toggleable';
+		- style = 'display:none';
+	tr(class=clazz?clazz:null style=style)
+		td(data-path='exchanges[' + index + '].input'): img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
+		td: +ref('exchanges[' + index + '].flow')
+		td 
+			if exchange.flow.category
+				- var url = baseUrl + 's/Flows';
+				+category-breadcrumb(url, exchange.flow.category, true, 2)
+		td
+			span(data-path='exchanges[' + index + '].amount' title=exchange.amount)=formatScientific(exchange.amount)
+			span(data-path='exchanges[' + index + '].unit')
+				if exchange.unit
+					|  #{exchange.unit.name}
+		td
+			span(data-path='exchanges[' + index + '].costValue' title=exchange.costValue)=formatScientific(exchange.costValue)
+			span(data-path='exchanges[' + index + '].currency')
+				if exchange.currency
+					|  #{exchange.currency.name}
+		td(data-path='exchanges[' + index + '].uncertainty'): +uncertainty(exchange.uncertainty, true)
+		td(data-path='exchanges[' + index + '].dqEntry')
+			if exchange.dqEntry
+				if dataset.exchangeDqSystem
+					a(href='#' data-action='show-data-quality' data-entry=exchange.dqEntry data-schema=dataset.exchangeDqSystem.id)=exchange.dqEntry
+				else
+					| #{exchange.dqEntry}
+		td
+			if exchange.input
+				+ref('exchanges[' + index + '].defaultProvider')
+			else
+				span(data-path='exchanges[' + index + '].avoidedProduct')
+					if exchange.avoidedProduct
+						img.icon-small(src='images/check_true.png')
+
+mixin non-causal-allocation-table()
+	h4 Physical & Economic allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th=getLabel('allocationFactors.product')
+				th=getLabel('allocationFactors.physical')
+				th=getLabel('allocationFactors.economic')
+		tbody
+			each factor in dataset.nonCausalAllocationFactors
+				if (factor.index || factor.index === 0) && factor.physical && factor.economic
+					tr
+						td
+						td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
+						td(data-path='allocationFactors[' + factor.physical.index + '].value')=factor.physical.value
+						td(data-path='allocationFactors[' + factor.economic.index + '].value')=factor.economic.value
+
+mixin causal-allocation-table()
+	h4 Causal allocation
+	table.table.allocation-factors
+		thead
+			tr
+				th
+				th=getLabel('allocationFactors.product')
+				each product in dataset.causalAllocationFactors[0].products
+					th: +ref('allocationFactors[' + product.index + '].product', 'PRODUCT_FLOW', false, null, true)
+		tbody
+			each factor in dataset.causalAllocationFactors
+				if factor.exchange && factor.products && factor.products.length && factor.exchange.flow
+					tr
+						td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
+						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, true)
+						each product in factor.products
+							if product.index || product.index === 0
+								td(data-path='allocationFactors[' + product.index + '].value')=product.value
+
+mixin social-aspect-table()
+		table.table.social-aspects
+			thead
+				tr
+					th=getLabel('socialAspects.socialIndicator.name')
+					th=getLabel('socialAspects.rawValue')
+					th=getLabel('socialAspects.riskLevel')
+					th=getLabel('socialAspects.acitivityVariable')
+					th=getLabel('socialAspects.quality')
+					th=getLabel('socialAspects.comment')
+					th=getLabel('socialAspects.source')
+			tbody
+				each aspect, index in dataset.socialAspects
+					tr
+						td: +ref('socialAspects[' + index + '].socialIndicator')
+						td
+							span(data-path='socialAspects[' + index + '].rawAmount')=aspect.rawAmount
+							|  
+							span(data-path='socialAspects[' + index + '].unitOfMeasurement')
+								if aspect.socialIndicator.unitOfMeasurement
+									| [#{aspect.socialIndicator.unitOfMeasurement}]
+						td(data-path='socialAspects[' + index + '].riskLevel')=aspect.riskLevel
+						td
+							span(data-path='socialAspects[' + index + '].activityValue')=aspect.activityValue
+							span(data-path='socialAspects[' + index + '].activityUnit')
+								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+									| #{aspect.socialIndicator.activityUnit.name}, 
+							span(data-path='socialAspects[' + index + '].activityVariable')
+								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+									| #{aspect.socialIndicator.activityVariable}
+						td(data-path='socialAspects[' + index + '].quality')
+							if aspect.quality
+								if dataset.socialDqSystem
+									a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dataset.socialDqSystem.id)=aspect.quality
+								else
+									| #{aspect.quality}
+						td(data-path='socialAspects[' + index + '].comment')=aspect.comment
+						td: +ref('socialAspects[' + index + '].source')
