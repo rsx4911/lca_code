@@ -41,7 +41,7 @@ class IndexEntryCreator {
 		return create(dataset, null, null);
 	}
 
-	IndexEntry create(Dataset dataset, IndexEntry previous, File file) {
+	IndexEntry create(Dataset dataset, IndexAction previousAction, File file) {
 		if (file == null) {
 			IndexEntry entry = generic(dataset);
 			entry.action = IndexAction.DELETE;
@@ -55,7 +55,7 @@ class IndexEntryCreator {
 		} else {
 			entry = generic(dataset);
 		}
-		if (previous == null || previous.action == IndexAction.DELETE) {
+		if (previousAction == IndexAction.DELETE) {
 			entry.action = IndexAction.ADD;
 		} else {
 			entry.action = IndexAction.UPDATE;

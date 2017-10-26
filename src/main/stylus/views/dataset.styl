@@ -29,6 +29,7 @@
 		float left
 
 	.model-left-content
+		padding-top 20px
 		border-bottom 1px solid rgb(221, 221, 221)
 
 		@media(min-width 768px)
@@ -111,6 +112,14 @@
 			.table.no-head > tbody > tr:first-child > td
 				padding-top 0
 
+		.table.inputs, .table.outputs
+			margin-bottom 0
+	
+		.table.inputs > tbody > tr > td, .table.outputs > tbody > tr > td
+			
+			&:nth-child(4)
+				text-align right
+
 		.table.inputs > tbody > tr > td, .table.inputs > thead > tr > th, .table.outputs > tbody > tr > td, .table.outputs > thead > tr > th
 			
 			&:first-child
@@ -121,10 +130,36 @@
 				@media(max-width 479px)
 					display none
 
+			&:nth-child(4)
+				white-space nowrap
+
 			&:nth-child(5), &:nth-child(6)
 
 				@media(max-width 991px)
 					display none
+
+		@media(max-width 767px)
+			
+			.switch-to-list, .exchange-tables
+				display none
+
+		@media(min-width 768px)
+				
+			.switch-to-table, .exchange-list
+				display none
+
+		.exchange-list-part 
+						
+			table, .toggle-control
+				margin-left 20px
+
+			table > tbody > tr 
+				
+				& > td:not(:last-child)
+					padding-right 5px
+				
+				& > td > .same-size-font
+					white-space nowrap
 
 		.table.allocation-factors > tbody > tr > td, .table.allocation-factors > thead > tr > th
 			
@@ -178,11 +213,15 @@
 		@media(min-width 768px)
 			width 25%
 
-		strong
-			color rgb(80, 80, 80)
-			
 		.meta-info
 			width 100%
+			
+			& > *:not(:first-child) strong, & > strong:not(:first-child) 
+				margin-top 10px
+
+			strong
+				display block
+				color rgb(80, 80, 80)
 
 body.public-mode
 

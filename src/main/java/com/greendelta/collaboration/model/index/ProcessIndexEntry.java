@@ -1,5 +1,10 @@
 package com.greendelta.collaboration.model.index;
 
+import java.util.Collection;
+import java.util.Map;
+
+import org.slf4j.LoggerFactory;
+
 public class ProcessIndexEntry extends IndexEntry {
 
 	private static final long serialVersionUID = 2145646252325642438L;
@@ -32,11 +37,39 @@ public class ProcessIndexEntry extends IndexEntry {
 
 		HORIZONTAL, VERTICAL, NONE, UNKNOWN;
 
+		public static AggregationType from(Map<String, Object> map) {
+			if (map == null)
+				return null;
+			Object value = map.get("aggregationType");
+			if (value == null)
+				return null;
+			if (value instanceof AggregationType)
+				return (AggregationType) value;
+			String sValue = value.toString();
+			if (sValue.isEmpty())
+				return null;
+			return valueOf(sValue.toUpperCase());
+		}
+
 	}
 
 	public enum LicenseType {
 
 		FREE, MIXED, CHARGED, UNKNOWN;
+
+		public static LicenseType from(Map<String, Object> map) {
+			if (map == null)
+				return null;
+			Object value = map.get("licenseType");
+			if (value == null)
+				return null;
+			if (value instanceof LicenseType)
+				return (LicenseType) value;
+			String sValue = value.toString();
+			if (sValue.isEmpty())
+				return null;
+			return valueOf(sValue.toUpperCase());
+		}
 
 	}
 
@@ -44,11 +77,39 @@ public class ProcessIndexEntry extends IndexEntry {
 
 		ATTRIBUTIONAL, CONSEQUENTIAL, UNKNOWN;
 
+		public static ModellingPrinciple from(Map<String, Object> map) {
+			if (map == null)
+				return null;
+			Object value = map.get("modellingPrinciple");
+			if (value == null)
+				return null;
+			if (value instanceof ModellingPrinciple)
+				return (ModellingPrinciple) value;
+			String sValue = value.toString();
+			if (sValue.isEmpty())
+				return null;
+			return valueOf(sValue.toUpperCase());
+		}
+
 	}
 
 	public enum ModellingApproach {
 
 		PHYSICAL, ECONOMIC, CAUSAL, NONE, UNKNOWN;
+
+		public static ModellingApproach from(Map<String, Object> map) {
+			if (map == null)
+				return null;
+			Object value = map.get("modellingApproach");
+			if (value == null)
+				return null;
+			if (value instanceof ModellingApproach)
+				return (ModellingApproach) value;
+			String sValue = value.toString();
+			if (sValue.isEmpty())
+				return null;
+			return valueOf(sValue.toUpperCase());
+		}
 
 	}
 
@@ -56,11 +117,52 @@ public class ProcessIndexEntry extends IndexEntry {
 
 		ILCD;
 
+		public static Nomenclature[] from(Map<String, Object> map) {
+			if (map == null)
+				return new Nomenclature[0];
+			Object value = map.get("supportedNomenclatures");
+			if (value instanceof Nomenclature[])
+				return (Nomenclature[]) value;
+			String[] values = null;
+			if (value instanceof String[]) {
+				values = (String[]) value;
+			} else if (value instanceof Collection) {
+				try {
+					@SuppressWarnings("unchecked")
+					Collection<String> collection = (Collection<String>) value;
+					values = collection.toArray(new String[collection.size()]);
+				} catch (Exception e) {
+					LoggerFactory.getLogger(ProcessIndexEntry.class).warn("Could not parse supported nomenclatures", e);
+				}
+			}
+			if (values == null)
+				return new Nomenclature[0];
+			Nomenclature[] result = new Nomenclature[values.length];
+			for (int i = 0; i < values.length; i++) {
+				result[i] = Nomenclature.valueOf(values[i]);
+			}
+			return result;
+		}
+
 	}
 
 	public enum ProcessType {
 
 		UNIT, SYSTEM, UNKNOWN;
+
+		public static ProcessType from(Map<String, Object> map) {
+			if (map == null)
+				return null;
+			Object value = map.get("processType");
+			if (value == null)
+				return null;
+			if (value instanceof ProcessType)
+				return (ProcessType) value;
+			String sValue = value.toString();
+			if (sValue.isEmpty())
+				return null;
+			return valueOf(sValue.toUpperCase());
+		}
 
 	}
 

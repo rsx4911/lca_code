@@ -21,8 +21,9 @@ import org.openlca.util.KeyGen;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.BrowseService;
+import com.greendelta.collaboration.service.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
@@ -54,24 +55,29 @@ public class BrowseResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@QueryParam("categoryPath") String categoryPath,
-			@QueryParam("commitId") String commitId,
 			@QueryParam("filter") String filter,
+			@QueryParam("commitId") String commitId,
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
 		Repository repo = repoService.get(group, name);
 		List<?> content = null;
-		if (Strings.isNullOrEmpty(categoryPath))
-			content = service.getRootContent(repo, commitId, showDeleted);
-		else {
-			ModelType type = null;
-			if (categoryPath.contains("/"))
-				type = ModelType.valueOf(categoryPath.substring(0, categoryPath.indexOf('/')));
-			else
-				type = ModelType.valueOf(categoryPath);
-			content = getCategoryContent(repo, type, toId(categoryPath), commitId, filter, showDeleted);
+		if (Strings.isNullOrEmpty(categoryPath)) {
+			content = service.getRootContent(new BrowseParameter(repo, commitId, showDeleted));
+		} else {
+			ModelType type = getModelType(categoryPath);
+			BrowseParameter params = new BrowseParameter(repo, page, pageSize, filter, commitId, showDeleted);
+			content = getCategoryContent(type, toId(categoryPath), params);
 		}
 		if (content == null)
 			return Respond.notFound();
 		return Respond.ok(Collections.singletonMap("entries", content));
+	}
+
+	private ModelType getModelType(String categoryPath) {
+		if (categoryPath.contains("/"))
+			return ModelType.valueOf(categoryPath.substring(0, categoryPath.indexOf('/')));
+		return ModelType.valueOf(categoryPath);
 	}
 
 	private String toId(String categoryPath) {
@@ -80,16 +86,14 @@ public class BrowseResource {
 		return categoryPath;
 	}
 
-	private List<IndexEntry> getCategoryContent(Repository repo, ModelType type, String categoryRefId, String commitId,
-			String filter,
-			boolean includeDeleted) {
+	private List<ObjectMap> getCategoryContent(ModelType type, String categoryRefId, BrowseParameter params) {
 		for (ModelType t : ModelTypes.SORTED) {
 			if (!t.name().equals(categoryRefId))
 				continue;
-			return service.getUncategorized(repo, type, commitId, filter, includeDeleted);
+			return service.getUncategorized(type, params);
 		}
-		List<IndexEntry> content = service.getForCategory(repo, categoryRefId, commitId, filter, includeDeleted);
-		if (content.isEmpty() || service.getDataset(repo, categoryRefId, commitId) == null)
+		List<ObjectMap> content = service.getForCategory(categoryRefId, params);
+		if (content.isEmpty() || service.getDataset(params.repo, categoryRefId, params.commitId) == null)
 			return null;
 		return content;
 	}
@@ -111,10 +115,10 @@ public class BrowseResource {
 			return Respond.ok(Collections.singletonMap("deleted", false));
 		}
 		String refId = toId(categoryPath);
-		IndexEntry entry = service.getDataset(repo, refId, commitId);
+		ObjectMap entry = service.getDataset(repo, refId, commitId);
 		Map<String, Object> result = new HashMap<>();
 		result.put("id", refId);
-		result.put("deleted", entry == null ? "false" : entry.action == IndexAction.DELETE ? "true" : "false");
+		result.put("deleted", entry.get("action") == IndexAction.DELETE ? "true" : "false");
 		return Respond.ok(result);
 	}
 
@@ -136,10 +140,10 @@ public class BrowseResource {
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
-			IndexEntry entry = service.getDataset(repo, type, refId, commitId);
+			Map<String, Object> entry = service.getDataset(repo, type, refId, commitId);
 			descriptor.put("@id", refId);
 			descriptor.put("@type", type.getModelClass().getSimpleName());
-			descriptor.put("name", entry.name);
+			descriptor.put("name", entry.get("name"));
 			descriptor.put("commitId", commitId);
 			descriptor.put("deleted", true);
 			return Respond.ok(descriptor);
@@ -151,6 +155,7 @@ public class BrowseResource {
 			List<Map<String, Object>> exchanges = map.get("exchanges");
 			List<Map<String, Object>> aspects = map.get("socialAspects");
 			putFlowCategories(repo, commitId, exchanges);
+			putProviderTypes(repo, commitId, exchanges);
 			putSocialIndicators(repo, commitId, aspects);
 		} else if (type == ModelType.IMPACT_CATEGORY) {
 			List<Map<String, Object>> factors = map.get("impactFactors");
@@ -162,23 +167,44 @@ public class BrowseResource {
 		return Respond.ok(map);
 	}
 
-	@SuppressWarnings("unchecked")
 	private void putFlowCategories(Repository repo, String commitId, List<Map<String, Object>> elements) {
 		if (elements == null)
 			return;
 		for (Map<String, Object> element : elements) {
 			if (!element.containsKey("flow"))
 				continue;
+			@SuppressWarnings("unchecked")
 			Map<String, Object> flow = (Map<String, Object>) element.get("flow");
 			String refId = (String) flow.get("@id");
 			String name = (String) flow.get("name");
 			// last element in path is the flow name itself
-			String flowCommitId = getLastCommitId(repo, ModelType.FLOW, refId, commitId);
-			String fullPath = getFullPath(repo, ModelType.FLOW, refId, flowCommitId);
+			String fullPath = getFullPath(repo, ModelType.FLOW, refId, commitId);
 			if (!fullPath.contains("/"))
 				continue;
 			fullPath = fullPath.substring(0, fullPath.length() - name.length() - 1);
 			flow.put("category", fullPath);
+		}
+	}
+
+	private void putProviderTypes(Repository repo, String commitId, List<Map<String, Object>> elements) {
+		if (elements == null)
+			return;
+		for (Map<String, Object> element : elements) {
+			if (!element.containsKey("defaultProvider"))
+				continue;
+			@SuppressWarnings("unchecked")
+			Map<String, Object> provider = (Map<String, Object>) element.get("defaultProvider");
+			String refId = (String) provider.get("@id");
+			String providerCommitId = getLastCommitId(repo, ModelType.PROCESS, refId, commitId);
+			Map<String, Object> entry = service.getDataset(repo, ModelType.PROCESS, refId, providerCommitId);
+			provider.put("processType", ProcessType.from(entry));
+			String name = (String) provider.get("name");
+			// last element in path is the provider name itself
+			String fullPath = getFullPath(repo, ModelType.PROCESS, refId, commitId);
+			if (!fullPath.contains("/"))
+				continue;
+			fullPath = fullPath.substring(0, fullPath.length() - name.length() - 1);
+			provider.put("category", fullPath);
 		}
 	}
 
@@ -243,18 +269,18 @@ public class BrowseResource {
 		if (commitId == null)
 			return "";
 		commitId = getLastCommitId(repo, type, refId, commitId);
-		IndexEntry entry = service.getDataset(repo, type, refId, commitId);
+		Map<String, Object> entry = service.getDataset(repo, type, refId, commitId);
 		if (entry == null)
 			return "";
-		return entry.fullPath;
+		return entry.get("fullPath").toString();
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
 		if (commitId.equals("null"))
 			commitId = null;
 		if (commitId != null) {
-			IndexEntry entry = service.getDataset(repo, type, refId, commitId);
-			if (entry != null && entry.action != IndexAction.DELETE) {
+			Map<String, Object> dataset = service.getDataset(repo, type, refId, commitId);
+			if (IndexAction.from(dataset) != IndexAction.DELETE) {
 				return commitId;
 			}
 		}

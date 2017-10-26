@@ -92,10 +92,11 @@ public class Collections {
 		return to;
 	}
 
-	public static <T> Map<String, T> map(Collection<T> col, Function<T, String> keyGenerator) {
-		Map<String, T> map = new HashMap<>();
+	public static <T> Map<String, String> map(Collection<T> col, Function<T, Object> keyGenerator,
+			Function<T, Object> valueMapper) {
+		Map<String, String> map = new HashMap<>();
 		for (T elem : col) {
-			map.put(keyGenerator.apply(elem), elem);
+			map.put(keyGenerator.apply(elem).toString(), valueMapper.apply(elem).toString());
 		}
 		return map;
 	}
@@ -149,7 +150,5 @@ public class Collections {
 		col.removeAll(sublist);
 		return sublist;
 	}
-	
-
 
 }

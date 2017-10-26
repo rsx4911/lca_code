@@ -18,6 +18,7 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Bytes;
 
@@ -82,8 +83,8 @@ public class CommitService {
 				indexEntries.add(indexEntryCreator.create(dataset));
 				continue;
 			}
-			IndexEntry last = searchService.getLatest(repo.toId(), dataset.refId);
-			indexEntries.add(indexEntryCreator.create(dataset, last, file));
+			IndexAction lastAction = searchService.getLastAction(repo.toId(), dataset.refId);
+			indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
 			File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
 			writeBinaries(reader, binDir);
 		}

@@ -13,6 +13,7 @@ define([
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DQLayer'
 				'cs!views/repository/dataset/DQSystem'
+				'cs!views/repository/dataset/Exchanges'
 				'cs!views/repository/dataset/Flow'
 				'cs!views/repository/dataset/ImpactMethod'
 				'cs!views/repository/dataset/Location'
@@ -36,7 +37,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DQLayer, DQSystem, Flow, ImpactMethod, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DQLayer, DQSystem, Exchanges, Flow, ImpactMethod, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -170,8 +171,10 @@ define([
 						DatasetPrepare.applyTo dataset
 						@$el.html template 
 							dataset: dataset
+							exchangeMap: if dataset.type is 'Process' then Exchanges.map dataset.exchanges else null
 							baseUrl: "#{group}/#{name}/dataset"
 							formatDate: Format.dateTime
+							formatScientific: Format.scientific
 							getSpecificTypeLabel: @getSpecificTypeLabel
 							getValue: (object, path) => return @getValue object, path
 							getIcon: Icons.get
@@ -188,6 +191,7 @@ define([
 							reviewMode: LocalStorage.getValue('reviewMode')
 							isPublic: !currentUser.isLoggedIn()
 						Renderer.render @, renderOptions
+						@$('.toggle-control').on 'click', (event) -> $('> .toggle-control, > .toggleable, > table > tbody > tr.toggleable', $(Events.target(event)).parent()).toggle()
 						if dataset.type is 'Location' # and dataset.geometry
 							Location.initMap @dataset
 						if dataset.type is 'Flow'

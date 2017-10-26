@@ -1,7 +1,9 @@
 package com.greendelta.collaboration.util;
 
 import java.util.Comparator;
+import java.util.Map;
 
+import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 
 public class ModelTypes {
@@ -30,6 +32,34 @@ public class ModelTypes {
 
 	public static int compare(ModelType t1, ModelType t2) {
 		return Integer.compare(getIndex(t1), getIndex(t2));
+	}
+
+	public static ModelType from(Map<String, Object> map, String field) {
+		if (map == null)
+			return null;
+		Object value = map.get(field);
+		if (value == null)
+			return null;
+		if (value instanceof ModelType)
+			return (ModelType) value;
+		String sValue = value.toString();
+		if (sValue.isEmpty())
+			return null;
+		return ModelType.valueOf(sValue.toUpperCase());
+	}
+
+	public static FlowType flowType(Map<String, Object> map) {
+		if (map == null)
+			return null;
+		Object value = map.get("flowType");
+		if (value == null)
+			return null;
+		if (value instanceof FlowType)
+			return (FlowType) value;
+		String sValue = value.toString();
+		if (sValue.isEmpty())
+			return null;
+		return FlowType.valueOf(sValue.toUpperCase());
 	}
 
 	private static class TypeComparator implements Comparator<ModelType> {

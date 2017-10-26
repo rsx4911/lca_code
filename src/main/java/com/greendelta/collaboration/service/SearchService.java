@@ -102,6 +102,10 @@ public class SearchService {
 		return SearchResults.convert(client.search(query), parser::parse);
 	}
 
+	SearchResult<ObjectMap> searchRaw(SearchQuery query) {
+		return SearchResults.convert(client.search(query), parser::convert);
+	}
+
 	public List<IndexEntry> getAll(Repository repo) {
 		return getAll(repo, (ModelType) null);
 	}
@@ -134,20 +138,29 @@ public class SearchService {
 		return parser.parse(client.get(type.name().toLowerCase(), id));
 	}
 
-	IndexEntry getLatest(String repoId, String refId) {
-		return getLatest(repoId, refId, null);
+	ObjectMap getRaw(Repository repo, ModelType type, String refId, String commitId) {
+		String id = repo.toId() + "/" + refId + "/" + commitId;
+		return parser.convert(client.get(type.name().toLowerCase(), id));
 	}
 
-	IndexEntry getLatest(String repoId, String refId, Commit until) {
-		List<IndexEntry> latest = getLatest(repoId, java.util.Collections.singleton(refId), until);
+	IndexAction getLastAction(String repoId, String refId) {
+		ObjectMap latest = getLatest(repoId, refId, null);
+		if (latest == null)
+			return null;
+		return IndexAction.from(latest);
+	}
+
+	ObjectMap getLatest(String repoId, String refId, Commit until) {
+		List<ObjectMap> latest = getLatest(repoId, java.util.Collections.singleton(refId), until);
 		if (latest == null || latest.isEmpty())
 			return null;
 		return latest.get(0);
 	}
 
-	List<IndexEntry> getLatest(String repoId, Set<String> refIds, Commit until) {
-		List<IndexEntry> results = new ArrayList<>();
+	List<ObjectMap> getLatest(String repoId, Set<String> refIds, Commit until) {
+		List<ObjectMap> results = new ArrayList<>();
 		Set<String> remaining = new HashSet<>(refIds);
+		Set<String> added = new HashSet<>();
 		while (!remaining.isEmpty()) {
 			Set<String> next = Collections.pop(remaining, 1000);
 			SearchQueryBuilder builder = builder(repoId);
@@ -160,10 +173,16 @@ public class SearchService {
 				builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
 			}
 			builder.sortBy("commitTimestamp", SearchSorting.DESC);
-			SearchResult<Map<String, Object>> result = client.search(builder.build());
+			SearchResult<ObjectMap> result = searchRaw(builder.build());
 			if (result.data.isEmpty())
-				return null;
-			results.addAll(parser.parse(result));
+				continue;
+			for (ObjectMap data : result.data) {
+				String refId = data.get("refId").toString();
+				if (added.contains(refId))
+					continue;
+				results.add(data);
+				added.add(refId);
+			}
 		}
 		return results;
 	}
@@ -195,13 +214,13 @@ public class SearchService {
 	}
 
 	public void index(IndexEntry entry) {
-		Map<String, Object> content = toMap(entry);
+		ObjectMap content = toMap(entry);
 		client.index(entry.type.name().toLowerCase(), entry.toIndexId(), content);
 	}
 
-	private Map<String, Object> toMap(IndexEntry entry) {
+	private ObjectMap toMap(IndexEntry entry) {
 		setDummyCategoryId(entry);
-		Map<String, Object> map = ObjectMap.fromObject(entry);
+		ObjectMap map = ObjectMap.fromObject(entry);
 		map.put("typeOrdinal", ModelTypes.getOrdinal(entry.type, entry.categoryType));
 		return map;
 	}

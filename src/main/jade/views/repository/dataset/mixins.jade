@@ -1,5 +1,6 @@
 include ../../mixins/category-breadcrumb.jade
 include ../../mixins/forms.jade
+include ../../mixins/long-text.jade
 include ../../mixins/user-info.jade
 
 mixin download-dropdown()
@@ -48,7 +49,7 @@ mixin header()
 					- url = baseUrl + 's' + '/' + typeLabel;
 					- path = dataset.category.name;
 				+category-breadcrumb(url, path, true)
-			h3: small: span(data-path='description')=dataset.description
+			h3: small: span(data-path='description'): +long-text(dataset.description, 500)
 	block
 	if !isPublic
 		hr
@@ -75,24 +76,31 @@ mixin meta()
 				div(data-path='id')=dataset.id
 			block
 
-mixin field-row(path, showValue, checkValue, formatter, noDataPath)
+mixin field-row(path, showValue, checkValue, formatter, noDataPath, showLongText)
 	- var value = showValue ? getValue(dataset, path) : null;
 	if !checkValue || value || reviewMode
 		tr
 			td=getLabel(path)
-			td(data-path=noDataPath?null:path)=formatter?formatter(value):value
+			- value = formatter?formatter(value):value;
+			td(data-path=noDataPath?null:path)
+				if showLongText
+					| #{value}
+				else
+					+long-text(value)
 				block
 
-mixin ref(path, additionalTypeInfo, noImage, defaultLabel, noPath)
-	- var ref = getValue(dataset, path);
-	span(data-path=noPath?null:path)
+mixin simple-ref(value)
+	+ref(value, null, false, null, true, true)
+
+mixin ref(pathOrValue, additionalTypeInfo, noImage, defaultLabel, noPath, directValue)
+	- var ref = directValue ? pathOrValue : getValue(dataset, pathOrValue);
+	span(data-path=noPath||directValue?null:pathOrValue)
 		if ref
 			if !noImage
 				img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
-			if commitId
-				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}?commitId=#{commitId}')=ref.name
-			else
-				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}')=ref.name
+			- var query = commitId ? '?commitId=' + commitId : ''
+			- var path = ref.category ? ref.category + '/' + ref.name : ref.name
+			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}#{query}' title=path)=ref.name
 		else if defaultLabel
 			| #{defaultLabel}
 

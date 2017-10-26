@@ -255,6 +255,7 @@ define([
 						view: 'repository/dataset/Dataset'
 						title: "#{group}/#{name}"
 						subTitle: 'Data sets'
+						fullWidth: true
 						nav: 
 							type: 'repository'
 							active: 'datasets'

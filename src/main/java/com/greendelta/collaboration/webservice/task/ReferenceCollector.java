@@ -9,10 +9,10 @@ import org.openlca.core.model.ModelType;
 import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.util.ObjectMap;
 
 class ReferenceCollector {
 
@@ -48,17 +48,17 @@ class ReferenceCollector {
 		return KeyGen.get(categoryPath.split("/"));
 	}
 
-	private List<ReviewReference> convert(Repository repo, List<IndexEntry> entries) {
+	private List<ReviewReference> convert(Repository repo, List<ObjectMap> entries) {
 		List<ReviewReference> references = new ArrayList<>();
-		for (IndexEntry entry : entries) {
+		for (ObjectMap entry : entries) {
 			ReviewReference ref = new ReviewReference();
 			if (ref.type == ModelType.CATEGORY) {
 				references.addAll(convert(repo, browseService.getForCategory(repo, ref.refId)));
 			} else {
-				ref.type = entry.type;
-				ref.refId = entry.refId;
-				ref.commitId = entry.commitId;
-				ref.name = entry.name;
+				ref.type = entry.get("type");
+				ref.refId = entry.getString("refId");
+				ref.commitId = entry.getString("commitId");
+				ref.name = entry.getString("name");
 				references.add(ref);
 			}
 		}

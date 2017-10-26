@@ -34,10 +34,6 @@ define () ->
 		unless dataset.exchanges
 			return
 		dataset.exchanges.sort (e1, e2) ->
-			if e1.input and !e2.input
-				return -1
-			if !e1.input and e2.input
-				return 1
 			if e1.flow.flowType is 'PRODUCT_FLOW' and e2.flow.flowType isnt 'PRODUCT_FLOW'
 				return -1
 			if e1.flow.flowType isnt 'PRODUCT_FLOW' and e2.flow.flowType is 'PRODUCT_FLOW'

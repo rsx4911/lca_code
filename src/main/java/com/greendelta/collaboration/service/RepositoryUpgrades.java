@@ -267,8 +267,8 @@ public class RepositoryUpgrades {
 			Dataset ds = references.get(entry.commitId).get(entry.refId);
 			entry.version = ds.version;
 			entry.lastChange = ds.lastChange;
-			IndexEntry last = searchService.getLatest(repo.toId(), entry.refId);
-			entry.action = last != null ? IndexAction.UPDATE : IndexAction.ADD;
+			IndexAction lastAction = searchService.getLastAction(repo.toId(), entry.refId);
+			entry.action = lastAction != null ? IndexAction.UPDATE : IndexAction.ADD;
 			entry.commitTimestamp = commits.get(entry.commitId).timestamp;
 			File dsFile = repo.getDatasetFile(type, entry.refId, entry.commitId, false);
 			if (Files.size(dsFile.toPath()) == 0)

@@ -17,11 +17,11 @@ each entry in entries
 				- url += '?commitId=' + commitId			
 			td: a(href=url): strong 
 				if entry.deleted
-					del  #{getRootLabel(entry.type)}
+					del  #{getRootLabel(entry.type)} (#{entry.count})
 				else
-					|  #{getRootLabel(entry.type)}
-			td
-			td
+					|  #{getRootLabel(entry.type)} (#{entry.count})
+			td #{formatLastUpdate(entry.commitTimestamp)}
+			td: a(href='#{baseUrl}/commit/#{entry.commitId}') #{entry.commitMessage}
 		else
 			- var icon = getIcon(entry);
 			td: img.model-icon-small(src='images/model/small/#{icon}')
@@ -32,7 +32,12 @@ each entry in entries
 				a(href=baseUrl + url): strong
 					if entry.action === 'DELETE'
 						del #{entry.name}
+							if entry.type === 'CATEGORY'
+								|  (#{entry.count})
 					else
 						| #{entry.name}
-			td #{formatLastUpdate(entry.lastUpdate)}
+						if entry.type === 'CATEGORY'
+							|  (#{entry.count})
+
+			td #{formatLastUpdate(entry.commitTimestamp)}
 			td: a(href='#{baseUrl}/commit/#{entry.commitId}') #{entry.commitMessage}

@@ -30,7 +30,7 @@
 		"type": "long"
 	},
 	"fullPath": {
-		"type": "text"
+		"type": "keyword"
 	},
 	"lastUpdate": {
 		"type": "text"
