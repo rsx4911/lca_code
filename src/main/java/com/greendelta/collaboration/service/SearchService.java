@@ -20,14 +20,14 @@ import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.lca.search.SearchClient;
-import com.greendelta.lca.search.SearchFilterValue;
-import com.greendelta.lca.search.SearchQuery;
-import com.greendelta.lca.search.SearchQueryBuilder;
-import com.greendelta.lca.search.SearchResult;
-import com.greendelta.lca.search.SearchSorting;
-import com.greendelta.lca.search.aggregations.SearchAggregation;
-import com.greendelta.lca.search.aggregations.results.AggregationResultBuilder;
+import com.greendelta.search.wrapper.SearchClient;
+import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQuery;
+import com.greendelta.search.wrapper.SearchQueryBuilder;
+import com.greendelta.search.wrapper.SearchResult;
+import com.greendelta.search.wrapper.SearchSorting;
+import com.greendelta.search.wrapper.aggregations.SearchAggregation;
+import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
 public class SearchService {
 

@@ -18,7 +18,7 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.Nomenclature;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchResult;
 
 class IndexEntryParser {
 

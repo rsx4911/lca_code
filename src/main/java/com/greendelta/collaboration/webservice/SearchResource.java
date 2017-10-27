@@ -25,10 +25,10 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.webservice.util.Client;
-import com.greendelta.lca.search.SearchFilterValue;
-import com.greendelta.lca.search.SearchQuery;
-import com.greendelta.lca.search.SearchQueryBuilder;
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQuery;
+import com.greendelta.search.wrapper.SearchQueryBuilder;
+import com.greendelta.search.wrapper.SearchResult;
 
 @Path("public/search")
 public class SearchResource {

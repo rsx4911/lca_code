@@ -29,7 +29,7 @@ import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchResult;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("group")

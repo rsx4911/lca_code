@@ -19,9 +19,9 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
-import com.greendelta.lca.search.SearchFilterValue;
-import com.greendelta.lca.search.SearchQueryBuilder;
-import com.greendelta.lca.search.SearchSorting;
+import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQueryBuilder;
+import com.greendelta.search.wrapper.SearchSorting;
 
 // This service filters previous versions of multiple data sets, so only the latest remains
 public class BrowseService {

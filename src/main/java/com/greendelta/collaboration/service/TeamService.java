@@ -10,7 +10,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchResult;
 
 public class TeamService {
 

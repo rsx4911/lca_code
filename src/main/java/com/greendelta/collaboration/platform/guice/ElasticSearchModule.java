@@ -23,9 +23,9 @@ import com.greendelta.collaboration.service.RepositoryUpgrades;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.Resources;
-import com.greendelta.lca.search.SearchClient;
-import com.greendelta.lca.search.elasticsearch.EsClient;
-import com.greendelta.lca.search.elasticsearch.EsSettings;
+import com.greendelta.search.wrapper.SearchClient;
+import com.greendelta.search.wrapper.es.EsClient;
+import com.greendelta.search.wrapper.es.EsSettings;
 
 class ElasticSearchModule extends AbstractModule {
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchResult;
 
 public class SearchResults {
 

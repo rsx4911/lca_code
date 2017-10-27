@@ -30,11 +30,11 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.lca.search.SearchFilterValue;
-import com.greendelta.lca.search.SearchQuery;
-import com.greendelta.lca.search.SearchQueryBuilder;
-import com.greendelta.lca.search.SearchResult;
-import com.greendelta.lca.search.SearchSorting;
+import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQuery;
+import com.greendelta.search.wrapper.SearchQueryBuilder;
+import com.greendelta.search.wrapper.SearchResult;
+import com.greendelta.search.wrapper.SearchSorting;
 
 @Path("history")
 public class HistoryResource {

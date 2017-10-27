@@ -19,7 +19,7 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchResult;
 
 public class GroupService {
 

@@ -30,7 +30,7 @@ import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Memberships;
-import com.greendelta.lca.search.SearchResult;
+import com.greendelta.search.wrapper.SearchResult;
 
 @Path("membership")
 @Produces(MediaType.APPLICATION_JSON)

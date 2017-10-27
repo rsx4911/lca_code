@@ -91,8 +91,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.greendelta.lca.search</groupId>
-			<artifactId>lca-search-elasticsearch</artifactId>
+			<groupId>com.greendelta.search</groupId>
+			<artifactId>search-wrapper-es</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 
