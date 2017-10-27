@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +37,6 @@ public class BrowseService {
 	}
 
 	public List<ObjectMap> getRootContent(BrowseParameter params) {
-		long t = Calendar.getInstance().getTimeInMillis();
 		List<ObjectMap> types = new ArrayList<>();
 		for (ModelType type : ModelTypes.SORTED) {
 			File dir = params.repo.getModelDir(type, false);
@@ -61,7 +59,6 @@ public class BrowseService {
 			map.put("deleted", params.includeDeleted && getAll(type, params.clone().includeDeleted(false)).isEmpty());
 			types.add(map);
 		}
-		System.out.println(Calendar.getInstance().getTimeInMillis() - t);
 		return types;
 	}
 
