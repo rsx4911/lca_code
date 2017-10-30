@@ -42,8 +42,7 @@ define([
 		openComment: (path) ->
 			unless path
 				return
-			fragment = Backbone.history.fragment
-			Router.navigate fragment.substring(0, fragment.lastIndexOf('/')), {trigger: false, replace: true}
+			@rewriteUrl()
 			elem = $("[data-path='#{path}']", '.tab-content')
 			if elem?.length
 				while !elem.hasClass('tab-pane') and !elem.is('body')
@@ -56,6 +55,21 @@ define([
 			if pos > 0
 				$(window).scrollTop pos
 			commentElement.click()
+
+		rewriteUrl: () ->
+			fragment = Backbone.history.fragment
+			query = fragment.substring fragment.lastIndexOf('?') + 1
+			parts = query.split '&'
+			fragment = fragment.substring 0, fragment.lastIndexOf('?') + 1
+			first = true
+			for part in parts
+				if part.indexOf('commentPath=') is 0
+					continue
+				unless first
+					fragment += '&'
+				first = false
+				fragment += part
+			Router.navigate fragment, {trigger: false, replace: true}
 
 		loadComments: (dataset, callback) ->
 			$.ajax 
@@ -252,13 +266,12 @@ define([
 			for comment in comments
 				if $.inArray(comment.id, added) isnt -1
 					continue
-				if comment.replyTo 
-					continue
-				sorted.push comment
-				added.push comment.id
+				unless comment.replyTo 
+					sorted.push comment
+					added.push comment.id
 				replies = []
 				for c in comments
-					if c.replyTo and c.replyTo.id is comment.id
+					if c.replyTo is comment.id
 						replies.push c
 						added.push c.id
 				replies.sort (a, b) -> return a.date - b.date
