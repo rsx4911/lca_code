@@ -83,7 +83,7 @@ mixin local-ref(path)
 										span
 											if doc && doc.sources
 												each source, index in doc.sources
-													div: +ref('processDocumentation.sources[' + index + ']')
+													div: +ref('processDocumentation.sources[' + index + ']', null, false, null, true)
 				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors) || reviewMode
 					#allocation.tab-pane(role='tabpanel')
 						if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length)

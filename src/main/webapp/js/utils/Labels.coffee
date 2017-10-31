@@ -51,6 +51,8 @@ define () ->
 				path = 'impactCategory'
 			else if path is 'processes'
 				path = 'process'
+			else if path is 'flowProperties'
+				path = 'flowProperty'
 			else if path.charAt(path.length - 1) is 's'
 				path = path.substring 0, path.length - 1
 		result = ''

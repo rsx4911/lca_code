@@ -63,17 +63,17 @@ mixin meta()
 				+download-dropdown
 			div
 				strong=getLabel('version')
-				div(data-path='version')=dataset.version?dataset.version:'-'
+				div=dataset.version?dataset.version:'-'
 			div
 				strong=getLabel('lastChange')
-				div(data-path='lastChange')
+				div
 					if dataset.lastChange
 						| #{formatDate(dataset.lastChange)}
 					else
 						| -
 			div
 				strong=getLabel('id')
-				div(data-path='id')=dataset.id
+				div=dataset.id
 			block
 
 mixin field-row(path, showValue, checkValue, formatter, noDataPath, showLongText)
@@ -158,19 +158,19 @@ mixin parameter-table(path, input)
 					th=getLabel(path + '[' + index + '].description')
 					if input
 						th=getLabel(path + '[' + index + '].uncertainty')
+					th
 			tbody
 				each parameter, index in parameters
 					if parameter.inputParameter === input
 						tr
-							td(data-path=path + '[' + index + '].name')
-								| #{parameter.name}
-								unless input
+							td #{parameter.name}
+								if !input
 									|  = #{parameter.formula}
 								|  = #{parameter.value}
-							td(data-path=path + '[' + index + '].description')=parameter.description
+							td=parameter.description
 							if input
-								td(data-path=path + '[' + index + '].uncertainty')
-									+uncertainty(parameter.uncertainty)
+								td: +uncertainty(parameter.uncertainty)
+							td(data-path=path + '[' + index + ']')
 
 mixin data-quality-matrix(system, uncertainties, entries)
 	if system.indicators && system.indicators.length

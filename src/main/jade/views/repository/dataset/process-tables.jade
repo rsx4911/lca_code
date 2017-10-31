@@ -35,6 +35,7 @@ mixin exchange-table(input)
 							| #{getLabel('exchanges.defaultProvider')}
 						else if show.avoidedProduct
 							| #{getLabel('exchanges.avoidedProduct')}
+					th
 			tbody
 				each exchange, index in dataset.exchanges
 					if exchange.input === input
@@ -55,24 +56,20 @@ mixin exchange-row(exchange, index, count)
 		- clazz += 'toggleable';
 		- style = 'display:none';
 	tr(class=clazz?clazz:null style=style)
-		td(data-path='exchanges[' + index + '].input'): img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
-		td: +ref('exchanges[' + index + '].flow')
+		td: img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
+		td: +ref('exchanges[' + index + '].flow', null, false, null, true)
 		td 
 			if exchange.flow.category
 				- var url = baseUrl + 's/Flows';
 				+category-breadcrumb(url, exchange.flow.category, true, 2)
+		td(title=exchange.amount) #{formatScientific(exchange.amount)}
+			if exchange.unit
+				|  #{exchange.unit.name}
+		td(title=exchange.costValue) #{formatScientific(exchange.costValue)}
+			if exchange.currency
+				|  #{exchange.currency.name}
+		td: +uncertainty(exchange.uncertainty, true)
 		td
-			span(data-path='exchanges[' + index + '].amount' title=exchange.amount)=formatScientific(exchange.amount)
-			span(data-path='exchanges[' + index + '].unit')
-				if exchange.unit
-					|  #{exchange.unit.name}
-		td
-			span(data-path='exchanges[' + index + '].costValue' title=exchange.costValue)=formatScientific(exchange.costValue)
-			span(data-path='exchanges[' + index + '].currency')
-				if exchange.currency
-					|  #{exchange.currency.name}
-		td(data-path='exchanges[' + index + '].uncertainty'): +uncertainty(exchange.uncertainty, true)
-		td(data-path='exchanges[' + index + '].dqEntry')
 			if exchange.dqEntry
 				if dataset.exchangeDqSystem
 					a(href='#' data-action='show-data-quality' data-entry=exchange.dqEntry data-schema=dataset.exchangeDqSystem.id)=exchange.dqEntry
@@ -80,11 +77,10 @@ mixin exchange-row(exchange, index, count)
 					| #{exchange.dqEntry}
 		td
 			if exchange.input
-				+ref('exchanges[' + index + '].defaultProvider')
-			else
-				span(data-path='exchanges[' + index + '].avoidedProduct')
-					if exchange.avoidedProduct
-						img.icon-small(src='images/check_true.png')
+				+ref('exchanges[' + index + '].defaultProvider', null, false, null, true)
+			else if exchange.avoidedProduct
+				img.icon-small(src='images/check_true.png')
+		td(data-path='exchanges[' + index +']')
 
 mixin non-causal-allocation-table()
 	h4 Physical & Economic allocation
@@ -95,14 +91,16 @@ mixin non-causal-allocation-table()
 				th=getLabel('allocationFactors.product')
 				th=getLabel('allocationFactors.physical')
 				th=getLabel('allocationFactors.economic')
+				td
 		tbody
 			each factor in dataset.nonCausalAllocationFactors
 				if (factor.index || factor.index === 0) && factor.physical && factor.economic
 					tr
 						td
 						td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
-						td(data-path='allocationFactors[' + factor.physical.index + '].value')=factor.physical.value
-						td(data-path='allocationFactors[' + factor.economic.index + '].value')=factor.economic.value
+						td=factor.physical.value
+						td=factor.economic.value
+						td(data-path='allocationFactors[' + factor.index + ']')
 
 mixin causal-allocation-table()
 	h4 Causal allocation
@@ -112,7 +110,7 @@ mixin causal-allocation-table()
 				th
 				th=getLabel('allocationFactors.product')
 				each product in dataset.causalAllocationFactors[0].products
-					th: +ref('allocationFactors[' + product.index + '].product', 'PRODUCT_FLOW', false, null, true)
+					th: +ref('allocationFactors[' + product.index + ']', 'PRODUCT_FLOW')
 		tbody
 			each factor in dataset.causalAllocationFactors
 				if factor.exchange && factor.products && factor.products.length && factor.exchange.flow
@@ -121,7 +119,7 @@ mixin causal-allocation-table()
 						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, true)
 						each product in factor.products
 							if product.index || product.index === 0
-								td(data-path='allocationFactors[' + product.index + '].value')=product.value
+								td=product.value
 
 mixin social-aspect-table()
 		table.table.social-aspects
@@ -134,30 +132,24 @@ mixin social-aspect-table()
 					th=getLabel('socialAspects.quality')
 					th=getLabel('socialAspects.comment')
 					th=getLabel('socialAspects.source')
+					th
 			tbody
 				each aspect, index in dataset.socialAspects
 					tr
-						td: +ref('socialAspects[' + index + '].socialIndicator')
-						td
-							span(data-path='socialAspects[' + index + '].rawAmount')=aspect.rawAmount
-							|  
-							span(data-path='socialAspects[' + index + '].unitOfMeasurement')
-								if aspect.socialIndicator.unitOfMeasurement
-									| [#{aspect.socialIndicator.unitOfMeasurement}]
+						td: +ref('socialAspects[' + index + '].socialIndicator', null, false, null, true)
+						td #{aspect.rawAmount}
+							if aspect.socialIndicator.unitOfMeasurement
+								|  [#{aspect.socialIndicator.unitOfMeasurement}]
 						td(data-path='socialAspects[' + index + '].riskLevel')=aspect.riskLevel
+						td #{aspect.activityValue}
+							if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
+								|  #{aspect.socialIndicator.activityUnit.name}, #{aspect.socialIndicator.activityVariable}
 						td
-							span(data-path='socialAspects[' + index + '].activityValue')=aspect.activityValue
-							span(data-path='socialAspects[' + index + '].activityUnit')
-								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
-									| #{aspect.socialIndicator.activityUnit.name}, 
-							span(data-path='socialAspects[' + index + '].activityVariable')
-								if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
-									| #{aspect.socialIndicator.activityVariable}
-						td(data-path='socialAspects[' + index + '].quality')
 							if aspect.quality
 								if dataset.socialDqSystem
 									a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dataset.socialDqSystem.id)=aspect.quality
 								else
 									| #{aspect.quality}
-						td(data-path='socialAspects[' + index + '].comment')=aspect.comment
-						td: +ref('socialAspects[' + index + '].source')
+						td=aspect.comment
+						td: +ref('socialAspects[' + index + '].source', null, false, null, true)
+						td(data-path='socialAspects[' + index + ']')

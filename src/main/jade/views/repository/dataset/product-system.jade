@@ -43,23 +43,25 @@ include ./mixins.jade
 										th=getLabel('parameterRedefs.name')
 										th=getLabel('parameterRedefs.value')
 										th=getLabel('parameterRedefs.uncertainty')
+										th
 								tbody
 									each parameter, index in dataset.parameterRedefs
 										tr
 											td 
 												if parameter.context
-													+ref('parameterRedefs[' + index + '].context')
+													+ref('parameterRedefs[' + index + '].context', null, false, null, true)
 												else
-													span(data-path='parameterRedefs[' + index + '].context') Global
-											td(data-path='parameterRedefs[' + index + '].name')=parameter.name
-											td(data-path='parameterRedefs[' + index + '].value')=parameter.value
-											td(data-path='parameterRedefs[' + index + '].uncertainty')
+													span Global
+											td=parameter.name
+											td=parameter.value
+											td
 												if parameter.inputParameter
 													+uncertainty(parameter.uncertainty)
+											td(data-path='parameterRedefs[' + index + ']')
 	+meta
 		hr
 		strong=getLabel('processes')
-		div(data-path='processes')=dataset.processes?dataset.processes.length:0
+		div=dataset.processes?dataset.processes.length:0
 		strong=getLabel('processLinks')
-		div(data-path='processLinks')=dataset.processLinks?dataset.processLinks.length:0
+		div=dataset.processLinks?dataset.processLinks.length:0
 	.clear

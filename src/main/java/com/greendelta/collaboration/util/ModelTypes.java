@@ -8,10 +8,10 @@ import org.openlca.core.model.ModelType;
 
 public class ModelTypes {
 
-	public static final ModelType[] SORTED = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM, ModelType.IMPACT_METHOD,
-			ModelType.PROCESS, ModelType.FLOW, ModelType.SOCIAL_INDICATOR, ModelType.FLOW_PROPERTY,
-			ModelType.UNIT_GROUP, ModelType.CURRENCY, ModelType.SOURCE, ModelType.ACTOR, ModelType.LOCATION,
-			ModelType.DQ_SYSTEM, ModelType.PARAMETER };
+	public static final ModelType[] SORTED = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM, ModelType.PROCESS,
+			ModelType.FLOW, ModelType.IMPACT_METHOD, ModelType.SOCIAL_INDICATOR, ModelType.PARAMETER,
+			ModelType.DQ_SYSTEM, ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP, ModelType.CURRENCY,
+			ModelType.ACTOR, ModelType.SOURCE, ModelType.LOCATION };
 
 	public static int getOrdinal(ModelType type, ModelType categoryType) {
 		if (categoryType != null)

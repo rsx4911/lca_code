@@ -22,18 +22,17 @@ include ./mixins.jade
 										th=getLabel('variants.productSystem')
 										th=getLabel('variants.allocationMethod')
 										th=getLabel('variants.amount')
+										th
 								tbody
 									each variant, index in dataset.variants
 										tr
-											td(data-path='variants[' + index + '].name')=variant.name
-											td: +ref('variants[' + index + '].productSystem')
-											td(data-path='variants[' + index + '].allocationMethod')=variant.allocationMethod
-											td 
-												span(data-path='variants[' + index + '].amount')=variant.amount
-												|  
-												span(data-path='variants[' + index + '].unit')
-													if variant.unit
-														| #{variant.unit.name}
+											td=variant.name
+											td: +ref('variants[' + index + '].productSystem', null, false, null, true)
+											td=variant.allocationMethod
+											td: span=variant.amount 
+												if variant.unit
+													| #{variant.unit.name}
+											td(data-path='variants[' + index + ']')
 					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 						#parameters.tab-pane(role='tabpanel')
 							if dataset.parameterRedefs && dataset.parameterRedefs.length
@@ -44,17 +43,19 @@ include ./mixins.jade
 											th=getLabel('parameters.context')
 											each variant in dataset.variants
 												th=variant.name
+											th
 									tbody
 										each parameter in dataset.parameterRedefs
 											tr
-												td(data-path=parameter.path + '.name')=parameter.name
+												td=parameter.name
 												td
 													if parameter.context
-														+ref(parameter.path + '.context')
+														+ref(parameter.path + '.context', null, false, null, true)
 													else
-														span(data-path=parameter.path + '.context') Global
+														span Global
 												each entry in parameter.values
-													td(data-path=entry.path)=entry.value
+													td=entry.value
+												td(data-path=parameter.path)
 	+meta
 		hr
 		strong=getLabel('impactMethod')

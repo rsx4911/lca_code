@@ -4,7 +4,7 @@ if dataset.impactFactors
 	each factor, index in dataset.impactFactors
 		- var hasFormula = factor.formula && (isNaN(factor.formula) || parseFloat(factor.formula) !== factor.value);
 		tr
-			td: +ref('impactFactors[' + index + '].flow')
+			td: +ref('impactFactors[' + index + '].flow', null, false, null, true)
 			td
 				if factor.flow.category
 					- var url = baseUrl + 's/Flows';
@@ -13,7 +13,6 @@ if dataset.impactFactors
 				- var unit = dataset.referenceUnitName + '/' + factor.unit.name;
 				if hasFormula
 					| #{factor.formula} #{unit} = 
-				span(data-path='impactFactors[' + index + '].' + (hasFormula ? 'formula' : 'value'))=factor.value
-				|  
-				span(data-path='impactFactors[' + index + '].unit')=unit
-			td(data-path='impactFactors[' + index + '].uncertainty'): +uncertainty(factor.uncertainty)
+				span #{factor.value} #{unit}
+			td: +uncertainty(factor.uncertainty)
+			td(data-path='impactFactors[' + index + ']')

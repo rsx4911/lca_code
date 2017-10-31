@@ -26,15 +26,17 @@ include ./mixins.jade
 								if showSynonyms
 									| #{getLabel('units.synonyms')}
 							th=getLabel('units.formula')
+							th
 					tbody
 						each unit, index in dataset.units
 							tr(class=unit.referenceUnit?'reference':null)
-								td(data-path='units[' + index + '].name')=unit.name
-								td(data-path='units[' + index + '].description')=unit.description
-								td.comma-separated(data-path='units[' + index + '].synonyms')
+								td=unit.name
+								td=unit.description
+								td.comma-separated
 									if unit.synonyms && showSynonyms
 										each synonym in unit.synonyms
 											span #{synonym}
-								td(data-path='units[' + index + '].conversionFactor') 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
+								td 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
+								td(data-path='units[' + index + ']')
 	+meta
 	.clear

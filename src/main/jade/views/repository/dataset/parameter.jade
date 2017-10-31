@@ -8,7 +8,7 @@ include ./mixins.jade
 			table.table.no-head
 				tbody
 					- var getParameterType = function (isInput) { return isInput ? 'Input' : 'Dependant'; };
-					+field-row('inputParameter', true, false, getParameterType)
+					+field-row('inputParameter', true, false, getParameterType, true)
 					+field-row(dataset.inputParameter?'value':'formula', false, false, null, false, true)
 						- var formula = dataset.inputParameter ? dataset.value : (dataset.formula + ' = ' + dataset.value)
 						span=formula
