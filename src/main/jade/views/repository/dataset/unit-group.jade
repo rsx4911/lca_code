@@ -37,6 +37,6 @@ include ./mixins.jade
 										each synonym in unit.synonyms
 											span #{synonym}
 								td 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
-								td(data-path='units[' + index + ']')
+								td(data-path='units[' + unit.name + ']')
 	+meta
 	.clear

@@ -44,6 +44,8 @@ define([
 					Sort.indicatorsAndScores dataset
 
 		removeAtSigns: (object) ->
+			unless object
+				return
 			for key in Object.keys(object)
 				if key.indexOf('@') is 0
 					object[key.substring(1)] = object[key]
@@ -67,7 +69,7 @@ define([
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
 						f = nonCausalAllocationFactors[factor.product.id]
 						unless f
-							f = {product: flowMap[factor.product.id], index: index}
+							f = {flow: flowMap[factor.product.id], product: factor.product}
 							nonCausalAllocationFactors[factor.product.id] = f
 						if factor.allocationType is 'PHYSICAL_ALLOCATION'
 							f.physical = {value: factor.value, index: index}
@@ -82,7 +84,7 @@ define([
 						unless f
 							f = {exchange: exchangeMap[factor.exchange.internalId], products: []}
 							causalAllocationFactors[factor.exchange.internalId] = f
-						f.products.push {product: flowMap[factor.product.id], value: factor.value, index: index}
+						f.products.push {flow: flowMap[factor.product.id], id: factor.product.id, value: factor.value, index: index}
 			dataset.nonCausalAllocationFactors = []
 			dataset.causalAllocationFactors = []
 			for key in Object.keys(nonCausalAllocationFactors)
@@ -104,9 +106,12 @@ define([
 						contextId = param.context.id
 					p = parameters[contextId + param.name]
 					unless p
-						p = {name: param.name, context: param.context, values: {}, path: 'variants[' + vIndex + '].parameterRedefs[' + pIndex + ']'}
+						p = {name: param.name, context: param.context, values: {}}
+						p.path = 'variants[' + vIndex + '].parameterRedefs[' + pIndex + ']'
+						contextId = if param.context then param.context.id else 'global'
+						p.commentPath = 'variants[' + variant.productSystem.id + '-' + variant.name + '].parameterRedefs[' + contextId + '-' + param.name + ']'
 						parameters[contextId + param.name] = p
-					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: 'variants[' + vIndex + '].parameterRedefs[' + pIndex + '].value'}
+					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: p.path + '.value'}
 			dataset.parameterRedefs = []
 			for key in Object.keys(parameters)
 				p = parameters[key]

@@ -57,7 +57,7 @@ mixin exchange-row(exchange, index, count)
 		- style = 'display:none';
 	tr(class=clazz?clazz:null style=style)
 		td: img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
-		td: +ref('exchanges[' + index + '].flow', null, false, null, true)
+		td: +ref('exchanges[' + index + '].flow', null, false, null, false)
 		td 
 			if exchange.flow.category
 				- var url = baseUrl + 's/Flows';
@@ -77,49 +77,51 @@ mixin exchange-row(exchange, index, count)
 					| #{exchange.dqEntry}
 		td
 			if exchange.input
-				+ref('exchanges[' + index + '].defaultProvider', null, false, null, true)
+				+ref('exchanges[' + index + '].defaultProvider', null, false, null, false)
 			else if exchange.avoidedProduct
 				img.icon-small(src='images/check_true.png')
-		td(data-path='exchanges[' + index +']')
+		td(data-path='exchanges[' + exchange.internalId +']')
 
 mixin non-causal-allocation-table()
 	h4 Physical & Economic allocation
-	table.table.allocation-factors
+	table.table.non-causal-allocation-factors
 		thead
 			tr
-				th
 				th=getLabel('allocationFactors.product')
 				th=getLabel('allocationFactors.physical')
 				th=getLabel('allocationFactors.economic')
-				td
 		tbody
 			each factor in dataset.nonCausalAllocationFactors
-				if (factor.index || factor.index === 0) && factor.physical && factor.economic
-					tr
+				tr
+					- var index = factor.physical ? factor.physical.index : factor.economic.index
+					td: +ref('allocationFactors[' + index + '].flow', 'PRODUCT_FLOW', false, null, false)
+					if factor.physical && (factor.physical.index || factor.physical.index === 0)
+						td(data-path='allocationFactors[physical-' + factor.product.id ']')=factor.physical.value
+					else
 						td
-						td: +ref('allocationFactors[' + factor.index + '].product', 'PRODUCT_FLOW', false, null, true)
-						td=factor.physical.value
-						td=factor.economic.value
-						td(data-path='allocationFactors[' + factor.index + ']')
+					if factor.economic && (factor.economic.index || factor.economic.index === 0)
+						td(data-path='allocationFactors[economic-' + factor.product.id ']')=factor.economic.value
+					else
+						td
 
 mixin causal-allocation-table()
 	h4 Causal allocation
-	table.table.allocation-factors
+	table.table.causal-allocation-factors
 		thead
 			tr
 				th
 				th=getLabel('allocationFactors.product')
 				each product in dataset.causalAllocationFactors[0].products
-					th: +ref('allocationFactors[' + product.index + ']', 'PRODUCT_FLOW')
+					th: +ref('allocationFactors[' + product.index + '].flow', 'PRODUCT_FLOW', false, null, false)
 		tbody
 			each factor in dataset.causalAllocationFactors
 				if factor.exchange && factor.products && factor.products.length && factor.exchange.flow
 					tr
 						td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
-						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, true)
+						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, false)
 						each product in factor.products
 							if product.index || product.index === 0
-								td=product.value
+								td(data-path='allocationFactors[causal-' + product.id + '-' + factor.exchange.internalId + ']')=product.value
 
 mixin social-aspect-table()
 		table.table.social-aspects
@@ -136,7 +138,7 @@ mixin social-aspect-table()
 			tbody
 				each aspect, index in dataset.socialAspects
 					tr
-						td: +ref('socialAspects[' + index + '].socialIndicator', null, false, null, true)
+						td: +ref('socialAspects[' + index + '].socialIndicator', null, false, null, false)
 						td #{aspect.rawAmount}
 							if aspect.socialIndicator.unitOfMeasurement
 								|  [#{aspect.socialIndicator.unitOfMeasurement}]
@@ -151,5 +153,5 @@ mixin social-aspect-table()
 								else
 									| #{aspect.quality}
 						td=aspect.comment
-						td: +ref('socialAspects[' + index + '].source', null, false, null, true)
-						td(data-path='socialAspects[' + index + ']')
+						td: +ref('socialAspects[' + index + '].source', null, false, null, false)
+						td(data-path='socialAspects[' + aspect.socialIndicator.id + ']')

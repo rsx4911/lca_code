@@ -27,12 +27,12 @@ include ./mixins.jade
 									each variant, index in dataset.variants
 										tr
 											td=variant.name
-											td: +ref('variants[' + index + '].productSystem', null, false, null, true)
+											td: +ref('variants[' + index + '].productSystem', null, false, null, false)
 											td=variant.allocationMethod
 											td: span=variant.amount 
 												if variant.unit
 													| #{variant.unit.name}
-											td(data-path='variants[' + index + ']')
+											td(data-path='variants[' + variant.productSystem.id + '-' + variant.name + ']')
 					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
 						#parameters.tab-pane(role='tabpanel')
 							if dataset.parameterRedefs && dataset.parameterRedefs.length
@@ -50,12 +50,12 @@ include ./mixins.jade
 												td=parameter.name
 												td
 													if parameter.context
-														+ref(parameter.path + '.context', null, false, null, true)
+														+ref(parameter.path + '.context', null, false, null, false)
 													else
 														span Global
 												each entry in parameter.values
 													td=entry.value
-												td(data-path=parameter.path)
+												td(data-path=parameter.commentPath)
 	+meta
 		hr
 		strong=getLabel('impactMethod')

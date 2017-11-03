@@ -34,7 +34,7 @@ define () ->
 		for e in list
 			cat = if e.flow.category then e.flow.category.split('/') else []
 			if cat.length < 2
-				map.elements.map[uncategorizedLabel][''].push e
+				map[uncategorizedLabel][''].push e
 			else
 				compartment = cat[cat.length - 2]
 				subCompartment = cat[cat.length - 1]

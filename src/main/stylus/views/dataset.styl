@@ -161,7 +161,12 @@
 				& > td > .same-size-font
 					white-space nowrap
 
-		.table.allocation-factors > tbody > tr > td, .table.allocation-factors > thead > tr > th
+		.table.non-causal-allocation-factors > tbody > tr > td, .table.non-causal-allocation-factors > thead > tr > th
+			
+			&:first-child
+				width 80%
+
+		.table.causal-allocation-factors > tbody > tr > td, .table.causal-allocation-factors > thead > tr > th
 			
 			&:first-child
 				width 35px

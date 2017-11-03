@@ -90,11 +90,11 @@ mixin field-row(path, showValue, checkValue, formatter, noDataPath, showLongText
 				block
 
 mixin simple-ref(value)
-	+ref(value, null, false, null, true, true)
+	+ref(value, null, false, null, false, true)
 
-mixin ref(pathOrValue, additionalTypeInfo, noImage, defaultLabel, noPath, directValue)
+mixin ref(pathOrValue, additionalTypeInfo, noImage, defaultLabel, commentPath, directValue)
 	- var ref = directValue ? pathOrValue : getValue(dataset, pathOrValue);
-	span(data-path=noPath||directValue?null:pathOrValue)
+	span(data-path=commentPath===false||directValue?null:commentPath?commentPath:pathOrValue)
 		if ref
 			if !noImage
 				img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
@@ -170,7 +170,7 @@ mixin parameter-table(path, input)
 							td=parameter.description
 							if input
 								td: +uncertainty(parameter.uncertainty)
-							td(data-path=path + '[' + index + ']')
+							td(data-path=path + '[' + parameter.name + ']')
 
 mixin data-quality-matrix(system, uncertainties, entries)
 	if system.indicators && system.indicators.length
@@ -183,16 +183,16 @@ mixin data-quality-matrix(system, uncertainties, entries)
 			thead
 				tr
 					th
-					each score, index in system.indicators[0].scores
-						th(data-path=uncertainties?null:'indicators[0].scores[' + index + ']')=score.label?score.label:score.position
+					each score in system.indicators[0].scores
+						th(data-path=uncertainties?null:'scores[' + score.position + ']')=score.label?score.label:score.position
 			tbody
-				each indicator, iIndex in system.indicators
+				each indicator in system.indicators
 					tr
-						td(data-path=uncertainties?null:'indicators[' + iIndex + ']')=indicator.name?indicator.name:indicator.position
-						each score, sIndex in indicator.scores
+						td(data-path=uncertainties?null:'indicators[' + indicator.position + ']')=indicator.name?indicator.name:indicator.position
+						each score in indicator.scores
 							if uncertainties
-								td(data-path='indicators[' + iIndex + '].scores[' + sIndex + '].uncertainty')=score.uncertainty
+								td(data-path='indicators[' + indicator.position + '].scores[' + score.position + '].uncertainty')=score.uncertainty
 							else
 								td(style='background-color:#{getDQColor(system, indicator, score, entries)}' data-indicator=indicator.position data-score=score.position)
-									span(data-path='indicators[' + iIndex + '].scores[' + sIndex + '].description')=score.description
+									span(data-path='indicators[' + indicator.position + '].scores[' + score.position + '].description')=score.description
 

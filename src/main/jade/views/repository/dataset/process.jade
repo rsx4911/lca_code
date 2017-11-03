@@ -83,7 +83,7 @@ mixin local-ref(path)
 										span
 											if doc && doc.sources
 												each source, index in doc.sources
-													div: +ref('processDocumentation.sources[' + index + ']', null, false, null, true)
+													div: +ref('processDocumentation.sources[' + index + ']', null, false, null, 'processDocumentation.sources[' + source.id +']')
 				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors) || reviewMode
 					#allocation.tab-pane(role='tabpanel')
 						if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length)
@@ -109,7 +109,7 @@ mixin local-ref(path)
 					if exchange.quantitativeReference
 						- flow = exchange.flow;
 						- eIndex = index;
-			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, false, '-', true)
+			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, false, '-', false)
 		+local-ref('location')
 		hr
 		+local-field('processDocumentation.validFrom', formatDate, '-')

@@ -48,9 +48,9 @@ include ./mixins.jade
 								each factor, index in dataset.flowProperties
 									if factor.flowProperty
 										tr(class=factor.referenceFlowProperty?'reference':null)
-											td: +ref('flowProperties[' + index + '].flowProperty', null, false, null, true)
+											td: +ref('flowProperties[' + index + '].flowProperty', null, false, null, false)
 											td 1 #{referenceFactor.referenceUnit} = #{factor.conversionFactor} #{factor.referenceUnit}
-											td(data-path='flowProperties[' + index + ']')
+											td(data-path='flowProperties[' + factor.flowProperty.id + ']')
 				#in.tab-pane(role='tabpanel')
 					.form-group
 						input#in-filter.form-control(type='text' placeholder='Filter by name')
