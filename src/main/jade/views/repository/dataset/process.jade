@@ -96,8 +96,8 @@ mixin local-ref(path)
 							+social-aspect-table()
 				if (dataset.parameters && dataset.parameters.length) || reviewMode
 					#parameters.tab-pane(role='tabpanel')
-						+parameter-table('parameters', true)
-						+parameter-table('parameters', false)
+						+parameter-table(true)
+						+parameter-table(false)
 	+meta
 		hr
 		strong=getLabel('quantitativeReference')

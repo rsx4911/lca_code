@@ -57,7 +57,8 @@ include ./mixins.jade
 											td
 												if parameter.inputParameter
 													+uncertainty(parameter.uncertainty)
-											td(data-path='parameterRedefs[' + parameter.context.id + '-' + parameter.name + ']')
+											- var context = parameter.context ? parameter.context.id : 'global';
+											td(data-path='parameterRedefs[' + context + '-' + parameter.name + ']')
 	+meta
 		hr
 		strong=getLabel('processes')

@@ -5,9 +5,9 @@ mixin impact-category-selection()
 		if dataset.impactCategories
 			each ic in dataset.impactCategories
 				option(id=ic.id)=ic.name
-	div#impact-category-description(data-path='description')
+	div#impact-category-description
 	| Reference unit: 
-	span#impact-category-unit(data-path='referenceUnitName')
+	span#impact-category-unit
 
 mixin impact-factor-table()
 	h4(data-path='impactFactors') Impact factors
@@ -69,7 +69,7 @@ mixin nw-factor-table()
 				if (dataset.parameters && dataset.parameters.length) || reviewMode
 					#parameters.tab-pane(role='tabpanel')
 						if dataset.parameters && dataset.parameters.length
-							+parameter-table('parameters', true)
-							+parameter-table('parameters', false)
+							+parameter-table(true)
+							+parameter-table(false)
 	+meta
 	.clear

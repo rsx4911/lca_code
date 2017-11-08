@@ -139,8 +139,8 @@ mixin uncertainty(uncertainty, round)
 			br
 			| Max: #{noToStr(uncertainty.maximum, round)}
 
-mixin parameter-table(path, input)
-	- var parameters = getValue(dataset, path);
+mixin parameter-table(input)
+	- var parameters = getValue(dataset, 'parameters');
 	- var isEmpty = true;
 	- var putPath = true;
 	if parameters
@@ -154,10 +154,10 @@ mixin parameter-table(path, input)
 		table.table.table-parameters
 			thead
 				tr
-					th=getLabel(path + '[' + index + '].name')
-					th=getLabel(path + '[' + index + '].description')
+					th=getLabel('parameters[' + index + '].name')
+					th=getLabel('parameters[' + index + '].description')
 					if input
-						th=getLabel(path + '[' + index + '].uncertainty')
+						th=getLabel('parameters[' + index + '].uncertainty')
 					th
 			tbody
 				each parameter, index in parameters
@@ -170,7 +170,7 @@ mixin parameter-table(path, input)
 							td=parameter.description
 							if input
 								td: +uncertainty(parameter.uncertainty)
-							td(data-path=path + '[' + parameter.name + ']')
+							td(data-path='parameters[' + parameter.name + ']')
 
 mixin data-quality-matrix(system, uncertainties, entries)
 	if system.indicators && system.indicators.length
