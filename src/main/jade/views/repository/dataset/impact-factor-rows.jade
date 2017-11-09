@@ -4,7 +4,7 @@ if dataset.impactFactors
 	each factor, index in dataset.impactFactors
 		- var hasFormula = factor.formula && (isNaN(factor.formula) || parseFloat(factor.formula) !== factor.value);
 		tr
-			td: +ref('impactFactors[' + index + '].flow', null, false, null, false)
+			td: +ref('impactFactors[' + index + '].flow')
 			td
 				if factor.flow.category
 					- var url = baseUrl + 's/Flows';

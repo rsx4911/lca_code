@@ -49,7 +49,7 @@ include ./mixins.jade
 										tr
 											td 
 												if parameter.context
-													+ref('parameterRedefs[' + index + '].context', null, false, null, false)
+													+ref('parameterRedefs[' + index + '].context')
 												else
 													span Global
 											td=parameter.name

@@ -57,7 +57,7 @@ mixin exchange-row(exchange, index, count)
 		- style = 'display:none';
 	tr(class=clazz?clazz:null style=style)
 		td: img.icon-small(src='images/' + (exchange.input?'input':'output') + '.png')
-		td: +ref('exchanges[' + index + '].flow', null, false, null, false)
+		td: +ref('exchanges[' + index + '].flow')
 		td 
 			if exchange.flow.category
 				- var url = baseUrl + 's/Flows';
@@ -77,7 +77,7 @@ mixin exchange-row(exchange, index, count)
 					| #{exchange.dqEntry}
 		td
 			if exchange.input
-				+ref('exchanges[' + index + '].defaultProvider', null, false, null, false)
+				+ref('exchanges[' + index + '].defaultProvider')
 			else if exchange.avoidedProduct
 				img.icon-small(src='images/check_true.png')
 		td(data-path='exchanges[' + exchange.internalId +']')
@@ -94,13 +94,13 @@ mixin non-causal-allocation-table()
 			each factor in dataset.nonCausalAllocationFactors
 				tr
 					- var index = factor.physical ? factor.physical.index : factor.economic.index
-					td: +ref('allocationFactors[' + index + '].flow', 'PRODUCT_FLOW', false, null, false)
+					td: +ref('allocationFactors[' + index + '].flow', 'PRODUCT_FLOW')
 					if factor.physical && (factor.physical.index || factor.physical.index === 0)
-						td(data-path='allocationFactors[physical-' + factor.product.id ']')=factor.physical.value
+						td(data-path='allocationFactors[physical-' + factor.product.id + ']')=factor.physical.value
 					else
 						td
 					if factor.economic && (factor.economic.index || factor.economic.index === 0)
-						td(data-path='allocationFactors[economic-' + factor.product.id ']')=factor.economic.value
+						td(data-path='allocationFactors[economic-' + factor.product.id + ']')=factor.economic.value
 					else
 						td
 
@@ -112,13 +112,13 @@ mixin causal-allocation-table()
 				th
 				th=getLabel('allocationFactors.product')
 				each product in dataset.causalAllocationFactors[0].products
-					th: +ref('allocationFactors[' + product.index + '].flow', 'PRODUCT_FLOW', false, null, false)
+					th: +ref('allocationFactors[' + product.index + '].flow', 'PRODUCT_FLOW')
 		tbody
 			each factor in dataset.causalAllocationFactors
 				if factor.exchange && factor.products && factor.products.length && factor.exchange.flow
 					tr
 						td: img.icon-small(src='images/' + (factor.exchange.input?'input':'output') + '.png')
-						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType, false, null, false)
+						td: +ref('allocationFactors[' + factor.products[0].index + '].exchange.flow', factor.exchange.flow.flowType)
 						each product in factor.products
 							if product.index || product.index === 0
 								td(data-path='allocationFactors[causal-' + product.id + '-' + factor.exchange.internalId + ']')=product.value
@@ -138,11 +138,11 @@ mixin social-aspect-table()
 			tbody
 				each aspect, index in dataset.socialAspects
 					tr
-						td: +ref('socialAspects[' + index + '].socialIndicator', null, false, null, false)
+						td: +ref('socialAspects[' + index + '].socialIndicator')
 						td #{aspect.rawAmount}
 							if aspect.socialIndicator.unitOfMeasurement
 								|  [#{aspect.socialIndicator.unitOfMeasurement}]
-						td(data-path='socialAspects[' + index + '].riskLevel')=aspect.riskLevel
+						td=aspect.riskLevel
 						td #{aspect.activityValue}
 							if aspect.socialIndicator.activityUnit && aspect.socialIndicator.activityVariable
 								|  #{aspect.socialIndicator.activityUnit.name}, #{aspect.socialIndicator.activityVariable}
@@ -153,5 +153,5 @@ mixin social-aspect-table()
 								else
 									| #{aspect.quality}
 						td=aspect.comment
-						td: +ref('socialAspects[' + index + '].source', null, false, null, false)
+						td: +ref('socialAspects[' + index + '].source')
 						td(data-path='socialAspects[' + aspect.socialIndicator.id + ']')

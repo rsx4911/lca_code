@@ -90,25 +90,27 @@ mixin field-row(path, showValue, checkValue, formatter, noDataPath, showLongText
 				block
 
 mixin simple-ref(value)
-	+ref(value, null, false, null, false, true)
+	+_ref(value)
 
-mixin ref(pathOrValue, additionalTypeInfo, noImage, defaultLabel, commentPath, directValue)
-	- var ref = directValue ? pathOrValue : getValue(dataset, pathOrValue);
-	span(data-path=commentPath===false||directValue?null:commentPath?commentPath:pathOrValue)
+mixin ref(path, additionalTypeInfo, defaultLabel)
+	- var value = getValue(dataset, path);
+	+_ref(value, additionalTypeInfo, defaultLabel)
+
+mixin _ref(ref, additionalTypeInfo, defaultLabel)
+	span&attributes(attributes)
 		if ref
-			if !noImage
-				img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
+			img.model-icon-small(src='images/model/small/#{getIcon(ref, additionalTypeInfo)}')
 			- var query = commitId ? '?commitId=' + commitId : ''
 			- var path = ref.category ? ref.category + '/' + ref.name : ref.name
 			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}#{query}' title=path)=ref.name
 		else if defaultLabel
 			| #{defaultLabel}
 
-mixin ref-row(path, additionalTypeInfo, noImage)
+mixin ref-row(path, additionalTypeInfo)
 	if getValue(dataset, path) || reviewMode
 		tr
 			td=getLabel(path)
-			td: +ref(path, additionalTypeInfo, noImage)
+			td: +ref(path, additionalTypeInfo)
 
 mixin uncertainty(uncertainty, round)
 	if uncertainty

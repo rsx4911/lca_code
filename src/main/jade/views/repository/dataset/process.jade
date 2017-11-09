@@ -4,7 +4,7 @@ include ./process-exchange-list.jade
 include ../../mixins/category-breadcrumb.jade
 include ../../mixins/long-text.jade
 
-mixin local-field(path, formatter, defaultValue, cropLongText)
+mixin labeled-field(path, formatter, defaultValue, cropLongText)
 	strong=getLabel(path)
 	- var value = getValue(dataset, path);
 	if !value && defaultValue
@@ -17,9 +17,9 @@ mixin local-field(path, formatter, defaultValue, cropLongText)
 		else 
 			| #{value}
 
-mixin local-ref(path)
+mixin labeled-ref(path)
 	strong=getLabel(path)
-	div: +ref(path, null, false, '-')
+	div: +ref(path, null, '-')(data-path=path)
 
 - var doc = dataset.processDocumentation
 +menubar
@@ -83,7 +83,7 @@ mixin local-ref(path)
 										span
 											if doc && doc.sources
 												each source, index in doc.sources
-													div: +ref('processDocumentation.sources[' + index + ']', null, false, null, 'processDocumentation.sources[' + source.id +']')
+													div: +ref('processDocumentation.sources[' + index + ']')(data-path='processDocumentation.sources[' + source.id +']')
 				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors) || reviewMode
 					#allocation.tab-pane(role='tabpanel')
 						if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length)
@@ -109,19 +109,19 @@ mixin local-ref(path)
 					if exchange.quantitativeReference
 						- flow = exchange.flow;
 						- eIndex = index;
-			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, false, '-', false)
-		+local-ref('location')
+			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, '-')
+		+labeled-ref('location')
 		hr
-		+local-field('processDocumentation.validFrom', formatDate, '-')
-		+local-field('processDocumentation.validUntil', formatDate, '-')
+		+labeled-field('processDocumentation.validFrom', formatDate, '-')
+		+labeled-field('processDocumentation.validUntil', formatDate, '-')
 		hr
-		+local-field('processDocumentation.timeDescription', null, '-', true)
-		+local-field('processDocumentation.geographyDescription', null, '-', true)
-		+local-field('processDocumentation.technologyDescription', null, '-', true)
+		+labeled-field('processDocumentation.timeDescription', null, '-', true)
+		+labeled-field('processDocumentation.geographyDescription', null, '-', true)
+		+labeled-field('processDocumentation.technologyDescription', null, '-', true)
 		hr
-		+local-ref('dqSystem')
-		+local-ref('exchangeDqSystem')
-		+local-ref('socialDqSystem')
+		+labeled-ref('dqSystem')
+		+labeled-ref('exchangeDqSystem')
+		+labeled-ref('socialDqSystem')
 		strong=getLabel('dqEntry')
 		div
 			if dataset.dqEntry

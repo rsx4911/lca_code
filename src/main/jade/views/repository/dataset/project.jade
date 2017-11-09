@@ -27,7 +27,7 @@ include ./mixins.jade
 									each variant, index in dataset.variants
 										tr
 											td=variant.name
-											td: +ref('variants[' + index + '].productSystem', null, false, null, false)
+											td: +ref('variants[' + index + '].productSystem')
 											td=variant.allocationMethod
 											td: span=variant.amount 
 												if variant.unit
@@ -50,7 +50,7 @@ include ./mixins.jade
 												td=parameter.name
 												td
 													if parameter.context
-														+ref(parameter.path + '.context', null, false, null, false)
+														+ref(parameter.path + '.context')
 													else
 														span Global
 												each entry in parameter.values
@@ -59,7 +59,7 @@ include ./mixins.jade
 	+meta
 		hr
 		strong=getLabel('impactMethod')
-		div: +ref('impactMethod', null, false, '-')
+		div: +ref('impactMethod', null, '-')
 		strong=getLabel('nwSet')
 		div(data-path='nwSet')=dataset.nwSet?dataset.nwSet.name:'-'
 	.clear
