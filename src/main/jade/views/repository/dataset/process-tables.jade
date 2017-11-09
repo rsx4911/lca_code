@@ -1,51 +1,58 @@
 mixin exchange-table(input)
-	div
-		- var count = 0;
-		table.table(class=input?'inputs':'outputs')
-			- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false};
-			each exchange, index in dataset.exchanges
-				if exchange.input === input
-					if exchange.costValue || exchange.currency
-						- show.costs = true;
-					if exchange.dqEntry
-						- show.dqEntry = true;
-					if exchange.uncertainty
-						- show.uncertainty = true;
-					if input && exchange.defaultProvider
-						- show.defaultProvider = true;
-					if !input && exchange.avoidedProduct
-						- show.avoidedProduct = true;
-			thead
-				tr
-					th
-					th=getLabel('exchanges.flow')
-					th=getLabel('exchanges.flow.category')
-					th=getLabel('exchanges.amount')
-					th
-						if show.costs
-							| #{getLabel('exchanges.costs')}
-					th
-						if show.uncertainty
-							| #{getLabel('exchanges.uncertainty')}
-					th
-						if show.dqEntry
-							| #{getLabel('exchanges.dqEntry')}
-					th
-						if input && show.defaultProvider
-							| #{getLabel('exchanges.defaultProvider')}
-						else if show.avoidedProduct
-							| #{getLabel('exchanges.avoidedProduct')}
-					th
-			tbody
+	- var count = 0;
+	each exchange, index in dataset.exchanges
+		if exchange.input === input
+			- count++;
+	if count > 0
+		div
+			table.table(class=input?'inputs':'outputs')
+				- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false};
 				each exchange, index in dataset.exchanges
 					if exchange.input === input
-						+exchange-row(exchange, index, count)
-						- count++;
-		if count > 10
-			a.toggle-control(href='#') Show #{count - 10} more
-			a.toggle-control(href='#' style='display:none') Show less
-			if input
-				p &nbsp;
+						if exchange.costValue || exchange.currency
+							- show.costs = true;
+						if exchange.dqEntry
+							- show.dqEntry = true;
+						if exchange.uncertainty
+							- show.uncertainty = true;
+						if input && exchange.defaultProvider
+							- show.defaultProvider = true;
+						if exchange.avoidedProduct
+							- show.avoidedProduct = true;
+				thead
+					tr
+						th
+						th=getLabel('exchanges.flow')
+						th=getLabel('exchanges.flow.category')
+						th=getLabel('exchanges.amount')
+						th
+							if show.costs
+								| #{getLabel('exchanges.costs')}
+						th
+							if show.uncertainty
+								| #{getLabel('exchanges.uncertainty')}
+						th
+							if show.dqEntry
+								| #{getLabel('exchanges.dqEntry')}
+						th
+							if show.defaultProvider
+								| #{getLabel('exchanges.defaultProvider')}
+						th
+							if show.avoidedProduct
+								if input
+									| #{getLabel('exchanges.avoidedWaste')}
+								else
+									| #{getLabel('exchanges.avoidedProduct')}
+						th
+				tbody
+					each exchange, index in dataset.exchanges
+						if exchange.input === input
+							+exchange-row(exchange, index, count)
+			if count > 10
+				a.toggle-control(href='#') Show #{count - 10} more
+				a.toggle-control(href='#' style='display:none') Show less
+				if input
+					p &nbsp;
 
 mixin exchange-row(exchange, index, count)
 	- var clazz = exchange.quantitativeReference?'reference':'';
@@ -72,13 +79,13 @@ mixin exchange-row(exchange, index, count)
 		td
 			if exchange.dqEntry
 				if dataset.exchangeDqSystem
-					a(href='#' data-action='show-data-quality' data-entry=exchange.dqEntry data-schema=dataset.exchangeDqSystem.id)=exchange.dqEntry
+					a(href='#' data-action='show-data-quality' data-entry=exchange.dqEntry data-scheme=dataset.exchangeDqSystem.id)=exchange.dqEntry
 				else
 					| #{exchange.dqEntry}
 		td
-			if exchange.input
-				+ref('exchanges[' + index + '].defaultProvider')
-			else if exchange.avoidedProduct
+			+ref('exchanges[' + index + '].defaultProvider')
+		td
+			if exchange.avoidedProduct
 				img.icon-small(src='images/check_true.png')
 		td(data-path='exchanges[' + exchange.internalId +']')
 
@@ -149,7 +156,7 @@ mixin social-aspect-table()
 						td
 							if aspect.quality
 								if dataset.socialDqSystem
-									a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-schema=dataset.socialDqSystem.id)=aspect.quality
+									a(href='#' data-action='show-data-quality' data-entry=aspect.quality data-scheme=dataset.socialDqSystem.id)=aspect.quality
 								else
 									| #{aspect.quality}
 						td=aspect.comment

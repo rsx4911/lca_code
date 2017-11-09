@@ -108,7 +108,7 @@ define([
 			showDataQuality: (event) ->
 				target = $ Events.target event
 				entry = target.attr 'data-entry'
-				schemaId = target.attr 'data-schema'
+				schemaId = target.attr 'data-scheme'
 				DQLayer.open @repository.toJSON(), @commitId, schemaId, entry
 
 			switchCommit: (event) ->

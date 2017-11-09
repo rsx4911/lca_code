@@ -126,7 +126,7 @@ mixin labeled-ref(path)
 		div
 			if dataset.dqEntry
 				if dataset.dqSystem
-					a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-schema=dataset.dqSystem.id data-path='dqEntry')=dataset.dqEntry
+					a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-scheme=dataset.dqSystem.id data-path='dqEntry')=dataset.dqEntry
 				else
 					span(data-path='dqEntry')=dataset.dqEntry
 			else
