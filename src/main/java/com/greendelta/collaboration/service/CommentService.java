@@ -25,7 +25,15 @@ public class CommentService {
 		this.userService = userService;
 	}
 
+	public List<Comment> getAllFor(Repository repository, String filter) {
+		return getAllFor(repository, null, null, null, filter);
+	}
+
 	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId) {
+		return getAllFor(repository, type, refId, commitId, null);
+	}
+
+	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId, String filter) {
 		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath ";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
@@ -40,6 +48,10 @@ public class CommentService {
 		if (commitId != null) {
 			jpql += "AND c.field.commitId = :commitId";
 			attributes.put("commitId", commitId);
+		}
+		if (filter != null) {
+			jpql += "AND c.text LIKE :filter";
+			attributes.put("filter", "%" + filter + "%");
 		}
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}

@@ -30,7 +30,6 @@ define([
 						result.repository = {group: group, name: name}
 						result.groups = @prepareModel result.data
 						result.formatDate = Format.date
-						console.log result
 
 			render: (renderOptions) ->
 				@$el.html template

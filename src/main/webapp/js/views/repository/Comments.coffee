@@ -1,16 +1,18 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Filter'
 				'cs!utils/Format'
 				'cs!utils/Labels'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!views/repository/CommentActions'
 				'cs!models/CurrentUser'
-				'templates/views/repository/comments'
+				'templates/views/repository/comments/comments'
+				'templates/views/repository/comments/comment-list'
 			]
 
-	(Backbone, Events, Format, Labels, ModelTypes, Renderer, Actions, currentUser, template) ->
+	(Backbone, Events, Filter, Format, Labels, ModelTypes, Renderer, Actions, currentUser, template, listTemplate) ->
 
 		class CommentsView extends Backbone.View
 
@@ -22,53 +24,33 @@ define([
 				'click a.remove': (event) -> Actions.remove event
 
 			initialize: (options) ->
-				{@repository} = options
+				group = options.repository.get 'group'
+				name = options.repository.get 'name'
+				@filter = new Filter
+					container: '.comments-view .content-box'
+					template: listTemplate
+					filterId: 'filter'
+					url: "ws/comment/#{group}/#{name}?"
+					callback: (result) =>
+						result.repository = {group: group, name: name}
+						result.formatDate = Format.dateTime
+						result.currentUser = {username: currentUser.get('username'), admin: currentUser.isAdmin()}
+						result.canApprove = result.resultInfo.canApprove
+						result.formatModelType = (type) -> return ModelTypes[type]
+						result.getLabel = (field) -> return Labels.get field.modelType, field.path
+						@setRenderData result.resultInfo
 
 			render: (renderOptions) ->
-				@loadComments (data) =>
-					@renderData = {canApprove: data.canApprove, canComment: false}
-					clickEvents = 
-						'a[href]:not([href=#])': (event) => Events.followLink event
-						'a.release': (event) => Actions.release event, @renderData
-						'a.remove': (event) => Actions.remove event
-					@renderData.clickEvents = clickEvents
-					@$el.html template 
-						comments: @sortAndFilter data.comments
-						canApprove: data.canApprove
-						formatDate: Format.dateTime
-						currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
-						formatModelType: (type) -> return ModelTypes[type]
-						getLabel: (field) -> return Labels.get field.modelType, field.path
-					Renderer.render @, renderOptions
+				@$el.html template
+				Renderer.render @, renderOptions
+				@filter.init()
 
-			loadComments: (callback) ->
-				group = @repository.get 'group'
-				name = @repository.get 'name'
-				$.ajax 
-					type: 'GET'
-					url: "ws/comment/#{group}/#{name}"
-					success: (data) =>
-						callback data
-
-			sortAndFilter: (comments) ->
-				comments.sort (a, b) -> return b.date - a.date
-				added = []
-				sorted = []
-				for comment in comments
-					if $.inArray(comment.id, added) isnt -1
-						continue
-					if comment.replyTo 
-						continue
-					sorted.push comment
-					added.push comment.id
-					replies = []
-					for c in comments
-						if c.replyTo and c.replyTo is comment.id
-							replies.push c
-							added.push c.id
-					replies.sort (a, b) -> return a.date - b.date
-					for reply in replies
-						sorted.push reply
-				return sorted
+			setRenderData: (resultInfo) ->
+				@renderData = {canApprove: resultInfo.canApprove, canComment: false}
+				clickEvents = 
+					'a[href]:not([href=#])': (event) => Events.followLink event
+					'a.release': (event) => Actions.release event, @renderData
+					'a.remove': (event) => Actions.remove event
+				@renderData.clickEvents = clickEvents
 
 )

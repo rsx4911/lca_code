@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -15,6 +17,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -34,8 +37,10 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Comments;
+import com.greendelta.search.wrapper.SearchResult;
 
 @Path("comment")
 @Produces(MediaType.APPLICATION_JSON)
@@ -63,8 +68,19 @@ public class CommentResource {
 	@Path("{group}/{name}")
 	public Response getForRepository(
 			@PathParam("group") String group,
-			@PathParam("name") String name) {
-		return getForDataset(group, name, null, null, null);
+			@PathParam("name") String name,
+			@QueryParam("filter") String filter,
+			@QueryParam("page") int page,
+			@QueryParam("pageSize") int pageSize) {
+		Repository repository = repoService.get(group, name);
+		List<Comment> comments = service.getAllFor(repository, filter);
+		sort(comments);
+		List<Map<String, Object>> mapped = map(repository, comments);
+		SearchResult<Map<String, Object>> result = SearchResults.pagedAndFiltered(page, pageSize, null, mapped);
+		boolean canApprove = accessService.canManageCommentsIn(repository.toId());
+		ObjectMap map = ObjectMap.fromObject(result);
+		map.put("resultInfo.canApprove", canApprove);
+		return Respond.ok(map);
 	}
 
 	@GET
@@ -201,6 +217,31 @@ public class CommentResource {
 		if (!data.containsKey("restrictedToRole"))
 			return null;
 		return Role.valueOf(data.getString("restrictedToRole"));
+	}
+
+	private void sort(List<Comment> list) {
+		List<Comment> sorted = new ArrayList<>();
+		Set<Long> added = new HashSet<>();
+		Collections.sort(list, (a, b) -> b.date.compareTo(a.date));
+		for (Comment comment : list) {
+			if (added.contains(comment.getId()))
+				continue;
+			if (comment.replyTo != null)
+				continue;
+			sorted.add(comment);
+			added.add(comment.getId());
+			List<Comment> replies = new ArrayList<>();
+			for (Comment c : list) {
+				if (c.replyTo == null || c.replyTo.getId() != comment.getId())
+					continue;
+				replies.add(c);
+				added.add(c.getId());
+			}
+			Collections.sort(replies, (a, b) -> a.date.compareTo(b.date));
+			sorted.addAll(replies);
+		}
+		list.clear();
+		list.addAll(sorted);
 	}
 
 }

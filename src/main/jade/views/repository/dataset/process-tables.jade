@@ -45,9 +45,11 @@ mixin exchange-table(input)
 									| #{getLabel('exchanges.avoidedProduct')}
 						th
 				tbody
+					- count = 0;
 					each exchange, index in dataset.exchanges
 						if exchange.input === input
 							+exchange-row(exchange, index, count)
+							- count++;
 			if count > 10
 				a.toggle-control(href='#') Show #{count - 10} more
 				a.toggle-control(href='#' style='display:none') Show less
