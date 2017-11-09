@@ -54,7 +54,7 @@ define([
 						if @commitId
 							url += '&commitId=' + @commitId
 						return url + '&'
-					callback: (type, result) =>
+					callback: (result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath

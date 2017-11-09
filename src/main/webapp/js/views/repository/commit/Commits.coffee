@@ -2,12 +2,14 @@ define([
 				'backbone'
 				'moment'
 				'cs!utils/Events'
+				'cs!utils/Filter'
 				'cs!utils/Format'
 				'cs!utils/Renderer'
 				'templates/views/repository/commit/commits'
+				'templates/views/repository/commit/commit-list'
 			]
 
-	(Backbone, moment, Events, Format, Renderer, template) ->
+	(Backbone, moment, Events, Filter, Format, Renderer, template, listTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
 
@@ -17,23 +19,23 @@ define([
 				'click a': (event) -> Events.followLink event
 
 			initialize: (options) ->
-				{@repository} = options
+				group = options.repository.get 'group'
+				name = options.repository.get 'name'
+				@filter = new Filter
+					container: '.repository-commits .content-box'
+					template: listTemplate
+					filterId: 'filter'
+					url: "ws/history/#{group}/#{name}?"
+					callback: (result) =>
+						result.repository = {group: group, name: name}
+						result.groups = @prepareModel result.data
+						result.formatDate = Format.date
+						console.log result
 
 			render: (renderOptions) ->
-				repository = @repository.toJSON()
-				@loadCommits (commits) =>
-					@$el.html template
-						repository: repository
-						groups: @prepareModel commits
-						formatDate: Format.date
+				@$el.html template
 				Renderer.render @, renderOptions
-
-			loadCommits: (callback) ->
-				repo = @repository.toJSON()
-				$.ajax
-					type: 'GET'
-					url: "ws/history/#{repo.group}/#{repo.name}/null"
-					success: callback
+				@filter.init()
 
 			prepareModel: (commits) ->
 				# id, message, timestamp, user

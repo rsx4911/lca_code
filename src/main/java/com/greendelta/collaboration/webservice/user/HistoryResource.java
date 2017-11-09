@@ -54,6 +54,23 @@ public class HistoryResource {
 	}
 
 	@GET
+	@Path("{group}/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("filter") String filter,
+			@QueryParam("page") int page,
+			@QueryParam("pageSize") int pageSize) {
+		Repository repo = repoService.get(group, name);
+		List<Commit> commits = service.getCommits(repo);
+		java.util.Collections.reverse(commits);
+		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
+		return Respond.ok(SearchResults.convert(result, this::putUserName));
+
+	}
+	
+	@GET
 	@Path("{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
@@ -155,7 +172,8 @@ public class HistoryResource {
 		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asFetchRequestData()));
 	}
 
-	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize, String filter) {
+	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize,
+			String filter) {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
 				.pageSize(pageSize)

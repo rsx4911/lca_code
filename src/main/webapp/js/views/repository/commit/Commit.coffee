@@ -27,7 +27,7 @@ define([
 					container: '.file-references'
 					filterId: 'filter'
 					template: refTemplate
-					callback: (type, result) => 
+					callback: (result) => 
 						result.commitId = commitId
 						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
 						result.getTypeLabel = (type) -> return ModelTypes[type]

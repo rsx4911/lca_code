@@ -134,7 +134,7 @@ define([
 					name = options.group.get 'name'
 					@filter1 = new Filter
 						type: 'group-members'
-						callback: (type, result) => @beforeRender type, result
+						callback: (result, type) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
@@ -145,14 +145,14 @@ define([
 					name = options.repository.get 'name'
 					@filter1 = new Filter
 						type: 'repository-members'
-						callback: (type, result) => @beforeRender type, result
+						callback: (result, type) => @beforeRender type, result
 						container: '#repository-members'
 						template: memberTemplate
 						filterId: 'filter'
 						url: (page, filter) -> "ws/membership/#{group}/#{name}?filter=#{filter}"
 					@filter2 = new Filter
 						type: 'group-members'
-						callback: (type, result) => @beforeRender type, result
+						callback: (result, type) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
