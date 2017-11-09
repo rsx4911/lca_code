@@ -45,10 +45,28 @@ define([
 				return url
 
 			load: (callback) ->
+				if @loading
+					if @waiting
+						return
+					@waitForLoading callback
+					return
+				@loading = true
 				url = @getUrl()
 				$.get url, (result) => 
 					@callback?(@type, result)
 					callback.apply @, [result]
+					@loading = false
+
+			waitForLoading: (callback) ->
+				if @loading
+					@waiting = true
+					setTimeout () =>
+						@waitForLoading callback
+					, 100
+					return
+				@waiting = false
+				@load callback
+
 
 			append: (result) ->
 				$(@container).html @template result
