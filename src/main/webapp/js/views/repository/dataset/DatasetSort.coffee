@@ -69,7 +69,7 @@ define () ->
 				order[exchange.internalId] = i
 			for factor in dataset.causalAllocationFactors
 				factor.products.sort (p1, p2) ->
-					return order[p1.product.id] - order[p2.product.id]
+					return order[p1.id] - order[p2.id]
 
 	socialAspects: (dataset) ->
 		@sortByName dataset.socialAspects, 'socialIndicator'
