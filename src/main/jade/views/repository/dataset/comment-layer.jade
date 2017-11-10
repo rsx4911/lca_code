@@ -10,6 +10,6 @@ if comments && comments.length && canComment
 	hr
 .comments
 	each comment, index in comments
-		+comment-entry(comment, roles, false)
+		+comment-entry(comment, roles)
 		if index < comments.length - 1
 			hr

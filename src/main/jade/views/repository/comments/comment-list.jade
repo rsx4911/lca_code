@@ -8,4 +8,5 @@ else
 		+comment-entry(comment, null, true)
 		if index < data.length-1
 			hr
-	+paging(resultInfo)
+	if resultInfo
+		+paging(resultInfo)

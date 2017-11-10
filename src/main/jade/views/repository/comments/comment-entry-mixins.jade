@@ -76,3 +76,13 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 			+user-info(comment.user.username, comment.user.name)
 			+comment-info(comment, roles, false)
 		.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
+		if comment.replyCount
+			.replies
+				a.toggle-control(href='#')
+					span.glyphicon.glyphicon-chevron-down
+					|  Show #{comment.replyCount} replies
+				.toggleable(style='display:none')
+					img.loader(src='images/loader.gif')
+				a.toggle-control(href='#' style='display:none') 
+					span.glyphicon.glyphicon-chevron-up
+					|  Hide #{comment.replyCount} replies

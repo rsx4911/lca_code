@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -72,13 +70,12 @@ public class CommentResource {
 			@QueryParam("filter") String filter,
 			@QueryParam("page") int page,
 			@QueryParam("pageSize") int pageSize) {
-		Repository repository = repoService.get(group, name);
-		List<Comment> comments = service.getAllFor(repository, filter);
-		sort(comments);
-		List<Map<String, Object>> mapped = map(repository, comments);
-		SearchResult<Map<String, Object>> result = SearchResults.pagedAndFiltered(page, pageSize, null, mapped);
-		boolean canApprove = accessService.canManageCommentsIn(repository.toId());
-		ObjectMap map = ObjectMap.fromObject(result);
+		Repository repo = repoService.get(group, name);
+		List<Comment> comments = service.getAllTopSorted(repo, filter);
+		SearchResult<Comment> result = SearchResults.paged(page, pageSize, comments);
+		SearchResult<ObjectMap> mapped = SearchResults.lconvert(result, (list) -> map(repo, list, true));
+		ObjectMap map = ObjectMap.fromObject(mapped);
+		boolean canApprove = accessService.canManageCommentsIn(repo.toId());
 		map.put("resultInfo.canApprove", canApprove);
 		return Respond.ok(map);
 	}
@@ -104,14 +101,14 @@ public class CommentResource {
 		Repository repository = repoService.get(group, name);
 		List<Comment> comments = service.getAllFor(repository, type, refId, commitId);
 		Map<String, Object> result = new HashMap<>();
-		result.put("comments", map(repository, comments));
+		result.put("comments", map(repository, comments, false));
 		result.put("canComment", accessService.canCommentIn(repository.toId()));
 		result.put("canApprove", accessService.canManageCommentsIn(repository.toId()));
 		return Respond.ok(result);
 	}
 
-	private List<Map<String, Object>> map(Repository repository, List<Comment> comments) {
-		List<Map<String, Object>> mapped = new ArrayList<>();
+	private List<ObjectMap> map(Repository repository, List<Comment> comments, boolean putReplyCount) {
+		List<ObjectMap> mapped = new ArrayList<>();
 		Map<String, String> modelTypeAndIdToPath = new HashMap<>();
 		for (IndexEntry entry : searchService.getAll(repository)) {
 			if (entry.action == IndexAction.DELETE)
@@ -122,9 +119,22 @@ public class CommentResource {
 			ObjectMap map = Comments.map(comment);
 			String key = comment.field.modelType.name() + "_" + comment.field.refId + "_" + comment.field.commitId;
 			map.put("dsPath", modelTypeAndIdToPath.get(key));
+			if (putReplyCount) {
+				map.put("replyCount", service.getRepliesTo(comment.getId()).size());
+			}
 			mapped.add(map);
 		}
 		return mapped;
+	}
+
+	@GET
+	@Path("{id}/replies")
+	public Response getReplies(@PathParam("id") long id) {
+		Comment comment = service.get(id);
+		String[] path = comment.repositoryPath.split("/");
+		Repository repo = repoService.get(path[0], path[1]);
+		List<Comment> comments = service.getRepliesTo(id);
+		return Respond.ok(map(repo, comments, false));
 	}
 
 	@POST
@@ -217,31 +227,6 @@ public class CommentResource {
 		if (!data.containsKey("restrictedToRole"))
 			return null;
 		return Role.valueOf(data.getString("restrictedToRole"));
-	}
-
-	private void sort(List<Comment> list) {
-		List<Comment> sorted = new ArrayList<>();
-		Set<Long> added = new HashSet<>();
-		Collections.sort(list, (a, b) -> b.date.compareTo(a.date));
-		for (Comment comment : list) {
-			if (added.contains(comment.getId()))
-				continue;
-			if (comment.replyTo != null)
-				continue;
-			sorted.add(comment);
-			added.add(comment.getId());
-			List<Comment> replies = new ArrayList<>();
-			for (Comment c : list) {
-				if (c.replyTo == null || c.replyTo.getId() != comment.getId())
-					continue;
-				replies.add(c);
-				added.add(c.getId());
-			}
-			Collections.sort(replies, (a, b) -> a.date.compareTo(b.date));
-			sorted.addAll(replies);
-		}
-		list.clear();
-		list.addAll(sorted);
 	}
 
 }

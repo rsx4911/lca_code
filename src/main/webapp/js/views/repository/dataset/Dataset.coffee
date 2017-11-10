@@ -9,6 +9,7 @@ define([
 				'cs!utils/LocalStorage'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!utils/Toggle'
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DQLayer'
@@ -37,7 +38,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DQLayer, DQSystem, Exchanges, Flow, ImpactMethod, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Toggle, Comments, DatasetPrepare, DQLayer, DQSystem, Exchanges, Flow, ImpactMethod, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -191,7 +192,7 @@ define([
 							reviewMode: LocalStorage.getValue('reviewMode')
 							isPublic: !currentUser.isLoggedIn()
 						Renderer.render @, renderOptions
-						@$('.toggle-control').on 'click', (event) -> $('> .toggle-control, > .toggleable, > table > tbody > tr.toggleable', $(Events.target(event)).parent()).toggle()
+						Toggle.init @$el
 						if dataset.type is 'Location' # and dataset.geometry
 							Location.initMap @dataset
 						if dataset.type is 'Flow'

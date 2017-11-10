@@ -1,6 +1,8 @@
 package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,10 +68,35 @@ public class HistoryResource {
 		List<Commit> commits = service.getCommits(repo);
 		java.util.Collections.reverse(commits);
 		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
-		return Respond.ok(SearchResults.convert(result, this::putUserName));
-
+		return Respond.ok(putAdditionalInfo(result, commits));
 	}
-	
+
+	private Map<String, Object> putAdditionalInfo(SearchResult<Commit> result, List<Commit> commits) {
+		Map<String, Integer> groupCount = new HashMap<>();
+		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
+		for (Commit commit : result.data) {
+			int count = 0;
+			for (Commit c : commits) {
+				if (!isSameDay(commit.timestamp, c.timestamp))
+					continue;
+				count++;
+			}
+			groupCount.put(commit.id, count);
+		}
+		map.put("resultInfo.groupCount", groupCount);
+		return map;
+	}
+
+	private boolean isSameDay(long d1, long d2) {
+		Calendar c1 = Calendar.getInstance();
+		c1.setTimeInMillis(d1);
+		Calendar c2 = Calendar.getInstance();
+		c2.setTimeInMillis(d2);
+		if (c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR))
+			return false;
+		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
+	}
+
 	@GET
 	@Path("{group}/{name}/{lastCommitId}")
 	@Produces(MediaType.APPLICATION_JSON)

@@ -26,9 +26,9 @@ define([
 					template: listTemplate
 					filterId: 'filter'
 					url: "ws/history/#{group}/#{name}?"
-					callback: (result) =>
+					beforeRender: (result) =>
 						result.repository = {group: group, name: name}
-						result.groups = @prepareModel result.data
+						@prepareModel result
 						result.formatDate = Format.date
 
 			render: (renderOptions) ->
@@ -36,20 +36,20 @@ define([
 				Renderer.render @, renderOptions
 				@filter.init()
 
-			prepareModel: (commits) ->
+			prepareModel: (result) ->
 				# id, message, timestamp, user
-				groups = []
+				result.groups = []
 				previous = null
 				group = null
-				if commits
-					for commit in commits
+				if result.data
+					for commit in result.data
 						if !@isSameDay(previous, commit.timestamp)
 							group = {commits: []}
-							groups.push group
+							result.groups.push group
 						group.date = new Date(commit.timestamp)
+						group.count = result.resultInfo.groupCount[commit.id]
 						group.commits.push commit
 						previous = commit.timestamp
-				return groups			
 
 			isSameDay: (t1, t2) ->
 				d1 = moment(t1)

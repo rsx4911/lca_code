@@ -13,15 +13,19 @@ public class SearchResults {
 	}
 
 	public static <T> SearchResult<T> from(List<T> data, int page, int pageSize, long total) {
+		return from(data, data.size(), page, pageSize, total);
+	}
+
+	public static <T> SearchResult<T> from(List<T> data, long count, int page, int pageSize, long total) {
 		SearchResult<T> result = new SearchResult<>();
 		result.data.addAll(data);
-		result.resultInfo.count = data.size();
+		result.resultInfo.count = count;
 		result.resultInfo.currentPage = page == 0 ? 1 : page;
 		result.resultInfo.pageSize = page == 0 ? 0 : pageSize;
 		if (page > 0 && pageSize > 0) {
 			result.resultInfo.pageCount = (int) Math.ceil(total / (double) pageSize);
 		} else {
-			result.resultInfo.pageCount = 1;			
+			result.resultInfo.pageCount = 1;
 		}
 		result.resultInfo.totalCount = total;
 		return result;
@@ -40,6 +44,22 @@ public class SearchResults {
 				result.resultInfo.totalCount);
 		converted.aggregations.addAll(result.aggregations);
 		return converted;
+	}
+
+	public static <T, V> SearchResult<V> lconvert(List<T> data, Function<List<T>, List<V>> converter) {
+		return lconvert(from(data), converter);
+	}
+
+	public static <T, V> SearchResult<V> lconvert(SearchResult<T> result, Function<List<T>, List<V>> converter) {
+		List<V> data = converter.apply(result.data);
+		SearchResult<V> converted = from(data, result.resultInfo.currentPage, result.resultInfo.pageSize,
+				result.resultInfo.totalCount);
+		converted.aggregations.addAll(result.aggregations);
+		return converted;
+	}
+
+	public static <T> SearchResult<T> paged(int page, int pageSize, List<T> toFilter) {
+		return pagedAndFiltered(page, pageSize, null, toFilter, null);
 	}
 
 	public static <T> SearchResult<T> pagedAndFiltered(int page, int pageSize, String filter, List<T> toFilter) {

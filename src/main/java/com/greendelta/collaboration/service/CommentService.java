@@ -25,39 +25,46 @@ public class CommentService {
 		this.userService = userService;
 	}
 
-	public List<Comment> getAllFor(Repository repository, String filter) {
-		return getAllFor(repository, null, null, null, filter);
+	public List<Comment> getAllTopSorted(Repository repository, String filter) {
+		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath AND c.replyTo IS NULL";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("repositoryPath", repository.toId());
+		if (filter != null) {
+			jpql += " AND c.text LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND c1.text LIKE :filter) > 0";
+			attributes.put("filter", "%" + filter + "%");
+		}
+		jpql += " ORDER BY c.date DESC";
+		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId) {
-		return getAllFor(repository, type, refId, commitId, null);
-	}
-
-	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId, String filter) {
-		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath ";
+		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
 		if (type != null) {
-			jpql += "AND c.field.modelType = :modelType ";
+			jpql += " AND c.field.modelType = :modelType";
 			attributes.put("modelType", type);
 		}
 		if (refId != null) {
-			jpql += "AND c.field.refId = :refId ";
+			jpql += " AND c.field.refId = :refId";
 			attributes.put("refId", refId);
 		}
 		if (commitId != null) {
-			jpql += "AND c.field.commitId = :commitId";
+			jpql += " AND c.field.commitId = :commitId";
 			attributes.put("commitId", commitId);
-		}
-		if (filter != null) {
-			jpql += "AND c.text LIKE :filter";
-			attributes.put("filter", "%" + filter + "%");
 		}
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public Comment get(long id) {
 		return dao.get(id);
+	}
+
+	public List<Comment> getRepliesTo(long id) {
+		String jpql = "SELECT c FROM Comment c WHERE c.replyTo.id = :id ORDER BY c.date ASC";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("id", id);
+		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public Comment insert(Comment comment) {

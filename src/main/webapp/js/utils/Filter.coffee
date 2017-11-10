@@ -8,7 +8,7 @@ define([
 		class Filter extends Backbone.Model
 
 			initialize: (options) ->
-				{@url, @container, @template, @filterId, @callback, @type, @pageSize} = options
+				{@url, @container, @template, @filterId, @beforeRender, @type, @pageSize, @afterRender} = options
 				if options.noPaging
 					@page = 0
 				else
@@ -53,7 +53,7 @@ define([
 				@loading = true
 				url = @getUrl()
 				$.get url, (result) => 
-					@callback?(result, @type)
+					@beforeRender?(result, @type)
 					callback.apply @, [result]
 					@loading = false
 
@@ -72,6 +72,7 @@ define([
 				$(@container).html @template result
 				$(@container + ' a.page').on 'click', (event) => @applyFilter event
 				$(@container + ' #page-size').on 'change', (event) => @applyFilter event
+				@afterRender?(result)
 
 			applyFilter: (event) ->
 				if event # if null it means the filter was triggered from outsite
