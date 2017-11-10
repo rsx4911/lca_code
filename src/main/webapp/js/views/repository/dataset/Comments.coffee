@@ -20,7 +20,7 @@ define([
 				for element in $('[data-path]', parent)
 					path = $(element).attr 'data-path'
 					label = Labels.get dataset.type, path
-					title = if path then "Comment '#{label}'" else 'Comment data set'
+					title = if path and path isnt 'null' then "Comment '#{label}'" else 'Comment data set'
 					visible = (LocalStorage.getValue('reviewMode') and @canComment) or comments[path]
 					style = if visible then '' else 'style="display:none" '
 					highlight = comments[path]
@@ -148,7 +148,7 @@ define([
 				'.new-comment-wrapper .change-visibility a[data-role]': (event) => @onChangeVisibility event
 			@renderData.clickEvents = clickEvents
 			comments = @sortAndFilter @comments[path]
-			if path
+			if path and path isnt 'null'
 				field = Labels.get dataset.type, path
 			buttons = []
 			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
@@ -222,13 +222,12 @@ define([
 			text = $('.modal #new-comment').val()
 			unless text
 				return
-			if path is 'null'
-				path = ''
+			fieldPath = if path is 'null' then '' else path
 			$.ajax
 				type: if @edit then 'PUT' else 'POST'
 				url: if @edit then "ws/comment/#{@edit}" else @getUrl(dataset) + '/' + dataset.commitId
 				contentType: 'application/json'
-				data: JSON.stringify({path: path, text: text, replyTo: @replyTo, restrictedToRole: @role})
+				data: JSON.stringify({path: fieldPath, text: text, replyTo: @replyTo, restrictedToRole: @role})
 				success: (comment) => 
 					if @edit
 						@updateComment comment.id, comment

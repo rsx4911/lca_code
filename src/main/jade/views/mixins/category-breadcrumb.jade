@@ -1,5 +1,5 @@
 mixin category-breadcrumb(baseUrl, path, linkLast, depth)
-	ol.breadcrumb
+	ol.breadcrumb&attributes(attributes)
 		if path
 			- var paths = path.split('/');
 			- var link = baseUrl;
