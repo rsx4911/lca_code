@@ -41,14 +41,14 @@ mixin header()
 		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
 		div
 			h3(data-path='name')=dataset.name
-			.category(data-path='category')
+			.category
 				- var url = null;
 				- var path = null;
 				if dataset.category
 					- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
 					- url = baseUrl + 's' + '/' + typeLabel;
 					- path = dataset.category.name;
-				+category-breadcrumb(url, path, true)
+				+category-breadcrumb(url, path, true)(data-path='category')
 			h3: small: span(data-path='description'): +long-text(dataset.description, 500)
 	block
 	if !isPublic
@@ -110,7 +110,7 @@ mixin ref-row(path, additionalTypeInfo)
 	if getValue(dataset, path) || reviewMode
 		tr
 			td=getLabel(path)
-			td: +ref(path, additionalTypeInfo)
+			td(data-path=path): +ref(path, additionalTypeInfo)
 
 mixin uncertainty(uncertainty, round)
 	if uncertainty

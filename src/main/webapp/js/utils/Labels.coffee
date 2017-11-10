@@ -2,9 +2,9 @@ define () ->
 
 	map: 
 		'id': 'UUID'
-		'telephone': 'Phone'
-		'telefax': 'Fax'
 		'url': 'URL'
+		'email': 'e-mail'
+		'cas': 'CAS number'
 		'externalFile': 'File'
 		'inputParameter': 'Type'
 		'referenceExchange.flow': 'Reference product'
@@ -24,6 +24,9 @@ define () ->
 		'processDocumentation.projectDescription': 'Project'
 		'dqSystem': 'Process data quality scheme'
 		'exchangeDqSystem': 'Input/Output data quality scheme'
+		'targetFlowProperty': 'Flow property'
+		'targetUnit': 'Unit'
+		'impactMethod': 'LCIA method'
 		'socialDqSystem': 'Social data quality scheme'
 		'exchanges.dqEntry': 'Data quality'
 		'exchanges.defaultProvider': 'Provider'
