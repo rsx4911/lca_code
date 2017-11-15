@@ -76,13 +76,17 @@ mixin meta()
 				div=dataset.id
 			block
 
-mixin field-row(path, showValue, checkValue, formatter, noDataPath, showLongText)
+mixin field-row(path, showValue, checkValue, formatter, noDataPathOrAlternative, showLongText)
 	- var value = showValue ? getValue(dataset, path) : null;
 	if !checkValue || value || reviewMode
 		tr
 			td=getLabel(path)
 			- value = formatter?formatter(value):value;
-			td(data-path=noDataPath?null:path)
+			// if noDataOrAlternative is true then no path
+			// if noDataOrAlternative is false or null then 'path'
+			// otherwise noDataOrAlternative is the alternative path
+			// TODO refactor
+			td(data-path=noDataPathOrAlternative===true?null:noDataPathOrAlternative?noDataPathOrAlternative:path)
 				if showLongText
 					| #{value}
 				else
@@ -90,11 +94,11 @@ mixin field-row(path, showValue, checkValue, formatter, noDataPath, showLongText
 				block
 
 mixin simple-ref(value)
-	+_ref(value)
+	+_ref(value)&attributes(attributes)
 
 mixin ref(path, additionalTypeInfo, defaultLabel)
 	- var value = getValue(dataset, path);
-	+_ref(value, additionalTypeInfo, defaultLabel)
+	+_ref(value, additionalTypeInfo, defaultLabel)&attributes(attributes)
 
 mixin _ref(ref, additionalTypeInfo, defaultLabel)
 	span&attributes(attributes)

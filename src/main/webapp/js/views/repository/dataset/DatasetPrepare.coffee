@@ -101,7 +101,7 @@ define([
 				unless variant.parameterRedefs
 					continue
 				for param, pIndex in variant.parameterRedefs
-					contextId = 'Global'
+					contextId = 'global'
 					if param.context
 						contextId = param.context.id
 					p = parameters[contextId + param.name]
@@ -109,9 +109,10 @@ define([
 						p = {name: param.name, context: param.context, values: {}}
 						p.path = 'variants[' + vIndex + '].parameterRedefs[' + pIndex + ']'
 						contextId = if param.context then param.context.id else 'global'
-						p.commentPath = 'variants[' + variant.productSystem.id + '-' + variant.name + '].parameterRedefs[' + contextId + '-' + param.name + ']'
 						parameters[contextId + param.name] = p
-					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: p.path + '.value'}
+					commentPath = 'variants[' + variant.productSystem.id + '-' + variant.name + '].parameterRedefs[' + contextId + '-' + param.name + ']'
+					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: p.path + '.value', commentPath: commentPath}
+			console.log parameters
 			dataset.parameterRedefs = []
 			for key in Object.keys(parameters)
 				p = parameters[key]
@@ -123,5 +124,6 @@ define([
 					values.push p.values[key2]
 				p.values = values
 				dataset.parameterRedefs.push p
+			console.log dataset.parameterRedefs
 
 )

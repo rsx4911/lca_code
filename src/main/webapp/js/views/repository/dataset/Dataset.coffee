@@ -141,8 +141,8 @@ define([
 				'click a[data-action=show-data-quality]': 'showDataQuality'
 				'click .maximize-content > a': 'maximizeContent'
 				'change #commitId': 'switchCommit'
-				'change #impact-category': (event) -> ImpactMethod.initCategory @createModelForImpactMethod () => @$('#impact-factors').trigger('update')
-				'change #nw-set': (event) -> ImpactMethod.initNwSet @createModelForImpactMethod () => @$('#nw-factors').trigger('update')
+				'change #impact-category': (event) -> ImpactMethod.initCategory @createModelForImpactMethod() 
+				'change #nw-set': (event) -> ImpactMethod.initNwSet @createModelForImpactMethod()
 				'click [href=#process-graph]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
 				'click [href=#process-tree]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
 
@@ -197,17 +197,16 @@ define([
 							Location.initMap @dataset
 						if dataset.type is 'Flow'
 							Flow.init @repository, @refId, @commitId
-						if dataset.type is 'ImpactMethod'
-							ImpactMethod.initCategory @createModelForImpactMethod () =>
-								@initTableSorting()
-								@initComments()
-						else
-							@initTableSorting()
-							@initComments()
 						if dataset.type is 'DQSystem'
-							@DQSystem.init @dataset
+							DQSystem.init @dataset
+						if dataset.type is 'ImpactMethod'
+							imModel = @createModelForImpactMethod()
+							ImpactMethod.initCategory imModel
+							ImpactMethod.initNwSet imModel
+						@initTableSorting()
+						@initComments true
 
-			createModelForImpactMethod: (callback) ->
+			createModelForImpactMethod: () ->
 				return {
 					repository: @repository
 					commitId: @commitId or @commits?[0]?.id
@@ -216,11 +215,15 @@ define([
 					getUrlPart: (modelType, refId) => @getUrlPart modelType, refId
 					getValue: (object, path) => return @getValue object, path
 					getTypeAsEnum: (type) => return @getTypeAsEnum type
-					callback: callback
+					initTableSorting: (table) => @initTableSorting table
+					initComments: (container) => @initComments container
 				}
 
-			initTableSorting: () ->
-				tables = @$('table:not(.no-head)')
+			initTableSorting: (table) ->
+				if table
+					tables = [$(table)]
+				else
+					tables = @$('table:not(.no-head)')
 				for table in tables
 					options = {headers: {}}
 					for th, index in $('thead > tr > th', table)
@@ -228,13 +231,14 @@ define([
 							options.headers[index] = {sorter: false}
 					$(table).tablesorter options
 
-			initComments: () ->
+			initComments: (loadComments) ->
 				Comments.init @$el, 
 					repository: @repository, 
 					type: @type, 
 					refId: @refId, 
 					commitId: @commitId
 					commentPath: @commentPath
+					loadComments: loadComments
 
 			getSpecificTypeLabel: (type, value) ->
 				switch type 

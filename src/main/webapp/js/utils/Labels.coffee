@@ -26,6 +26,7 @@ define () ->
 		'exchangeDqSystem': 'Input/Output data quality scheme'
 		'targetFlowProperty': 'Flow property'
 		'targetUnit': 'Unit'
+		'referenceExchange.name': 'Reference product'
 		'impactMethod': 'LCIA method'
 		'socialDqSystem': 'Social data quality scheme'
 		'exchanges.dqEntry': 'Data quality'

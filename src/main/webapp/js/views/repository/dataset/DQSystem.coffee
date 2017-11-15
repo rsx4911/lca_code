@@ -1,7 +1,8 @@
 define([
+				'cs!utils/Events'
 				'cs!utils/Layers'
 			]
-	(Layers) ->
+	(Events, Layers) ->
 
 		init: (dataset) ->
 			$('table.data-quality td').on 'click', (event) ->

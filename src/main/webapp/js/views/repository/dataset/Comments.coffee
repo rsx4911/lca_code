@@ -12,21 +12,21 @@ define([
 
 	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, Actions, currentUser) ->
 
-		init: (parent, dataset, callback) ->
+		init: (parent, options) ->
 			unless currentUser.isLoggedIn()
-				callback?()
 				return
-			@loadComments dataset, (comments) =>
+			@loadComments options, () =>
 				for element in $('[data-path]', parent)
 					path = $(element).attr 'data-path'
-					label = Labels.get dataset.type, path
+					label = Labels.get options.type, path
 					title = if path and path isnt 'null' then "Comment '#{label}'" else 'Comment data set'
-					visible = (LocalStorage.getValue('reviewMode') and @canComment) or comments[path]
+					visible = (LocalStorage.getValue('reviewMode') and @canComment) or @comments[path]
 					style = if visible then '' else 'style="display:none" '
-					highlight = comments[path]
-					$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
-				@comments = comments
-				$('[data-path] [data-action=comment]', parent).on 'click', (event) => 
+					highlight = @comments[path]
+					unless $('img[data-action=comment]', element).length
+						$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
+				$('[data-path] [data-action=comment]', parent).off 'click.comment'
+				$('[data-path] [data-action=comment]', parent).on 'click.comment', (event) => 
 					Events.preventDefault event
 					target = $ Events.target event
 					while !target.attr('data-path') and !target.is('body')
@@ -36,8 +36,8 @@ define([
 					path = target.attr 'data-path'
 					unless @comments[path]
 						@comments[path] = []
-					@showComments dataset, path
-				@openComment dataset.commentPath
+					@showComments options, path
+				@openComment options.commentPath
 
 		openComment: (path) ->
 			unless path
@@ -71,27 +71,31 @@ define([
 				fragment += part
 			Router.navigate fragment, {trigger: false, replace: true}
 
-		loadComments: (dataset, callback) ->
+		loadComments: (options, callback) ->
+			unless options.loadComments
+				if @comments and Object.keys(@comments).length
+					callback()
+				return
+			@comments = {}
 			$.ajax 
 				type: 'GET'
-				url: @getUrl(dataset)
+				url: @getUrl(options)
 				success: (data) =>
 					@canComment = data.canComment
 					@canApprove = data.canApprove
-					map = {}
 					for comment in data.comments
 						path = comment.field.path
 						unless path
 							path = 'null'
-						unless map[path]
-							map[path] = []
-						map[path].push comment
-					callback map
+						unless @comments[path]
+							@comments[path] = []
+						@comments[path].push comment
+					callback()
 
-		getUrl: (dataset) ->
-			group = dataset.repository.get 'group'
-			name = dataset.repository.get 'name'
-			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}"
+		getUrl: (options) ->
+			group = options.repository.get 'group'
+			name = options.repository.get 'name'
+			return "ws/comment/#{group}/#{name}/#{options.type}/#{options.refId}"
 
 		onEdit: (event) ->
 			Events.preventDefault event
@@ -137,7 +141,7 @@ define([
 				visibility.attr 'title', 'Visible to everybody'
 			$('.dropdown.open > a').click()
 
-		showComments: (dataset, path) ->
+		showComments: (options, path) ->
 			@renderData = {canComment: @canComment, canApprove: @canApprove, canEdit: true, roles: Roles.getAll(), callback: (commentId, comment) => @updateComment commentId, comment}
 			clickEvents = 
 				'.edit': (event) => @onEdit event
@@ -149,11 +153,11 @@ define([
 			@renderData.clickEvents = clickEvents
 			comments = @sortAndFilter @comments[path]
 			if path and path isnt 'null'
-				field = Labels.get dataset.type, path
+				field = Labels.get options.type, path
 			buttons = []
 			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
 			if @canComment
-				buttons.push {text: 'Add comment', className: 'btn-success', callback: => @addComment dataset, path}
+				buttons.push {text: 'Add comment', className: 'btn-success', callback: => @addComment options, path}
 			Layers.showTemplateInLayer
 				title: if field then "Comments on '#{field}'" else 'Comments on data set'
 				template: 'repository/dataset/comment-layer'
@@ -173,6 +177,7 @@ define([
 					@initSubMenues()
 					for key in Object.keys(clickEvents)
 						$('.modal ' + key).on 'click', clickEvents[key]
+					$('#new-comment').focus()
 
 		initSubMenues: () ->
 			$('.modal .dropdown > .dropdown-menu > li').mouseenter (event) ->
@@ -218,14 +223,14 @@ define([
 				$(".modal .comment-entry[data-comment-id=#{activeId}]").append textarea
 			return activeId
 
-		addComment: (dataset, path) ->
+		addComment: (options, path) ->
 			text = $('.modal #new-comment').val()
 			unless text
 				return
 			fieldPath = if path is 'null' then '' else path
 			$.ajax
 				type: if @edit then 'PUT' else 'POST'
-				url: if @edit then "ws/comment/#{@edit}" else @getUrl(dataset) + '/' + dataset.commitId
+				url: if @edit then "ws/comment/#{@edit}" else @getUrl(options) + '/' + options.commitId
 				contentType: 'application/json'
 				data: JSON.stringify({path: fieldPath, text: text, replyTo: @replyTo, restrictedToRole: @role})
 				success: (comment) => 

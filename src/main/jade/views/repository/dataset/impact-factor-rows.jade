@@ -15,4 +15,4 @@ if dataset.impactFactors
 					| #{factor.formula} #{unit} = 
 				span #{factor.value} #{unit}
 			td: +uncertainty(factor.uncertainty)
-			td(data-path='impactFactors[' + factor.flow.id + ']')
+			td(data-path='impactCategories[' + dataset.id + '].impactFactors[' + factor.flow.id + ']')

@@ -54,12 +54,11 @@ include ./mixins.jade
 													else
 														span Global
 												each entry in parameter.values
-													td=entry.value
-												td(data-path=parameter.commentPath)
+													td(data-path=entry.commentPath)=entry.value
 	+meta
 		hr
 		strong=getLabel('impactMethod')
-		div: +ref('impactMethod', null, '-')
+		div: +ref('impactMethod', null, '-')(data-path='impactMethod')
 		strong=getLabel('nwSet')
 		div(data-path='nwSet')=dataset.nwSet?dataset.nwSet.name:'-'
 	.clear

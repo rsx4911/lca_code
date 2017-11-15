@@ -14,5 +14,5 @@ include ./mixins.jade
 	+meta
 		hr
 		strong=getLabel('source')
-		div: +ref('source', null, '-')
+		div: +ref('source', null, '-')(data-path='source')
 	.clear

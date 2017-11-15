@@ -1,6 +1,7 @@
 include ./mixins.jade
 
 mixin impact-category-selection()
+	#impact-category-comment-container
 	+select('impact-category', 'Impact category')
 		if dataset.impactCategories
 			each ic in dataset.impactCategories
@@ -10,7 +11,8 @@ mixin impact-category-selection()
 	span#impact-category-unit
 
 mixin impact-factor-table()
-	h4(data-path='impactFactors') Impact factors
+	h4 Impact factors
+		span#impact-factors-comment-container
 	table#impact-factors.table
 		thead
 			tr
@@ -27,7 +29,8 @@ mixin nw-set-selection()
 			option(id=set.id) #{set.name}
 
 mixin nw-factor-table()
-	h4(data-path='factors') Normalization and weighting factors
+	h4 Normalization and weighting factors
+		span#nw-factors-comment-container
 	table#nw-factors.table
 		thead
 			tr
@@ -44,7 +47,7 @@ mixin nw-factor-table()
 		.content
 			ul.nav.nav-tabs(role='tablist')
 				li.active(role='presentation') 
-					a(href='#categories' aria-controls='categories' role='tab' data-toggle='tab' data-path='impactCategories') Impact factors
+					a(href='#categories' aria-controls='categories' role='tab' data-toggle='tab' data-path='impactCategories') Impact categories
 				if (dataset.nwSets && dataset.nwSets.length) || reviewMode
 					li(role='presentation') 
 						a(href='#nwsets' aria-controls='nwsets' role='tab' data-toggle='tab' data-path='nwSets') Normalization and weighting
@@ -62,7 +65,7 @@ mixin nw-factor-table()
 						if dataset.nwSets && dataset.nwSets.length
 							+nw-set-selection
 							| Reference unit: 
-							span#nw-set-unit(data-path='weightedScoreUnit')
+							span#nw-set-unit
 							if dataset.nwSets && dataset.nwSets.length
 								hr
 								+nw-factor-table

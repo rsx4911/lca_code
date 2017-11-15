@@ -23,11 +23,15 @@ include ./mixins.jade
 						tbody
 							+ref-row('referenceProcess')
 							if dataset.referenceExchange || reviewMode
-								+ref-row('referenceExchange.flow', 'PRODUCT_FLOW')
+								+field-row('referenceExchange.name', true, false, null, 'referenceExchange')
 							+ref-row('targetFlowProperty')
-							if dataset.targetUnit || reviewMode
-								+field-row('targetUnit.name', true, true)
-							+field-row('targetAmount', true, true)
+							tr
+								td=getLabel('targetAmount')
+								td 
+									span(data-path='targetAmount')=dataset.targetAmount
+									if dataset.targetUnit || reviewMode
+										|  
+										span(data-path='targetUnit')=dataset.targetUnit.name
 				if dataset.processLinks && dataset.processLinks.length
 					#process-tree.tab-pane(role='tabpanel')
 						#process-tree-container

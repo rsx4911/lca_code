@@ -68,9 +68,9 @@ mixin labeled-ref(path)
 								+field-row('processDocumentation.restrictionsDescription', true, true)
 								+field-row('processDocumentation.projectDescription', true, true)
 								+field-row('processDocumentation.creationDate', true, true, formatDate)
-								+field-row('copyright')
+								+field-row('processDocumentation.copyright')
 									span
-										img.icon-small(src='images/check_' + (dataset.copyright?'true':'false') + '.png')
+										img.icon-small(src='images/check_' + (doc.copyright?'true':'false') + '.png')
 								+field-row('processDocumentation.inventoryMethodDescription', true, true)
 								+field-row('processDocumentation.modelingConstantsDescription', true, true)
 								+field-row('processDocumentation.completenessDescription', true, true)
@@ -79,7 +79,7 @@ mixin labeled-ref(path)
 								+field-row('processDocumentation.samplingDescription', true, true)
 								+field-row('processDocumentation.dataCollectionDescription', true, true)
 								if (doc && doc.sources) || reviewMode
-									+field-row('sources')
+									+field-row('processDocumentation.sources')
 										span
 											if doc && doc.sources
 												each source, index in doc.sources
@@ -111,6 +111,11 @@ mixin labeled-ref(path)
 						- eIndex = index;
 			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, '-')
 		+labeled-ref('location')
+		- var typeFormat = function(value) {return value==='LCI_RESULT'?'System process':'Unit process'};
+		+labeled-field('processType', typeFormat)
+		strong=getLabel('infrastructureProcess')
+		div(data-path='infrastructureProcess')
+			img.icon-small(src='images/check_' + (dataset.infrastructureProcess?'true':'false') + '.png')
 		hr
 		+labeled-field('processDocumentation.validFrom', formatDate, '-')
 		+labeled-field('processDocumentation.validUntil', formatDate, '-')
