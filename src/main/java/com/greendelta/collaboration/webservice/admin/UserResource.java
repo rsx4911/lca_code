@@ -67,7 +67,7 @@ public class UserResource {
 		for (Notification notification : Notification.values())
 			user.enable(notification);
 		user = service.insert(user);
-		groupService.create(username);
+		groupService.create(username, true);
 		notificationService.userCreated(user, password).send();
 		return Respond.created(Users.mapForSelf(user));
 	}

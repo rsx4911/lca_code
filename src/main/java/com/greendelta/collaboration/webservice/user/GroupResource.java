@@ -65,7 +65,7 @@ public class GroupResource {
 			String message = "Group " + name + " already exists";
 			return Respond.conflict(message);
 		}
-		service.create(name);
+		service.create(name, false);
 		notificationService.groupCreated(name).send();
 		return Respond.created(Collections.singletonMap("name", name));
 	}
