@@ -30,7 +30,7 @@ public class CommentService {
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
 		if (filter != null) {
-			jpql += " AND c.text LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND c1.text LIKE :filter) > 0";
+			jpql += " AND (c.text LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND c1.text LIKE :filter) > 0)";
 			attributes.put("filter", "%" + filter + "%");
 		}
 		jpql += " ORDER BY c.date DESC";
