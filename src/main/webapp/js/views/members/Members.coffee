@@ -138,7 +138,8 @@ define([
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "ws/membership/#{name}/NULL?filter=#{filter}"
+						noPaging: true
+						url: () -> "ws/membership/#{name}/null?"
 				else if options.repository
 					@repository = options.repository
 					group = options.repository.get 'group'
@@ -149,14 +150,16 @@ define([
 						container: '#repository-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "ws/membership/#{group}/#{name}?filter=#{filter}"
+						noPaging: true
+						url: () -> "ws/membership/#{group}/#{name}?"
 					@filter2 = new Filter
 						type: 'group-members'
 						beforeRender: (result, type) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "ws/membership/#{group}/NULL?filter=#{filter}"
+						noPaging: true
+						url: () -> "ws/membership/#{group}/null?"
 
 			render: (renderOptions) ->
 				showRepositoryMembers = false
