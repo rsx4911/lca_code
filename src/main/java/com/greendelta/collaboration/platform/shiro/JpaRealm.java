@@ -29,9 +29,9 @@ public class JpaRealm extends AuthorizingRealm {
 		HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher(Sha256Hash.ALGORITHM_NAME);
 		credentialsMatcher.setHashIterations(50);
 		setCredentialsMatcher(credentialsMatcher);
-		setCachingEnabled(true);
-		setAuthenticationCachingEnabled(true);
-		setAuthorizationCachingEnabled(true);
+		setCachingEnabled(false);
+		setAuthenticationCachingEnabled(false);
+		setAuthorizationCachingEnabled(false);
 		log.info("Successfully constructed jpa-realm");
 	}
 

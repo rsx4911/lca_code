@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import javax.persistence.EntityManager;
-
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,15 +31,12 @@ public class UserService {
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
 	private final String servername;
-	private final Provider<EntityManager> entityManagerProvider;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server,
-			Provider<EntityManager> entityManagerProvider) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.servername = server;
-		this.entityManagerProvider = entityManagerProvider;
 	}
 
 	public User getForUsername(String username) {
@@ -161,10 +156,6 @@ public class UserService {
 
 	public User update(User user) {
 		return dao.update(user);
-	}
-
-	public void clearCache() {
-		entityManagerProvider.get().getEntityManagerFactory().getCache().evict(User.class);
 	}
 
 	public boolean logout() {

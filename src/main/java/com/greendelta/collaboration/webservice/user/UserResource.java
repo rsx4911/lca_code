@@ -142,7 +142,6 @@ public class UserResource {
 			return Respond.notFound();
 		service.setPassword(user, password);
 		service.update(user);
-		service.clearCache();
 		return Respond.ok(new HashMap<>());
 	}
 
