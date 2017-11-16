@@ -8,20 +8,22 @@ if isRoot
 			span.text Download Zip
 		.clear
 else
-	.header-box
-		if !isPublic
-			.pull-left
-				+select('commit', 'Version', null, null, true)
-					each commit, index in commits
-						option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId)=index===0?'Latest':commit.id 
-						optgroup.additional-info(label!='&nbsp; &nbsp;' + commit.message)
-			.pull-right
-				+checkbox('show-deleted', 'Show deleted')(checked=showDeleted)
-		.clear
-		if categoryPath
-			.form-group
-				input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
+	- var showCommitSelection = !isPublic && commits && commits.length;
+	if showCommitSelection || categoryPath
+		.header-box
+			if showCommitSelection
+				.pull-left
+					+select('commit', 'Version', null, null, true)
+						each commit, index in commits
+							option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId)=index===0?'Latest':commit.id 
+							optgroup.additional-info(label!='&nbsp; &nbsp;' + commit.message)
+				.pull-right
+					+checkbox('show-deleted', 'Show deleted')(checked=showDeleted)
 			.clear
+			if categoryPath
+				.form-group
+					input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
+				.clear
 	.header-box
 		if deleted
 			.pull-left
