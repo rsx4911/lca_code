@@ -16,8 +16,11 @@ define([
 			unless currentUser.isLoggedIn()
 				return
 			@loadComments options, () =>
+				found = []
 				for element in $('[data-path]', parent)
 					path = $(element).attr 'data-path'
+					if @comments[path]
+						found.push path
 					label = Labels.get options.type, path
 					title = if path and path isnt 'null' then "Comment '#{label}'" else 'Comment data set'
 					visible = (LocalStorage.getValue('reviewMode') and @canComment) or @comments[path]
@@ -38,6 +41,9 @@ define([
 						@comments[path] = []
 					@showComments options, path
 				@openComment options.commentPath
+				for key in Object.keys(@comments)
+					if $.inArray(key, found) is -1
+						console.log 'Unknown path: ' + key
 
 		openComment: (path) ->
 			unless path
