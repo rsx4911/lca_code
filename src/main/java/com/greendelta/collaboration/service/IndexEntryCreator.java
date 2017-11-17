@@ -55,7 +55,7 @@ class IndexEntryCreator {
 		} else {
 			entry = generic(dataset);
 		}
-		if (previousAction == IndexAction.DELETE) {
+		if (previousAction == IndexAction.DELETE || previousAction == null) {
 			entry.action = IndexAction.ADD;
 		} else {
 			entry.action = IndexAction.UPDATE;
