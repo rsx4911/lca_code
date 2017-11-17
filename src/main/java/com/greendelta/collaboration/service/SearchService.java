@@ -213,11 +213,6 @@ public class SearchService {
 		client.index(contentsByIdByType);
 	}
 
-	public void index(IndexEntry entry) {
-		ObjectMap content = toMap(entry);
-		client.index(entry.type.name().toLowerCase(), entry.toIndexId(), content);
-	}
-
 	private ObjectMap toMap(IndexEntry entry) {
 		setDummyCategoryId(entry);
 		ObjectMap map = ObjectMap.fromObject(entry);
