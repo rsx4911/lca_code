@@ -35,7 +35,8 @@ define([
 					Avatar.save 'user', @user.get('username')
 
 			initialize: (options) ->
-				{@user, @adminArea} = options
+				if options
+					{@user, @adminArea} = options
 				unless @user
 					@user = new User currentUser.toJSON()
 

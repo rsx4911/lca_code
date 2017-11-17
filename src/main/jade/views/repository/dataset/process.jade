@@ -70,7 +70,7 @@ mixin labeled-ref(path)
 								+field-row('processDocumentation.creationDate', true, true, formatDate)
 								+field-row('processDocumentation.copyright')
 									span
-										img.icon-small(src='images/check_' + (doc.copyright?'true':'false') + '.png')
+										img.icon-small(src='images/check_' + (doc && doc.copyright?'true':'false') + '.png')
 								+field-row('processDocumentation.inventoryMethodDescription', true, true)
 								+field-row('processDocumentation.modelingConstantsDescription', true, true)
 								+field-row('processDocumentation.completenessDescription', true, true)
@@ -116,24 +116,27 @@ mixin labeled-ref(path)
 		strong=getLabel('infrastructureProcess')
 		div(data-path='infrastructureProcess')
 			img.icon-small(src='images/check_' + (dataset.infrastructureProcess?'true':'false') + '.png')
-		hr
-		+labeled-field('processDocumentation.validFrom', formatDate, '-')
-		+labeled-field('processDocumentation.validUntil', formatDate, '-')
-		hr
-		+labeled-field('processDocumentation.timeDescription', null, '-', true)
-		+labeled-field('processDocumentation.geographyDescription', null, '-', true)
-		+labeled-field('processDocumentation.technologyDescription', null, '-', true)
-		hr
-		+labeled-ref('dqSystem')
-		+labeled-ref('exchangeDqSystem')
-		+labeled-ref('socialDqSystem')
-		strong=getLabel('dqEntry')
-		div
-			if dataset.dqEntry
-				if dataset.dqSystem
-					a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-scheme=dataset.dqSystem.id data-path='dqEntry')=dataset.dqEntry
+		if (doc && (doc.validFrom || doc.validUntil)) || reviewMode
+			hr
+			+labeled-field('processDocumentation.validFrom', formatDate, '-')
+			+labeled-field('processDocumentation.validUntil', formatDate, '-')
+		if (doc && (doc.timeDescription || doc.geographyDescription || doc.technologyDescription)) || reviewMode
+			hr
+			+labeled-field('processDocumentation.timeDescription', null, '-', true)
+			+labeled-field('processDocumentation.geographyDescription', null, '-', true)
+			+labeled-field('processDocumentation.technologyDescription', null, '-', true)
+		if dataset.dqSystem || dataset.dqEntry || dataset.exchangeDqSystem || dataset.socialDqSystem || reviewMode
+			hr
+			+labeled-ref('dqSystem')
+			+labeled-ref('exchangeDqSystem')
+			+labeled-ref('socialDqSystem')
+			strong=getLabel('dqEntry')
+			div
+				if dataset.dqEntry
+					if dataset.dqSystem
+						a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-scheme=dataset.dqSystem.id data-path='dqEntry')=dataset.dqEntry
+					else
+						span(data-path='dqEntry')=dataset.dqEntry
 				else
-					span(data-path='dqEntry')=dataset.dqEntry
-			else
-				span(data-path='dqEntry') -
+					span(data-path='dqEntry') -
 	.clear

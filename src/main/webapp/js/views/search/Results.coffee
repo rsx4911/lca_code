@@ -19,19 +19,20 @@ define([
 
 			initialize: (options) ->
 				@aggregations = {}
-				for option in Object.keys(options)	
-					if option is 'query'
-						@query = options[option]
-					else if option is 'page'
-						@page = options[option]
-					else if option is 'pageSize'
-						@pageSize = options[option]
-					else
-						values = options[option]
-						if $.isArray(values)
-							@aggregations[option] = values							
+				if options
+					for option in Object.keys(options)	
+						if option is 'query'
+							@query = options[option]
+						else if option is 'page'
+							@page = options[option]
+						else if option is 'pageSize'
+							@pageSize = options[option]
 						else
-							@aggregations[option] = [values]
+							values = options[option]
+							if $.isArray(values)
+								@aggregations[option] = values							
+							else
+								@aggregations[option] = [values]
 
 			render: (renderOptions) ->
 				url = @getUrlPart 'ws/public/search?', @query, @page, @pageSize, @aggregations
