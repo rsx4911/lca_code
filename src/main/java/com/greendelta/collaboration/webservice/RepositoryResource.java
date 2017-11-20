@@ -44,7 +44,8 @@ public class RepositoryResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
-		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group, repo.publicAccess));
+		Map<String, Object> mappedRepo = Repositories.map(repo,
+				groupService.isUserNamespace(group, repo.settings.publicAccess));
 		return Respond.ok(mappedRepo);
 	}
 

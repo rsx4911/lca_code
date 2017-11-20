@@ -144,14 +144,15 @@ public class RepositoryResource {
 	}
 
 	@PUT
-	@Path("public/{group}/{name}/{value}")
-	public Response togglePublicAccess(
+	@Path("settings/{group}/{name}/{setting}/{value}")
+	public Response toggleSetting(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
+			@PathParam("setting") String setting,
 			@PathParam("value") boolean value) {
 		Repository repo = service.get(group, name);
-		boolean isPublic = service.setPublic(repo, value);
-		return Respond.ok(java.util.Collections.singletonMap("public", isPublic));
+		service.setSetting(repo, setting, value);
+		return Respond.ok(new HashMap<>());
 	}
 
 	@GET
@@ -167,7 +168,7 @@ public class RepositoryResource {
 		mappedRepo.put("userCanMove", accessService.canMove(id));
 		mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
 		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(id));
-		mappedRepo.put("userCanSetPublic", accessService.canSetPublic(id));
+		mappedRepo.put("userCanSetSettings", accessService.canSetSettings(id));
 		return Respond.ok(mappedRepo);
 	}
 

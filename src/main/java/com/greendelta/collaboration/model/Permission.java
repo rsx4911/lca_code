@@ -20,6 +20,6 @@ public enum Permission {
 
 	MANAGE_TASK,
 
-	SET_PUBLIC;
+	SET_SETTINGS;
 
 }

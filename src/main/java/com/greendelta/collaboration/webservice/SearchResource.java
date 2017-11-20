@@ -76,8 +76,7 @@ public class SearchResource {
 		if (Strings.isNullOrEmpty(repositoryId)) {
 			repos = repoService.getAllAccessible();
 		} else {
-			String[] repo = repositoryId.split("/");
-			repos = Collections.singletonList(repoService.get(repo[0], repo[1]));
+			repos = Collections.singletonList(repoService.get(repositoryId));
 		}
 		if (repos.isEmpty())
 			return false;

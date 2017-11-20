@@ -11,6 +11,7 @@ include ../mixins/avatar-box.jade
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
-	+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetPublic)
+	+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings checked=repository.settings.publicAccess data-setting='publicAccess')
+	+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings checked=repository.settings.commentApproval data-setting='commentApproval')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)

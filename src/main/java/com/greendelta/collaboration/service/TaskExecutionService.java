@@ -4,11 +4,9 @@ import java.util.Calendar;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.cloud.error.ServerException;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 
-import com.google.common.base.Strings;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -30,7 +28,7 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public void start(T task) {
-		Repository repo = getRepository(task.repositoryPath);
+		Repository repo = repoService.get(task.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		if (!task.assignments.isEmpty() || task.hasId())
@@ -44,7 +42,7 @@ public abstract class TaskExecutionService<T extends Task> {
 
 	public void merge(T task) {
 		T fromDb = get(task.getId());
-		Repository repo = getRepository(fromDb.repositoryPath);
+		Repository repo = repoService.get(fromDb.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		fromDb.name = task.name;
@@ -54,7 +52,7 @@ public abstract class TaskExecutionService<T extends Task> {
 
 	public TaskAssignment startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
 		User user = userService.getForUsername(username);
-		Repository repo = getRepository(task.repositoryPath);
+		Repository repo = repoService.get(task.repositoryPath);
 		if (!accessCheck.canBeAssigned(user, repo))
 			throw new UnauthorizedAccessException(repo.toId(), task.getClass().getSimpleName().toUpperCase());
 		if (!accessService.canManageTaskIn(repo.toId()))
@@ -82,7 +80,7 @@ public abstract class TaskExecutionService<T extends Task> {
 			throw new ServerException(Status.CONFLICT, "Task is not in process state");
 		User user = userService.getForUsername(username);
 		User currentUser = userService.getCurrentUser();
-		Repository repo = getRepository(task.repositoryPath);
+		Repository repo = repoService.get(task.repositoryPath);
 		if (!user.equals(currentUser) && !accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		TaskAssignment assignment = null;
@@ -109,7 +107,7 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public void end(T task, TaskState state) {
-		Repository repo = getRepository(task.repositoryPath);
+		Repository repo = repoService.get(task.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		task.state = state;
@@ -120,15 +118,6 @@ public abstract class TaskExecutionService<T extends Task> {
 			assignment.endedBy = currentUser;
 		}
 		update(task);
-	}
-
-	protected Repository getRepository(String path) {
-		if (Strings.isNullOrEmpty(path))
-			throw new RepositoryNotFoundException("");
-		if (!path.contains("/"))
-			throw new RepositoryNotFoundException(path);
-		String[] split = path.split("/");
-		return repoService.get(split[0], split[1]);
 	}
 
 	public T get(long id) {

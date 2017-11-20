@@ -164,6 +164,7 @@ define([
 			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
 			if @canComment
 				buttons.push {text: 'Add comment', className: 'btn-success', callback: => @addComment options, path}
+				buttons.push {text: 'Add and release comment', className: 'btn-success', callback: => @addComment options, path, true}
 			Layers.showTemplateInLayer
 				title: if field then "Comments on '#{field}'" else 'Comments on data set'
 				template: 'repository/dataset/comment-layer'
@@ -229,7 +230,7 @@ define([
 				$(".modal .comment-entry[data-comment-id=#{activeId}]").append textarea
 			return activeId
 
-		addComment: (options, path) ->
+		addComment: (options, path, release) ->
 			text = $('.modal #new-comment').val()
 			unless text
 				return
@@ -238,7 +239,7 @@ define([
 				type: if @edit then 'PUT' else 'POST'
 				url: if @edit then "ws/comment/#{@edit}" else @getUrl(options) + '/' + options.commitId
 				contentType: 'application/json'
-				data: JSON.stringify({path: fieldPath, text: text, replyTo: @replyTo, restrictedToRole: @role})
+				data: JSON.stringify({path: fieldPath, text: text, replyTo: @replyTo, restrictedToRole: @role, released: release})
 				success: (comment) => 
 					if @edit
 						@updateComment comment.id, comment

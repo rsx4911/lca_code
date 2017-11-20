@@ -22,7 +22,7 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'repository', @repository.get('group') + '/' + @repository.get('name')
-				'change input#publicAccess': 'togglePublicAccess'
+				'change [data-setting]': 'toggleSetting'
 				'click [data-action=delete-repository]': 'deleteRepository'
 				'click [data-action=clone-repository]': 'openCloneLayer'
 				'click [data-action=move-repository]': 'openMoveLayer'
@@ -34,18 +34,18 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
-				@$('#publicAccess').prop('checked', repository.publicAccess);
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 
-			togglePublicAccess: (event) ->
+			toggleSetting: (event) ->
 				target = $ Events.target event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
+				setting = target.attr 'data-setting'
 				value = target.is ':checked'
 				$.ajax
 					type: 'PUT'
-					url: "ws/repository/public/#{fullPath}/#{value}"
+					url: "ws/repository/settings/#{fullPath}/#{setting}/#{value}"
 
 			deleteRepository: (event) ->
 				repository = @repository.toJSON()

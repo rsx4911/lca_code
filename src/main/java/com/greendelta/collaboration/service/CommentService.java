@@ -17,12 +17,15 @@ public class CommentService {
 	private final Dao<Comment> dao;
 	private final AccessService accessService;
 	private final UserService userService;
+	private final RepositoryService repoService;
 
 	@Inject
-	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService) {
+	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
+			RepositoryService repoService) {
 		this.dao = dao;
 		this.accessService = accessService;
 		this.userService = userService;
+		this.repoService = repoService;
 	}
 
 	public List<Comment> getAllTopSorted(Repository repository, String filter) {
@@ -105,6 +108,11 @@ public class CommentService {
 		}
 		if (accessService.canManageCommentsIn(comment.repositoryPath)) {
 			comment.approvedBy = currentUser;
+		} else {
+			Repository repo = repoService.get(comment.repositoryPath);
+			if (!repo.settings.commentApproval) {
+				comment.approvedBy = currentUser;
+			}
 		}
 		return dao.update(comment);
 	}

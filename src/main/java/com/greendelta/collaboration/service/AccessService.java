@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openlca.cloud.error.RepositoryNotFoundException;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
@@ -49,8 +51,8 @@ public class AccessService {
 		return hasPermissionTo(Permission.WRITE, groupOrRepo);
 	}
 
-	public boolean canSetPublic(String groupOrRepo) {
-		return hasPermissionTo(Permission.SET_PUBLIC, groupOrRepo);
+	public boolean canSetSettings(String groupOrRepo) {
+		return hasPermissionTo(Permission.SET_SETTINGS, groupOrRepo);
 	}
 
 	public boolean canMove(String repository) {
@@ -165,15 +167,20 @@ public class AccessService {
 	private boolean isPublic(String groupOrRepo) {
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
-			if (new File(dir, ".public").exists())
-				return true;
-			return false;
+			Repository repo = Repository.getIgnoreSchema(repositoryPath, dir.getParentFile().getName(), dir.getName());
+			return repo.settings.publicAccess;
 		}
 		if (!dir.isDirectory() || dir.listFiles() == null)
 			return false;
-		for (File child : dir.listFiles())
-			if (new File(child, ".public").exists())
-				return true;
+		for (File child : dir.listFiles()) {
+			try {
+				Repository repo = Repository.getIgnoreSchema(repositoryPath, groupOrRepo, child.getName());
+				if (repo.settings.publicAccess)
+					return true;
+			} catch (RepositoryNotFoundException e) {
+				// ignore
+			}
+		}
 		return false;
 	}
 

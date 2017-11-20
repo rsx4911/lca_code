@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.AccessService;
@@ -131,8 +132,7 @@ public class CommentResource {
 	@Path("{id}/replies")
 	public Response getReplies(@PathParam("id") long id) {
 		Comment comment = service.get(id);
-		String[] path = comment.repositoryPath.split("/");
-		Repository repo = repoService.get(path[0], path[1]);
+		Repository repo = repoService.get(comment.repositoryPath);
 		List<Comment> comments = service.getRepliesTo(id);
 		return Respond.ok(map(repo, comments, false));
 	}
@@ -163,6 +163,15 @@ public class CommentResource {
 		comment.restrictedToRole = parseRole(map);
 		comment.date = Calendar.getInstance().getTime();
 		comment.replyTo = service.get(map.getLong("replyTo"));
+		comment.released = map.getBoolean("released");
+		if (comment.released) {
+			boolean approve = accessService.canManageCommentsIn(repository.toId())
+					|| repository.settings.commentApproval;
+			if (approve) {
+				User currentUser = userService.getCurrentUser();
+				comment.approvedBy = currentUser;
+			}
+		}
 		comment = service.insert(comment);
 		notificationService.fieldCommented(comment).send();
 		return Respond.ok(map(comment, repository));
@@ -172,10 +181,14 @@ public class CommentResource {
 	@Path("{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response edit(@PathParam("id") long id, Map<String, Object> data) {
-		Comment comment = service.update(id, data.get("text").toString());
+		ObjectMap map = ObjectMap.fromMap(data);
+		Comment comment = service.update(id, map.getString("text"));
 		if (comment == null)
 			return Respond.notFound();
-		Repository repository = getRepository(comment);
+		Repository repository = repoService.get(comment.repositoryPath);
+		if (map.getBoolean("released")) {
+			comment = service.release(id);
+		}
 		return Respond.ok(map(comment, repository));
 	}
 
@@ -188,7 +201,7 @@ public class CommentResource {
 		Comment comment = service.changeVisibility(id, role);
 		if (comment == null)
 			return Respond.notFound();
-		Repository repository = getRepository(comment);
+		Repository repository = repoService.get(comment.repositoryPath);
 		return Respond.ok(map(comment, repository));
 	}
 
@@ -198,7 +211,7 @@ public class CommentResource {
 		Comment comment = service.release(id);
 		if (comment == null)
 			return Respond.notFound();
-		Repository repository = getRepository(comment);
+		Repository repository = repoService.get(comment.repositoryPath);
 		return Respond.ok(map(comment, repository));
 	}
 
@@ -215,12 +228,6 @@ public class CommentResource {
 		IndexEntry ds = searchService.get(repository, field.modelType, field.refId, field.commitId);
 		map.put("dsPath", ds.fullPath);
 		return map;
-	}
-
-	private Repository getRepository(Comment comment) {
-		String group = comment.repositoryPath.split("/")[0];
-		String name = comment.repositoryPath.split("/")[1];
-		return repoService.get(group, name);
 	}
 
 	private Role parseRole(ObjectMap data) {

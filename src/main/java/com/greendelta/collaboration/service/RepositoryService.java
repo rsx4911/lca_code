@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.Directories;
@@ -17,6 +18,7 @@ import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.jsonld.output.Context;
 
+import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -46,6 +48,17 @@ public class RepositoryService {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
+	}
+
+	public Repository get(String id) {
+		if (Strings.isNullOrEmpty(id))
+			throw new RepositoryNotFoundException("");
+		if (!id.contains("/"))
+			throw new RepositoryNotFoundException(id);
+		String[] path = id.split("/");
+		if (path.length != 2)
+			throw new RepositoryNotFoundException(id);
+		return get(path[0], path[1]);
 	}
 
 	public Repository get(String group, String name) {
@@ -123,20 +136,10 @@ public class RepositoryService {
 		return Repositories.clone(from, to, commits);
 	}
 
-	public boolean setPublic(Repository repo, boolean value) {
+	public void setSetting(Repository repo, String setting, boolean value) {
 		if (!accessService.canWrite(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "SET_PUBLIC");
-		File file = new File(repo.repoDir, ".public");
-		if (value && !file.exists()) {
-			try {
-				file.createNewFile();
-			} catch (IOException e) {
-				log.error("Error making repository public", e);
-			}
-		} else if (file.exists()) {
-			file.delete();
-		}
-		return file.exists();
+			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
+		repo.setSetting(setting, value);
 	}
 
 	private void putJsonContext(String group, String name) {

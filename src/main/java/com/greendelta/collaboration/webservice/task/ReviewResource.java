@@ -71,8 +71,7 @@ public class ReviewResource {
 		Response invalid = checkValidity(review);
 		if (invalid != null)
 			return invalid;
-		String[] path = review.repositoryPath.split("/");
-		Repository repo = repoService.get(path[0], path[1]);
+		Repository repo = repoService.get(review.repositoryPath);
 		service.start(review);
 		notificationService.taskStarted(repo, review).send();
 		return createResponse();
@@ -103,8 +102,7 @@ public class ReviewResource {
 			return Respond.notFound("No review with id " + id + " found");
 		if (!review.assignments.isEmpty())
 			return Respond.invalid("", "References can not be changed after reviewer were already assigned");
-		String[] split = review.repositoryPath.split("/");
-		Repository repo = repoService.get(split[0], split[1]);
+		Repository repo = repoService.get(review.repositoryPath);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
 		ReferenceCollector collector = new ReferenceCollector(browseService);
@@ -122,8 +120,7 @@ public class ReviewResource {
 			return Respond.notFound("No review with id " + id + " found");
 		if (review.references.isEmpty())
 			return Respond.invalid("", "Please select data set references before assigning a user");
-		String[] path = review.repositoryPath.split("/");
-		Repository repository = repoService.get(path[0], path[1]);
+		Repository repository = repoService.get(review.repositoryPath);
 		TaskAssignment assignment = service.startAssignment(review, username,
 				(user, repo) -> accessService.canReviewIn(user, repo.toId()));
 		notificationService.taskAssigned(repository, review, assignment).send();
@@ -149,8 +146,7 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		String[] path = review.repositoryPath.split("/");
-		Repository repo = repoService.get(path[0], path[1]);
+		Repository repo = repoService.get(review.repositoryPath);
 		TaskAssignment assignment = service.endAssignment(review, username, false);
 		notificationService.taskCompleted(repo, review, assignment);
 		return createResponse();
@@ -164,8 +160,7 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		String[] path = review.repositoryPath.split("/");
-		Repository repo = repoService.get(path[0], path[1]);
+		Repository repo = repoService.get(review.repositoryPath);
 		TaskAssignment assignment = service.endAssignment(review, username, true);
 		notificationService.taskRevoked(repo, review, assignment);
 		return createResponse();
@@ -177,8 +172,7 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		String[] path = review.repositoryPath.split("/");
-		Repository repo = repoService.get(path[0], path[1]);
+		Repository repo = repoService.get(review.repositoryPath);
 		service.end(review, TaskState.COMPLETED);
 		notificationService.taskCompleted(repo, review).send();
 		return createResponse();
@@ -190,8 +184,7 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		String[] path = review.repositoryPath.split("/");
-		Repository repo = repoService.get(path[0], path[1]);
+		Repository repo = repoService.get(review.repositoryPath);
 		service.end(review, TaskState.CANCELED);
 		notificationService.taskCanceled(repo, review).send();
 		return createResponse();

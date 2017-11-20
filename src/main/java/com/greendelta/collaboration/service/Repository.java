@@ -1,7 +1,10 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +24,7 @@ public class Repository {
 	final File repoDir;
 	public final String group;
 	public final String name;
-	public final boolean publicAccess;
+	public final Settings settings;
 
 	static Repository get(String root, String group, String name) {
 		Repository repo = new Repository(root, group, name);
@@ -39,7 +42,18 @@ public class Repository {
 		String path = root + File.separator + group + File.separator + name;
 		repoDir = new File(path);
 		if (repoDir.exists()) {
-			publicAccess = new File(repoDir, ".public").exists();
+			Settings settings = null;
+			File settingsFile = new File(repoDir, "settings.json");
+			if (!settingsFile.exists())
+				settings = new Settings();
+			else {
+				try {
+					settings = new Gson().fromJson(new FileReader(settingsFile), Settings.class);
+				} catch (IOException e) {
+					log.error("Error loading settings for repository");
+				}
+			}
+			this.settings = settings;
 			return;
 		}
 		throw new RepositoryNotFoundException(toId());
@@ -47,6 +61,22 @@ public class Repository {
 
 	public String toId() {
 		return toId(group, name);
+	}
+
+	void setSetting(String setting, boolean value) {
+		try {
+			Field field = Settings.class.getField(setting);
+			field.set(this.settings, value);
+			try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
+				new Gson().toJson(settings, writer);
+			} catch (IOException e) {
+				log.error("Error saving settings", e);
+			}
+		} catch (NoSuchFieldException e) {
+			log.debug("Tried to set non existing setting value: " + setting);
+		} catch (IllegalAccessException e) {
+			log.error("Error setting value for " + setting, e);
+		}
 	}
 
 	public static String toId(String group, String name) {
@@ -158,6 +188,13 @@ public class Repository {
 		if (create && !file.exists())
 			file.mkdir();
 		return file;
+	}
+
+	public static class Settings {
+
+		public boolean publicAccess;
+		public boolean commentApproval;
+
 	}
 
 }

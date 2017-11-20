@@ -8,7 +8,7 @@ import static com.greendelta.collaboration.model.Permission.MANAGE_TASK;
 import static com.greendelta.collaboration.model.Permission.MOVE;
 import static com.greendelta.collaboration.model.Permission.READ;
 import static com.greendelta.collaboration.model.Permission.REVIEW;
-import static com.greendelta.collaboration.model.Permission.SET_PUBLIC;
+import static com.greendelta.collaboration.model.Permission.SET_SETTINGS;
 import static com.greendelta.collaboration.model.Permission.WRITE;
 
 import java.util.ArrayList;
@@ -26,7 +26,9 @@ public enum Role {
 
 	REVIEWER(4, READ, WRITE, COMMENT, REVIEW),
 
-	OWNER(5, READ, WRITE, COMMENT, REVIEW, MOVE, DELETE, EDIT_MEMBERS, MANAGE_COMMENTS, MANAGE_TASK, SET_PUBLIC);
+	EDITOR(5, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK),
+
+	OWNER(6, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, EDIT_MEMBERS, SET_SETTINGS, MOVE, DELETE);
 
 	private List<Permission> permissions;
 	private int level;
