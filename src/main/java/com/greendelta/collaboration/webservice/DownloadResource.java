@@ -32,7 +32,7 @@ abstract class DownloadResource {
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
 		Repository repo = repoService.get(group, repository);
-		if (commitId.equals("null")) {
+		if (commitId == null) {
 			Commit commit = historyService.getLastCommit(repo, type, refId);
 			if (commit != null)
 				commitId = commit.id;

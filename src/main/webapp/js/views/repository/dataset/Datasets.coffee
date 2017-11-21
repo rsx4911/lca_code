@@ -90,7 +90,7 @@ define([
 						if categoryInfo.id
 							historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
 						else
-							historyUrl += "#{group}/#{name}/null"
+							historyUrl += "#{group}/#{name}"
 						$.ajax
 							type: 'GET'
 							url: historyUrl

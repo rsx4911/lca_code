@@ -1,8 +1,5 @@
 package com.greendelta.collaboration.webservice.user;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -54,37 +51,14 @@ public class FetchResource {
 	}
 
 	@GET
-	@Path("file/{group}/{name}/{type}/{refId}/{commitId}/{filename}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getFile(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("type") ModelType type,
-			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId,
-			@PathParam("filename") String filename) throws IOException {
-		Repository repo = repoService.get(group, name);
-		commitId = getLastCommitId(repo, type, refId, commitId);
-		if (commitId == null)
-			return Respond.notFound(notFoundMessage(type, refId, null));
-		File binDir = service.getBinDir(repo, type, refId, commitId);
-		if (!binDir.exists())
-			return Respond.notFound(notFoundMessage(type, refId, filename));
-		File file = new File(binDir, filename);
-		if (!file.exists())
-			return Respond.notFound(notFoundMessage(type, refId, filename));
-		return Respond.ok(Files.readAllBytes(file.toPath()));
-	}
-
-	@GET
-	@Path("data/{group}/{name}/{type}/{refId}/{commitId}")
+	@Path("data/{group}/{name}/{type}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getData(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId) {
+			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
@@ -96,8 +70,6 @@ public class FetchResource {
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
-		if ("null".equals(commitId))
-			commitId = null;
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
 			return null;
@@ -119,12 +91,12 @@ public class FetchResource {
 	}
 
 	@GET
-	@Path("request/{group}/{name}/{lastCommitId}")
+	@Path("request/{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response request(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId,
+			@QueryParam("lastCommitId") String lastCommitId,
 			@QueryParam("sync") @DefaultValue("false") boolean sync) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = getCommits(repo, lastCommitId, sync);
@@ -152,13 +124,13 @@ public class FetchResource {
 	}
 
 	@POST
-	@Path("{group}/{name}/{commitId}")
+	@Path("{group}/{name}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("commitId") String commitId,
+			@QueryParam("commitId") String commitId,
 			@QueryParam("download") @DefaultValue("false") boolean download,
 			List<FileReference> requested) {
 		Repository repo = repoService.get(group, name);
@@ -194,8 +166,6 @@ public class FetchResource {
 	}
 
 	private List<Commit> getCommits(Repository repo, String commitId, boolean until) {
-		if (commitId.equals("null"))
-			commitId = null;
 		List<Commit> commits = null;
 		if (until) {
 			commits = historyService.getCommitsUntil(repo, commitId);

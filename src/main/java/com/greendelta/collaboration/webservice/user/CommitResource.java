@@ -7,6 +7,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -42,11 +43,11 @@ public class CommitResource {
 	}
 
 	@GET
-	@Path("request/{group}/{name}/{lastCommitId}")
+	@Path("request/{group}/{name}")
 	public Response request(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId) {
+			@QueryParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
 		if (!accessService.canWrite(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
@@ -56,8 +57,6 @@ public class CommitResource {
 	}
 
 	private boolean isUpToDate(Repository repo, String lastCommitId) {
-		if (lastCommitId.equals("null"))
-			lastCommitId = null;
 		Commit lastCommit = historyService.getLastCommit(repo);
 		if (lastCommit == null)
 			return lastCommitId == null;
@@ -65,12 +64,12 @@ public class CommitResource {
 	}
 
 	@POST
-	@Path("{group}/{name}/{lastCommitId}")
+	@Path("{group}/{name}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response commit(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId,
+			@QueryParam("lastCommitId") String lastCommitId,
 			InputStream commitData) {
 		Repository repo = repoService.get(group, name);
 		if (!isUpToDate(repo, lastCommitId))

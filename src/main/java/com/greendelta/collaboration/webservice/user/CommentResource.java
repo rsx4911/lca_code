@@ -87,18 +87,8 @@ public class CommentResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("type") ModelType type,
-			@PathParam("refId") String refId) {
-		return getForDataset(group, name, type, refId, null);
-	}
-
-	@GET
-	@Path("{group}/{name}/{type}/{refId}/{commitId}")
-	public Response getForDataset(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId) {
+			@QueryParam("commitId") String commitId) {
 		Repository repository = repoService.get(group, name);
 		List<Comment> comments = service.getAllFor(repository, type, refId, commitId);
 		Map<String, Object> result = new HashMap<>();

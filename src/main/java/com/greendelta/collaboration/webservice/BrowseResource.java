@@ -122,14 +122,14 @@ public class BrowseResource {
 	}
 
 	@GET
-	@Path("{group}/{name}/{type}/{refId}/{commitId}")
+	@Path("{group}/{name}/{type}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getData(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId) {
+			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null) {
@@ -275,8 +275,6 @@ public class BrowseResource {
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
-		if (commitId.equals("null"))
-			commitId = null;
 		if (commitId != null) {
 			Map<String, Object> dataset = service.getDataset(repo, type, refId, commitId);
 			if (IndexAction.from(dataset) != IndexAction.DELETE) {

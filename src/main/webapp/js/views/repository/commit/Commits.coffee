@@ -25,7 +25,7 @@ define([
 					container: '.repository-commits .content-box'
 					template: listTemplate
 					filterId: 'filter'
-					url: "ws/history/#{group}/#{name}?"
+					url: "ws/history/search/#{group}/#{name}?"
 					beforeRender: (result) =>
 						result.repository = {group: group, name: name}
 						@prepareModel result

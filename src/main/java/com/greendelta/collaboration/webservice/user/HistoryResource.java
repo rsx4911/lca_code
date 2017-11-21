@@ -56,7 +56,7 @@ public class HistoryResource {
 	}
 
 	@GET
-	@Path("{group}/{name}")
+	@Path("search/{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
@@ -98,15 +98,13 @@ public class HistoryResource {
 	}
 
 	@GET
-	@Path("{group}/{name}/{lastCommitId}")
+	@Path("{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId) {
+			@QueryParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
-		if (lastCommitId.equals("null"))
-			lastCommitId = null;
 		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
@@ -171,8 +169,6 @@ public class HistoryResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		if (commitId == "null")
-			commitId = null;
 		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
 		if (lastCommit == null || lastCommit.id.equals(commitId))
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);

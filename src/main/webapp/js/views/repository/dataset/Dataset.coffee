@@ -61,10 +61,12 @@ define([
 
 			loadDataset: (callback) ->
 				urlPart = @getUrlPart()
-				commitId = @commitId or 'null'
+				url = "ws/public/browse/#{urlPart}"
+				if @commitId
+					url += '?commitId=' + @commitId
 				$.ajax
 					type: 'GET'
-					url: "ws/public/browse/#{urlPart}/#{commitId}" 
+					url: url 
 					success: callback
 
 			loadCommitHistory: (callback) ->
@@ -79,13 +81,17 @@ define([
 
 			getDownloadUrl: (format = 'json') ->
 				urlPart = @getUrlPart()
-				commitId = @commitId or 'null'
-				return "ws/public/download/#{format}/prepare/#{urlPart}/#{commitId}" 
+				url = "ws/public/download/#{format}/prepare/#{urlPart}" 
+				if @commitId
+					url +='?commitId=' + @commitId
+				return url
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
-				commitId = @commitId or 'null'
-				return "ws/public/repository/file/#{urlPart}/#{commitId}" 
+				url = "ws/public/repository/file/#{urlPart}"
+				if @commitId
+					url +='?commitId=' + @commitId
+				return url 
 
 			getUrlPart: (type, refId) ->
 				group = @repository.get 'group'

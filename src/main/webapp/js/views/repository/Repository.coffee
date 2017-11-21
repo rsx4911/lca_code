@@ -88,7 +88,7 @@ define([
 				fullPath = "#{repository.group}/#{repository.name}"
 				$.ajax
 					type: 'GET'
-					url: "ws/history/#{fullPath}/null"
+					url: "ws/history/#{fullPath}"
 					success: (commits) =>
 						@loadGroups (groups) =>
 							callback commits, groups

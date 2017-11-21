@@ -7,9 +7,12 @@ define([
 	(DataQuality, Layers, Sort) ->
 
 		open: (repo, commitId, systemId, entry) ->
+			url = "ws/public/browse/#{repo.group}/#{repo.name}/DQ_SYSTEM/#{systemId}"
+			if commitId
+				url += "?commitId=#{commitId}"
 			$.ajax
 				type: 'GET'
-				url: "ws/public/browse/#{repo.group}/#{repo.name}/DQ_SYSTEM/#{systemId}/#{commitId}"
+				url: url
 				success: (system) ->
 					Sort.indicatorsAndScores system
 					Layers.showTemplateInLayer

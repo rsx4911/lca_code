@@ -9,6 +9,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -60,15 +61,15 @@ public class RepositoryResource {
 	}
 
 	@GET
-	@Path("file/{group}/{name}/{type}/{refId}/{commitId}/{filename}")
+	@Path("file/{group}/{name}/{type}/{refId}/{filename}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getFile(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId,
-			@PathParam("filename") String filename) throws IOException {
+			@PathParam("filename") String filename,
+			@QueryParam("commitId") String commitId) throws IOException {
 		Repository repo = service.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
@@ -83,8 +84,6 @@ public class RepositoryResource {
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
-		if ("null".equals(commitId))
-			commitId = null;
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
 			return null;

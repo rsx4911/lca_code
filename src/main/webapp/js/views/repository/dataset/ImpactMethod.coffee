@@ -12,9 +12,12 @@ define([
 			unless options.impactCategory
 				return
 			urlPart = options.getUrlPart 'IMPACT_CATEGORY', options.impactCategory
+			url = "ws/public/browse/#{urlPart}"
+			if options.commitId
+				url += "?commitId=#{options.commitId}"
 			$.ajax
 				type: 'GET'
-				url: "ws/public/browse/#{urlPart}/#{options.commitId||'null'}"
+				url: url
 				success: (impactCategory) =>
 					group = options.repository.get 'group'
 					name = options.repository.get 'name'
@@ -40,9 +43,12 @@ define([
 			unless options.nwSet
 				return
 			urlPart = options.getUrlPart 'NW_SET', options.nwSet
+			url = "ws/public/browse/#{urlPart}"
+			if options.commitId
+				url += "?commitId=#{options.commitId}"
 			$.ajax
 				type: 'GET'
-				url: "ws/public/browse/#{urlPart}/#{options.commitId||'null'}"
+				url: url
 				success: (nwSet) =>
 					DatasetPrepare.applyTo nwSet
 					$('#nw-set-unit').html nwSet.weightedScoreUnit
