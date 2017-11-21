@@ -32,6 +32,7 @@ define([
 					if $('.select2-hidden-accessible').length
 						$('.select2-hidden-accessible').select2('close')
 					$('.modal').remove()
+					options.onClose?()
 				if options.static
 					$('.modal').modal
 						backdrop: 'static'

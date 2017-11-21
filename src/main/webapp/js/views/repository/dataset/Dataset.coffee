@@ -222,7 +222,7 @@ define([
 					getValue: (object, path) => return @getValue object, path
 					getTypeAsEnum: (type) => return @getTypeAsEnum type
 					initTableSorting: (table) => @initTableSorting table
-					initComments: (container) => @initComments container
+					initComments: (loadComments) => @initComments loadComments
 				}
 
 			initTableSorting: (table) ->
@@ -238,13 +238,22 @@ define([
 					$(table).tablesorter options
 
 			initComments: (loadComments) ->
-				Comments.init @$el, 
+				Comments.init @$el,
 					repository: @repository, 
 					type: @type, 
 					refId: @refId, 
 					commitId: @commitId
 					commentPath: @commentPath
 					loadComments: loadComments
+					updateIcon: @updateIcon
+
+			updateIcon: (path, commentCount) ->
+				if commentCount
+					$("[data-path='#{path}'] img[data-action=comment]").attr 'src', 'images/comment_highlighted.png'
+				else if LocalStorage.getValue('reviewMode')
+					$("[data-path='#{path}'] img[data-action=comment]").attr 'src', 'images/comment.png'
+				else
+					$("[data-path='#{path}'] img[data-action=comment]").remove()
 
 			getSpecificTypeLabel: (type, value) ->
 				switch type 

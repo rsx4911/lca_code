@@ -12,12 +12,13 @@ define([
 
 	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, Actions, currentUser) ->
 
-		init: (parent, options) ->
+		init: (container, options) ->
 			unless currentUser.isLoggedIn()
 				return
+			@updateIcon = options.updateIcon
 			@loadComments options, () =>
 				found = []
-				for element in $('[data-path]', parent)
+				for element in $('[data-path]', container)
 					path = $(element).attr 'data-path'
 					if @comments[path]
 						found.push path
@@ -28,8 +29,8 @@ define([
 					highlight = @comments[path]
 					unless $('img[data-action=comment]', element).length
 						$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
-				$('[data-path] [data-action=comment]', parent).off 'click.comment'
-				$('[data-path] [data-action=comment]', parent).on 'click.comment', (event) => 
+				$('[data-path] [data-action=comment]', container).off 'click.comment'
+				$('[data-path] [data-action=comment]', container).on 'click.comment', (event) => 
 					Events.preventDefault event
 					target = $ Events.target event
 					while !target.attr('data-path') and !target.is('body')
@@ -125,11 +126,7 @@ define([
 				@setEdit $('.modal [data-active]')
 			else if @replyTo
 				@setReplyTo $('.modal [data-active]')
-			Actions.remove event, (commentId) =>
-				fieldComments = @updateComment commentId
-				if fieldComments?.length is 0
-					Layers.closeActive()
-					Backbone.history.loadUrl()
+			Actions.remove event, (commentId) => @updateComment commentId
 
 		onChangeVisibility: (event) ->
 			Events.preventDefault event
@@ -161,10 +158,10 @@ define([
 			if path and path isnt 'null'
 				field = Labels.get options.type, path
 			buttons = []
-			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
+			buttons.push {text: 'Close', callback: () => Layers.closeActive()}
 			if @canComment
-				buttons.push {text: 'Add comment', className: 'btn-success', callback: => @addComment options, path}
-				buttons.push {text: 'Add and release comment', className: 'btn-success', callback: => @addComment options, path, true}
+				buttons.push {text: 'Add comment', id: 'add', className: 'btn-success', callback: => @addComment options, path}
+				buttons.push {text: 'Add and release comment', id: 'release', className: 'btn-success', callback: => @addComment options, path, true}
 			Layers.showTemplateInLayer
 				title: if field then "Comments on '#{field}'" else 'Comments on data set'
 				template: 'repository/dataset/comment-layer'
@@ -180,6 +177,8 @@ define([
 					getRoleLabel: (role) -> return Roles[role].name
 					getLabel: (field) -> return Labels.get field.modelType, field.path
 				buttons: buttons
+				onClose: () =>
+					@updateIcon path, @comments[path].length
 				callback: () =>
 					@initSubMenues()
 					for key in Object.keys(clickEvents)
@@ -200,18 +199,21 @@ define([
 
 		setReplyTo: (target) ->
 			@replyTo = @moveTextarea target
-			$('.modal-footer button:last-child').html 'Add comment'
+			$('.modal-footer button#add').html 'Add reply'
+			$('.modal-footer button#release').html 'Add and release reply'
 
 		setEdit: (target) ->
 			@edit = @moveTextarea target
 			if @edit
-				$('.modal-footer button:last-child').html 'Edit comment'
+				$('.modal-footer button#add').html 'Edit comment'
+				$('.modal-footer button#release').html 'Edit and release comment'
 				$(".modal [data-comment-id=#{@edit}] .comment-text, .modal #new-comment-group label").hide()
 				while !target.attr 'data-comment-id'
 					target = target.parent()
 				$('.modal #new-comment-group textarea').val($('.comment-text', target).text())
 			else
-				$('.modal-footer button:last-child').html 'Add comment'
+				$('.modal-footer button#add').html 'Add comment'
+				$('.modal-footer button#release').html 'Add and release comment'
 
 		moveTextarea: (target) ->
 			$('.modal .comment-text, .modal #new-comment-group label').show()
@@ -241,16 +243,21 @@ define([
 				contentType: 'application/json'
 				data: JSON.stringify({path: fieldPath, text: text, replyTo: @replyTo, restrictedToRole: @role, released: release})
 				success: (comment) => 
+					$('.modal #new-comment-group textarea').val('')
 					if @edit
 						@updateComment comment.id, comment
-						$(".modal [data-comment-id=#{comment.id}] .comment-text").html comment.text
 						@setEdit $('.modal [data-active]')
-						$('.modal #new-comment-group textarea').val('')
+						Actions.rerender $("[data-comment-id=#{comment.id}]"), comment, @renderData
 					else
 						@comments[path].push comment
-						@replyTo = null
-						Layers.closeActive()
-						Backbone.history.loadUrl()
+						dummy = '<div data-comment-id="' + comment.id + '" class="comment-entry"></div>'
+						if @replyTo
+							@setEdit $('.modal [data-active]')
+							$('.comments [data-comment-id=' + @replyTo + ']').after dummy
+							@replyTo = null
+						else
+							$('.comments').prepend dummy
+						Actions.rerender $("[data-comment-id=#{comment.id}]"), comment, @renderData
 
 		updateComment: (commentId, comment) ->
 			path = null
