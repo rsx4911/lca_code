@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +9,9 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 
@@ -17,15 +20,15 @@ public class CommentService {
 	private final Dao<Comment> dao;
 	private final AccessService accessService;
 	private final UserService userService;
-	private final RepositoryService repoService;
+	private final String repoRootPath;
 
 	@Inject
 	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
-			RepositoryService repoService) {
+			@Named("repository.path") String repoRootPath) {
 		this.dao = dao;
 		this.accessService = accessService;
 		this.userService = userService;
-		this.repoService = repoService;
+		this.repoRootPath = repoRootPath;
 	}
 
 	public List<Comment> getAllTopSorted(Repository repository, String filter) {
@@ -84,6 +87,57 @@ public class CommentService {
 		return dao.update(comment);
 	}
 
+	public void move(Repository from, Repository to) {
+		List<Comment> comments = getAllFor(from, null, null, null);
+		for (Comment comment : comments) {
+			comment.repositoryPath = to.toId();
+		}
+		dao.update(comments);
+	}
+
+	public void copy(Repository from, Repository to) {
+		List<Comment> comments = getAllFor(from, null, null, null);
+		Map<Long, Comment> oldToNew = new HashMap<>();
+		List<Comment> standalone = new ArrayList<>();
+		List<Comment> replies = new ArrayList<>();
+		for (Comment comment : comments) {
+			if (comment.replyTo != null)
+				continue;
+			standalone.add(comment);
+			Comment clone = clone(comment, null, to);
+			clone = dao.insert(clone);
+			oldToNew.put(comment.getId(), clone);
+		}
+		for (Comment comment : comments) {
+			if (comment.replyTo == null)
+				continue;
+			replies.add(comment);
+			Comment replyTo = oldToNew.get(comment.replyTo.getId());
+			Comment clone = clone(comment, replyTo, to);
+			dao.insert(clone);
+		}
+		dao.delete(replies);
+		dao.delete(standalone);
+	}
+
+	private Comment clone(Comment comment, Comment replyTo, Repository repo) {
+		Comment clone = new Comment();
+		clone.approvedBy = comment.approvedBy;
+		clone.date = comment.date;
+		clone.field = new DatasetField();
+		clone.field.modelType = comment.field.modelType;
+		clone.field.refId = comment.field.refId;
+		clone.field.path = comment.field.path;
+		clone.field.commitId = comment.field.commitId;
+		clone.released = comment.released;
+		clone.restrictedToRole = comment.restrictedToRole;
+		clone.text = comment.text;
+		clone.user = comment.user;
+		clone.replyTo = replyTo;
+		clone.repositoryPath = repo.toId();
+		return clone;
+	}
+
 	public Comment changeVisibility(long commentId, Role role) {
 		Comment comment = dao.get(commentId);
 		if (comment == null)
@@ -109,7 +163,8 @@ public class CommentService {
 		if (accessService.canManageCommentsIn(comment.repositoryPath)) {
 			comment.approvedBy = currentUser;
 		} else {
-			Repository repo = repoService.get(comment.repositoryPath);
+			String[] split = comment.repositoryPath.split("/");
+			Repository repo = Repository.get(repoRootPath, split[0], split[1]);
 			if (!repo.settings.commentApproval) {
 				comment.approvedBy = currentUser;
 			}

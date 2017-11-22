@@ -40,14 +40,16 @@ public class RepositoryService {
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
+	private final CommentService commentService;
 
 	@Inject
-	public RepositoryService(@Named("repository.path") String repositoryPath,
-			AccessService accessService, MembershipService membershipService, UserService userService) {
+	public RepositoryService(@Named("repository.path") String repositoryPath, AccessService accessService,
+			MembershipService membershipService, UserService userService, CommentService commentService) {
 		this.root = repositoryPath;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
+		this.commentService = commentService;
 	}
 
 	public Repository get(String id) {
@@ -114,6 +116,7 @@ public class RepositoryService {
 				return false;
 			}
 			moveMemberships(repo, newRepo);
+			commentService.move(repo, newRepo);
 			delete(repo);
 		} catch (IOException e) {
 			log.error("Error moving repository contents", e);
@@ -133,7 +136,10 @@ public class RepositoryService {
 	public boolean clone(Repository from, Repository to, List<Commit> commits) {
 		if (!accessService.canWrite(to.group))
 			throw new UnauthorizedAccessException(to.group, "WRITE");
-		return Repositories.clone(from, to, commits);
+		if (!Repositories.clone(from, to, commits))
+			return false;
+		commentService.copy(from, to);		
+		return true;
 	}
 
 	public void setSetting(Repository repo, String setting, boolean value) {

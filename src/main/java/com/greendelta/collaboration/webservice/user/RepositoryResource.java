@@ -113,8 +113,7 @@ public class RepositoryResource {
 		if (service.exists(newGroup, newName))
 			return Respond.conflict("Specified repository does already exist");
 		Repository repo = service.get(group, name);
-		boolean successful = service.move(repo, newGroup, newName);
-		if (!successful)
+		if (!service.move(repo, newGroup, newName))
 			return Respond.error("Repository could not be moved");
 		Repository newRepo = service.get(newGroup, newName);
 		updateRepoId(repo, newRepo);

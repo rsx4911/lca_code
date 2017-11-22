@@ -55,6 +55,7 @@ public class DeleteService {
 		for (Message message : messagingService.getMessages(user)) {
 			messagingService.delete(message);
 		}
+		// TODO comments
 		userService.delete(user);
 	}
 
