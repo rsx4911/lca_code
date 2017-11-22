@@ -46,6 +46,7 @@ public class DeleteService {
 		for (Repository repository : repoService.getAll(0, 0, user.username + "/", false).data) {
 			delete(repository);
 		}
+		groupService.delete(user.username);
 		for (Team team : teamService.getTeamsFor(user)) {
 			teamService.removeMember(user, team);
 		}

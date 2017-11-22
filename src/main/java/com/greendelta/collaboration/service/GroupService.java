@@ -74,8 +74,9 @@ public class GroupService {
 		boolean created = new File(getPath(group)).mkdir();
 		if (!created)
 			return false;
-		if (!userGroup)
-			membershipService.addMembership(currentUser, group, Role.OWNER, true);
+		if (userGroup)
+			return true;
+		membershipService.addMembership(currentUser, group, Role.OWNER, true);
 		return true;
 	}
 
