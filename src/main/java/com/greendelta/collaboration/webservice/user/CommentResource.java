@@ -25,7 +25,6 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.AccessService;
@@ -153,16 +152,10 @@ public class CommentResource {
 		comment.restrictedToRole = parseRole(map);
 		comment.date = Calendar.getInstance().getTime();
 		comment.replyTo = service.get(map.getLong("replyTo"));
-		comment.released = map.getBoolean("released");
-		if (comment.released) {
-			boolean approve = accessService.canManageCommentsIn(repository.toId())
-					|| repository.settings.commentApproval;
-			if (approve) {
-				User currentUser = userService.getCurrentUser();
-				comment.approvedBy = currentUser;
-			}
-		}
 		comment = service.insert(comment);
+		if (map.getBoolean("released")) {
+			comment = service.release(comment.getId());
+		}
 		notificationService.fieldCommented(comment).send();
 		return Respond.ok(map(comment, repository));
 	}
