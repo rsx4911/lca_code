@@ -39,7 +39,7 @@ mixin menubar()
 mixin header()
 	.title(class=isPublic?'header-box':null)
 		img.pull-right.model-icon(src='images/model/large/#{getIcon(dataset)}')
-		div
+		.info-header
 			h3(data-path='name')=dataset.name
 			.category
 				- var url = null;

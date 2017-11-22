@@ -29,7 +29,6 @@
 		float left
 
 	.model-left-content
-		padding-top 20px
 		border-bottom 1px solid rgb(221, 221, 221)
 
 		@media(min-width 768px)
@@ -69,15 +68,24 @@
 			height 90%
 			overflow auto
     			
-		.title h3:first-child
-			margin-bottom 0
+		.title 
+			
+			h3:first-child
+				margin-bottom 0
+			
+			h3:last-child
+				margin-top 0
+				margin-bottom 20px
+
+			.model-icon
+				margin-top 20px
+		
+			.info-header
+				padding-top 1px
 		
 		.breadcrumb
 			padding 0 15px 8px 1px
 
-		.title h3:last-child
-			margin-top 0
-			margin-bottom 20px
 
 		.title, .content
 			padding 0 25px
@@ -238,9 +246,6 @@ body.public-mode
 
 		.model-left-content .header-box.title	
 			border-top 1px solid rgb(248, 250, 252)
-
-			img.model-icon
-				margin-top 20px
 				
 	.meta-info > div:nth-child(2) > *
 		word-wrap initial						
