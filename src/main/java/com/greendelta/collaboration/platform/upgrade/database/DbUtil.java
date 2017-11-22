@@ -62,6 +62,13 @@ class DbUtil implements Closeable {
 		return true;
 	}
 
+	boolean dropColumn(String table, String column) throws SQLException {
+		if (!columnExists(table, column))
+			return false;
+		update("ALTER TABLE " + table + " DROP COLUMN " + column);
+		return true;
+	}
+
 	boolean createTable(String table, String... columnDefinitions) throws SQLException {
 		if (tableExists(table))
 			return false;

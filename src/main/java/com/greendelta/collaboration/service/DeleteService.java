@@ -23,11 +23,13 @@ public class DeleteService {
 	private final MessagingService messagingService;
 	private final AccessService accessService;
 	private final SearchService searchService;
+	private final CommentService commentService;
 
 	@Inject
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
-			MessagingService messagingService, AccessService accessService, SearchService searchService) {
+			MessagingService messagingService, AccessService accessService, SearchService searchService,
+			CommentService commentService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -37,6 +39,7 @@ public class DeleteService {
 		this.messagingService = messagingService;
 		this.accessService = accessService;
 		this.searchService = searchService;
+		this.commentService = commentService;
 	}
 
 	public void delete(User user) {
@@ -55,7 +58,7 @@ public class DeleteService {
 		for (Message message : messagingService.getMessages(user)) {
 			messagingService.delete(message);
 		}
-		// TODO comments
+		commentService.clearUser(user);
 		userService.delete(user);
 	}
 

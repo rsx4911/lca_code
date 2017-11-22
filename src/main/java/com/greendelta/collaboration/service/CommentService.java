@@ -62,6 +62,17 @@ public class CommentService {
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
+	void clearUser(User user) {
+		String jpql = "SELECT c FROM Comment c WHERE c.user.id = :userId";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("userId", user.getId());
+		List<Comment> comments = dao.getAll(jpql, attributes);
+		for (Comment comment : comments) {
+			comment.user = null;
+		}
+		dao.update(comments);
+	}
+
 	public Comment get(long id) {
 		return dao.get(id);
 	}
@@ -122,7 +133,7 @@ public class CommentService {
 
 	private Comment clone(Comment comment, Comment replyTo, Repository repo) {
 		Comment clone = new Comment();
-		clone.approvedBy = comment.approvedBy;
+		clone.approved = comment.approved;
 		clone.date = comment.date;
 		clone.field = new DatasetField();
 		clone.field.modelType = comment.field.modelType;
@@ -161,12 +172,12 @@ public class CommentService {
 			comment.released = true;
 		}
 		if (accessService.canManageCommentsIn(comment.repositoryPath)) {
-			comment.approvedBy = currentUser;
+			comment.approved = true;
 		} else {
 			String[] split = comment.repositoryPath.split("/");
 			Repository repo = Repository.get(repoRootPath, split[0], split[1]);
 			if (!repo.settings.commentApproval) {
-				comment.approvedBy = currentUser;
+				comment.approved = true;
 			}
 		}
 		return dao.update(comment);
@@ -178,6 +189,7 @@ public class CommentService {
 			return;
 		if (!accessService.canManage(comment))
 			return;
+		dao.delete(getRepliesTo(commentId));
 		dao.delete(comment);
 	}
 

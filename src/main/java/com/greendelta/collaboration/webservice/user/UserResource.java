@@ -93,6 +93,8 @@ public class UserResource {
 	@Path("avatar/{username}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getAvatar(@PathParam("username") String username) {
+		if ("null".equals(username) || username == null)
+			return Respond.ok(null, "avatar-user.png");
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound(username);

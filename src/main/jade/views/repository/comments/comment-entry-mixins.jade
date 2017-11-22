@@ -17,23 +17,23 @@ mixin comment-visibility(restrictedToRole, roles)
 						li: a(href='#' data-role=role.id)=role.name
 
 mixin comment-info(comment, roles, showDatasetInfo)
-	- var canChangeVisibility = canComment && (currentUser.admin || currentUser.username === comment.user.username);
+	- var canChangeVisibility = canComment && (currentUser.admin || (comment.user && currentUser.username === comment.user.username));
 	span: small wrote on #{formatDate(comment.date)}
 	if canChangeVisibility
 		| &nbsp;
 		+comment-visibility(comment.restrictedToRole, roles)
-	if (!comment.released && comment.user.username === currentUser.username) || (comment.released && !comment.approvedBy && canApprove)
+	if (!comment.released && comment.user && comment.user.username === currentUser.username) || (comment.released && !comment.approved && canApprove)
 		|  | 
 		a.default-link.release(href='#')
 			small=!comment.released?'Release':'Approve'
-	if comment.released && !comment.approvedBy && !canApprove
+	if comment.released && !comment.approved && !canApprove
 		|  | 
 		i: small Approval pending
-	if !comment.replyTo && canComment && comment.released && !!comment.approvedBy
+	if !comment.replyTo && canComment && comment.released && !!comment.approved
 		|  | 
 		a.default-link.reply-to(href='#')
 			small Reply
-	if (!comment.released || !comment.approvedBy) && canEdit && comment.user.username === currentUser.username
+	if (!comment.released || !comment.approved) && canEdit && comment.user && comment.user.username === currentUser.username
 		|  | 
 		a.default-link.edit(href='#')
 			small Edit
@@ -45,7 +45,7 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 	if comment.replyTo
 		- classes.push('reply');
 	if comment.released 
-		if comment.approvedBy
+		if comment.approved
 			- classes.push('approved');
 		else
 			- classes.push('released');
@@ -59,9 +59,9 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 	.comment-entry(class=addClass data-comment-id=comment.id)
 		if showDatasetInfo
 			.pull-left
-				img.avatar.avatar-small(src='ws/user/avatar/#{comment.user.username}')
+				img.avatar.avatar-small(src='ws/user/avatar/#{comment.user?comment.user.username:"null"}')
 			.comment-info-container
-				strong=comment.user.name
+				strong=comment.user?comment.user.name:'Anonymous user'
 				|  
 				+comment-info(comment, roles, true)
 				- var field = comment.field;
@@ -73,7 +73,10 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 							| - #{label}
 			.clear
 		else
-			+user-info(comment.user.username, comment.user.name)
+			if comment.user
+				+user-info(comment.user.username, comment.user.name)
+			else
+				+user-info('null', 'Anonymous user')
 			+comment-info(comment, roles, false)
 		.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
 		if comment.replyCount

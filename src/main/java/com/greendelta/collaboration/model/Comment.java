@@ -50,9 +50,8 @@ public class Comment extends AbstractEntity {
 	@Column(name = "released")
 	public boolean released;
 
-	@OneToOne
-	@JoinColumn(name = "f_approved_by")
-	public User approvedBy;
+	@Column(name = "approved")
+	public boolean approved;
 
 	@Override
 	public long getId() {

@@ -89,7 +89,7 @@ public class AccessService {
 				continue;
 			if (!comment.released)
 				continue;
-			if (comment.approvedBy == null && !canManageCommentsIn(comment.repositoryPath))
+			if (!comment.approved && !canManageCommentsIn(comment.repositoryPath))
 				continue;
 			if ((comment.replyTo != null && comment.replyTo.user.equals(user)) || comment.restrictedToRole == null) {
 				canRead.add(comment);
