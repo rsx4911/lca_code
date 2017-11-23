@@ -43,6 +43,10 @@ public class CommentService {
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
+	public List<Comment> getAllFor(Repository repository) {
+		return getAllFor(repository, null, null, null);
+	}
+
 	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId) {
 		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath";
 		Map<String, Object> attributes = new HashMap<>();

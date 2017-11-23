@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -69,9 +70,10 @@ public class CommentResource {
 			@PathParam("name") String name,
 			@QueryParam("filter") String filter,
 			@QueryParam("page") int page,
-			@QueryParam("pageSize") int pageSize) {
+			@QueryParam("pageSize") int pageSize,
+			@QueryParam("includeReplies") @DefaultValue("false") boolean includeReplies) {
 		Repository repo = repoService.get(group, name);
-		List<Comment> comments = service.getAllTopSorted(repo, filter);
+		List<Comment> comments = includeReplies ? service.getAllFor(repo) : service.getAllTopSorted(repo, filter);
 		SearchResult<Comment> result = SearchResults.paged(page, pageSize, comments);
 		SearchResult<ObjectMap> mapped = SearchResults.lconvert(result, (list) -> map(repo, list, true));
 		ObjectMap map = ObjectMap.fromObject(mapped);

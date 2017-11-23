@@ -68,7 +68,7 @@ define([
 					type: 'GET'
 					url: "ws/comment/#{commentId}/replies"
 					success: (replies) =>
-						@$('.comment-entry[data-comment-id] .replies .toggleable').html listTemplate 
+						@$(".comment-entry[data-comment-id=#{commentId}] .replies .toggleable").html listTemplate 
 							data: replies
 							formatDate: Format.dateTime
 							currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
