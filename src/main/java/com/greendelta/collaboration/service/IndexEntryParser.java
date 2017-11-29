@@ -92,7 +92,7 @@ class IndexEntryParser {
 	private void unsetDummyCategoryId(ObjectMap entry) {
 		if (entry.get("categoryRefId") == null)
 			return;
-		if (entry.get("type") == ModelType.CATEGORY) {
+		if (entry.get("type").equals(ModelType.CATEGORY.name())) {
 			if (entry.get("categoryRefId").equals(entry.get("categoryType"))) {
 				entry.put("categoryRefId", null);
 			}
