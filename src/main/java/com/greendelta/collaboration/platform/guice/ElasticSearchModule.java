@@ -19,7 +19,6 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.platform.guice.util.BindUtils;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
-import com.greendelta.collaboration.service.RepositoryUpgrades;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.Resources;
@@ -90,8 +89,6 @@ class ElasticSearchModule extends AbstractModule {
 					new EsMapping(ModelType.CATEGORY.name().toLowerCase()).build());
 			settings.put(EsSettings.MAPPINGS, mappings);
 			searchService.createIndex(settings);
-			String repoPath = PropertiesModule.getProperties().getProperty("repository.path");
-			RepositoryUpgrades.upgrade(repoPath, searchService);
 		}
 
 	}
