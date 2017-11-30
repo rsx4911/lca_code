@@ -28,7 +28,6 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
-import com.greendelta.collaboration.platform.upgrade.database.Upgrades;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
@@ -102,8 +101,6 @@ public class GuiceConfig extends GuiceServletContextListener {
 			checkAndCreateDirectories(databaseDir.getParent());
 			createDatabase(databasePath);
 			new File(repositoriesDir, "admin").mkdir();
-		} else {
-			Upgrades.run(databasePath);
 		}
 		shutdownDatabase(databasePath);
 	}
