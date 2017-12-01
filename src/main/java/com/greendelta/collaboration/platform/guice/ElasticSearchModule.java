@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.platform.guice;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.elasticsearch.client.Client;
@@ -30,6 +31,8 @@ class ElasticSearchModule extends AbstractModule {
 	@Provides
 	@Singleton
 	public Node provideNode(@Named("search.path") String home) {
+		if (!new File(home).exists() || new File(home).listFiles().length == 0)
+			throw new IllegalArgumentException("Search home not initialized, did you run the installer?");	
 		Builder settingsBuilder = Settings.builder()
 				.put("http.enabled", "false")
 				.put("transport.type", "local")
