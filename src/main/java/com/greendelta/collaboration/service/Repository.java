@@ -12,7 +12,6 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.openlca.jsonld.output.Context;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -98,17 +97,6 @@ public class Repository {
 		}
 	}
 
-	public void setSchemaVersion(String version) {
-		File file = new File(repoDir, "context.json");
-		JsonElement context = Context.write(version);
-		String json = new Gson().toJson(context);
-		try {
-			Files.write(json.getBytes(), file);
-		} catch (IOException e) {
-			log.error("Could not write context.json", e);
-		}
-	}
-
 	private void checkVersion() {
 		try {
 			String version = getSchemaVersion();
@@ -128,7 +116,7 @@ public class Repository {
 	File getDatasetFile(ModelType type, String refId, String commitId,
 			boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
-		String filename = commitId + ".json";
+		String filename = commitId + ".json.gzip";
 		return getFile(datasetDir, filename, create);
 	}
 
