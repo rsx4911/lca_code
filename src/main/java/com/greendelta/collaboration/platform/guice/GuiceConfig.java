@@ -1,19 +1,11 @@
 package com.greendelta.collaboration.platform.guice;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
-import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.guice.aop.ShiroAopModule;
@@ -74,70 +66,14 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
 		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
 		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
-		String repositoriesPath = PropertiesModule.getProperties().getProperty("repository.path");
-		String librariesPath = PropertiesModule.getProperties().getProperty("library.path");
 		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
 		Properties properties = new Properties();
-		checkAndCreateDirectories(repositoriesPath);
-		checkAndCreateDirectories(librariesPath);
-		checkAndCreateDatabase(databasePath, repositoriesPath);
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroModule(servletContext), jpaModule,
 				new JerseyModule(resourcePackages), new EhCacheModule(),
 				new PropertiesModule(), new MailModule(), new ElasticSearchModule() };
-	}
-
-	private void checkAndCreateDatabase(String databasePath, String repositoriesPath) {
-		File databaseDir = new File(databasePath);
-		File repositoriesDir = new File(repositoriesPath);
-		try {
-			DriverManager.registerDriver(new EmbeddedDriver());
-		} catch (SQLException e) {
-			log.error("Error registering sql driver", e);
-		}
-		if (!databaseDir.exists()) {
-			checkAndCreateDirectories(databaseDir.getParent());
-			createDatabase(databasePath);
-			new File(repositoriesDir, "admin").mkdir();
-		}
-		shutdownDatabase(databasePath);
-	}
-
-	private void checkAndCreateDirectories(String path) {
-		if (!new File(path).exists())
-			new File(path).mkdirs();
-	}
-
-	private void createDatabase(String databasePath) {
-		log.info("Creating new database");
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(
-				"database.sql")))) {
-			try (Connection con = DriverManager.getConnection("jdbc:derby:" + databasePath + ";create=true");
-					Statement s = con.createStatement()) {
-				String line = null;
-				String all = "";
-				while ((line = reader.readLine()) != null)
-					all += line;
-				for (String query : all.split(";")) {
-					s.executeUpdate(query);
-				}
-			}
-		} catch (Exception e) {
-			log.debug("Error creating inital database", e);
-		}
-	}
-
-	private void shutdownDatabase(String databasePath) {
-		try {
-			DriverManager.getConnection("jdbc:derby:" + databasePath + ";shutdown=true");
-		} catch (SQLException e) {
-			// Derby 10.9.1.0 shutdown raises a SQLException with state "XJ015"
-			if (!"XJ015".equals(e.getSQLState())) {
-				log.debug("Error shutting down database", e);
-			}
-		}
 	}
 
 	private static final class Injections {

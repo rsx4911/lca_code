@@ -1,15 +1,13 @@
 package com.greendelta.collaboration.platform.guice;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeValidationException;
-import org.openlca.core.model.ModelType;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -19,12 +17,8 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.platform.guice.util.BindUtils;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
-import com.greendelta.collaboration.service.SearchService;
-import com.greendelta.collaboration.util.ModelTypes;
-import com.greendelta.collaboration.util.Resources;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.es.EsClient;
-import com.greendelta.search.wrapper.es.EsSettings;
 
 class ElasticSearchModule extends AbstractModule {
 
@@ -36,8 +30,9 @@ class ElasticSearchModule extends AbstractModule {
 
 	@Provides
 	@Singleton
-	public Node provideNode() {
-		String home = PropertiesModule.getProperties().getProperty("search.path");
+	public Node provideNode(@Named("search.path") String home) {
+		if (!new File(home).exists() || new File(home).listFiles().length == 0)
+			throw new IllegalArgumentException("Search home not initialized, did you run the installer?");	
 		Builder settingsBuilder = Settings.builder()
 				.put("http.enabled", "false")
 				.put("transport.type", "local")
@@ -61,14 +56,7 @@ class ElasticSearchModule extends AbstractModule {
 	private static class NodeStartupListener implements StartupListener {
 
 		@Inject
-		private SearchService searchService;
-
-		@Inject
 		private Node node;
-
-		@Inject
-		@Named("search.path")
-		private String searchPath;
 
 		@Override
 		public void startup() {
@@ -77,18 +65,6 @@ class ElasticSearchModule extends AbstractModule {
 			} catch (NodeValidationException e) {
 				e.printStackTrace();
 			}
-			Map<String, Object> settings = new HashMap<>();
-			settings.put(EsSettings.CONFIG, Resources.get(getClass(), "es-settings.json"));
-			Map<String, String> mappings = new HashMap<>();
-			for (ModelType type : ModelTypes.SORTED) {
-				String typeName = type.name().toLowerCase();
-				String mapping = new EsMapping(typeName).build();
-				mappings.put(typeName, mapping);
-			}
-			mappings.put(ModelType.CATEGORY.name().toLowerCase(),
-					new EsMapping(ModelType.CATEGORY.name().toLowerCase()).build());
-			settings.put(EsSettings.MAPPINGS, mappings);
-			searchService.createIndex(settings);
 		}
 
 	}
