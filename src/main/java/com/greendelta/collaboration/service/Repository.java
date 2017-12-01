@@ -116,7 +116,7 @@ public class Repository {
 	File getDatasetFile(ModelType type, String refId, String commitId,
 			boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
-		String filename = commitId + ".json.gzip";
+		String filename = commitId + ".json";
 		return getFile(datasetDir, filename, create);
 	}
 

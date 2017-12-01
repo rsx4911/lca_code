@@ -75,11 +75,11 @@ public class CommitService {
 			Dataset dataset = reader.readNextPartAsDataset();
 			datasets.add(dataset);
 			File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
-			int size = 0;
+			boolean hadData = false;
 			try (OutputStream out = new FileOutputStream(file)) {
-				size = reader.readNextPartToStream(out);
+				hadData = reader.readNextPartToStream(out);
 			}
-			if (size == 0) {
+			if (!hadData) {
 				indexEntries.add(indexEntryCreator.create(dataset));
 				continue;
 			}
