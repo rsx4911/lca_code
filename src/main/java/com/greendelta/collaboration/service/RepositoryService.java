@@ -143,7 +143,7 @@ public class RepositoryService {
 	}
 
 	public void setSetting(Repository repo, String setting, boolean value) {
-		if (!accessService.canWrite(repo.toId()))
+		if (!accessService.canSetSettings(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);
 	}
