@@ -219,7 +219,7 @@ public class BrowseService {
 
 	public ObjectMap getDataset(Repository repo, String refId, String commitId) {
 		Commit commit = historyService.getCommit(repo, commitId);
-		return searchService.getLatest(repo.toId(), refId, commit);
+		return searchService.getMostRecent(repo.toId(), refId, commit);
 	}
 
 	public ObjectMap getDataset(Repository repo, ModelType type, String refId, String commitId) {
@@ -314,7 +314,7 @@ public class BrowseService {
 					continue;
 				refIds.add(entry.get("refId"));
 			}
-			List<ObjectMap> latest = searchService.getLatest(params.repo.toId(), refIds, commit);
+			List<ObjectMap> latest = searchService.getMostRecent(params.repo.toId(), refIds, commit);
 			Map<String, String> latestMap = Collections.map(latest, (e) -> e.get("refId"), (e) -> e.get("commitId"));
 			entries = Collections.filter(entries, (e) -> latestMap.containsKey(e.get("refId"))
 					&& !e.get("commitId").equals(latestMap.get(e.get("refId"))));

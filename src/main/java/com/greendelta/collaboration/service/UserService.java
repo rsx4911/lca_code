@@ -70,6 +70,11 @@ public class UserService {
 		return getForUsername(name);
 	}
 
+	public boolean isAnonymous() {
+		Subject subject = subjectProvider.get();
+		return !subject.isAuthenticated();
+	}
+
 	public long getCount() {
 		return dao.getCount();
 	}

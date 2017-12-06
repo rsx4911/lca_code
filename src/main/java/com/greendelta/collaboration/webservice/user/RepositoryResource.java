@@ -127,7 +127,7 @@ public class RepositoryResource {
 		for (IndexEntry entry : entries) {
 			entry.repositoryId = newRepo.toId();
 		}
-		searchService.index(entries);
+		searchService.index(newRepo.toId(), entries);
 	}
 
 	@DELETE
@@ -235,7 +235,7 @@ public class RepositoryResource {
 			clone.repositoryId = to.toId();
 			cloned.add(clone);
 		}
-		searchService.index(cloned);
+		searchService.index(to.toId(), cloned);
 		return response;
 	}
 

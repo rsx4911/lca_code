@@ -2,28 +2,29 @@ define () ->
 
 	map: (exchanges) ->
 		model = {byProducts: [], producedWaste: [], avoidedProducts: [], usedProducts: [], recycledWaste: [], emissions: [], resources: []}
-		for e in exchanges
-			if e.input
-				switch e.flow.flowType
-					when 'PRODUCT_FLOW'
-						model.usedProducts.push e
-					when 'WASTE_FLOW'
-						model.recycledWaste.push e
-					when 'ELEMENTARY_FLOW'
-						model.resources.push e
-			else
-				if e.quantitativeReference
-					model.referenceProduct = e
-				else if e.avoidedProduct
-					model.avoidedProducts.push e
-				else 
+		if exchanges
+			for e in exchanges
+				if e.input
 					switch e.flow.flowType
 						when 'PRODUCT_FLOW'
-							model.byProducts.push e
+							model.usedProducts.push e
 						when 'WASTE_FLOW'
-							model.producedWaste.push e
+							model.recycledWaste.push e
 						when 'ELEMENTARY_FLOW'
-							model.emissions.push e
+							model.resources.push e
+				else
+					if e.quantitativeReference
+						model.referenceProduct = e
+					else if e.avoidedProduct
+						model.avoidedProducts.push e
+					else 
+						switch e.flow.flowType
+							when 'PRODUCT_FLOW'
+								model.byProducts.push e
+							when 'WASTE_FLOW'
+								model.producedWaste.push e
+							when 'ELEMENTARY_FLOW'
+								model.emissions.push e
 		model.resources = @mapByCategory model.resources, 'Uncategorized resources'
 		model.emissions = @mapByCategory model.emissions, 'Uncategorized emissions'
 		return model

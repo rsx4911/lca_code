@@ -143,21 +143,21 @@ public class SearchService {
 		return parser.convert(client.get(type.name().toLowerCase(), id));
 	}
 
-	IndexAction getLastAction(String repoId, String refId) {
-		ObjectMap latest = getLatest(repoId, refId, null);
+	IndexAction getMostRecentAction(String repoId, String refId) {
+		ObjectMap latest = getMostRecent(repoId, refId, null);
 		if (latest == null)
 			return null;
 		return IndexAction.from(latest);
 	}
 
-	ObjectMap getLatest(String repoId, String refId, Commit until) {
-		List<ObjectMap> latest = getLatest(repoId, java.util.Collections.singleton(refId), until);
+	ObjectMap getMostRecent(String repoId, String refId, Commit until) {
+		List<ObjectMap> latest = getMostRecent(repoId, java.util.Collections.singleton(refId), until);
 		if (latest == null || latest.isEmpty())
 			return null;
 		return latest.get(0);
 	}
 
-	List<ObjectMap> getLatest(String repoId, Set<String> refIds, Commit until) {
+	List<ObjectMap> getMostRecent(String repoId, Set<String> refIds, Commit until) {
 		List<ObjectMap> results = new ArrayList<>();
 		Set<String> remaining = new HashSet<>(refIds);
 		Set<String> added = new HashSet<>();
@@ -198,9 +198,24 @@ public class SearchService {
 		return parser.parse(result.data.get(0));
 	}
 
-	public void index(Collection<IndexEntry> entries) {
+	public void index(String repoId, Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
+		Set<String> refIds = Collections.convert(new HashSet<>(entries), e -> e.refId);
+		List<IndexEntry> mostRecent = Collections.convert(getMostRecent(repoId, refIds, null), parser::parse);
+		for (IndexEntry entry : mostRecent) {
+			entry.mostRecent = false;
+		}
+		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = buildIndexMap(mostRecent);
+		client.index(contentsByIdByType);
+		for (IndexEntry entry : entries) {
+			entry.mostRecent = true;
+		}
+		contentsByIdByType = buildIndexMap(entries);
+		client.index(contentsByIdByType);
+	}
+
+	private Map<String, Map<String, Map<String, Object>>> buildIndexMap(Collection<IndexEntry> entries) {
 		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = new HashMap<>();
 		for (IndexEntry entry : entries) {
 			Map<String, Object> content = toMap(entry);
@@ -210,7 +225,7 @@ public class SearchService {
 			}
 			contentsById.put(entry.toIndexId(), content);
 		}
-		client.index(contentsByIdByType);
+		return contentsByIdByType;
 	}
 
 	private ObjectMap toMap(IndexEntry entry) {

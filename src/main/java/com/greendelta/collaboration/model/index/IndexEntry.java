@@ -11,6 +11,7 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public String commitMessage;
 	public long commitTimestamp;
 	public IndexAction action;
+	public boolean mostRecent;
 
 	public String toIndexId() {
 		return repositoryId + "/" + refId + "/" + commitId;
