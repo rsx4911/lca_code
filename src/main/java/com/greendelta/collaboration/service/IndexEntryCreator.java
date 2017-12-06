@@ -1,12 +1,14 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import org.elasticsearch.common.Strings;
 import org.openlca.cloud.model.data.Commit;
@@ -92,8 +94,8 @@ class IndexEntryCreator {
 	}
 
 	static void fillFlow(FlowIndexEntry entry, Map<String, Object> map) {
-		ObjectMap data = ObjectMap.fromMap(map);		
-		entry.flowType = Enums.getValue(data.getString("flowType"), FlowType.class);		
+		ObjectMap data = ObjectMap.fromMap(map);
+		entry.flowType = Enums.getValue(data.getString("flowType"), FlowType.class);
 	}
 
 	private ProcessIndexEntry process(Dataset dataset, File dataFile) {
@@ -167,8 +169,9 @@ class IndexEntryCreator {
 
 	private static Map<String, Object> readData(File file) {
 		try {
-			return gson.fromJson(new FileReader(file), new TypeToken<Map<String, Object>>() {
-			}.getType());
+			return gson.fromJson(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))),
+					new TypeToken<Map<String, Object>>() {
+					}.getType());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return new HashMap<>();

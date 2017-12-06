@@ -75,20 +75,20 @@ public class CommitService {
 			Dataset dataset = reader.readNextPartAsDataset();
 			datasets.add(dataset);
 			File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
-			boolean hadData = false;
+			int size = 0;
 			try (OutputStream out = new FileOutputStream(file)) {
-				hadData = reader.readNextPartToStream(out);
+				size = reader.readNextPartToStream(out);
 			}
-			if (!hadData) {
+			if (size == 0) {
 				indexEntries.add(indexEntryCreator.create(dataset));
 				continue;
 			}
-			IndexAction lastAction = searchService.getLastAction(repo.toId(), dataset.refId);
+			IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
 			indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
 			File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
 			writeBinaries(reader, binDir);
 		}
-		searchService.index(indexEntries);
+		searchService.index(repo.toId(), indexEntries);
 		return datasets;
 	}
 

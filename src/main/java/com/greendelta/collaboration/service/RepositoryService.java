@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,7 +36,8 @@ import com.greendelta.search.wrapper.SearchResult;
 public class RepositoryService {
 
 	private static final Logger log = LogManager.getLogger(Repository.class);
-
+	private static final String VERSION = "1";
+	
 	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;
@@ -94,6 +96,7 @@ public class RepositoryService {
 			throw new UnauthorizedAccessException(group, "WRITE");
 		new File(getPath(group, name)).mkdirs();
 		putJsonContext(group, name);
+		putVersion(group, name);
 		Repository repo = get(group, name);
 		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER, true);
 		return repo;
@@ -138,7 +141,7 @@ public class RepositoryService {
 			throw new UnauthorizedAccessException(to.group, "WRITE");
 		if (!Repositories.clone(from, to, commits))
 			return false;
-		commentService.copy(from, to);		
+		commentService.copy(from, to);
 		return true;
 	}
 
@@ -158,6 +161,17 @@ public class RepositoryService {
 			Files.write(data, file);
 		} catch (Exception e) {
 			log.error("Could not create context.json", e);
+		}
+	}
+
+	private void putVersion(String group, String name) {
+		File versionFile = new File(getPath(group, name), ".version");
+		if (versionFile.exists())
+			return;
+		try {
+			Files.write(VERSION.getBytes(Charset.forName("utf-8")), versionFile);
+		} catch (Exception e) {
+			log.error("Could not create .version file", e);
 		}
 	}
 

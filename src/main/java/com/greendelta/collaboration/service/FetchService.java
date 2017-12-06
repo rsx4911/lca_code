@@ -17,6 +17,9 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.BinUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
@@ -24,6 +27,7 @@ import com.greendelta.collaboration.util.Bytes;
 
 public class FetchService {
 
+	private static final Logger log = LoggerFactory.getLogger(FetchService.class);
 	private final SearchService searchService;
 
 	@Inject
@@ -33,10 +37,15 @@ public class FetchService {
 
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		File file = repo.getDatasetFile(type, refId, commitId, false);
-		byte[] data = Bytes.read(file);
-		if (data == null || data.length == 0)
+		try {
+			byte[] data = BinUtils.gunzip(Bytes.read(file));
+			if (data == null || data.length == 0)
+				return null;
+			return new String(data, Charset.forName("utf-8"));
+		} catch (IOException e) {
+			log.error("Error gunzipping data set", e);
 			return null;
-		return new String(data, Charset.forName("utf-8"));
+		}
 	}
 
 	public File getBinDir(Repository repo, ModelType type, String refId, String commitId) {
@@ -89,10 +98,8 @@ public class FetchService {
 
 		@Override
 		protected byte[] getData(Dataset dataset) throws IOException {
-			String data = getDataset(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
-			if (data == null)
-				return new byte[0];
-			return data.getBytes(ModelStream.CHARSET);
+			File file = repo.getDatasetFile(dataset.type, dataset.refId, dsToCommitId.get(dataset), false);
+			return Bytes.read(file);
 		}
 
 		@Override
