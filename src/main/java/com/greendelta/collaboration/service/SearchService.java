@@ -203,15 +203,17 @@ public class SearchService {
 			return;
 		Set<String> refIds = Collections.convert(new HashSet<>(entries), e -> e.refId);
 		List<IndexEntry> mostRecent = Collections.convert(getMostRecent(repoId, refIds, null), parser::parse);
-		for (IndexEntry entry : mostRecent) {
-			entry.mostRecent = false;
+		if (!mostRecent.isEmpty()) {
+			for (IndexEntry entry : mostRecent) {
+				entry.mostRecent = false;
+			}
+			Map<String, Map<String, Map<String, Object>>> contentsByIdByType = buildIndexMap(mostRecent);
+			client.index(contentsByIdByType);
 		}
-		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = buildIndexMap(mostRecent);
-		client.index(contentsByIdByType);
 		for (IndexEntry entry : entries) {
 			entry.mostRecent = true;
 		}
-		contentsByIdByType = buildIndexMap(entries);
+		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = buildIndexMap(entries);
 		client.index(contentsByIdByType);
 	}
 
