@@ -37,7 +37,7 @@ public class RepositoryService {
 
 	private static final Logger log = LogManager.getLogger(Repository.class);
 	private static final String VERSION = "1";
-	
+
 	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;

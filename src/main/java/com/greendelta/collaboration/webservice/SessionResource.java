@@ -103,6 +103,7 @@ public class SessionResource {
 		User currentUser = userService.getCurrentUser();
 		ObjectMap mapped = Users.mapForSelf(currentUser);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(currentUser).size());
+		mapped.put("noOfRepositories", userService.getNoOfRepositories());
 		return Respond.ok(mapped);
 	}
 }

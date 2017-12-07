@@ -46,7 +46,10 @@ define([
 					if type is 'checkbox'
 						setValue values, name, field.is(':checked')
 					else if type isnt 'file'
-						setValue values, name, field.val()
+						value = field.val()
+						if type is 'number'
+							value = parseFloat value
+						setValue values, name, value
 				return values
 
 			fill: (form, json) ->

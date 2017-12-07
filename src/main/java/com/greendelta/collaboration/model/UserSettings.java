@@ -20,6 +20,9 @@ public class UserSettings {
 	@Column(name = "can_create_repositories")
 	public boolean canCreateRepositories;
 
+	@Column(name = "no_of_repositories")
+	public int noOfRepositories;
+
 	// If true all users can initiate conversations, otherwise admins only
 	@Column(name = "messaging_enabled")
 	public boolean messagingEnabled;

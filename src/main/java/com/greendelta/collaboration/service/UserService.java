@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -31,12 +32,15 @@ public class UserService {
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
 	private final String servername;
+	private final String repositoryPath;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server,
+			@Named("repository.path") String repositoryPath) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.servername = server;
+		this.repositoryPath = repositoryPath;
 	}
 
 	public User getForUsername(String username) {
@@ -77,6 +81,16 @@ public class UserService {
 
 	public long getCount() {
 		return dao.getCount();
+	}
+
+	public int getNoOfRepositories() {
+		User currentUser = getCurrentUser();
+		if (currentUser.username == null || currentUser.username.isEmpty())
+			return 0;
+		File userGroup = new File(repositoryPath, currentUser.username);
+		if (!userGroup.exists())
+			return 0;
+		return userGroup.listFiles().length;
 	}
 
 	public SearchResult<User> getAll(int page, String filter) {

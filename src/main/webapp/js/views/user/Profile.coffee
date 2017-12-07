@@ -25,6 +25,7 @@ define([
 			events:
 				'submit #user-form': 'saveUser'
 				'change #admin, #settings-canCreateGroups': 'updateRights'
+				'change #admin, #settings-canCreateRepositories': 'updateRights'
 				'submit #password-form': 'savePassword'
 				'click [data-action=delete-user]': 'deleteUser'
 				'click [data-action=generate-password]': 'generatePassword'
@@ -156,6 +157,10 @@ define([
 				if @$('#settings-canCreateGroups').is(':checked')
 					@$('#settings-canCreateRepositories').prop 'checked', true
 					@$('#settings-canCreateRepositories').prop 'disabled', true
+				if !@$('#settings-canCreateRepositories').is(':checked')
+					@$('#settings-noOfRepositories-group').hide()
+				else
+					@$('#settings-noOfRepositories-group').show()
 
 			generatePassword: () ->
 				Layers.showMessageInLayer

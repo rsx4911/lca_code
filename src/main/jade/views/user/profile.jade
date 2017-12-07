@@ -15,7 +15,8 @@ form#user-form.content-box
 	if adminArea
 		+checkbox('admin', 'Is admin user')(disabled=user.lastAdmin)
 		+checkbox('settings-canCreateGroups', 'Is allowed to create groups')
-		+checkbox('settings-canCreateRepositories', 'Is allowed to create repository in his user group')
+		+checkbox('settings-canCreateRepositories', 'Is allowed to create repositories in his user group')
+		+input('settings-noOfRepositories', 'No. of user group repositories', 'number')(class='input-sm', value=user.settings.noOfRepositories||0, size=4, min=1)
 	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
 		if user.id
 			| Save
