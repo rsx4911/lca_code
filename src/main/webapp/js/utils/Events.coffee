@@ -31,6 +31,13 @@ define () ->
 					target = target.parentElement
 			return target
 
+		validateNumber: (event) ->
+			key = @keyCode event
+			if key < 48 or key > 57
+				@preventDefault event
+				return false
+			return true
+
 		followLink: (event) ->
 			link = $ @target event, 'a'
 			route = link.attr 'href'

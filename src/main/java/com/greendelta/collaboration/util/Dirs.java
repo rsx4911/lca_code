@@ -2,10 +2,20 @@ package com.greendelta.collaboration.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 
 public class Dirs {
+
+	private static final Logger log = LoggerFactory.getLogger(Dirs.class);
 
 	/**
 	 * Copies all files from the directory specified by the first argument to
@@ -41,4 +51,31 @@ public class Dirs {
 		}
 		return true;
 	}
+
+	public static long getSize(Path path) {
+		AtomicLong size = new AtomicLong(0);
+		try {
+			java.nio.file.Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+					size.addAndGet(attrs.size());
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFileFailed(Path file, IOException exc) {
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+					return FileVisitResult.CONTINUE;
+				}
+			});
+		} catch (IOException e) {
+			log.error("Error getting size of directory", e);
+		}
+		return size.get();
+	}
+
 }

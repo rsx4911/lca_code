@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Field;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +15,8 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.greendelta.collaboration.util.Dirs;
+import com.greendelta.collaboration.util.ModelTypes;
 
 public class Repository {
 
@@ -62,19 +63,22 @@ public class Repository {
 		return toId(group, name);
 	}
 
-	void setSetting(String setting, boolean value) {
-		try {
-			Field field = Settings.class.getField(setting);
-			field.set(this.settings, value);
-			try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
-				new Gson().toJson(settings, writer);
-			} catch (IOException e) {
-				log.error("Error saving settings", e);
-			}
-		} catch (NoSuchFieldException e) {
-			log.debug("Tried to set non existing setting value: " + setting);
-		} catch (IllegalAccessException e) {
-			log.error("Error setting value for " + setting, e);
+	void setSetting(String setting, String value) {
+		switch (setting) {
+		case "publicAccess":
+			settings.publicAccess = Boolean.parseBoolean(value);
+			break;
+		case "commentApproval":
+			settings.commentApproval = Boolean.parseBoolean(value);
+			break;
+		case "maxSize":
+			settings.maxSize = Long.parseLong(value);
+			break;
+		}
+		try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
+			new Gson().toJson(settings, writer);
+		} catch (IOException e) {
+			log.error("Error saving settings", e);
 		}
 	}
 
@@ -95,6 +99,15 @@ public class Repository {
 			log.error("Could not read context.json", e);
 			return null;
 		}
+	}
+
+	long getSize() {
+		long size = 0;
+		for (ModelType type : ModelTypes.SORTED) {
+			size += Dirs.getSize(getModelDir(type, false).toPath());
+		}
+		size += Dirs.getSize(getBinDir(false).toPath());
+		return size;
 	}
 
 	private void checkVersion() {
@@ -182,6 +195,7 @@ public class Repository {
 
 		public boolean publicAccess;
 		public boolean commentApproval;
+		public long maxSize;
 
 	}
 

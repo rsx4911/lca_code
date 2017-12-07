@@ -22,7 +22,10 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'repository', @repository.get('group') + '/' + @repository.get('name')
-				'change [data-setting]': 'toggleSetting'
+				'change [data-setting][type=checkbox]': 'toggleSetting'
+				'change #maxSize': 'updateMaxSize'
+				'change #unit': 'updateMaxSize'
+				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
 				'click [data-action=clone-repository]': 'openCloneLayer'
 				'click [data-action=move-repository]': 'openMoveLayer'
@@ -36,6 +39,17 @@ define([
 					repository: repository
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
+				@setMaxSize parseFloat repository.settings.maxSize
+
+			setMaxSize: (size) ->
+				unless size
+					return
+				if size % 1073741824 is 0
+					@$('#maxSize-group #unit').val('1073741824')
+					@$('#maxSize').val(size / 1073741824)
+				else
+					@$('#maxSize-group #unit').val('1048576')
+					@$('#maxSize').val(parseInt(size / 1048576))
 
 			toggleSetting: (event) ->
 				target = $ Events.target event
@@ -43,9 +57,25 @@ define([
 				fullPath = "#{repository.group}/#{repository.name}"
 				setting = target.attr 'data-setting'
 				value = target.is ':checked'
+				repository.settings[setting] = value
 				$.ajax
 					type: 'PUT'
 					url: "ws/repository/settings/#{fullPath}/#{setting}/#{value}"
+
+			updateMaxSize: (event) ->
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				size = @$('#maxSize').val()
+				if size isnt parseInt(size).toString()
+					@setMaxSize parseInt repository.settings.maxSize
+					return
+				size = parseInt size
+				unit = parseInt @$('#maxSize-group #unit').val()
+				value = size * unit
+				repository.settings.maxSize = value
+				$.ajax
+					type: 'PUT'
+					url: "ws/repository/settings/#{fullPath}/maxSize/#{value}"
 
 			deleteRepository: (event) ->
 				repository = @repository.toJSON()

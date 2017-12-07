@@ -76,7 +76,7 @@ public class CommitResource {
 			return Respond.conflict("User is out of sync");
 		Commit commit = service.put(repo, commitData);
 		if (commit == null)
-			return Respond.error("Error reading commit data");
+			return Respond.error("Unknown error handling commit data");
 		notificationService.dataCommitted(repo, commit).send();
 		return Respond.created(commit.id);
 	}

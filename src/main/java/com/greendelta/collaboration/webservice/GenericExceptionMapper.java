@@ -17,6 +17,7 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.CommitService.InsufficientStorageException;
 import com.greendelta.collaboration.service.UserService;
 
 @Provider
@@ -35,6 +36,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		if (e instanceof AuthorizationException)
 			return Response.status(Status.FORBIDDEN).build();
+		if (e instanceof InsufficientStorageException)
+			return Response.status(507).entity(e.getMessage()).build();
 		log.error("Server error [user=" + getUserInfo() + "]", e);
 		return Response.status(getStatus(e)).entity(getMessage(e)).type(MediaType.APPLICATION_JSON).build();
 	}

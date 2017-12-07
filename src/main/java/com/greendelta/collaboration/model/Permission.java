@@ -14,6 +14,8 @@ public enum Permission {
 
 	DELETE,
 
+	CREATE,
+
 	EDIT_MEMBERS,
 
 	MANAGE_COMMENTS,

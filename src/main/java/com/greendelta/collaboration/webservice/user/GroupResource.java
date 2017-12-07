@@ -78,6 +78,7 @@ public class GroupResource {
 		Map<String, Object> group = new HashMap<>();
 		group.put("userCanDelete", accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
+		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
 		group.put("userCanEditMembers", accessService.canEditMembersOf(name));
 		return Respond.ok(group);
 	}

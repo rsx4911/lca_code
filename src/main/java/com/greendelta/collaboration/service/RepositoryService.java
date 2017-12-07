@@ -145,7 +145,7 @@ public class RepositoryService {
 		return true;
 	}
 
-	public void setSetting(Repository repo, String setting, boolean value) {
+	public void setSetting(Repository repo, String setting, String value) {
 		if (!accessService.canSetSettings(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);

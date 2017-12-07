@@ -11,7 +11,19 @@ include ../mixins/avatar-box.jade
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
-	+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings checked=repository.settings.publicAccess data-setting='publicAccess')
-	+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings checked=repository.settings.commentApproval data-setting='commentApproval')
+	if repository.userCanSetSettings
+		+input('maxSize', 'Maximum size', 'number', true)(class='input-sm', value=0, size=4, min=0)
+			+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
+	else
+		- maxSize = repository.settings.maxSize; 
+		if maxSize % 1073741824 === 0
+			- maxSize /= 1073741824;
+			- maxSize = maxSize + ' GB';
+		else
+			- maxSize /= 1048576;
+			- maxSize = maxSize + ' MB';
+		+static('maxSize', 'Maximum size', maxSize)
+	+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='publicAccess')
+	+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)

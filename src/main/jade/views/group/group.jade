@@ -12,7 +12,7 @@ include ../mixins/avatar-box.jade
 	.repositories.flex-column
 		.flex-container
 			.header-box Repositories (#{repositories.length})
-				if group.userCanWrite
+				if group.userCanCreate
 					button.btn.btn-lg.btn-success.pull-right(data-action='create-repository')
 						span.glyphicon.glyphicon-plus
 						span.text Create new

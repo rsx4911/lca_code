@@ -16,6 +16,7 @@ import org.openlca.cloud.api.data.ModelStreamReader;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
+import org.openlca.cloud.util.Directories;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
@@ -43,7 +44,7 @@ public class CommitService {
 		try (ModelStreamReader reader = new ModelStreamReader(data)) {
 			return write(repo, reader);
 		} catch (IOException e) {
-			log.error("Error reading commit data", e);
+			log.error("Error handling commit data", e);
 			return null;
 		}
 	}
@@ -67,42 +68,82 @@ public class CommitService {
 		return commit;
 	}
 
-	private List<Dataset> writeDatasets(Repository repo, Commit commit, ModelStreamReader reader) throws IOException {
+	private void writeDatasets(Repository repo, Commit commit, ModelStreamReader reader) throws IOException {
 		List<Dataset> datasets = new ArrayList<>();
 		List<IndexEntry> indexEntries = new ArrayList<>();
 		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
-		while (reader.hasMore()) {
-			Dataset dataset = reader.readNextPartAsDataset();
-			datasets.add(dataset);
-			File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
-			int size = 0;
-			try (OutputStream out = new FileOutputStream(file)) {
-				size = reader.readNextPartToStream(out);
+		long totalSize = repo.getSize();
+		try {
+			while (reader.hasMore()) {
+				Dataset dataset = reader.readNextPartAsDataset();
+				datasets.add(dataset);
+				File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
+				int size = 0;
+				try (OutputStream out = new FileOutputStream(file)) {
+					size = reader.readNextPartToStream(out);
+				}
+				if (size == 0) {
+					indexEntries.add(indexEntryCreator.create(dataset));
+					datasets.add(dataset);
+					continue;
+				}
+				totalSize += size;
+				checkSize(repo, totalSize);
+				IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
+				indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
+				File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
+				int count = 0;
+				int noOfFiles = reader.readNextInt();
+				while (count++ < noOfFiles) {
+					String path = reader.readNextPartAsString();
+					File binFile = new File(binDir, path);
+					binFile.getParentFile().mkdirs();
+					try (OutputStream out = new FileOutputStream(binFile)) {
+						size = reader.readNextPartToStream(out);
+						totalSize += size;
+					}
+					checkSize(repo, totalSize);
+				}
 			}
-			if (size == 0) {
-				indexEntries.add(indexEntryCreator.create(dataset));
-				continue;
-			}
-			IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
-			indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
-			File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
-			writeBinaries(reader, binDir);
+			searchService.index(repo.toId(), indexEntries);
+		} catch (Exception e) {
+			cleanup(repo, datasets, commit);
+			throw e;
 		}
-		searchService.index(repo.toId(), indexEntries);
-		return datasets;
 	}
 
-	private void writeBinaries(ModelStreamReader reader, File binDir) throws IOException {
-		int count = 0;
-		int noOfFiles = reader.readNextInt();
-		while (count++ < noOfFiles) {
-			String path = reader.readNextPartAsString();
-			File binFile = new File(binDir, path);
-			binFile.getParentFile().mkdirs();
-			try (OutputStream out = new FileOutputStream(binFile)) {
-				reader.readNextPartToStream(out);
+	private void checkSize(Repository repo, long size) {
+		if (repo.settings.maxSize > 0 && size > repo.settings.maxSize)
+			throw new InsufficientStorageException();
+	}
+
+	private void cleanup(Repository repo, List<Dataset> datasets, Commit commit) {
+		for (Dataset dataset : datasets) {
+			File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, false);
+			if (file.exists()) {
+				file.delete();
+			}
+			while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
+				file.delete();
+			}
+			file = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
+			if (file.exists()) {
+				Directories.delete(file);
+				while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
+					file.delete();
+				}
 			}
 		}
+	}
+
+	public class InsufficientStorageException extends RuntimeException {
+
+		private static final long serialVersionUID = 543921197834005033L;
+		
+		private InsufficientStorageException() {
+			super("Insufficient storage on repository");
+		}
+
 	}
 
 }

@@ -73,7 +73,7 @@ public class AccessService {
 		User user = userService.getCurrentUser();
 		if (isOwnNamespace(user, group))
 			return user.settings.canCreateRepositories;
-		return hasPermissionTo(Permission.WRITE, group);
+		return hasPermissionTo(Permission.CREATE, group);
 	}
 
 	public List<Comment> filterCanRead(List<Comment> comments) {

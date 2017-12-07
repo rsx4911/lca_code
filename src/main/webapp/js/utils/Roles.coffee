@@ -9,7 +9,7 @@ define () ->
 	CONTRIBUTOR:
 		id: 'CONTRIBUTOR'
 		name: 'Contributor'
-		descriptionForGroup: 'A contributor can add new repositories to the group and commit content'
+		descriptionForGroup: 'A contributor can commit data to all repositories in the group'
 		descriptionForRepository: 'A contributor can commit data to the repository'
 
 	REVIEWER:
@@ -27,7 +27,7 @@ define () ->
 	OWNER:
 		id: 'OWNER'
 		name: 'Owner'
-		descriptionForGroup: 'An owner can delete the group and repositories within the group and edit its members'
+		descriptionForGroup: 'An owner can delete the group, add and delete repositories within the group and edit its members'
 		descriptionForRepository: 'An owner can delete the repository and edit its members'
 
 	getAll: () ->
