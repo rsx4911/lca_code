@@ -17,6 +17,8 @@ form#user-form.content-box
 		+checkbox('settings-canCreateGroups', 'Is allowed to create groups')
 		+checkbox('settings-canCreateRepositories', 'Is allowed to create repositories in his user group')
 		+input('settings-noOfRepositories', 'No. of user group repositories', 'number')(class='input-sm', value=user.settings.noOfRepositories||0, size=4, min=1)
+		+input('settings-maxSize', 'Maximum user group size', 'number', true)(class='input-sm', value=0, size=4, min=0)
+			+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
 	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
 		if user.id
 			| Save

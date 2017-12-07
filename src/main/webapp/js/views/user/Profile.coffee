@@ -27,6 +27,7 @@ define([
 				'change #admin, #settings-canCreateGroups': 'updateRights'
 				'change #admin, #settings-canCreateRepositories': 'updateRights'
 				'submit #password-form': 'savePassword'
+				'keydown #settings-maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-user]': 'deleteUser'
 				'click [data-action=generate-password]': 'generatePassword'
 				'click [data-action=show-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication ''
@@ -56,12 +57,30 @@ define([
 					adminArea: @adminArea
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
+				@setMaxSize user.settings.maxSize
 				@updateRights()
 				Avatar.initCropper 'user', @user.get('username')
+
+			setMaxSize: (size) ->
+				unless size
+					return
+				if size % 1073741824 is 0
+					@$('#settings-maxSize-group #unit').val('1073741824')
+					@$('#settings-maxSize').val(size / 1073741824)
+				else
+					@$('#settings-maxSize-group #unit').val('1048576')
+					@$('#settings-maxSize').val(parseInt(size / 1048576))
 
 			saveUser: (event) ->
 				Events.preventDefault event
 				@user.set Forms.toJson 'user-form'
+				settings = @user.get 'settings'
+				size = parseInt @$('#settings-maxSize').val()
+				if isNaN(size)
+					settings.maxSize = 0
+				else
+					unit = parseInt @$('#settings-maxSize-group #unit').val()
+					settings.maxSize = size * unit
 				username = @user.get 'username'
 				unless username
 					Forms.handleError 'user-form', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
@@ -158,9 +177,9 @@ define([
 					@$('#settings-canCreateRepositories').prop 'checked', true
 					@$('#settings-canCreateRepositories').prop 'disabled', true
 				if !@$('#settings-canCreateRepositories').is(':checked')
-					@$('#settings-noOfRepositories-group').hide()
+					@$('#settings-noOfRepositories-group, #settings-maxSize-group').hide()
 				else
-					@$('#settings-noOfRepositories-group').show()
+					@$('#settings-noOfRepositories-group, #settings-maxSize-group').show()
 
 			generatePassword: () ->
 				Layers.showMessageInLayer

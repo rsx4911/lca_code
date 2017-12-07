@@ -93,6 +93,20 @@ public class UserService {
 		return userGroup.listFiles().length;
 	}
 
+	public long getUserGroupSize() {
+		User currentUser = getCurrentUser();
+		if (currentUser.username == null || currentUser.username.isEmpty())
+			return 0;
+		File userGroup = new File(repositoryPath, currentUser.username);
+		if (!userGroup.exists())
+			return 0;
+		long size = 0;
+		for (File file : userGroup.listFiles()) {
+			size += Repository.getIgnoreSchema(repositoryPath, currentUser.username, file.getName()).getSize();
+		}
+		return size;
+	}
+
 	public SearchResult<User> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))

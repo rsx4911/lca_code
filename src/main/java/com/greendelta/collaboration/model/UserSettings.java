@@ -23,6 +23,10 @@ public class UserSettings {
 	@Column(name = "no_of_repositories")
 	public int noOfRepositories;
 
+	// If not 0, the maximum size of all user group repositories in bytes
+	@Column(name = "max_size")
+	public long maxSize;
+
 	// If true all users can initiate conversations, otherwise admins only
 	@Column(name = "messaging_enabled")
 	public boolean messagingEnabled;

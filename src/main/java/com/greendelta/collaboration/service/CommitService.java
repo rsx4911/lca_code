@@ -19,6 +19,7 @@ import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.util.Directories;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.util.Bytes;
@@ -72,7 +73,9 @@ public class CommitService {
 		List<Dataset> datasets = new ArrayList<>();
 		List<IndexEntry> indexEntries = new ArrayList<>();
 		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
-		long totalSize = repo.getSize();
+		long repoSize = repo.getSize();
+		long userGroupSize = userService.getUserGroupSize();
+		User user = userService.getCurrentUser();
 		try {
 			while (reader.hasMore()) {
 				Dataset dataset = reader.readNextPartAsDataset();
@@ -87,8 +90,9 @@ public class CommitService {
 					datasets.add(dataset);
 					continue;
 				}
-				totalSize += size;
-				checkSize(repo, totalSize);
+				repoSize += size;
+				userGroupSize += size;
+				checkSize(repo, repoSize, user, userGroupSize);
 				IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
 				indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
 				File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
@@ -100,9 +104,10 @@ public class CommitService {
 					binFile.getParentFile().mkdirs();
 					try (OutputStream out = new FileOutputStream(binFile)) {
 						size = reader.readNextPartToStream(out);
-						totalSize += size;
+						repoSize += size;
+						userGroupSize += size;
 					}
-					checkSize(repo, totalSize);
+					checkSize(repo, repoSize, user, userGroupSize);
 				}
 			}
 			searchService.index(repo.toId(), indexEntries);
@@ -112,9 +117,11 @@ public class CommitService {
 		}
 	}
 
-	private void checkSize(Repository repo, long size) {
+	private void checkSize(Repository repo, long size, User user, long userGroupSize) {
 		if (repo.settings.maxSize > 0 && size > repo.settings.maxSize)
-			throw new InsufficientStorageException();
+			throw new InsufficientStorageException("Insufficient storage in repository");
+		if (user.settings.maxSize > 0 && userGroupSize > user.settings.maxSize)
+			throw new InsufficientStorageException("Insufficient storage in user group");
 	}
 
 	private void cleanup(Repository repo, List<Dataset> datasets, Commit commit) {
@@ -139,9 +146,9 @@ public class CommitService {
 	public class InsufficientStorageException extends RuntimeException {
 
 		private static final long serialVersionUID = 543921197834005033L;
-		
-		private InsufficientStorageException() {
-			super("Insufficient storage on repository");
+
+		private InsufficientStorageException(String message) {
+			super(message);
 		}
 
 	}

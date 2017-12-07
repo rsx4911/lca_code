@@ -119,7 +119,7 @@ public class UserResource {
 		if (currentUser.admin) {
 			Beans.populateProperties(user, fromDb, "admin");
 			Beans.populateProperties(user.settings, fromDb.settings,
-					"canCreateGroups", "canCreateRepositories", "noOfRepositories");
+					"canCreateGroups", "canCreateRepositories", "noOfRepositories", "maxSize");
 		}
 		fromDb = service.update(fromDb);
 		return Respond.ok(Users.mapForSelf(fromDb));
