@@ -74,7 +74,9 @@ public class CommitService {
 		List<IndexEntry> indexEntries = new ArrayList<>();
 		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
 		long repoSize = repo.getSize();
-		long userGroupSize = userService.getUserGroupSize();
+		User currentUser = userService.getCurrentUser();
+		boolean isOwnNamespace = accessService.isOwnNamespace(currentUser, repo.toId());
+		long userGroupSize = isOwnNamespace ? userService.getUserGroupSize() : 0;
 		User user = userService.getCurrentUser();
 		try {
 			while (reader.hasMore()) {
@@ -92,7 +94,7 @@ public class CommitService {
 				}
 				repoSize += size;
 				userGroupSize += size;
-				checkSize(repo, repoSize, user, userGroupSize);
+				checkSize(repo, repoSize, user, userGroupSize, isOwnNamespace);
 				IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
 				indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
 				File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
@@ -107,7 +109,7 @@ public class CommitService {
 						repoSize += size;
 						userGroupSize += size;
 					}
-					checkSize(repo, repoSize, user, userGroupSize);
+					checkSize(repo, repoSize, user, userGroupSize, isOwnNamespace);
 				}
 			}
 			searchService.index(repo.toId(), indexEntries);
@@ -117,9 +119,11 @@ public class CommitService {
 		}
 	}
 
-	private void checkSize(Repository repo, long size, User user, long userGroupSize) {
+	private void checkSize(Repository repo, long size, User user, long userGroupSize, boolean isOwnNamespace) {
 		if (repo.settings.maxSize > 0 && size > repo.settings.maxSize)
 			throw new InsufficientStorageException("Insufficient storage in repository");
+		if (!isOwnNamespace)
+			return;
 		if (user.settings.maxSize > 0 && userGroupSize > user.settings.maxSize)
 			throw new InsufficientStorageException("Insufficient storage in user group");
 	}

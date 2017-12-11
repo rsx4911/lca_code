@@ -156,7 +156,7 @@ public class AccessService {
 		return role.getPermissions().contains(permission);
 	}
 
-	private boolean isOwnNamespace(User user, String groupOrRepo) {
+	boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equalsIgnoreCase(user.username);
 		String group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
