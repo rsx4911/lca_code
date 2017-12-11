@@ -103,7 +103,7 @@ mixin non-causal-allocation-table()
 			each factor in dataset.nonCausalAllocationFactors
 				tr
 					- var index = factor.physical ? factor.physical.index : factor.economic.index
-					td: +ref('allocationFactors[' + index + '].flow', 'PRODUCT_FLOW')
+					td: +ref('allocationFactors[' + index + '].product', 'PRODUCT_FLOW')
 					if factor.physical && (factor.physical.index || factor.physical.index === 0)
 						td(data-path='allocationFactors[physical-' + factor.product.id + ']')=factor.physical.value
 					else
@@ -121,7 +121,7 @@ mixin causal-allocation-table()
 				th
 				th=getLabel('allocationFactors.product')
 				each product in dataset.causalAllocationFactors[0].products
-					th: +ref('allocationFactors[' + product.index + '].flow', 'PRODUCT_FLOW')
+					th: +ref('allocationFactors[' + product.index + '].product', 'PRODUCT_FLOW')
 		tbody
 			each factor in dataset.causalAllocationFactors
 				if factor.exchange && factor.products && factor.products.length && factor.exchange.flow
