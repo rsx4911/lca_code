@@ -177,9 +177,9 @@ define([
 					@$('#settings-canCreateRepositories').prop 'checked', true
 					@$('#settings-canCreateRepositories').prop 'disabled', true
 				if !@$('#settings-canCreateRepositories').is(':checked')
-					@$('#settings-noOfRepositories-group, #settings-maxSize-group').hide()
+					@$('#settings-noOfRepositories-group').hide()
 				else
-					@$('#settings-noOfRepositories-group, #settings-maxSize-group').show()
+					@$('#settings-noOfRepositories-group').show()
 
 			generatePassword: () ->
 				Layers.showMessageInLayer
