@@ -66,11 +66,22 @@ define([
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				size = @$('#maxSize').val()
+				unit = parseInt @$('#maxSize-group #unit').val()
+				if unit is 1073741824
+					@$('#size-value').html(parseInt(1000*repository.size/unit)/1000)
+				else
+					@$('#size-value').html(parseInt(repository.size/unit))
+				if size
+					percentage = parseInt(100*repository.size/(size*unit))
+					@$('#size-group .size-indicator-overlay').css 'width', (100 - percentage) + '%'					
+					@$('#size-group .size-indicator-overlay').css 'margin-left', percentage + '%'					
+					@$('#size-group .size-indicator').show()
+				else
+					@$('#size-group .size-indicator').hide()
 				if size isnt parseInt(size).toString()
 					@setMaxSize parseInt repository.settings.maxSize
 					return
 				size = parseInt size
-				unit = parseInt @$('#maxSize-group #unit').val()
 				value = size * unit
 				repository.settings.maxSize = value
 				$.ajax

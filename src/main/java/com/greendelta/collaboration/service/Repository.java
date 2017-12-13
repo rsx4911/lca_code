@@ -101,7 +101,7 @@ public class Repository {
 		}
 	}
 
-	long getSize() {
+	public long getSize() {
 		long size = 0;
 		for (ModelType type : ModelTypes.SORTED) {
 			size += Dirs.getSize(getModelDir(type, false).toPath());

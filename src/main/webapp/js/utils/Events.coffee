@@ -33,7 +33,7 @@ define () ->
 
 		validateNumber: (event) ->
 			key = @keyCode event
-			if key < 48 or key > 57
+			if !((key >= 48 and key <= 57) or (key >= 37 and key <= 40) or (key >= 112 and key <= 123) or key is 65 or key is 16 or key is 8 or key is 9)
 				@preventDefault event
 				return false
 			return true

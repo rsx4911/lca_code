@@ -168,6 +168,7 @@ public class RepositoryResource {
 		mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
 		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(id));
 		mappedRepo.put("userCanSetSettings", accessService.canSetSettings(id));
+		mappedRepo.put("size", repo.getSize());
 		return Respond.ok(mappedRepo);
 	}
 

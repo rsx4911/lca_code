@@ -12,7 +12,7 @@ mixin static(id, label, value, href)
 				a(href=href)=value
 			else
 				| #{value}
-		block
+			block
 
 mixin input(id, label, type, inline, required, hide)
 	- var hidden = type === 'hidden'
