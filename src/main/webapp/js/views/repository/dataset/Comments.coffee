@@ -42,9 +42,6 @@ define([
 						@comments[path] = []
 					@showComments options, path
 				@openComment options.commentPath
-				for key in Object.keys(@comments)
-					if $.inArray(key, found) is -1
-						console.log 'Unknown path: ' + key
 
 		openComment: (path) ->
 			unless path
@@ -164,7 +161,7 @@ define([
 				buttons.push {text: 'Add and release comment', id: 'release', className: 'btn-success', callback: => @addComment options, path, true}
 			Layers.showTemplateInLayer
 				title: if field then "Comments on '#{field}'" else 'Comments on data set'
-				template: 'repository/dataset/comment-layer'
+				template: 'repository/dataset/layer/comment-layer'
 				model: 
 					path: path
 					comments: comments or []

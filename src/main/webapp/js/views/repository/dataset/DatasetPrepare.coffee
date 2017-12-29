@@ -69,7 +69,7 @@ define([
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
 						f = nonCausalAllocationFactors[factor.product.id]
 						unless f
-							f = {flow: flowMap[factor.product.id], product: factor.product}
+							f = {product: flowMap[factor.product.id]}
 							nonCausalAllocationFactors[factor.product.id] = f
 						if factor.allocationType is 'PHYSICAL_ALLOCATION'
 							f.physical = {value: factor.value, index: index}
@@ -112,7 +112,6 @@ define([
 						parameters[contextId + param.name] = p
 					commentPath = 'variants[' + variant.productSystem.id + '-' + variant.name + '].parameterRedefs[' + contextId + '-' + param.name + ']'
 					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: p.path + '.value', commentPath: commentPath}
-			console.log parameters
 			dataset.parameterRedefs = []
 			for key in Object.keys(parameters)
 				p = parameters[key]
@@ -124,6 +123,5 @@ define([
 					values.push p.values[key2]
 				p.values = values
 				dataset.parameterRedefs.push p
-			console.log dataset.parameterRedefs
 
 )

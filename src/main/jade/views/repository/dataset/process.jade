@@ -1,142 +1,107 @@
-include ./mixins.jade
-include ./process-tables.jade
-include ./process-exchange-list.jade
-include ../../mixins/category-breadcrumb.jade
-include ../../mixins/long-text.jade
+include ./structures/exchange-list.jade
+include ./structures/exchange-table.jade
+include ./structures/non-causal-allocation-factor-table.jade
+include ./structures/causal-allocation-factor-table.jade
+include ./structures/social-aspect-table.jade
+include ./structures/parameter-table.jade
 
-mixin labeled-field(path, formatter, defaultValue, cropLongText)
-	strong=getLabel(path)
-	- var value = getValue(dataset, path);
-	if !value && defaultValue
-		- value = defaultValue
-	else if formatter
-		- value = formatter(value);
-	div(data-path=path)
-		if cropLongText 
-			+long-text(value)
-		else 
-			| #{value}
-
-mixin labeled-ref(path)
-	strong=getLabel(path)
-	div: +ref(path, null, '-')(data-path=path)
-
-- var doc = dataset.processDocumentation
+- var doc = dataset.processDocumentation;
+- var doc2 = getValue(compareTo, 'processDocumentation');
 +menubar
 .content-box
 	.model-left-content
 		+header
 		.content
 			ul.nav.nav-tabs(role='tablist')
-				li.active(role='presentation') 
-					a(href='#exchanges' aria-controls='exchange' role='tab' data-toggle='tab' data-path='exchanges')=getLabel('exchanges')
-				if doc || reviewMode
-					li(role='presentation') 
-						a(href='#documentation' aria-controls='documentation' role='tab' data-toggle='tab')=getLabel('documentation')
-				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors.length) || reviewMode
-					li(role='presentation') 
-						a(href='#allocation' aria-controls='allocation' role='tab' data-toggle='tab' data-path='allocationFactors')=getLabel('allocationFactors')
-				if (dataset.socialAspects && dataset.socialAspects.length) || reviewMode
-					li(role='presentation') 
-						a(href='#social' aria-controls='social' role='tab' data-toggle='tab' data-path='socialAspects')=getLabel('socialAspects')
-				if (dataset.parameters && dataset.parameters.length) || reviewMode
-					li(role='presentation') 
-						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters')=getLabel('parameters')
+				+nav-tab('exchanges', true)
+				+nav-tab(null, false, 'Documentation')
+				+nav-tab('allocationFactors')
+				+nav-tab('socialAspects')
+				+nav-tab('parameters')
 			.tab-content
-				#exchanges.tab-pane.active(role='tabpanel')
-					if dataset.exchanges
-						a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
-						.clear
-						.exchange-tables.toggleable
-							+exchange-table(true)
-							+exchange-table(false)
-						a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
-						.clear
-						.exchange-list.toggleable
-							+exchange-list(exchangeMap)
-				if doc || reviewMode
-					#documentation.tab-pane(role='tabpanel')
-						table.table.no-head
-							tbody
-								+field-row('processDocumentation.intendedApplication', true, true)
-								+ref-row('processDocumentation.dataSetOwner')
-								+ref-row('processDocumentation.dataGenerator')
-								+ref-row('processDocumentation.dataDocumentor')
-								+ref-row('processDocumentation.publication')
-								+ref-row('processDocumentation.reviewer')
-								+field-row('processDocumentation.reviewDetails', true, true)
-								+field-row('processDocumentation.restrictionsDescription', true, true)
-								+field-row('processDocumentation.projectDescription', true, true)
-								+field-row('processDocumentation.creationDate', true, true, formatDate)
-								+field-row('processDocumentation.copyright')
-									span
-										img.icon-small(src='images/check_' + (doc && doc.copyright?'true':'false') + '.png')
-								+field-row('processDocumentation.inventoryMethodDescription', true, true)
-								+field-row('processDocumentation.modelingConstantsDescription', true, true)
-								+field-row('processDocumentation.completenessDescription', true, true)
-								+field-row('processDocumentation.dataSelectionDescription', true, true)
-								+field-row('processDocumentation.dataTreatmentDescription', true, true)
-								+field-row('processDocumentation.samplingDescription', true, true)
-								+field-row('processDocumentation.dataCollectionDescription', true, true)
-								if (doc && doc.sources) || reviewMode
-									+field-row('processDocumentation.sources')
-										span
-											if doc && doc.sources
-												each source, index in doc.sources
-													div: +ref('processDocumentation.sources[' + index + ']')(data-path='processDocumentation.sources[' + source.id +']')
-				if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length) || (dataset.causalAllocationFactors && dataset.causalAllocationFactors) || reviewMode
-					#allocation.tab-pane(role='tabpanel')
-						if (dataset.nonCausalAllocationFactors && dataset.nonCausalAllocationFactors.length)
-							+non-causal-allocation-table()
-						if (dataset.causalAllocationFactors && dataset.causalAllocationFactors.length)
-							+causal-allocation-table()
-				if (dataset.socialAspects && dataset.socialAspects.length) || reviewMode
-					#social.tab-pane(role='tabpanel')
-						if (dataset.socialAspects && dataset.socialAspects.length)
-							+social-aspect-table()
-				if (dataset.parameters && dataset.parameters.length) || reviewMode
-					#parameters.tab-pane(role='tabpanel')
-						+parameter-table(true)
-						+parameter-table(false)
+				+nav-tab-pane('exchanges', true)
+					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
+					.clear
+					.exchange-tables.toggleable
+						+exchange-table(true)
+						+exchange-table(false)
+					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
+					.clear
+					.exchange-list.toggleable
+						+exchange-list(exchangeMap, otherExchangeMap)
+				+nav-tab-pane('documentation', false, true)
+					table.table.no-head
+						tbody
+							+field-row('processDocumentation.intendedApplication')
+							+ref-row('processDocumentation.dataSetOwner')
+							+ref-row('processDocumentation.dataGenerator')
+							+ref-row('processDocumentation.dataDocumentor')
+							+ref-row('processDocumentation.publication')
+							+ref-row('processDocumentation.reviewer')
+							+field-row('processDocumentation.reviewDetails')
+							+field-row('processDocumentation.restrictionsDescription')
+							+field-row('processDocumentation.projectDescription')
+							+field-row('processDocumentation.creationDate', formatDate)
+							+boolean-field-row('processDocumentation.copyright')
+							+field-row('processDocumentation.inventoryMethodDescription')
+							+field-row('processDocumentation.modelingConstantsDescription')
+							+field-row('processDocumentation.completenessDescription')
+							+field-row('processDocumentation.dataSelectionDescription')
+							+field-row('processDocumentation.dataTreatmentDescription')
+							+field-row('processDocumentation.samplingDescription')
+							+field-row('processDocumentation.dataCollectionDescription')
+							- var getSourceId = function(source) {return source.id};
+							+array-field-row('processDocumentation.sources', 'SOURCE', getSourceId)
+				+nav-tab-pane('allocationFactors')
+					if hasAtLeastOne(dataset, compareTo, 'nonCausalAllocationFactors')
+						+non-causal-allocation-factor-table()
+					if hasAtLeastOne(dataset, compareTo, 'causalAllocationFactors')
+						+causal-allocation-factor-table()
+				+nav-tab-pane('socialAspects')
+					+social-aspect-table()
+				+nav-tab-pane('parameters')
+					+parameter-table(true)
+					+parameter-table(false)
 	+meta
 		hr
 		strong=getLabel('quantitativeReference')
-		div
-			- var flow = null;
-			- var eIndex = -1;
-			if dataset.exchanges
-				each exchange, index in dataset.exchanges
-					if exchange.quantitativeReference
-						- flow = exchange.flow;
-						- eIndex = index;
-			+ref('exchanges[' + eIndex + '].flow', flow?flow.flowType:null, '-')
-		+labeled-ref('location')
+		- var flow = null;
+		- var otherFlow = null;
+		- var eIndex = -1;
+		if dataset.exchanges
+			each exchange, index in dataset.exchanges
+				if exchange.quantitativeReference
+					- flow = exchange.flow;
+					- eIndex = index;
+		if compareTo && compareTo.exchanges
+			each otherExchange, index in compareTo.exchanges
+				if otherExchange.quantitativeReference
+					- otherFlow = otherExchange.flow;
+		- var qRefChanged = compareTo ? compare(flow, otherFlow) : null;
+		div(data-compare=qRefChanged)
+			+compare-icon(qRefChanged)
+			+ref(flow, otherFlow, '-')
+		+labeled-ref-block('location')
 		- var typeFormat = function(value) {return value==='LCI_RESULT'?'System process':'Unit process'};
-		+labeled-field('processType', typeFormat)
-		strong=getLabel('infrastructureProcess')
-		div(data-path='infrastructureProcess')
-			img.icon-small(src='images/check_' + (dataset.infrastructureProcess?'true':'false') + '.png')
+		+labeled-field-block('processType', typeFormat)
+		+labeled-boolean-field-block('infrastructureProcess')
 		if (doc && (doc.validFrom || doc.validUntil)) || reviewMode
 			hr
-			+labeled-field('processDocumentation.validFrom', formatDate, '-')
-			+labeled-field('processDocumentation.validUntil', formatDate, '-')
+			+labeled-field-block('processDocumentation.validFrom', formatDate, '-')
+			+labeled-field-block('processDocumentation.validUntil', formatDate, '-')
 		if (doc && (doc.timeDescription || doc.geographyDescription || doc.technologyDescription)) || reviewMode
 			hr
-			+labeled-field('processDocumentation.timeDescription', null, '-', true)
-			+labeled-field('processDocumentation.geographyDescription', null, '-', true)
-			+labeled-field('processDocumentation.technologyDescription', null, '-', true)
+			+labeled-field-block('processDocumentation.timeDescription', null, '-', true)
+			+labeled-field-block('processDocumentation.geographyDescription', null, '-', true)
+			+labeled-field-block('processDocumentation.technologyDescription', null, '-', true)
 		if dataset.dqSystem || dataset.dqEntry || dataset.exchangeDqSystem || dataset.socialDqSystem || reviewMode
 			hr
-			+labeled-ref('dqSystem')
-			+labeled-ref('exchangeDqSystem')
-			+labeled-ref('socialDqSystem')
+			+labeled-ref-block('dqSystem')
+			+labeled-ref-block('exchangeDqSystem')
+			+labeled-ref-block('socialDqSystem')
+			- var dqChanged = compareTo ? compare(dataset.dqEntry, compareTo.dqEntry) : null;
 			strong=getLabel('dqEntry')
-			div
-				if dataset.dqEntry
-					if dataset.dqSystem
-						a(href='#' data-action='show-data-quality' data-entry=dataset.dqEntry data-scheme=dataset.dqSystem.id data-path='dqEntry')=dataset.dqEntry
-					else
-						span(data-path='dqEntry')=dataset.dqEntry
-				else
-					span(data-path='dqEntry') -
+			div(data-path='dqEntry')
+				- var otherSystem = compareTo ? compareTo.dqSystem : null;
+				+dq-field(dataset, compareTo, 'dqEntry', dataset.dqSystem, otherSystem, '-')
 	.clear

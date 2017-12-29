@@ -7,11 +7,11 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+field-row('unitOfMeasurement', true, true)
-					+field-row('evaluationScheme', true, true)
-					+field-row('activityVariable', true, true)
+					+field-row('unitOfMeasurement')
+					+field-row('evaluationScheme')
+					+field-row('activityVariable')
 					+ref-row('activityQuantity')
-					if dataset.activityUnit || reviewMode
-						+field-row('activityUnit', true, true)
+					if dataset.activityUnit || getValue(compareTo, activityUnit) || reviewMode
+						+field-row('activityUnit.name')
 	+meta
 	.clear

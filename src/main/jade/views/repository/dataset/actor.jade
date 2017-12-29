@@ -7,25 +7,19 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					+field-row('address', false, false, null, true)
-						if dataset.address
-							div(data-path='address')=dataset.address
-						if dataset.zipCode || dataset.city || reviewMode
-							div 
-								span(data-path='zipCode')=dataset.zipCode
-								|  
-								span(data-path='city')=dataset.city 
-						if dataset.country || reviewMode
-							div(data-path='country')=dataset.country
-					+field-row('telephone', true, true)
-					+field-row('telefax', true, true)
-					if dataset.email || reviewMode
-						+field-row('email')
-							if dataset.email
-								a(href='mailto:#{dataset.email}' data-protocol='mailto')=dataset.email
-					if dataset.website || reviewMode
-						+field-row('website')
-							if dataset.website
-								a(href=dataset.website target='_blank')=dataset.website
+						tr
+							td=getLabel('address')
+							td
+								+field-block('address')
+								if dataset.zipCode || dataset.city || (compareTo && (compareTo.zipCode || compareTo.city)) || reviewMode
+									div 
+										+field('zipCode')
+										|  
+										+field('city')
+								+field-block('country')
+					+field-row('telephone')
+					+field-row('telefax')
+					+field-link-row('email')
+					+field-link-row('website')
 	+meta
 	.clear

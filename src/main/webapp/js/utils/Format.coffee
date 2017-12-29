@@ -32,6 +32,21 @@ define([
 				return value
 			return Math.round(value * 1000) / 1000
 
+		relative: (value, precision = 2) ->
+			isNegative = value < 0
+			value = Math.abs value
+			count = 0
+			while count < precision
+				value *= 10
+				count++
+			value = Math.round value
+			if count > 0
+				for i in [1..count]
+					value /= 10
+			if isNegative
+				value *= -1
+			return value
+
 		scientific: (value, round) ->
 			unless value
 				return ''

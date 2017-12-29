@@ -6,7 +6,7 @@ define([
 
 	(DataQuality, Layers, Sort) ->
 
-		open: (repo, commitId, systemId, entry) ->
+		open: (repo, commitId, systemId, entry, getValue) ->
 			url = "ws/public/browse/#{repo.group}/#{repo.name}/DQ_SYSTEM/#{systemId}"
 			if commitId
 				url += "?commitId=#{commitId}"
@@ -17,11 +17,12 @@ define([
 					Sort.indicatorsAndScores system
 					Layers.showTemplateInLayer
 						title: 'Data quality'
-						template: 'repository/model/dataset/data-quality-entry'
+						template: 'repository/dataset/layer/data-quality-entry'
 						dialogType: 'modal-large'
 						model: 
 							system: system
 							entry: entry
+							getValue: getValue
 							getDQColor: DataQuality.getColor
 
 )

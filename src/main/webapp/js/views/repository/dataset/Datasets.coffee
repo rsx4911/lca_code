@@ -10,8 +10,8 @@ define([
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!models/CurrentUser'
-				'templates/views/repository/dataset/datasets'
-				'templates/views/repository/dataset/datasets-entries'
+				'templates/views/repository/datasets'
+				'templates/views/repository/datasets-entries'
 			]
 
 	(Backbone, Moment, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, currentUser, template, entriesTemplate) ->

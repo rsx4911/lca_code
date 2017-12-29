@@ -1,7 +1,0 @@
-if nwSet.factors
-	each factor, index in nwSet.factors
-		tr
-			td=factor.impactCategory.name
-			td=factor.normalisationFactor
-			td=factor.weightingFactor
-			td(data-path='nwSets[' + nwSet.id + '].factors[' + factor.impactCategory.id +']')

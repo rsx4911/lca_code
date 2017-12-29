@@ -1,21 +1,23 @@
 define([				
 				'cs!utils/Filter'
 				'cs!utils/Icons'
-				'templates/views/repository/dataset/flow-references'
+				'templates/views/repository/dataset/structures/flow-references'
 			]
 
 	(Filter, Icons, template) ->
 
-		init: (repository, refId, commitId) ->
-			@initReferences repository, refId, commitId, 'in'
-			@initReferences repository, refId, commitId, 'out'
+		init: (repository, refId, commitId, flowType) ->
+			outType = if flowType is 'ELEMENTARY_FLOW' then 'emitted-by' else 'produced-by'
+			@initReferences repository, refId, commitId, 'used-by'
+			@initReferences repository, refId, commitId, outType
 
-		initReferences: (repository, refId, commitId, direction) ->
+		initReferences: (repository, refId, commitId, type) ->
 			group = repository.get 'group'
 			name = repository.get 'name'
+			direction = if type is 'used-by' then 'in' else 'out' 
 			filter = new Filter
-				container: "##{direction}-data"
-				filterId: "#{direction}-filter"
+				container: "##{type}-data"
+				filterId: "#{type}-filter"
 				template: template
 				pageSize: 25
 				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&direction=#{direction}&"
@@ -25,8 +27,8 @@ define([
 					result.baseUrl = "#{group}/#{name}/dataset"
 			filter.init (result) ->
 				if result.resultInfo.totalCount > 0
-					$("[href=##{direction}]").html $("[href=##{direction}]").html() + " (#{result.resultInfo.totalCount})"
+					$("[href=##{type}]").html $("[href=##{type}]").html() + " (#{result.resultInfo.totalCount})"
 				else
-					$("[href=##{direction}], ##{direction}").hide()
+					$("[href=##{type}], ##{type}").hide()
 
 )

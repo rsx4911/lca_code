@@ -1,68 +1,45 @@
-include ./mixins.jade
+include ./structures/product-system-parameter-redef-table.jade
+
+mixin target-amount-row()
+	tr
+		td=getLabel('targetAmount')
+		td
+			+field('targetAmount')
+			if dataset.targetUnit || getValue(compareTo, targetUnit) || reviewMode
+				|  
+				+field('targetUnit.name')
 
 +menubar
 .content-box
 	.model-left-content
 		+header
 		.content
+			- var hasLinks = hasAtLeastOne(dataset, null, 'processLinks');
 			ul.nav.nav-tabs(role='tablist')
-				li.active(role='presentation') 
-					a(href='#overview' aria-controls='overview' role='tab' data-toggle='tab') Overview
-				if dataset.processLinks && dataset.processLinks.length
-					li(role='presentation')
-						a(href='#process-tree' aria-controls='process-tree' role='tab' data-toggle='tab') Supply chain
-					li(role='presentation')
-						a(href='#process-graph' aria-controls='process-graph' role='tab' data-toggle='tab') Graph
-				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
-					li(role='presentation') 
-						a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameterRedefs')=getLabel('parameterRedefs')
+				+nav-tab(null, true, 'Overview')
+				if hasLinks
+					+nav-tab(null, false, 'Supply chain')
+					+nav-tab(null, false, 'Graph')
+				+nav-tab('parameterRedefs')
 				+maximize-icon
 			.tab-content
-				#overview.tab-pane.active(role='tabpanel')
+				+nav-tab-pane('overview', true, true)
 					table.table.no-head
 						tbody
 							+ref-row('referenceProcess')
-							if dataset.referenceExchange || reviewMode
-								+field-row('referenceExchange.name', true, false, null, 'referenceExchange')
+							- var name = dataset.referenceExchange ? dataset.referenceExchange.name : null;
+							- var otherName = compareTo && compareTo.referenceExchange ? compareTo.referenceExchange.name : null;
+							if name || otherName || reviewMode
+								+field-row-frame('referenceExchange.name')
+									+field-row-value(name, otherName)
 							+ref-row('targetFlowProperty')
-							tr
-								td=getLabel('targetAmount')
-								td 
-									span(data-path='targetAmount')=dataset.targetAmount
-									if dataset.targetUnit || reviewMode
-										|  
-										span(data-path='targetUnit')=dataset.targetUnit.name
-				if dataset.processLinks && dataset.processLinks.length
-					#process-tree.tab-pane(role='tabpanel')
-						#process-tree-container
-					#process-graph.tab-pane(role='tabpanel')
-						iframe(src='graph/graph.html' width='100%' height='500px')
-				if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
-					#parameters.tab-pane(role='tabpanel')
-						if dataset.parameterRedefs && dataset.parameterRedefs.length
-							table.table
-								thead
-									tr
-										th=getLabel('parameterRedefs.context')
-										th=getLabel('parameterRedefs.name')
-										th=getLabel('parameterRedefs.value')
-										th=getLabel('parameterRedefs.uncertainty')
-										th
-								tbody
-									each parameter, index in dataset.parameterRedefs
-										tr
-											td 
-												if parameter.context
-													+ref('parameterRedefs[' + index + '].context')
-												else
-													span Global
-											td=parameter.name
-											td=parameter.value
-											td
-												if parameter.inputParameter
-													+uncertainty(parameter.uncertainty)
-											- var context = parameter.context ? parameter.context.id : 'global';
-											td(data-path='parameterRedefs[' + context + '-' + parameter.name + ']')
+							+target-amount-row()
+				+nav-tab-pane('supply-chain', false, hasLinks)
+					#process-tree-container
+				+nav-tab-pane('graph', false, hasLinks)
+					iframe(src='graph/graph.html' width='100%' height='500px')
+				+nav-tab-pane('parameterRedefs')
+					+product-system-parameter-redef-table()
 	+meta
 		hr
 		strong=getLabel('processes')

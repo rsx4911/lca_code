@@ -1,4 +1,4 @@
-include ./mixins.jade
+include ./structures/unit-table.jade
 
 +menubar
 .content-box
@@ -8,35 +8,8 @@ include ./mixins.jade
 			table.table.no-head
 				tbody
 					+ref-row('defaultFlowProperty')
-			if dataset.units
+			if hasAtLeastOne(dataset, compareTo, 'units') || reviewMode
 				h4(data-path='units')=getLabel('units')
-				table.table.units
-					- var referenceUnit = null;
-					- var showSynonyms = false;
-					each unit in dataset.units
-						if unit.referenceUnit
-							- referenceUnit = unit
-						if unit.synonyms && unit.synonyms.length
-							- showSynonyms = true;
-					thead
-						tr
-							th=getLabel('units.name')
-							th=getLabel('units.description')
-							th
-								if showSynonyms
-									| #{getLabel('units.synonyms')}
-							th=getLabel('units.formula')
-							th
-					tbody
-						each unit, index in dataset.units
-							tr(class=unit.referenceUnit?'reference':null)
-								td=unit.name
-								td=unit.description
-								td.comma-separated
-									if unit.synonyms && showSynonyms
-										each synonym in unit.synonyms
-											span #{synonym}
-								td 1 #{unit.name} = #{unit.conversionFactor} #{referenceUnit.name}
-								td(data-path='units[' + unit.name + ']')
+				+unit-table()
 	+meta
 	.clear

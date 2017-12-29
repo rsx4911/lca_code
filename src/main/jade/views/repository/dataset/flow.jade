@@ -1,63 +1,37 @@
-include ./mixins.jade
+include ./structures/flow-property-table.jade
 
 +menubar
 .content-box
 	.model-left-content
 		+header
 		.content
+			- var outLabel = dataset.flowType==='ELEMENTARY_FLOW'?'Emitted by':'Produced by';
+			- var outId = dataset.flowType==='ELEMENTARY_FLOW'?'emitted-by':'produced-by';
 			ul.nav.nav-tabs(role='tablist')
-				li.active(role='presentation') 
-					a(href='#flow-info' aria-controls='flow-info' role='tab' data-toggle='tab') Flow info
-				li(role='presentation') 
-					a(href='#flow-properties' aria-controls='flow-properties' role='tab' data-toggle='tab' data-path='flowProperties')=getLabel('flowProperties')
-				li(role='presentation') 
-					a(href='#in' aria-controls='in' role='tab' data-toggle='tab') Used by
-				li(role='presentation') 
-					a(href='#out' aria-controls='out' role='tab' data-toggle='tab')=dataset.flowType==='ELEMENTARY_FLOW'?'Emitted by':'Produced by'
+				+nav-tab(null, true, 'Flow info')
+				+nav-tab('flowProperties')
+				+nav-tab(null, false, 'Used by')
+				+nav-tab(null, false, outLabel)
 			.tab-content
-				#flow-info.tab-pane.active(role='tabpanel')
+				+nav-tab-pane('flow-info', true, true)
 					table.table.no-head
 						tbody
 							- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType', flowType); };
-							+field-row('flowType', true, false, getFlowTypeLabel)
-							+field-row('cas', true, true)
-							+field-row('formula', true, true)
-							if (dataset.synonyms && dataset.synonyms.length) || reviewMode
-								+field-row('synonyms')
-									.comma-separated
-										if dataset.synonyms
-											each synonym in dataset.synonyms
-												span=synonym
+							+field-row('flowType', getFlowTypeLabel)
+							+field-row('cas')
+							+field-row('formula')
+							+field-row('synonyms')
 							+ref-row('location')
-							+field-row('infrastructureFlow')
-								span
-									img.icon-small(src='images/check_' + (dataset.infrastructureFlow?'true':'false') + '.png')
-				#flow-properties.tab-pane(role='tabpanel')
-					table.table.flow-properties
-						thead
-							tr
-								th=getLabel('flowProperties.name')
-								th=getLabel('flowProperties.formula')
-								th
-						tbody
-							- var referenceFactor = null;
-							if dataset.flowProperties
-								each factor in dataset.flowProperties
-									if factor.referenceFlowProperty
-										- referenceFactor = factor
-								each factor, index in dataset.flowProperties
-									if factor.flowProperty
-										tr(class=factor.referenceFlowProperty?'reference':null)
-											td: +ref('flowProperties[' + index + '].flowProperty')
-											td 1 #{referenceFactor.referenceUnit} = #{factor.conversionFactor} #{factor.referenceUnit}
-											td(data-path='flowProperties[' + factor.flowProperty.id + ']')
-				#in.tab-pane(role='tabpanel')
+							+boolean-field-row('infrastructureFlow')
+				+nav-tab-pane('flowProperties')
+					+flow-property-table()
+				+nav-tab-pane('used-by', false, true)
 					.form-group
-						input#in-filter.form-control(type='text' placeholder='Filter by name')
-					#in-data
-				#out.tab-pane(role='tabpanel')
+						input#used-by-filter.form-control(type='text' placeholder='Filter by name')
+					#used-by-data
+				+nav-tab-pane(outId, false, true)
 					.form-group
-						input#out-filter.form-control(type='text' placeholder='Filter by name')
-					#out-data
+						input.form-control(id=outId + '-filter' type='text' placeholder='Filter by name')
+					div(id=outId + '-data')
 	+meta
 	.clear

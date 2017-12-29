@@ -84,7 +84,7 @@
 				padding-top 1px
 		
 		.breadcrumb
-			padding 0 15px 8px 1px
+			padding 0 1px 8px 1px
 
 
 		.title, .content
@@ -97,7 +97,7 @@
 		.table > tbody > tr
 
 			& > td:first-child
-				width 25%
+				min-width 25%
 
 			&.reference > td 
 				font-weight bold
@@ -172,7 +172,7 @@
 		.table.non-causal-allocation-factors > tbody > tr > td, .table.non-causal-allocation-factors > thead > tr > th
 			
 			&:first-child
-				width 80%
+				width 66%
 
 		.table.causal-allocation-factors > tbody > tr > td, .table.causal-allocation-factors > thead > tr > th
 			
@@ -200,14 +200,9 @@
 			text-align center
 
 		.table.units > thead > tr > th, .table.units > tbody > tr > td
-
-			&:first-child
-				width 60px
-
-			&:nth-child(2)
-				width 30%
 				
 			&:nth-child(2), &:nth-child(3)
+				max-width 30%
 
 				@media(max-width 767px)
 					display none

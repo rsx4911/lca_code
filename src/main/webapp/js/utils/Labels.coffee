@@ -34,6 +34,7 @@ define () ->
 		'exchanges.costs': 'Costs/Revenue'
 		'socialAspects.quality': 'Data quality'
 		'nwSet': 'Normalisation & Weighting set'
+		'nwSets': 'Normalisation & Weighting sets'
 
 	get: (type, path) ->
 		if type is 'CURRENCY' and path is 'code'

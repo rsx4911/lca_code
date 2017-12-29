@@ -135,8 +135,8 @@ public class BrowseResource {
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		CommitCache commits = new CommitCache(repo);
-		commitId = commits.getLastCommitId(type, refId, commitId);
+		DataCache data = new DataCache(repo);
+		commitId = data.getLastCommitId(type, refId, commitId);
 		if (commitId == null) {
 			String message = notFoundMessage(type, refId, null);
 			return Respond.notFound(message);
@@ -154,24 +154,24 @@ public class BrowseResource {
 		}
 		ObjectMap map = ObjectMap.fromJson(dataset);
 		if (map.containsKey("category"))
-			map.put("category.name", getFullPath(commits, repo, ModelType.CATEGORY, map.get("category.@id"), commitId));
+			map.put("category.name", data.getFullPath(ModelType.CATEGORY, map.get("category.@id"), commitId));
 		if (type == ModelType.PROCESS) {
 			List<Map<String, Object>> exchanges = map.get("exchanges");
 			List<Map<String, Object>> aspects = map.get("socialAspects");
-			putFlowCategories(commits, repo, commitId, exchanges);
-			putProviderTypes(commits, repo, commitId, exchanges);
-			putSocialIndicators(commits, repo, commitId, aspects);
-		} else if (type == ModelType.IMPACT_CATEGORY) {
-			List<Map<String, Object>> factors = map.get("impactFactors");
-			putFlowCategories(commits, repo, commitId, factors);
+			putFlowCategories(data, repo, commitId, exchanges);
+			putProviderTypes(data, repo, commitId, exchanges);
+			putSocialIndicators(data, repo, commitId, aspects);
+		} else if (type == ModelType.IMPACT_METHOD) {
+			putImpactCategories(data, repo, commitId, map);
+			putNwSets(data, repo, commitId, map);
 		} else if (type == ModelType.FLOW) {
-			putReferenceUnits(commits, repo, map, commitId);
+			putReferenceUnits(data, repo, map, commitId);
 		}
 		map.put("commitId", commitId);
 		return Respond.ok(map);
 	}
 
-	private void putFlowCategories(CommitCache commits, Repository repo, String commitId,
+	private void putFlowCategories(DataCache data, Repository repo, String commitId,
 			List<Map<String, Object>> elements) {
 		if (elements == null)
 			return;
@@ -183,7 +183,7 @@ public class BrowseResource {
 			String refId = (String) flow.get("@id");
 			String name = (String) flow.get("name");
 			// last element in path is the flow name itself
-			String fullPath = getFullPath(commits, repo, ModelType.FLOW, refId, commitId);
+			String fullPath = data.getFullPath(ModelType.FLOW, refId, commitId);
 			if (!fullPath.contains("/"))
 				continue;
 			fullPath = fullPath.substring(0, fullPath.length() - name.length() - 1);
@@ -191,7 +191,42 @@ public class BrowseResource {
 		}
 	}
 
-	private void putProviderTypes(CommitCache commits, Repository repo, String commitId,
+	private void putImpactCategories(DataCache data, Repository repo, String commitId, ObjectMap method) {
+		if (method == null)
+			return;
+		if (!method.containsKey("impactCategories"))
+			return;
+		List<String> categoryIds = method.getAll("impactCategories.@id", String.class);
+		List<Map<String, Object>> categories = new ArrayList<>();
+		for (String refId : categoryIds) {
+			String categoryCommitId = data.getLastCommitId(ModelType.IMPACT_CATEGORY, refId, commitId);
+			String categoryJson = fetchService.getDataset(repo, ModelType.IMPACT_CATEGORY, refId, categoryCommitId);
+			ObjectMap category = ObjectMap.fromJson(categoryJson);
+			@SuppressWarnings("unchecked")
+			List<Map<String, Object>> factors = (List<Map<String, Object>>) category.get("impactFactors");
+			putFlowCategories(data, repo, commitId, factors);
+			categories.add(category);
+		}
+		method.put("impactCategories", categories);
+	}
+
+	private void putNwSets(DataCache data, Repository repo, String commitId, ObjectMap method) {
+		if (method == null)
+			return;
+		if (!method.containsKey("nwSets"))
+			return;
+		List<String> nwSetIds = method.getAll("nwSets.@id", String.class);
+		List<Map<String, Object>> nwSets = new ArrayList<>();
+		for (String refId : nwSetIds) {
+			String nwSetCommitId = data.getLastCommitId(ModelType.NW_SET, refId, commitId);
+			String nwSetJson = fetchService.getDataset(repo, ModelType.NW_SET, refId, nwSetCommitId);
+			ObjectMap nwSet = ObjectMap.fromJson(nwSetJson);
+			nwSets.add(nwSet);
+		}
+		method.put("nwSets", nwSets);
+	}
+
+	private void putProviderTypes(DataCache data, Repository repo, String commitId,
 			List<Map<String, Object>> elements) {
 		if (elements == null)
 			return;
@@ -201,12 +236,12 @@ public class BrowseResource {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> provider = (Map<String, Object>) element.get("defaultProvider");
 			String refId = (String) provider.get("@id");
-			String providerCommitId = commits.getLastCommitId(ModelType.PROCESS, refId, commitId);
+			String providerCommitId = data.getLastCommitId(ModelType.PROCESS, refId, commitId);
 			Map<String, Object> entry = service.getDataset(repo, ModelType.PROCESS, refId, providerCommitId);
 			provider.put("processType", ProcessType.from(entry));
 			String name = (String) provider.get("name");
 			// last element in path is the provider name itself
-			String fullPath = getFullPath(commits, repo, ModelType.PROCESS, refId, commitId);
+			String fullPath = data.getFullPath(ModelType.PROCESS, refId, commitId);
 			if (!fullPath.contains("/"))
 				continue;
 			fullPath = fullPath.substring(0, fullPath.length() - name.length() - 1);
@@ -215,7 +250,7 @@ public class BrowseResource {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void putSocialIndicators(CommitCache commits, Repository repo, String commitId,
+	private void putSocialIndicators(DataCache data, Repository repo, String commitId,
 			List<Map<String, Object>> aspects) {
 		if (aspects == null)
 			return;
@@ -224,7 +259,7 @@ public class BrowseResource {
 				continue;
 			Map<String, Object> indicator = (Map<String, Object>) aspect.get("socialIndicator");
 			String refId = (String) indicator.get("@id");
-			String cId = commits.getLastCommitId(ModelType.SOCIAL_INDICATOR, refId, commitId);
+			String cId = data.getLastCommitId(ModelType.SOCIAL_INDICATOR, refId, commitId);
 			String dataset = fetchService.getDataset(repo, ModelType.SOCIAL_INDICATOR, refId, cId);
 			if (dataset == null)
 				continue;
@@ -233,7 +268,7 @@ public class BrowseResource {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void putReferenceUnits(CommitCache commits, Repository repo, ObjectMap map, String commitId) {
+	private void putReferenceUnits(DataCache data, Repository repo, ObjectMap map, String commitId) {
 		List<Map<String, Object>> factors = (List<Map<String, Object>>) map.get("flowProperties");
 		if (factors == null)
 			return;
@@ -242,20 +277,20 @@ public class BrowseResource {
 				continue;
 			Map<String, Object> property = (Map<String, Object>) factor.get("flowProperty");
 			String refId = (String) property.get("@id");
-			String cId = commits.getLastCommitId(ModelType.FLOW_PROPERTY, refId, commitId);
-			String data = fetchService.getDataset(repo, ModelType.FLOW_PROPERTY, refId, cId);
-			if (data == null)
+			String cId = data.getLastCommitId(ModelType.FLOW_PROPERTY, refId, commitId);
+			String dataset = fetchService.getDataset(repo, ModelType.FLOW_PROPERTY, refId, cId);
+			if (dataset == null)
 				continue;
-			Map<String, Object> flowProperty = ObjectMap.fromJson(data);
+			Map<String, Object> flowProperty = ObjectMap.fromJson(dataset);
 			Map<String, Object> unitGroup = (Map<String, Object>) flowProperty.get("unitGroup");
 			if (unitGroup == null)
 				continue;
 			refId = (String) unitGroup.get("@id");
-			cId = commits.getLastCommitId(ModelType.UNIT_GROUP, refId, commitId);
-			data = fetchService.getDataset(repo, ModelType.UNIT_GROUP, refId, cId);
-			if (data == null)
+			cId = data.getLastCommitId(ModelType.UNIT_GROUP, refId, commitId);
+			dataset = fetchService.getDataset(repo, ModelType.UNIT_GROUP, refId, cId);
+			if (dataset == null)
 				continue;
-			unitGroup = ObjectMap.fromJson(data);
+			unitGroup = ObjectMap.fromJson(dataset);
 			List<Map<String, Object>> units = (List<Map<String, Object>>) unitGroup.get("units");
 			if (units == null)
 				continue;
@@ -268,18 +303,6 @@ public class BrowseResource {
 				break;
 			}
 		}
-	}
-
-	private String getFullPath(CommitCache commits, Repository repo, ModelType type, String refId, String commitId) {
-		if (refId == null)
-			return "";
-		if (commitId == null)
-			return "";
-		commitId = commits.getLastCommitId(type, refId, commitId);
-		Map<String, Object> entry = service.getDataset(repo, type, refId, commitId);
-		if (entry == null)
-			return "";
-		return entry.get("fullPath").toString();
 	}
 
 	private String notFoundMessage(ModelType type, String refId, String commitId) {
@@ -299,15 +322,41 @@ public class BrowseResource {
 	// using history service is not very efficient, so caching the references is
 	// a necessary improvement
 	// TODO maybe the history service can be refactored
-	private class CommitCache {
+	private class DataCache {
 
 		private final Repository repo;
 		private final List<Commit> commits;
 		private Map<String, Map<ModelType, List<String>>> commitToReferences = new HashMap<>();
+		private Map<ModelType, Map<String, Map<String, String>>> flowPaths = new HashMap<>();
 
-		private CommitCache(Repository repo) {
+		private DataCache(Repository repo) {
 			this.repo = repo;
 			commits = historyService.getCommits(repo);
+		}
+
+		private String getFullPath(ModelType type, String refId, String commitId) {
+			if (refId == null)
+				return "";
+			if (commitId == null)
+				return "";
+			commitId = getLastCommitId(type, refId, commitId);
+			Map<String, Map<String, String>> byCommitId = flowPaths.get(type);
+			if (byCommitId == null) {
+				flowPaths.put(type, byCommitId = new HashMap<>());
+			}
+			Map<String, String> byRefId = byCommitId.get(commitId);
+			if (byRefId == null) {
+				byCommitId.put(commitId, byRefId = new HashMap<>());
+			}
+			if (byRefId.containsKey(refId))
+				return byRefId.get(refId);
+			Map<String, Object> entry = service.getDataset(repo, type, refId, commitId);
+			if (entry == null) {
+				byRefId.put(refId, "");
+			} else {
+				byRefId.put(refId, entry.get("fullPath").toString());
+			}
+			return byRefId.get(refId);
 		}
 
 		private String getLastCommitId(ModelType type, String refId, String commitId) {

@@ -16,11 +16,11 @@ define () ->
 			first = false
 			icon += char
 		if ref.type is 'Flow' or ref.type is 'FLOW'
-			flowType = if additionalTypeInfo then additionalTypeInfo else ref.flowType
+			flowType = ref.flowType || additionalTypeInfo
 			if flowType
 				icon += '_' + flowType.substring(0, flowType.indexOf('_'))
 		if ref.type is 'Process' or ref.type is 'PROCESS'
-			processType = if additionalTypeInfo then additionalTypeInfo else ref.processType
+			processType = ref.processType || additionalTypeInfo
 			if processType is 'LCI_RESULT' or processType is 'SYSTEM'
 				icon += '_system'
 		if ref.type is 'CATEGORY' or ref.type is 'Category'

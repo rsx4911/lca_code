@@ -1,64 +1,23 @@
-include ./mixins.jade
+include ./structures/project-variant-table.jade
+include ./structures/project-parameter-redef-table.jade
 
 +menubar
 .content-box
 	.model-left-content
 		+header
 		.content
-			if (dataset.variants && dataset.variants.length) || reviewMode 
-				ul.nav.nav-tabs(role='tablist')
-					li.active(role='presentation') 
-						a(href='#variants' aria-controls='variants' role='tab' data-toggle='tab' data-path='variants')=getLabel('variants')
-					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
-						li(role='presentation') 
-							a(href='#parameters' aria-controls='parameters' role='tab' data-toggle='tab' data-path='parameters')=getLabel('parameters')
-				.tab-content
-					#variants.tab-pane.active(role='tabpanel')
-						if dataset.variants && dataset.variants.length
-							table.table
-								thead
-									tr
-										th=getLabel('variants.name')
-										th=getLabel('variants.productSystem')
-										th=getLabel('variants.allocationMethod')
-										th=getLabel('variants.amount')
-										th
-								tbody
-									each variant, index in dataset.variants
-										tr
-											td=variant.name
-											td: +ref('variants[' + index + '].productSystem')
-											td=variant.allocationMethod
-											td: span=variant.amount 
-												if variant.unit
-													| #{variant.unit.name}
-											td(data-path='variants[' + variant.productSystem.id + '-' + variant.name + ']')
-					if (dataset.parameterRedefs && dataset.parameterRedefs.length) || reviewMode
-						#parameters.tab-pane(role='tabpanel')
-							if dataset.parameterRedefs && dataset.parameterRedefs.length
-								table.table
-									thead
-										tr
-											th=getLabel('parameters.name')
-											th=getLabel('parameters.context')
-											each variant in dataset.variants
-												th=variant.name
-											th
-									tbody
-										each parameter in dataset.parameterRedefs
-											tr
-												td=parameter.name
-												td
-													if parameter.context
-														+ref(parameter.path + '.context')
-													else
-														span Global
-												each entry in parameter.values
-													td(data-path=entry.commentPath)=entry.value
+			ul.nav.nav-tabs(role='tablist')
+				+nav-tab('variants', true)
+				+nav-tab('parameterRedefs')
+			.tab-content
+				+nav-tab-pane('variants', true)
+					+project-variant-table()
+				+nav-tab-pane('parameterRedefs', true)
+					+project-parameter-redef-table()
 	+meta
 		hr
 		strong=getLabel('impactMethod')
-		div: +ref('impactMethod', null, '-')(data-path='impactMethod')
+		+ref-block('impactMethod', '-')
 		strong=getLabel('nwSet')
-		div(data-path='nwSet')=dataset.nwSet?dataset.nwSet.name:'-'
+		+field-block('nwSet.name', '-')(data-path='nwSet')
 	.clear

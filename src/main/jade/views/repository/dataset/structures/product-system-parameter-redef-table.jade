@@ -1,0 +1,34 @@
+include ./mixins.jade
+
+mixin product-system-parameter-redef-table()
+	table.table
+		thead
+			tr
+				th=getLabel('parameterRedefs.context')
+				th=getLabel('parameterRedefs.name')
+				th=getLabel('parameterRedefs.value')
+				th
+					- var showUncertainties = hasAtLeastOne(dataset, compareTo, 'parameterRedefs', 'uncertainty');
+					if showUncertainties
+						| #{getLabel('parameterRedefs.uncertainty')}
+				th
+		tbody
+			each values in getArrayValues(dataset, compareTo, 'PARAMETER_REDEF', 'parameterRedefs')
+				+product-system-parameter-redef-row(values[0], values[1])
+
+mixin product-system-parameter-redef-row(parameter, other)
+	- var changed = compareTo && !other ? 'added' : (compareTo && !parameter ? 'removed' : null);
+	tr(data-compare=changed)
+		td
+			+compare-icon(changed)
+			- var parameterContext = getValue(parameter, 'context');
+			- var otherContext = getValue(other, 'context');
+			if parameterContext || otherContext
+				+ref(parameterContext, otherContext)
+			else
+				span Global
+		+sub-field-cell(parameter, other, 'name') 
+		+sub-field-cell(parameter, other, 'value') 
+		+uncertainty-cell(parameter, other) 
+		- var context = parameter && parameter.context ? parameter.context.id : 'global';
+		td(data-path=parameter?'parameterRedefs[' + context + '-' + parameter.name + ']':null)
