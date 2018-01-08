@@ -55,6 +55,12 @@ public class SearchService {
 			Set<String> filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
 				putRepositoryFilter(builder, filterValues, repos);
+			} else if (aggregation.name.equals(Aggregations.MODEL_TYPE.name)) {
+				if (type == null) {
+					builder.aggregation(Aggregations.MODEL_TYPE, getModelTypes());
+				} else {
+					builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+				}
 			} else if (filterValues != null && !filterValues.isEmpty()) {
 				for (String filterValue : filterValues) {
 					builder.aggregation(aggregation, filterValue);
@@ -70,6 +76,14 @@ public class SearchService {
 		builder.page(page);
 		builder.pageSize(pageSize);
 		return SearchResults.convert(client.search(builder.build()), parser::parse);
+	}
+
+	private String[] getModelTypes() {
+		Set<String> types = new HashSet<>();
+		for (ModelType type : ModelType.categorized()) {
+			types.add(type.name());
+		}
+		return types.toArray(new String[types.size()]);
 	}
 
 	private SearchResult<IndexEntry> buildEmptyResult(int page, int pageSize) {
