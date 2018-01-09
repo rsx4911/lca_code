@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.web.util.WebUtils;
+import org.openlca.cloud.error.RepositoryNotFoundException;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -50,6 +51,7 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 	protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue)
 			throws Exception {
 		HttpServletRequest httpRequest = WebUtils.toHttp(request);
+		HttpServletResponse httpResponse = WebUtils.toHttp(response);
 		String url = httpRequest.getRequestURI().toString();
 		if (url.contains("/ws/") || url.contains("/sockets/"))
 			return true; // web service or web socket -> ignore
@@ -61,6 +63,12 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 		String repo = url.substring(url.indexOf("/") + 1);
 		if (repo.contains("/"))
 			repo = repo.substring(0, repo.indexOf("/"));
-		return accessService.canRead(group + "/" + repo);
+		try {
+			return accessService.canRead(group + "/" + repo);
+		} catch (RepositoryNotFoundException e) {
+			httpResponse.reset();
+			httpResponse.setStatus(404);
+			return true;
+		}
 	}
 }

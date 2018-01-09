@@ -24,6 +24,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
@@ -49,7 +50,10 @@ public class SearchResource {
 		String query = Client.removeStringFilter("query", parameters);
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
-		return Respond.ok(service.search(query, page, pageSize, parameters));
+		return Respond.ok(SearchResults.convert(service.search(query, page, pageSize, parameters), (r) -> {
+			r.action = null;
+			return r;
+		}));
 	}
 
 	@GET

@@ -6,9 +6,6 @@
 	.result
 		padding 10px 25px
 		border-bottom 1px solid rgb(231, 233, 237)	
-
-		&:not(:first-child)
-			border-top 1px solid rgb(231, 233, 237)
 			
 		.details
 			font-size 90%
@@ -28,3 +25,13 @@
 			
 			.glyphicon-remove
 				color rgb(217, 83, 79)
+				
+.public-mode .search-view
+	
+	@media(min-width 1200px)
+		
+		.aggregations
+			margin-left 0
+			
+		.search-results
+			border-right 1px solid rgb(231, 233, 237)

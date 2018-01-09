@@ -41,6 +41,11 @@ define([
 				{@repository, @categoryPath, @commitId} = options
 				group = @repository.get 'group'
 				name = @repository.get 'name'
+				if !currentUser.isLoggedIn() and @commitId
+					@commitId = null
+					Router.navigate "#{group}/#{name}/datasets/" + @categoryPath, 
+						trigger: false
+						replace: true
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
@@ -82,31 +87,39 @@ define([
 					else
 						url += '?'
 					url += 'commitId=' + @commitId
+
 				$.ajax
 					type: 'GET'
 					url: url
 					success: (categoryInfo) =>
-						historyUrl = "ws/history/"
-						if categoryInfo.id
-							historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
+						if currentUser.isLoggedIn()
+							historyUrl = "ws/history/"
+							if categoryInfo.id
+								historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
+							else
+								historyUrl += "#{group}/#{name}"
+							$.ajax
+								type: 'GET'
+								url: historyUrl
+								success: (commits) => @doRender renderOptions, categoryInfo, commits
 						else
-							historyUrl += "#{group}/#{name}"
-						$.ajax
-							type: 'GET'
-							url: historyUrl
-							success: (commits) =>
-								@$el.html template
-									baseUrl: "#{group}/#{name}/datasets"
-									categoryPath: @categoryPath
-									showDeleted: LocalStorage.getValue('datasets-showDeleted')
-									deleted: (categoryInfo.deleted is 'true')
-									isPublic: !currentUser.isLoggedIn()
-									commits: commits
-									commitId: @commitId
-									getRootLabel: (type) -> return ModelTypes[type]
-									getIcon: Icons.get
-								Renderer.render @, renderOptions
-								@filter.init()
+							@doRender renderOptions, categoryInfo, []
+
+			doRender: (renderOptions, categoryInfo, commits) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				@$el.html template
+					baseUrl: "#{group}/#{name}/datasets"
+					categoryPath: @categoryPath
+					showDeleted: LocalStorage.getValue('datasets-showDeleted')
+					deleted: (categoryInfo.deleted is 'true')
+					isPublic: !currentUser.isLoggedIn()
+					commits: commits
+					commitId: @commitId
+					getRootLabel: (type) -> return ModelTypes[type]
+					getIcon: Icons.get
+				Renderer.render @, renderOptions
+				@filter.init()
 
 			getCategoryPath: () ->
 				unless @categoryPath 

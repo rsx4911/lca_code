@@ -62,7 +62,7 @@ define([
 					Router.navigate 'search'
 
 			events: 
-				'click a[href]:not([target=_blank]):not(.logout):not([data-action])': (event) -> Events.followLink event
+				'click a[href]:not([target=_blank]):not(.login):not(.logout):not([data-action])': (event) -> Events.followLink event
 				'click a.logout': (event) -> @logout event
 				'click a.toggle-debug': (event) -> @toggleDebug event
 				'click a.toggle-review': (event) -> @toggleReview event
@@ -108,6 +108,7 @@ define([
 					debugMode: LocalStorage.getValue('debugMode')
 					reviewMode: LocalStorage.getValue('reviewMode')
 					activeTasks: currentUser.get('noOfTasks')
+					isPublic: !currentUser.isLoggedIn()
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 

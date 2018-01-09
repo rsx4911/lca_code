@@ -1,5 +1,5 @@
 define
-	'': 'dashboardRepositories'
+	'': 'landingPage'
 	'search(/:query)': 'search'
 	'repository/new(/:group)': 'repositoryNew'
 	'user': 'userProfile'

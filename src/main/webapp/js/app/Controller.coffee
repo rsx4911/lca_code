@@ -87,9 +87,13 @@ define([
 				@registerUserRoutes()
 
 			registerRouteRewrites: () ->
-				@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
-				@router.registerRouteRewrite 'userProfile', 'user/profile'
-				@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+				if currentUser.isLoggedIn()
+					@router.registerRouteRewrite 'landingPage', 'dashboard/repositories'
+					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
+					@router.registerRouteRewrite 'userProfile', 'user/profile'
+					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+				else
+					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', -> @showView 
@@ -136,7 +140,7 @@ define([
 						@showError()
 				@router.registerUserRoute 'search', (query) => @showView 
 					view: 'search/Results'
-					title: 'Search' 
+					title: 'Search'
 					fullWidth: true
 					viewOptions: @splitQuery query
 				@router.registerUserRoute 'userProfile', -> @showView 
@@ -157,6 +161,19 @@ define([
 					nav: 
 						type: 'user'
 						active: 'notifications'
+				@router.registerUserRoute 'landingPage', -> 
+					if currentUser.isLoggedIn()
+						@showView 
+							view: 'dashboard/Repositories'
+							title: 'Repositories' 
+							nav: 
+								type: 'dashboard'
+								active: 'repositories'
+					else
+						@showView 
+							view: 'search/Results'
+							title: 'Search' 
+							fullWidth: true
 				@router.registerUserRoute 'dashboardRepositories', -> @showView 
 					view: 'dashboard/Repositories'
 					title: 'Repositories' 
@@ -318,7 +335,7 @@ define([
 				if currentUser.isLoggedIn()
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
-					@initializeUserMenu()
+				@initializeUserMenu()
 				@registerRoutes()
 
 			splitQuery: (query) ->

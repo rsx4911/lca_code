@@ -52,6 +52,9 @@ class ShiroModule extends ShiroWebModule {
 			addFilterChain("/" + userRoute + "/**", LOGGED_IN_USER);
 		addFilterChain("/login", ANON);
 		addFilterChain("/imprint", ANON);
+		addFilterChain("/", ANON);
+		addFilterChain("/search", ANON);
+		addFilterChain("/search/**", ANON);
 		for (String staticResource : WebappModule.STATIC_RESOURCES)
 			addFilterChain("/" + staticResource + "/**", ANON);
 		addFilterChain("/*", LOGGED_IN_USER); // group urls

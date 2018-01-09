@@ -22,7 +22,9 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
+import org.openlca.core.model.ProcessType;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.index.IndexAction;
@@ -40,12 +42,13 @@ public class CachedResource {
 			@PathParam("modelType") ModelType modelType,
 			@PathParam("overlayType") IndexAction overlayType,
 			@QueryParam("category") @DefaultValue("false") boolean category,
+			@QueryParam("subType") String subType,
 			@Context HttpServletRequest request) {
 		if (overlayType == IndexAction.UPDATE || overlayType == null)
 			return Respond.badRequest();
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			BufferedImage image = getModelImage(request, modelType, category);
+			BufferedImage image = getModelImage(request, modelType.name(), mapSubType(modelType, subType), category);
 			BufferedImage overlay = getOverlayImage(request, overlayType);
 			int w = Math.max(image.getWidth(), overlay.getWidth());
 			int h = Math.max(image.getHeight(), overlay.getHeight());
@@ -61,13 +64,34 @@ public class CachedResource {
 		}
 	}
 
-	private BufferedImage getModelImage(HttpServletRequest request, ModelType type, boolean category)
+	private String mapSubType(ModelType type, String subType) {
+		if (subType == null)
+			return null;
+		if (type == ModelType.PROCESS && ProcessType.LCI_RESULT.equals(subType))
+			return "system";
+		if (type == ModelType.FLOW)
+			switch (FlowType.valueOf(subType)) {
+			case ELEMENTARY_FLOW:
+				return "elementary";
+			case PRODUCT_FLOW:
+				return "product";
+			case WASTE_FLOW:
+				return "waste";
+			}
+		return null;
+	}
+
+	private BufferedImage getModelImage(HttpServletRequest request, String type, String subType, boolean category)
 			throws IOException {
 		String subPath = "/model/small/";
 		if (category) {
 			subPath += "category/";
 		}
-		subPath += type.name().toLowerCase() + ".png";
+		subPath += type.toLowerCase();
+		if (subType != null) {
+			subPath += "_" + subType.toLowerCase();
+		}
+		subPath += ".png";
 		if (imageCache.containsKey(subPath))
 			return imageCache.get(subPath);
 		String path = getImageBaseUrl(request) + subPath;

@@ -13,6 +13,7 @@ import javax.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
+import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
@@ -32,6 +33,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	public Response toResponse(Throwable e) {
 		if (e instanceof WebApplicationException)
 			return ((WebApplicationException) e).getResponse();
+		if (e instanceof RepositoryNotFoundException)
+			return Response.status(Status.NOT_FOUND).entity(e.getMessage()).build();
 		if (e instanceof UnsupportedSchemaException)
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		if (e instanceof AuthorizationException)
