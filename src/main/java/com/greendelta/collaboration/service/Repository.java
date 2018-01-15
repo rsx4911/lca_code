@@ -11,11 +11,11 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.openlca.util.Dirs;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.ModelTypes;
 
 public class Repository {
@@ -104,9 +104,9 @@ public class Repository {
 	public long getSize() {
 		long size = 0;
 		for (ModelType type : ModelTypes.SORTED) {
-			size += Dirs.getSize(getModelDir(type, false).toPath());
+			size += Dirs.size(getModelDir(type, false).toPath());
 		}
-		size += Dirs.getSize(getBinDir(false).toPath());
+		size += Dirs.size(getBinDir(false).toPath());
 		return size;
 	}
 
