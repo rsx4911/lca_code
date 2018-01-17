@@ -49,6 +49,8 @@ public class Names {
 		RESERVED.add("search");
 		RESERVED.add("imprint");
 		RESERVED.add("overlay");
+		RESERVED.add("import");
+		RESERVED.add("export");
 	}
 
 	public static boolean isUserRoute(String name) {

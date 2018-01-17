@@ -30,6 +30,7 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
@@ -53,18 +54,20 @@ public class RepositoryResource {
 	private final AccessService accessService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
+	private final ReindexService reindexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
-			HistoryService historyService, SearchService searchService, DeleteService deleteService,
+			HistoryService historyService, SearchService searchService, ReindexService reindexService, DeleteService deleteService,
 			NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.historyService = historyService;
 		this.searchService = searchService;
+		this.reindexService = reindexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 	}
@@ -151,6 +154,29 @@ public class RepositoryResource {
 			@PathParam("value") String value) {
 		Repository repo = service.get(group, name);
 		service.setSetting(repo, setting, value);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@GET
+	@Path("export/{group}/{name}")
+	public Response doExport(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
+		Repository repo = service.get(group, name);
+		String filename = repo.toId().replace('/', '-') + ".zip";
+		return Respond.ok(filename, 0, service.pack(repo));
+	}
+
+	@POST
+	@Path("import/{group}/{name}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response doImport(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@FormDataParam("file") InputStream input) {
+		Repository repo = service.get(group, name);
+		service.unpack(repo, input);
+		reindexService.reindex(repo);
 		return Respond.ok(new HashMap<>());
 	}
 

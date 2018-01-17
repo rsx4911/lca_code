@@ -241,6 +241,11 @@ define([
 					title: 'New repository' 
 					viewOptions: 
 						groupName: groupName
+				@router.registerUserRoute 'repositoryImport', () -> @showView 
+					view: 'repository/Create'
+					title: 'Import repository' 
+					viewOptions: 
+						doImport: true
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
 						@router.navigate "#{group}/#{name}/datasets"

@@ -29,6 +29,7 @@ define([
 				'click [data-action=delete-repository]': 'deleteRepository'
 				'click [data-action=clone-repository]': 'openCloneLayer'
 				'click [data-action=move-repository]': 'openMoveLayer'
+				'click [data-action=export-repository]': 'exportRepository'
 
 			initialize: (options) ->
 				{@repository} = options
@@ -89,6 +90,7 @@ define([
 					url: "ws/repository/settings/#{fullPath}/maxSize/#{value}"
 
 			deleteRepository: (event) ->
+				Events.preventDefault event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				Layers.askDeleteQuestion "repository #{fullPath}", fullPath, () =>
@@ -99,6 +101,7 @@ define([
 							Router.navigate 'dashboard/repositories'
 
 			openCloneLayer: (event) ->
+				Events.preventDefault event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				@loadCommitsAndGroups (commits, groups) =>
@@ -112,6 +115,7 @@ define([
 							$('.modal #group').select repository.group
 
 			openMoveLayer: (event) ->
+				Events.preventDefault event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				@loadGroups (groups) =>
@@ -123,6 +127,13 @@ define([
 						callback: () =>
 							$('.modal #name').val repository.name
 							$('.modal #group').val repository.group
+
+			exportRepository: (event) ->
+				Events.preventDefault event
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				@$('iframe#export-frame').remove()
+				@$el.append '<iframe id="export-frame" class="hidden" border="0" height="0" width="0" src="ws/repository/export/' + fullPath + '"></iframe>'
 
 			loadCommitsAndGroups: (callback) ->
 				repository = @repository.toJSON()

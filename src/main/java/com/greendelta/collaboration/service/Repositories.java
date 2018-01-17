@@ -76,9 +76,6 @@ class Repositories {
 	}
 
 	private static void cloneHistoryContents(Repository from, Repository to, List<Commit> commits) throws IOException {
-		File historyDir = from.getHistoryDir(false);
-		if (!historyDir.exists())
-			return;
 		File copy = to.getHistoryFile(true);
 		for (Commit commit : commits)
 			Bytes.appendTo(copy, commit.toString());

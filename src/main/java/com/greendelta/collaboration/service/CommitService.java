@@ -7,7 +7,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +19,7 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.util.Directories;
+import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
@@ -96,7 +99,10 @@ public class CommitService {
 				userGroupSize += size;
 				checkSize(repo, repoSize, user, userGroupSize, isOwnNamespace);
 				IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
-				indexEntries.add(indexEntryCreator.create(dataset, lastAction, file));
+				Map<String, Object> data = new HashMap<>();
+				if (dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW)
+					data = IndexEntryCreator.readData(file);
+				indexEntries.add(indexEntryCreator.create(dataset, lastAction, data));
 				File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
 				int count = 0;
 				int noOfFiles = reader.readNextInt();

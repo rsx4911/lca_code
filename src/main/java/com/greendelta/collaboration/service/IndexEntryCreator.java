@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,17 +44,17 @@ class IndexEntryCreator {
 		return create(dataset, null, null);
 	}
 
-	IndexEntry create(Dataset dataset, IndexAction previousAction, File file) {
-		if (file == null) {
+	IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
+		if (data == null) {
 			IndexEntry entry = generic(dataset);
 			entry.action = IndexAction.DELETE;
 			return entry;
 		}
 		IndexEntry entry = null;
 		if (dataset.type == ModelType.PROCESS) {
-			entry = process(dataset, file);
+			entry = process(dataset, data);
 		} else if (dataset.type == ModelType.FLOW) {
-			entry = flow(dataset, file);
+			entry = flow(dataset, data);
 		} else {
 			entry = generic(dataset);
 		}
@@ -86,10 +87,10 @@ class IndexEntryCreator {
 		entry.version = dataset.version;
 	}
 
-	private FlowIndexEntry flow(Dataset dataset, File dataFile) {
+	private FlowIndexEntry flow(Dataset dataset, Map<String, Object> data) {
 		FlowIndexEntry entry = new FlowIndexEntry();
 		fillGeneric(entry, dataset);
-		fillFlow(entry, readData(dataFile));
+		fillFlow(entry, data);
 		return entry;
 	}
 
@@ -98,10 +99,10 @@ class IndexEntryCreator {
 		entry.flowType = Enums.getValue(data.getString("flowType"), FlowType.class);
 	}
 
-	private ProcessIndexEntry process(Dataset dataset, File dataFile) {
+	private ProcessIndexEntry process(Dataset dataset, Map<String, Object> data) {
 		ProcessIndexEntry entry = new ProcessIndexEntry();
 		fillGeneric(entry, dataset);
-		fillProcess(entry, readData(dataFile));
+		fillProcess(entry, data);
 		return entry;
 	}
 
@@ -167,8 +168,10 @@ class IndexEntryCreator {
 		return ModellingApproach.UNKNOWN;
 	}
 
-	private static Map<String, Object> readData(File file) {
+	static Map<String, Object> readData(File file) {
 		try {
+			if (Files.size(file.toPath()) == 0)
+				return new HashMap<>();
 			return gson.fromJson(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))),
 					new TypeToken<Map<String, Object>>() {
 					}.getType());

@@ -122,8 +122,7 @@ public class Repository {
 	}
 
 	File getHistoryFile(boolean create) {
-		File historyDir = getHistoryDir(create);
-		return getFile(historyDir, "history.txt", create);
+		return getFile(repoDir, "history.txt", create);
 	}
 
 	File getDatasetFile(ModelType type, String refId, String commitId,
@@ -165,10 +164,6 @@ public class Repository {
 
 	private File getBinDir(boolean create) {
 		return getDir(repoDir, "bin", create);
-	}
-
-	File getHistoryDir(boolean create) {
-		return getDir(repoDir, "history", true);
 	}
 
 	File getFile(File dir, String name, boolean create) {

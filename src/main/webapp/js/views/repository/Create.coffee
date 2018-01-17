@@ -2,6 +2,7 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Forms'
+				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!utils/Renderer'
 				'cs!app/Router'
@@ -10,7 +11,7 @@ define([
 				'templates/views/repository/create'
 			]
 
-	(Backbone, Events, Forms, Model, Renderer, Router, Repository, currentUser, template) ->
+	(Backbone, Events, Forms, Layers, Model, Renderer, Router, Repository, currentUser, template) ->
 
 		class RepositoryCreate extends Backbone.View
 
@@ -35,7 +36,23 @@ define([
 					success: () => 
 						group = @repository.get 'group'
 						name = @repository.get 'name'
-						Router.navigate "#{group}/#{name}"						
+						if @doImport
+							Layers.showProgressIndicator 'Importing'
+							data = new FormData()
+							data.append('file', $('#data')[0].files[0])
+							$.ajax	
+								type: 'POST'
+								url: "ws/repository/import/#{group}/#{name}"
+								cache: false
+								contentType: false
+								processData: false
+								data: data
+								success: () -> 
+									Layers.hideProgressIndicator()
+									Router.navigate "#{group}/#{name}"						
+								error: () -> Layers.hideProgressIndicator()
+						else
+							Router.navigate "#{group}/#{name}"						
 					error: (model, response) -> Forms.handleError 'repository-form', response
 				return false
 
@@ -45,7 +62,7 @@ define([
 				'click [data-action=create-repository]': 'createRepository'
 
 			initialize: (options) ->
-				{@groupName} = options
+				{@groupName, @doImport} = options
 				@repository = new Repository()
 
 			render: (renderOptions) ->
@@ -55,6 +72,7 @@ define([
 					@$el.html template
 						groups: groups
 						selection: @groupName
+						doImport: @doImport
 					Renderer.render @, renderOptions
 
 )

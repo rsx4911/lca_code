@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.core.StreamingOutput;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.error.RepositoryNotFoundException;
@@ -177,6 +179,18 @@ public class RepositoryService {
 
 	boolean delete(Repository repo) {
 		return Directories.delete(new File(getPath(repo.group, repo.name)));
+	}
+
+	public StreamingOutput pack(Repository repo) {
+		return new RepositoryOutput(repo.repoDir.toPath());
+	}
+
+	public void unpack(Repository repo, InputStream input) {
+		try {
+			new RepositoryInput(repo.repoDir.toPath()).read(input);
+		} catch (IOException e) {
+			log.error("Error unpacking repository", e);
+		}
 	}
 
 	public long getCount(boolean adminArea) {

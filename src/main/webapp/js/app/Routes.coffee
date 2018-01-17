@@ -2,6 +2,7 @@ define
 	'': 'landingPage'
 	'search(/:query)': 'search'
 	'repository/new(/:group)': 'repositoryNew'
+	'repository/import': 'repositoryImport'
 	'user': 'userProfile'
 	'user/profile': 'userProfile'
 	'user/messaging': 'userMessaging'

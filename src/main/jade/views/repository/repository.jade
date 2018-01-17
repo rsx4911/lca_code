@@ -17,12 +17,33 @@ mixin to-size(value, inGb, round, showUnit)
 	| #{value}
 
 .header-box Info
-	if repository.userCanMove
-		button.btn.btn-lg.btn-default.pull-right(data-action='move-repository') Move
-	if repository.userCanClone
-		button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
-	if repository.userCanDelete
-		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
+	.pull-right.responsive-menu.dropdown
+		a(href='#' data-toggle='dropdown'): span.glyphicon.glyphicon-cog
+		ul.dropdown-menu
+			if repository.userCanMove
+				li: a(href='#' data-action='move-repository')
+					span.glyphicon.glyphicon-move
+					| Move
+			if repository.userCanClone
+				li: a(href='#' data-action='clone-repository')
+					span.glyphicon.glyphicon-copy
+					| Clone
+			li: a(href='#' data-action='export-repository')
+				span.glyphicon.glyphicon-export
+				| Export
+			if repository.userCanDelete
+				li: a(href='#' data-action='delete-repository')
+					span.glyphicon.glyphicon-remove
+					| Delete
+		.default-menu
+			if repository.userCanMove
+				button.btn.btn-lg.btn-default.pull-right(data-action='move-repository') Move
+			if repository.userCanClone
+				button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
+			button.btn.btn-lg.btn-default.pull-right(data-action='export-repository') Export
+			if repository.userCanDelete
+				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
+
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
