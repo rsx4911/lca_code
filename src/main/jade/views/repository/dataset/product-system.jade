@@ -1,4 +1,6 @@
 include ./structures/product-system-parameter-redef-table.jade
+include ./structures/exchange-table.jade
+include ./structures/exchange-list.jade
 
 mixin target-amount-row()
 	tr
@@ -17,6 +19,7 @@ mixin target-amount-row()
 			- var hasLinks = hasAtLeastOne(dataset, null, 'processLinks');
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab(null, true, 'Overview')
+				+nav-tab('inventory')
 				if hasLinks
 					+nav-tab(null, false, 'Supply chain')
 					+nav-tab(null, false, 'Graph')
@@ -34,6 +37,16 @@ mixin target-amount-row()
 									+field-row-value(name, otherName)
 							+ref-row('targetFlowProperty')
 							+target-amount-row()
+				+nav-tab-pane('inventory')
+					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
+					.clear
+					.exchange-tables.toggleable
+						+exchange-table('inventory', true)
+						+exchange-table('inventory', false)
+					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
+					.clear
+					.exchange-list.toggleable
+						+exchange-list(exchangeMap, otherExchangeMap)
 				+nav-tab-pane('supply-chain', false, hasLinks)
 					#process-tree-container
 				+nav-tab-pane('graph', false, hasLinks)

@@ -6,6 +6,7 @@ define([
 				'cs!utils/Renderer'
 				'cs!utils/Toggle'
 				'cs!views/repository/dataset/Comments'
+				'cs!views/repository/dataset/CompareSelection'
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DatasetRendering'
 				'cs!views/repository/dataset/DQLayer'
@@ -33,7 +34,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, CompareSelection, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -190,6 +191,11 @@ define([
 				template = @getTemplate()
 				group = @repository.get 'group'
 				name = @repository.get 'name'
+				exchangesField = null
+				if @dataset.type is 'Process'
+					exchangesField = 'exchanges'
+				else if @dataset.type is 'ProductSystem'
+					exchangesField = 'inventory'
 				model =
 					dataset: @dataset
 					commits: @commits
@@ -198,8 +204,8 @@ define([
 					comparisonCommitId: comparisonCommitId
 					baseUrl: "#{group}/#{name}/dataset"
 					fileBaseUrl: @getFileBaseUrl()
-					exchangeMap: if @dataset.type is 'Process' then Exchanges.map @dataset.exchanges else null
-					otherExchangeMap: if @compareTo?.type is 'Process' then Exchanges.map @compareTo.exchanges else null
+					exchangeMap: if exchangesField then Exchanges.map @dataset[exchangesField] else null
+					otherExchangeMap: if @compareTo and exchangesField then Exchanges.map @compareTo[exchangesField] else null
 					reviewMode: LocalStorage.getValue('reviewMode')
 					isPublic: !currentUser.isLoggedIn()
 				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo
@@ -244,22 +250,24 @@ define([
 
 			initComparison: (event) ->
 				target = $ Events.target event
-				commitId = target.attr 'data-compare-to'
-				if !commitId or commitId is 'previous' or commitId is 'next'
-						for commit, index in @commits
-							if commitId is 'previous'
-								if commit.id is @commitId
-									commitId = @commits[index + 1].id
-									break
-							else if commitId is 'next'
-								if commit.id is @commitId
-									break
-								commitId = commit.id
-				if !commitId and !@commitId
-					commitId = @commits[@commits.length - 1].id
-				if !commitId or commitId is '0'
-					return
-				@loadDataset @refId, commitId, (dataset) =>
+				type = target.attr 'data-compare-to'
+				if type is 'previous'
+					for commit, index in @commits
+						if commit.id is @commitId
+							commitId = @commits[index + 1].id
+							break
+					if commitId
+						@applyComparison @refId, commitId
+				else if type is 'other-version'
+					CompareSelection.openCommitSelection @commits, @commitId, (commitId) =>
+						@applyComparison @refId, commitId
+				else if type is 'other-dataset'
+					repositoryPath = @repository.get('group') + '/' + @repository.get('name')
+					CompareSelection.openModelSelection repositoryPath, @type, (refId, commitId) =>
+						@applyComparison refId, commitId
+
+			applyComparison: (refId, commitId) ->
+				@loadDataset refId, commitId, (dataset) =>
 					DatasetPrepare.applyTo dataset
 					@compareTo = dataset
 					@doRender null, commitId

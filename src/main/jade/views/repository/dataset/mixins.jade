@@ -52,18 +52,21 @@ mixin download-dropdown()
 				li: a(href='#' data-format='ilcd') as ILCD
 
 mixin comparison-dropdown()
-	if commits.length > 1
-		.dropdown.btn-group
-			button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
-				span.glyphicon.glyphicon-transfer
-				span.text Compare to
-				span  
-				span.caret
-			ul.dropdown-menu
-				if commits[commits.length - 1].id !== commitId
-					li: a(href='#' data-compare-to='previous') previous version
-				if commits[0].id !== commitId
-					li: a(href='#' data-compare-to='next') next version
+	.dropdown.btn-group
+		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+			span.glyphicon.glyphicon-transfer
+			span.text Compare to
+			span  
+			span.caret
+		ul.dropdown-menu
+			- var isFirst = commits[commits.length - 1].id === commitId;
+			if !isFirst
+				li: a(href='#' data-compare-to='previous') previous version
+				li.divider(role='separator')
+			if commits.length > 2 || (commits.length === 2 && isFirst)
+				li: a(href='#' data-compare-to='other-version') other version...
+			li: a(href='#' data-compare-to='other-dataset') other data set...
+
 
 mixin header()
 	.title(class=isPublic?'header-box':null)

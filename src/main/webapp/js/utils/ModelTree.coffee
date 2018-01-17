@@ -5,14 +5,17 @@ define([
 
 	(ModelTypes) ->
 
-		init: (container, repositoryPath) ->
+		init: (container, repositoryPath, options) ->
+			defaultPath = options?.defaultPath || ''
+			multiSelection = options?.multiSelection || false
 			$(container).jstree 
-				plugins: ['checkbox']
+				plugins: if multiSelection then ['checkbox'] else []
 				core:
+					multiple: multiSelection,
 					themes:
 						dots: false
 					data: (node, callback) ->
-						path = if node.id is '#' then '' else node.id
+						path = if node.id is '#' then defaultPath else node.id
 						$.ajax
 							type: 'GET'
 							url: "ws/public/browse/#{repositoryPath}?categoryPath=#{path}"
@@ -53,7 +56,7 @@ define([
 		# 3) Model elements, e.g. {id: '4321-...', type: 'FLOW'}
 		# if a parent is already in the elements to be returned, child elements will not be added
 		# because the tree is lazy loaded, the calling code must add missing (not selected in UI) elements anyway
-		getSelection: (container) ->
+		getSelection: (container, firstOnly) ->
 			selected = $('#model-tree').jstree 'get_selected', true
 			elements = []
 			types = []
@@ -80,6 +83,10 @@ define([
 					if skip
 						continue
 					elements.push {type: e.original.type, id: e.original.id, name: e.original.text, commitId: e.commitId}
+			if firstOnly
+				if elements.length
+					return elements[0]
+				return null
 			return elements
  
 )

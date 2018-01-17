@@ -1,16 +1,18 @@
 include ./mixins.jade
 
-mixin exchange-table(input)
+mixin exchange-table(field, input)
 	- var count = 0;
-	each exchange in dataset.exchanges
+	- var exchanges = getValue(dataset, field);
+	- var otherExchanges = compareTo ? getValue(compareTo, field) : null;
+	each exchange in exchanges
 		if exchange.input === input
 			- count++;
 	if count > 0
 		div
 			table.table(class=input?'inputs':'outputs')
 				- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false, description: false};
-				if dataset.exchanges
-					each exchange in dataset.exchanges
+				if exchanges
+					each exchange in exchanges
 						if exchange.input === input
 							- show.costs = show.costs || exchange.costValue || exchange.currency;
 							- show.dqEntry = show.dqEntry || exchange.dqEntry;
@@ -18,8 +20,8 @@ mixin exchange-table(input)
 							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
 							- show.avoidedProduct = show.avoidedProduct || exchange.avoidedProduct;
 							- show.description = show.description || exchange.description;
-				if compareTo && compareTo.exchanges
-					each exchange in compareTo.exchanges
+				if otherExchanges
+					each exchange in otherExchanges
 						if exchange.input === input
 							- show.costs = show.costs || exchange.costValue || exchange.currency;
 							- show.dqEntry = show.dqEntry || exchange.dqEntry;
@@ -42,7 +44,7 @@ mixin exchange-table(input)
 						th
 				tbody
 					- count = 0;
-					each values in getArrayValues(dataset, compareTo, 'EXCHANGE', 'exchanges')
+					each values in getArrayValues(dataset, compareTo, 'EXCHANGE', field)
 						if (values[0] ? values[0].input : values[1].input) === input
 							+exchange-row(values[0], values[1], count, input, show)
 							- count++;

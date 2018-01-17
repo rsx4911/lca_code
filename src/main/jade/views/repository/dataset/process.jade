@@ -23,8 +23,8 @@ include ./structures/parameter-table.jade
 					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
 					.clear
 					.exchange-tables.toggleable
-						+exchange-table(true)
-						+exchange-table(false)
+						+exchange-table('exchanges', true)
+						+exchange-table('exchanges', false)
 					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
 					.clear
 					.exchange-list.toggleable

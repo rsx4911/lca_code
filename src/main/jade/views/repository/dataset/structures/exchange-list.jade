@@ -1,7 +1,8 @@
 include ../mixins.jade
 
 mixin exchange-list(map, otherMap)
-	+exchange-sublist('Reference product', map ? [map.referenceProduct] : null, otherMap ? [otherMap.referenceProduct] : null)
+	if map.referenceProduct || (otherMap && otherMap.referenceProduct)
+		+exchange-sublist('Reference product', map ? [map.referenceProduct] : null, otherMap ? [otherMap.referenceProduct] : null)
 	+exchange-sublist('By-products', map.byProducts, getValue(otherMap, 'byProducts'))
 	+exchange-sublist('Produced waste', map.producedWaste, getValue(otherMap, 'producedWaste'))
 	+exchange-sublist('Used products', map.usedProducts, getValue(otherMap, 'usedProducts'))

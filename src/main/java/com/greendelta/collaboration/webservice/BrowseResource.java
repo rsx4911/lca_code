@@ -161,6 +161,9 @@ public class BrowseResource {
 			putFlowCategories(data, repo, commitId, exchanges);
 			putProviderTypes(data, repo, commitId, exchanges);
 			putSocialIndicators(data, repo, commitId, aspects);
+		} else if (type == ModelType.PRODUCT_SYSTEM) {
+			List<Map<String, Object>> inventory = map.get("inventory");
+			putFlowCategories(data, repo, commitId, inventory);
 		} else if (type == ModelType.IMPACT_METHOD) {
 			putImpactCategories(data, repo, commitId, map);
 			putNwSets(data, repo, commitId, map);

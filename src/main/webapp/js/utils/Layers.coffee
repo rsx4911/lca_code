@@ -183,7 +183,8 @@ define([
 							options.callback ModelTree.getSelection '#model-tree'
 						}
 					]
-				ModelTree.init '#model-tree', options.repositoryPath
+				ModelTree.init '#model-tree', options.repositoryPath, 
+					multiSelection: true
 
 			askQuestion: (options) ->
 				unless options.question
