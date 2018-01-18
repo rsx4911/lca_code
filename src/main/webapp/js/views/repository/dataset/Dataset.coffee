@@ -6,7 +6,6 @@ define([
 				'cs!utils/Renderer'
 				'cs!utils/Toggle'
 				'cs!views/repository/dataset/Comments'
-				'cs!views/repository/dataset/CompareSelection'
 				'cs!views/repository/dataset/DatasetPrepare'
 				'cs!views/repository/dataset/DatasetRendering'
 				'cs!views/repository/dataset/DQLayer'
@@ -34,7 +33,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, CompareSelection, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -155,6 +154,7 @@ define([
 				'change #commitId': 'switchCommit'
 				'click [href=#supply-chain]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
 				'click [href=#graph]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
+				'click .select-method': (event) -> ProductSystem.selectImpactMethod @repository, @dataset
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options
@@ -230,7 +230,7 @@ define([
 				if table
 					tables = [$(table)]
 				else
-					tables = @$('table:not(.no-head)')
+					tables = @$('table:not(.no-head):not(.no-sorting)')
 				for table in tables
 					options = {headers: {}}
 					for th, index in $('thead > tr > th', table)
@@ -259,12 +259,16 @@ define([
 					if commitId
 						@applyComparison @refId, commitId
 				else if type is 'other-version'
-					CompareSelection.openCommitSelection @commits, @commitId, (commitId) =>
+					Layers.selectCommit @commits, @commitId, (commitId) =>
 						@applyComparison @refId, commitId
 				else if type is 'other-dataset'
 					repositoryPath = @repository.get('group') + '/' + @repository.get('name')
-					CompareSelection.openModelSelection repositoryPath, @type, (refId, commitId) =>
-						@applyComparison refId, commitId
+					Layers.selectModel
+						repositoryPath: repositoryPath
+						type: @type
+						selectVersion: true
+						callback: (refId, commitId) =>
+							@applyComparison refId, commitId
 
 			applyComparison: (refId, commitId) ->
 				@loadDataset refId, commitId, (dataset) =>

@@ -48,7 +48,7 @@ define([
 			return value
 
 		scientific: (value, round) ->
-			unless value
+			if not value and value isnt 0
 				return ''
 			# TODO use math lib
 			if round

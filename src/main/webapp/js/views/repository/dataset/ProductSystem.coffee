@@ -1,8 +1,10 @@
 define([
-				'cs!views/repository/dataset/Tree.coffee'
+				'cs!utils/Format'
+				'cs!utils/Layers'
+				'cs!views/repository/dataset/Tree'
 			]
 
-	(Tree) ->
+	(Format, Layers, Tree) ->
 
 		initGraph: (dataset) ->
 			setTimeout () =>
@@ -36,5 +38,39 @@ define([
 
 		initTree: (repository, dataset, commitId) ->
 			Tree.init repository, dataset, commitId
+
+		selectImpactMethod: (repository, dataset) ->
+			repositoryPath = repository.get('group') + '/' + repository.get('name')
+			Layers.selectModel 
+				repositoryPath: repositoryPath
+				multiSelection: false
+				selectVersion: true
+				type: 'IMPACT_METHOD'
+				callback: (methodId, commitId) =>
+					Layers.closeActive()
+					Layers.showProgressIndicator 'Loading'
+					$.ajax
+						type: 'GET'
+						url: "ws/public/browse/#{repositoryPath}/IMPACT_METHOD/#{methodId}"
+						success: (impactMethod) => @applyImpactMethod dataset, impactMethod
+						error: () -> Layers.hideProgressIndicator()
+
+		applyImpactMethod: (dataset, method) ->
+			$('.impact-method').html method.name
+			table = $ 'table.impact-result-table'
+			for category in method.impactCategories
+				category.result = @calculateResult dataset, category
+				table.append "<tr><td>#{category.name}</td><td>#{Format.scientific(category.result)} #{category.referenceUnitName}</td></tr>"
+			table.tablesorter()
+			table.show()
+			Layers.hideProgressIndicator()
+
+		calculateResult: (dataset, category) ->
+			result = 0
+			for factor in category.impactFactors
+				for exchange in dataset.inventory
+					if exchange.flow.id is factor.flow['@id']
+						result += factor.value * exchange.amount
+			return result
 
 )

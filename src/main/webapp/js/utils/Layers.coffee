@@ -2,6 +2,7 @@ define([
 				'cs!utils/ModelTree'
 				'cs!utils/Data'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
 				'templates/views/layer'
@@ -9,7 +10,7 @@ define([
 				'bootstrap'
 			]
 
-	(ModelTree, Data, Events, Model, currentUser, template, progressIndicatorTemplate) ->
+	(ModelTree, Data, Events, Format, Model, currentUser, template, progressIndicatorTemplate) ->
 
 		Layers = () ->
 
@@ -174,17 +175,69 @@ define([
 					return []
 				unless options.callback
 					return []
-				@showMessageInLayer
+				@showTemplateInLayer
 					title: 'Select data set'
-					body: '<div id="model-tree"></div>'
+					template: 'select-model-layer'
+					model: 
+						selectVersion: options.selectVersion
 					buttons: [
 						{text: 'Cancel', callback: () => @closeActive()}
-						{text: 'Select', className: 'btn-success', callback: -> 
-							options.callback ModelTree.getSelection '#model-tree'
+						{id: 'select-model-button', text: 'Select', className: 'btn-primary', callback: () => 
+							if options.multiSelection
+								options.callback ModelTree.getSelection '#model-tree'
+								@closeActive()
+							else
+								refId = ModelTree.getSelection('#model-tree', true).id
+								commitId = null
+								if options.selectVersion
+									commitId = $('#model-selection #commitId').val()
+								@closeActive()
+								options.callback refId, commitId
 						}
 					]
-				ModelTree.init '#model-tree', options.repositoryPath, 
-					multiSelection: true
+					callback: () =>
+						ModelTree.init '#model-tree', options.repositoryPath, 
+							multiSelection: options.multiSelection
+							defaultPath: options.type
+						$('#select-model-button').prop 'disabled', !options.multiSelection
+						$('#model-tree').on 'activate_node.jstree', (event, data) =>
+							if options.type && !options.multiSelection
+								isType = data?.node?.original?.type is options.type
+								$('#select-model-button').prop 'disabled', !isType
+								if isType and options.selectVersion
+									refId = data.node.original.id
+									@showProgressIndicator 'Loading<br>versions'
+									$.ajax
+										type: 'GET'
+										url: "ws/history/#{options.repositoryPath}/#{options.type}/#{refId}"
+										success: (commits) =>
+											$('#select-model-button').prop 'disabled', (!commits || !commits.length)
+											$('#model-selection #commitId').empty()
+											if commits?.length
+												for commit, index in commits
+													$('#model-selection #commitId').append '<option value="' + commit.id + '">' + (if index is 0 then 'Latest' else commit.id) + '</option>'
+													$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.formatCommitDescription(commit.message) + '"></optgroup>'
+											@hideProgressIndicator()
+										error: () => 
+											$('#select-model').prop 'disabled', true
+											@hideProgressIndicator()
+
+			selectCommit: (commits, commitId, callback) ->
+				@showTemplateInLayer
+					title: 'Select version'
+					template: 'select-commit-layer'
+					model:
+						commits: commits
+						commitId: commitId
+						formatCommitDescription: Format.formatCommitDescription
+					buttons: [
+						{id: 'close', className: 'btn-default', text: 'Close', callback: () => @closeActive()}
+						{id: 'select', className: 'btn-primary', text: 'Select', callback: () => 
+							selection = $('#commit-selection #commitId').val()
+							@closeActive()
+							callback selection
+						}
+					]
 
 			askQuestion: (options) ->
 				unless options.question

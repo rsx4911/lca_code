@@ -20,6 +20,8 @@ mixin target-amount-row()
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab(null, true, 'Overview')
 				+nav-tab('inventory')
+				if dataset.inventory && dataset.inventory.length
+					+nav-tab(null, false, 'Impacts')
 				if hasLinks
 					+nav-tab(null, false, 'Supply chain')
 					+nav-tab(null, false, 'Graph')
@@ -47,6 +49,19 @@ mixin target-amount-row()
 					.clear
 					.exchange-list.toggleable
 						+exchange-list(exchangeMap, otherExchangeMap)
+				if dataset.inventory && dataset.inventory.length
+					+nav-tab-pane('impacts', false, true)
+						label Impact method:
+						|  
+						span.impact-method No selection
+						|  
+						button.btn.btn-sm.btn-default.select-method Select...
+						table.table.impact-result-table.no-sorting(style='display:none;')
+							thead
+								tr
+									th Impact category
+									th Result
+							tbody
 				+nav-tab-pane('supply-chain', false, hasLinks)
 					#process-tree-container
 				+nav-tab-pane('graph', false, hasLinks)
