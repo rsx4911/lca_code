@@ -24,22 +24,24 @@ else
 				.form-group
 					input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
 				.clear
-	.header-box
-		if deleted
-			.pull-left
+	if !isPublic || categoryPath
+		.header-box
+			if deleted
+				.pull-left
+					+category-breadcrumb(baseUrl, categoryPath)
+				.badge.pull-right.deleted Deleted
+			else
 				+category-breadcrumb(baseUrl, categoryPath)
-			.badge.pull-right.deleted Deleted
-		else
-			+category-breadcrumb(baseUrl, categoryPath)
-		.clear
+			.clear
 
 .content-box
 	table.table.table-browse
-		thead
-			tr
-				th
-				th Name
-				th Last change
-				th Commit
+		if !isPublic
+			thead
+				tr
+					th
+					th Name
+					th Last change
+					th Commit
 		tbody
 	.no-content-message(style='display:none') No data sets found

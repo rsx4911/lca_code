@@ -33,12 +33,14 @@ public class SearchService {
 
 	private final SearchClient client;
 	private final RepositoryService repoService;
+	private final UserService userService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	public SearchService(SearchClient searchClient, RepositoryService repoService) {
+	public SearchService(SearchClient searchClient, RepositoryService repoService, UserService userService) {
 		this.client = searchClient;
 		this.repoService = repoService;
+		this.userService = userService;
 	}
 
 	public void createIndex(Map<String, Object> settings) {
@@ -70,7 +72,8 @@ public class SearchService {
 			}
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, SearchFields.get(type));
+			boolean loggedIn = userService.getCurrentUser().getId() != 0;
+			builder.query(query, SearchFields.get(type, loggedIn));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);

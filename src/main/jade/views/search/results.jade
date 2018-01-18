@@ -23,7 +23,9 @@ mixin result-entry(dataset)
 		span.result-text=dataset.fullPath
 
 .col-lg-9
-	.header-box #{resultInfo.totalCount} results for '#{query}'
+	.header-box #{resultInfo.totalCount} results
+		if query
+			|  for '#{query}'
 	.content-box.search-results
 		each dataset in data
 			.result
@@ -39,9 +41,10 @@ mixin result-entry(dataset)
 				.details
 					div Repository: 
 						a(href='#{dataset.repositoryId}')=dataset.repositoryId
-					div Commit: 
-						a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
-							span.result-text #{dataset.commitMessage} (#{dataset.commitId})
+					if !isPublic
+						div Commit: 
+							a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
+								span.result-text #{dataset.commitMessage} (#{dataset.commitId})
 		+paging(resultInfo, getPagingUrl)
 .col-lg-3
 	.aggregations

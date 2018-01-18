@@ -13,10 +13,12 @@ public class SearchFields {
 			"representativeness", "biogenicCarbon", "reviewer", "copyrightHolder", "contact", "description"
 	};
 
-	public static String[] get(ModelType type) {
+	public static String[] get(ModelType type, boolean loggedIn) {
 		Set<String> fields = new HashSet<>();
 		fields.add("name");
-		fields.add("commitMessage");
+		if (loggedIn) {
+			fields.add("commitMessage");
+		}
 		if (type == ModelType.PROCESS) {
 			fields.addAll(Arrays.asList(PROCESS_FULL_TEXT_FIELDS));
 		}

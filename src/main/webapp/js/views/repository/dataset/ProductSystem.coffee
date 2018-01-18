@@ -58,9 +58,11 @@ define([
 		applyImpactMethod: (dataset, method) ->
 			$('.impact-method').html method.name
 			table = $ 'table.impact-result-table'
+			$('tbody', table).empty()
 			for category in method.impactCategories
 				category.result = @calculateResult dataset, category
-				table.append "<tr><td>#{category.name}</td><td>#{Format.scientific(category.result)} #{category.referenceUnitName}</td></tr>"
+				$('tbody', table).append "<tr><td>#{category.name}</td><td>#{Format.scientific(category.result)} #{category.referenceUnitName}</td></tr>"
+			table.unbind('appendCache applyWidgetId applyWidgets sorton update updateCell').removeClass('tablesorter').find('thead th').unbind('click mousedown').removeClass('header headerSortDown headerSortUp')
 			table.tablesorter()
 			table.show()
 			Layers.hideProgressIndicator()

@@ -5,10 +5,11 @@ define([
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/search/results'
 			]
 
-	(Backbone, Events, Icons, ModelTypes, Renderer, Router, template) ->
+	(Backbone, Events, Icons, ModelTypes, Renderer, Router, currentUser, template) ->
 
 		class SearchResultsView extends Backbone.View
 
@@ -41,6 +42,7 @@ define([
 					url: url
 					success: (result) =>
 						result.getIcon = Icons.get
+						result.isPublic = !currentUser.isLoggedIn()
 						result.getAggregationLabel = (type) => @getAggregationLabel type
 						result.getLabel = (type, value) => @getLabel type, value
 						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @pageSize, @aggregations, result

@@ -64,6 +64,7 @@ define([
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
 						result.commitId = @commitId
+						result.isPublic = !currentUser.isLoggedIn()
 						result.getRootLabel = (t) -> return ModelTypes[t]
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						result.getIcon = Icons.get

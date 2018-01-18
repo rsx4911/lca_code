@@ -31,6 +31,7 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SearchService;
+import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
@@ -43,15 +44,17 @@ public class BrowseResource {
 	private final RepositoryService repoService;
 	private final FetchService fetchService;
 	private final HistoryService historyService;
+	private final UserService userService;
 
 	@Inject
 	public BrowseResource(BrowseService service, SearchService searchService, RepositoryService repoService,
-			FetchService fetchService, HistoryService historyService) {
+			FetchService fetchService, HistoryService historyService, UserService userService) {
 		this.service = service;
 		this.searchService = searchService;
 		this.repoService = repoService;
 		this.fetchService = fetchService;
 		this.historyService = historyService;
+		this.userService = userService;
 	}
 
 	@GET
@@ -64,7 +67,7 @@ public class BrowseResource {
 			@QueryParam("commitId") String commitId,
 			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
 		Repository repo = repoService.get(group, name);
-		List<?> content = null;
+		List<ObjectMap> content = null;
 		if (Strings.isNullOrEmpty(categoryPath)) {
 			content = service.getRootContent(new BrowseParameter(repo, commitId, showDeleted));
 		} else {
@@ -74,6 +77,12 @@ public class BrowseResource {
 		}
 		if (content == null)
 			content = new ArrayList<>();
+		if (userService.getCurrentUser().getId() == 0) {
+			content = com.greendelta.collaboration.util.Collections.convert(content, (entry) -> {
+				entry.remove("commitTimestamp", "commitMessage", "commitId");
+				return entry;
+			});
+		}
 		return Respond.ok(Collections.singletonMap("entries", content));
 	}
 
@@ -141,6 +150,7 @@ public class BrowseResource {
 			String message = notFoundMessage(type, refId, null);
 			return Respond.notFound(message);
 		}
+		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
@@ -148,7 +158,9 @@ public class BrowseResource {
 			descriptor.put("@id", refId);
 			descriptor.put("@type", type.getModelClass().getSimpleName());
 			descriptor.put("name", entry.get("name"));
-			descriptor.put("commitId", commitId);
+			if (loggedIn) {
+				descriptor.put("commitId", commitId);
+			}
 			descriptor.put("deleted", true);
 			return Respond.ok(descriptor);
 		}
@@ -170,7 +182,9 @@ public class BrowseResource {
 		} else if (type == ModelType.FLOW) {
 			putReferenceUnits(data, repo, map, commitId);
 		}
-		map.put("commitId", commitId);
+		if (loggedIn) {
+			map.put("commitId", commitId);
+		}
 		return Respond.ok(map);
 	}
 
