@@ -21,3 +21,13 @@ define () ->
 			if key is type
 				return index
 		return -1
+
+	singular: (type) ->
+		if type is 'DQ_SYSTEM'
+			return 'Data quality system'
+		text = type.replace('_', ' ').toLowerCase()
+		text = text[0].toUpperCase() + text.substring(1, text.length)
+		return text
+
+	plural: (type) ->
+		return @[type]		

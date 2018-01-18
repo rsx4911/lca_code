@@ -4,13 +4,14 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Model'
+				'cs!utils/ModelTypes'
 				'cs!models/CurrentUser'
 				'templates/views/layer'
 				'templates/views/progress-indicator'
 				'bootstrap'
 			]
 
-	(ModelTree, Data, Events, Format, Model, currentUser, template, progressIndicatorTemplate) ->
+	(ModelTree, Data, Events, Format, Model, ModelTypes, currentUser, template, progressIndicatorTemplate) ->
 
 		Layers = () ->
 
@@ -175,10 +176,17 @@ define([
 					return []
 				unless options.callback
 					return []
+				title = if options.multipleSelection then 'Select data sets' else 'Select data set'
+				if options.type
+					if options.multipleSelection
+						title = "Select #{ModelTypes[options.type].toLowerCase()}"
+					else
+						title = "Select #{ModelTypes.singular(options.type).toLowerCase()}"
 				@showTemplateInLayer
-					title: 'Select data set'
+					title: title
 					template: 'select-model-layer'
 					model: 
+						label: if options.type then ModelTypes.singular(options.type) else 'Data set'
 						selectVersion: options.selectVersion
 					buttons: [
 						{text: 'Cancel', callback: () => @closeActive()}
