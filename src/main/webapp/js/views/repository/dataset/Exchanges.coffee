@@ -1,9 +1,11 @@
 define () ->
 
-	map: (exchanges) ->
+	map: (exchanges, dsType) ->
 		model = {byProducts: [], producedWaste: [], avoidedProducts: [], usedProducts: [], recycledWaste: [], emissions: [], resources: []}
 		if exchanges
 			for e in exchanges
+				if dsType is 'PRODUCT_SYSTEM'
+					e.internalId = e.flow.id
 				if e.input
 					switch e.flow.flowType
 						when 'PRODUCT_FLOW'

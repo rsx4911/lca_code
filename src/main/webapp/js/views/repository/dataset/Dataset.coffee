@@ -204,8 +204,8 @@ define([
 					comparisonCommitId: comparisonCommitId
 					baseUrl: "#{group}/#{name}/dataset"
 					fileBaseUrl: @getFileBaseUrl()
-					exchangeMap: if exchangesField then Exchanges.map @dataset[exchangesField] else null
-					otherExchangeMap: if @compareTo and exchangesField then Exchanges.map @compareTo[exchangesField] else null
+					exchangeMap: if exchangesField then Exchanges.map(@dataset[exchangesField], @type) else null
+					otherExchangeMap: if @compareTo and exchangesField then Exchanges.map(@compareTo[exchangesField], @type) else null
 					reviewMode: LocalStorage.getValue('reviewMode')
 					isPublic: !currentUser.isLoggedIn()
 				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo

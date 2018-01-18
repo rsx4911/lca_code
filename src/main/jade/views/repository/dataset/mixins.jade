@@ -24,10 +24,12 @@ mixin menubar()
 				|  on #{formatDate(currentCommit.timestamp)}
 		if compareTo
 			.header-box.comparison-statistics
-				h4 Differences to 
-					if compareTo.id !== dataset.id
-						| '#{compareTo.name}' 
-					| Version '#{compareTo.commitId}'
+				h4 Differences to
+					br
+					small
+						if compareTo.id !== dataset.id
+							| '#{compareTo.name}' 
+						| version '#{compareTo.commitId}'
 				.pull-left(data-compare='added') 
 					+compare-icon('added')
 					| Additions: 
