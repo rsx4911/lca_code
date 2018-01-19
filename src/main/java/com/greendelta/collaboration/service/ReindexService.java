@@ -82,6 +82,8 @@ public class ReindexService {
 			for (ModelType type : ModelTypes.SORTED) {
 				collectRefs(type);
 			}
+			collectRefs(ModelType.IMPACT_CATEGORY);
+			collectRefs(ModelType.NW_SET);
 		}
 
 		private List<IndexEntry> run(Commit commit) {
@@ -126,6 +128,8 @@ public class ReindexService {
 
 		private void collectRefs(ModelType type) {
 			File modelDir = repo.getModelDir(type, false);
+			if (!modelDir.exists())
+				return;
 			for (File file : modelDir.listFiles()) {
 				for (File model : file.listFiles()) {
 					for (File version : model.listFiles()) {
