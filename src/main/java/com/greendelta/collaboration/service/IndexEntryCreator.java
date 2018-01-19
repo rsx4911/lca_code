@@ -169,12 +169,13 @@ class IndexEntryCreator {
 	}
 
 	static Map<String, Object> readData(File file) {
-		try {
+		try (FileInputStream fis = new FileInputStream(file);
+				GZIPInputStream gis = new GZIPInputStream(fis);
+				InputStreamReader isr = new InputStreamReader(gis)) {
 			if (Files.size(file.toPath()) == 0)
 				return new HashMap<>();
-			return gson.fromJson(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))),
-					new TypeToken<Map<String, Object>>() {
-					}.getType());
+			return gson.fromJson(isr, new TypeToken<Map<String, Object>>() {
+			}.getType());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return new HashMap<>();

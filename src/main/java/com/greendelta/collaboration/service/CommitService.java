@@ -89,6 +89,7 @@ public class CommitService {
 				int size = 0;
 				try (OutputStream out = new FileOutputStream(file)) {
 					size = reader.readNextPartToStream(out);
+					out.close();
 				}
 				if (size == 0) {
 					indexEntries.add(indexEntryCreator.create(dataset));
@@ -112,6 +113,7 @@ public class CommitService {
 					binFile.getParentFile().mkdirs();
 					try (OutputStream out = new FileOutputStream(binFile)) {
 						size = reader.readNextPartToStream(out);
+						out.close();
 						repoSize += size;
 						userGroupSize += size;
 					}
