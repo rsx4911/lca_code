@@ -119,6 +119,7 @@ public class CommitService {
 				}
 			}
 			searchService.index(repo.toId(), indexEntries);
+			repo.updateSize(repoSize);
 		} catch (Exception e) {
 			cleanup(repo, datasets, commit);
 			throw e;

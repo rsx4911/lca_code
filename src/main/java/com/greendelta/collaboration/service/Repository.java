@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +15,6 @@ import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.util.Dirs;
 
-import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -91,7 +92,7 @@ public class Repository {
 			File file = new File(repoDir, "context.json");
 			if (!file.exists())
 				return null;
-			byte[] data = Files.toByteArray(file);
+			byte[] data = com.google.common.io.Files.toByteArray(file);
 			String json = new String(data, "utf-8");
 			JsonElement context = new Gson().fromJson(json, JsonElement.class);
 			return Schema.parseUri(context);
@@ -102,6 +103,30 @@ public class Repository {
 	}
 
 	public long getSize() {
+		try {
+			File sizeInfo = new File(repoDir, ".size");
+			if (!sizeInfo.exists()) {
+				long size = determineSize();
+				Files.write(sizeInfo.toPath(), Long.toString(size).getBytes(Charset.forName("utf-8")));
+				return size;
+			}
+			return Long.parseLong(new String(Files.readAllBytes(sizeInfo.toPath()), Charset.forName("utf-8")));
+		} catch (IOException e) {
+			log.error("Error getting size of repository", e);
+			return 0;
+		}
+	}
+
+	void updateSize(long size) {
+		try {
+			File sizeInfo = new File(repoDir, ".size");
+			Files.write(sizeInfo.toPath(), Long.toString(size).getBytes(Charset.forName("utf-8")));
+		} catch (IOException e) {
+			log.error("Error setting size of repository", e);
+		}
+	}
+
+	private long determineSize() {
 		long size = 0;
 		for (ModelType type : ModelTypes.SORTED) {
 			size += Dirs.size(getModelDir(type, false).toPath());
