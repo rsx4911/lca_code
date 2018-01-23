@@ -2,55 +2,32 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.ModelType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-import com.google.inject.servlet.SessionScoped;
-import com.greendelta.collaboration.index.DatasetIndexEntry;
-import com.greendelta.collaboration.service.DataAccessor.Filter;
+import com.greendelta.collaboration.model.index.IndexEntry;
 
-/* Commits are stored in text files, this way the repository is always independent from any database 
- * and can e.g. also be copied from one server to another without any other migration 
- * (except user rights on the new server)
- * 
- * Since the commit references are often read and can be quite big a cache is used to enhance read performance 
- * in the web UI. This was added because of heavy performance issues in the data set browsing
-
- * The cache is session scoped. Singleton scope could lead to a memory problem for bigger cloud instances, 
- * request scope would not solve the performance issues since browsing to a data set is split up in several requests.
- * Session scope is more than needed, but since it does not cause any problems the decision was to not implement 
- * a custom scope which would be quite some effort and would make the client code less readable
- * 
- * Also making the complete history service session scoped would be more than necessary, therefore a inner class is created 
- * with session scope, which is a solution with good enough performance enhancement and least implementation effort
- */
 public class HistoryService {
 
-	private final static Logger log = LoggerFactory.getLogger(HistoryService.class);
-	private final static Charset charset = Charset.forName("utf-8");
-	private final RepositoryService repoService;
-	private final DataAccessor dataAccessor;
-	private final ReferencesCache referencesCache;
+	private static final Logger log = LogManager.getLogger(HistoryService.class);
+	private final SearchService searchService;
 
 	@Inject
-	public HistoryService(RepositoryService repoService, DataAccessor dataAccessor, ReferencesCache referencesCache) {
-		this.repoService = repoService;
-		this.dataAccessor = dataAccessor;
-		this.referencesCache = referencesCache;
+	public HistoryService(SearchService searchService) {
+		this.searchService = searchService;
 	}
 
+	/**
+	 * Returns the last commit of the repository
+	 */
 	public Commit getLastCommit(Repository repo) {
 		List<Commit> commits = getCommits(repo);
 		if (commits.isEmpty())
@@ -58,8 +35,13 @@ public class HistoryService {
 		return commits.get(commits.size() - 1);
 	}
 
+	/**
+	 * Returns the last commit of the specified data set that was not a
+	 * "Delete"-commit
+	 */
 	public Commit getLastCommit(Repository repo, ModelType type, String refId) {
-		List<Commit> commits = getCommits(repo, type, refId);
+		File file = repo.getHistoryFile(false);
+		List<Commit> commits = readHistory(file, new ModelCommitFilter(repo, type, refId));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -67,8 +49,7 @@ public class HistoryService {
 
 	public Commit getLastCommit(Repository repo, ModelType type, String refId, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId,
-				false));
+		List<Commit> commits = readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId, false));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -76,92 +57,82 @@ public class HistoryService {
 
 	public Commit getLastCommitBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId,
-				true));
+		List<Commit> commits = readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId, true));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
 	}
 
-	public boolean isLastCommit(DatasetIndexEntry entry) {
-		String group = entry.repositoryId.split(File.separator)[0];
-		String name = entry.repositoryId.split(File.separator)[1];
-		Repository repo = repoService.get(group, name);
-		Commit commit = getLastCommit(repo, entry.type, entry.refId);
-		if (commit == null)
-			return false;
-		return commit.id.equals(entry.commitId);
-	}
-
 	public Commit getCommit(Repository repo, String commitId) {
 		File historyFile = repo.getHistoryFile(false);
-		List<Commit> commits = dataAccessor.readHistory(historyFile, new SpecificCommitFilter(commitId));
+		List<Commit> commits = readHistory(historyFile, new SpecificCommitFilter(commitId));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(0);
 	}
 
 	public List<Commit> getCommits(Repository repo) {
-		return getCommitsAfter(repo, null);
+		File file = repo.getHistoryFile(false);
+		return readHistory(file, null);
 	}
 
 	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
-		return getCommitsBefore(repo, type, refId, null);
+		File file = repo.getHistoryFile(false);
+		return readHistory(file, new ModelCommitFilter(repo, type, refId));
 	}
 
 	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId) {
-		File file = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(file, new AfterCommitFilter(afterCommitId));
+		return getCommitsAfter(repo, afterCommitId, false);
 	}
 
-	public List<Commit> getCommitsBetween(Repository repo, String afterCommitId, String untilCommitId) {
+	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId, boolean includeLimit) {
 		File file = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(file, new BetweenCommitFilter(afterCommitId, untilCommitId));
+		return readHistory(file, new AfterCommitFilter(afterCommitId, includeLimit));
 	}
 
 	public List<Commit> getCommitsUntil(Repository repo, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(file, new UntilCommitFilter(untilCommitId));
+		return readHistory(file, new UntilCommitFilter(untilCommitId));
 	}
 
-	public List<Commit> getCommitsBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
-		File historyFile = repo.getHistoryFile(false);
-		return dataAccessor.readHistory(historyFile, new BeforeCommitFilter(beforeCommitId, repo, type, refId));
-	}
-
-	public List<Dataset> getReferences(Repository repo, String commitId) {
-		String key = repo.toId() + "/" + commitId;
-		if (referencesCache.containsKey(key))
-			return referencesCache.get(key);
-		File file = repo.getCommitFile(commitId, false);
+	private List<Commit> readHistory(File file, Filter<Commit> filter) {
+		if (file == null)
+			return Collections.emptyList();
+		if (!file.exists())
+			return Collections.emptyList();
 		try {
-			String json = new String(Files.readAllBytes(file.toPath()), charset);
-			List<Dataset> references = new Gson().fromJson(json, new TypeToken<List<Dataset>>() {
-			}.getType());
-			referencesCache.put(key, references);
-			return references;
+			List<String> lines = Files.readAllLines(file.toPath());
+			if (lines.isEmpty())
+				return Collections.emptyList();
+			List<Commit> commits = new ArrayList<>();
+			for (String entry : lines) {
+				if (entry.trim().isEmpty())
+					continue;
+				Commit commit = Commit.parse(entry);
+				if (filter == null || !filter.filter(commit))
+					commits.add(commit);
+			}
+			return commits;
 		} catch (IOException e) {
-			log.error("Unexpected error while parsing commit history entry", e);
+			log.error("Unexpected error reading to commit history", e);
 			return Collections.emptyList();
 		}
 	}
 
-	public Dataset getReference(Repository repo, String commitId, ModelType type, String refId) {
-		List<Dataset> references = getReferences(repo, commitId);
-		for (Dataset reference : references)
-			if (reference.type == type && reference.refId.equals(refId))
-				return reference;
-		return null;
+	interface Filter<T> {
+		boolean filter(T element);
 	}
 
 	private class AfterCommitFilter implements Filter<Commit> {
 
 		private String commitId;
 		private boolean reachedId;
+		private boolean includeLimit;
 
-		private AfterCommitFilter(String commitId) {
+		private AfterCommitFilter(String commitId, boolean includeLimit) {
 			this.commitId = commitId;
 			this.reachedId = commitId == null;
+			this.includeLimit = includeLimit;
 		}
 
 		@Override
@@ -170,48 +141,20 @@ public class HistoryService {
 				return false;
 			if (element.id.equals(commitId))
 				reachedId = true;
-			return true;
-		}
-
-	}
-
-	private class BetweenCommitFilter implements Filter<Commit> {
-
-		private String afterCommitId;
-		private String untilCommitId;
-		private boolean reachedAfterCommitId;
-		private boolean reachedUntilCommitId;
-
-		private BetweenCommitFilter(String afterCommitId, String untilCommitId) {
-			this.afterCommitId = afterCommitId;
-			this.untilCommitId = untilCommitId;
-			this.reachedAfterCommitId = afterCommitId == null;
-		}
-
-		@Override
-		public boolean filter(Commit element) {
-			if (reachedUntilCommitId)
+			if (!includeLimit)
 				return true;
-			boolean filter = !reachedAfterCommitId || reachedUntilCommitId;
-			if (element.id.equals(untilCommitId))
-				reachedUntilCommitId = true;
-			if (element.id.equals(afterCommitId))
-				reachedAfterCommitId = true;
-			return filter;
+			return !reachedId;
 		}
 
 	}
 
-	private class BeforeCommitFilter implements Filter<Commit> {
+	private class ModelCommitFilter implements Filter<Commit> {
 
-		private final String commitId;
 		private final Repository repo;
 		private final ModelType type;
 		private final String refId;
-		private boolean reachedId;
 
-		private BeforeCommitFilter(String commitId, Repository repo, ModelType type, String refId) {
-			this.commitId = commitId;
+		private ModelCommitFilter(Repository repo, ModelType type, String refId) {
 			this.repo = repo;
 			this.type = type;
 			this.refId = refId;
@@ -219,16 +162,10 @@ public class HistoryService {
 
 		@Override
 		public boolean filter(Commit element) {
-			if (reachedId)
-				return true;
-			if (element.id.equals(commitId)) {
-				reachedId = true;
-				return true;
-			}
-			for (Dataset dataset : getReferences(repo, element.id)) {
-				if (dataset.type != type)
+			for (IndexEntry entry : searchService.getAll(repo, element)) {
+				if (entry.type != type)
 					continue;
-				if (!dataset.refId.equals(refId))
+				if (!entry.refId.equals(refId))
 					continue;
 				return false;
 			}
@@ -265,8 +202,7 @@ public class HistoryService {
 		private final ModelType type;
 		private final String refId;
 		private boolean done;
-		private boolean beforeCommit; // if true the commit itself will not be
-										// returned
+		private boolean beforeCommit;
 
 		private LastCommitFilter(String commitId, Repository repo, ModelType type, String refId, boolean beforeCommit) {
 			this.commitId = commitId;
@@ -284,14 +220,14 @@ public class HistoryService {
 				done = true;
 			if (beforeCommit && done)
 				return true;
-			return !containsModel(element.id);
+			return !containsModel(element);
 		}
 
-		private boolean containsModel(String commitId) {
-			for (Dataset dataset : getReferences(repo, commitId)) {
-				if (dataset.type != type)
+		private boolean containsModel(Commit commit) {
+			for (IndexEntry entry : searchService.getAll(repo, commit)) {
+				if (entry.type != type)
 					continue;
-				if (!dataset.refId.equals(refId))
+				if (!entry.refId.equals(refId))
 					continue;
 				return true;
 			}
@@ -312,13 +248,6 @@ public class HistoryService {
 		public boolean filter(Commit element) {
 			return !element.id.equals(commitId);
 		}
-	}
-
-	@SessionScoped
-	public static class ReferencesCache extends HashMap<String, List<Dataset>> {
-
-		private static final long serialVersionUID = -833987089892754712L;
-
 	}
 
 }

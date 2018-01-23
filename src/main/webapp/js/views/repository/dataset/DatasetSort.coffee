@@ -34,10 +34,6 @@ define () ->
 		unless dataset.exchanges
 			return
 		dataset.exchanges.sort (e1, e2) ->
-			if e1.input and !e2.input
-				return -1
-			if !e1.input and e2.input
-				return 1
 			if e1.flow.flowType is 'PRODUCT_FLOW' and e2.flow.flowType isnt 'PRODUCT_FLOW'
 				return -1
 			if e1.flow.flowType isnt 'PRODUCT_FLOW' and e2.flow.flowType is 'PRODUCT_FLOW'
@@ -55,9 +51,6 @@ define () ->
 	allocationFactors: (dataset) ->
 		unless dataset.exchanges
 			return
-		order = {}
-		for exchange, i in dataset.exchanges
-			order[exchange.id] = i
 		if dataset.nonCausalAllocationFactors
 			dataset.nonCausalAllocationFactors.sort (f1, f2) ->
 				if f1.product.name.toLowerCase() < f2.product.name.toLowerCase()
@@ -66,11 +59,17 @@ define () ->
 					return 1
 				return 0
 		if dataset.causalAllocationFactors
+			order = {}
+			for exchange, i in dataset.exchanges
+				order[exchange.internalId] = i
 			dataset.causalAllocationFactors.sort (f1, f2) ->
-				return order[f1.exchange.id] - order[f2.exchange.id]
-		for factor in dataset.causalAllocationFactors
-			factor.products.sort (p1, p2) ->
-				return order[p1.product.id] - order[p2.product.id]
+				return order[f1.exchange.internalId] - order[f2.exchange.internalId]
+			order = {}
+			for exchange, i in dataset.exchanges
+				order[exchange.internalId] = i
+			for factor in dataset.causalAllocationFactors
+				factor.products.sort (p1, p2) ->
+					return order[p1.id] - order[p2.id]
 
 	socialAspects: (dataset) ->
 		@sortByName dataset.socialAspects, 'socialIndicator'

@@ -24,9 +24,9 @@ define () ->
 		if index < median
 			divisor = median - 1
 			factor = index - 1
-			r = 125 + (125 * factor / divisor)
+			r = parseInt(125 + (125 * factor / divisor))
 			return "rgba(#{r}, 250, 125, #{o})"
 		divisor = median - 1;
 		factor = index - median;
-		g = 250 - (125 * factor / divisor)
+		g = parseInt(250 - (125 * factor / divisor))
 		return "rgba(250, #{g}, 125, #{o})"

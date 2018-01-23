@@ -1,6 +1,9 @@
 option[disabled]
 	color rgb(160, 160, 160)
 
+.same-size-font
+	font-family Menlo, Monaco, Consolas, "Courier New", monospace
+
 img.image-crop
 	max-width 100%
 
@@ -8,6 +11,10 @@ img.image-crop
 	border-bottom 4px solid transparent
 	border-top 4px solid transparent
 	border-left 4px solid
+
+.badge.deleted
+	font-size 28px
+	background-color rgb(213, 83, 79)
 
 .no-content-message
 	padding 10px 20px
@@ -89,6 +96,9 @@ img.image-crop
 	text-align center
 	z-index 10000
 
+table > thead > tr > th:empty, table > tbody > tr > td:empty, table > tfoot > tr > td:empty
+	padding 0
+
 table > thead > tr > th.header:not(:empty)
 	cursor pointer
 		
@@ -140,6 +150,7 @@ table > thead > tr > th.header:not(:empty)
 
 .header-box + .header-box
 	padding 10px 25px
+	border-top 0
 
 .btn > .glyphicon + .text
 	
@@ -257,3 +268,28 @@ table.data-quality
 			
 			&:not(:first-child)
 				word-break break-all
+				
+.responsive-menu
+	margin-top 4px
+
+	.default-menu
+		display inline-block
+
+	@media(max-width 767px)
+		
+		.default-menu
+			display none
+
+	@media(min-width 768px)
+	
+		.glyphicon-cog
+			display none
+		
+		.dropdown-menu
+			display none !important
+			
+.dropdown-menu
+	
+	& > li > a > .glyphicon
+		margin-left -11px
+		margin-right 11px

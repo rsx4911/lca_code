@@ -10,19 +10,21 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
+import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.CommitService.InsufficientStorageException;
 import com.greendelta.collaboration.service.UserService;
 
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
-	private static final Logger log = LoggerFactory.getLogger(GenericExceptionMapper.class);
+	private static final Logger log = LogManager.getLogger(GenericExceptionMapper.class);
 
 	@Inject
 	private UserService userService;
@@ -31,10 +33,14 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 	public Response toResponse(Throwable e) {
 		if (e instanceof WebApplicationException)
 			return ((WebApplicationException) e).getResponse();
+		if (e instanceof RepositoryNotFoundException)
+			return Response.status(Status.NOT_FOUND).entity(e.getMessage()).build();
 		if (e instanceof UnsupportedSchemaException)
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		if (e instanceof AuthorizationException)
 			return Response.status(Status.FORBIDDEN).build();
+		if (e instanceof InsufficientStorageException)
+			return Response.status(507).entity(e.getMessage()).build();
 		log.error("Server error [user=" + getUserInfo() + "]", e);
 		return Response.status(getStatus(e)).entity(getMessage(e)).type(MediaType.APPLICATION_JSON).build();
 	}

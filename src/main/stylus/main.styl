@@ -6,7 +6,9 @@
 		padding-left 230px    
 		
 	.full-size
-		max-width 1200px
+		
+		&:not(.full-width)
+			max-width 1200px
 
 		@media(min-width 992px)
 			margin 25px auto

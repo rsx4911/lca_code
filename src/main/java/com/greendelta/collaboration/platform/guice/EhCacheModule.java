@@ -2,9 +2,9 @@ package com.greendelta.collaboration.platform.guice;
 
 import net.sf.ehcache.CacheManager;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 import com.google.inject.AbstractModule;
@@ -16,12 +16,12 @@ import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 
 class EhCacheModule extends AbstractModule {
 
-	private static final Logger log = LoggerFactory.getLogger(EhCacheModule.class);
+	private static final Logger log = LogManager.getLogger(EhCacheModule.class);
 
 	@Override
 	protected void configure() {
 		BindUtils.multibind(binder(), ShutdownListener.class, CacheManagerShutdownListener.class);
-		log.debug("Successfully configured {}", Logs.simpleClassName(this));
+		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	@Provides
@@ -40,7 +40,7 @@ class EhCacheModule extends AbstractModule {
 
 		@Override
 		public void shutdown() {
-			log.debug("Shutting down cache manager");
+			log.info("Shutting down cache manager");
 			cacheManager.shutdown();
 			log.debug("Shut down cache manager");
 		}

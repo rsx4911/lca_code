@@ -1,6 +1,8 @@
 package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,44 +15,96 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import joptsimple.internal.Strings;
+
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SearchService;
 import com.greendelta.collaboration.service.UserService;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQuery;
+import com.greendelta.search.wrapper.SearchQueryBuilder;
+import com.greendelta.search.wrapper.SearchResult;
+import com.greendelta.search.wrapper.SearchSorting;
 
 @Path("history")
 public class HistoryResource {
 
 	private final HistoryService service;
+	private final SearchService searchService;
 	private final RepositoryService repoService;
 	private final UserService userService;
 
 	@Inject
-	public HistoryResource(HistoryService service, RepositoryService repoService, UserService userService) {
+	public HistoryResource(HistoryService service, SearchService searchService, RepositoryService repoService,
+			UserService userService) {
 		this.service = service;
+		this.searchService = searchService;
 		this.repoService = repoService;
 		this.userService = userService;
 	}
 
 	@GET
-	@Path("{group}/{name}/{lastCommitId}")
+	@Path("search/{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(@PathParam("group") String group,
+	public Response getCommitHistory(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("lastCommitId") String lastCommitId) {
+			@QueryParam("filter") String filter,
+			@QueryParam("page") int page,
+			@QueryParam("pageSize") int pageSize) {
 		Repository repo = repoService.get(group, name);
-		if (lastCommitId.equals("null"))
-			lastCommitId = null;
+		List<Commit> commits = service.getCommits(repo);
+		java.util.Collections.reverse(commits);
+		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
+		return Respond.ok(putAdditionalInfo(result, commits));
+	}
+
+	private Map<String, Object> putAdditionalInfo(SearchResult<Commit> result, List<Commit> commits) {
+		Map<String, Integer> groupCount = new HashMap<>();
+		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
+		for (Commit commit : result.data) {
+			int count = 0;
+			for (Commit c : commits) {
+				if (!isSameDay(commit.timestamp, c.timestamp))
+					continue;
+				count++;
+			}
+			groupCount.put(commit.id, count);
+		}
+		map.put("resultInfo.groupCount", groupCount);
+		return map;
+	}
+
+	private boolean isSameDay(long d1, long d2) {
+		Calendar c1 = Calendar.getInstance();
+		c1.setTimeInMillis(d1);
+		Calendar c2 = Calendar.getInstance();
+		c2.setTimeInMillis(d2);
+		if (c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR))
+			return false;
+		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
+	}
+
+	@GET
+	@Path("{group}/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("lastCommitId") String lastCommitId) {
+		Repository repo = repoService.get(group, name);
 		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
@@ -61,9 +115,11 @@ public class HistoryResource {
 	@GET
 	@Path("{group}/{name}/{type}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(@PathParam("group") String group,
+	public Response getCommitHistory(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId) {
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = service.getCommits(repo, type, refId);
 		if (commits.size() == 0)
@@ -73,9 +129,26 @@ public class HistoryResource {
 	}
 
 	@GET
+	@Path("category/{group}/{name}/{refId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistoryForCategory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("refId") String refId) {
+		Repository repo = repoService.get(group, name);
+		IndexEntry first = searchService.getFirst(repo.toId(), refId);
+		if (first == null)
+			return Respond.noContent();
+		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
+		java.util.Collections.reverse(commits);
+		return Respond.ok(putUserName(commits));
+	}
+
+	@GET
 	@Path("commit/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommit(@PathParam("group") String group,
+	public Response getCommit(
+			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
@@ -89,11 +162,13 @@ public class HistoryResource {
 	@GET
 	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.TEXT_PLAIN)
-	public Response getPreviousReference(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("type") ModelType type, @PathParam("refId") String refId, @PathParam("commitId") String commitId) {
+	public Response getPreviousReference(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		if (commitId == "null")
-			commitId = null;
 		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
 		if (lastCommit == null || lastCommit.id.equals(commitId))
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
@@ -103,20 +178,42 @@ public class HistoryResource {
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getReferences(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("commitId") String commitId, @QueryParam("page") @DefaultValue("1") int page) {
+	public Response getReferences(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("commitId") String commitId,
+			@QueryParam("type") ModelType type,
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
+			@QueryParam("filter") @DefaultValue("") String filter) {
 		Repository repo = repoService.get(group, name);
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		List<Dataset> all = service.getReferences(repo, commitId);
-		List<Dataset> categorized = Collections.filter(all, (ds) -> !ds.type.isCategorized());
-		List<Dataset> refs = new ArrayList<>();
-		for (int i = (page - 1) * 10; i < page * 10; i++)
-			if (categorized.size() > i)
-				refs.add(categorized.get(i));
-		PagedResult<Dataset> result = new PagedResult<Dataset>(page, null, categorized.size(), refs.size(), refs);
-		return Respond.ok(result);
+		SearchQuery query = createReferencesQuery(repo, commit, type, page, pageSize, filter);
+		SearchResult<IndexEntry> result = searchService.search(query);
+		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asFetchRequestData()));
+	}
+
+	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize,
+			String filter) {
+		SearchQueryBuilder builder = new SearchQueryBuilder()
+				.page(page)
+				.pageSize(pageSize)
+				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.phrase(repo.toId()))
+				.filter("commitId", SearchFilterValue.phrase(commit.id));
+		if (!Strings.isNullOrEmpty(filter)) {
+			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
+		}
+		if (type != null) {
+			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+		} else {
+			for (ModelType categorized : ModelType.categorized()) {
+				builder.aggregation(Aggregations.MODEL_TYPE, categorized.name());
+			}
+		}
+		builder.sortBy("typeOrdinal", SearchSorting.DESC);
+		return builder.build();
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
@@ -135,4 +232,5 @@ public class HistoryResource {
 			map.put("userDisplayName", commit.user);
 		return map;
 	}
+
 }

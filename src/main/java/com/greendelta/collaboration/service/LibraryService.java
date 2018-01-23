@@ -1,21 +1,16 @@
 package com.greendelta.collaboration.service;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,7 +19,7 @@ import com.google.inject.name.Named;
 @Singleton
 public class LibraryService {
 
-	private static final Logger log = LoggerFactory.getLogger(LibraryService.class);
+	private static final Logger log = LogManager.getLogger(LibraryService.class);
 	private final Map<String, Set<String>> refIds = new HashMap<>();
 	private final String libraryPath;
 
@@ -44,15 +39,11 @@ public class LibraryService {
 	}
 
 	private void initRefIds(String libraryName) {
-		String path = libraryPath + File.separator + libraryName + ".txt";
-		try (InputStream s = new FileInputStream(path);
-				InputStreamReader r = new InputStreamReader(s);
-				BufferedReader reader = new BufferedReader(r)) {
-			Set<String> ids = new HashSet<>();
-			String line = null;
-			while ((line = reader.readLine()) != null)
-				if (!line.trim().isEmpty())
-					ids.add(line);
+		File file = getFile(libraryName);
+		if (!file.exists())
+			return;
+		try {
+			Set<String> ids = new HashSet<>(Files.readAllLines(file.toPath()));
 			refIds.put(libraryName, ids);
 		} catch (IOException e) {
 			String m = "Error loading ref ids of library " + libraryName;
@@ -76,24 +67,17 @@ public class LibraryService {
 	public void putLibrary(String name, Collection<String> refIds) {
 		removeLibrary(name);
 		this.refIds.put(name, new HashSet<>(refIds));
-		File file = new File(libraryPath + File.separator + name + ".txt");
+		File file = getFile(name);
 		try {
-			file.createNewFile();
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-			for (String refId : refIds) {
-				writer.write(refId);
-				writer.newLine();
-			}
-			writer.close();
+			Files.write(file.toPath(), refIds);
 		} catch (IOException e) {
-			String m = "Error saving ref ids of library " + name;
-			log.error(m, e);
+			log.error("Error saving ref ids of library " + name, e);
 		}
 	}
 
 	public void removeLibrary(String name) {
 		refIds.remove(name);
-		File file = new File(libraryPath + File.separator + name + ".txt");
+		File file = getFile(name);
 		if (!file.exists())
 			return;
 		file.delete();
@@ -101,6 +85,10 @@ public class LibraryService {
 
 	public Set<String> getRefIds(String library) {
 		return refIds.get(library);
+	}
+
+	private File getFile(String libraryName) {
+		return new File(libraryPath + File.separator + libraryName + ".txt");
 	}
 
 }

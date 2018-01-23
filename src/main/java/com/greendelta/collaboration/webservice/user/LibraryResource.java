@@ -30,8 +30,9 @@ public class LibraryResource {
 		Map<String, String> refIdToLibrary = new HashMap<>();
 		for (String refId : refIds) {
 			String library = service.getLibraryName(refId);
-			if (library != null)
-				refIdToLibrary.put(refId, library);
+			if (library == null)
+				continue;
+			refIdToLibrary.put(refId, library);
 		}
 		if (refIdToLibrary.isEmpty())
 			return Respond.noContent();

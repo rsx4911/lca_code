@@ -21,10 +21,10 @@ define([
 			className: 'messages-view'
 
 			events:
-				'click a[data-action=show-message]': (event) -> @onConversationClicked event
-				'click [data-action=start-new-conversation]': (event) -> @openSelection event
-				'click .block': (event) -> @blockUser()
-				'keypress #conversation-input input': (event) -> @sendMessage event
+				'click a[data-action=show-message]': 'onConversationClicked'
+				'click [data-action=start-new-conversation]': 'openSelection'
+				'click .block': 'blockUser'
+				'keypress #conversation-input input': 'sendMessage'
 
 			render: (renderOptions) ->
 				@$el.html template

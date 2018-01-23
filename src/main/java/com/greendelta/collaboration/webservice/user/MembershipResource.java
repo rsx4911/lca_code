@@ -23,13 +23,14 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Memberships;
+import com.greendelta.search.wrapper.SearchResult;
 
 @Path("membership")
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,8 +54,11 @@ public class MembershipResource {
 
 	@POST
 	@Path("{group}/{repo}/user/{username}/{role}")
-	public Response addUserRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("username") String username, @PathParam("role") Role role) {
+	public Response addUserRole(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
+			@PathParam("username") String username,
+			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean added = service.addMembership(user, path, role);
@@ -68,8 +72,11 @@ public class MembershipResource {
 
 	@POST
 	@Path("{group}/{repo}/team/{teamname}/{role}")
-	public Response addTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("teamname") String teamname, @PathParam("role") Role role) {
+	public Response addTeamRole(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
+			@PathParam("teamname") String teamname,
+			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean added = service.addMemberships(team, path, role);
@@ -83,8 +90,11 @@ public class MembershipResource {
 
 	@PUT
 	@Path("{group}/{repo}/user/{username}/{role}")
-	public Response updateUserRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("username") String username, @PathParam("role") Role role) {
+	public Response updateUserRole(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
+			@PathParam("username") String username,
+			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean updated = service.setRole(user, path, role);
@@ -98,8 +108,11 @@ public class MembershipResource {
 
 	@PUT
 	@Path("{group}/{repo}/team/{teamname}/{role}")
-	public Response updateTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
-			@PathParam("teamname") String teamname, @PathParam("role") Role role) {
+	public Response updateTeamRole(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
+			@PathParam("teamname") String teamname,
+			@PathParam("role") Role role) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean updated = service.setRole(team, path, role);
@@ -113,7 +126,9 @@ public class MembershipResource {
 
 	@DELETE
 	@Path("{group}/{repo}/user/{username}")
-	public Response removeUserRole(@PathParam("group") String group, @PathParam("repo") String repo,
+	public Response removeUserRole(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
 			@PathParam("username") String username) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
@@ -130,7 +145,9 @@ public class MembershipResource {
 
 	@DELETE
 	@Path("{group}/{repo}/team/{teamname}")
-	public Response removeTeamRole(@PathParam("group") String group, @PathParam("repo") String repo,
+	public Response removeTeamRole(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
 			@PathParam("teamname") String teamname) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
@@ -147,13 +164,15 @@ public class MembershipResource {
 
 	@GET
 	@Path("{group}/{repo}")
-	public Response getAll(@PathParam("group") String group, @PathParam("repo") String repo,
+	public Response getAll(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		String path = group;
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
 			path = Repository.toId(group, repo);
-		PagedResult<Membership> memberships = service.getMemberships(path, filter);
-		return Respond.ok(memberships.toClient2(Memberships::map));
+		SearchResult<Membership> memberships = service.getMemberships(path, filter);
+		return Respond.ok(SearchResults.convert(memberships, Memberships::map));
 	}
 
 	private String getAuthorizedPath(String group, String repo) {

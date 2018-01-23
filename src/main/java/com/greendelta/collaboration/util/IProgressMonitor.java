@@ -7,11 +7,11 @@ public interface IProgressMonitor {
 	void task(String name);
 
 	void worked();
-		
+
 	boolean canceled();
-	
+
 	void cancel();
 
 	void done();
-	
+
 }

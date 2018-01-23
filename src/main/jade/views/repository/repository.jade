@@ -1,16 +1,78 @@
 include ../mixins/forms.jade
 include ../mixins/avatar-box.jade
 
+mixin to-size(value, inGb, round, showUnit)
+	if inGb
+		- value /= 1073741824;
+		if round
+			- value = parseInt(value*1000)/1000;
+		if showUnit
+			- value = value + ' GB';
+	else
+		- value /= 1048576;
+		if round
+			- value = parseInt(value);
+		if showUnit
+			- value = value + ' MB';
+	| #{value}
+
 .header-box Info
-	if repository.userCanMove
-		button.btn.btn-lg.btn-default.pull-right(data-action='move-repository') Move
-	if repository.userCanClone
-		button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
-	if repository.userCanDelete
-		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
+	.pull-right.responsive-menu.dropdown
+		a(href='#' data-toggle='dropdown'): span.glyphicon.glyphicon-cog
+		ul.dropdown-menu
+			if repository.userCanMove
+				li: a(href='#' data-action='move-repository')
+					span.glyphicon.glyphicon-move
+					| Move
+			if repository.userCanClone
+				li: a(href='#' data-action='clone-repository')
+					span.glyphicon.glyphicon-copy
+					| Clone
+			li: a(href='#' data-action='export-repository')
+				span.glyphicon.glyphicon-export
+				| Export
+			if repository.userCanDelete
+				li: a(href='#' data-action='delete-repository')
+					span.glyphicon.glyphicon-remove
+					| Delete
+		.default-menu
+			if repository.userCanMove
+				button.btn.btn-lg.btn-default.pull-right(data-action='move-repository') Move
+			if repository.userCanClone
+				button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
+			button.btn.btn-lg.btn-default.pull-right(data-action='export-repository') Export
+			if repository.userCanDelete
+				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
+
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
-	+checkbox('publicAccess', 'This repository can be accessed publicly')
+	- var maxSize = repository.settings.maxSize; 
+	- var inGb = false;
+	if maxSize
+		- inGb = maxSize % 1073741824 === 0;
+	else
+		- inGb = repository.size > 1073741824;
+	div(id='size-group' class='form-group')
+		label.control-label(for='size') Size
+		div.form-value
+			- var showUnit = !maxSize && !repository.userCanSetSettings;
+			span#size-value: +to-size(repository.size, inGb, true, showUnit)
+			if repository.userCanSetSettings
+				strong  of 
+				+input('maxSize', null, 'number', true)(class='input-sm', value=0, size=4, min=0)
+					+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
+			else if maxSize
+				strong  of 
+				+to-size(maxSize, inGb, false, true)
+			if maxSize > 0
+				- var percentage = parseInt(100*repository.size/maxSize);
+				if percentage > 100
+					- percentage = 100;
+				.size-indicator-container
+					.size-indicator-bar
+						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
+	+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='publicAccess')
+	+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)

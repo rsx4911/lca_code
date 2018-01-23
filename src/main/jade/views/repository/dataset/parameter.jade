@@ -7,10 +7,9 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					- var getParameterType = function (isInput) { console.log(isInput); return isInput ? 'Input' : 'Dependant'; };
-					+field-row('inputParameter', true, false, getParameterType)
-					+field-row(dataset.inputParameter?'value':'formula')
-						- var formula = dataset.inputParameter ? dataset.value : (dataset.formula + ' = ' + dataset.value)
-						span=formula
+					- var getParameterType = function(value, parent) { return parent ? (parent.inputParameter ? 'Input' : 'Dependant') : null;};
+					+field-row('inputParameter', getParameterType)
+					- var getFormula = function (value, parent) { return parent ? (parent.inputParameter ? parent.value : (parent.formula + ' = ' + parent.value)) : null;}; 
+					+field-row(dataset.inputParameter?'value':'formula', getFormula)
 	+meta
 	.clear

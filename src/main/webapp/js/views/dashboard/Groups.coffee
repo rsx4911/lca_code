@@ -24,7 +24,7 @@ define([
 					container: '#groups'
 					template: listTemplate
 					filterId: 'filter'
-					url: (page, filter) -> "ws/group?page=#{page}&filter=#{filter}"
+					url: 'ws/group?'
 
 			render: (renderOptions) ->
 				@$el.html template

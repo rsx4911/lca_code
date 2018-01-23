@@ -37,19 +37,55 @@
 			border-bottom 0
 
 		.nav-tabs > li
-			
+
 			@media(max-width 479px)
 				float none
 			
-		.title h3:first-child
-			margin-bottom 0
+			&.maximize-content
+				float right
+
+				a
+					cursor pointer
+					color initial
+					
+					&:hover, &:focus
+						border-color transparent
+						background-color transparent
+
+					&:hover
+						font-size 15px
+						padding-bottom 9px
+						padding-left 14px
+						
+		.tab-pane.modal-content
+			position fixed
+			top 0
+			left 0
+			margin 2% 5% 1% 5%
+			padding 25px
+			z-index 10000
+			width 90%
+			height 90%
+			overflow auto
+    			
+		.title 
+			
+			h3:first-child
+				margin-bottom 0
+			
+			h3:last-child
+				margin-top 0
+				margin-bottom 20px
+
+			.model-icon
+				margin-top 20px
+		
+			.info-header
+				padding-top 1px
 		
 		.breadcrumb
-			padding 0 15px 8px 1px
+			padding 0 1px 8px 1px
 
-		.title h3:last-child
-			margin-top 0
-			margin-bottom 20px
 
 		.title, .content
 			padding 0 25px
@@ -61,7 +97,7 @@
 		.table > tbody > tr
 
 			& > td:first-child
-				width 25%
+				min-width 25%
 
 			&.reference > td 
 				font-weight bold
@@ -84,6 +120,14 @@
 			.table.no-head > tbody > tr:first-child > td
 				padding-top 0
 
+		.table.inputs, .table.outputs
+			margin-bottom 0
+	
+		.table.inputs > thead > tr > th, .table.outputs > thead > tr > th, .table.inputs > tbody > tr > td, .table.outputs > tbody > tr > td
+			
+			&:nth-child(4)
+				text-align right
+
 		.table.inputs > tbody > tr > td, .table.inputs > thead > tr > th, .table.outputs > tbody > tr > td, .table.outputs > thead > tr > th
 			
 			&:first-child
@@ -94,12 +138,43 @@
 				@media(max-width 479px)
 					display none
 
+			&:nth-child(4)
+				white-space nowrap
+
 			&:nth-child(5), &:nth-child(6)
 
 				@media(max-width 991px)
 					display none
 
-		.table.allocation-factors > tbody > tr > td, .table.allocation-factors > thead > tr > th
+		@media(max-width 767px)
+			
+			.switch-to-list, .exchange-tables
+				display none
+
+		@media(min-width 768px)
+				
+			.switch-to-table, .exchange-list
+				display none
+
+		.exchange-list-part 
+						
+			table, .toggle-control
+				margin-left 20px
+
+			table > tbody > tr 
+				
+				& > td:not(:last-child)
+					padding-right 5px
+				
+				& > td > .same-size-font
+					white-space nowrap
+
+		.table.non-causal-allocation-factors > tbody > tr > td, .table.non-causal-allocation-factors > thead > tr > th
+			
+			&:first-child
+				width 66%
+
+		.table.causal-allocation-factors > tbody > tr > td, .table.causal-allocation-factors > thead > tr > th
 			
 			&:first-child
 				width 35px
@@ -125,14 +200,9 @@
 			text-align center
 
 		.table.units > thead > tr > th, .table.units > tbody > tr > td
-
-			&:first-child
-				width 60px
-
-			&:nth-child(2)
-				width 30%
 				
 			&:nth-child(2), &:nth-child(3)
+				max-width 30%
 
 				@media(max-width 767px)
 					display none
@@ -151,11 +221,15 @@
 		@media(min-width 768px)
 			width 25%
 
-		strong
-			color rgb(80, 80, 80)
-			
 		.meta-info
 			width 100%
+			
+			& > *:not(:first-child) strong, & > strong:not(:first-child) 
+				margin-top 10px
+
+			strong
+				display block
+				color rgb(80, 80, 80)
 
 body.public-mode
 
@@ -167,9 +241,6 @@ body.public-mode
 
 		.model-left-content .header-box.title	
 			border-top 1px solid rgb(248, 250, 252)
-
-			img.model-icon
-				margin-top 20px
 				
 	.meta-info > div:nth-child(2) > *
 		word-wrap initial						

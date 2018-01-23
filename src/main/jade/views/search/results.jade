@@ -1,33 +1,66 @@
 include ../mixins/forms.jade
 include ../mixins/paging.jade
 
-.header-box #{total} results for '#{filter}'
-	if filteredType
-		|  and type '#{getTypeLabel(filteredType)}'
-	.pull-right
-		+select('type', 'Type', null, null, true)
-			option All
-			each type in modelTypes
-				option(value='#{type}' selected=type===filteredType)=getTypeLabel(type)
-	.clear
-.content-box
-	each dataset in data
-		.result
-			- var url = dataset.repositoryId + '/dataset';
-			if dataset.type === 'CATEGORY'
-				- url += 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
-			else
-				- url += '/' + dataset.type + '/' + dataset.refId + '/' + dataset.commitId;
-			a(href=url)
-				if dataset.type === 'CATEGORY'
-					img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
+mixin result-entry(dataset)
+	- var action = dataset.action;
+	if action === 'DELETE' && dataset.type === 'CATEGORY'
+		- action = null;
+	if action && action !== 'UPDATE'
+		if dataset.type === 'CATEGORY'
+			img.model-icon-small(src='ws/public/cached/overlay/#{dataset.categoryType}/#{action}?category=true')
+		else
+			- var query = '';
+			if dataset.type === 'PROCESS' && dataset.processType === 'SYSTEM'
+				- query = '?subType=LCI_RESULT';
+			else if dataset.type === 'FLOW' && dataset.flowType
+				- query = '?subType=' + dataset.flowType;
+			img.model-icon-small(src='ws/public/cached/overlay/#{dataset.type}/#{action}#{query}')
+	else
+		img.model-icon-small(src='images/model/small/#{getIcon(dataset)}')
+	if dataset.action === 'DELETE'
+		del.result-text=dataset.fullPath
+	else 
+		span.result-text=dataset.fullPath
+
+.col-lg-9
+	.header-box #{resultInfo.totalCount} results
+		if query
+			|  for '#{query}'
+	.content-box.search-results
+		each dataset in data
+			.result
+				if dataset.action === 'DELETE' && dataset.type === 'CATEGORY'
+					+result-entry(dataset)
 				else
-					img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
-				span.result-text=dataset.fullPath
-			.details
-				div Repository: 
-					a(href='#{dataset.repositoryId}')=dataset.repositoryId
-				div Commit: 
-					a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
-						span.result-text #{dataset.commitMessage} (#{dataset.commitId})
-	+paging(page, Math.ceil(total/pageSize))
+					- var url = dataset.repositoryId + '/dataset';
+					if dataset.type === 'CATEGORY'
+						- url += 's/' + getLabel('modelType', dataset.categoryType) + '/' + dataset.fullPath;
+					else
+						- url += '/' + dataset.type + '/' + dataset.refId + '?commitId' + dataset.commitId;
+					a(href=url): +result-entry(dataset)
+				.details
+					div Repository: 
+						a(href='#{dataset.repositoryId}')=dataset.repositoryId
+					if !isPublic
+						div Commit: 
+							a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
+								span.result-text #{dataset.commitMessage} (#{dataset.commitId})
+		+paging(resultInfo, getPagingUrl)
+.col-lg-3
+	.aggregations
+		.header-box Filters
+		.content-box
+			each aggregation in aggregations
+				if aggregation.entries && aggregation.entries.length
+					.aggregation
+						div: strong=getAggregationLabel(aggregation.name)
+						each entry in aggregation.entries
+							- var label = getLabel(aggregation.name, entry.key);
+							div
+								if aggregation.entries.length > 1
+									a(href=getAggregationUrl(aggregation.name, entry.key)) #{label} (#{entry.count})
+								else
+									| #{label} (#{entry.count}) 
+									if isSelectedAggregationValue(aggregation.name, entry.key)
+										a(href=getAggregationUrl(aggregation.name, entry.key, true)): span.glyphicon.glyphicon-remove
+.clear

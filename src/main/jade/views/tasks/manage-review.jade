@@ -32,7 +32,7 @@ mixin review-info()
 				if review
 					+hidden('id', review.id)
 				+hidden('type', 'REVIEW')
-				+input('name', 'Name')
+				+input('name', 'Review Task Name')
 				if !review
 					+select('repositoryPath', 'Repository', repositories)
 				else
@@ -60,7 +60,7 @@ mixin data-set-column(elements, col)
 				if index % 3 === col - 1
 					.overflow-ellipsis
 						input(type='checkbox' id=reference.id data-action='mark-as-reviewed' checked=!!reference.reviewer)
-						a(href='#{review.repositoryPath}/dataset/#{reference.type}/#{reference.refId}/#{reference.commitId}' title=reference.name)
+						a(href='#{review.repositoryPath}/dataset/#{reference.type}/#{reference.refId}?commitId=#{reference.commitId}' title=reference.name)
 							img.model-icon-small(src='images/model/small/#{reference.type.toLowerCase()}.png')
 							strong=reference.name
 

@@ -1,27 +1,31 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.openlca.jsonld.output.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.openlca.util.Dirs;
 
-import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.greendelta.collaboration.util.ModelTypes;
 
 public class Repository {
 
-	private final static Logger log = LoggerFactory.getLogger(Repository.class);
+	private final static Logger log = LogManager.getLogger(Repository.class);
 	final File repoDir;
 	public final String group;
 	public final String name;
-	public final boolean publicAccess;
+	public final Settings settings;
 
 	static Repository get(String root, String group, String name) {
 		Repository repo = new Repository(root, group, name);
@@ -36,10 +40,21 @@ public class Repository {
 	private Repository(String root, String group, String name) {
 		this.group = group;
 		this.name = name;
-		String path = root + File.separator + toId();
+		String path = root + File.separator + group + File.separator + name;
 		repoDir = new File(path);
 		if (repoDir.exists()) {
-			publicAccess = new File(repoDir, ".public").exists();
+			Settings settings = null;
+			File settingsFile = new File(repoDir, "settings.json");
+			if (!settingsFile.exists())
+				settings = new Settings();
+			else {
+				try {
+					settings = new Gson().fromJson(new FileReader(settingsFile), Settings.class);
+				} catch (IOException e) {
+					log.error("Error loading settings for repository");
+				}
+			}
+			this.settings = settings;
 			return;
 		}
 		throw new RepositoryNotFoundException(toId());
@@ -49,8 +64,27 @@ public class Repository {
 		return toId(group, name);
 	}
 
+	void setSetting(String setting, String value) {
+		switch (setting) {
+		case "publicAccess":
+			settings.publicAccess = Boolean.parseBoolean(value);
+			break;
+		case "commentApproval":
+			settings.commentApproval = Boolean.parseBoolean(value);
+			break;
+		case "maxSize":
+			settings.maxSize = Long.parseLong(value);
+			break;
+		}
+		try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
+			new Gson().toJson(settings, writer);
+		} catch (IOException e) {
+			log.error("Error saving settings", e);
+		}
+	}
+
 	public static String toId(String group, String name) {
-		return group + File.separator + name;
+		return group + "/" + name;
 	}
 
 	public String getSchemaVersion() {
@@ -58,7 +92,7 @@ public class Repository {
 			File file = new File(repoDir, "context.json");
 			if (!file.exists())
 				return null;
-			byte[] data = Files.toByteArray(file);
+			byte[] data = com.google.common.io.Files.toByteArray(file);
 			String json = new String(data, "utf-8");
 			JsonElement context = new Gson().fromJson(json, JsonElement.class);
 			return Schema.parseUri(context);
@@ -68,15 +102,37 @@ public class Repository {
 		}
 	}
 
-	public void setSchemaVersion(String version) {
-		File file = new File(repoDir, "context.json");
-		JsonElement context = Context.write(version);
-		String json = new Gson().toJson(context);
+	public long getSize() {
 		try {
-			Files.write(json.getBytes(), file);
+			File sizeInfo = new File(repoDir, ".size");
+			if (!sizeInfo.exists()) {
+				long size = determineSize();
+				Files.write(sizeInfo.toPath(), Long.toString(size).getBytes(Charset.forName("utf-8")));
+				return size;
+			}
+			return Long.parseLong(new String(Files.readAllBytes(sizeInfo.toPath()), Charset.forName("utf-8")));
 		} catch (IOException e) {
-			log.error("Could not write context.json", e);
+			log.error("Error getting size of repository", e);
+			return 0;
 		}
+	}
+
+	void updateSize(long size) {
+		try {
+			File sizeInfo = new File(repoDir, ".size");
+			Files.write(sizeInfo.toPath(), Long.toString(size).getBytes(Charset.forName("utf-8")));
+		} catch (IOException e) {
+			log.error("Error setting size of repository", e);
+		}
+	}
+
+	private long determineSize() {
+		long size = 0;
+		for (ModelType type : ModelTypes.SORTED) {
+			size += Dirs.size(getModelDir(type, false).toPath());
+		}
+		size += Dirs.size(getBinDir(false).toPath());
+		return size;
 	}
 
 	private void checkVersion() {
@@ -91,30 +147,19 @@ public class Repository {
 	}
 
 	File getHistoryFile(boolean create) {
-		File historyDir = getHistoryDir(create);
-		return getFile(historyDir, "history.txt", create);
-	}
-
-	File getCommitFile(String commitId, boolean create) {
-		File historyDir = getHistoryDir(create);
-		String filename = commitId + ".txt";
-		return getFile(historyDir, filename, create);
+		return getFile(repoDir, "history.txt", create);
 	}
 
 	File getDatasetFile(ModelType type, String refId, String commitId,
 			boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
-		String filename = commitId + ".json";
+		String filename = commitId + ".json.gz";
 		return getFile(datasetDir, filename, create);
 	}
 
 	File getBinDir(ModelType type, String refId, String commitId, boolean create) {
 		File binDir = getBinDir(type, refId, create);
 		return getDir(binDir, commitId, create);
-	}
-
-	File getIndexDir() {
-		return new File(repoDir, "ds_index");
 	}
 
 	File getAvatarFile() {
@@ -146,11 +191,7 @@ public class Repository {
 		return getDir(repoDir, "bin", create);
 	}
 
-	File getHistoryDir(boolean create) {
-		return getDir(repoDir, "history", true);
-	}
-
-	private File getFile(File dir, String name, boolean create) {
+	File getFile(File dir, String name, boolean create) {
 		File file = new File(dir, name);
 		if (create && !file.exists())
 			try {
@@ -168,6 +209,14 @@ public class Repository {
 		if (create && !file.exists())
 			file.mkdir();
 		return file;
+	}
+
+	public static class Settings {
+
+		public boolean publicAccess;
+		public boolean commentApproval;
+		public long maxSize;
+
 	}
 
 }

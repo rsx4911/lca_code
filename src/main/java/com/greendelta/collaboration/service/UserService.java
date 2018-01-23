@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -7,39 +8,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import javax.persistence.EntityManager;
-
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
 public class UserService {
 
-	private final static Logger log = LoggerFactory.getLogger(UserService.class);
+	private final static Logger log = LogManager.getLogger(UserService.class);
 	private final static Random random = new SecureRandom();
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
 	private final String servername;
-	private final Provider<EntityManager> entityManagerProvider;
+	private final String repositoryPath;
 
 	@Inject
 	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, @Named("twofactor.servername") String server,
-			Provider<EntityManager> entityManagerProvider) {
+			@Named("repository.path") String repositoryPath) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.servername = server;
-		this.entityManagerProvider = entityManagerProvider;
+		this.repositoryPath = repositoryPath;
 	}
 
 	public User getForUsername(String username) {
@@ -73,22 +74,50 @@ public class UserService {
 		return getForUsername(name);
 	}
 
+	public boolean isAnonymous() {
+		Subject subject = subjectProvider.get();
+		return !subject.isAuthenticated();
+	}
+
 	public long getCount() {
 		return dao.getCount();
 	}
 
-	public PagedResult<User> getAll(int page, String filter) {
+	public int getNoOfRepositories() {
+		User currentUser = getCurrentUser();
+		if (currentUser.username == null || currentUser.username.isEmpty())
+			return 0;
+		File userGroup = new File(repositoryPath, currentUser.username);
+		if (!userGroup.exists())
+			return 0;
+		return userGroup.listFiles().length;
+	}
+
+	public long getUserGroupSize() {
+		User currentUser = getCurrentUser();
+		if (currentUser.username == null || currentUser.username.isEmpty())
+			return 0;
+		File userGroup = new File(repositoryPath, currentUser.username);
+		if (!userGroup.exists())
+			return 0;
+		long size = 0;
+		for (File file : userGroup.listFiles()) {
+			size += Repository.getIgnoreSchema(repositoryPath, currentUser.username, file.getName()).getSize();
+		}
+		return size;
+	}
+
+	public SearchResult<User> getAll(int page, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		long total = dao.getCount();
 		String query = createQuery(filter, true);
 		long subTotal = dao.getCount(query, parameters);
 		int start = page == 0 ? 0 : 1 + (page - 1) * 10;
 		int limit = page == 0 ? 0 : 10;
 		query = createQuery(filter, false);
 		List<User> data = dao.getAll(query, parameters, start, limit);
-		return new PagedResult<>(page, filter, total, subTotal, data);
+		return SearchResults.from(data, page, 10, subTotal);
 	}
 
 	private String createQuery(String filter, boolean forCount) {
@@ -150,7 +179,7 @@ public class UserService {
 		return issuer + ":" + username;
 	}
 
-	public void delete(User user) {
+	void delete(User user) {
 		dao.delete(user);
 	}
 
@@ -162,10 +191,6 @@ public class UserService {
 		return dao.update(user);
 	}
 
-	public void clearCache() {
-		entityManagerProvider.get().getEntityManagerFactory().getCache().evict(User.class);
-	}
-	
 	public boolean logout() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())

@@ -44,8 +44,7 @@ public class Message extends AbstractEntity {
 
 	@Column(name = "show_read_receipt")
 	public boolean showReadReceipt;
-	
-	
+
 	@Override
 	public long getId() {
 		return id;

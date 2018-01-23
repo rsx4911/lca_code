@@ -15,9 +15,9 @@ define([
 
 			events: 
 				'click [data-action=add]': (event) -> @showAddDialog event, true
-				'click [data-action=delete]': (event) -> @deleteLibrary event
 				'click [data-action=replace]': (event) -> @showAddDialog event, false
-				'click [data-action=show]': (event) -> @showRefIds event
+				'click [data-action=delete]': 'deleteLibrary'
+				'click [data-action=show]': 'showRefIds'
 
 			render: (renderOptions) ->
 				@loadLibraries (libraries) =>				

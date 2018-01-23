@@ -15,9 +15,9 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.subject.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -34,7 +34,7 @@ import com.greendelta.collaboration.webservice.util.Messages;
 @ServerEndpoint(value = "/sockets/messaging", configurator = WebsocketConfigurator.class)
 public class MessagingEndpoint {
 
-	private static final Logger log = LoggerFactory.getLogger(MessagingEndpoint.class);
+	private static final Logger log = LogManager.getLogger(MessagingEndpoint.class);
 	// username->sessionId(s)
 	private static volatile Map<String, Set<String>> online = new HashMap<>();
 
@@ -53,7 +53,7 @@ public class MessagingEndpoint {
 	public void onOpen(Session session, EndpointConfig config) {
 		User user = getUser(config);
 		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
-		if (wasConnected || !user.settings.showOnlineStatus) 
+		if (wasConnected || !user.settings.showOnlineStatus)
 			return;
 		notifyConnected(session, user);
 	}
@@ -193,10 +193,10 @@ public class MessagingEndpoint {
 	@OnClose
 	public void onClose(Session session) {
 		String username = Collections.remove(online, session.getId());
-		if (username == null) 
+		if (username == null)
 			return;
 		User pinged = userService.getForUsername(username);
-		if (!pinged.settings.showOnlineStatus) 
+		if (!pinged.settings.showOnlineStatus)
 			return;
 		broadcast(session, new Event(EventType.DISCONNECTED, username));
 	}

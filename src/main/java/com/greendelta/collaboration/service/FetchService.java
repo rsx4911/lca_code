@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,102 +15,58 @@ import javax.ws.rs.core.StreamingOutput;
 import org.openlca.cloud.api.data.ModelStream;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
-import org.openlca.cloud.model.data.FetchRequestData;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.BinUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.util.Bytes;
 
 public class FetchService {
 
-	private final HistoryService historyService;
-	private final DataAccessor dataAccessor;
+	private static final Logger log = LoggerFactory.getLogger(FetchService.class);
+	private final SearchService searchService;
 
 	@Inject
-	public FetchService(HistoryService historyService, DataAccessor dataAccessor) {
-		this.historyService = historyService;
-		this.dataAccessor = dataAccessor;
-	}
-
-	public FetchRequestData toRequestData(Repository repo, String commitId, Dataset dataset) {
-		FetchRequestData value = new FetchRequestData(dataset);
-		ModelType type = dataset.type;
-		String refId = dataset.refId;
-		value.setDeleted(wasDeleted(repo, type, refId, commitId));
-		value.setAdded(wasAdded(repo, type, refId, commitId));
-		return value;
-	}
-
-	private boolean wasDeleted(Repository repo, ModelType type, String refId, String commitId) {
-		String data = getDataset(repo, type, refId, commitId);
-		if (data == null)
-			return true;
-		return data.isEmpty();
-	}
-
-	private boolean wasAdded(Repository repo, ModelType type, String refId, String commitId) {
-		List<Commit> previous = historyService.getCommitsBefore(repo, type, refId, commitId);
-		if (previous.isEmpty())
-			return true;
-		Commit commit = previous.get(previous.size() - 1);
-		String previousData = getDataset(repo, type, refId, commit.id);
-		if (previousData == null)
-			return true;
-		return previousData.isEmpty();
-	}
-
-	public boolean hasDataset(Repository repo, ModelType type, String refId, String commitId) {
-		File file = repo.getDatasetFile(type, refId, commitId, false);
-		if (!file.exists())
-			return false;
-		try {
-			long size = Files.size(file.toPath());
-			return size > 0;
-		} catch (IOException e) {
-			return false;
-		}
+	public FetchService(SearchService searchService) {
+		this.searchService = searchService;
 	}
 
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
 		File file = repo.getDatasetFile(type, refId, commitId, false);
-		byte[] data = dataAccessor.read(file);
-		if (data == null)
+		try {
+			byte[] data = BinUtils.gunzip(Bytes.read(file));
+			if (data == null || data.length == 0)
+				return null;
+			return new String(data, Charset.forName("utf-8"));
+		} catch (IOException e) {
+			log.error("Error gunzipping data set", e);
 			return null;
-		return new String(data, Charset.forName("utf-8"));
+		}
 	}
 
 	public File getBinDir(Repository repo, ModelType type, String refId, String commitId) {
 		return repo.getBinDir(type, refId, commitId, false);
 	}
 
-	public StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits) {
-		return prepareData(repo, requested, commits, false);
-	}
-
-	public StreamingOutput prepareData(Repository repo, List<Commit> commits) {
-		return prepareData(repo, null, commits, true);
-	}
-
-	private StreamingOutput prepareData(Repository repo, List<FileReference> requested, List<Commit> commits,
-			boolean skipEmpty) {
-		Collections.reverse(commits);
-		Set<Dataset> empty = new HashSet<>();
+	public StreamingOutput prepareData(Repository repo, List<Commit> commits, List<FileReference> requested) {
+		Set<FileReference> added = new HashSet<>();
 		Set<Dataset> datasets = new HashSet<>();
 		Map<Dataset, String> dsToCommit = new HashMap<>();
 		for (Commit commit : commits) {
-			for (Dataset dataset : historyService.getReferences(repo, commit.id)) {
-				if (requested != null && !requested.contains(dataset.asFileReference()))
+			for (IndexEntry entry : searchService.getAll(repo, commit)) {
+				FileReference ref = entry.asFileReference();
+				if (requested != null && !requested.contains(ref))
 					continue;
-				if (skipEmpty && empty.contains(dataset))
+				Dataset ds = entry.asDataset();
+				if (added.contains(ref))
 					continue;
-				if (datasets.contains(dataset))
-					continue;
-				if (skipEmpty && !hasDataset(repo, dataset.type, dataset.refId, commit.id)) {
-					empty.add(dataset);
-					continue;
-				}
-				dsToCommit.put(dataset, commit.id);
-				datasets.add(dataset);
+				dsToCommit.put(ds, commit.id);
+				datasets.add(ds);
+				added.add(ref);
 			}
 		}
 		return new StreamingOutput() {
@@ -144,16 +98,14 @@ public class FetchService {
 
 		@Override
 		protected byte[] getData(Dataset dataset) throws IOException {
-			String data = getDataset(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
-			if (data == null)
-				return new byte[0];
-			return data.getBytes(ModelStream.CHARSET);
+			File file = repo.getDatasetFile(dataset.type, dataset.refId, dsToCommitId.get(dataset), false);
+			return Bytes.read(file);
 		}
 
 		@Override
 		protected File getBinaryFilesLocation(Dataset dataset) {
 			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
 		}
-				
+
 	}
 }

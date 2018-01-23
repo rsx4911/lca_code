@@ -7,15 +7,9 @@ include ./mixins.jade
 		.content
 			table.table.no-head
 				tbody
-					if dataset.url || reviewMode
-						+field-row('url')
-							if dataset.url
-								a(href=dataset.url target='_blank')=dataset.url
-					+field-row('textReference', true, true)
-					+field-row('year', true, true)
-					if dataset.externalFile || reviewMode
-						+field-row('externalFile')
-							if dataset.externalFile
-								a(href='#{fileBaseUrl}/#{dataset.externalFile}' target='_blank')=dataset.externalFile
+					+field-link-row('url')
+					+field-row('year')
+					+field-link-row('externalFile', fileBaseUrl)
+					+field-row('textReference')
 	+meta
 	.clear

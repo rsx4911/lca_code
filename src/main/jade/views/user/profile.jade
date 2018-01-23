@@ -2,7 +2,7 @@ include ../mixins/forms.jade
 include ../mixins/avatar-box.jade
 
 .header-box Account
-	if user.id && (adminArea || isOwnUser) && !user.lastAdmin
+	if user.id && adminArea && !user.lastAdmin
 		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 form#user-form.content-box
 	#user-form-general-message-group.alert(role='alert'): span.message
@@ -15,7 +15,10 @@ form#user-form.content-box
 	if adminArea
 		+checkbox('admin', 'Is admin user')(disabled=user.lastAdmin)
 		+checkbox('settings-canCreateGroups', 'Is allowed to create groups')
-		+checkbox('settings-canCreateRepositories', 'Is allowed to create repository in his user group')
+		+checkbox('settings-canCreateRepositories', 'Is allowed to create repositories in his user group')
+		+input('settings-noOfRepositories', 'No. of user group repositories', 'number')(class='input-sm', value=user&&user.settings?(user.settings.noOfRepositories||0):0, size=4, min=0)
+		+input('settings-maxSize', 'Maximum user group size', 'number', true)(class='input-sm', value=0, size=4, min=0)
+			+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
 	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
 		if user.id
 			| Save

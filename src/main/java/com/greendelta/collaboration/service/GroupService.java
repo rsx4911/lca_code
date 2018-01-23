@@ -7,10 +7,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -18,10 +18,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.search.wrapper.SearchResult;
 
 public class GroupService {
 
-	private final static Logger log = LoggerFactory.getLogger(GroupService.class);
+	private final static Logger log = LogManager.getLogger(GroupService.class);
 	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;
@@ -63,11 +65,7 @@ public class GroupService {
 		return userService.exists(group);
 	}
 
-	public boolean create(String group) {
-		return create(group, false);
-	}
-
-	private boolean create(String group, boolean userGroup) {
+	public boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
 		if (!currentUser.admin && !currentUser.settings.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
@@ -76,21 +74,14 @@ public class GroupService {
 		boolean created = new File(getPath(group)).mkdir();
 		if (!created)
 			return false;
-		if (!userGroup)
-			membershipService.addMembership(currentUser, group, Role.OWNER, true);
+		if (userGroup)
+			return true;
+		membershipService.addMembership(currentUser, group, Role.OWNER, true);
 		return true;
 	}
 
-	public boolean delete(String group) {
-		if (!exists(group))
-			return false;
-		if (!accessService.canDelete(group))
-			throw new UnauthorizedAccessException(group, "DELETE");
-		File groupDir = new File(getPath(group));
-		for (File repo : groupDir.listFiles())
-			membershipService.removeMemberships(Repository.toId(group, repo.getName()));
-		membershipService.removeMemberships(group);
-		return Directories.delete(groupDir);
+	boolean delete(String group) {
+		return Directories.delete(new File(getPath(group)));
 	}
 
 	public byte[] getAvatar(String group) {
@@ -122,21 +113,23 @@ public class GroupService {
 	}
 
 	public long getCount(boolean adminArea) {
-		return getAll(adminArea).size();
+		return getAll(adminArea, false).size();
 	}
 
-	public PagedResult<String> getAll(int page, String filter, boolean adminArea) {
-		List<String> accessible = getAll(adminArea);
-		return PagedResult.pagedAndFiltered(page, filter, accessible);
+	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea, boolean onlyIfCanWrite) {
+		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
+		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
 	}
 
-	private List<String> getAll(boolean adminArea) {
+	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
 		File root = new File(this.root);
 		List<String> groups = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
 			if (!accessService.canRead(group.getName(), !adminArea))
+				continue;
+			if (onlyIfCanWrite && !accessService.canWrite(group.getName()))
 				continue;
 			if (isUserNamespace(group.getName()))
 				continue;

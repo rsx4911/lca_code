@@ -14,7 +14,7 @@ public class Conversations {
 	private Conversations() {
 		// only static access
 	}
-	
+
 	public static List<ObjectMap> map(List<ConversationDescriptor> conversations, User currentUser) {
 		List<ObjectMap> all = new ArrayList<>();
 		for (ConversationDescriptor conversation : conversations)

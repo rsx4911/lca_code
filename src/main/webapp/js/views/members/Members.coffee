@@ -20,9 +20,9 @@ define([
 
 			events: 
 				'click [data-route]': (event) -> Events.followRoute event
-				'click [data-action=add-members]': (event) -> @showAddMembersLayer event
-				'click [data-action=set-role]': (event) -> @showSetRoleLayer event
-				'click [data-action=remove-member]': (event) -> @removeMember event
+				'click [data-action=add-members]': 'showAddMembersLayer'
+				'click [data-action=set-role]': 'showSetRoleLayer'
+				'click [data-action=remove-member]': 'removeMember'
 
 			showAddMembersLayer: (event) ->
 				type = if @group then 'group' else 'repository'
@@ -134,29 +134,32 @@ define([
 					name = options.group.get 'name'
 					@filter1 = new Filter
 						type: 'group-members'
-						callback: (type, result) => @beforeRender type, result
+						beforeRender: (result, type) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "ws/membership/#{name}/NULL?filter=#{filter}"
+						noPaging: true
+						url: () -> "ws/membership/#{name}/null?"
 				else if options.repository
 					@repository = options.repository
 					group = options.repository.get 'group'
 					name = options.repository.get 'name'
 					@filter1 = new Filter
 						type: 'repository-members'
-						callback: (type, result) => @beforeRender type, result
+						beforeRender: (result, type) => @beforeRender type, result
 						container: '#repository-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "ws/membership/#{group}/#{name}?filter=#{filter}"
+						noPaging: true
+						url: () -> "ws/membership/#{group}/#{name}?"
 					@filter2 = new Filter
 						type: 'group-members'
-						callback: (type, result) => @beforeRender type, result
+						beforeRender: (result, type) => @beforeRender type, result
 						container: '#group-members'
 						template: memberTemplate
 						filterId: 'filter'
-						url: (page, filter) -> "ws/membership/#{group}/NULL?filter=#{filter}"
+						noPaging: true
+						url: () -> "ws/membership/#{group}/null?"
 
 			render: (renderOptions) ->
 				showRepositoryMembers = false

@@ -6,8 +6,8 @@ require.config({
 		'jquery-ui': 'libs/jquery-ui',
 		'coffee-script': 'libs/coffee-script',
 		'cs': 'libs/cs',
-		'underscore': 'libs/underscore-amd',
-		'backbone': 'libs/backbone-amd',
+		'underscore': 'libs/underscore-min',
+		'backbone': 'libs/backbone-min',
 		'jadeRuntime': 'libs/jadeRuntime',
 		'bootstrap': 'libs/bootstrap',
 		'datepicker': 'libs/bootstrap-datepicker',
@@ -41,6 +41,8 @@ require.config({
 })
 
 define(['cs!app/App', 'pace'], function(App, pace) {
+	pace.on('start', function() {$('body').append('<div id="block-interaction"></div>')});
+	pace.on('hide', function() {$('#block-interaction').remove()});
 	pace.start();
 	App.initialize();
 });

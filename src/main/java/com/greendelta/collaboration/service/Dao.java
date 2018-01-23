@@ -268,7 +268,6 @@ class Dao<T extends AbstractEntity> {
 		EntityManager em = createManager();
 		for (T entity : entities)
 			em.remove(em.merge(entity));
-
 	}
 
 	public void delete(long id) {

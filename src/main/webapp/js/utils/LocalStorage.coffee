@@ -1,7 +1,7 @@
 define () ->
 
 	getValue: (key) ->
-		localStorage?.getItem?('reviewMode') is 'true' or window.reviewMode is 'true'
+		localStorage?.getItem?(key) is 'true' or window[key] is 'true'
 
 	setValue: (key, value) ->
 		if localStorage and localStorage.getItem and localStorage.setItem

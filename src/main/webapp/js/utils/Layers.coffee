@@ -2,14 +2,16 @@ define([
 				'cs!utils/ModelTree'
 				'cs!utils/Data'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Model'
+				'cs!utils/ModelTypes'
 				'cs!models/CurrentUser'
 				'templates/views/layer'
 				'templates/views/progress-indicator'
 				'bootstrap'
 			]
 
-	(ModelTree, Data, Events, Model, currentUser, template, progressIndicatorTemplate) ->
+	(ModelTree, Data, Events, Format, Model, ModelTypes, currentUser, template, progressIndicatorTemplate) ->
 
 		Layers = () ->
 
@@ -32,6 +34,7 @@ define([
 					if $('.select2-hidden-accessible').length
 						$('.select2-hidden-accessible').select2('close')
 					$('.modal').remove()
+					options.onClose?()
 				if options.static
 					$('.modal').modal
 						backdrop: 'static'
@@ -173,16 +176,76 @@ define([
 					return []
 				unless options.callback
 					return []
-				@showMessageInLayer
-					title: 'Select data set'
-					body: '<div id="model-tree"></div>'
+				title = if options.multipleSelection then 'Select data sets' else 'Select data set'
+				if options.type
+					if options.multipleSelection
+						title = "Select #{ModelTypes[options.type].toLowerCase()}"
+					else
+						title = "Select #{ModelTypes.singular(options.type).toLowerCase()}"
+				@showTemplateInLayer
+					title: title
+					template: 'select-model-layer'
+					model: 
+						label: if options.type then ModelTypes.singular(options.type) else 'Data set'
+						selectVersion: options.selectVersion
 					buttons: [
 						{text: 'Cancel', callback: () => @closeActive()}
-						{text: 'Select', className: 'btn-success', callback: -> 
-							options.callback ModelTree.getSelection '#model-tree'
+						{id: 'select-model-button', text: 'Select', className: 'btn-primary', callback: () => 
+							if options.multiSelection
+								options.callback ModelTree.getSelection '#model-tree'
+								@closeActive()
+							else
+								refId = ModelTree.getSelection('#model-tree', true).id
+								commitId = null
+								if options.selectVersion
+									commitId = $('#model-selection #commitId').val()
+								@closeActive()
+								options.callback refId, commitId
 						}
 					]
-				ModelTree.init '#model-tree', options.repositoryPath
+					callback: () =>
+						ModelTree.init '#model-tree', options.repositoryPath, 
+							multiSelection: options.multiSelection
+							defaultPath: options.type
+						$('#select-model-button').prop 'disabled', !options.multiSelection
+						$('#model-tree').on 'activate_node.jstree', (event, data) =>
+							if options.type && !options.multiSelection
+								isType = data?.node?.original?.type is options.type
+								$('#select-model-button').prop 'disabled', !isType
+								if isType and options.selectVersion
+									refId = data.node.original.id
+									@showProgressIndicator 'Loading<br>versions'
+									$.ajax
+										type: 'GET'
+										url: "ws/history/#{options.repositoryPath}/#{options.type}/#{refId}"
+										success: (commits) =>
+											$('#select-model-button').prop 'disabled', (!commits || !commits.length)
+											$('#model-selection #commitId').empty()
+											if commits?.length
+												for commit, index in commits
+													$('#model-selection #commitId').append '<option value="' + commit.id + '">' + (if index is 0 then 'Latest' else commit.id) + '</option>'
+													$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.formatCommitDescription(commit.message) + '"></optgroup>'
+											@hideProgressIndicator()
+										error: () => 
+											$('#select-model').prop 'disabled', true
+											@hideProgressIndicator()
+
+			selectCommit: (commits, commitId, callback) ->
+				@showTemplateInLayer
+					title: 'Select version'
+					template: 'select-commit-layer'
+					model:
+						commits: commits
+						commitId: commitId
+						formatCommitDescription: Format.formatCommitDescription
+					buttons: [
+						{id: 'close', className: 'btn-default', text: 'Close', callback: () => @closeActive()}
+						{id: 'select', className: 'btn-primary', text: 'Select', callback: () => 
+							selection = $('#commit-selection #commitId').val()
+							@closeActive()
+							callback selection
+						}
+					]
 
 			askQuestion: (options) ->
 				unless options.question
@@ -222,11 +285,17 @@ define([
 						text: "You are about to delete #{toDelete}. This action can not be undone. Are you absolutely sure?"
 						confirmationPhrase: confirmationPhrase
 					buttons: buttons
-					callback: () ->
+					callback: () =>
 						$('#btn-confirm-delete').prop 'disabled', true
 						$('#confirmation-phrase').on 'keyup', (event) ->
 							target = $ Events.target event
 							$('#btn-confirm-delete').prop 'disabled', (target.val() isnt confirmationPhrase)
+						$('#confirmation-phrase').on 'keydown', (event) =>
+							target = $ Events.target event
+							key = Events.keyCode event
+							if target.val() is confirmationPhrase and key is 13
+								@closeActive()
+								callback?()								
 
 			showProgressIndicator: (message) ->
 				$('.progress-indicator').remove()

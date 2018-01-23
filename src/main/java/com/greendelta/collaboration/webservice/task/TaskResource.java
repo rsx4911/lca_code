@@ -28,7 +28,8 @@ public class TaskResource {
 	private final AccessService accessService;
 
 	@Inject
-	public TaskResource(TaskService service, UserService userService, RepositoryService repoService, AccessService accessService) {
+	public TaskResource(TaskService service, UserService userService, RepositoryService repoService,
+			AccessService accessService) {
 		this.service = service;
 		this.userService = userService;
 		this.repoService = repoService;

@@ -1,18 +1,19 @@
 define([
 				'backbone'
-				'open-layers'
-				'cs!utils/DataQuality'
 				'cs!utils/Events'
-				'cs!utils/Format'
-				'cs!utils/Icons'
-				'cs!utils/Labels'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
-				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!utils/Toggle'
 				'cs!views/repository/dataset/Comments'
 				'cs!views/repository/dataset/DatasetPrepare'
-				'cs!views/repository/dataset/DataQualityLayer'
+				'cs!views/repository/dataset/DatasetRendering'
+				'cs!views/repository/dataset/DQLayer'
+				'cs!views/repository/dataset/DQSystem'
+				'cs!views/repository/dataset/Exchanges'
+				'cs!views/repository/dataset/Flow'
+				'cs!views/repository/dataset/Location'
+				'cs!views/repository/dataset/ProductSystem'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/repository/dataset/project'
@@ -29,12 +30,10 @@ define([
 				'templates/views/repository/dataset/actor'
 				'templates/views/repository/dataset/location'
 				'templates/views/repository/dataset/dq-system'
-				'templates/views/repository/dataset/impact-factor-rows'
-				'templates/views/repository/dataset/nw-factor-rows'
 				'tablesorter'
 			]
 
-	(Backbone, OpenLayers, DataQuality, Events, Format, Icons, Labels, Layers, LocalStorage, ModelTypes, Renderer, Comments, DatasetPrepare, DataQualityLayer, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, impactFactorsTemplate, nwFactorsTemplate) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -55,12 +54,14 @@ define([
 					when 'LOCATION' then return location
 					when 'DQ_SYSTEM' then return dqSystem
 
-			loadDataset: (callback) ->
-				urlPart = @getUrlPart()
-				commitId = @commitId or 'null'
+			loadDataset: (refId, commitId, callback) ->
+				urlPart = @getUrlPart @type, refId
+				url = "ws/public/browse/#{urlPart}"
+				if commitId
+					url += '?commitId=' + commitId
 				$.ajax
 					type: 'GET'
-					url: "ws/public/browse/#{urlPart}/#{commitId}" 
+					url: url 
 					success: callback
 
 			loadCommitHistory: (callback) ->
@@ -75,13 +76,17 @@ define([
 
 			getDownloadUrl: (format = 'json') ->
 				urlPart = @getUrlPart()
-				commitId = @commitId or 'null'
-				return "ws/public/download/#{format}/prepare/#{urlPart}/#{commitId}" 
+				url = "ws/public/download/#{format}/prepare/#{urlPart}" 
+				if @commitId
+					url +='?commitId=' + @commitId
+				return url
 
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
-				commitId = @commitId or 'null'
-				return "ws/public/repository/file/#{urlPart}/#{commitId}" 
+				url = "ws/public/repository/file/#{urlPart}"
+				if @commitId
+					url +='?commitId=' + @commitId
+				return url 
 
 			getUrlPart: (type, refId) ->
 				group = @repository.get 'group'
@@ -91,95 +96,141 @@ define([
 				return "#{group}/#{name}/#{type}/#{refId}"
 
 			downloadData: (event) ->
-				@$('iframe').remove()
+				@$('iframe#download-frame').remove()
 				target = $ Events.target event
 				format = target.attr('data-format') or 'json'
+				Layers.showProgressIndicator 'Collecting<br>data sets'
 				$.ajax
 					type: 'GET'
 					url: @getDownloadUrl(format)
 					success: (token) =>
-						@$el.append '<iframe class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+						Layers.hideProgressIndicator()
+						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+
+			updateIcon: (path, commentCount) ->
+				if commentCount
+					$("[data-path='#{path}'] img[data-action=comment]").attr 'src', 'images/comment_highlighted.png'
+				else if LocalStorage.getValue('reviewMode')
+					$("[data-path='#{path}'] img[data-action=comment]").attr 'src', 'images/comment.png'
+				else
+					$("[data-path='#{path}'] img[data-action=comment]").remove()
+
+			showDataQuality: (event) ->
+				Events.preventDefault event
+				target = $ Events.target event
+				entry = target.attr 'data-entry'
+				schemaId = target.attr 'data-scheme'
+				DQLayer.open @repository.toJSON(), @commitId, schemaId, entry, (object, path) => return @getValue object, path
+
+			switchCommit: (event) ->
+				repo = @repository.toJSON()
+				type = @type
+				refId = @refId
+				commitId = $(Events.target(event)).val()
+				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}?commitId=#{commitId}"
+
+			maximizeContent: (event) ->
+				pane = @$('.tab-pane.active')
+				pane.addClass 'modal-content'
+				$('body').append '<div class="modal-backdrop in"></div>'
+				$('.modal-backdrop').on 'click', (event) => @restoreContent event
+
+			restoreContent: (event) ->
+				pane = @$('.tab-pane.active')
+				pane.css 'position', ''
+				pane.css 'top', ''
+				pane.css 'left', ''
+				pane.removeClass 'modal-content'
+				$('.modal-backdrop').remove()
 
 			className: 'repository-dataset'
 
 			events: 
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
-				'click [data-format]': (event) -> @downloadData event
-				'change #impact-category': (event) -> @loadImpactCategory () -> @$('#impact-factors').trigger('update')
-				'change #nw-set': (event) -> @loadNwSet () -> @$('#nw-factors').trigger('update')
-				'click a[data-action=show-data-quality]': (event) ->
-					target = $ Events.target event
-					entry = target.attr 'data-entry'
-					schemaId = target.attr 'data-schema'
-					DataQualityLayer.open @repository.toJSON(), @commitId, schemaId, entry
-				'change #commitId': (event) -> 
-					repo = @repository.toJSON()
-					type = @type
-					refId = @refId
-					commitId = $(Events.target(event)).val()
-					Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}/#{commitId}"
+				'click [data-format]': 'downloadData'
+				'click [data-compare-to]': 'initComparison'
+				'click a[data-action=show-data-quality]': 'showDataQuality'
+				'click .maximize-content > a': 'maximizeContent'
+				'change #commitId': 'switchCommit'
+				'click [href=#supply-chain]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
+				'click [href=#graph]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
+				'click .select-method': (event) -> ProductSystem.selectImpactMethod @repository, @dataset
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath} = options
 
+			doInitialize: (varName, method) ->
+				if @[varName]
+					return
+				@[varName] = true
+				method()
+
 			render: (renderOptions) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				if !currentUser.isLoggedIn() and @commitId
+					@commitId = null
+					Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId, 
+						trigger: false
+						replace: true
+				@loadDataset @refId, @commitId, (dataset) =>
+					@dataset = dataset
+					if currentUser.isLoggedIn()
+						# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
+						if @commitId isnt dataset.commitId
+							Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "?commitId=#{dataset.commitId}", 
+								trigger: false
+								replace: true
+						@commitId = dataset.commitId
+					@loadCommitHistory (commits) =>
+						@commits = commits
+						DatasetPrepare.applyTo @dataset
+						@doRender renderOptions
+
+			doRender: (renderOptions, comparisonCommitId) ->
 				template = @getTemplate()
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				@loadDataset (dataset) =>
-					# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
-					if @commitId isnt dataset.commitId
-						Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "/#{dataset.commitId}", 
-							trigger: false
-							replace: true
-					@commitId = dataset.commitId
-					@loadCommitHistory (commits) =>
-						DatasetPrepare.applyTo dataset
-						@$el.html template 
-							dataset: dataset
-							baseUrl: "#{group}/#{name}/dataset"
-							formatDate: Format.dateTime
-							getSpecificTypeLabel: @getSpecificTypeLabel
-							getValue: (object, path) => return @getValue object, path
-							getIcon: Icons.get
-							getTypeAsEnum: (type) => return @getTypeAsEnum(type)
-							getTypeLabel: (type) => return ModelTypes[type]
-							getLabel: (path) => return Labels.get @getTypeAsEnum(dataset.type), path
-							getUncertaintyLabel: @getUncertaintyLabel
-							getDQColor: DataQuality.getColor 
-							noToStr: Format.number
-							fileBaseUrl: @getFileBaseUrl()
-							commits: commits
-							commitId: @commitId or commits?[0]?.id
-							formatCommitDescription: Format.formatCommitDescription
-							reviewMode: LocalStorage.getValue('reviewMode')
-							isPublic: !currentUser.isLoggedIn()
-						Renderer.render @, renderOptions
-						if dataset.type is 'Location' # and dataset.geometry
-							@initMap dataset
-						if dataset.type is 'ImpactMethod'
-							@loadImpactCategory () =>
-								@loadNwSet () =>
-									@initTableSorting()
-									Comments.init @$el, 
-										repository: @repository, 
-										type: @type, 
-										refId: @refId, 
-										commitId: @commitId
-										commentPath: @commentPath
-						else
-							@initTableSorting()
-							Comments.init @$el,
-								repository: @repository, 
-								type: @type, 
-								refId: @refId, 
-								commitId: @commitId
-								commentPath: @commentPath
-						if dataset.type is 'DQSystem'
-							@initDataQualityPopups dataset
+				exchangesField = null
+				if @dataset.type is 'Process'
+					exchangesField = 'exchanges'
+				else if @dataset.type is 'ProductSystem'
+					exchangesField = 'inventory'
+				model =
+					dataset: @dataset
+					commits: @commits
+					commitId: @commitId or commits?[0]?.id
+					compareTo: @compareTo
+					comparisonCommitId: comparisonCommitId
+					baseUrl: "#{group}/#{name}/dataset"
+					fileBaseUrl: @getFileBaseUrl()
+					exchangeMap: if exchangesField then Exchanges.map(@dataset[exchangesField], @type) else null
+					otherExchangeMap: if @compareTo and exchangesField then Exchanges.map(@compareTo[exchangesField], @type) else null
+					reviewMode: LocalStorage.getValue('reviewMode')
+					isPublic: !currentUser.isLoggedIn()
+				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo
+				@$el.html template model
+				if renderOptions
+					Renderer.render @, renderOptions
+				Toggle.init @$el
+				@initDatasetSpecifics()
+				@initTableSorting()
+				unless @compareTo
+					@initComments true
 
-			initTableSorting: () ->
-				tables = @$('table:not(.no-head)')
+			initDatasetSpecifics: () ->
+				if @dataset.type is 'Location' # and dataset.geometry
+					Location.initMap @dataset
+				if @dataset.type is 'Flow'
+					Flow.init @repository, @refId, @commitId
+				if @dataset.type is 'DQSystem'
+					DQSystem.init @dataset
+
+			initTableSorting: (table) ->
+				if table
+					tables = [$(table)]
+				else
+					tables = @$('table:not(.no-head):not(.no-sorting)')
 				for table in tables
 					options = {headers: {}}
 					for th, index in $('thead > tr > th', table)
@@ -187,124 +238,71 @@ define([
 							options.headers[index] = {sorter: false}
 					$(table).tablesorter options
 
-			getSpecificTypeLabel: (type, value) ->
-				switch type 
-					when 'FlowPropertyType'
-						switch value
-							when 'ECONOMIC_QUANTITY' then return 'Economic flow property'
-							when 'PHYSICAL_QUANTITY' then return 'Physical flow property'
-					when 'FlowType'
-						switch value
-							when 'ELEMENTARY_FLOW' then return 'Elementary flow'
-							when 'PRODUCT_FLOW' then return 'Product flow'
-							when 'WASTE_FLOW' then return 'Waste flow'
-					when 'ProcessType'
-						switch value
-							when 'UNIT_PROCESS' then return 'Unit process'
-							when 'LCI_RESULT' then return 'System process'
-				return ''
+			initComments: (loadComments) ->
+				Comments.init @$el,
+					repository: @repository
+					type: @type
+					refId: @refId
+					commitId: @commitId
+					commentPath: @commentPath
+					loadComments: loadComments
+					updateIcon: @updateIcon
 
-			getValue: (object, path) ->
-				unless path
-					return null
-				unless object
-					return null
-				if path.indexOf('.') is -1 and path.indexOf('[') is -1
-					return object[path]
-				subpath = path
-				if subpath.indexOf('.') isnt -1 
-					subpath = path.substring 0, path.indexOf('.')
-				arrayPos = null
-				if subpath.indexOf('[') isnt -1
-					arrayPos = subpath.substring(subpath.indexOf('[') + 1, subpath.indexOf(']'))
-					subpath = subpath.substring 0, subpath.indexOf('[')
-				object = object[subpath]
-				if (arrayPos and (parseInt(arrayPos) is NaN or parseInt(arrayPos) > 0)) or parseInt(arrayPos) is 0
-					object = object[arrayPos]
-				if path.indexOf('.') is -1
-					return object
-				path = path.substring path.indexOf('.') + 1
-				return @getValue object, path
+			initComparison: (event) ->
+				target = $ Events.target event
+				type = target.attr 'data-compare-to'
+				if type is 'previous'
+					for commit, index in @commits
+						if commit.id is @commitId
+							commitId = @commits[index + 1].id
+							break
+					if commitId
+						@applyComparison @refId, commitId
+				else if type is 'other-version'
+					Layers.selectCommit @commits, @commitId, (commitId) =>
+						@applyComparison @refId, commitId
+				else if type is 'other-dataset'
+					repositoryPath = @repository.get('group') + '/' + @repository.get('name')
+					Layers.selectModel
+						repositoryPath: repositoryPath
+						type: @type
+						selectVersion: true
+						callback: (refId, commitId) =>
+							@applyComparison refId, commitId
 
-			isCapital: (char) ->
-				asInt = char.charCodeAt(0)
-				if asInt < 65 or asInt > 90
-					return false
-				return true
+			applyComparison: (refId, commitId) ->
+				@loadDataset refId, commitId, (dataset) =>
+					DatasetPrepare.applyTo dataset
+					@compareTo = dataset
+					@doRender null, commitId
+					@setComparisonStatistics()
 
-			getTypeAsEnum: (type) ->
-				asEnum = ''
-				first = true
-				for char, index in type 
-					if !first and @isCapital(char) and !@isCapital(type[index + 1])
-						asEnum += '_'
-					first = false
-					asEnum += char
-				return asEnum.toUpperCase()
-
-			initMap: (dataset) ->
-				map = new OpenLayers.Map
-					layers: [
-						new OpenLayers.layer.Tile
-							source: new OpenLayers.source.OSM()
-					]
-					target: 'map'
-					view: new OpenLayers.View
-						center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
-						zoom: 5
-
-			loadImpactCategory: (callback) ->
-				commitId = @commitId or 'null'
-				selectedImpactCategory = $('#impact-category option:selected').attr 'id'
-				if selectedImpactCategory
-					urlPart = @getUrlPart 'IMPACT_CATEGORY', selectedImpactCategory
-					$.ajax
-						type: 'GET'
-						url: "ws/public/browse/#{urlPart}/#{commitId}"
-						success: (impactCategory) =>
-							DatasetPrepare.applyTo impactCategory
-							@$('#impact-category-description').html impactCategory.description
-							@$('#impact-category-unit').html impactCategory.referenceUnitName
-							@$('#impact-factors tbody').empty()
-							@$('#impact-factors tbody').append impactFactorsTemplate 
-								impactCategory: impactCategory
-								noToStr: Format.number
-							callback()
-				else
-					callback()
-
-			loadNwSet: (callback) ->
-				commitId = @commitId or 'null'
-				selectedNwSet = $('#nw-set option:selected').attr 'id'
-				if selectedNwSet
-					urlPart = @getUrlPart 'NW_SET', selectedNwSet
-					$.ajax
-						type: 'GET'
-						url: "ws/public/browse/#{urlPart}/#{commitId}"
-						success: (nwSet) =>
-							DatasetPrepare.applyTo nwSet
-							@$('#nw-set-unit').html nwSet.weightedScoreUnit
-							@$('#nw-factors tbody').empty()
-							@$('#nw-factors tbody').append nwFactorsTemplate 
-								nwSet: nwSet
-								noToStr: Format.number
-							callback()
-				else
-					callback()
-
-			initDataQualityPopups: (dataset) ->
-				@$('table.data-quality td').on 'click', (event) ->
-					target = $ Events.target event
-					span = $ 'span', target
-					if span.css('display') is 'none'
-						iIndex = target.attr('data-indicator') - 1
-						sIndex = target.attr('data-score') - 1
-						indicator = dataset.indicators[iIndex]
-						score = indicator.scores[sIndex]
-						iName = if indicator.name then indicator.name else indicator.position
-						sName = if score.label then score.label else score.position
-						Layers.showMessageInLayer
-							title: "#{iName} - #{sName}"
-							body: score.description
+			setComparisonStatistics: () ->
+				addedCount = @$('.content-box [data-compare=added] .glyphicon-plus-sign').length
+				@$('.comparison-statistics [data-compare=added] .count').html addedCount
+				changedCount = @$('.content-box [data-compare=changed] .glyphicon-exclamation-sign').length
+				@$('.comparison-statistics [data-compare=changed] .count').html changedCount
+				removedCount = @$('.content-box [data-compare=removed] .glyphicon-minus-sign').length
+				@$('.comparison-statistics [data-compare=removed] .count').html removedCount
+				for pane in @$('.tab-pane')
+					id = $(pane).attr 'id'
+					addedCount = $('[data-compare=added] .glyphicon-plus-sign', pane).length
+					changedCount = $('[data-compare=changed] .glyphicon-exclamation-sign', pane).length
+					removedCount = $('[data-compare=removed] .glyphicon-minus-sign', pane).length
+					count = addedCount + changedCount + removedCount
+					if count
+						@$("a[href=##{id}] .change-count").html count
+				for dropdown in @$('li.dropdown')
+					count = 0
+					for entry in $('.dropdown-menu li', dropdown)
+						if $('.glyphicon-plus-sign, .glyphicon-minus-sign', entry).length
+							count++
+						else
+							current = parseInt $('.change-count', entry).text()
+							if current and !isNaN(current)
+								count += current
+								$(entry).attr 'data-compare', 'changed'
+					if count
+						$('.dropdown-toggle .change-count', dropdown).html count
 
 )

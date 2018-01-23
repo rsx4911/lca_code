@@ -4,9 +4,17 @@ define([
 
 	(moment) ->
 
+		timeFormat = 'h:mm a'
+		dateFormat = 'MM/DD/YYYY'
+		dateTimeFormat = 'MM/DD/YYYY h:mm a'
+
 		apply = (value, format) ->
 			unless value 
 				return ''
+			if value.length is 16 and value[10] is '+'
+				value = value.substring 0, 10
+			if format is dateTimeFormat and value.length is 10
+				format = dateFormat
 			return moment(value).format format
 
 		formatCommitDescription: (text) ->
@@ -24,28 +32,74 @@ define([
 				return value
 			return Math.round(value * 1000) / 1000
 
+		relative: (value, precision = 2) ->
+			isNegative = value < 0
+			value = Math.abs value
+			count = 0
+			while count < precision
+				value *= 10
+				count++
+			value = Math.round value
+			if count > 0
+				for i in [1..count]
+					value /= 10
+			if isNegative
+				value *= -1
+			return value
+
+		scientific: (value, round) ->
+			if not value and value isnt 0
+				return ''
+			# TODO use math lib
+			if round
+				count = 0
+				isNegative = value < 0
+				value = Math.abs value
+				while value < 1000
+					value *= 10
+					count++
+				value = Math.round value
+				if count > 0
+					for i in [1..count]
+						value /= 10
+				if isNegative
+					value *= -1
+			value = value.toExponential()
+			corrected = ''
+			foundE = false
+			minLength = if isNegative then 6 else 5
+			for char, index in value
+				if char is 'e'
+					foundE = true
+				if index <= minLength or foundE
+					if foundE and corrected.length <= minLength
+						if corrected is '1' or corrected is '-1'
+							corrected += '.'
+						for i in [corrected.length..minLength]
+							corrected += '0'
+					corrected += char
+			return corrected
+
 		date: (value) -> 
-			return apply value, 'M/D/YY'
+			return apply value, dateFormat
 
 		time: (value) -> 
-			return apply value, 'h:mm a'
+			return apply value, timeFormat
 
 		dateTime: (value) -> 
-			return apply value, 'M/D/YY h:mm a'
+			return apply value, dateTimeFormat
 
 		timeOrDate: (value) -> 
 			if moment(value).isBefore(new Date(), 'day')
-				return apply value, 'M/D/YY'
-			return apply value, 'h:mm a'
+				return apply value, dateFormat
+			return apply value, timeFormat
 
 		dateOrTime: (value) -> 
 			if moment(value).isBefore(new Date(), 'day')
-				return apply value, 'h:mm a'
-			return apply value, 'M/D/YY'
+				return apply value, timeFormat
+			return apply value, dateFormat
 
 		moment: (value, format) ->
-			unless value 
-				return ''
-			return moment(value).format format
+			return apply value, format
 
 )

@@ -93,6 +93,7 @@ define([
 				taskId = @id
 				Layers.selectModel
 					repositoryPath: @review.repositoryPath
+					multiSelection: true
 					callback: (selection) -> 
 						Layers.showProgressIndicator 'Updating...'
 						$.ajax
@@ -121,14 +122,14 @@ define([
 
 			events: 
 				'click a[href]:not([href=#]):not([data-action])': (event) -> Events.followLink event
-				'click [data-action=create-task]': (event) -> @createTask event
-				'click [data-action=assign-task]': (event) -> @assignTask event
-				'click [data-action=cancel-assignment]': (event) -> @cancel event
-				'click [data-action=complete-assignment]': (event) -> @complete event
-				'click [data-action=cancel-task]': (event) -> @cancel event
-				'click [data-action=complete-task]': (event) -> @complete event
-				'click [data-action=select-references]': (event) -> @selectReferences event
-				'click [data-action=mark-as-reviewed]': (event) -> @markAsReviewed event
+				'click [data-action=create-task]': 'createTask'
+				'click [data-action=assign-task]': 'assignTask'
+				'click [data-action=cancel-assignment]': 'cancel'
+				'click [data-action=complete-assignment]': 'complete'
+				'click [data-action=cancel-task]': 'cancel'
+				'click [data-action=complete-task]': 'complete'
+				'click [data-action=select-references]': 'selectReferences'
+				'click [data-action=mark-as-reviewed]': 'markAsReviewed'
 
 			initialize: (options) ->
 				{@id, @userMenu} = options

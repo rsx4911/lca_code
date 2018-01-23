@@ -30,7 +30,6 @@ define([
 				AppRouter = Backbone.Router.extend
 					routes: Routes
 				@userRoutes = userRoutes
-				@userRoutes.push ''
 				@routeRewrites = {}
 				@router = new AppRouter
 

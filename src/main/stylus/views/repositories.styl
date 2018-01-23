@@ -1,0 +1,33 @@
+.repository-view
+	
+	#maxSize-group.form-inline
+		display inline-block
+	
+	#size-group
+		
+		& > label
+			display block
+			
+		& > .form-value
+			display inline-block
+			
+			.size-indicator-container 
+				height auto
+				padding 10px 0
+
+				.size-indicator-bar 
+					height 20px
+					border 1px solid rgb(200, 200, 200)
+					background linear-gradient(to right, rgb(92, 184, 92), rgb(240, 173, 78), rgb(193, 48, 44))
+					border-radius 2px
+
+					.size-indicator-overlay 
+						background white
+						width 0%
+						margin-left 100%
+						height 100%
+						text-align center
+						color rgb(255, 255, 255)
+
+	.dropdown-menu a[data-action='delete-repository']
+		color rgb(217, 83, 79)

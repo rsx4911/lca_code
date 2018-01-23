@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openlca.cloud.error.RepositoryNotFoundException;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
@@ -18,7 +20,7 @@ public class AccessService {
 	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
-	
+
 	@Inject
 	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
 			MembershipService membershipService) {
@@ -49,6 +51,10 @@ public class AccessService {
 		return hasPermissionTo(Permission.WRITE, groupOrRepo);
 	}
 
+	public boolean canSetSettings(String groupOrRepo) {
+		return hasPermissionTo(Permission.SET_SETTINGS, groupOrRepo);
+	}
+
 	public boolean canMove(String repository) {
 		if (isGroup(repository))
 			return false; // can not move groups
@@ -65,9 +71,12 @@ public class AccessService {
 
 	public boolean canCreateRepositoryIn(String group) {
 		User user = userService.getCurrentUser();
-		if (isOwnNamespace(user, group))
-			return user.settings.canCreateRepositories;
-		return hasPermissionTo(Permission.WRITE, group);
+		if (isOwnNamespace(user, group)) {
+			if (!user.settings.canCreateRepositories || user.settings.noOfRepositories == 0)
+				return false;
+			return user.settings.noOfRepositories > userService.getNoOfRepositories();
+		}
+		return hasPermissionTo(Permission.CREATE, group);
 	}
 
 	public List<Comment> filterCanRead(List<Comment> comments) {
@@ -83,7 +92,7 @@ public class AccessService {
 				continue;
 			if (!comment.released)
 				continue;
-			if (comment.approvedBy == null && !canManageCommentsIn(comment.repositoryPath))
+			if (!comment.approved && !canManageCommentsIn(comment.repositoryPath))
 				continue;
 			if ((comment.replyTo != null && comment.replyTo.user.equals(user)) || comment.restrictedToRole == null) {
 				canRead.add(comment);
@@ -147,21 +156,34 @@ public class AccessService {
 		return role.getPermissions().contains(permission);
 	}
 
-	private boolean isOwnNamespace(User user, String groupOrRepo) {
+	boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equalsIgnoreCase(user.username);
-		String group = groupOrRepo.substring(0, groupOrRepo.indexOf(File.separator));
+		String group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
 		return group.equalsIgnoreCase(user.username);
 	}
 
 	private boolean isGroup(String groupOrRepo) {
-		return !groupOrRepo.contains(File.separator);
+		return !groupOrRepo.contains("/");
 	}
 
 	private boolean isPublic(String groupOrRepo) {
 		File dir = new File(repositoryPath, groupOrRepo);
-		if (new File(dir, ".public").exists())
-			return true;
+		if (!isGroup(groupOrRepo)) {
+			Repository repo = Repository.getIgnoreSchema(repositoryPath, dir.getParentFile().getName(), dir.getName());
+			return repo.settings.publicAccess;
+		}
+		if (!dir.isDirectory() || dir.listFiles() == null)
+			return false;
+		for (File child : dir.listFiles()) {
+			try {
+				Repository repo = Repository.getIgnoreSchema(repositoryPath, groupOrRepo, child.getName());
+				if (repo.settings.publicAccess)
+					return true;
+			} catch (RepositoryNotFoundException e) {
+				// ignore
+			}
+		}
 		return false;
 	}
 

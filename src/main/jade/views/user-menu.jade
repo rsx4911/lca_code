@@ -24,9 +24,13 @@ mixin menu-items()
 .pull-left.has-feedback
 	+input('global-search')(placeholder='Search')
 		span.glyphicon.glyphicon-search.form-control-feedback
-.pull-right.user-menu-actions.dropdown
-	a(href='#' data-toggle='dropdown'): span.glyphicon.glyphicon-cog
-	.dropdown-menu
-		+menu-items()
-	.default-menu
-		+menu-items()
+if isPublic
+	a.login(href='login')
+		span.glyphicon.glyphicon-log-in(data-toggle='tooltip' data-placement='bottom' title='Login')
+else
+	.pull-right.responsive-menu.dropdown
+		a(href='#' data-toggle='dropdown'): span.glyphicon.glyphicon-cog
+		.dropdown-menu
+			+menu-items()
+		.default-menu
+			+menu-items()

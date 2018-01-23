@@ -7,16 +7,16 @@ import java.util.Map;
 import javax.websocket.EndpointConfig;
 import javax.websocket.Session;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.subject.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.greendelta.collaboration.util.IProgressMonitor;
 
 abstract class ProgressWebsocket {
 
-	private static final Logger log = LoggerFactory.getLogger(ProgressWebsocket.class);
+	private static final Logger log = LogManager.getLogger(ProgressWebsocket.class);
 	private static final Map<String, ProgressMonitor> monitors = new HashMap<>();
 	private static final Map<String, Subject> subjects = new HashMap<>();
 

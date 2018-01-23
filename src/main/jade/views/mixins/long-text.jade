@@ -1,0 +1,11 @@
+mixin long-text(value, length)
+	if !length
+		- length = 250;
+	if value && value.length > length
+		div
+			.toggleable=value.substring(0, length - 50) + '... '
+			a.toggle-control(href='#') Show more
+			.toggleable(style='display:none')=value
+			a.toggle-control(href='#' style='display:none') Show less
+	else
+		| #{value}

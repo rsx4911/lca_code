@@ -1,4 +1,4 @@
-include ./mixins.jade
+include ./structures/data-quality-matrix.jade
 
 +menubar
 .content-box
@@ -14,5 +14,5 @@ include ./mixins.jade
 	+meta
 		hr
 		strong=getLabel('source')
-		div: +ref('source', null, false, '-')
+		+ref-block('source', '-')
 	.clear

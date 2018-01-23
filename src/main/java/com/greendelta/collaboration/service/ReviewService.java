@@ -12,6 +12,7 @@ public class ReviewService extends TaskExecutionService<Review> {
 
 	private final Dao<Review> dao;
 	private final AccessService accessService;
+	private final RepositoryService repoService;
 	private final UserService userService;
 
 	@Inject
@@ -20,12 +21,13 @@ public class ReviewService extends TaskExecutionService<Review> {
 		super(dao, userService, repoService, accessService);
 		this.dao = dao;
 		this.userService = userService;
+		this.repoService = repoService;
 		this.accessService = accessService;
 	}
 
 	public void setReferences(long reviewId, Set<ReviewReference> references) {
 		Review fromDb = get(reviewId);
-		Repository repo = getRepository(fromDb.repositoryPath);
+		Repository repo = repoService.get(fromDb.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		fromDb.references = references;

@@ -14,15 +14,15 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Resources;
 
 public class Respond {
 
-	private static final Logger log = LoggerFactory.getLogger(Respond.class);
+	private static final Logger log = LogManager.getLogger(Respond.class);
 
 	public static Response ok() {
 		return status(Status.OK);

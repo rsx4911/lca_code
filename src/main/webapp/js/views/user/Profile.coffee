@@ -23,22 +23,22 @@ define([
 			className: 'profile-view multi-box-view'
 
 			events:
-				'submit #user-form': (event) -> @saveUser event
-				'change #admin, #settings-canCreateGroups': (event) -> @updateRights()
-				'submit #password-form': (event) -> @savePassword event
-				'click [data-action=delete-user]': (event) -> @deleteUser event
-				'click [data-action=generate-password]': (event) -> @generatePassword()
+				'submit #user-form': 'saveUser'
+				'change #admin, #settings-canCreateGroups': 'updateRights'
+				'change #admin, #settings-canCreateRepositories': 'updateRights'
+				'submit #password-form': 'savePassword'
+				'keydown #settings-maxSize': (event) -> Events.validateNumber event
+				'click [data-action=delete-user]': 'deleteUser'
+				'click [data-action=generate-password]': 'generatePassword'
 				'click [data-action=show-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication ''
 				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication true
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'user', @user.get('username')
-				'click [data-action=reset-avatar]': (event) -> 
-					Events.preventDefault event
-					Avatar.upload 'user', @user.get('username')
 
 			initialize: (options) ->
-				{@user, @adminArea} = options
+				if options
+					{@user, @adminArea} = options
 				unless @user
 					@user = new User currentUser.toJSON()
 
@@ -55,21 +55,32 @@ define([
 				@$el.html template
 					user: user
 					adminArea: @adminArea
-					isOwnUser: (user.id is currentUser.get('id'))
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
+				@setMaxSize user.settings.maxSize
 				@updateRights()
-				view = @
-				$('#avatar').on 'change', () ->
-					if @files and @files[0]
-						reader = new FileReader()
-						reader.onload = (e) ->
-							 view.openCropper.call view, e.target.result
-						reader.readAsDataURL @files[0]
+				Avatar.initCropper 'user', @user.get('username')
+
+			setMaxSize: (size) ->
+				unless size
+					return
+				if size % 1073741824 is 0
+					@$('#settings-maxSize-group #unit').val('1073741824')
+					@$('#settings-maxSize').val(size / 1073741824)
+				else
+					@$('#settings-maxSize-group #unit').val('1048576')
+					@$('#settings-maxSize').val(parseInt(size / 1048576))
 
 			saveUser: (event) ->
 				Events.preventDefault event
 				@user.set Forms.toJson 'user-form'
+				settings = @user.get 'settings'
+				size = parseInt @$('#settings-maxSize').val()
+				if isNaN(size)
+					settings.maxSize = 0
+				else
+					unit = parseInt @$('#settings-maxSize-group #unit').val()
+					settings.maxSize = size * unit
 				username = @user.get 'username'
 				unless username
 					Forms.handleError 'user-form', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
@@ -165,6 +176,10 @@ define([
 				if @$('#settings-canCreateGroups').is(':checked')
 					@$('#settings-canCreateRepositories').prop 'checked', true
 					@$('#settings-canCreateRepositories').prop 'disabled', true
+				if !@$('#settings-canCreateRepositories').is(':checked')
+					@$('#settings-noOfRepositories-group').hide()
+				else
+					@$('#settings-noOfRepositories-group').show()
 
 			generatePassword: () ->
 				Layers.showMessageInLayer
@@ -193,28 +208,5 @@ define([
 				pass = $('#generated-password').text()
 				Layers.closeActive()
 				$('#password, #password2').val pass
-
-			openCropper: (data) ->
-				Layers.showMessageInLayer
-					title: 'Avatar selection'
-					body: '<img class="image-crop" src="' + data + '">'
-					buttons: [
-						{text: 'Cancel', callback: () => @resetForm()}
-						{text: 'Save', callback: () => @saveCropped()}
-					]
-				@cropper = $('.image-crop').cropper 
-					aspectRatio: 1
-					dragMode: 'move'
-
-			resetForm: () ->
-				$('form#avatar-form')[0].reset()
-				Layers.closeActive()
-
-			saveCropped: () ->
-				@cropper.cropper('getCroppedCanvas').toBlob (blob) =>
-					formData = new FormData()
-					formData.append 'file', blob
-					Layers.closeActive()
-					Avatar.uploadData 'user', @user.get('username'), formData
 
 )

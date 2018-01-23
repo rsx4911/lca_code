@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ObjectMap extends HashMap<String, Object> {
 
 	private static final long serialVersionUID = 8510487677972200938L;
-	private static final Logger log = LoggerFactory.getLogger(ObjectMap.class);
+	private static final Logger log = LogManager.getLogger(ObjectMap.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	public ObjectMap() {

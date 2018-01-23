@@ -20,14 +20,15 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.MessagingService;
-import com.greendelta.collaboration.service.PagedResult;
 import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Bytes;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Teams;
+import com.greendelta.search.wrapper.SearchResult;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("team")
@@ -50,9 +51,9 @@ public class TeamResource {
 			@QueryParam("page") @DefaultValue("0") int page,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module) {
-		PagedResult<Team> result = service.getAll(page, filter);
+		SearchResult<Team> result = service.getAll(page, filter);
 		if (module == null)
-			return Respond.ok(result.toClient(Teams::mapForOthers));
+			return Respond.ok(SearchResults.convert(result, Teams::mapForOthers));
 		List<Team> teams = result.data;
 		switch (module) {
 		case MESSAGING:
@@ -68,7 +69,9 @@ public class TeamResource {
 	@Path("avatar/{teamname}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("teamname") String teamname, @FormDataParam("file") InputStream file) {
+	public Response setAvatar(
+			@PathParam("teamname") String teamname,
+			@FormDataParam("file") InputStream file) {
 		Team team = authorizedGetTeam(teamname);
 		if (team == null)
 			return Respond.notFound();

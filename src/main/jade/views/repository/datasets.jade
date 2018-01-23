@@ -1,0 +1,47 @@
+include ../mixins/category-breadcrumb.jade
+include ../mixins/forms.jade
+
+if isRoot
+	.header-box
+		button.btn.btn-lg.btn-success.pull-right(data-action='download') 
+			span.glyphicon.glyphicon-download
+			span.text Download Zip
+		.clear
+else
+	- var showCommitSelection = !isPublic && commits && commits.length;
+	if showCommitSelection || categoryPath
+		.header-box
+			if showCommitSelection
+				.pull-left
+					+select('commit', 'Version', null, null, true)
+						each commit, index in commits
+							option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId)=index===0?'Latest':commit.id 
+							optgroup.additional-info(label!='&nbsp; &nbsp;' + commit.message)
+				.pull-right
+					+checkbox('show-deleted', 'Show deleted')(checked=showDeleted)
+			.clear
+			if categoryPath
+				.form-group
+					input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
+				.clear
+	if !isPublic || categoryPath
+		.header-box
+			if deleted
+				.pull-left
+					+category-breadcrumb(baseUrl, categoryPath)
+				.badge.pull-right.deleted Deleted
+			else
+				+category-breadcrumb(baseUrl, categoryPath)
+			.clear
+
+.content-box
+	table.table.table-browse
+		if !isPublic
+			thead
+				tr
+					th
+					th Name
+					th Last change
+					th Commit
+		tbody
+	.no-content-message(style='display:none') No data sets found

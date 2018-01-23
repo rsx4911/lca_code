@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.platform.shiro;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -9,8 +11,6 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
@@ -18,7 +18,7 @@ import com.greendelta.collaboration.service.UserService;
 
 public class JpaRealm extends AuthorizingRealm {
 
-	private static final Logger log = LoggerFactory.getLogger(JpaRealm.class);
+	private static final Logger log = LogManager.getLogger(JpaRealm.class);
 
 	private UserService userService;
 
@@ -29,10 +29,10 @@ public class JpaRealm extends AuthorizingRealm {
 		HashedCredentialsMatcher credentialsMatcher = new HashedCredentialsMatcher(Sha256Hash.ALGORITHM_NAME);
 		credentialsMatcher.setHashIterations(50);
 		setCredentialsMatcher(credentialsMatcher);
-		setCachingEnabled(true);
-		setAuthenticationCachingEnabled(true);
-		setAuthorizationCachingEnabled(true);
-		log.debug("Successfully constructed jpa-realm");
+		setCachingEnabled(false);
+		setAuthenticationCachingEnabled(false);
+		setAuthorizationCachingEnabled(false);
+		log.info("Successfully constructed jpa-realm");
 	}
 
 	@Override

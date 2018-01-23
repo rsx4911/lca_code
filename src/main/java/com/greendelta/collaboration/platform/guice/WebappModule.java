@@ -1,9 +1,9 @@
 package com.greendelta.collaboration.platform.guice;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import websocket.WebsocketConfigurator;
 
@@ -13,8 +13,8 @@ import com.greendelta.collaboration.platform.servlet.DefaultServlet;
 
 class WebappModule extends ServletModule {
 
-	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "favicon.ico" };
-	private static final Logger log = LoggerFactory.getLogger(WebappModule.class);
+	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "graph/" };
+	private static final Logger log = LogManager.getLogger(WebappModule.class);
 
 	@Override
 	protected void configureServlets() {
@@ -23,7 +23,7 @@ class WebappModule extends ServletModule {
 		configureNonStaticResources();
 		bind(ShiroFilter.class).in(Singleton.class);
 		filter("/*").through(ShiroFilter.class);
-		log.debug("Successfully configured {}", Logs.simpleClassName(this));
+		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	private void configureNonStaticResources() {

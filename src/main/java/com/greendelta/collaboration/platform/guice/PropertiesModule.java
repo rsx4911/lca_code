@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Resources;
 import com.google.inject.AbstractModule;
@@ -14,14 +14,14 @@ import com.google.inject.name.Names;
 
 class PropertiesModule extends AbstractModule {
 
-	private static final Logger log = LoggerFactory.getLogger(PropertiesModule.class);
+	private static final Logger log = LogManager.getLogger(PropertiesModule.class);
 	private static Properties properties;
 	private static String environment;
 
 	@Override
 	protected void configure() {
 		Names.bindProperties(binder(), getProperties());
-		log.debug("Successfully configured {}", Logs.simpleClassName(this));
+		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	static void setEnvironment(String environment) {

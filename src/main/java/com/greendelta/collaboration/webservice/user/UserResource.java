@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -21,26 +20,21 @@ import org.apache.shiro.authz.UnauthorizedException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.AccessService;
-import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.MessagingService;
-import com.greendelta.collaboration.service.NotificationService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.PagedResult;
-import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.Password;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Users;
+import com.greendelta.search.wrapper.SearchResult;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("user")
@@ -48,22 +42,12 @@ import com.sun.jersey.multipart.FormDataParam;
 public class UserResource {
 
 	private final UserService service;
-	private final TeamService teamService;
-	private final RepositoryService repoService;
-	private final NotificationService notificationService;
-	private final MembershipService memberService;
 	private final MessagingService messagingService;
 	private final AccessService accessService;
 
 	@Inject
-	public UserResource(UserService service, TeamService teamService, RepositoryService repoService,
-			NotificationService notificationService, MembershipService memberService,
-			MessagingService messagingService, AccessService accessService) {
+	public UserResource(UserService service, MessagingService messagingService, AccessService accessService) {
 		this.service = service;
-		this.repoService = repoService;
-		this.notificationService = notificationService;
-		this.teamService = teamService;
-		this.memberService = memberService;
 		this.messagingService = messagingService;
 		this.accessService = accessService;
 	}
@@ -86,9 +70,9 @@ public class UserResource {
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module,
 			@QueryParam("repositoryPath") String repositoryPath) {
-		PagedResult<User> result = service.getAll(page, filter);
+		SearchResult<User> result = service.getAll(page, filter);
 		if (module == null)
-			return Respond.ok(result.toClient(Users::mapForOthers));
+			return Respond.ok(SearchResults.convert(result, Users::mapForOthers));
 		List<User> users = result.data;
 		switch (module) {
 		case MESSAGING:
@@ -109,6 +93,8 @@ public class UserResource {
 	@Path("avatar/{username}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getAvatar(@PathParam("username") String username) {
+		if ("null".equals(username) || username == null)
+			return Respond.ok(null, "avatar-user.png");
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound(username);
@@ -132,27 +118,11 @@ public class UserResource {
 		User currentUser = service.getCurrentUser();
 		if (currentUser.admin) {
 			Beans.populateProperties(user, fromDb, "admin");
-			Beans.populateProperties(user.settings, fromDb.settings, "canCreateGroups", "canCreateRepositories");
+			Beans.populateProperties(user.settings, fromDb.settings,
+					"canCreateGroups", "canCreateRepositories", "noOfRepositories", "maxSize");
 		}
 		fromDb = service.update(fromDb);
 		return Respond.ok(Users.mapForSelf(fromDb));
-	}
-
-	@DELETE
-	public Response delete() {
-		User user = service.getCurrentUser();
-		if (user == null)
-			return Respond.notFound();
-		NotificationJob notification = notificationService.userDeleted(user);
-		repoService.deleteAllFor(user);
-		for (Team team : teamService.getTeamsFor(user)) {
-			teamService.removeMember(user, team);
-		}
-		memberService.removeMemberships(user);
-		service.delete(user);
-		notification.send();
-		service.logout();
-		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT
@@ -175,7 +145,6 @@ public class UserResource {
 			return Respond.notFound();
 		service.setPassword(user, password);
 		service.update(user);
-		service.clearCache();
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -183,7 +152,9 @@ public class UserResource {
 	@Path("avatar/{username}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("username") String username, @FormDataParam("file") InputStream file) {
+	public Response setAvatar(
+			@PathParam("username") String username,
+			@FormDataParam("file") InputStream file) {
 		User user = authorizedGetUser(username);
 		if (user == null)
 			return Respond.notFound();

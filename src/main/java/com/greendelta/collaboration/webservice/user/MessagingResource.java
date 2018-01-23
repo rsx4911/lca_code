@@ -52,7 +52,9 @@ public class MessagingResource {
 
 	@GET
 	@Path("user/{username}")
-	public Response getMessages(@PathParam("username") String username, @QueryParam("before") long before) {
+	public Response getMessages(
+			@PathParam("username") String username,
+			@QueryParam("before") long before) {
 		User user = userService.getCurrentUser();
 		User other = userService.getForUsername(username);
 		if (user.settings.blockedUsers.contains(other))
@@ -69,7 +71,9 @@ public class MessagingResource {
 
 	@GET
 	@Path("team/{teamname}")
-	public Response getTeamMessages(@PathParam("teamname") String teamname, @QueryParam("before") long before) {
+	public Response getTeamMessages(
+			@PathParam("teamname") String teamname,
+			@QueryParam("before") long before) {
 		Team team = teamService.getForTeamname(teamname);
 		Calendar cal = Calendar.getInstance();
 		if (before > 0) {

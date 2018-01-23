@@ -14,14 +14,11 @@ import javax.ws.rs.core.Response;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Notification;
-import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.MembershipService;
 import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.TeamService;
 import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.Password;
@@ -34,21 +31,17 @@ import com.greendelta.collaboration.webservice.util.Users;
 public class UserResource {
 
 	private final UserService service;
-	private final TeamService teamService;
 	private final GroupService groupService;
-	private final RepositoryService repoService;
+	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-	private final MembershipService memberService;
 
 	@Inject
-	public UserResource(UserService service, TeamService teamService, GroupService groupService,
-			RepositoryService repoService, NotificationService notificationService, MembershipService memberService) {
+	public UserResource(UserService service, GroupService groupService, DeleteService deleteService,
+			NotificationService notificationService) {
 		this.service = service;
-		this.teamService = teamService;
 		this.groupService = groupService;
-		this.repoService = repoService;
+		this.deleteService = deleteService;
 		this.notificationService = notificationService;
-		this.memberService = memberService;
 	}
 
 	@POST
@@ -74,7 +67,7 @@ public class UserResource {
 		for (Notification notification : Notification.values())
 			user.enable(notification);
 		user = service.insert(user);
-		groupService.create(username);
+		groupService.create(username, true);
 		notificationService.userCreated(user, password).send();
 		return Respond.created(Users.mapForSelf(user));
 	}
@@ -86,12 +79,7 @@ public class UserResource {
 		if (user == null)
 			return Respond.notFound();
 		NotificationJob notification = notificationService.userDeleted(user);
-		repoService.deleteAllFor(user);
-		for (Team team : teamService.getTeamsFor(user)) {
-			teamService.removeMember(user, team);
-		}
-		memberService.removeMemberships(user);
-		service.delete(user);
+		deleteService.delete(user);
 		notification.send();
 		return Respond.ok(new HashMap<>());
 	}

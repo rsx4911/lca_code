@@ -2,7 +2,9 @@ package com.greendelta.collaboration.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,6 +77,30 @@ public class Collections {
 		}
 	}
 
+	public static <V, T> List<T> convert(List<V> col, Function<V, T> converter) {
+		return (List<T>) convert(col, new ArrayList<>(), converter);
+	}
+
+	public static <V, T> Set<T> convert(Set<V> col, Function<V, T> converter) {
+		return (Set<T>) convert(col, new HashSet<>(), converter);
+	}
+
+	public static <V, T> Collection<T> convert(Collection<V> from, Collection<T> to, Function<V, T> converter) {
+		for (V elem : from) {
+			to.add(converter.apply(elem));
+		}
+		return to;
+	}
+
+	public static <T> Map<String, String> map(Collection<T> col, Function<T, Object> keyGenerator,
+			Function<T, Object> valueMapper) {
+		Map<String, String> map = new HashMap<>();
+		for (T elem : col) {
+			map.put(keyGenerator.apply(elem).toString(), valueMapper.apply(elem).toString());
+		}
+		return map;
+	}
+
 	public static <V> String stringify(Collection<V> col) {
 		return stringify(col, ',');
 	}
@@ -105,6 +131,24 @@ public class Collections {
 			filtered.add(value);
 		}
 		return filtered;
+	}
+
+	public static <T> List<T> pop(List<T> col, int amount) {
+		List<T> sublist = new ArrayList<>();
+		while (sublist.size() < amount && !col.isEmpty()) {
+			sublist.add(col.remove(0));
+		}
+		return sublist;
+	}
+
+	public static <T> Set<T> pop(Set<T> col, int amount) {
+		Set<T> sublist = new HashSet<>();
+		Iterator<T> it = col.iterator();
+		while (sublist.size() < amount && it.hasNext()) {
+			sublist.add(it.next());
+		}
+		col.removeAll(sublist);
+		return sublist;
 	}
 
 }

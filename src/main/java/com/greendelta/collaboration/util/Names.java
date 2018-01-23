@@ -12,7 +12,6 @@ public class Names {
 	static {
 		USER_ROUTES = new ArrayList<>();
 		USER_ROUTES.add("repository");
-		USER_ROUTES.add("search");
 		USER_ROUTES.add("user");
 		USER_ROUTES.add("dashboard");
 		USER_ROUTES.add("administration");
@@ -37,6 +36,8 @@ public class Names {
 		RESERVED.add("group");
 		RESERVED.add("groups");
 		RESERVED.add("dashboard");
+		RESERVED.add("commit");
+		RESERVED.add("category");
 		RESERVED.add("members");
 		RESERVED.add("member");
 		RESERVED.add("references");
@@ -45,7 +46,11 @@ public class Names {
 		RESERVED.add("block");
 		RESERVED.add("unblock");
 		RESERVED.add("login");
+		RESERVED.add("search");
 		RESERVED.add("imprint");
+		RESERVED.add("overlay");
+		RESERVED.add("import");
+		RESERVED.add("export");
 	}
 
 	public static boolean isUserRoute(String name) {

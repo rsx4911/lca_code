@@ -25,6 +25,8 @@ define([
 							variant.allocationMethod = Allocation[variant.allocationMethod]
 				when 'ProductSystem'
 					Sort.parameterRedefs dataset
+					for exchange in dataset
+						exchange.internalId = exchange.flow.id
 				when 'Process'
 					Sort.exchanges dataset
 					Sort.socialAspects dataset
@@ -44,6 +46,8 @@ define([
 					Sort.indicatorsAndScores dataset
 
 		removeAtSigns: (object) ->
+			unless object
+				return
 			for key in Object.keys(object)
 				if key.indexOf('@') is 0
 					object[key.substring(1)] = object[key]
@@ -58,25 +62,31 @@ define([
 			flowMap = {}
 			if dataset.exchanges
 				for e in dataset.exchanges
-					exchangeMap[e.id] = e
+					exchangeMap[e.internalId] = e
 					flowMap[e.flow.id] = e.flow
 			if dataset.allocationFactors?.length
 				for factor, index in dataset.allocationFactors
+					unless factor.product?.id
+						continue
 					if factor.allocationType is 'PHYSICAL_ALLOCATION' or factor.allocationType is 'ECONOMIC_ALLOCATION'
 						f = nonCausalAllocationFactors[factor.product.id]
 						unless f
-							f = {product: flowMap[factor.product.id], index: index}
+							f = {product: flowMap[factor.product.id]}
 							nonCausalAllocationFactors[factor.product.id] = f
 						if factor.allocationType is 'PHYSICAL_ALLOCATION'
 							f.physical = {value: factor.value, index: index}
 						else if factor.allocationType is 'ECONOMIC_ALLOCATION'
 							f.economic = {value: factor.value, index: index}
 					else if factor.allocationType is 'CAUSAL_ALLOCATION'
-						f = causalAllocationFactors[factor.exchange.id]
+						unless factor.exchange?.internalId
+							continue
+						unless exchangeMap[factor.exchange.internalId]
+							continue
+						f = causalAllocationFactors[factor.exchange.internalId]
 						unless f
-							f = {exchange: exchangeMap[factor.exchange.id], products: []}
-							causalAllocationFactors[factor.exchange.id] = f
-						f.products.push {product: flowMap[factor.product.id], value: factor.value, index: index}
+							f = {exchange: exchangeMap[factor.exchange.internalId], products: []}
+							causalAllocationFactors[factor.exchange.internalId] = f
+						f.products.push {flow: flowMap[factor.product.id], id: factor.product.id, value: factor.value, index: index}
 			dataset.nonCausalAllocationFactors = []
 			dataset.causalAllocationFactors = []
 			for key in Object.keys(nonCausalAllocationFactors)
@@ -93,14 +103,17 @@ define([
 				unless variant.parameterRedefs
 					continue
 				for param, pIndex in variant.parameterRedefs
-					contextId = 'Global'
+					contextId = 'global'
 					if param.context
 						contextId = param.context.id
 					p = parameters[contextId + param.name]
 					unless p
-						p = {name: param.name, context: param.context, values: {}, path: 'variants[' + vIndex + '].parameterRedefs[' + pIndex + ']'}
+						p = {name: param.name, context: param.context, values: {}}
+						p.path = 'variants[' + vIndex + '].parameterRedefs[' + pIndex + ']'
+						contextId = if param.context then param.context.id else 'global'
 						parameters[contextId + param.name] = p
-					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: 'variants[' + vIndex + '].parameterRedefs[' + pIndex + '].value'}
+					commentPath = 'variants[' + variant.productSystem.id + '-' + variant.name + '].parameterRedefs[' + contextId + '-' + param.name + ']'
+					p.values[variant.productSystem.id] = {variant: variant.name, value: param.value, path: p.path + '.value', commentPath: commentPath}
 			dataset.parameterRedefs = []
 			for key in Object.keys(parameters)
 				p = parameters[key]

@@ -12,7 +12,7 @@ mixin static(id, label, value, href)
 				a(href=href)=value
 			else
 				| #{value}
-		block
+			block
 
 mixin input(id, label, type, inline, required, hide)
 	- var hidden = type === 'hidden'
@@ -37,7 +37,7 @@ mixin hidden(id, value)
 	input(id=id name=id value=value type='hidden')
 
 mixin select(id, label, options, defaultSelection, inline)
-	div(id='#{id}-group' class=inline?'form-inline':'form-group')
+	div(id='#{id}-group' class=inline?'form-inline':'form-group' style=inline?'display:inline-block':null)
 		if label
 			label.control-label(for=id)=label
 		select.form-control(id=id name=id)&attributes(attributes)

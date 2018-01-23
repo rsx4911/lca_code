@@ -39,7 +39,7 @@ public class ReviewReference extends AbstractEntity {
 	@OneToOne
 	@JoinColumn(name = "f_reviewer")
 	public User reviewer;
-	
+
 	@Override
 	public long getId() {
 		return id;

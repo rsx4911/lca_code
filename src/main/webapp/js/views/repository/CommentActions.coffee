@@ -5,7 +5,7 @@ define([
 				'cs!utils/ModelTypes'
 				'cs!utils/Roles'
 				'cs!models/CurrentUser'
-				'templates/views/repository/comment-entry'
+				'templates/views/repository/comments/comment-entry'
 			]
 
 	(Events, Format, Labels, ModelTypes, Roles, currentUser, template) ->

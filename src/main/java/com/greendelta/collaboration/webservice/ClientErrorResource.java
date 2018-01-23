@@ -9,8 +9,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
@@ -19,7 +19,7 @@ import com.greendelta.collaboration.service.UserService;
 @Path("public/error")
 public class ClientErrorResource {
 
-	private final Logger log = LoggerFactory.getLogger(ClientErrorResource.class);
+	private final Logger log = LogManager.getLogger(ClientErrorResource.class);
 	private final UserService userService;
 
 	@Inject
@@ -72,10 +72,17 @@ public class ClientErrorResource {
 			} else {
 				ref = part.trim();
 			}
-			ref = ref.substring(0, ref.lastIndexOf(":"));
-			String file = ref.substring(0, ref.lastIndexOf(":"));
-			String linePart = ref.substring(ref.lastIndexOf(":") + 1);
-			int line = Integer.parseInt(linePart);
+			if (ref.indexOf(':') != -1) {
+				ref = ref.substring(0, ref.lastIndexOf(":"));
+			}
+			int index = ref.lastIndexOf(":");
+			int line = 0;
+			String file = null;
+			if (index != -1) {
+				file = ref.substring(0, index);
+				String linePart = ref.substring(index + 1);
+				line = Integer.parseInt(linePart);
+			}
 			stackTrace[i - 1] = new StackTraceElement(clazz, method, file, line);
 		}
 		t.setStackTrace(stackTrace);

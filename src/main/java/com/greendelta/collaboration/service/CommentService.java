@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +9,9 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 
@@ -17,35 +20,72 @@ public class CommentService {
 	private final Dao<Comment> dao;
 	private final AccessService accessService;
 	private final UserService userService;
+	private final String repoRootPath;
 
 	@Inject
-	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService) {
+	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
+			@Named("repository.path") String repoRootPath) {
 		this.dao = dao;
 		this.accessService = accessService;
 		this.userService = userService;
+		this.repoRootPath = repoRootPath;
+	}
+
+	public List<Comment> getAllTopSorted(Repository repository, String filter) {
+		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath AND c.replyTo IS NULL";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("repositoryPath", repository.toId());
+		if (filter != null) {
+			jpql += " AND (c.text LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND c1.text LIKE :filter) > 0)";
+			attributes.put("filter", "%" + filter + "%");
+		}
+		jpql += " ORDER BY c.date DESC";
+		return accessService.filterCanRead(dao.getAll(jpql, attributes));
+	}
+
+	public List<Comment> getAllFor(Repository repository) {
+		return getAllFor(repository, null, null, null);
 	}
 
 	public List<Comment> getAllFor(Repository repository, ModelType type, String refId, String commitId) {
-		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath ";
+		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
 		if (type != null) {
-			jpql += "AND c.field.modelType = :modelType ";
+			jpql += " AND c.field.modelType = :modelType";
 			attributes.put("modelType", type);
 		}
 		if (refId != null) {
-			jpql += "AND c.field.refId = :refId ";
+			jpql += " AND c.field.refId = :refId";
 			attributes.put("refId", refId);
 		}
 		if (commitId != null) {
-			jpql += "AND c.field.commitId = :commitId";
+			jpql += " AND c.field.commitId = :commitId";
 			attributes.put("commitId", commitId);
 		}
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
+	void clearUser(User user) {
+		String jpql = "SELECT c FROM Comment c WHERE c.user.id = :userId";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("userId", user.getId());
+		List<Comment> comments = dao.getAll(jpql, attributes);
+		for (Comment comment : comments) {
+			comment.user = null;
+		}
+		dao.update(comments);
+	}
+
 	public Comment get(long id) {
 		return dao.get(id);
+	}
+
+	public List<Comment> getRepliesTo(long id) {
+		String jpql = "SELECT c FROM Comment c WHERE c.replyTo.id = :id ORDER BY c.date ASC";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("id", id);
+		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public Comment insert(Comment comment) {
@@ -60,6 +100,57 @@ public class CommentService {
 			return null;
 		comment.text = text;
 		return dao.update(comment);
+	}
+
+	public void move(Repository from, Repository to) {
+		List<Comment> comments = getAllFor(from, null, null, null);
+		for (Comment comment : comments) {
+			comment.repositoryPath = to.toId();
+		}
+		dao.update(comments);
+	}
+
+	public void copy(Repository from, Repository to) {
+		List<Comment> comments = getAllFor(from, null, null, null);
+		Map<Long, Comment> oldToNew = new HashMap<>();
+		List<Comment> standalone = new ArrayList<>();
+		List<Comment> replies = new ArrayList<>();
+		for (Comment comment : comments) {
+			if (comment.replyTo != null)
+				continue;
+			standalone.add(comment);
+			Comment clone = clone(comment, null, to);
+			clone = dao.insert(clone);
+			oldToNew.put(comment.getId(), clone);
+		}
+		for (Comment comment : comments) {
+			if (comment.replyTo == null)
+				continue;
+			replies.add(comment);
+			Comment replyTo = oldToNew.get(comment.replyTo.getId());
+			Comment clone = clone(comment, replyTo, to);
+			dao.insert(clone);
+		}
+		dao.delete(replies);
+		dao.delete(standalone);
+	}
+
+	private Comment clone(Comment comment, Comment replyTo, Repository repo) {
+		Comment clone = new Comment();
+		clone.approved = comment.approved;
+		clone.date = comment.date;
+		clone.field = new DatasetField();
+		clone.field.modelType = comment.field.modelType;
+		clone.field.refId = comment.field.refId;
+		clone.field.path = comment.field.path;
+		clone.field.commitId = comment.field.commitId;
+		clone.released = comment.released;
+		clone.restrictedToRole = comment.restrictedToRole;
+		clone.text = comment.text;
+		clone.user = comment.user;
+		clone.replyTo = replyTo;
+		clone.repositoryPath = repo.toId();
+		return clone;
 	}
 
 	public Comment changeVisibility(long commentId, Role role) {
@@ -85,7 +176,13 @@ public class CommentService {
 			comment.released = true;
 		}
 		if (accessService.canManageCommentsIn(comment.repositoryPath)) {
-			comment.approvedBy = currentUser;
+			comment.approved = true;
+		} else {
+			String[] split = comment.repositoryPath.split("/");
+			Repository repo = Repository.get(repoRootPath, split[0], split[1]);
+			if (!repo.settings.commentApproval) {
+				comment.approved = true;
+			}
 		}
 		return dao.update(comment);
 	}
@@ -96,6 +193,7 @@ public class CommentService {
 			return;
 		if (!accessService.canManage(comment))
 			return;
+		dao.delete(getRepliesTo(commentId));
 		dao.delete(comment);
 	}
 

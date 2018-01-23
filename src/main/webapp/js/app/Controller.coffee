@@ -87,9 +87,13 @@ define([
 				@registerUserRoutes()
 
 			registerRouteRewrites: () ->
-				@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
-				@router.registerRouteRewrite 'userProfile', 'user/profile'
-				@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+				if currentUser.isLoggedIn()
+					@router.registerRouteRewrite 'landingPage', 'dashboard/repositories'
+					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
+					@router.registerRouteRewrite 'userProfile', 'user/profile'
+					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+				else
+					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', -> @showView 
@@ -136,7 +140,8 @@ define([
 						@showError()
 				@router.registerUserRoute 'search', (query) => @showView 
 					view: 'search/Results'
-					title: 'Search' 
+					title: 'Search'
+					fullWidth: true
 					viewOptions: @splitQuery query
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
@@ -156,6 +161,19 @@ define([
 					nav: 
 						type: 'user'
 						active: 'notifications'
+				@router.registerUserRoute 'landingPage', -> 
+					if currentUser.isLoggedIn()
+						@showView 
+							view: 'dashboard/Repositories'
+							title: 'Repositories' 
+							nav: 
+								type: 'dashboard'
+								active: 'repositories'
+					else
+						@showView 
+							view: 'search/Results'
+							title: 'Search' 
+							fullWidth: true
 				@router.registerUserRoute 'dashboardRepositories', -> @showView 
 					view: 'dashboard/Repositories'
 					title: 'Repositories' 
@@ -223,6 +241,11 @@ define([
 					title: 'New repository' 
 					viewOptions: 
 						groupName: groupName
+				@router.registerUserRoute 'repositoryImport', () -> @showView 
+					view: 'repository/Create'
+					title: 'Import repository' 
+					viewOptions: 
+						doImport: true
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
 						@router.navigate "#{group}/#{name}/datasets"
@@ -236,7 +259,7 @@ define([
 							urlPrefix: "#{group}/#{name}"
 						viewOptions: 
 							repository: new Repository({group: group, name: name})
-				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryPath) -> @showView 
+				@router.registerUserRoute 'repositoryDatasets', (group, name, categoryPath, commitId) -> @showView 
 					view: 'repository/dataset/Datasets'
 					title: "#{group}/#{name}"
 					subTitle: 'Data sets'
@@ -247,20 +270,24 @@ define([
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
 						categoryPath: categoryPath
-				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, commitId, commentPath) -> @showView 
-					view: 'repository/dataset/Dataset'
-					title: "#{group}/#{name}"
-					subTitle: 'Data sets'
-					nav: 
-						type: 'repository'
-						active: 'datasets'
-						urlPrefix: "#{group}/#{name}"
-					viewOptions: 
-						repository: new Repository({group: group, name: name})
-						type: type
-						refId: refId
 						commitId: commitId
-						commentPath: commentPath
+				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, query) -> 
+					params = @splitQuery query
+					@showView 
+						view: 'repository/dataset/Dataset'
+						title: "#{group}/#{name}"
+						subTitle: 'Data sets'
+						fullWidth: true
+						nav: 
+							type: 'repository'
+							active: 'datasets'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
+							type: type
+							refId: refId
+							commitId: params.commitId
+							commentPath: params.commentPath
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"
@@ -313,7 +340,7 @@ define([
 				if currentUser.isLoggedIn()
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
-					@initializeUserMenu()
+				@initializeUserMenu()
 				@registerRoutes()
 
 			splitQuery: (query) ->
@@ -323,7 +350,11 @@ define([
 				result = {}
 				for param in params
 					param = param.split '='
-					result[param[0]] = param[1]
+					if result[param[0]]
+						result[param[0]] = [result[param[0]]]
+						result[param[0]].push param[1]
+					else 
+						result[param[0]] = param[1]
 				return result
 
 			checkGroupOrRepositoryExists: (options, callback) ->
@@ -356,8 +387,13 @@ define([
 				return reversed
 
 			showView: (options) ->
+				$('#global-search').val options?.viewOptions?.query	
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main .center').empty()
+					if options.fullWidth
+						$('#main .full-size').addClass 'full-width'
+					else
+						$('#main .full-size').removeClass 'full-width'
 					title1 = options.title
 					title2 = options.title
 					if options.title and options.subTitle and currentUser.isLoggedIn()

@@ -12,21 +12,25 @@ define([
 
 	(Router, Events, Format, Labels, Layers, LocalStorage, Roles, Actions, currentUser) ->
 
-		init: (parent, dataset, callback) ->
+		init: (container, options) ->
 			unless currentUser.isLoggedIn()
-				callback?()
 				return
-			@loadComments dataset, (comments) =>
-				for element in $('[data-path]', parent)
+			@updateIcon = options.updateIcon
+			@loadComments options, () =>
+				found = []
+				for element in $('[data-path]', container)
 					path = $(element).attr 'data-path'
-					label = Labels.get dataset.type, path
-					title = if path then "Comment '#{label}'" else 'Comment data set'
-					visible = (LocalStorage.getValue('reviewMode') and @canComment) or comments[path]
+					if @comments[path]
+						found.push path
+					label = Labels.get options.type, path
+					title = if path and path isnt 'null' then "Comment '#{label}'" else 'Comment data set'
+					visible = (LocalStorage.getValue('reviewMode') and @canComment) or @comments[path]
 					style = if visible then '' else 'style="display:none" '
-					highlight = comments[path]
-					$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
-				@comments = comments
-				$('[data-path] [data-action=comment]', parent).on 'click', (event) => 
+					highlight = @comments[path]
+					unless $('img[data-action=comment]', element).length
+						$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
+				$('[data-path] [data-action=comment]', container).off 'click.comment'
+				$('[data-path] [data-action=comment]', container).on 'click.comment', (event) => 
 					Events.preventDefault event
 					target = $ Events.target event
 					while !target.attr('data-path') and !target.is('body')
@@ -36,14 +40,13 @@ define([
 					path = target.attr 'data-path'
 					unless @comments[path]
 						@comments[path] = []
-					@showComments dataset, path
-				@openComment dataset.commentPath
+					@showComments options, path
+				@openComment options.commentPath
 
 		openComment: (path) ->
 			unless path
 				return
-			fragment = Backbone.history.fragment
-			Router.navigate fragment.substring(0, fragment.lastIndexOf('/')), {trigger: false, replace: true}
+			@rewriteUrl()
 			elem = $("[data-path='#{path}']", '.tab-content')
 			if elem?.length
 				while !elem.hasClass('tab-pane') and !elem.is('body')
@@ -57,27 +60,46 @@ define([
 				$(window).scrollTop pos
 			commentElement.click()
 
-		loadComments: (dataset, callback) ->
+		rewriteUrl: () ->
+			fragment = Backbone.history.fragment
+			query = fragment.substring fragment.lastIndexOf('?') + 1
+			parts = query.split '&'
+			fragment = fragment.substring 0, fragment.lastIndexOf('?') + 1
+			first = true
+			for part in parts
+				if part.indexOf('commentPath=') is 0
+					continue
+				unless first
+					fragment += '&'
+				first = false
+				fragment += part
+			Router.navigate fragment, {trigger: false, replace: true}
+
+		loadComments: (options, callback) ->
+			unless options.loadComments
+				if @comments and Object.keys(@comments).length
+					callback()
+				return
+			@comments = {}
 			$.ajax 
 				type: 'GET'
-				url: @getUrl(dataset)
+				url: @getUrl(options)
 				success: (data) =>
 					@canComment = data.canComment
 					@canApprove = data.canApprove
-					map = {}
 					for comment in data.comments
 						path = comment.field.path
 						unless path
 							path = 'null'
-						unless map[path]
-							map[path] = []
-						map[path].push comment
-					callback map
+						unless @comments[path]
+							@comments[path] = []
+						@comments[path].push comment
+					callback()
 
-		getUrl: (dataset) ->
-			group = dataset.repository.get 'group'
-			name = dataset.repository.get 'name'
-			return "ws/comment/#{group}/#{name}/#{dataset.type}/#{dataset.refId}"
+		getUrl: (options) ->
+			group = options.repository.get 'group'
+			name = options.repository.get 'name'
+			return "ws/comment/#{group}/#{name}/#{options.type}/#{options.refId}"
 
 		onEdit: (event) ->
 			Events.preventDefault event
@@ -101,11 +123,7 @@ define([
 				@setEdit $('.modal [data-active]')
 			else if @replyTo
 				@setReplyTo $('.modal [data-active]')
-			Actions.remove event, (commentId) =>
-				fieldComments = @updateComment commentId
-				if fieldComments?.length is 0
-					Layers.closeActive()
-					Backbone.history.loadUrl()
+			Actions.remove event, (commentId) => @updateComment commentId
 
 		onChangeVisibility: (event) ->
 			Events.preventDefault event
@@ -123,7 +141,7 @@ define([
 				visibility.attr 'title', 'Visible to everybody'
 			$('.dropdown.open > a').click()
 
-		showComments: (dataset, path) ->
+		showComments: (options, path) ->
 			@renderData = {canComment: @canComment, canApprove: @canApprove, canEdit: true, roles: Roles.getAll(), callback: (commentId, comment) => @updateComment commentId, comment}
 			clickEvents = 
 				'.edit': (event) => @onEdit event
@@ -134,15 +152,16 @@ define([
 				'.new-comment-wrapper .change-visibility a[data-role]': (event) => @onChangeVisibility event
 			@renderData.clickEvents = clickEvents
 			comments = @sortAndFilter @comments[path]
-			if path
-				field = Labels.get dataset.type, path
+			if path and path isnt 'null'
+				field = Labels.get options.type, path
 			buttons = []
-			buttons.push {text: 'Close', callback: -> Layers.closeActive()}
+			buttons.push {text: 'Close', callback: () => Layers.closeActive()}
 			if @canComment
-				buttons.push {text: 'Add comment', className: 'btn-success', callback: => @addComment dataset, path}
+				buttons.push {text: 'Add comment', id: 'add', className: 'btn-success', callback: => @addComment options, path}
+				buttons.push {text: 'Add and release comment', id: 'release', className: 'btn-success', callback: => @addComment options, path, true}
 			Layers.showTemplateInLayer
 				title: if field then "Comments on '#{field}'" else 'Comments on data set'
-				template: 'repository/dataset/comment-layer'
+				template: 'repository/dataset/layer/comment-layer'
 				model: 
 					path: path
 					comments: comments or []
@@ -155,10 +174,13 @@ define([
 					getRoleLabel: (role) -> return Roles[role].name
 					getLabel: (field) -> return Labels.get field.modelType, field.path
 				buttons: buttons
+				onClose: () =>
+					@updateIcon path, @comments[path].length
 				callback: () =>
 					@initSubMenues()
 					for key in Object.keys(clickEvents)
 						$('.modal ' + key).on 'click', clickEvents[key]
+					$('#new-comment').focus()
 
 		initSubMenues: () ->
 			$('.modal .dropdown > .dropdown-menu > li').mouseenter (event) ->
@@ -174,18 +196,21 @@ define([
 
 		setReplyTo: (target) ->
 			@replyTo = @moveTextarea target
-			$('.modal-footer button:last-child').html 'Add comment'
+			$('.modal-footer button#add').html 'Add reply'
+			$('.modal-footer button#release').html 'Add and release reply'
 
 		setEdit: (target) ->
 			@edit = @moveTextarea target
 			if @edit
-				$('.modal-footer button:last-child').html 'Edit comment'
+				$('.modal-footer button#add').html 'Edit comment'
+				$('.modal-footer button#release').html 'Edit and release comment'
 				$(".modal [data-comment-id=#{@edit}] .comment-text, .modal #new-comment-group label").hide()
 				while !target.attr 'data-comment-id'
 					target = target.parent()
 				$('.modal #new-comment-group textarea').val($('.comment-text', target).text())
 			else
-				$('.modal-footer button:last-child').html 'Add comment'
+				$('.modal-footer button#add').html 'Add comment'
+				$('.modal-footer button#release').html 'Add and release comment'
 
 		moveTextarea: (target) ->
 			$('.modal .comment-text, .modal #new-comment-group label').show()
@@ -204,28 +229,32 @@ define([
 				$(".modal .comment-entry[data-comment-id=#{activeId}]").append textarea
 			return activeId
 
-		addComment: (dataset, path) ->
+		addComment: (options, path, release) ->
 			text = $('.modal #new-comment').val()
 			unless text
 				return
-			if path is 'null'
-				path = ''
+			fieldPath = if path is 'null' then '' else path
 			$.ajax
 				type: if @edit then 'PUT' else 'POST'
-				url: if @edit then "ws/comment/#{@edit}" else @getUrl(dataset) + '/' + dataset.commitId
+				url: if @edit then "ws/comment/#{@edit}" else @getUrl(options) + '/' + options.commitId
 				contentType: 'application/json'
-				data: JSON.stringify({path: path, text: text, replyTo: @replyTo, restrictedToRole: @role})
+				data: JSON.stringify({path: fieldPath, text: text, replyTo: @replyTo, restrictedToRole: @role, released: release})
 				success: (comment) => 
+					$('.modal #new-comment-group textarea').val('')
 					if @edit
 						@updateComment comment.id, comment
-						$(".modal [data-comment-id=#{comment.id}] .comment-text").html comment.text
 						@setEdit $('.modal [data-active]')
-						$('.modal #new-comment-group textarea').val('')
+						Actions.rerender $("[data-comment-id=#{comment.id}]"), comment, @renderData
 					else
 						@comments[path].push comment
-						@replyTo = null
-						Layers.closeActive()
-						Backbone.history.loadUrl()
+						dummy = '<div data-comment-id="' + comment.id + '" class="comment-entry"></div>'
+						if @replyTo
+							@setEdit $('.modal [data-active]')
+							$('.comments [data-comment-id=' + @replyTo + ']').after dummy
+							@replyTo = null
+						else
+							$('.comments').prepend dummy
+						Actions.rerender $("[data-comment-id=#{comment.id}]"), comment, @renderData
 
 		updateComment: (commentId, comment) ->
 			path = null
@@ -252,13 +281,12 @@ define([
 			for comment in comments
 				if $.inArray(comment.id, added) isnt -1
 					continue
-				if comment.replyTo 
-					continue
-				sorted.push comment
-				added.push comment.id
+				unless comment.replyTo 
+					sorted.push comment
+					added.push comment.id
 				replies = []
 				for c in comments
-					if c.replyTo and c.replyTo.id is comment.id
+					if c.replyTo is comment.id
 						replies.push c
 						added.push c.id
 				replies.sort (a, b) -> return a.date - b.date

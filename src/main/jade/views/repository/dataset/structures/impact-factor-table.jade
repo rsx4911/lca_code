@@ -1,0 +1,46 @@
+include ./mixins.jade
+
+mixin impact-factor-table(category, otherCategory)
+	-var factors = getArrayValues(category, otherCategory, 'IMPACT_FACTOR', 'impactFactors');
+	- var showUncertainties = false;
+	each factor in factors
+		- showUncertainties = showUncertainties || factor.uncertainty
+	h4(data-path=category?'impactCategories[' + category.Id + '].impactFactors':null) Impact factors
+	table#impact-factors.table
+		thead
+			tr
+				th=getLabel('impactCategories.impactFactors.flow')
+				th=getLabel('impactCategories.impactFactors.flow.category')
+				th=getLabel('impactCategories.impactFactors.value')
+				th
+					if showUncertainties
+						| #{getLabel('impactCategories.impactFactors.uncertainty')}
+				th
+		tbody
+			each values in factors
+				- var categoryId = getValue(category, 'id');
+				- var referenceUnit = getValue(category, 'referenceUnitName');
+				+impact-factor-row(category, otherCategory, values[0], values[1])
+
+mixin impact-factor-row(category, otherCategory, factor, otherFactor)
+	- var flow = getValue(factor, 'flow');
+	- var otherFlow = getValue(otherFactor, 'flow');
+	- var unit = getValue(factor, 'unit');
+	- var otherUnit = getValue(otherFactor, 'unit');
+	- var flowCategory = getValue(flow, 'category');
+	- var otherFlowCategory = getValue(otherFlow, 'category');
+	- var changed = compareTo && !otherFactor ? 'added' : (compareTo && !factor ? 'removed' : null);
+	tr(data-compare=changed)
+		td
+			if category && otherCategory
+				+compare-icon(changed)
+			+ref(flow, otherFlow)
+		td: +category-field(flowCategory, otherFlowCategory, true)
+		td 
+			+sub-field(factor, otherFactor, 'value', null, formatScientific)
+			|  
+			+sub-field(category, otherCategory, 'referenceUnitName')
+			| /
+			+sub-field(unit, otherUnit, 'name')
+		+uncertainty-cell(factor, otherFactor, formatScientific)
+		td(data-path=flow?'impactCategories[' + category.Id + '].impactFactors[' + flow.id + ']':null)

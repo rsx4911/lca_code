@@ -22,13 +22,14 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'repository', @repository.get('group') + '/' + @repository.get('name')
-				'click [data-action=reset-avatar]': (event) -> 
-					Events.preventDefault event
-					Avatar.upload 'repository', @repository.get('group') + '/' + @repository.get('name')
-				'change input#publicAccess': (event) -> @togglePublicAccess event
-				'click [data-action=delete-repository]': (event) -> @deleteRepository event
-				'click [data-action=clone-repository]': (event) -> @openCloneLayer event
-				'click [data-action=move-repository]': (event) -> @openMoveLayer event
+				'change [data-setting][type=checkbox]': 'toggleSetting'
+				'change #maxSize': 'updateMaxSize'
+				'change #unit': 'updateMaxSize'
+				'keydown #maxSize': (event) -> Events.validateNumber event
+				'click [data-action=delete-repository]': 'deleteRepository'
+				'click [data-action=clone-repository]': 'openCloneLayer'
+				'click [data-action=move-repository]': 'openMoveLayer'
+				'click [data-action=export-repository]': 'exportRepository'
 
 			initialize: (options) ->
 				{@repository} = options
@@ -37,26 +38,59 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
-				@$('#publicAccess').prop('checked', repository.publicAccess);
 				Renderer.render @, renderOptions
-				view = @
-				$('#avatar').on 'change', () ->
-					if @files and @files[0]
-						reader = new FileReader()
-						reader.onload = (e) ->
-							 view.openCropper.call view, e.target.result
-						reader.readAsDataURL @files[0]
+				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
+				@setMaxSize parseFloat repository.settings.maxSize
 
-			togglePublicAccess: (event) ->
+			setMaxSize: (size) ->
+				unless size
+					return
+				if size % 1073741824 is 0
+					@$('#maxSize-group #unit').val('1073741824')
+					@$('#maxSize').val(size / 1073741824)
+				else
+					@$('#maxSize-group #unit').val('1048576')
+					@$('#maxSize').val(parseInt(size / 1048576))
+
+			toggleSetting: (event) ->
 				target = $ Events.target event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
+				setting = target.attr 'data-setting'
 				value = target.is ':checked'
+				repository.settings[setting] = value
 				$.ajax
 					type: 'PUT'
-					url: "ws/repository/public/#{fullPath}/#{value}"
+					url: "ws/repository/settings/#{fullPath}/#{setting}/#{value}"
+
+			updateMaxSize: (event) ->
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				size = @$('#maxSize').val()
+				unit = parseInt @$('#maxSize-group #unit').val()
+				if unit is 1073741824
+					@$('#size-value').html(parseInt(1000*repository.size/unit)/1000)
+				else
+					@$('#size-value').html(parseInt(repository.size/unit))
+				if size
+					percentage = parseInt(100*repository.size/(size*unit))
+					@$('#size-group .size-indicator-overlay').css 'width', (100 - percentage) + '%'					
+					@$('#size-group .size-indicator-overlay').css 'margin-left', percentage + '%'					
+					@$('#size-group .size-indicator').show()
+				else
+					@$('#size-group .size-indicator').hide()
+				if size isnt parseInt(size).toString()
+					@setMaxSize parseInt repository.settings.maxSize
+					return
+				size = parseInt size
+				value = size * unit
+				repository.settings.maxSize = value
+				$.ajax
+					type: 'PUT'
+					url: "ws/repository/settings/#{fullPath}/maxSize/#{value}"
 
 			deleteRepository: (event) ->
+				Events.preventDefault event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				Layers.askDeleteQuestion "repository #{fullPath}", fullPath, () =>
@@ -67,6 +101,7 @@ define([
 							Router.navigate 'dashboard/repositories'
 
 			openCloneLayer: (event) ->
+				Events.preventDefault event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				@loadCommitsAndGroups (commits, groups) =>
@@ -80,6 +115,7 @@ define([
 							$('.modal #group').select repository.group
 
 			openMoveLayer: (event) ->
+				Events.preventDefault event
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				@loadGroups (groups) =>
@@ -92,12 +128,19 @@ define([
 							$('.modal #name').val repository.name
 							$('.modal #group').val repository.group
 
+			exportRepository: (event) ->
+				Events.preventDefault event
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				@$('iframe#export-frame').remove()
+				@$el.append '<iframe id="export-frame" class="hidden" border="0" height="0" width="0" src="ws/repository/export/' + fullPath + '"></iframe>'
+
 			loadCommitsAndGroups: (callback) ->
 				repository = @repository.toJSON()
 				fullPath = "#{repository.group}/#{repository.name}"
 				$.ajax
 					type: 'GET'
-					url: "ws/history/#{fullPath}/null"
+					url: "ws/history/#{fullPath}"
 					success: (commits) =>
 						@loadGroups (groups) =>
 							callback commits, groups
@@ -152,28 +195,5 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'move-form', response
-
-			openCropper: (data) ->
-				Layers.showMessageInLayer
-					title: 'Avatar selection'
-					body: '<img class="image-crop" src="' + data + '">'
-					buttons: [
-						{text: 'Cancel', callback: () => @resetForm()}
-						{text: 'Save', className: 'btn-success', callback: () => @saveCropped()}
-					]
-				@cropper = $('.image-crop').cropper 
-					aspectRatio: 1
-					dragMode: 'move'
-
-			resetForm: () ->
-				$('form#avatar-form')[0].reset()
-				Layers.closeActive()
-
-			saveCropped: () ->
-				@cropper.cropper('getCroppedCanvas').toBlob (blob) =>
-					formData = new FormData()
-					formData.append 'file', blob
-					Layers.closeActive()
-					Avatar.uploadData 'repository', @repository.get('group') + '/' + @repository.get('name'), formData
 
 )

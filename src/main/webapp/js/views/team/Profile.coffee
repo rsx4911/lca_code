@@ -20,10 +20,10 @@ define([
 			className: 'profile-view team-view multi-box-view'
 
 			events:
-				'submit #team-form': (event) -> @saveTeam event
-				'click [data-action=delete-team]': (event) -> @deleteTeam event
-				'click [data-action=add-members]': (event) -> @showAddMembersLayer event
-				'click [data-action=remove-member]': (event) -> @removeMember event
+				'submit #team-form': 'saveTeam'
+				'click [data-action=delete-team]': 'deleteTeam'
+				'click [data-action=add-members]': 'showAddMembersLayer'
+				'click [data-action=remove-member]': 'removeMember'
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'team', @team.get('teamname')

@@ -35,6 +35,18 @@ public class TaskService {
 		return tasks;
 	}
 
+	public List<Task> getAllFor(Repository repo) {
+		List<Task> tasks = new ArrayList<>();
+		for (TaskType type : TaskType.values()) {
+			String jpql = "SELECT DISTINCT task FROM " + type.subclass.getSimpleName() + " task "
+					+ "WHERE task.repositoryPath = :repoId";
+			Map<String, Object> parameters = new HashMap<>();
+			parameters.put("repoId", repo.toId());
+			tasks.addAll(dao.getAll(jpql, parameters));
+		}
+		return tasks;
+	}
+
 	public List<Task> getAllActiveFor(User user) {
 		List<Task> all = getAllFor(user);
 		List<Task> active = new ArrayList<>();
@@ -53,6 +65,14 @@ public class TaskService {
 			}
 		}
 		return active;
+	}
+
+	Task update(Task task) {
+		return dao.update(task);
+	}
+
+	void delete(Task task) {
+		dao.delete(task);
 	}
 
 }

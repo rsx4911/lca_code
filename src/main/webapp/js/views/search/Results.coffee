@@ -1,71 +1,92 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Icons'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/search/results'
 			]
 
-	(Backbone, Events, ModelTypes, Renderer, Router, template) ->
+	(Backbone, Events, Icons, ModelTypes, Renderer, Router, currentUser, template) ->
 
 		class SearchResultsView extends Backbone.View
-
-			doPage: (event) ->
-				Events.preventDefault event
-				target = $ Events.target event
-				page = target.attr 'data-page'
-				Router.navigate @getUrl @query, page, @type
-
-			doFilterType: (event) ->
-				target = $ Events.target event
-				type = target.val()
-				if type is 'All'
-					type = null
-				Router.navigate @getUrl @query, null, type
-
-			getUrl: (query, page, type) ->
-				url = 'search/'
-				if query
-					url += "query=#{query}"
-				if page
-					if query
-						url += '&'
-					url += "page=#{page}"
-				if type
-					if query or page
-						url += '&'
-					url += "type=#{type}"
-				return url
 
 			className: 'search-view'
 
 			events: 
-				'click .result a': (event) -> Events.followLink event
-				'click a[data-page]': (event) -> @doPage event
-				'change #type': (event) -> @doFilterType event
+				'click a:not([href=#])': (event) -> Events.followLink event
 
 			initialize: (options) ->
-				{@query, @page, @type} = options
-				unless @query
-					@query = ''
-				unless @page
-					@page = 1
+				@aggregations = {}
+				if options
+					for option in Object.keys(options)	
+						if option is 'query'
+							@query = options[option]
+						else if option is 'page'
+							@page = options[option]
+						else if option is 'pageSize'
+							@pageSize = options[option]
+						else
+							values = options[option]
+							if $.isArray(values)
+								@aggregations[option] = values							
+							else
+								@aggregations[option] = [values]
 
 			render: (renderOptions) ->
-				url = 'ws/search?query=' + @query + '&page=' + @page
-				if @type
-					url += '&type=' + @type
+				url = @getUrlPart 'ws/public/search?', @query, @page, @pageSize, @aggregations
 				$.ajax
 					type: 'GET'
 					url: url
 					success: (result) =>
-						result.getTypeLabel = (type) -> return ModelTypes[type]
+						result.getIcon = Icons.get
+						result.isPublic = !currentUser.isLoggedIn()
+						result.getAggregationLabel = (type) => @getAggregationLabel type
+						result.getLabel = (type, value) => @getLabel type, value
+						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @pageSize, @aggregations, result
+						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $(value, @aggregations[type]) isnt -1
+						result.getAggregationUrl = (type, value, without = false) => 
+							aggregations = if without then @aggreagtionsWithout(type, value, result) else @aggreagtionsWith(type, value, result)
+							return @getUrlPart 'search/', @query, 1, @pageSize, aggregations, result
+						result.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
-						if result.filter
+						@$('#page-size').on 'change', (event) => Router.navigate @getUrlPart 'search/', @query, 1, $(Events.target(event)).val(), @aggregations, result
+						if @query
 							for textElement in $('.search-view .content-box .result-text')
-								@highlight result.filter, $(textElement)
+								@highlight @query, $(textElement)
+
+			aggreagtionsWithout: (type, value, result) ->
+				copy = {}
+				keys = Object.keys(@aggregations)
+				for key in keys
+					copy[key] = []
+					for v in @aggregations[key]
+						if type is key and v is value
+							continue
+						copy[key].push v
+				return copy
+
+			aggreagtionsWith: (type, value, result) ->
+				copy = {}
+				unless @aggregations[type]
+					@aggregations[type] = []
+				keys = Object.keys(@aggregations)
+				for key in keys
+					copy[key] = []
+					for v in @aggregations[key]
+						copy[key].push v
+					if type is key and $.inArray(value, copy[key]) is -1
+						copy[key].push value
+				return copy
+
+			isInResult: (key, result) ->
+				for aggregation in result.aggregations
+					if aggregation.name is key
+						return true
+				return false
 
 			highlight: (word, element) ->
 				word = word.toLowerCase()
@@ -78,5 +99,82 @@ define([
 					next = text.toLowerCase().indexOf word, next
 				replaced += text
 				element.html replaced
+
+			getUrlPart: (base, query, page, pageSize, aggregations, result) ->
+				url = base
+				isFirst = true
+				if query
+					url += "query=#{encodeURIComponent(query)}"
+					isFirst = false
+				if page
+					unless isFirst
+						url += '&'
+					url += "page=#{page}"
+					isFirst = false
+				if pageSize
+					unless isFirst
+						url += '&'
+					url += "pageSize=#{pageSize}"
+					isFirst = false
+				if aggregations and Object.keys(aggregations).length
+					for key in Object.keys(aggregations)
+						if result and !@isInResult(key, result)
+							continue
+						for value in aggregations[key]
+							unless isFirst
+								url += '&'
+							url += "#{encodeURIComponent(key)}=#{encodeURIComponent(value)}"
+							isFirst = false
+				if url.indexOf('/', url.length - 1) isnt -1
+					url = url.substring(0, url.length - 1)
+				if url.indexOf('?', url.length - 1) isnt -1
+					url = url.substring(0, url.length - 1)
+				return url
+
+			getLabel: (type, value) ->
+				if type is 'type'
+					return ModelTypes[value]
+				if type is 'modellingApproach'
+					if value is 'PHYSICAL'
+						return 'Phsycial allocation'
+					else if value is 'ECONOMIC'
+						return 'Economic allocation'
+					else if value is 'CAUSAL'
+						return 'Causal allocation'
+					else if value is 'NONE'
+						return 'No allocation'
+					else if value is 'UNKNOWN'
+						return 'Unknown'
+				if type is 'processType'
+					if value is 'UNIT'
+						return 'Unit process'
+					else if value is 'SYSTEM'
+						return 'System process'
+					else if value is 'UNKNOWN'
+						return 'Unknown'
+				if type is 'flowType'
+					if value is 'ELEMENTARY_FLOW'
+						return 'Resource/Emission'
+					else if value is 'WASTE_FLOW'
+						return 'Waste'
+					else if value is 'PRODUCT_FLOW'
+						return 'Product'
+				return value
+
+			getAggregationLabel: (type) ->
+				if type is 'repositoryId'
+					return 'Repository'
+				if type is 'type'
+					return 'Model type'
+				if type is 'categoryType'
+					return 'Category type'
+				if type is 'categoryRefId'
+					return 'Category'
+				if type is 'processType'
+					return 'Process type'
+				if type is 'flowType'
+					return 'Flow type'
+				if type is 'modellingApproach'
+					return 'Modelling approach'
 
 )

@@ -1,0 +1,27 @@
+include ../../mixins/paging.jade
+include ../../mixins/user-info.jade
+
+if !data.length
+	.no-content-message No commits found	
+else
+	each group in groups
+		.commit-group
+			.date-and-count
+				.date 
+					img(src='images/calendar.png')
+					|  #{formatDate(group.date)}
+				.count #{group.count} commit
+					if group.count > 1 
+						| s
+			.commits
+				each commit in group.commits
+					.commit
+						.commit-details.pull-left
+							.commit-message=commit.message
+							+user-info(commit.user, commit.userDisplayName)(class='concealed')
+								|  on #{formatDate(commit.timestamp)}
+						.commit-link.pull-right
+							.commit-id.pull-right=commit.id
+							a.pull-right(href='#{repository.group}/#{repository.name}/commit/#{commit.id}') Details »
+						.clear
+	+paging(resultInfo)

@@ -1,0 +1,8 @@
+include mixins/forms.jade
+
+form#commit-selection
+	+select('commitId', 'Compare with version')
+		each commit, i in commits
+			if commit.id !== commitId
+				option(value=commit.id)=i===0?'Latest':commit.id 
+				optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')

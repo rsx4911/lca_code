@@ -3,14 +3,14 @@ package com.greendelta.collaboration.platform.mail;
 import javax.mail.Transport;
 
 import org.apache.commons.pool.PoolableObjectFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Provider;
 
 class TransportObjectFactory implements PoolableObjectFactory<TransportHolder> {
 
-	private static final Logger log = LoggerFactory.getLogger(TransportObjectFactory.class);
+	private static final Logger log = LogManager.getLogger(TransportObjectFactory.class);
 	private EmailService emailService;
 	private Provider<Transport> transportProvider;
 

@@ -31,6 +31,10 @@ public class MessagingService {
 		return dao.insert(message);
 	}
 
+	void delete(Message message) {
+		dao.delete(message);
+	}
+
 	public List<ConversationDescriptor> getConversations(User user) {
 		String jpql = "SELECT m FROM Message m WHERE ((m.from = :user AND m.team IS NULL) OR m.to = :user) ORDER BY m.date DESC";
 		Map<String, Object> attributes = new HashMap<>();
@@ -70,6 +74,20 @@ public class MessagingService {
 		List<Message> messages = dao.getAll(jpql, attributes, 0, limit);
 		Collections.sort(messages, new MessageSorter());
 		return messages;
+	}
+
+	List<Message> getMessages(User user) {
+		String jpql = "SELECT m FROM Message m WHERE m.from = :user OR m.to = :user";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("user", user);
+		return dao.getAll(jpql, attributes);
+	}
+
+	List<Message> getMessages(Team team) {
+		String jpql = "SELECT m FROM Message m WHERE m.team :team";
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("team", team);
+		return dao.getAll(jpql, attributes);
 	}
 
 	public List<Message> getMessages(User user, Team team, int limit, Date before) {

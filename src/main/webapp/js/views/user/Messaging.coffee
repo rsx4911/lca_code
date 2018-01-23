@@ -16,8 +16,8 @@ define([
 			className: 'user-messaging-view multi-box-view'
 
 			events:
-				'change #settings-form': (event) -> @saveSettings event
-				'click .unblock': (event) -> @unblockUser event
+				'change #settings-form': 'saveSettings'
+				'click .unblock': 'unblockUser'
 
 			render: (renderOptions) ->
 				@$el.html template

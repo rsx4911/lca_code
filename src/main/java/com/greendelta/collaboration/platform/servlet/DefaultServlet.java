@@ -31,7 +31,10 @@ public class DefaultServlet extends HttpServlet {
 		String url = request.getRequestURL().toString();
 		boolean isLoginUrl = url.endsWith("/login");
 		boolean isImprintUrl = url.endsWith("/imprint");
-		if (isImprintUrl) {
+		boolean isGraphUrl = url.endsWith("/graph/graph.html");
+		if (isGraphUrl) {
+			forward("/graph/graph.html", request, response);
+		} else if (isImprintUrl) {
 			forward("/imprint.html", request, response);
 		} else if (isLoginUrl) {
 			Subject subject = subjectProvider.get();
@@ -56,5 +59,5 @@ public class DefaultServlet extends HttpServlet {
 			throws ServletException, IOException {
 		request.getRequestDispatcher(path).forward(request, response);
 	}
-	
+
 }

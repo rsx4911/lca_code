@@ -8,9 +8,9 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.util.Logs;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
@@ -30,14 +30,14 @@ import com.greendelta.collaboration.platform.mail.EmailService;
  */
 class MailModule extends AbstractModule {
 
-	private static final Logger log = LoggerFactory.getLogger(MailModule.class);
+	private static final Logger log = LogManager.getLogger(MailModule.class);
 
 	@Override
 	protected void configure() {
 		install(ThrowingProviderBinder.forModule(this));
 		BindUtils.multibind(binder(), StartupListener.class, MailSenderStartupListener.class);
 		BindUtils.multibind(binder(), ShutdownListener.class, MailSenderShutdownListener.class);
-		log.debug("Successfully configured {}", Logs.simpleClassName(this));
+		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	@Provides
@@ -97,12 +97,12 @@ class MailModule extends AbstractModule {
 			else
 				transport.connect();
 		} catch (Exception e) {
-			log.debug("Error when trying to connect to transport", e);
+			log.error("Error when trying to connect to transport", e);
 			try {
 				if (transport != null)
 					transport.close();
 			} catch (Exception ex) {
-				log.debug("Closing transport after exception failed: {}", ex.getMessage());
+				log.error("Closing transport after exception failed: {}", ex.getMessage());
 			}
 		}
 		return transport;
@@ -119,7 +119,7 @@ class MailModule extends AbstractModule {
 		@Override
 		public void startup() {
 			try {
-				log.debug("Starting mail sender service");
+				log.info("Starting mail sender service");
 				emailService.init(transportProvider);
 				log.debug("Started mail sender service");
 			} catch (Exception e) {
@@ -136,7 +136,7 @@ class MailModule extends AbstractModule {
 		@Override
 		public void shutdown() {
 			try {
-				log.debug("Shutting down mail sender service");
+				log.info("Shutting down mail sender service");
 				emailService.close();
 				log.debug("Shut down mail sender service");
 			} catch (IOException e) {
