@@ -9,6 +9,7 @@
 /schema.sql
 /src/main/webapp/index.html
 /src/main/webapp/login.html
+/src/main/webapp/imprint.html
 /src/main/webapp/css/main.css
 /src/main/webapp/js/templates
 /src/main/webapp/js/app/DynamicDependencies.coffee
