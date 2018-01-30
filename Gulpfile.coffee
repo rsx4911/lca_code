@@ -147,3 +147,4 @@ gulp.task 'jsBuild', () ->
 		output: 
 			ascii_only: true
 	)
+	.pipe gulp.dest './target/require-build/js'
