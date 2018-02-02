@@ -11,15 +11,18 @@ import org.openlca.util.KeyGen;
 import com.google.common.base.Strings;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.service.BrowseService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
 
 class ReferenceCollector {
 
 	private final BrowseService browseService;
+	private final HistoryService historyService;
 
-	ReferenceCollector(BrowseService browseService) {
+	ReferenceCollector(BrowseService browseService, HistoryService historyService) {
 		this.browseService = browseService;
+		this.historyService = historyService;
 	}
 
 	Set<ReviewReference> getReferences(Repository repo, List<Reference> in) {
@@ -70,6 +73,9 @@ class ReferenceCollector {
 		reference.type = ref.type;
 		reference.refId = ref.id;
 		reference.commitId = ref.commitId;
+		if (Strings.isNullOrEmpty(ref.commitId))  {
+			reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
+		}
 		reference.name = ref.name;
 		return reference;
 	}
