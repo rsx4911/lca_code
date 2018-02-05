@@ -24,6 +24,10 @@ class RepositoryInput {
 			String filename = entry.getName();
 			Path path = repoPath.resolve(filename);
 			File file = path.toFile();
+			if (entry.isDirectory()) {
+				file.mkdirs();
+				continue;
+			}	
 			if (!file.exists()) {
 				file.getParentFile().mkdirs();
 				file.createNewFile();
