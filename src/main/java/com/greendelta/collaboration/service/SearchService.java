@@ -71,14 +71,22 @@ public class SearchService {
 				builder.aggregation(aggregation);
 			}
 		}
+		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!Strings.isNullOrEmpty(query)) {
-			boolean loggedIn = userService.getCurrentUser().getId() != 0;
 			builder.query(query, SearchFields.get(type, loggedIn));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
 		builder.pageSize(pageSize);
-		return SearchResults.convert(client.search(builder.build()), parser::parse);
+		SearchResult<Map<String, Object>> result = client.search(builder.build());
+		if (loggedIn)
+			return SearchResults.convert(result, parser::parse);
+		// only return newest and undeleted versions to anonymous users
+		List<Map<String, Object>> entries = new ArrayList<>();
+		Set<String> alreadyAdded = new HashSet<>();
+		entries = Collections.filter(entries, (e) -> !alreadyAdded.add(e.get("refId").toString()));
+		entries = Collections.filter(entries, (e) -> e.get("action") == IndexAction.DELETE);
+		return SearchResults.convert(result, parser::parse);
 	}
 
 	private String[] getModelTypes() {

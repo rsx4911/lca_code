@@ -55,11 +55,11 @@ public class SearchResource {
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		return Respond.ok(SearchResults.convert(service.search(query, page, pageSize, parameters), (r) -> {
-			r.action = null;
 			if (!loggedIn) {
 				r.commitId = null;
 				r.commitMessage = null;
 				r.commitTimestamp = 0;
+				r.action = null;
 			}
 			return r;
 		}));
