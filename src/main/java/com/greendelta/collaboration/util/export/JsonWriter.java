@@ -28,28 +28,36 @@ public class JsonWriter implements DatasetWriter {
 	private final HistoryService historyService;
 	private final SearchService searchService;
 	private final Repository repo;
+	private final String commitId;
 	private final ZipStore zipStore;
 	private final File tmpFile;
 	private final Set<String> written = new HashSet<>();
 
 	public JsonWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
-			Repository repo) throws IOException {
+			Repository repo, String commitId) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.searchService = searchService;
 		this.repo = repo;
+		this.commitId = commitId;
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, "temp.zip");
 		this.zipStore = ZipStore.open(tmpFile);
 	}
 
 	@Override
-	public void write(ModelType type, String refId, String commitId) throws IOException {
+	public void write(ModelType type, String refId) throws IOException {
 		if (written.contains(type.name() + refId))
 			return;
 		String dataset = fetchService.getDataset(repo, type, refId, commitId);
-		if (dataset == null)
-			return;
+		if (dataset == null) {
+			Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
+			if (commit == null)
+				return;
+			dataset = fetchService.getDataset(repo, type, refId, commit.id);
+			if (dataset == null)
+				return;
+		}
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		zipStore.put(type, json);
 		File binDir = fetchService.getBinDir(repo, type, refId, commitId);
@@ -57,9 +65,9 @@ public class JsonWriter implements DatasetWriter {
 			for (File file : binDir.listFiles())
 				zipStore.putBin(type, refId, file.getName(), Files.readAllBytes(file.toPath()));
 		written.add(type.name() + refId);
-		writeReferences(json, commitId);
+		writeReferences(json);
 		for (IndexEntry entry : getGlobalParameters(commitId)) {
-			write(ModelType.PARAMETER, entry.refId, entry.commitId);
+			write(ModelType.PARAMETER, entry.refId);
 		}
 	}
 
@@ -88,35 +96,35 @@ public class JsonWriter implements DatasetWriter {
 		return tmpFile;
 	}
 
-	private void writeReferences(JsonObject object, String commitId) throws IOException {
+	private void writeReferences(JsonObject object) throws IOException {
 		if (object == null)
 			return;
 		for (Entry<String, JsonElement> entry : object.entrySet()) {
 			JsonElement element = entry.getValue();
 			if (element.isJsonArray()) {
-				for (JsonElement child : element.getAsJsonArray())
-					if (child.isJsonObject())
-						writeReferences(child.getAsJsonObject(), commitId);
+				for (JsonElement arrayElement : element.getAsJsonArray())
+					if (arrayElement.isJsonObject())
+						write(arrayElement.getAsJsonObject());
 				continue;
 			}
 			if (!element.isJsonObject())
 				continue;
-			JsonObject child = element.getAsJsonObject();
-			if (!(child.has("@type") && child.has("@id"))) {
-				writeReferences(child, commitId);
-				continue;
-			}
-			ModelType type = getType(child.get("@type").getAsString());
-			if (type == null)
-				continue;
-			String id = child.get("@id").getAsString();
-			if (written.contains(type.name() + id))
-				continue;
-			Commit commit = historyService.getLastCommit(repo, type, id, commitId);
-			if (commit == null)
-				continue;
-			write(type, id, commit.id);
+			write(element.getAsJsonObject());
 		}
+	}
+
+	private void write(JsonObject object) throws IOException {
+		if (!(object.has("@type") && object.has("@id"))) {
+			writeReferences(object);
+			return;
+		}
+		ModelType type = getType(object.get("@type").getAsString());
+		if (type == null)
+			return;
+		String id = object.get("@id").getAsString();
+		if (written.contains(type.name() + id))
+			return;
+		write(type, id);
 	}
 
 	private ModelType getType(String name) {

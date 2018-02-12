@@ -100,7 +100,7 @@ public class SearchResource {
 	}
 
 	private void putFlowFilter(SearchQueryBuilder builder, String refId, String direction) {
-		SearchFilterValue value = SearchFilterValue.phrase(refId);
+		SearchFilterValue value = SearchFilterValue.term(refId);
 		if ("in".equals(direction)) {
 			builder.filter("inputs", value);
 		} else if ("out".equals(direction)) {

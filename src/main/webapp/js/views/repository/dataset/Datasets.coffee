@@ -88,7 +88,6 @@ define([
 					else
 						url += '?'
 					url += 'commitId=' + @commitId
-
 				$.ajax
 					type: 'GET'
 					url: url

@@ -14,7 +14,7 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public boolean mostRecent;
 
 	public String toIndexId() {
-		return repositoryId + "/" + refId + "/" + commitId;
+		return toIndexId(repositoryId, refId, commitId);
 	}
 
 	public Dataset asDataset() {
@@ -60,4 +60,18 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.commitTimestamp = commitTimestamp;
 		e.action = action;
 	}
+
+	public static String toIndexId(String repositoryId, String refId, String commitId) {
+		return repositoryId + "/" + refId + "/" + commitId;
+	}
+
+	public static IndexEntry descriptor(String indexId) {
+		String[] ids = indexId.split("/");
+		IndexEntry entry = new IndexEntry();
+		entry.repositoryId = ids[0] + "/" + ids[1];
+		entry.refId = ids[2];
+		entry.commitId = ids[3];
+		return entry;
+	}
+
 }

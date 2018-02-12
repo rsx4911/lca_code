@@ -43,10 +43,6 @@ public class SearchService {
 		this.userService = userService;
 	}
 
-	public void createIndex(Map<String, Object> settings) {
-		client.create(settings);
-	}
-
 	public SearchResult<IndexEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
 		List<Repository> repos = repoService.getAllAccessible();
 		if (repos.isEmpty())
@@ -138,7 +134,7 @@ public class SearchService {
 	public List<IndexEntry> getAll(Repository repo, ModelType type) {
 		SearchQueryBuilder builder = builder(repo.toId());
 		if (type != null) {
-			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		return parser.parse(client.search(builder.build()));
@@ -147,25 +143,37 @@ public class SearchService {
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
 		SearchQueryBuilder builder = builder(repo.toId());
 		if (commit != null) {
-			builder.filter("commitId", SearchFilterValue.phrase(commit.id));
+			builder.filter("commitId", SearchFilterValue.term(commit.id));
 		}
 		return parser.parse(client.search(builder.build()));
+	}
+
+	public List<IndexEntry> getDescriptors(Repository repo, Commit commit) {
+		SearchQueryBuilder builder = builder(repo.toId());
+		if (commit != null) {
+			builder.filter("commitId", SearchFilterValue.term(commit.id));
+		}
+		builder.fullResult(false);
+		List<IndexEntry> descriptors = new ArrayList<>();
+		for (Map<String, Object> descriptor : client.search(builder.build()).data) {
+			IndexEntry entry = IndexEntry.descriptor(descriptor.get("documentId").toString());
+			descriptors.add(entry);
+		}
+		return descriptors;
 	}
 
 	SearchQueryBuilder builder(String repoId) {
 		return new SearchQueryBuilder()
 				.page(0)
-				.aggregation(Aggregations.REPOSITORY, repoId);
+				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repoId));
 	}
 
-	public IndexEntry get(Repository repo, ModelType type, String refId, String commitId) {
-		String id = repo.toId() + "/" + refId + "/" + commitId;
-		return parser.parse(client.get(type.name().toLowerCase(), id));
+	public IndexEntry get(Repository repo, String refId, String commitId) {
+		return get(IndexEntry.toIndexId(repo.toId(), refId, commitId));
 	}
 
-	ObjectMap getRaw(Repository repo, ModelType type, String refId, String commitId) {
-		String id = repo.toId() + "/" + refId + "/" + commitId;
-		return parser.convert(client.get(type.name().toLowerCase(), id));
+	ObjectMap getRaw(Repository repo, String refId, String commitId) {
+		return parser.convert(client.get(IndexEntry.toIndexId(repo.toId(), refId, commitId)));
 	}
 
 	IndexAction getMostRecentAction(String repoId, String refId) {
@@ -190,9 +198,9 @@ public class SearchService {
 			Set<String> next = Collections.pop(remaining, 1000);
 			SearchQueryBuilder builder = builder(repoId);
 			if (next.size() == 1) {
-				builder.filter("refId", SearchFilterValue.phrase(next.iterator().next()));
+				builder.filter("refId", SearchFilterValue.term(next.iterator().next()));
 			} else {
-				builder.filter("refId", SearchFilterValue.phrase(next));
+				builder.filter("refId", SearchFilterValue.term(next));
 			}
 			if (until != null) {
 				builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
@@ -214,8 +222,8 @@ public class SearchService {
 
 	public IndexEntry getFirst(String repoId, String refId) {
 		SearchQueryBuilder builder = builder(repoId);
-		builder.filter("refId", SearchFilterValue.phrase(refId));
-		builder.filter("action", SearchFilterValue.phrase(IndexAction.ADD.name()));
+		builder.filter("refId", SearchFilterValue.term(refId));
+		builder.filter("action", SearchFilterValue.term(IndexAction.ADD.name()));
 		builder.sortBy("commitTimestamp", SearchSorting.ASC);
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (result.data.isEmpty())
@@ -232,27 +240,31 @@ public class SearchService {
 			for (IndexEntry entry : mostRecent) {
 				entry.mostRecent = false;
 			}
-			Map<String, Map<String, Map<String, Object>>> contentsByIdByType = buildIndexMap(mostRecent);
-			client.index(contentsByIdByType);
+			Map<String, Map<String, Object>> contentsById = buildIndexMap(mostRecent);
+			client.index(contentsById);
 		}
 		for (IndexEntry entry : entries) {
 			entry.mostRecent = true;
 		}
-		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = buildIndexMap(entries);
-		client.index(contentsByIdByType);
+		Map<String, Map<String, Object>> contentsById = buildIndexMap(entries);
+		client.index(contentsById);
 	}
 
-	private Map<String, Map<String, Map<String, Object>>> buildIndexMap(Collection<IndexEntry> entries) {
-		Map<String, Map<String, Map<String, Object>>> contentsByIdByType = new HashMap<>();
+	public IndexEntry get(String id) {
+		return parser.parse(client.get(id));
+	}
+
+	public List<IndexEntry> get(Set<String> ids) {
+		return parser.parse(client.get(ids));
+	}
+
+	private Map<String, Map<String, Object>> buildIndexMap(Collection<IndexEntry> entries) {
+		Map<String, Map<String, Object>> contentsById = new HashMap<>();
 		for (IndexEntry entry : entries) {
 			Map<String, Object> content = toMap(entry);
-			Map<String, Map<String, Object>> contentsById = contentsByIdByType.get(entry.type.name().toLowerCase());
-			if (contentsById == null) {
-				contentsByIdByType.put(entry.type.name().toLowerCase(), contentsById = new HashMap<>());
-			}
 			contentsById.put(entry.toIndexId(), content);
 		}
-		return contentsByIdByType;
+		return contentsById;
 	}
 
 	private ObjectMap toMap(IndexEntry entry) {
@@ -275,19 +287,19 @@ public class SearchService {
 	public void remove(Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
-		Map<String, Set<String>> idsByType = new HashMap<>();
+		Set<String> ids = new HashSet<>();
 		for (IndexEntry entry : entries) {
-			Set<String> ids = idsByType.get(entry.type.name().toLowerCase());
-			if (ids == null) {
-				idsByType.put(entry.type.name().toLowerCase(), ids = new HashSet<>());
-			}
 			ids.add(entry.toIndexId());
 		}
-		client.remove(idsByType);
+		client.remove(ids);
 	}
 
 	public void remove(IndexEntry entry) {
-		client.remove(entry.type.name().toLowerCase(), entry.toIndexId());
+		client.remove(entry.toIndexId());
+	}
+
+	public void clearIndex() {
+		remove(search(new SearchQueryBuilder().page(0).build()).data);
 	}
 
 }

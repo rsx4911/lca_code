@@ -73,7 +73,7 @@ public class BrowseService {
 	private List<ObjectMap> getAll(ModelType type, BrowseParameter params, boolean ignoreIfMoved) {
 		SearchQueryBuilder builder = builder(params);
 		if (type != null) {
-			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		}
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
 		return new DataFilter(result, params, ignoreIfMoved).apply();
@@ -88,9 +88,9 @@ public class BrowseService {
 
 	private List<ObjectMap> getRootCategories(ModelType type, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params);
-		builder.aggregation(Aggregations.MODEL_TYPE, ModelType.CATEGORY.name());
-		builder.filter("categoryType", SearchFilterValue.phrase(type.name()));
-		builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
+		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(ModelType.CATEGORY.name()));
+		builder.filter("categoryType", SearchFilterValue.term(type.name()));
+		builder.filter("categoryRefId", SearchFilterValue.term(type.name()));
 		List<ObjectMap> result = new DataFilter(searchService.searchRaw(builder.build()).data, params).apply();
 		Map<String, List<ObjectMap>> lastForPath = getForPath(getAll(type, params.clone().removeFilter()), 1);
 		updateCommitInfo(lastForPath, result);
@@ -99,8 +99,8 @@ public class BrowseService {
 
 	private List<ObjectMap> getRootModels(ModelType type, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params);
-		builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-		builder.filter("categoryRefId", SearchFilterValue.phrase(type.name()));
+		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
+		builder.filter("categoryRefId", SearchFilterValue.term(type.name()));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
 		return new DataFilter(result, params).apply();
 	}
@@ -108,14 +108,14 @@ public class BrowseService {
 	public List<ObjectMap> getForCategory(Repository repo, String refId) {
 		BrowseParameter params = new BrowseParameter(repo);
 		SearchQueryBuilder builder = builder(params)
-				.filter("categoryRefId", SearchFilterValue.phrase(refId));
+				.filter("categoryRefId", SearchFilterValue.term(refId));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
 		return sort(convert(new DataFilter(result, params).apply()));
 	}
 
 	public List<ObjectMap> getForCategory(String refId, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params)
-				.filter("categoryRefId", SearchFilterValue.phrase(refId));
+				.filter("categoryRefId", SearchFilterValue.term(refId));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
 		result = new DataFilter(result, params).apply();
 		// get last commit info
@@ -132,7 +132,7 @@ public class BrowseService {
 
 	private List<ObjectMap> getAllCategoryChildren(ModelType categoryType, String path, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params);
-		builder.filter("type", SearchFilterValue.phrase(Arrays.asList(categoryType.name(), ModelType.CATEGORY.name())));
+		builder.filter("type", SearchFilterValue.term(Arrays.asList(categoryType.name(), ModelType.CATEGORY.name())));
 		builder.filter("fullPath", SearchFilterValue.wildcard(path + "/?*"));
 		return new DataFilter(searchService.searchRaw(builder.build()).data, params).apply();
 	}
@@ -218,12 +218,11 @@ public class BrowseService {
 	}
 
 	public ObjectMap getDataset(Repository repo, String refId, String commitId) {
+		ObjectMap dataset = searchService.getRaw(repo, refId, commitId);
+		if (dataset != null)
+			return dataset;
 		Commit commit = historyService.getCommit(repo, commitId);
 		return searchService.getMostRecent(repo.toId(), refId, commit);
-	}
-
-	public ObjectMap getDataset(Repository repo, ModelType type, String refId, String commitId) {
-		return searchService.getRaw(repo, type, refId, commitId);
 	}
 
 	public static class BrowseParameter implements Cloneable {

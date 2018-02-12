@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,6 +23,11 @@ public class HistoryService {
 
 	private static final Logger log = LogManager.getLogger(HistoryService.class);
 	private final SearchService searchService;
+	// caches the commit references for the last repository requested, this is
+	// to reduce calls to the search api for consecutive calls over different
+	// requests in the same repo
+	private static String lastRepoId;
+	private static Map<String, Set<String>> lastResult;
 
 	@Inject
 	public HistoryService(SearchService searchService) {
@@ -41,7 +50,7 @@ public class HistoryService {
 	 */
 	public Commit getLastCommit(Repository repo, ModelType type, String refId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = readHistory(file, new ModelCommitFilter(repo, type, refId));
+		List<Commit> commits = readHistory(file, new ModelCommitFilter(repo, refId));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -49,7 +58,7 @@ public class HistoryService {
 
 	public Commit getLastCommit(Repository repo, ModelType type, String refId, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId, false));
+		List<Commit> commits = readHistory(file, new LastCommitFilter(untilCommitId, repo, refId, false));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -57,7 +66,7 @@ public class HistoryService {
 
 	public Commit getLastCommitBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId, true));
+		List<Commit> commits = readHistory(file, new LastCommitFilter(beforeCommitId, repo, refId, true));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -78,7 +87,7 @@ public class HistoryService {
 
 	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
 		File file = repo.getHistoryFile(false);
-		return readHistory(file, new ModelCommitFilter(repo, type, refId));
+		return readHistory(file, new ModelCommitFilter(repo, refId));
 	}
 
 	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId) {
@@ -119,6 +128,21 @@ public class HistoryService {
 		}
 	}
 
+	private boolean isReferenceIn(Repository repo, Commit element, String refId) {
+		if (!repo.toId().equals(lastRepoId)) {
+			lastResult = new HashMap<>();
+			lastRepoId = repo.toId();
+		}
+		if (!lastResult.containsKey(element.id)) {
+			Set<String> ids = new HashSet<>();
+			for (IndexEntry entry : searchService.getDescriptors(repo, element)) {
+				ids.add(entry.refId);
+			}
+			lastResult.put(element.id, ids);
+		}
+		return lastResult.get(element.id).contains(refId);
+	}
+
 	interface Filter<T> {
 		boolean filter(T element);
 	}
@@ -151,26 +175,16 @@ public class HistoryService {
 	private class ModelCommitFilter implements Filter<Commit> {
 
 		private final Repository repo;
-		private final ModelType type;
 		private final String refId;
 
-		private ModelCommitFilter(Repository repo, ModelType type, String refId) {
+		private ModelCommitFilter(Repository repo, String refId) {
 			this.repo = repo;
-			this.type = type;
 			this.refId = refId;
 		}
 
 		@Override
 		public boolean filter(Commit element) {
-			for (IndexEntry entry : searchService.getAll(repo, element)) {
-				if (entry.type != type)
-					continue;
-				if (!entry.refId.equals(refId))
-					continue;
-				return false;
-			}
-			return true;
-
+			return !isReferenceIn(repo, element, refId);
 		}
 
 	}
@@ -199,15 +213,13 @@ public class HistoryService {
 
 		private final String commitId;
 		private final Repository repo;
-		private final ModelType type;
 		private final String refId;
 		private boolean done;
 		private boolean beforeCommit;
 
-		private LastCommitFilter(String commitId, Repository repo, ModelType type, String refId, boolean beforeCommit) {
+		private LastCommitFilter(String commitId, Repository repo, String refId, boolean beforeCommit) {
 			this.commitId = commitId;
 			this.repo = repo;
-			this.type = type;
 			this.refId = refId;
 			this.beforeCommit = beforeCommit;
 		}
@@ -220,18 +232,7 @@ public class HistoryService {
 				done = true;
 			if (beforeCommit && done)
 				return true;
-			return !containsModel(element);
-		}
-
-		private boolean containsModel(Commit commit) {
-			for (IndexEntry entry : searchService.getAll(repo, commit)) {
-				if (entry.type != type)
-					continue;
-				if (!entry.refId.equals(refId))
-					continue;
-				return true;
-			}
-			return false;
+			return !isReferenceIn(repo, element, refId);
 		}
 
 	}

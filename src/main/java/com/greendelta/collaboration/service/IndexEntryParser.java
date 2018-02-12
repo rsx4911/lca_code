@@ -23,8 +23,12 @@ import com.greendelta.search.wrapper.SearchResult;
 class IndexEntryParser {
 
 	List<IndexEntry> parse(SearchResult<Map<String, Object>> result) {
+		return parse(result.data);
+	}
+
+	List<IndexEntry> parse(List<Map<String, Object>> entries) {
 		List<IndexEntry> parsed = new ArrayList<>();
-		for (Map<String, Object> entry : result.data) {
+		for (Map<String, Object> entry : entries) {
 			parsed.add(parse(convert(entry)));
 		}
 		return parsed;

@@ -59,7 +59,7 @@ public class DownloadIlcdResource extends DownloadResource {
 			@PathParam("group") String group,
 			@PathParam("repository") String repository,
 			List<FileReference> requested) {
-		return super.prepare(group, repository, requested);
+		return super.prepare(group, repository, null, requested);
 	}
 
 	@GET
@@ -71,8 +71,8 @@ public class DownloadIlcdResource extends DownloadResource {
 	}
 
 	@Override
-	protected DatasetWriter createWriter(Repository repo) throws IOException {
-		return new IlcdWriter(fetchService, historyService, searchService, repo);
+	protected DatasetWriter createWriter(Repository repo, String commitId) throws IOException {
+		return new IlcdWriter(fetchService, historyService, searchService, repo, commitId);
 	}
 
 }

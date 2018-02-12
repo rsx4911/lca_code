@@ -2,8 +2,10 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!utils/Renderer'
+				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/User'
 				'templates/views/admin/overview'
@@ -13,7 +15,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Events, Filter, Model, Renderer, Router, User, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Events, Filter, Layers, Model, Renderer, Status, Router, User, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -21,10 +23,28 @@ define([
 
 			events: 
 				'click a[href].follow': (event) -> Events.followLink event
+				'click [data-action=reindex-repositories]': 'reindexRepositories'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
 				'click [data-action=create-team]': () -> Router.navigate 'administration/team/new'
+
+			reindexRepositories: () ->
+				Layers.askQuestion
+					title: 'Reindex repositories'
+					question: 'Do you really want to reindex all repositories? This may take a while, depending on the amount and size of the repositories.'
+					type: 'danger'
+					answers: ['Cancel', 'Confirm']
+					onAnswer: (answer) =>
+						if answer isnt 1
+							return
+						Layers.showProgressIndicator 'Indexing'
+						$.ajax
+							type: 'PUT'
+							url: 'ws/admin/area/reindex'
+							success: () ->
+								Layers.hideProgressIndicator()
+								Status.success 'Successfully reindexed repositories'
 
 			initialize: () ->
 				@repositoryFilter = new Filter

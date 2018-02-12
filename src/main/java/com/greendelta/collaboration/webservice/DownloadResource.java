@@ -40,8 +40,8 @@ abstract class DownloadResource {
 		if (commitId == null)
 			return Respond.notFound(type.name() + " " + refId + " not found");
 		try {
-			DatasetWriter writer = createWriter(repo);
-			writer.write(type, refId, commitId);
+			DatasetWriter writer = createWriter(repo, commitId);
+			writer.write(type, refId);
 			File tmpFile = writer.close();
 			String token = put(tmpFile, refId + "_" + commitId + ".zip");
 			return Respond.ok(token);
@@ -50,15 +50,16 @@ abstract class DownloadResource {
 		}
 	}
 
-	protected Response prepare(String group, String repository, List<FileReference> requested) {
-		Repository repo = repoService.get(group, repository);
+	protected Response prepare(String group, String repository, String commitId, List<FileReference> requested) {
 		try {
-			DatasetWriter writer = createWriter(repo);
+			Repository repo = repoService.get(group, repository);
+			if (commitId == null) {
+				Commit commit = historyService.getLastCommit(repo);
+				commitId = commit.id;
+			}
+			DatasetWriter writer = createWriter(repo, commitId);
 			for (FileReference element : requested) {
-				Commit commit = historyService.getLastCommit(repo, element.type, element.refId);
-				if (commit == null)
-					continue;
-				writer.write(element.type, element.refId, commit.id);
+				writer.write(element.type, element.refId);
 			}
 			File tmpFile = writer.close();
 			String token = put(tmpFile, group + "_" + repository + ".zip");
@@ -84,6 +85,6 @@ abstract class DownloadResource {
 		return Respond.ok(filename, tmpFile, () -> tmpFile.delete());
 	}
 
-	protected abstract DatasetWriter createWriter(Repository repo) throws IOException;
+	protected abstract DatasetWriter createWriter(Repository repo, String commitId) throws IOException;
 
 }

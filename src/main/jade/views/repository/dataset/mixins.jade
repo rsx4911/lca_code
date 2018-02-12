@@ -11,7 +11,7 @@ mixin menubar()
 				each commit, i in commits
 					if commit.id === commitId
 						- currentCommit = commit;
-					option(value=commit.id selected=commit.id===commitId)=i===0?'Latest':commit.id 
+					option(value=commit.id, selected=commit.id===commitId, class=commit.modelHasChanged?'highlight':null)=i===0?'Latest':commit.id 
 					optgroup.additional-info(label!='&nbsp; &nbsp;#{formatCommitDescription(commit.message)}')
 			if dataset.deleted
 				.badge.pull-right.deleted Deleted
@@ -277,7 +277,7 @@ mixin array-field-row(path, type, getSpecificId)
 			if value
 				each v in value
 					- var other = value2 ? findValue(type, v, value2) : null;
-					div(data-compare=!other?'added':null, data-path=path + '[' + getSpecificId(v) + ']')
+					div(data-compare=compareTo&&!other?'added':null, data-path=path + '[' + getSpecificId(v) + ']')
 						if !other
 							+compare-icon('added')
 						+ref(v, null)
@@ -302,26 +302,26 @@ mixin field-link-row(path, urlPrefix)
 			if changed && value2
 				span.comparison-value=value2
 
-mixin old_ref(path, additionalTypeInfo, defaultLabel)
-	- var value = getValue(dataset, path);
-	- var value2 = getValue(compareTo, path);
-	+ref(value, value2, defaultLabel)&attributes(attributes)
-
-mixin ref(ref, ref2, defaultLabel)
-	span.original-value
-		if ref
-			img.model-icon-small(src='images/model/small/#{getIcon(ref)}')
-			- var query = commitId ? '?commitId=' + commitId : ''
-			- var path = ref.category ? ref.category + '/' + ref.name : ref.name
-			a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}#{query}' title=path)=ref.name
-		else if defaultLabel && !(compareTo && ref2)
-			| #{defaultLabel}
-	if ref2 && compare(ref, ref2)
-		span.comparison-value
-			img.model-icon-small(src='images/model/small/#{getIcon(ref2)}')
-			- var query = comparisonCommitId ? '?commitId=' + comparisonCommitId : ''
-			- var path = ref2.category ? ref2.category + '/' + ref2.name : ref2.name
-			a(href='#{baseUrl}/#{getTypeAsEnum(ref2.type)}/#{ref2.id}#{query}' title=path)=ref2.name
+mixin ref(ref, ref2, defaultLabel, noCompareIcon)
+	- var changed = ref2 && compare(ref, ref2);
+	- var changedName = ref2 && !changed && compare(getValue(ref, 'name'), getValue(ref2, 'name'));
+	span(data-compare=changedName==='changed'?'changed':null)
+		if changedName==='changed' && !noCompareIcon
+			+compare-icon(changedName)
+		span.original-value
+			if ref
+				img.model-icon-small(src='images/model/small/#{getIcon(ref)}')
+				- var query = commitId ? '?commitId=' + commitId : ''
+				- var path = ref.category ? ref.category + '/' + ref.name : ref.name
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}#{query}' title=path)=ref.name
+			else if defaultLabel && !(compareTo && ref2)
+				| #{defaultLabel}
+		if changed || changedName
+			span.comparison-value
+				img.model-icon-small(src='images/model/small/#{getIcon(ref2)}')
+				- var query = comparisonCommitId ? '?commitId=' + comparisonCommitId : ''
+				- var path = ref2.category ? ref2.category + '/' + ref2.name : ref2.name
+				a(href='#{baseUrl}/#{getTypeAsEnum(ref2.type)}/#{ref2.id}#{query}' title=path)=ref2.name
 
 mixin ref-row(path)
 	- var value = getValue(dataset, path);

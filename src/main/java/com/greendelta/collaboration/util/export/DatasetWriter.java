@@ -7,7 +7,7 @@ import org.openlca.core.model.ModelType;
 
 public interface DatasetWriter {
 
-	void write(ModelType type, String refId, String commitId) throws IOException;
+	void write(ModelType type, String refId) throws IOException;
 
 	File close() throws IOException;
 

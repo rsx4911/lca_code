@@ -43,15 +43,16 @@ public class IlcdWriter implements DatasetWriter {
 	private final Json2IlcdStore converter;
 	private final Gson gson = new Gson();
 	private final File tmpFile;
-	private String currentCommitId;
+	private final String commitId;
 	private Set<Ref> collectedRefs;
 
 	public IlcdWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
-			Repository repo) throws IOException {
+			Repository repo, String commitId) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.searchService = searchService;
 		this.repo = repo;
+		this.commitId = commitId;
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, UUID.randomUUID().toString() + ".zip");
 		this.ilcdStore = new ZipStore(tmpFile);
@@ -60,23 +61,21 @@ public class IlcdWriter implements DatasetWriter {
 	}
 
 	@Override
-	public void write(ModelType type, String refId, String commitId) throws IOException {
-		this.currentCommitId = commitId;
+	public void write(ModelType type, String refId) throws IOException {
 		this.collectedRefs = new HashSet<>();
-		IndexEntry entry = searchService.get(repo, type, refId, commitId);
+		IndexEntry entry = searchService.get(repo, refId, commitId);
 		boolean exists = entry != null && entry.action != IndexAction.DELETE;
 		if (!exists) {
-			Commit lastCommit = historyService.getLastCommitBefore(repo, type, refId, currentCommitId);
+			Commit lastCommit = historyService.getLastCommitBefore(repo, type, refId, commitId);
 			if (lastCommit == null)
 				return;
-			this.currentCommitId = lastCommit.id;
 		}
 		JsonObject obj = jsonStore.get(type.getModelClass().getSimpleName(), refId);
 		if (obj == null)
 			return;
 		converter.convertAndPut(obj);
 		for (Ref ref : new ArrayList<>(collectedRefs)) {
-			write(ref.modelType, ref.refId, ref.commitId);
+			write(ref.modelType, ref.refId);
 		}
 	}
 
@@ -87,7 +86,7 @@ public class IlcdWriter implements DatasetWriter {
 	}
 
 	private void collectRefs(String type, String refId) {
-		collectedRefs.add(new Ref(getType(type), refId, currentCommitId));
+		collectedRefs.add(new Ref(getType(type), refId));
 	}
 
 	private ModelType getType(String type) {
@@ -107,10 +106,10 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public JsonObject get(String type, String refId) {
 			ModelType modelType = getType(type);
-			String data = fetchService.getDataset(repo, modelType, refId, currentCommitId);
+			String data = fetchService.getDataset(repo, modelType, refId, commitId);
 			if (data != null)
 				return gson.fromJson(data, JsonObject.class);
-			Commit lastCommit = historyService.getLastCommitBefore(repo, modelType, refId, currentCommitId);
+			Commit lastCommit = historyService.getLastCommitBefore(repo, modelType, refId, commitId);
 			if (lastCommit == null)
 				return null;
 			data = fetchService.getDataset(repo, modelType, refId, lastCommit.id);
@@ -121,7 +120,10 @@ public class IlcdWriter implements DatasetWriter {
 
 		@Override
 		public byte[] getExternalFile(String sourceRefId, String filename) {
-			File binDir = fetchService.getBinDir(repo, ModelType.SOURCE, sourceRefId, currentCommitId);
+			Commit lastCommit = historyService.getLastCommit(repo, ModelType.SOURCE, sourceRefId, commitId);			
+			if (lastCommit == null)
+				return null;
+			File binDir = fetchService.getBinDir(repo, ModelType.SOURCE, sourceRefId, lastCommit.id);
 			if (!binDir.exists())
 				return null;
 			File file = new File(binDir, filename);
@@ -140,7 +142,7 @@ public class IlcdWriter implements DatasetWriter {
 			List<JsonObject> parameters = new ArrayList<>();
 			List<IndexEntry> entries = searchService.getAll(repo, ModelType.PARAMETER);
 			Set<String> added = new HashSet<>();
-			List<Commit> commits = historyService.getCommitsUntil(repo, currentCommitId);
+			List<Commit> commits = historyService.getCommitsUntil(repo, commitId);
 			List<IndexEntry> filtered = new ArrayList<>();
 			for (IndexEntry entry : entries) {
 				if (entry.action == IndexAction.DELETE)
@@ -188,12 +190,10 @@ public class IlcdWriter implements DatasetWriter {
 
 		private ModelType modelType;
 		private String refId;
-		private String commitId;
 
-		private Ref(ModelType modelType, String refId, String commitId) {
+		private Ref(ModelType modelType, String refId) {
 			this.modelType = modelType;
 			this.refId = refId;
-			this.commitId = commitId;
 		}
 
 		@Override
