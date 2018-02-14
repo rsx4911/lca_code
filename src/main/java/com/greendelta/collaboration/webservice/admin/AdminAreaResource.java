@@ -16,9 +16,9 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchService;
-import com.greendelta.collaboration.service.TeamService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.TeamService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("admin/area")

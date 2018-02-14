@@ -29,7 +29,7 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.SearchService;
+import com.greendelta.collaboration.service.search.SearchService;
 
 public class IlcdWriter implements DatasetWriter {
 

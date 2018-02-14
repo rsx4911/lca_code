@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.search;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,24 +27,25 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingApproach;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
 
-class IndexEntryCreator {
+public class IndexEntryCreator {
 
 	private static final Gson gson = new Gson();
 	private final Repository repo;
 	private final Commit commit;
 
-	IndexEntryCreator(Repository repo, Commit commit) {
+	public IndexEntryCreator(Repository repo, Commit commit) {
 		this.repo = repo;
 		this.commit = commit;
 	}
 
-	IndexEntry create(Dataset dataset) {
+	public IndexEntry create(Dataset dataset) {
 		return create(dataset, null, null);
 	}
 
-	IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
+	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
 		if (data == null) {
 			IndexEntry entry = generic(dataset);
 			entry.action = IndexAction.DELETE;
@@ -168,7 +169,7 @@ class IndexEntryCreator {
 		return ModellingApproach.UNKNOWN;
 	}
 
-	static Map<String, Object> readData(File file) {
+	public static Map<String, Object> readData(File file) {
 		try (FileInputStream fis = new FileInputStream(file);
 				GZIPInputStream gis = new GZIPInputStream(fis);
 				InputStreamReader isr = new InputStreamReader(gis)) {

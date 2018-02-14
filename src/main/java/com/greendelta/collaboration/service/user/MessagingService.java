@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.user;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Dao;
 
 public class MessagingService {
 
@@ -31,7 +32,7 @@ public class MessagingService {
 		return dao.insert(message);
 	}
 
-	void delete(Message message) {
+	public void delete(Message message) {
 		dao.delete(message);
 	}
 
@@ -76,14 +77,14 @@ public class MessagingService {
 		return messages;
 	}
 
-	List<Message> getMessages(User user) {
+	public List<Message> getMessages(User user) {
 		String jpql = "SELECT m FROM Message m WHERE m.from = :user OR m.to = :user";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("user", user);
 		return dao.getAll(jpql, attributes);
 	}
 
-	List<Message> getMessages(Team team) {
+	public List<Message> getMessages(Team team) {
 		String jpql = "SELECT m FROM Message m WHERE m.team :team";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("team", team);

@@ -1,6 +1,5 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.search;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +14,8 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -39,8 +40,7 @@ public class BrowseService {
 	public List<ObjectMap> getRootContent(BrowseParameter params) {
 		List<ObjectMap> types = new ArrayList<>();
 		for (ModelType type : ModelTypes.SORTED) {
-			File dir = params.repo.getModelDir(type, false);
-			if (!dir.exists())
+			if (!params.repo.has(type))
 				continue;
 			List<ObjectMap> all = getAll(type, params, true);
 			if (all.isEmpty())
@@ -76,7 +76,7 @@ public class BrowseService {
 			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		}
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
-		return new DataFilter(result, params, ignoreIfMoved).apply();
+		return new BrowseDataFilter(result, params, ignoreIfMoved).apply();
 	}
 
 	public List<ObjectMap> getUncategorized(ModelType type, BrowseParameter params) {
@@ -91,9 +91,9 @@ public class BrowseService {
 		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(ModelType.CATEGORY.name()));
 		builder.filter("categoryType", SearchFilterValue.term(type.name()));
 		builder.filter("categoryRefId", SearchFilterValue.term(type.name()));
-		List<ObjectMap> result = new DataFilter(searchService.searchRaw(builder.build()).data, params).apply();
-		Map<String, List<ObjectMap>> lastForPath = getForPath(getAll(type, params.clone().removeFilter()), 1);
-		updateCommitInfo(lastForPath, result);
+		List<ObjectMap> result = new BrowseDataFilter(searchService.searchRaw(builder.build()).data, params).apply();
+		List<ObjectMap> allForType = getAll(type, params.clone().removeFilter());
+		new CommitInfoFiller().apply(allForType, result, 1);
 		return result;
 	}
 
@@ -102,7 +102,7 @@ public class BrowseService {
 		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		builder.filter("categoryRefId", SearchFilterValue.term(type.name()));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
-		return new DataFilter(result, params).apply();
+		return new BrowseDataFilter(result, params).apply();
 	}
 
 	public List<ObjectMap> getForCategory(Repository repo, String refId) {
@@ -110,14 +110,14 @@ public class BrowseService {
 		SearchQueryBuilder builder = builder(params)
 				.filter("categoryRefId", SearchFilterValue.term(refId));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
-		return sort(convert(new DataFilter(result, params).apply()));
+		return sort(convert(new BrowseDataFilter(result, params).apply()));
 	}
 
 	public List<ObjectMap> getForCategory(String refId, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params)
 				.filter("categoryRefId", SearchFilterValue.term(refId));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
-		result = new DataFilter(result, params).apply();
+		result = new BrowseDataFilter(result, params).apply();
 		// get last commit info
 		ObjectMap category = getDataset(params.repo, refId, params.commitId);
 		ModelType type = category.get("categoryType");
@@ -125,8 +125,7 @@ public class BrowseService {
 		List<ObjectMap> children = getAllCategoryChildren(type, path, params.clone().removeFilter()
 				.includeDeleted(true));
 		int depth = path.split("/").length + 1;
-		Map<String, List<ObjectMap>> lastForPath = getForPath(children, depth);
-		updateCommitInfo(lastForPath, result);
+		new CommitInfoFiller().apply(children, result, depth);
 		return sort(convert(result));
 	}
 
@@ -134,57 +133,7 @@ public class BrowseService {
 		SearchQueryBuilder builder = builder(params);
 		builder.filter("type", SearchFilterValue.term(Arrays.asList(categoryType.name(), ModelType.CATEGORY.name())));
 		builder.filter("fullPath", SearchFilterValue.wildcard(path + "/?*"));
-		return new DataFilter(searchService.searchRaw(builder.build()).data, params).apply();
-	}
-
-	private Map<String, List<ObjectMap>> getForPath(List<ObjectMap> entries, int depth) {
-		Map<String, List<ObjectMap>> map = new HashMap<>();
-		for (ObjectMap entry : entries) {
-			String path = getSubPath(entry.get("fullPath"), depth);
-			List<ObjectMap> pathEntries = map.get(path);
-			if (pathEntries == null) {
-				map.put(path, pathEntries = new ArrayList<>());
-			}
-			pathEntries.add(entry);
-		}
-		return map;
-	}
-
-	private void updateCommitInfo(Map<String, List<ObjectMap>> lastForPath, List<ObjectMap> entries) {
-		for (ObjectMap entry : entries) {
-			if (entry.get("type") != ModelType.CATEGORY)
-				continue;
-			// entries are supposed to be sorted by timestamp
-			List<ObjectMap> children = lastForPath.get(entry.get("fullPath"));
-			if (children != null) {
-				ObjectMap lastChild = children.get(0);
-				entry.put("commitId", lastChild.get("commitId"));
-				entry.put("commitMessage", lastChild.get("commitMessage"));
-				entry.put("commitTimestamp", lastChild.get("commitTimestamp"));
-				int count = 0;
-				for (ObjectMap child : children) {
-					if (child.get("type") == ModelType.CATEGORY)
-						continue;
-					count++;
-				}
-				entry.put("count", count);
-			} else {
-				entry.put("count", 0);
-			}
-
-		}
-	}
-
-	private String getSubPath(String path, int depth) {
-		String subPath = "";
-		String[] pathSplit = path.split("/");
-		for (int i = 0; i < depth; i++) {
-			if (!subPath.isEmpty()) {
-				subPath += "/";
-			}
-			subPath += pathSplit[i];
-		}
-		return subPath;
+		return new BrowseDataFilter(searchService.searchRaw(builder.build()).data, params).apply();
 	}
 
 	private SearchQueryBuilder builder(BrowseParameter params) {
@@ -268,17 +217,17 @@ public class BrowseService {
 
 	}
 
-	private class DataFilter {
+	private class BrowseDataFilter {
 
 		private List<ObjectMap> entries;
 		private final BrowseParameter params;
 		private final boolean ignoreIfMoved;
 
-		private DataFilter(List<ObjectMap> entries, BrowseParameter params) {
+		private BrowseDataFilter(List<ObjectMap> entries, BrowseParameter params) {
 			this(entries, params, false);
 		}
 
-		private DataFilter(List<ObjectMap> entries, BrowseParameter params, boolean ignoreIfMoved) {
+		private BrowseDataFilter(List<ObjectMap> entries, BrowseParameter params, boolean ignoreIfMoved) {
 			this.entries = entries;
 			this.params = params;
 			this.ignoreIfMoved = ignoreIfMoved;

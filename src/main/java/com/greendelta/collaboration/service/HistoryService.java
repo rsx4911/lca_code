@@ -14,6 +14,7 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.SearchService;
 
 public class HistoryService {
 

@@ -14,6 +14,8 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.IndexEntryCreator;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 

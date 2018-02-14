@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.user;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +23,7 @@ import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.platform.Imprint;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
+import com.greendelta.collaboration.service.Repository;
 
 public class NotificationService {
 

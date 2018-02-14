@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,6 +12,9 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;

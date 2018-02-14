@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.user.UserService;
 
 @Path("public/error")
 public class ClientErrorResource {

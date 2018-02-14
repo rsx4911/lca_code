@@ -24,13 +24,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.service.BrowseService;
-import com.greendelta.collaboration.service.BrowseService.BrowseParameter;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.UserService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 

@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
+import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class Conversations {

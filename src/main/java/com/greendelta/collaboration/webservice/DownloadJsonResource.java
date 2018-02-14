@@ -17,12 +17,12 @@ import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchService;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.export.DatasetWriter;
 import com.greendelta.collaboration.util.export.JsonWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;

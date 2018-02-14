@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +15,7 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -99,7 +100,7 @@ public class SearchService {
 		return parser.convert(client.get(IndexEntry.toIndexId(repo.toId(), refId, commitId)));
 	}
 
-	IndexAction getMostRecentAction(String repoId, String refId) {
+	public IndexAction getMostRecentAction(String repoId, String refId) {
 		ObjectMap latest = getMostRecent(repoId, refId, null);
 		if (latest == null)
 			return null;

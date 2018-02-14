@@ -19,7 +19,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.persist.Transactional;
 import com.greendelta.collaboration.model.AbstractEntity;
 
-class Dao<T extends AbstractEntity> {
+public class Dao<T extends AbstractEntity> {
 
 	private final Provider<EntityManager> entityManagerProvider;
 	// used for getting detached objects (no cache, session, etc.)
@@ -203,11 +203,11 @@ class Dao<T extends AbstractEntity> {
 		return getCount(jpql, parameters);
 	}
 
-	private long getLastId() {
+	public long getLastId() {
 		return getLastId(entityType);
 	}
 
-	long getLastId(Class<? extends AbstractEntity> entityType) {
+	public long getLastId(Class<? extends AbstractEntity> entityType) {
 		String query = "SELECT o FROM " + entityType.getSimpleName() + " o ORDER BY o.id DESC";
 		T value = getFirst(query, Collections.emptyMap());
 		if (value == null)

@@ -14,7 +14,7 @@ import org.apache.shiro.subject.PrincipalCollection;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.user.UserService;
 
 public class JpaRealm extends AuthorizingRealm {
 

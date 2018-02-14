@@ -24,10 +24,10 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.MessagingService;
-import com.greendelta.collaboration.service.MessagingService.ConversationDescriptor;
-import com.greendelta.collaboration.service.TeamService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.TeamService;
+import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.webservice.util.Messages;
 

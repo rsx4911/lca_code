@@ -30,7 +30,7 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchService;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("fetch")

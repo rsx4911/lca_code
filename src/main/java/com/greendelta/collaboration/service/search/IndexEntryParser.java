@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
 import java.util.List;

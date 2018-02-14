@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Bytes;
 
 public class FetchService {

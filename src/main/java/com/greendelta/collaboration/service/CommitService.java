@@ -25,6 +25,10 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.IndexEntryCreator;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Bytes;
 
 public class CommitService {

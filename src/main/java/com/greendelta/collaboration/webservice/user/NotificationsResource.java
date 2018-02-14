@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Notification;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("notifications")

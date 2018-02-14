@@ -27,14 +27,10 @@ public class Repository {
 	public final String name;
 	public final Settings settings;
 
-	static Repository get(String root, String group, String name) {
+	public static Repository get(String root, String group, String name) {
 		Repository repo = new Repository(root, group, name);
 		repo.checkVersion();
 		return repo;
-	}
-
-	static Repository getIgnoreSchema(String root, String group, String name) {
-		return new Repository(root, group, name);
 	}
 
 	private Repository(String root, String group, String name) {
@@ -115,6 +111,10 @@ public class Repository {
 			log.error("Error getting size of repository", e);
 			return 0;
 		}
+	}
+
+	public boolean has(ModelType type) {
+		return getModelDir(type, false).exists();
 	}
 
 	void updateSize(long size) {

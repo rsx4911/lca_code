@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +11,8 @@ import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.model.task.TaskType;
+import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.service.Repository;
 
 public class TaskService {
 
@@ -67,11 +69,11 @@ public class TaskService {
 		return active;
 	}
 
-	Task update(Task task) {
+	public Task update(Task task) {
 		return dao.update(task);
 	}
 
-	void delete(Task task) {
+	public void delete(Task task) {
 		dao.delete(task);
 	}
 

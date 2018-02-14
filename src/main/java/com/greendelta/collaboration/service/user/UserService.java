@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.user;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -14,12 +14,15 @@ import org.apache.logging.log4j.Logger;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
+import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -102,7 +105,11 @@ public class UserService {
 			return 0;
 		long size = 0;
 		for (File file : userGroup.listFiles()) {
-			size += Repository.getIgnoreSchema(repositoryPath, currentUser.username, file.getName()).getSize();
+			try {
+				size += Repository.get(repositoryPath, currentUser.username, file.getName()).getSize();
+			} catch (UnsupportedSchemaException e) {
+				// ignore
+			}
 		}
 		return size;
 	}
@@ -179,7 +186,7 @@ public class UserService {
 		return issuer + ":" + username;
 	}
 
-	void delete(User user) {
+	public void delete(User user) {
 		dao.delete(user);
 	}
 
