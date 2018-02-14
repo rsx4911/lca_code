@@ -5,11 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,11 +19,6 @@ public class HistoryService {
 
 	private static final Logger log = LogManager.getLogger(HistoryService.class);
 	private final SearchService searchService;
-	// caches the commit references for the last repository requested, this is
-	// to reduce calls to the search api for consecutive calls over different
-	// requests in the same repo
-	private static String lastRepoId;
-	private static Map<String, Set<String>> lastResult;
 
 	@Inject
 	public HistoryService(SearchService searchService) {
@@ -128,21 +119,6 @@ public class HistoryService {
 		}
 	}
 
-	private boolean isReferenceIn(Repository repo, Commit element, String refId) {
-		if (!repo.toId().equals(lastRepoId)) {
-			lastResult = new HashMap<>();
-			lastRepoId = repo.toId();
-		}
-		if (!lastResult.containsKey(element.id)) {
-			Set<String> ids = new HashSet<>();
-			for (IndexEntry entry : searchService.getDescriptors(repo, element)) {
-				ids.add(entry.refId);
-			}
-			lastResult.put(element.id, ids);
-		}
-		return lastResult.get(element.id).contains(refId);
-	}
-
 	interface Filter<T> {
 		boolean filter(T element);
 	}
@@ -184,7 +160,7 @@ public class HistoryService {
 
 		@Override
 		public boolean filter(Commit element) {
-			return !isReferenceIn(repo, element, refId);
+			return !searchService.has(IndexEntry.toIndexId(repo.toId(), refId, element.id));
 		}
 
 	}
@@ -232,7 +208,7 @@ public class HistoryService {
 				done = true;
 			if (beforeCommit && done)
 				return true;
-			return !isReferenceIn(repo, element, refId);
+			return !searchService.has(IndexEntry.toIndexId(repo.toId(), refId, element.id));
 		}
 
 	}

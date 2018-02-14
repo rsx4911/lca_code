@@ -143,7 +143,7 @@ public class BrowseResource {
 		Repository repo = repoService.get(group, name);
 		String lastCommitId = getLastCommitId(repo, type, refId, commitId);
 		if (lastCommitId == null) {
-			String message = notFoundMessage(type, refId, null);
+			String message = notFoundMessage(type, refId, commitId);
 			return Respond.notFound(message);
 		}
 		if (commitId == null) {

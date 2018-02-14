@@ -191,7 +191,7 @@ define([
 					buttons: [
 						{text: 'Cancel', callback: () => @closeActive()}
 						{id: 'select-model-button', text: 'Select', className: 'btn-primary', callback: () => 
-							if options.multiSelection
+							if options.multipleSelection
 								options.callback ModelTree.getSelection '#model-tree'
 								@closeActive()
 							else
@@ -205,11 +205,11 @@ define([
 					]
 					callback: () =>
 						ModelTree.init '#model-tree', options.repositoryPath, 
-							multiSelection: options.multiSelection
-							defaultPath: options.type
-						$('#select-model-button').prop 'disabled', !options.multiSelection
+							multipleSelection: options.multipleSelection
+							defaultPath: options.path || options.type
+						$('#select-model-button').prop 'disabled', !options.multipleSelection
 						$('#model-tree').on 'activate_node.jstree', (event, data) =>
-							if options.type && !options.multiSelection
+							if options.type && !options.multipleSelection
 								isType = data?.node?.original?.type is options.type
 								$('#select-model-button').prop 'disabled', !isType
 								if isType and options.selectVersion
@@ -227,7 +227,7 @@ define([
 													$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.formatCommitDescription(commit.message) + '"></optgroup>'
 											@hideProgressIndicator()
 										error: () => 
-											$('#select-model').prop 'disabled', true
+											$('#select-model-button').prop 'disabled', true
 											@hideProgressIndicator()
 
 			selectCommit: (commits, commitId, callback) ->

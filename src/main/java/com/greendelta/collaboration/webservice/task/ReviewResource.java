@@ -2,6 +2,7 @@ package com.greendelta.collaboration.webservice.task;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -17,6 +18,7 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.AccessService;
@@ -28,8 +30,9 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.ReviewService;
 import com.greendelta.collaboration.service.TaskService;
 import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.webservice.ReferenceCollector;
+import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.collaboration.webservice.task.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.util.Reviews;
 
 @Path("task/review")
@@ -108,8 +111,10 @@ public class ReviewResource {
 		Repository repo = repoService.get(review.repositoryPath);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
-		ReferenceCollector collector = new ReferenceCollector(browseService, historyService);
-		service.setReferences(id, collector.getReferences(repo, references));
+		ReferenceCollector<ReviewReference> collector = new ReferenceCollector<>(
+				browseService, (ref) -> convert(repo, ref));
+		Set<ReviewReference> reviewReferences = collector.getReferences(repo, references);
+		service.setReferences(id, reviewReferences);
 		return createResponse();
 	}
 
@@ -199,4 +204,15 @@ public class ReviewResource {
 		return Respond.ok(Collections.singletonMap("activeTasks", Integer.toString(activeTasks)));
 	}
 
+	private ReviewReference convert(Repository repo, Reference ref) {
+		ReviewReference reference = new ReviewReference();
+		reference.type = ref.type;
+		reference.refId = ref.id;
+		reference.commitId = ref.commitId;
+		if (reference.commitId == null) {
+			reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
+		}
+		reference.name = ref.name;
+		return reference;
+	}
 }

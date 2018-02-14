@@ -220,6 +220,33 @@ public class SearchService {
 		return results;
 	}
 
+	public List<IndexEntry> getMostRecent(Repository repo, ModelType type, String path, Commit until) {
+		List<IndexEntry> results = new ArrayList<>();
+		Set<String> added = new HashSet<>();
+		SearchQueryBuilder builder = builder(repo.toId());
+		if (until != null) {
+			builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
+		}
+		if (type != null) {
+			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
+		}
+		if (path != null) {
+			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/?*"));
+		}
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
+		SearchResult<ObjectMap> result = searchRaw(builder.build());
+		if (result.data.isEmpty())
+			return results;
+		for (ObjectMap data : result.data) {
+			String refId = data.get("refId").toString();
+			if (added.contains(refId))
+				continue;
+			results.add(parser.parse(data));
+			added.add(refId);
+		}
+		return results;
+	}
+
 	public IndexEntry getFirst(String repoId, String refId) {
 		SearchQueryBuilder builder = builder(repoId);
 		builder.filter("refId", SearchFilterValue.term(refId));
@@ -252,6 +279,10 @@ public class SearchService {
 
 	public IndexEntry get(String id) {
 		return parser.parse(client.get(id));
+	}
+
+	public boolean has(String id) {
+		return client.has(id);
 	}
 
 	public List<IndexEntry> get(Set<String> ids) {

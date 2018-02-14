@@ -18,24 +18,73 @@ define([
 
 		class RepositoryDatasets extends Backbone.View
 
+			toggleDeleted: (event) ->
+				target = $ Events.target event
+				LocalStorage.toggleValue 'datasets-showDeleted'
+				@filter.applyFilter()
+
+			changeCommit: (event) ->
+				target = $ Events.target event
+				commitId = target.val()
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				path = "#{group}/#{name}/datasets/"
+				if @categoryPath
+					path += @categoryPath 
+				path += "?commitId=#{commitId}"
+				Router.navigate path
+
+			downloadData: (event) ->
+				Events.preventDefault event
+				target = $ Events.target event
+				format = target.attr('data-format') or 'json'
+				@download format
+
+			selectData: (event) ->
+				Events.preventDefault event
+				target = $ Events.target event
+				format = target.attr('data-format') or 'json'
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				Layers.selectModel
+					repositoryPath: "#{group}/#{name}"
+					multipleSelection: true
+					path: @getCategoryPath()
+					callback: (selection) =>
+						if !selection or !selection.length
+							return
+						@download format, selection
+
+			download: (format, selection) ->
+				@$('iframe#download-frame').remove()
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				url = "ws/public/download/#{format}/prepare/#{group}/#{name}"
+				if @commitId
+					url += '?commitId=' + @commitId
+				if @categoryPath
+					url += if @commitId then '&' else '?'
+					url += 'path=' + @getCategoryPath()
+				Layers.showProgressIndicator 'Collecting<br>data sets'
+				$.ajax
+					type: if selection then 'POST' else 'GET'
+					url: url
+					contentType: if selection then 'application/json' else null
+					data: if selection then JSON.stringify(selection) else null
+					success: (token) =>
+						Layers.hideProgressIndicator()
+						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
+					error: () =>
+						Layers.hideProgressIndicator()
+
 			className: 'repository-datasets'
 
 			events: 
-				'click a': (event) -> Events.followLink event
-				'change #show-deleted': (event) ->
-					target = $ Events.target event
-					LocalStorage.toggleValue 'datasets-showDeleted'
-					@filter.applyFilter()
-				'change #commit': (event) ->
-					target = $ Events.target event
-					commitId = target.val()
-					group = @repository.get 'group'
-					name = @repository.get 'name'
-					path = "#{group}/#{name}/datasets/"
-					if @categoryPath
-						path += @categoryPath 
-					path += "?commitId=#{commitId}"
-					Router.navigate path
+				'click a:not([href=#])': (event) -> Events.followLink event
+				'click a[data-format]:not([data-action=select-data])': 'downloadData'
+				'click a[data-action=select-data]': 'selectData'
+				'change #show-deleted': 'toggleDeleted'
+				'change #commit': 'changeCommit'
 
 			initialize: (options) ->
 				{@repository, @categoryPath, @commitId} = options
@@ -120,6 +169,7 @@ define([
 					getIcon: Icons.get
 				Renderer.render @, renderOptions
 				@filter.init()
+
 
 			getCategoryPath: () ->
 				unless @categoryPath 

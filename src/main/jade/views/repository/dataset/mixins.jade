@@ -7,7 +7,7 @@ mixin menubar()
 	if !isPublic
 		.header-box
 			- var currentCommit = null;
-			+select('commitId', 'Version', null, null, true)
+			+select('commitId', 'Commit', null, null, true)
 				each commit, i in commits
 					if commit.id === commitId
 						- currentCommit = commit;
@@ -48,12 +48,12 @@ mixin download-dropdown()
 	.dropdown.btn-group
 		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
 			span.glyphicon.glyphicon-download
-			span.text Download
-			span  
+			span.text Download 
 			span.caret
 		ul.dropdown-menu
 			li: a(href='#' data-format='json') as JSON-LD
-			if $.inArray(getTypeAsEnum(dataset.type), ['ACTOR', 'SOURCE', 'UNIT_GROUP', 'FLOW_PROPERTY', 'FLOW', 'PROCESS', 'IMPACT_METHOD']) !== -1
+			- var dsType = dataset ? dataset.type : null;
+			if !dsType || $.inArray(getTypeAsEnum(dsType), ['ACTOR', 'SOURCE', 'UNIT_GROUP', 'FLOW_PROPERTY', 'FLOW', 'PROCESS', 'IMPACT_METHOD']) !== -1
 				li: a(href='#' data-format='ilcd') as ILCD
 
 mixin comparison-dropdown()
