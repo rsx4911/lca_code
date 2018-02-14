@@ -26,97 +26,21 @@ import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
-import com.greendelta.search.wrapper.aggregations.SearchAggregation;
-import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
 public class SearchService {
 
 	private final SearchClient client;
-	private final RepositoryService repoService;
-	private final UserService userService;
+	private final QueryService queryService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	public SearchService(SearchClient searchClient, RepositoryService repoService, UserService userService) {
+	public SearchService(SearchClient searchClient, QueryService queryService) {
 		this.client = searchClient;
-		this.repoService = repoService;
-		this.userService = userService;
+		this.queryService = queryService;
 	}
 
 	public SearchResult<IndexEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
-		List<Repository> repos = repoService.getAllAccessible();
-		if (repos.isEmpty())
-			return buildEmptyResult(page, pageSize);
-		SearchQueryBuilder builder = new SearchQueryBuilder();
-		ModelType type = getFilteredModelType(filters.get(Aggregations.MODEL_TYPE.name));
-		for (SearchAggregation aggregation : Aggregations.getFilters(type)) {
-			Set<String> filterValues = filters.get(aggregation.name);
-			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
-				putRepositoryFilter(builder, filterValues, repos);
-			} else if (aggregation.name.equals(Aggregations.MODEL_TYPE.name)) {
-				if (type == null) {
-					builder.aggregation(Aggregations.MODEL_TYPE, getModelTypes());
-				} else {
-					builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-				}
-			} else if (filterValues != null && !filterValues.isEmpty()) {
-				for (String filterValue : filterValues) {
-					builder.aggregation(aggregation, filterValue);
-				}
-			} else {
-				builder.aggregation(aggregation);
-			}
-		}
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
-		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, SearchFields.get(type, loggedIn));
-		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
-		builder.page(page);
-		builder.pageSize(pageSize);
-		SearchResult<Map<String, Object>> result = client.search(builder.build());
-		if (loggedIn)
-			return SearchResults.convert(result, parser::parse);
-		// only return newest and undeleted versions to anonymous users
-		List<Map<String, Object>> entries = new ArrayList<>();
-		Set<String> alreadyAdded = new HashSet<>();
-		entries = Collections.filter(entries, (e) -> !alreadyAdded.add(e.get("refId").toString()));
-		entries = Collections.filter(entries, (e) -> e.get("action") == IndexAction.DELETE);
-		return SearchResults.convert(result, parser::parse);
-	}
-
-	private String[] getModelTypes() {
-		Set<String> types = new HashSet<>();
-		for (ModelType type : ModelType.categorized()) {
-			types.add(type.name());
-		}
-		return types.toArray(new String[types.size()]);
-	}
-
-	private SearchResult<IndexEntry> buildEmptyResult(int page, int pageSize) {
-		SearchResult<IndexEntry> result = new SearchResult<>();
-		result.resultInfo.currentPage = page;
-		result.resultInfo.pageSize = pageSize;
-		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {
-			result.aggregations.add(new AggregationResultBuilder().type(aggr.type).name(aggr.name).build());
-		}
-		return result;
-	}
-
-	private ModelType getFilteredModelType(Set<String> values) {
-		if (values == null)
-			return null;
-		if (values.size() > 1)
-			return null;
-		return ModelType.valueOf(values.iterator().next());
-	}
-
-	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> repos) {
-		for (Repository repo : repos) {
-			if (values != null && !values.contains(repo.toId()))
-				continue;
-			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
-		}
+		return queryService.query(query, page, pageSize, filters);
 	}
 
 	public SearchResult<IndexEntry> search(SearchQuery query) {
@@ -163,8 +87,7 @@ public class SearchService {
 	}
 
 	SearchQueryBuilder builder(String repoId) {
-		return new SearchQueryBuilder()
-				.page(0)
+		return new SearchQueryBuilder().page(0)
 				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repoId));
 	}
 
