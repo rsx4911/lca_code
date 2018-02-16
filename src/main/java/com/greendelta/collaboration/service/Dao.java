@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
 
 import com.google.inject.Inject;
@@ -22,18 +21,13 @@ import com.greendelta.collaboration.model.AbstractEntity;
 public class Dao<T extends AbstractEntity> {
 
 	private final Provider<EntityManager> entityManagerProvider;
-	// used for getting detached objects (no cache, session, etc.)
-	private final Provider<EntityManagerFactory> entityManagerFactoryProvider;
 	private final Class<T> entityType;
 
 	@Inject
 	@SuppressWarnings("unchecked")
-	public Dao(TypeLiteral<T> type,
-			Provider<EntityManager> entityManagerProvider,
-			Provider<EntityManagerFactory> entityManagerFactoryProvider) {
+	public Dao(TypeLiteral<T> type, Provider<EntityManager> entityManagerProvider) {
 		this.entityType = (Class<T>) type.getRawType();
 		this.entityManagerProvider = entityManagerProvider;
-		this.entityManagerFactoryProvider = entityManagerFactoryProvider;
 	}
 
 	public T get(long id) {
@@ -41,19 +35,6 @@ public class Dao<T extends AbstractEntity> {
 			return null;
 		EntityManager entityManager = createManager();
 		return entityManager.find(entityType, id);
-	}
-
-	public T getDetached(long id) {
-		if (id < 1)
-			return null;
-		EntityManager entityManager = entityManagerFactoryProvider.get()
-				.createEntityManager();
-		try {
-			T o = entityManager.find(entityType, id);
-			return o;
-		} finally {
-			entityManager.close();
-		}
 	}
 
 	public List<T> getAll() {

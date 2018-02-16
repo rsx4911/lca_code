@@ -42,10 +42,16 @@ public class ModelTypes {
 			return null;
 		if (value instanceof ModelType)
 			return (ModelType) value;
-		String sValue = value.toString();
-		if (sValue.isEmpty())
+		return parse(value.toString());
+	}
+
+	public static ModelType parse(String value) {
+		if (value.isEmpty())
 			return null;
-		return ModelType.valueOf(sValue.toUpperCase());
+		for (ModelType type : ModelType.values())
+			if (type.name().equals(value.toUpperCase()))
+				return type;
+		return null;
 	}
 
 	public static FlowType flowType(Map<String, Object> map) {

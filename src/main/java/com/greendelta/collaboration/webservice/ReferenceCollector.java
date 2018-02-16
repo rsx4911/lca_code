@@ -12,6 +12,7 @@ import org.openlca.util.KeyGen;
 import com.google.common.base.Strings;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class ReferenceCollector<T> {
@@ -39,7 +40,7 @@ public class ReferenceCollector<T> {
 	}
 
 	private List<T> collectForType(Repository repo, ModelType type) {
-		return convert(repo, browseService.getAll(repo, type));
+		return convert(repo, browseService.getAll(type, new BrowseParameter(repo)));
 	}
 
 	private List<T> collectForCategory(Repository repo, String id) {

@@ -66,10 +66,10 @@ public class BrowseResource {
 		Repository repo = repoService.get(group, name);
 		List<ObjectMap> content = null;
 		if (Strings.isNullOrEmpty(categoryPath)) {
-			content = service.getRootContent(new BrowseParameter(repo, commitId, showDeleted));
+			content = service.getRootContent(new BrowseParameter(repo, commitId).includeDeleted(showDeleted));
 		} else {
 			ModelType type = getModelType(categoryPath);
-			BrowseParameter params = new BrowseParameter(repo, filter, commitId, showDeleted);
+			BrowseParameter params = new BrowseParameter(repo, filter, commitId).includeDeleted(showDeleted);
 			content = getCategoryContent(type, toId(categoryPath), params);
 		}
 		if (content == null)
@@ -110,21 +110,21 @@ public class BrowseResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("categoryInfo/{group}/{name}")
-	public Response categoryDeleted(
+	public Response categoryInfo(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@QueryParam("categoryPath") String categoryPath,
 			@QueryParam("commitId") String commitId) {
 		if (categoryPath == null || categoryPath.isEmpty())
 			return Respond.ok(new HashMap<>());
+		if (!categoryPath.contains("/"))
+			return Respond.ok(Collections.emptyMap());
 		Repository repo = repoService.get(group, name);
-		if (!categoryPath.contains("/")) {
-			if (service.getAll(repo, ModelType.valueOf(categoryPath)).isEmpty())
-				return Respond.ok(Collections.singletonMap("deleted", true));
-			return Respond.ok(Collections.singletonMap("deleted", false));
-		}
 		String refId = toId(categoryPath);
+		String category = categoryPath.substring(categoryPath.indexOf('/') + 1);
 		ObjectMap entry = service.getDataset(repo, refId, commitId);
+		if (entry == null)
+			return Respond.notFound("No category '" + category + "' found");
 		Map<String, Object> result = new HashMap<>();
 		result.put("id", refId);
 		result.put("deleted", entry.get("action") == IndexAction.DELETE ? "true" : "false");
@@ -171,6 +171,28 @@ public class BrowseResource {
 			map.put("commitId", commitId);
 		}
 		return Respond.ok(map);
+	}
+
+	@GET
+	@Path("count/{group}/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCount(@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("categoryPath") String path,
+			@QueryParam("commitId") String commitId,
+			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
+		String typeAsString = path.contains("/") ? path.substring(0, path.indexOf('/')) : path;
+		String category = path.contains("/") ? path.substring(path.indexOf('/') + 1) : null;
+		ModelType type = ModelTypes.parse(typeAsString);
+		Repository repo = repoService.get(group, name);
+		if (commitId == null) {
+			commitId = historyService.getLastCommit(repo).id;
+		}
+		long count = service.getCount(type, category, new BrowseParameter(repo, commitId).includeDeleted(showDeleted));
+		Map<String, Object> result = new HashMap<>();
+		result.put("count", count);
+		result.put("path", path);
+		return Respond.ok(result);
 	}
 
 	private String notFoundMessage(ModelType type, String refId, String commitId) {

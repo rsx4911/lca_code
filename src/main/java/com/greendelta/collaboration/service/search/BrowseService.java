@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,41 +41,67 @@ public class BrowseService {
 		for (ModelType type : ModelTypes.SORTED) {
 			if (!params.repo.has(type))
 				continue;
-			List<ObjectMap> all = getAll(type, params, true);
-			if (all.isEmpty())
+			if (getUncategorized(type, params).isEmpty())
 				continue;
 			ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 			map.put("type", type);
-			map.put("count", all.size());
-			ObjectMap last = all.get(0);
-			if (!params.includeDeleted) {
-				last = getAll(type, params.clone().includeDeleted(true), true).get(0);
-			}
+			ObjectMap last = getLastChanged(type, null, params);
 			// put commit info of last changed children
 			map.put("commitId", last.get("commitId"));
 			map.put("commitMessage", last.get("commitMessage"));
 			map.put("commitTimestamp", last.get("commitTimestamp"));
-			map.put("deleted", params.includeDeleted && getAll(type, params.clone().includeDeleted(false)).isEmpty());
+			map.put("deleted", params.includeDeleted
+					&& getUncategorized(type, params.clone().includeDeleted(false)).isEmpty());
 			types.add(map);
 		}
 		return types;
 	}
 
-	public List<ObjectMap> getAll(Repository repo, ModelType type) {
-		return convert(getAll(type, new BrowseParameter(repo)));
+	public long getCount(ModelType type, String path, BrowseParameter params) {
+		return getAll(type, path, params).size();
 	}
 
-	private List<ObjectMap> getAll(ModelType type, BrowseParameter params) {
-		return getAll(type, params, false);
+	public List<ObjectMap> getAll(ModelType type, BrowseParameter params) {
+		return getAll(type, null, params);
 	}
 
-	private List<ObjectMap> getAll(ModelType type, BrowseParameter params, boolean ignoreIfMoved) {
+	public List<ObjectMap> getAll(ModelType type, String path, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params);
 		if (type != null) {
 			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		}
+		if (path != null) {
+			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/*"));
+		}
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
-		return new BrowseDataFilter(result, params, ignoreIfMoved).apply();
+		return new BrowseDataFilter(result, params).apply();
+	}
+
+	ObjectMap getLastChanged(ModelType categoryType, String path, BrowseParameter params) {
+		ObjectMap lastModel = getLastChanged(categoryType, null, path, params);
+		ObjectMap lastCategory = getLastChanged(ModelType.CATEGORY, categoryType, path, params);
+		long modelTimestamp = lastModel != null ? lastModel.getLong("commitTimestamp") : 0;
+		long categoryTimestamp = lastCategory != null ? lastCategory.getLong("commitTimestamp") : 0;
+		if (modelTimestamp > categoryTimestamp)
+			return lastModel;
+		return lastCategory;
+	}
+
+	private ObjectMap getLastChanged(ModelType type, ModelType categoryType, String path, BrowseParameter params) {
+		SearchQueryBuilder builder = builder(params);
+		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
+		if (categoryType != null) {
+			builder.filter("categoryType", SearchFilterValue.term(categoryType.name()));
+		}
+		if (path != null) {
+			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/?*"));
+		}
+		builder.page(1);
+		builder.pageSize(1);
+		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
+		if (result.isEmpty())
+			return null;
+		return result.get(0);
 	}
 
 	public List<ObjectMap> getUncategorized(ModelType type, BrowseParameter params) {
@@ -92,8 +117,7 @@ public class BrowseService {
 		builder.filter("categoryType", SearchFilterValue.term(type.name()));
 		builder.filter("categoryRefId", SearchFilterValue.term(type.name()));
 		List<ObjectMap> result = new BrowseDataFilter(searchService.searchRaw(builder.build()).data, params).apply();
-		List<ObjectMap> allForType = getAll(type, params.clone().removeFilter());
-		new CommitInfoFiller().apply(allForType, result, 1);
+		appendCommitInfo(result, params);
 		return result;
 	}
 
@@ -118,22 +142,23 @@ public class BrowseService {
 				.filter("categoryRefId", SearchFilterValue.term(refId));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
 		result = new BrowseDataFilter(result, params).apply();
-		// get last commit info
-		ObjectMap category = getDataset(params.repo, refId, params.commitId);
-		ModelType type = category.get("categoryType");
-		String path = category.get("fullPath");
-		List<ObjectMap> children = getAllCategoryChildren(type, path, params.clone().removeFilter()
-				.includeDeleted(true));
-		int depth = path.split("/").length + 1;
-		new CommitInfoFiller().apply(children, result, depth);
+		appendCommitInfo(result, params);
 		return sort(convert(result));
 	}
 
-	private List<ObjectMap> getAllCategoryChildren(ModelType categoryType, String path, BrowseParameter params) {
-		SearchQueryBuilder builder = builder(params);
-		builder.filter("type", SearchFilterValue.term(Arrays.asList(categoryType.name(), ModelType.CATEGORY.name())));
-		builder.filter("fullPath", SearchFilterValue.wildcard(path + "/?*"));
-		return new BrowseDataFilter(searchService.searchRaw(builder.build()).data, params).apply();
+	private void appendCommitInfo(List<ObjectMap> entries, BrowseParameter params) {
+		params = params.clone().removeFilter().includeDeleted(true);
+		for (ObjectMap entry : entries) {
+			ModelType type = ModelTypes.from(entry, "type");
+			if (type != ModelType.CATEGORY)
+				continue;
+			type = ModelTypes.from(entry, "categoryType");
+			String path = entry.getString("fullPath");
+			ObjectMap lastChanged = getLastChanged(type, path, params);
+			entry.put("commitId", lastChanged.get("commitId"));
+			entry.put("commitMessage", lastChanged.get("commitMessage"));
+			entry.put("commitTimestamp", lastChanged.get("commitTimestamp"));
+		}
 	}
 
 	private SearchQueryBuilder builder(BrowseParameter params) {
@@ -141,6 +166,7 @@ public class BrowseService {
 		if (!Strings.isNullOrEmpty(params.nameFilter)) {
 			builder.filter("name", SearchFilterValue.wildcard("*" + params.nameFilter + "*"));
 		}
+		builder.fullResult(!params.onlyCount);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		if (params.commitId == null)
 			return builder;
@@ -180,24 +206,29 @@ public class BrowseService {
 		public String nameFilter;
 		public String commitId;
 		public boolean includeDeleted;
+		public boolean onlyCount;
 
 		public BrowseParameter(Repository repo) {
-			this(repo, null, null, false);
+			this(repo, null, null);
 		}
 
-		public BrowseParameter(Repository repo, String commitId, boolean includeDeleted) {
-			this(repo, null, commitId, includeDeleted);
+		public BrowseParameter(Repository repo, String commitId) {
+			this(repo, null, commitId);
 		}
 
-		public BrowseParameter(Repository repo, String nameFilter, String commitId, boolean includeDeleted) {
+		public BrowseParameter(Repository repo, String nameFilter, String commitId) {
 			this.repo = repo;
 			this.nameFilter = nameFilter;
 			this.commitId = commitId;
-			this.includeDeleted = includeDeleted;
 		}
 
 		public BrowseParameter includeDeleted(boolean value) {
 			includeDeleted = value;
+			return this;
+		}
+
+		public BrowseParameter onlyCount(boolean value) {
+			onlyCount = value;
 			return this;
 		}
 
@@ -212,6 +243,7 @@ public class BrowseService {
 			p.nameFilter = nameFilter;
 			p.commitId = commitId;
 			p.includeDeleted = includeDeleted;
+			p.onlyCount = onlyCount;
 			return p;
 		}
 
@@ -221,24 +253,17 @@ public class BrowseService {
 
 		private List<ObjectMap> entries;
 		private final BrowseParameter params;
-		private final boolean ignoreIfMoved;
 
 		private BrowseDataFilter(List<ObjectMap> entries, BrowseParameter params) {
-			this(entries, params, false);
-		}
-
-		private BrowseDataFilter(List<ObjectMap> entries, BrowseParameter params, boolean ignoreIfMoved) {
 			this.entries = entries;
 			this.params = params;
-			this.ignoreIfMoved = ignoreIfMoved;
 		}
 
 		private List<ObjectMap> apply() {
 			filterPrevious();
 			if (!params.includeDeleted)
 				filterDeleted();
-			if (!ignoreIfMoved)
-				filterMoved();
+			filterMoved();
 			return entries;
 		}
 

@@ -41,6 +41,14 @@ class IndexEntryParser {
 	ObjectMap convert(Map<String, Object> entry) {
 		if (entry == null)
 			return null;
+		if (entry.containsKey("documentId")) {
+			ObjectMap map = new ObjectMap();
+			IndexEntry descriptor = IndexEntry.descriptor(entry.get("documentId").toString());
+			map.put("repositoryId", descriptor.repositoryId);
+			map.put("refId", descriptor.refId);
+			map.put("commitId", descriptor.commitId);
+			return map;
+		}
 		ObjectMap map = ObjectMap.fromMap(entry);
 		unsetDummyCategoryId(map);
 		ModelType type = ModelTypes.from(entry, "type");

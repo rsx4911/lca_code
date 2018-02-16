@@ -1,6 +1,7 @@
 define([
 				'backbone'
 				'moment'
+				'pace'
 				'cs!app/Router'
 				'cs!utils/Events'
 				'cs!utils/Filter'
@@ -14,7 +15,7 @@ define([
 				'templates/views/repository/datasets-entries'
 			]
 
-	(Backbone, Moment, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, currentUser, template, entriesTemplate) ->
+	(Backbone, Moment, Pace, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, currentUser, template, entriesTemplate) ->
 
 		class RepositoryDatasets extends Backbone.View
 
@@ -108,6 +109,7 @@ define([
 						if @commitId
 							url += '&commitId=' + @commitId
 						return url + '&'
+					afterRender: (result) => @loadCount result
 					beforeRender: (result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
@@ -124,35 +126,59 @@ define([
 							@$('.no-content-message').show()
 							@$('.table-browse').hide()
 						@initialized = true
-				
+
+			loadCount: (result) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'				
+				for entry in result.entries
+					if entry.type is 'CATEGORY' or !entry.refId
+						path = if entry.type is 'CATEGORY' then entry.categoryType else entry.type
+						if entry.fullPath
+							path += "/#{entry.fullPath}"
+						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{path}"
+						if @commitId
+							url += '&commitId=' + @commitId
+						url += "&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
+						Pace.ignore () =>
+							$.ajax
+								type: 'GET'
+								url: url
+								success: (result) ->
+									$("td[data-path='#{result.path}'] .dataset-count").html "(#{result.count})"
+
 			render: (renderOptions) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				@getCategoryInfo (categoryInfo) =>
+					if currentUser.isLoggedIn()
+						historyUrl = "ws/history/"
+						if categoryInfo.id
+							historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
+						else
+							historyUrl += "#{group}/#{name}"
+						$.ajax
+							type: 'GET'
+							url: historyUrl
+							success: (commits) => @doRender renderOptions, categoryInfo, commits
+					else
+						@doRender renderOptions, categoryInfo, []
+
+			getCategoryInfo: (callback) ->
+				if !@categoryPath or @categoryPath.indexOf('/') is -1
+					callback {}
+					return
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				url = "ws/public/browse/categoryInfo/#{group}/#{name}"
 				if @categoryPath
 					url += '?categoryPath=' + @getCategoryPath()
 				if @commitId
-					if @categoryPath
-						url += '&'
-					else
-						url += '?'
+					url += if @categoryPath then '&' else '?'
 					url += 'commitId=' + @commitId
 				$.ajax
 					type: 'GET'
 					url: url
-					success: (categoryInfo) =>
-						if currentUser.isLoggedIn()
-							historyUrl = "ws/history/"
-							if categoryInfo.id
-								historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
-							else
-								historyUrl += "#{group}/#{name}"
-							$.ajax
-								type: 'GET'
-								url: historyUrl
-								success: (commits) => @doRender renderOptions, categoryInfo, commits
-						else
-							@doRender renderOptions, categoryInfo, []
+					success: callback
 
 			doRender: (renderOptions, categoryInfo, commits) ->
 				group = @repository.get 'group'
@@ -169,7 +195,6 @@ define([
 					getIcon: Icons.get
 				Renderer.render @, renderOptions
 				@filter.init()
-
 
 			getCategoryPath: () ->
 				unless @categoryPath 

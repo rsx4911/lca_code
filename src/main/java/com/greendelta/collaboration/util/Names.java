@@ -28,6 +28,8 @@ public class Names {
 		RESERVED.add("team");
 		RESERVED.add("teams");
 		RESERVED.add("repositories");
+		RESERVED.add("categoryInfo");
+		RESERVED.add("count");
 		RESERVED.add("public");
 		RESERVED.add("images");
 		RESERVED.add("fonts");
