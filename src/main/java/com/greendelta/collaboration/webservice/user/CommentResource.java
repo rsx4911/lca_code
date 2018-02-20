@@ -22,6 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
@@ -29,6 +30,7 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
@@ -52,16 +54,19 @@ public class CommentResource {
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 	private final SearchService searchService;
+	private final HistoryService historyService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, NotificationService notificationService, SearchService searchService) {
+			AccessService accessService, NotificationService notificationService, SearchService searchService,
+			HistoryService historyService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 		this.searchService = searchService;
+		this.historyService = historyService;
 	}
 
 	@GET
@@ -107,7 +112,9 @@ public class CommentResource {
 		String repoId = repository.toId();
 		Set<String> ids = new HashSet<>();
 		for (Comment comment : comments) {
-			ids.add(IndexEntry.toIndexId(repoId, comment.field.refId, comment.field.commitId));
+			DatasetField field = comment.field;
+			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+			ids.add(IndexEntry.toIndexId(repoId, field.refId, commit.id));
 		}
 		List<IndexEntry> entries = searchService.get(ids);
 		Map<String, String> idToPath = new HashMap<>();
@@ -217,7 +224,8 @@ public class CommentResource {
 	private ObjectMap map(Comment comment, Repository repository) {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
-		IndexEntry ds = searchService.get(repository, field.refId, field.commitId);
+		Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+		IndexEntry ds = searchService.get(repository, field.refId, commit.id);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

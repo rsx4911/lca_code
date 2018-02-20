@@ -135,7 +135,7 @@ define([
 						path = if entry.type is 'CATEGORY' then entry.categoryType else entry.type
 						if entry.fullPath
 							path += "/#{entry.fullPath}"
-						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{path}"
+						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{encodeURIComponent(path)}"
 						if @commitId
 							url += '&commitId=' + @commitId
 						url += "&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
@@ -202,7 +202,7 @@ define([
 				slashIndex = @categoryPath.indexOf('/')
 				if slashIndex isnt -1
 					type = @categoryPath.substring 0, slashIndex
-					rest = @categoryPath.substring slashIndex
+					rest = encodeURIComponent @categoryPath.substring slashIndex
 				else
 					type = @categoryPath
 					rest = ''

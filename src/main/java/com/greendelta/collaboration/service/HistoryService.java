@@ -26,9 +26,6 @@ public class HistoryService {
 		this.searchService = searchService;
 	}
 
-	/**
-	 * Returns the last commit of the repository
-	 */
 	public Commit getLastCommit(Repository repo) {
 		List<Commit> commits = getCommits(repo);
 		if (commits.isEmpty())
@@ -36,10 +33,6 @@ public class HistoryService {
 		return commits.get(commits.size() - 1);
 	}
 
-	/**
-	 * Returns the last commit of the specified data set that was not a
-	 * "Delete"-commit
-	 */
 	public Commit getLastCommit(Repository repo, ModelType type, String refId) {
 		File file = repo.getHistoryFile(false);
 		List<Commit> commits = readHistory(file, new ModelCommitFilter(repo, refId));

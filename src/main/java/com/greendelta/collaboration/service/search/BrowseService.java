@@ -193,9 +193,11 @@ public class BrowseService {
 	}
 
 	public ObjectMap getDataset(Repository repo, String refId, String commitId) {
-		ObjectMap dataset = searchService.getRaw(repo, refId, commitId);
-		if (dataset != null)
-			return dataset;
+		if (commitId != null) {
+			ObjectMap dataset = searchService.getRaw(repo, refId, commitId);
+			if (dataset != null)
+				return dataset;
+		}
 		Commit commit = historyService.getCommit(repo, commitId);
 		return searchService.getMostRecent(repo.toId(), refId, commit);
 	}

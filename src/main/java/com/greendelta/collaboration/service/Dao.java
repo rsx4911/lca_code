@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
@@ -48,26 +48,31 @@ public class Dao<T extends AbstractEntity> {
 		return getAll(jpql, parameters, 0, 0);
 	}
 
-	public List<T> getAll(String jpql,
-			Map<String, ? extends Object> parameters, int start, int limit) {
+	public List<T> getAll(String jpql, Map<String, ? extends Object> parameters, int start, int limit) {
 		EntityManager em = createManager();
 		TypedQuery<T> query = em.createQuery(jpql, entityType);
-		if (parameters != null)
-			for (String parameter : parameters.keySet())
+		if (parameters != null) {
+			for (String parameter : parameters.keySet()) {
 				query.setParameter(parameter, parameters.get(parameter));
-		if (start > 0)
+			}
+		}
+		if (start > 0) {
 			query.setFirstResult(start - 1);
-		if (limit > 0)
+		}
+		if (limit > 0) {
 			query.setMaxResults(limit);
+		}
 		return query.getResultList();
 	}
 
 	public <RT> List<RT> getAttributes(String jpql, Map<String, ? extends Object> parameters, Class<RT> resultClass) {
 		EntityManager em = createManager();
 		TypedQuery<RT> query = em.createQuery(jpql, resultClass);
-		if (parameters != null)
-			for (String parameter : parameters.keySet())
+		if (parameters != null) {
+			for (String parameter : parameters.keySet()) {
 				query.setParameter(parameter, parameters.get(parameter));
+			}
+		}
 		return query.getResultList();
 	}
 
@@ -85,49 +90,41 @@ public class Dao<T extends AbstractEntity> {
 
 	public List<T> getForAttributes(Map<String, Object> parameters, boolean ignoreCase) {
 		String jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
-		if (parameters != null && parameters.size() > 0) {
-			jpql += " WHERE ";
-			int count = 0;
-			Map<String, Object> internal = new HashMap<>();
-			for (Entry<String, Object> parameter : parameters.entrySet()) {
-				if (count != 0)
-					jpql += " AND ";
-				Object value = parameter.getValue();
-				String comparator = "=";
-				if (value instanceof Collection
-						|| (value != null && value.getClass().isArray()))
-					comparator = "IN";
-				if (value == null)
-					jpql += "o." + parameter.getKey() + " IS NULL";
-				else {
-					if (ignoreCase && value instanceof String)
-						jpql += "LOWER(o." + parameter.getKey() + ") " + comparator + " :p" + ++count;
-					else
-						jpql += "o." + parameter.getKey() + " " + comparator + " :p" + ++count;
-				}
-				if (value != null && value.getClass().isArray()) {
-					Set<Object> values = new HashSet<>();
-					for (Object object : (Object[]) value)
-						values.add(object);
-					value = values;
-				}
-				if (value != null)
-					if (value instanceof String && ignoreCase)
-						internal.put("p" + count, value.toString().toLowerCase());
-					else
-						internal.put("p" + count, value);
+		if (parameters == null || parameters.isEmpty())
+			return getAll(jpql, parameters);
+		jpql += " WHERE ";
+		int count = 0;
+		Map<String, Object> params = new HashMap<>();
+		for (Entry<String, Object> parameter : parameters.entrySet()) {
+			if (count != 0) {
+				jpql += " AND ";
 			}
-			parameters = internal;
+			Object value = parameter.getValue();
+			count++;
+			if (value == null) {
+				jpql += "o." + parameter.getKey() + " IS NULL";
+			} else if (value instanceof Collection) {
+				jpql += "o." + parameter.getKey() + " IN :p" + count;
+				params.put("p" + count, value);
+			} else if (value.getClass().isArray()) {
+				jpql += "o." + parameter.getKey() + " IN :p" + count;
+				params.put("p" + count, new HashSet<>(Arrays.asList((Object[]) value)));
+			} else if (ignoreCase && value instanceof String) {
+				jpql += "LOWER(o." + parameter.getKey() + ") = :p" + count;
+				params.put("p" + count, value.toString().toLowerCase());
+			} else {
+				jpql += "o." + parameter.getKey() + " = :p" + count;
+				params.put("p" + count, value);
+			}
 		}
-		return getAll(jpql, parameters);
+		return getAll(jpql, params);
 	}
 
 	public T getFirst(String jpql, Map<String, Object> parameters) {
 		List<T> list = getAll(jpql, parameters);
 		if (list.isEmpty())
 			return null;
-		else
-			return list.get(0);
+		return list.get(0);
 	}
 
 	public T getFirstForAttribute(String attribute, Object value) {
@@ -146,8 +143,7 @@ public class Dao<T extends AbstractEntity> {
 		List<T> list = getForAttributes(parameters, ignoreCase);
 		if (list.isEmpty())
 			return null;
-		else
-			return list.get(0);
+		return list.get(0);
 	}
 
 	public long getCount() {
@@ -157,8 +153,9 @@ public class Dao<T extends AbstractEntity> {
 	public long getCount(String jpql, Map<String, Object> parameters) {
 		EntityManager em = createManager();
 		TypedQuery<Long> query = em.createQuery(jpql, Long.class);
-		for (String parameter : parameters.keySet())
+		for (String parameter : parameters.keySet()) {
 			query.setParameter(parameter, parameters.get(parameter));
+		}
 		Long count = query.getSingleResult();
 		return count == null ? 0 : count;
 	}
@@ -174,8 +171,9 @@ public class Dao<T extends AbstractEntity> {
 			int count = 0;
 			Map<String, Object> internal = new HashMap<>();
 			for (Entry<String, Object> parameter : parameters.entrySet()) {
-				if (count != 0)
+				if (count != 0) {
 					jpql += " AND ";
+				}
 				jpql += "o." + parameter.getKey() + " = :p" + ++count;
 				internal.put("p" + count, parameter.getValue());
 			}
@@ -211,8 +209,10 @@ public class Dao<T extends AbstractEntity> {
 		if (entities == null)
 			return null;
 		EntityManager em = createManager();
-		for (T entity : entities)
+		for (T entity : entities) {
+			entity.setId(getLastId() + 1);
 			em.persist(entity);
+		}
 		return entities;
 	}
 
@@ -229,8 +229,9 @@ public class Dao<T extends AbstractEntity> {
 		if (entities == null)
 			return null;
 		EntityManager em = createManager();
-		for (T entity : entities)
+		for (T entity : entities) {
 			em.merge(entity);
+		}
 		return entities;
 	}
 
@@ -247,14 +248,16 @@ public class Dao<T extends AbstractEntity> {
 		if (entities == null)
 			return;
 		EntityManager em = createManager();
-		for (T entity : entities)
+		for (T entity : entities) {
 			em.remove(em.merge(entity));
+		}
 	}
 
 	public void delete(long id) {
 		T entity = get(id);
-		if (entity != null)
-			delete(entity);
+		if (entity == null)
+			return;
+		delete(entity);
 	}
 
 	public T refresh(T entity) {
@@ -270,9 +273,11 @@ public class Dao<T extends AbstractEntity> {
 			return Collections.emptyList();
 		EntityManager entityManager = createManager();
 		TypedQuery<T> query = entityManager.createQuery(jpql, entityType);
-		if (values != null)
-			for (String name : values.keySet())
+		if (values != null) {
+			for (String name : values.keySet()) {
 				query.setParameter(name, values.get(name));
+			}
+		}
 		Collection<T> result = query.getResultList();
 		if (result == null)
 			return Collections.emptyList();

@@ -92,10 +92,6 @@ public class SearchService {
 				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repoId));
 	}
 
-	public IndexEntry get(Repository repo, String refId, String commitId) {
-		return get(IndexEntry.toIndexId(repo.toId(), refId, commitId));
-	}
-
 	ObjectMap getRaw(Repository repo, String refId, String commitId) {
 		return parser.convert(client.get(IndexEntry.toIndexId(repo.toId(), refId, commitId)));
 	}
@@ -199,6 +195,10 @@ public class SearchService {
 		}
 		Map<String, Map<String, Object>> contentsById = buildIndexMap(entries);
 		client.index(contentsById);
+	}
+
+	public IndexEntry get(Repository repo, String refId, String commitId) {
+		return get(IndexEntry.toIndexId(repo.toId(), refId, commitId));
 	}
 
 	public IndexEntry get(String id) {
