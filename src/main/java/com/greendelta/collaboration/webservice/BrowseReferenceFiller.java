@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -12,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.Repository;
@@ -88,17 +90,17 @@ class BrowseReferenceFiller {
 			if (processType != null) {
 				reference.addProperty("processType", processType.name());
 			}
-			reference.addProperty("category", getCategory(indexEntry));
+			reference.add("category", toCategoryArray(indexEntry, false));
 			break;
 		case FLOW:
 			FlowType flowType = ModelTypes.flowType(indexEntry);
 			if (flowType != null) {
 				reference.addProperty("flowType", flowType.name());
 			}
-			reference.addProperty("category", getCategory(indexEntry));
+			reference.add("category", toCategoryArray(indexEntry, false));
 			break;
 		case CATEGORY:
-			reference.addProperty("name", indexEntry.getString("fullPath"));
+			reference.add("name", toCategoryArray(indexEntry, true));
 			break;
 		case SOCIAL_INDICATOR:
 		case IMPACT_CATEGORY:
@@ -114,6 +116,20 @@ class BrowseReferenceFiller {
 		default:
 			break;
 		}
+	}
+
+	static JsonArray toCategoryArray(ObjectMap indexEntry, boolean appendOwn) {
+		JsonArray array = new JsonArray();
+		List<String> categories = indexEntry.get("categories");
+		if (categories != null) {
+			for (String category : categories) {
+				array.add(new JsonPrimitive(category));
+			}
+		}
+		if (appendOwn) {
+			array.add(new JsonPrimitive(indexEntry.getString("name")));
+		}
+		return array;
 	}
 
 	private void setReferenceUnit(JsonObject reference) {
@@ -197,15 +213,6 @@ class BrowseReferenceFiller {
 				return modelType;
 		}
 		return null;
-	}
-
-	private String getCategory(ObjectMap indexEntry) {
-		String fullPath = indexEntry.getString("fullPath");
-		if (fullPath == null || !fullPath.contains("/"))
-			return null;
-		String name = indexEntry.getString("name");
-		fullPath = fullPath.substring(0, fullPath.length() - name.length() - 1);
-		return fullPath;
 	}
 
 	private ObjectMap getIndexEntry(String refId) {

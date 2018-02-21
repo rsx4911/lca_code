@@ -79,7 +79,12 @@ public class IndexEntryCreator {
 		entry.refId = dataset.refId;
 		entry.name = dataset.name;
 		entry.categoryRefId = dataset.categoryRefId;
-		entry.fullPath = dataset.fullPath;
+		entry.categories = dataset.categories != null ? new ArrayList<>(dataset.categories) : null;
+		if (dataset.categories != null && dataset.categories.size() > 0) {
+			entry.fullPath = org.openlca.util.Strings.join(dataset.categories, '/') + '/' + dataset.name;
+		} else {
+			entry.fullPath = dataset.name;
+		}
 		entry.categoryType = dataset.categoryType;
 		entry.commitId = commit.id;
 		entry.commitMessage = commit.message;
@@ -170,11 +175,16 @@ public class IndexEntryCreator {
 	}
 
 	public static Map<String, Object> readData(File file) {
+		try {
+			if (Files.size(file.toPath()) == 0)
+				return new HashMap<>();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new HashMap<>();
+		}
 		try (FileInputStream fis = new FileInputStream(file);
 				GZIPInputStream gis = new GZIPInputStream(fis);
 				InputStreamReader isr = new InputStreamReader(gis)) {
-			if (Files.size(file.toPath()) == 0)
-				return new HashMap<>();
 			return gson.fromJson(isr, new TypeToken<Map<String, Object>>() {
 			}.getType());
 		} catch (IOException e) {

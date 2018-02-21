@@ -1,7 +1,6 @@
-mixin category-breadcrumb(baseUrl, path, linkLast, depth)
+mixin category-breadcrumb(baseUrl, paths, linkLast, depth)
 	ol.breadcrumb&attributes(attributes)
-		if path
-			- var paths = path.split('/');
+		if paths && paths.length
 			- var link = baseUrl;
 			if depth && paths.length > depth
 				li ...

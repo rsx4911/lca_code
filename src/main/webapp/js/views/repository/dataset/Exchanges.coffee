@@ -35,7 +35,7 @@ define () ->
 		map = {}
 		map[uncategorizedLabel] = {'': []}
 		for e in list
-			cat = if e.flow.category then e.flow.category.split('/') else []
+			cat = e.flow.category or []
 			if cat.length < 2
 				map[uncategorizedLabel][''].push e
 			else

@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +55,12 @@ class IndexEntryParser {
 		ModelType type = ModelTypes.from(entry, "type");
 		map.put("type", type);
 		map.put("categoryType", ModelTypes.from(entry, "categoryType"));
+		if (map.containsKey("fullPath") && !map.containsKey("categories")) {
+			String[] path = map.getString("fullPath").split("/");
+			if (path.length > 1) {
+				map.put("categories", Arrays.asList(Arrays.copyOfRange(path, 0, path.length - 1)));
+			}
+		}
 		if (type == ModelType.PROCESS) {
 			map.put("processType", ProcessType.from(entry));
 			map.put("validFrom", map.getLong("validFrom"));
@@ -89,6 +96,15 @@ class IndexEntryParser {
 		e.commitId = entry.get("commitId");
 		e.commitMessage = entry.get("commitMessage");
 		e.fullPath = entry.get("fullPath");
+		if (entry.containsKey("categories")) {
+			e.categories = entry.get("categories");
+		}
+		if (e.fullPath != null && e.categories == null || e.categories.size() == 0) {
+			String[] path = e.fullPath.split("/");
+			if (path.length > 1) {
+				e.categories = Arrays.asList(Arrays.copyOfRange(path, 0, path.length - 1));
+			}
+		}
 		e.lastChange = entry.get("lastChange");
 		e.name = entry.get("name");
 		e.refId = entry.get("refId");

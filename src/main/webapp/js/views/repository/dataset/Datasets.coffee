@@ -114,6 +114,13 @@ define([
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
+						result.previousPath = ''
+						if @pathArray and @pathArray.length
+							for path, index in @pathArray
+								if index < (@pathArray.length - 1)
+									if index > 0
+										result.previousPath += '/'
+									result.previousPath += path
 						result.commitId = @commitId
 						result.isPublic = !currentUser.isLoggedIn()
 						result.getRootLabel = (t) -> return ModelTypes[t]
@@ -183,9 +190,18 @@ define([
 			doRender: (renderOptions, categoryInfo, commits) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
+				@pathArray = []
+				if @categoryPath and @categoryPath.indexOf('/') isnt -1
+					@pathArray.push @categoryPath.substring 0, @categoryPath.indexOf('/')
+				else if @categoryPath
+					@pathArray.push @categoryPath
+				if categoryInfo?.category
+					for category in categoryInfo.category
+						@pathArray.push category
 				@$el.html template
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
+					pathAsArray: @pathArray
 					showDeleted: LocalStorage.getValue('datasets-showDeleted')
 					deleted: (categoryInfo.deleted is 'true')
 					isPublic: !currentUser.isLoggedIn()

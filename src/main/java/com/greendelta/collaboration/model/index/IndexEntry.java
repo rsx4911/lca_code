@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.model.index;
 
+import java.util.ArrayList;
+
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FetchRequestData;
 
@@ -12,7 +14,8 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public long commitTimestamp;
 	public IndexAction action;
 	public boolean mostRecent;
-
+	public String fullPath;
+	
 	public String toIndexId() {
 		return toIndexId(repositoryId, refId, commitId);
 	}
@@ -29,7 +32,7 @@ public class IndexEntry extends Dataset implements Cloneable {
 		d.version = version;
 		d.lastChange = lastChange;
 		d.name = name;
-		d.fullPath = fullPath;
+		d.categories = categories != null ? new ArrayList<>(categories) : null;
 		d.categoryRefId = categoryRefId;
 		d.categoryType = categoryType;
 	}
@@ -59,6 +62,7 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.commitMessage = commitMessage;
 		e.commitTimestamp = commitTimestamp;
 		e.action = action;
+		e.fullPath = fullPath;
 	}
 
 	public static String toIndexId(String repositoryId, String refId, String commitId) {
