@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.user;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +14,8 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.service.Repository;
 
 public class CommentService {
 
@@ -66,7 +68,7 @@ public class CommentService {
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
-	void clearUser(User user) {
+	public void clearUser(User user) {
 		String jpql = "SELECT c FROM Comment c WHERE c.user.id = :userId";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("userId", user.getId());

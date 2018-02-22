@@ -22,8 +22,8 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
@@ -55,11 +55,11 @@ public class SearchResource {
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		return Respond.ok(SearchResults.convert(service.search(query, page, pageSize, parameters), (r) -> {
-			r.action = null;
 			if (!loggedIn) {
 				r.commitId = null;
 				r.commitMessage = null;
 				r.commitTimestamp = 0;
+				r.action = null;
 			}
 			return r;
 		}));
@@ -100,7 +100,7 @@ public class SearchResource {
 	}
 
 	private void putFlowFilter(SearchQueryBuilder builder, String refId, String direction) {
-		SearchFilterValue value = SearchFilterValue.phrase(refId);
+		SearchFilterValue value = SearchFilterValue.term(refId);
 		if ("in".equals(direction)) {
 			builder.filter("inputs", value);
 		} else if ("out".equals(direction)) {

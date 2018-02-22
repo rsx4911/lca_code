@@ -1,46 +1,49 @@
-package com.greendelta.collaboration.webservice.task;
+package com.greendelta.collaboration.webservice;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.KeyGen;
 
 import com.google.common.base.Strings;
-import com.greendelta.collaboration.model.task.ReviewReference;
-import com.greendelta.collaboration.service.BrowseService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.util.ObjectMap;
 
-class ReferenceCollector {
+public class ReferenceCollector<T> {
 
 	private final BrowseService browseService;
+	private final Function<Reference, T> converter;
 
-	ReferenceCollector(BrowseService browseService) {
+	public ReferenceCollector(BrowseService browseService, Function<Reference, T> converter) {
 		this.browseService = browseService;
+		this.converter = converter;
 	}
 
-	Set<ReviewReference> getReferences(Repository repo, List<Reference> in) {
-		Set<ReviewReference> all = new HashSet<>();
+	public Set<T> getReferences(Repository repo, List<Reference> in) {
+		Set<T> all = new HashSet<>();
 		for (Reference reference : in) {
 			if (reference.type != null && Strings.isNullOrEmpty(reference.id)) {
 				all.addAll(collectForType(repo, reference.type));
 			} else if (reference.type == ModelType.CATEGORY && !Strings.isNullOrEmpty(reference.id)) {
 				all.addAll(collectForCategory(repo, toId(reference.id)));
 			} else {
-				all.add(convert(repo, reference));
+				all.add(converter.apply(reference));
 			}
 		}
 		return all;
 	}
 
-	private List<ReviewReference> collectForType(Repository repo, ModelType type) {
-		return convert(repo, browseService.getAll(repo, type));
+	private List<T> collectForType(Repository repo, ModelType type) {
+		return convert(repo, browseService.getAll(type, new BrowseParameter(repo)));
 	}
 
-	private List<ReviewReference> collectForCategory(Repository repo, String id) {
+	private List<T> collectForCategory(Repository repo, String id) {
 		return convert(repo, browseService.getForCategory(repo, id));
 	}
 
@@ -48,33 +51,24 @@ class ReferenceCollector {
 		return KeyGen.get(categoryPath.split("/"));
 	}
 
-	private List<ReviewReference> convert(Repository repo, List<ObjectMap> entries) {
-		List<ReviewReference> references = new ArrayList<>();
+	private List<T> convert(Repository repo, List<ObjectMap> entries) {
+		List<T> references = new ArrayList<>();
 		for (ObjectMap entry : entries) {
-			ReviewReference ref = new ReviewReference();
+			Reference ref = new Reference();
 			if (ref.type == ModelType.CATEGORY) {
-				references.addAll(convert(repo, browseService.getForCategory(repo, ref.refId)));
+				references.addAll(convert(repo, browseService.getForCategory(repo, ref.id)));
 			} else {
 				ref.type = entry.get("type");
-				ref.refId = entry.getString("refId");
+				ref.id = entry.getString("refId");
 				ref.commitId = entry.getString("commitId");
 				ref.name = entry.getString("name");
-				references.add(ref);
+				references.add(converter.apply(ref));
 			}
 		}
 		return references;
 	}
 
-	private ReviewReference convert(Repository repo, Reference ref) {
-		ReviewReference reference = new ReviewReference();
-		reference.type = ref.type;
-		reference.refId = ref.id;
-		reference.commitId = ref.commitId;
-		reference.name = ref.name;
-		return reference;
-	}
-
-	static class Reference {
+	public static class Reference {
 
 		public String id;
 		public ModelType type;

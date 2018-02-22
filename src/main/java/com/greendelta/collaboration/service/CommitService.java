@@ -25,6 +25,10 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.IndexEntryCreator;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Bytes;
 
 public class CommitService {
@@ -55,7 +59,8 @@ public class CommitService {
 
 	private Commit write(Repository repo, ModelStreamReader reader) throws IOException {
 		Commit commit = createCommit(repo, reader.readNextPartAsString());
-		writeDatasets(repo, commit, reader);
+		DatasetWriter writer = new DatasetWriter(repo, commit, reader);
+		writer.writeDatasets();
 		File historyFile = repo.getHistoryFile(true);
 		Bytes.appendTo(historyFile, commit.toString());
 		return commit;
@@ -72,90 +77,6 @@ public class CommitService {
 		return commit;
 	}
 
-	private void writeDatasets(Repository repo, Commit commit, ModelStreamReader reader) throws IOException {
-		List<Dataset> datasets = new ArrayList<>();
-		List<IndexEntry> indexEntries = new ArrayList<>();
-		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
-		long repoSize = repo.getSize();
-		User currentUser = userService.getCurrentUser();
-		boolean isOwnNamespace = accessService.isOwnNamespace(currentUser, repo.toId());
-		long userGroupSize = isOwnNamespace ? userService.getUserGroupSize() : 0;
-		User user = userService.getCurrentUser();
-		try {
-			while (reader.hasMore()) {
-				Dataset dataset = reader.readNextPartAsDataset();
-				datasets.add(dataset);
-				File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
-				int size = 0;
-				try (OutputStream out = new FileOutputStream(file)) {
-					size = reader.readNextPartToStream(out);
-					out.close();
-				}
-				if (size == 0) {
-					indexEntries.add(indexEntryCreator.create(dataset));
-					datasets.add(dataset);
-					continue;
-				}
-				repoSize += size;
-				userGroupSize += size;
-				checkSize(repo, repoSize, user, userGroupSize, isOwnNamespace);
-				IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
-				Map<String, Object> data = new HashMap<>();
-				if (dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW)
-					data = IndexEntryCreator.readData(file);
-				indexEntries.add(indexEntryCreator.create(dataset, lastAction, data));
-				File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
-				int count = 0;
-				int noOfFiles = reader.readNextInt();
-				while (count++ < noOfFiles) {
-					String path = reader.readNextPartAsString();
-					File binFile = new File(binDir, path);
-					binFile.getParentFile().mkdirs();
-					try (OutputStream out = new FileOutputStream(binFile)) {
-						size = reader.readNextPartToStream(out);
-						out.close();
-						repoSize += size;
-						userGroupSize += size;
-					}
-					checkSize(repo, repoSize, user, userGroupSize, isOwnNamespace);
-				}
-			}
-			searchService.index(repo.toId(), indexEntries);
-			repo.updateSize(repoSize);
-		} catch (Exception e) {
-			cleanup(repo, datasets, commit);
-			throw e;
-		}
-	}
-
-	private void checkSize(Repository repo, long size, User user, long userGroupSize, boolean isOwnNamespace) {
-		if (repo.settings.maxSize > 0 && size > repo.settings.maxSize)
-			throw new InsufficientStorageException("Insufficient storage in repository");
-		if (!isOwnNamespace)
-			return;
-		if (user.settings.maxSize > 0 && userGroupSize > user.settings.maxSize)
-			throw new InsufficientStorageException("Insufficient storage in user group");
-	}
-
-	private void cleanup(Repository repo, List<Dataset> datasets, Commit commit) {
-		for (Dataset dataset : datasets) {
-			File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, false);
-			if (file.exists()) {
-				file.delete();
-			}
-			while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
-				file.delete();
-			}
-			file = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
-			if (file.exists()) {
-				Directories.delete(file);
-				while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
-					file.delete();
-				}
-			}
-		}
-	}
-
 	public class InsufficientStorageException extends RuntimeException {
 
 		private static final long serialVersionUID = 543921197834005033L;
@@ -164,6 +85,120 @@ public class CommitService {
 			super(message);
 		}
 
+	}
+
+	private class DatasetWriter {
+
+		private final Repository repo;
+		private final Commit commit;
+		private final ModelStreamReader reader;
+		private final List<Dataset> datasets = new ArrayList<>();
+		private final List<IndexEntry> indexEntries = new ArrayList<>();
+		private final IndexEntryCreator indexEntryCreator;
+		private final boolean isOwnNamespace;
+		private final User user;
+		private long currentRepoSize;
+		private long currentUserGroupSize;
+
+		private DatasetWriter(Repository repo, Commit commit, ModelStreamReader reader) {
+			this.repo = repo;
+			this.commit = commit;
+			this.reader = reader;
+			this.indexEntryCreator = new IndexEntryCreator(repo, commit);
+			this.currentRepoSize = repo.getSize();
+			this.user = userService.getCurrentUser();
+			this.isOwnNamespace = accessService.isOwnNamespace(user, repo.toId());
+			this.currentUserGroupSize = isOwnNamespace ? userService.getUserGroupSize() : 0;
+		}
+
+		private void writeDatasets() throws IOException {
+			try {
+				while (reader.hasMore()) {
+					Dataset dataset = reader.readNextPartAsDataset();
+					datasets.add(dataset);
+					File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
+					if (!write(dataset, file)) {
+						indexEntries.add(indexEntryCreator.create(dataset));
+						continue;
+					}
+					createIndexEntry(dataset, file);
+					writeBinaries(dataset);
+				}
+				searchService.index(repo.toId(), indexEntries);
+				repo.updateSize(currentRepoSize);
+			} catch (Exception e) {
+				cleanup(repo, datasets, commit);
+				throw e;
+			}
+		}
+
+		private boolean write(Dataset dataset, File file) throws IOException {
+			int size = 0;
+			try (OutputStream out = new FileOutputStream(file)) {
+				size = reader.readNextPartToStream(out);
+				out.close();
+			}
+			if (size == 0)
+				return false;
+			currentRepoSize += size;
+			currentUserGroupSize += size;
+			checkSize();
+			return true;
+		}
+
+		private void createIndexEntry(Dataset dataset, File file) {
+			IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
+			Map<String, Object> data = new HashMap<>();
+			if (dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW)
+				data = IndexEntryCreator.readData(file);
+			indexEntries.add(indexEntryCreator.create(dataset, lastAction, data));
+		}
+
+		private void checkSize() {
+			if (repo.settings.maxSize > 0 && currentRepoSize > repo.settings.maxSize)
+				throw new InsufficientStorageException("Insufficient storage in repository");
+			if (!isOwnNamespace)
+				return;
+			if (user.settings.maxSize > 0 && currentUserGroupSize > user.settings.maxSize)
+				throw new InsufficientStorageException("Insufficient storage in user group");
+		}
+
+		private void writeBinaries(Dataset dataset) throws IOException {
+			File binDir = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
+			int count = 0;
+			int noOfFiles = reader.readNextInt();
+			while (count++ < noOfFiles) {
+				String path = reader.readNextPartAsString();
+				File binFile = new File(binDir, path);
+				binFile.getParentFile().mkdirs();
+				try (OutputStream out = new FileOutputStream(binFile)) {
+					int size = reader.readNextPartToStream(out);
+					out.close();
+					currentRepoSize += size;
+					currentUserGroupSize += size;
+				}
+				checkSize();
+			}
+		}
+
+		private void cleanup(Repository repo, List<Dataset> datasets, Commit commit) {
+			for (Dataset dataset : datasets) {
+				File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, false);
+				if (file.exists()) {
+					file.delete();
+				}
+				while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
+					file.delete();
+				}
+				file = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
+				if (file.exists()) {
+					Directories.delete(file);
+					while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
+						file.delete();
+					}
+				}
+			}
+		}
 	}
 
 }

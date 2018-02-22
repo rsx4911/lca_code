@@ -26,8 +26,8 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
@@ -121,11 +121,26 @@ public class HistoryResource {
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
-		List<Commit> commits = service.getCommits(repo, type, refId);
+		IndexEntry first = searchService.getFirst(repo.toId(), refId);
+		if (first == null)
+			return Respond.noContent();
+		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
-		return Respond.ok(putUserName(commits));
+		List<Map<String, Object>> mapped = new ArrayList<>();
+		List<Commit> ownCommits = service.getCommits(repo, type, refId);
+		for (Commit commit : commits) {
+			Map<String, Object> map = putUserName(commit);
+			for (Commit c : ownCommits) {
+				if (!commit.id.equals(c.id))
+					continue;
+				map.put("modelHasChanged", true);
+				break;
+			}
+			mapped.add(map);
+		}
+		return Respond.ok(mapped);
 	}
 
 	@GET
@@ -200,8 +215,8 @@ public class HistoryResource {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
 				.pageSize(pageSize)
-				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.phrase(repo.toId()))
-				.filter("commitId", SearchFilterValue.phrase(commit.id));
+				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.term(repo.toId()))
+				.filter("commitId", SearchFilterValue.term(commit.id));
 		if (!Strings.isNullOrEmpty(filter)) {
 			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
 		}

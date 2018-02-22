@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.task;
 
 import java.util.Set;
 
@@ -7,6 +7,11 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
+import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.UserService;
 
 public class ReviewService extends TaskExecutionService<Review> {
 

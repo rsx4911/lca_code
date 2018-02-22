@@ -13,7 +13,7 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
-import com.greendelta.collaboration.service.AccessService;
+import com.greendelta.collaboration.service.user.AccessService;
 
 /**
  * This filter should only be used for repository urls (/[group]/[repo]/**).

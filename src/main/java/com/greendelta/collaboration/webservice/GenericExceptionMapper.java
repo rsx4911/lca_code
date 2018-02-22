@@ -19,7 +19,7 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.CommitService.InsufficientStorageException;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.user.UserService;
 
 @Provider
 public class GenericExceptionMapper implements ExceptionMapper<Throwable> {

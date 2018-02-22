@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.task;
 
 import java.util.Calendar;
 
@@ -11,6 +11,11 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
+import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.UserService;
 
 public abstract class TaskExecutionService<T extends Task> {
 

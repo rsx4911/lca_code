@@ -7,11 +7,11 @@ define([
 
 		init: (container, repositoryPath, options) ->
 			defaultPath = options?.defaultPath || ''
-			multiSelection = options?.multiSelection || false
+			multipleSelection = options?.multipleSelection || false
 			$(container).jstree 
-				plugins: if multiSelection then ['checkbox'] else []
+				plugins: if multipleSelection then ['checkbox'] else []
 				core:
-					multiple: multiSelection,
+					multiple: multipleSelection,
 					themes:
 						dots: false
 					data: (node, callback) ->

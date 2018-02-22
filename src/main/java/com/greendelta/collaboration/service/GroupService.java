@@ -18,6 +18,9 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 

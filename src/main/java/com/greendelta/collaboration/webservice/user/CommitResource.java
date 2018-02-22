@@ -15,12 +15,12 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.CommitService;
 import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.NotificationService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("commit")

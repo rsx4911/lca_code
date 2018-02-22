@@ -40,18 +40,18 @@ define([
 				for v in value
 					if subPath
 						v = _getValue v, subPath
-					other = if ref2 then findValue(type, v, value2) else null
+					other = if ref2 then findValue(type, v, value2, ref, ref2) else null
 					values.push [v, other]
 			if ref2 and value2
 				for other in value2
 					if subPath
 						other = _getValue other, subPath
-					v = if ref then findValue(type, other, value) else null
+					v = if ref then findValue(type, other, value, ref, ref2) else null
 					unless v
 						values.push [null, other]
 			return values
 
-		findValue = (type, value, array) ->
+		findValue = (type, value, array, ref, ref2) ->
 			if !array or !array.length or !value
 				return null
 			for v in array
@@ -62,7 +62,12 @@ define([
 					when 'DQ_INDICATOR' then if v.position is value.position then return v
 					when 'DQ_SCORE' then if v.position is value.position then return v
 					when 'SOCIAL_ASPECT' then if v.socialIndicator?.id is value.socialIndicator?.id then return v
-					when 'EXCHANGE' then if v.internalId is value.internalId then return v
+					when 'EXCHANGE' 
+						if ref and ref2 and ref.id is ref2.id
+							if v.internalId is value.internalId 
+								return v
+						else if v.flow?.id is value.flow?.id
+							return v
 					when 'PARAMETER' then if v.name is value.name and v.inputParameter is value.inputParameter then return v
 					when 'FLOW' then if v.id is value.id then return v
 					when 'PRODUCT' then if v.id is value.id then return v

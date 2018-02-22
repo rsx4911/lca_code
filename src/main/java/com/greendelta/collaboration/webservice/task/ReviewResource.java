@@ -2,6 +2,7 @@ package com.greendelta.collaboration.webservice.task;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -17,18 +18,21 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
-import com.greendelta.collaboration.service.AccessService;
-import com.greendelta.collaboration.service.BrowseService;
-import com.greendelta.collaboration.service.NotificationService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.ReviewService;
-import com.greendelta.collaboration.service.TaskService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.task.ReviewService;
+import com.greendelta.collaboration.service.task.TaskService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.webservice.ReferenceCollector;
+import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.collaboration.webservice.task.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.util.Reviews;
 
 @Path("task/review")
@@ -40,18 +44,20 @@ public class ReviewResource {
 	private final TaskService taskService;
 	private final UserService userService;
 	private final AccessService accessService;
+	private final HistoryService historyService;
 	private final BrowseService browseService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
-			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
-			BrowseService browseService) {
+			AccessService accessService, HistoryService historyService, NotificationService notificationService,
+			RepositoryService repoService, BrowseService browseService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
+		this.historyService = historyService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.browseService = browseService;
@@ -105,8 +111,10 @@ public class ReviewResource {
 		Repository repo = repoService.get(review.repositoryPath);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
-		ReferenceCollector collector = new ReferenceCollector(browseService);
-		service.setReferences(id, collector.getReferences(repo, references));
+		ReferenceCollector<ReviewReference> collector = new ReferenceCollector<>(
+				browseService, (ref) -> convert(repo, ref));
+		Set<ReviewReference> reviewReferences = collector.getReferences(repo, references);
+		service.setReferences(id, reviewReferences);
 		return createResponse();
 	}
 
@@ -196,4 +204,15 @@ public class ReviewResource {
 		return Respond.ok(Collections.singletonMap("activeTasks", Integer.toString(activeTasks)));
 	}
 
+	private ReviewReference convert(Repository repo, Reference ref) {
+		ReviewReference reference = new ReviewReference();
+		reference.type = ref.type;
+		reference.refId = ref.id;
+		reference.commitId = ref.commitId;
+		if (reference.commitId == null) {
+			reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
+		}
+		reference.name = ref.name;
+		return reference;
+	}
 }

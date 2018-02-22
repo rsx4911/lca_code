@@ -14,6 +14,8 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.IndexEntryCreator;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
@@ -88,8 +90,10 @@ public class ReindexService {
 
 		private List<IndexEntry> run(Commit commit) {
 			List<IndexEntry> entries = new ArrayList<>();
-			IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
 			List<FileReference> refs = commitRefs.get(commit.id);
+			if (refs == null || refs.isEmpty())
+				return entries;
+			IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
 			for (FileReference ref : refs) {
 				IndexAction lastAction = get(lastActions, ref);
 				File file = repo.getDatasetFile(ref.type, ref.refId, commit.id, false);

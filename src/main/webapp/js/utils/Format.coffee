@@ -51,7 +51,7 @@ define([
 			if not value and value isnt 0
 				return ''
 			# TODO use math lib
-			if round
+			if round and value isnt 0
 				count = 0
 				isNegative = value < 0
 				value = Math.abs value

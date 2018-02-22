@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchFields;
+import com.greendelta.collaboration.service.search.SearchFields;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.search.wrapper.SearchClient;

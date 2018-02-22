@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -20,21 +22,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.AccessService;
-import com.greendelta.collaboration.service.CommentService;
-import com.greendelta.collaboration.service.NotificationService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SearchService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.CommentService;
+import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
@@ -51,16 +54,19 @@ public class CommentResource {
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 	private final SearchService searchService;
+	private final HistoryService historyService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, NotificationService notificationService, SearchService searchService) {
+			AccessService accessService, NotificationService notificationService, SearchService searchService,
+			HistoryService historyService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 		this.searchService = searchService;
+		this.historyService = historyService;
 	}
 
 	@GET
@@ -101,16 +107,24 @@ public class CommentResource {
 
 	private List<ObjectMap> map(Repository repository, List<Comment> comments, boolean putReplyCount) {
 		List<ObjectMap> mapped = new ArrayList<>();
-		Map<String, String> modelTypeAndIdToPath = new HashMap<>();
-		for (IndexEntry entry : searchService.getAll(repository)) {
-			if (entry.action == IndexAction.DELETE)
-				continue;
-			modelTypeAndIdToPath.put(entry.type.name() + "_" + entry.refId + "_" + entry.commitId, entry.fullPath);
+		if (comments.isEmpty())
+			return mapped;
+		String repoId = repository.toId();
+		Set<String> ids = new HashSet<>();
+		for (Comment comment : comments) {
+			DatasetField field = comment.field;
+			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+			ids.add(IndexEntry.toIndexId(repoId, field.refId, commit.id));
+		}
+		List<IndexEntry> entries = searchService.get(ids);
+		Map<String, String> idToPath = new HashMap<>();
+		for (IndexEntry entry : entries) {
+			idToPath.put(entry.toIndexId(), entry.fullPath);
 		}
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
-			String key = comment.field.modelType.name() + "_" + comment.field.refId + "_" + comment.field.commitId;
-			map.put("dsPath", modelTypeAndIdToPath.get(key));
+			String key = IndexEntry.toIndexId(repoId, comment.field.refId, comment.field.commitId);
+			map.put("dsPath", idToPath.get(key));
 			if (putReplyCount) {
 				map.put("replyCount", service.getRepliesTo(comment.getId()).size());
 			}
@@ -210,7 +224,8 @@ public class CommentResource {
 	private ObjectMap map(Comment comment, Repository repository) {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
-		IndexEntry ds = searchService.get(repository, field.modelType, field.refId, field.commitId);
+		Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+		IndexEntry ds = searchService.get(repository, field.refId, commit.id);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

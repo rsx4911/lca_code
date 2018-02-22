@@ -38,7 +38,7 @@ define([
 					first = false
 				if @filter
 					url += if first then '' else '&'
-					url += 'filter=' + @filter
+					url += 'filter=' + encodeURIComponent(@filter)
 					first = false
 				if first
 					url = url.substring 0, url.length - 1

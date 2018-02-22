@@ -14,6 +14,7 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.SearchService;
 
 public class HistoryService {
 
@@ -25,9 +26,6 @@ public class HistoryService {
 		this.searchService = searchService;
 	}
 
-	/**
-	 * Returns the last commit of the repository
-	 */
 	public Commit getLastCommit(Repository repo) {
 		List<Commit> commits = getCommits(repo);
 		if (commits.isEmpty())
@@ -35,13 +33,9 @@ public class HistoryService {
 		return commits.get(commits.size() - 1);
 	}
 
-	/**
-	 * Returns the last commit of the specified data set that was not a
-	 * "Delete"-commit
-	 */
 	public Commit getLastCommit(Repository repo, ModelType type, String refId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = readHistory(file, new ModelCommitFilter(repo, type, refId));
+		List<Commit> commits = readHistory(file, new ModelCommitFilter(repo, refId));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -49,7 +43,7 @@ public class HistoryService {
 
 	public Commit getLastCommit(Repository repo, ModelType type, String refId, String untilCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = readHistory(file, new LastCommitFilter(untilCommitId, repo, type, refId, false));
+		List<Commit> commits = readHistory(file, new LastCommitFilter(untilCommitId, repo, refId, false));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -57,7 +51,7 @@ public class HistoryService {
 
 	public Commit getLastCommitBefore(Repository repo, ModelType type, String refId, String beforeCommitId) {
 		File file = repo.getHistoryFile(false);
-		List<Commit> commits = readHistory(file, new LastCommitFilter(beforeCommitId, repo, type, refId, true));
+		List<Commit> commits = readHistory(file, new LastCommitFilter(beforeCommitId, repo, refId, true));
 		if (commits.isEmpty())
 			return null;
 		return commits.get(commits.size() - 1);
@@ -78,7 +72,7 @@ public class HistoryService {
 
 	public List<Commit> getCommits(Repository repo, ModelType type, String refId) {
 		File file = repo.getHistoryFile(false);
-		return readHistory(file, new ModelCommitFilter(repo, type, refId));
+		return readHistory(file, new ModelCommitFilter(repo, refId));
 	}
 
 	public List<Commit> getCommitsAfter(Repository repo, String afterCommitId) {
@@ -151,26 +145,16 @@ public class HistoryService {
 	private class ModelCommitFilter implements Filter<Commit> {
 
 		private final Repository repo;
-		private final ModelType type;
 		private final String refId;
 
-		private ModelCommitFilter(Repository repo, ModelType type, String refId) {
+		private ModelCommitFilter(Repository repo, String refId) {
 			this.repo = repo;
-			this.type = type;
 			this.refId = refId;
 		}
 
 		@Override
 		public boolean filter(Commit element) {
-			for (IndexEntry entry : searchService.getAll(repo, element)) {
-				if (entry.type != type)
-					continue;
-				if (!entry.refId.equals(refId))
-					continue;
-				return false;
-			}
-			return true;
-
+			return !searchService.has(IndexEntry.toIndexId(repo.toId(), refId, element.id));
 		}
 
 	}
@@ -199,15 +183,13 @@ public class HistoryService {
 
 		private final String commitId;
 		private final Repository repo;
-		private final ModelType type;
 		private final String refId;
 		private boolean done;
 		private boolean beforeCommit;
 
-		private LastCommitFilter(String commitId, Repository repo, ModelType type, String refId, boolean beforeCommit) {
+		private LastCommitFilter(String commitId, Repository repo, String refId, boolean beforeCommit) {
 			this.commitId = commitId;
 			this.repo = repo;
-			this.type = type;
 			this.refId = refId;
 			this.beforeCommit = beforeCommit;
 		}
@@ -220,18 +202,7 @@ public class HistoryService {
 				done = true;
 			if (beforeCommit && done)
 				return true;
-			return !containsModel(element);
-		}
-
-		private boolean containsModel(Commit commit) {
-			for (IndexEntry entry : searchService.getAll(repo, commit)) {
-				if (entry.type != type)
-					continue;
-				if (!entry.refId.equals(refId))
-					continue;
-				return true;
-			}
-			return false;
+			return !searchService.has(IndexEntry.toIndexId(repo.toId(), refId, element.id));
 		}
 
 	}

@@ -11,6 +11,14 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.task.TaskService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.CommentService;
+import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.TeamService;
+import com.greendelta.collaboration.service.user.UserService;
 
 public class DeleteService {
 

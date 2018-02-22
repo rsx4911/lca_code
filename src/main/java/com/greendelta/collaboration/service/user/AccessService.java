@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.service.user;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openlca.cloud.error.RepositoryNotFoundException;
+import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -14,6 +15,7 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Repository;
 
 public class AccessService {
 
@@ -156,7 +158,7 @@ public class AccessService {
 		return role.getPermissions().contains(permission);
 	}
 
-	boolean isOwnNamespace(User user, String groupOrRepo) {
+	public boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equalsIgnoreCase(user.username);
 		String group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
@@ -170,17 +172,21 @@ public class AccessService {
 	private boolean isPublic(String groupOrRepo) {
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
-			Repository repo = Repository.getIgnoreSchema(repositoryPath, dir.getParentFile().getName(), dir.getName());
-			return repo.settings.publicAccess;
+			try {
+				Repository repo = Repository.get(repositoryPath, dir.getParentFile().getName(), dir.getName());
+				return repo.settings.publicAccess;
+			} catch (UnsupportedSchemaException e) {
+				return false;
+			}
 		}
 		if (!dir.isDirectory() || dir.listFiles() == null)
 			return false;
 		for (File child : dir.listFiles()) {
 			try {
-				Repository repo = Repository.getIgnoreSchema(repositoryPath, groupOrRepo, child.getName());
+				Repository repo = Repository.get(repositoryPath, groupOrRepo, child.getName());
 				if (repo.settings.publicAccess)
 					return true;
-			} catch (RepositoryNotFoundException e) {
+			} catch (RepositoryNotFoundException | UnsupportedSchemaException e) {
 				// ignore
 			}
 		}

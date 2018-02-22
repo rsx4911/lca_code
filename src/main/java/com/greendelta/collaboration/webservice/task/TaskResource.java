@@ -8,11 +8,11 @@ import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.TaskService;
-import com.greendelta.collaboration.service.UserService;
+import com.greendelta.collaboration.service.task.TaskService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;

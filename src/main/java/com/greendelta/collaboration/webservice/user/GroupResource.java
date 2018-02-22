@@ -20,11 +20,11 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.service.AccessService;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.NotificationService;
-import com.greendelta.collaboration.service.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
