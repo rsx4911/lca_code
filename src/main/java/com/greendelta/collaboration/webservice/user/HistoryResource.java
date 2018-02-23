@@ -22,13 +22,17 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.model.index.ProcessIndexEntry;
+import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
@@ -207,7 +211,16 @@ public class HistoryResource {
 			return Respond.notFound();
 		SearchQuery query = createReferencesQuery(repo, commit, type, page, pageSize, filter);
 		SearchResult<IndexEntry> result = searchService.search(query);
-		return Respond.ok(SearchResults.convert(result, (entry) -> entry.asFetchRequestData()));
+		return Respond.ok(SearchResults.convert(result, (entry) -> {
+			ObjectMap map = ObjectMap.fromObject(entry.asFetchRequestData());
+			if (entry instanceof FlowIndexEntry) {
+				map.put("flowType", ((FlowIndexEntry) entry).flowType);
+			} else if (entry instanceof ProcessIndexEntry) {
+				ProcessType pType = ((ProcessIndexEntry) entry).processType;
+				map.put("processType", ModelTypes.processType(pType));
+			}
+			return map;
+		}));
 	}
 
 	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize,

@@ -4,28 +4,26 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
-import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.index.IndexAction;
 
@@ -36,14 +34,43 @@ public class CachedResource {
 	private final static Map<String, BufferedImage> imageCache = new HashMap<>();
 
 	@GET
+	@Path("overlay/CATEGORY/{modelType}/{overlayType}")
+	public Response getOverlayedCategoryImage(
+			@PathParam("modelType") ModelType modelType,
+			@PathParam("overlayType") IndexAction overlayType,
+			@Context HttpServletRequest request) {
+		return getOverlayedImage(request, modelType, overlayType, null, true);
+	}
+
+	@GET
+	@Path("overlay/FLOW/{flowType}/{overlayType}")
+	public Response getOverlayedFlowImage(@PathParam("flowType") FlowType flowType,
+			@PathParam("overlayType") IndexAction overlayType,
+			@Context HttpServletRequest request) {
+		return getOverlayedImage(request, ModelType.FLOW, overlayType, flowType.name(), false);
+	}
+
+	@GET
+	@Path("overlay/PROCESS/{processType}/{overlayType}")
+	public Response getOverlayedProcessImage(
+			@PathParam("processType") ProcessType processType,
+			@PathParam("overlayType") IndexAction overlayType,
+			@Context HttpServletRequest request) {
+		return getOverlayedImage(request, ModelType.PROCESS, overlayType, processType.name(), false);
+	}
+
+	@GET
 	@Path("overlay/{modelType}/{overlayType}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getOverlayedImage(
 			@PathParam("modelType") ModelType modelType,
 			@PathParam("overlayType") IndexAction overlayType,
-			@QueryParam("category") @DefaultValue("false") boolean category,
-			@QueryParam("subType") String subType,
 			@Context HttpServletRequest request) {
+		return getOverlayedImage(request, modelType, overlayType, null, false);
+	}
+
+	private Response getOverlayedImage(HttpServletRequest request, ModelType modelType, IndexAction overlayType,
+			String subType, boolean category) {
 		if (overlayType == IndexAction.UPDATE || overlayType == null)
 			return Respond.badRequest();
 		try {
@@ -57,17 +84,24 @@ public class CachedResource {
 			g.drawImage(image, 0, 0, null);
 			g.drawImage(overlay, 0, 0, null);
 			ImageIO.write(combined, "PNG", out);
-			return Respond.ok(out.toByteArray());
+			return Respond.status(Status.OK, out.toByteArray(), getCacheControl());
 		} catch (IOException e) {
 			log.error("Error loading overlay image", e);
 			return Respond.notFound();
 		}
 	}
 
+	private CacheControl getCacheControl() {
+		CacheControl cacheControl = new CacheControl();
+		cacheControl.setPrivate(true);
+		cacheControl.setMaxAge(31536000);
+		return cacheControl;
+	}
+
 	private String mapSubType(ModelType type, String subType) {
 		if (subType == null)
 			return null;
-		if (type == ModelType.PROCESS && ProcessType.LCI_RESULT.equals(subType))
+		if (type == ModelType.PROCESS && ProcessType.valueOf(subType) == ProcessType.LCI_RESULT)
 			return "system";
 		if (type == ModelType.FLOW)
 			switch (FlowType.valueOf(subType)) {
@@ -83,39 +117,29 @@ public class CachedResource {
 
 	private BufferedImage getModelImage(HttpServletRequest request, String type, String subType, boolean category)
 			throws IOException {
-		String subPath = "/model/small/";
+		String path = "/images/model/small/";
 		if (category) {
-			subPath += "category/";
+			path += "category/";
 		}
-		subPath += type.toLowerCase();
+		path += type.toLowerCase();
 		if (subType != null) {
-			subPath += "_" + subType.toLowerCase();
+			path += "_" + subType.toLowerCase();
 		}
-		subPath += ".png";
-		if (imageCache.containsKey(subPath))
-			return imageCache.get(subPath);
-		String path = getImageBaseUrl(request) + subPath;
-		BufferedImage image = ImageIO.read(new URL(path).openStream());
-		imageCache.put(subPath, image);
-		return image;
+		path += ".png";
+		return getImage(request, path);
 	}
 
 	private BufferedImage getOverlayImage(HttpServletRequest request, IndexAction action) throws IOException {
-		String subPath = "/model/" + action.name().toLowerCase() + ".png";
-		if (imageCache.containsKey(subPath))
-			return imageCache.get(subPath);
-		String path = getImageBaseUrl(request) + subPath;
-		BufferedImage image = ImageIO.read(new URL(path).openStream());
-		imageCache.put(subPath, image);
-		return image;
+		String path = "/images/model/" + action.name().toLowerCase() + ".png";
+		return getImage(request, path);
 	}
 
-	private String getImageBaseUrl(HttpServletRequest request) {
-		String path = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/";
-		if (Strings.notEmpty(request.getContextPath())) {
-			path += request.getContextPath() + "/";
-		}
-		return path + "images";
+	private BufferedImage getImage(HttpServletRequest request, String path) throws IOException {
+		if (imageCache.containsKey(path))
+			return imageCache.get(path);
+		BufferedImage image = ImageIO.read(request.getServletContext().getResourceAsStream(path));
+		imageCache.put(path, image);
+		return image;
 	}
 
 }

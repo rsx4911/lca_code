@@ -7,14 +7,14 @@ mixin result-entry(dataset)
 		- action = null;
 	if action && action !== 'UPDATE'
 		if dataset.type === 'CATEGORY'
-			img.model-icon-small(src='ws/public/cached/overlay/#{dataset.categoryType}/#{action}?category=true')
+			img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/#{dataset.categoryType}/#{action}')
+		else if dataset.type === 'PROCESS' && dataset.processType
+			- var processType = dataset.processType.toLowerCase() === 'system' ? 'LCI_RESULT' : 'UNIT_PROCESS';
+			img.model-icon-small(src='ws/public/cached/overlay/PROCESS/#{processType}/#{action}')
+		else if dataset.type === 'FLOW' && dataset.flowType
+			img.model-icon-small(src='ws/public/cached/overlay/FLOW/#{dataset.flowType}/#{action}')
 		else
-			- var query = '';
-			if dataset.type === 'PROCESS' && dataset.processType === 'SYSTEM'
-				- query = '?subType=LCI_RESULT';
-			else if dataset.type === 'FLOW' && dataset.flowType
-				- query = '?subType=' + dataset.flowType;
-			img.model-icon-small(src='ws/public/cached/overlay/#{dataset.type}/#{action}#{query}')
+			img.model-icon-small(src='ws/public/cached/overlay/#{dataset.type}/#{action}')
 	else
 		img.model-icon-small(src='images/model/small/#{getIcon(dataset)}')
 	if dataset.action === 'DELETE'
