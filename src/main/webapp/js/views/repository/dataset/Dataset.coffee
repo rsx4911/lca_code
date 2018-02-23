@@ -222,7 +222,7 @@ define([
 				if @dataset.type is 'Location' # and dataset.geometry
 					Location.initMap @dataset
 				if @dataset.type is 'Flow'
-					Flow.init @repository, @refId, @commitId
+					Flow.init @repository, @refId, @commitId, @dataset.flowType
 				if @dataset.type is 'DQSystem'
 					DQSystem.init @dataset
 

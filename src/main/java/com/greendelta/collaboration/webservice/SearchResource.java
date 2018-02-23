@@ -94,7 +94,7 @@ public class SearchResource {
 		if (repos.isEmpty())
 			return false;
 		for (Repository repo : repos) {
-			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
+			builder.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()));
 		}
 		return true;
 	}

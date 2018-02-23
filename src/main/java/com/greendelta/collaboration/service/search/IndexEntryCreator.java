@@ -146,8 +146,8 @@ public class IndexEntryCreator {
 				outputs.add(flowRefId);
 			}
 		}
-		entry.inputs = inputs.toArray(new String[inputs.size()]);
-		entry.outputs = outputs.toArray(new String[outputs.size()]);
+		entry.inputs = inputs;
+		entry.outputs = outputs;
 	}
 
 	private static ProcessType getProcessType(String value) {

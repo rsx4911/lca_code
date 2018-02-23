@@ -7,6 +7,7 @@ define([
 	(Filter, Icons, template) ->
 
 		init: (repository, refId, commitId, flowType) ->
+			console.log flowType
 			outType = if flowType is 'ELEMENTARY_FLOW' then 'emitted-by' else 'produced-by'
 			@initReferences repository, refId, commitId, 'used-by'
 			@initReferences repository, refId, commitId, outType

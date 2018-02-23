@@ -153,6 +153,8 @@ class IndexEntryParser {
 		e.license = entry.get("license");
 		e.contact = entry.get("contact");
 		e.description = entry.get("description");
+		e.inputs = entry.get("inputs");
+		e.outputs = entry.get("outputs");
 		return e;
 	}
 
