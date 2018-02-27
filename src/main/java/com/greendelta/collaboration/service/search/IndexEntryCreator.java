@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Dates;
 import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
@@ -75,22 +77,23 @@ public class IndexEntryCreator {
 
 	private void fillGeneric(IndexEntry entry, Dataset dataset) {
 		entry.repositoryId = repo.toId();
+		entry.group = repo.group;
 		entry.type = dataset.type;
 		entry.refId = dataset.refId;
 		entry.name = dataset.name;
 		entry.categoryRefId = dataset.categoryRefId;
-		entry.categories = dataset.categories != null ? new ArrayList<>(dataset.categories) : null;
-		if (dataset.categories != null && dataset.categories.size() > 0) {
-			entry.fullPath = org.openlca.util.Strings.join(dataset.categories, '/') + '/' + dataset.name;
-		} else {
-			entry.fullPath = dataset.name;
-		}
 		entry.categoryType = dataset.categoryType;
 		entry.commitId = commit.id;
 		entry.commitMessage = commit.message;
 		entry.commitTimestamp = commit.timestamp;
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
+		CategoryInfo.fillUp(entry, dataset.categories);
+		if (entry.categories != null) {
+			entry.fullPath = entry.category + '/' + dataset.name;
+		} else {
+			entry.fullPath = dataset.name;
+		}
 	}
 
 	private FlowIndexEntry flow(Dataset dataset, Map<String, Object> data) {
@@ -117,9 +120,12 @@ public class IndexEntryCreator {
 		entry.processType = getProcessType(data.getString("processType"));
 		entry.completeness = data.getString("processDocumentation.completenessDescription");
 		entry.samplingProcedure = data.getString("processDocumentation.samplingDescription");
-		entry.validFrom = data.getLong("processDocumentation.validFrom");
-		entry.validUntil = data.getLong("processDocumentation.validUntil");
-		entry.location = data.getString("processDocumentation.location.code");
+		entry.validFrom = Dates.getTime(data.get("processDocumentation.validFrom"));
+		entry.validFromYear = getYear(entry.validFrom);
+		entry.validUntil = Dates.getTime(data.get("processDocumentation.validUntil"));
+		entry.validUntilYear = getYear(entry.validUntil);
+		entry.locationCode = data.getString("location.code");
+		entry.location = data.getString("location.name");
 		entry.technology = data.getString("processDocumentation.technologyDescription");
 		entry.modellingApproach = getModellingApproach(data.getString("defaultAllocationMethod"));
 		entry.reviewer = data.getString("processDocumentation.reviewer.name");
@@ -129,6 +135,14 @@ public class IndexEntryCreator {
 		entry.contact = entry.copyrightHolder;
 		entry.description = data.getString("description");
 		putLinkedFlows(entry, data.get("exchanges"));
+	}
+
+	private static Integer getYear(long time) {
+		if (time == 0l)
+			return null;
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(time);
+		return cal.get(Calendar.YEAR);
 	}
 
 	private static void putLinkedFlows(ProcessIndexEntry entry, List<Map<String, Object>> exchanges) {
@@ -190,6 +204,64 @@ public class IndexEntryCreator {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return new HashMap<>();
+		}
+	}
+
+	public static class CategoryInfo {
+
+		String category;
+		List<String> categories;
+		List<String> categoryPaths;
+
+		private CategoryInfo(List<String> categories) {
+			this.categories = categories != null ? new ArrayList<>(categories) : null;
+			fill();
+		}
+
+		private void fill() {
+			if (categories == null || categories.size() == 0)
+				return;
+			category = org.openlca.util.Strings.join(categories, '/');
+			categoryPaths = new ArrayList<>();
+			String current = null;
+			for (String category : categories) {
+				if (current == null) {
+					current = category;
+				} else {
+					current += '/' + category;
+				}
+				categoryPaths.add(current);
+			}
+		}
+
+		public static void fillUp(IndexEntry entry) {
+			fillUp(entry, entry.categories);
+		}
+
+		public static void fillUp(IndexEntry entry, List<String> categories) {
+			CategoryInfo info = new CategoryInfo(categories);
+			if (entry.categories == null) {
+				entry.categories = info.categories;
+			}
+			if (entry.category == null) {
+				entry.category = info.category;
+			}
+			if (entry.categoryPaths == null) {
+				entry.categoryPaths = info.categoryPaths;
+			}
+		}
+
+		public static void fillUp(Map<String, Object> map, List<String> categories) {
+			CategoryInfo info = new CategoryInfo(categories);
+			if (!map.containsKey("categories")) {
+				map.put("categories", info.categories);
+			}
+			if (!map.containsKey("category")) {
+				map.put("category", info.category);
+			}
+			if (!map.containsKey("categoryPaths")) {
+				map.put("categoryPaths", info.categoryPaths);
+			}
 		}
 	}
 

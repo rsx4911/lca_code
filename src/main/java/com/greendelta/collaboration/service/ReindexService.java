@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
+import com.greendelta.collaboration.service.search.IndexEntryCreator.CategoryInfo;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -120,6 +121,7 @@ public class ReindexService {
 				if (entry.categories != null && entry.categories.size() > 0) {
 					entry.fullPath = Strings.join(entry.categories, '/') + '/' + entry.name;
 				}
+				CategoryInfo.fillUp(entry);
 			}
 			return entries;
 		}

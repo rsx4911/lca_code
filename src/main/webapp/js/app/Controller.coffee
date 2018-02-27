@@ -142,6 +142,7 @@ define([
 					view: 'search/Results'
 					title: 'Search'
 					fullWidth: true
+					search: true
 					viewOptions: @splitQuery query
 				@router.registerUserRoute 'userProfile', -> @showView 
 					view: 'user/Profile'
@@ -358,14 +359,17 @@ define([
 				return result
 
 			checkGroupOrRepositoryExists: (options, callback) ->
-				if options.viewOptions?.repository
-					Model.fetch options.viewOptions.repository,
-						force: true
-						success: callback
-				else if options.viewOptions?.group
-					Model.fetch options.viewOptions.group,
-						force: true
-						success: callback
+				if !options.search
+					if options.viewOptions?.repository
+						Model.fetch options.viewOptions.repository,
+							force: true
+							success: callback
+					else if options.viewOptions?.group
+						Model.fetch options.viewOptions.group,
+							force: true
+							success: callback
+					else
+						callback?()
 				else
 					callback?()
 

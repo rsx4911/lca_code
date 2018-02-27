@@ -17,6 +17,9 @@ public class ProcessIndexEntry extends IndexEntry {
 	public String samplingProcedure;
 	public long validFrom;
 	public long validUntil;
+	public Integer validFromYear;
+	public Integer validUntilYear;
+	public String locationCode;
 	public String location;
 	public String technology;
 	public List<Nomenclature> supportedNomenclatures;
@@ -179,8 +182,11 @@ public class ProcessIndexEntry extends IndexEntry {
 		e.sampleRepresentativeness = sampleRepresentativeness;
 		e.samplingProcedure = samplingProcedure;
 		e.validFrom = validFrom;
+		e.validFromYear = validFromYear;
 		e.validUntil = validUntil;
-		e.location = location;
+		e.validUntilYear = validUntilYear;
+		e.locationCode = locationCode;
+		e.location= location;
 		e.technology = technology;
 		e.representativeness = representativeness;
 		e.modellingPrinciple = modellingPrinciple;
