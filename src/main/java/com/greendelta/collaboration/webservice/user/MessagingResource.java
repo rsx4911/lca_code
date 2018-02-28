@@ -12,16 +12,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
+import com.greendelta.collaboration.service.SettingService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.util.Beans;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.Respond;
@@ -35,16 +38,21 @@ public class MessagingResource {
 	private final MessagingService service;
 	private final UserService userService;
 	private final TeamService teamService;
+	private final SettingService settingService;
 
 	@Inject
-	public MessagingResource(MessagingService service, UserService userService, TeamService teamService) {
+	public MessagingResource(MessagingService service, UserService userService, TeamService teamService,
+			SettingService settingService) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;
+		this.settingService = settingService;
 	}
 
 	@GET
 	public Response getConversations() {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User user = userService.getCurrentUser();
 		List<ConversationDescriptor> conversations = service.getConversations(user);
 		return Respond.ok(Conversations.map(conversations, user));
@@ -55,6 +63,8 @@ public class MessagingResource {
 	public Response getMessages(
 			@PathParam("username") String username,
 			@QueryParam("before") long before) {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User user = userService.getCurrentUser();
 		User other = userService.getForUsername(username);
 		if (user.settings.blockedUsers.contains(other))
@@ -74,6 +84,8 @@ public class MessagingResource {
 	public Response getTeamMessages(
 			@PathParam("teamname") String teamname,
 			@QueryParam("before") long before) {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		Team team = teamService.getForTeamname(teamname);
 		Calendar cal = Calendar.getInstance();
 		if (before > 0) {
@@ -89,6 +101,8 @@ public class MessagingResource {
 	@PUT
 	@Path("settings")
 	public Response updateSettings(UserSettings settings) {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User currentUser = userService.getCurrentUser();
 		Beans.populateProperties(settings, currentUser.settings,
 				"messagingEnabled", "messagingRestricted", "showOnlineStatus", "showReadReceipt");
@@ -99,6 +113,8 @@ public class MessagingResource {
 	@PUT
 	@Path("block/{username}")
 	public Response blockUser(@PathParam("username") String username) {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User other = userService.getForUsername(username);
 		if (other == null)
 			return Respond.notFound();
@@ -111,6 +127,8 @@ public class MessagingResource {
 	@PUT
 	@Path("unblock/{username}")
 	public Response unblockUser(@PathParam("username") String username) {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User other = userService.getForUsername(username);
 		if (other == null)
 			return Respond.notFound();

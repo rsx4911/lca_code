@@ -6,10 +6,11 @@ define([
 				'cs!utils/Model'
 				'cs!models/CurrentUser'
 				'cs!models/Conversations'
+				'cs!models/Settings'
 				'cs!app/DynamicDependencies'
 			]
 
-	(Backbone, Controller, Router, Layers, Model, currentUser, conversations) ->
+	(Backbone, Controller, Router, Layers, Model, currentUser, conversations, settings) ->
 
 		initializeErrorHandling: () ->
 			$(document).ajaxError (event, response, options, error) ->
@@ -71,9 +72,13 @@ define([
 		fetchModels: (callback) ->
 			Model.fetch currentUser, success: () ->
 				if currentUser.isLoggedIn()
-					Model.fetch conversations, success: () ->
-						conversations.initSocket()
-						callback()
+					Model.fetch settings, success: () ->
+						if settings.is('MESSAGING_ENABLED')
+							Model.fetch conversations, success: () ->
+								conversations.initSocket()
+								callback()
+						else
+							callback()
 				else
 					callback()
 				

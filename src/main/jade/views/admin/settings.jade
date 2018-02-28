@@ -1,0 +1,12 @@
+include ../mixins/forms.jade
+
+.header-box Enabled features
+.content-box
+	- var boolSettings = [];
+	- boolSettings.push(['COMMENTS_ENABLED', '<strong>Comments</strong>: Reviewers are enabled to make comments on data set fields']); 
+	- boolSettings.push(['TASKS_ENABLED', '<strong>Tasks</strong>: Editors can create review tasks']);
+	- boolSettings.push(['MESSAGING_ENABLED', '<strong>Messaging</strong>: Users can write messages to each other']);
+	- boolSettings.push(['PUBLIC_REPOSITORY_ENABLED', '<strong>Public repositories</strong>: Repositories can be marked as publicly accessible']);
+	each setting in boolSettings
+		- var val = settings[setting[0]];
+		+checkbox(setting[0], setting[1])(checked=val===true||val==='true')

@@ -16,6 +16,7 @@ define([
 				'cs!views/repository/dataset/ProductSystem'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/repository/dataset/project'
 				'templates/views/repository/dataset/product-system'
 				'templates/views/repository/dataset/impact-method'
@@ -33,7 +34,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, settings, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -239,6 +240,8 @@ define([
 					$(table).tablesorter options
 
 			initComments: (loadComments) ->
+				unless settings.is('COMMENTS_ENABLED')
+					return
 				Comments.init @$el,
 					repository: @repository
 					type: @type

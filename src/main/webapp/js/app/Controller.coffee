@@ -10,10 +10,11 @@ define([
 				'cs!models/Team'
 				'cs!models/Conversations'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, currentUser, errorTemplate) ->
+	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -48,24 +49,29 @@ define([
 					when 'messaging' then return [
 						{href: @concatUrl(prefix, 'messages'), imageSrc: 'images/inbox.png', label: 'Inbox', id: 'inbox'}
 					]
-					when 'user' then return [
-						{href: @concatUrl(prefix, 'user/profile'), imageSrc: 'images/profile.png', label: 'Profile', id: 'profile'}
-						{href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
-						{href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
-					]
+					when 'user'
+						userMenu = []
+						userMenu.push {href: @concatUrl(prefix, 'user/profile'), imageSrc: 'images/profile.png', label: 'Profile', id: 'profile'}
+						if settings.is('MESSAGING_ENABLED')
+							userMenu.push {href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
+						userMenu.push {href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
+						return userMenu
 					when 'group' then return [
 						{href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
 						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 					]
-					when 'repository' then return [
-						{href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
-						{href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
-						{href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
-						{href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
-						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
-					]
+					when 'repository' 
+						repoMenu = []
+						repoMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
+						repoMenu.push {href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
+						repoMenu.push {href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
+						if settings.is('COMMENTS_ENABLED')
+							repoMenu.push {href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
+						repoMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
+						return repoMenu
 					when 'admin' then return [
 						{href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
+						{href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
 						{href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
 					]
 
@@ -130,6 +136,12 @@ define([
 					nav:
 						type: 'admin'
 						active: 'libraries'
+				@router.registerAdminRoute 'adminSettings', -> @showView 
+					view: 'admin/Settings'
+					title: 'Admin area - Settings'
+					nav:
+						type: 'admin'
+						active: 'settings'
 
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @showError 404

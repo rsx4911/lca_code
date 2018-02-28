@@ -9,10 +9,11 @@ define([
 				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/repository/repository'
 			]
 
-	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, template) ->
+	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, settings, template) ->
 
 		class RepositoryView extends Backbone.View
 
@@ -38,6 +39,8 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
+					commentsEnabled: settings.is('COMMENTS_ENABLED')
+					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize

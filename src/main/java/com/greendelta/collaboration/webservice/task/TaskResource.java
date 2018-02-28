@@ -5,11 +5,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -26,18 +29,22 @@ public class TaskResource {
 	private final UserService userService;
 	private final RepositoryService repoService;
 	private final AccessService accessService;
+	private final SettingService settingService;
 
 	@Inject
 	public TaskResource(TaskService service, UserService userService, RepositoryService repoService,
-			AccessService accessService) {
+			AccessService accessService, SettingService settingService) {
 		this.service = service;
 		this.userService = userService;
 		this.repoService = repoService;
 		this.accessService = accessService;
+		this.settingService = settingService;
 	}
 
 	@GET
 	public Response getAll() {
+		if (!settingService.is(Key.TASKS_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		User user = userService.getCurrentUser();
 		ObjectMap result = new ObjectMap();
 		result.put("tasks", Client.map(service.getAllFor(user), Tasks::map));
