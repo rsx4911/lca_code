@@ -89,7 +89,7 @@ public class IndexEntryCreator {
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
 		CategoryInfo.fillUp(entry, dataset.categories);
-		if (entry.categories != null) {
+		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;
 		} else {
 			entry.fullPath = dataset.name;
