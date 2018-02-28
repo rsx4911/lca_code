@@ -93,7 +93,7 @@ define([
 				taskId = @id
 				Layers.selectModel
 					repositoryPath: @review.repositoryPath
-					multiSelection: true
+					multipleSelection: true
 					callback: (selection) -> 
 						Layers.showProgressIndicator 'Updating...'
 						$.ajax
