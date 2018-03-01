@@ -34,10 +34,10 @@ public class Setting extends AbstractEntity {
 
 	public enum Key {
 
-		MESSAGING_ENABLED(Boolean.class, false),
-		TASKS_ENABLED(Boolean.class, false),
-		COMMENTS_ENABLED(Boolean.class, false),
-		PUBLIC_REPOSITORY_ENABLED(Boolean.class, false);
+		MESSAGING_ENABLED(Boolean.class, true),
+		TASKS_ENABLED(Boolean.class, true),
+		COMMENTS_ENABLED(Boolean.class, true),
+		PUBLIC_REPOSITORY_ENABLED(Boolean.class, true);
 
 		public final Class<?> type;
 		private final Object defaultValue;
