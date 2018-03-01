@@ -14,21 +14,25 @@ import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SettingService;
 
 public class AccessService {
 
 	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
+	private final SettingService settingService;
 
 	@Inject
 	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
-			MembershipService membershipService) {
+			MembershipService membershipService, SettingService settingService) {
 		this.repositoryPath = repositoryPath;
 		this.userService = userService;
 		this.membershipService = membershipService;
+		this.settingService = settingService;
 	}
 
 	public boolean canRead(String groupOrRepo) {
@@ -170,6 +174,8 @@ public class AccessService {
 	}
 
 	private boolean isPublic(String groupOrRepo) {
+		if (!settingService.is(Key.PUBLIC_REPOSITORY_ENABLED))
+			return false;
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {

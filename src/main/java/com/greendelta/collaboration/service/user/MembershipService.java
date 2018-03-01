@@ -17,6 +17,7 @@ import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.service.SettingService;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -27,10 +28,10 @@ public class MembershipService {
 
 	@Inject
 	public MembershipService(@Named("repository.path") String repositoryPath, Dao<Membership> dao,
-			UserService userService) {
+			UserService userService, SettingService settingService) {
 		this.dao = dao;
 		// cannot inject access service - would result in a dependency loop
-		this.accessService = new AccessService(repositoryPath, userService, this);
+		this.accessService = new AccessService(repositoryPath, userService, this, settingService);
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {
