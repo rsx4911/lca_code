@@ -78,9 +78,10 @@ public class AccessService {
 	public boolean canCreateRepositoryIn(String group) {
 		User user = userService.getCurrentUser();
 		if (isOwnNamespace(user, group)) {
-			if (!user.settings.canCreateRepositories || user.settings.noOfRepositories == 0)
+			if (!user.settings.canCreateRepositories)
 				return false;
-			return user.settings.noOfRepositories > userService.getNoOfRepositories();
+			int noOfRepos = user.settings.noOfRepositories;
+			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories();
 		}
 		return hasPermissionTo(Permission.CREATE, group);
 	}

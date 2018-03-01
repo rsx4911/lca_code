@@ -97,11 +97,13 @@ define([
 						Backbone.history.loadUrl()
 
 			deleteTeam: (event) ->
-				teamname = @team.get 'teamname'
 				Layers.askDeleteQuestion "team #{teamname}", teamname, () =>
+					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
 						url: "ws/admin/team/#{teamname}"
-						success: () -> Router.navigate 'administration/overview'
+						success: () -> 
+							Layers.hideProgressIndicator()
+							Router.navigate 'administration/overview'
 
 )
