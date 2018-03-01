@@ -1,39 +1,48 @@
+include ../mixins/category-breadcrumb.jade
+
 mixin result(dataset)
 	.result
 		if dataset.action === 'DELETE' && dataset.type === 'CATEGORY'
-			+result-entry(dataset)
+			+result-title(dataset)
+		else if dataset.type === 'CATEGORY'
+			- var url = dataset.repositoryId + '/datasets/' + getLabel('type', dataset.categoryType) + '/' + dataset.fullPath;
+			a(href=url): +result-title(dataset)
 		else
-			- var url = dataset.repositoryId + '/dataset';
-			if dataset.type === 'CATEGORY'
-				- url += 's/' + getLabel('modelType', dataset.categoryType) + '/' + dataset.fullPath;
-			else
-				- url += '/' + dataset.type + '/' + dataset.refId + '?commitId' + dataset.commitId;
-			a(href=url): +result-entry(dataset)
-		.details
+			- var url = dataset.repositoryId + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId' + dataset.commitId;
+			a(href=url): +result-title(dataset)
+		+result-details(dataset)
+
+mixin result-title(dataset)
+	img.model-icon-small(src='images/model/small/#{getIcon(dataset)}')
+	if dataset.action === 'DELETE'
+		del.result-text=dataset.name
+	else 
+		span.result-text=dataset.name
+
+mixin result-details(dataset)
+	.details
+		if dataset.categories && dataset.categories.length
+			- var catUrl = dataset.repositoryId + '/datasets/' + getLabel('type', dataset.categoryType);
+			+category-breadcrumb(catUrl, dataset.categories, true)
+		.details-left
 			div Repository: 
 				a(href='#{dataset.repositoryId}')=dataset.repositoryId
 			if !isPublic
 				div Commit: 
-					a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}') 
-						span.result-text #{dataset.commitMessage} (#{dataset.commitId})
-
-mixin result-entry(dataset)
-	- var action = dataset.action;
-	if action === 'DELETE' && dataset.type === 'CATEGORY'
-		- action = null;
-	if action && action !== 'UPDATE'
-		if dataset.type === 'CATEGORY'
-			img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/#{dataset.categoryType}/#{action}')
-		else if dataset.type === 'PROCESS' && dataset.processType
-			- var processType = dataset.processType.toLowerCase() === 'system' ? 'LCI_RESULT' : 'UNIT_PROCESS';
-			img.model-icon-small(src='ws/public/cached/overlay/PROCESS/#{processType}/#{action}')
-		else if dataset.type === 'FLOW' && dataset.flowType
-			img.model-icon-small(src='ws/public/cached/overlay/FLOW/#{dataset.flowType}/#{action}')
-		else
-			img.model-icon-small(src='ws/public/cached/overlay/#{dataset.type}/#{action}')
-	else
-		img.model-icon-small(src='images/model/small/#{getIcon(dataset)}')
-	if dataset.action === 'DELETE'
-		del.result-text=dataset.fullPath
-	else 
-		span.result-text=dataset.fullPath
+					a(href='#{dataset.repositoryId}/commit/#{dataset.commitId}')=dataset.commitMessage
+		if dataset.location || dataset.validFromYear || dataset.validUntilYear
+			.details-right
+				if dataset.location
+					div 
+						img(src='images/model/small/location.png')
+						|  #{dataset.location}
+				if dataset.validFromYear || dataset.validUntilYear
+					div
+						img(src='images/calendar.png')
+						if dataset.validFromYear && dataset.validUntilYear && dataset.validFromYear != dataset.validUntilYear
+							|  #{dataset.validFromYear} - #{dataset.validUntilYear}
+						else if dataset.validFromYear
+							|  #{dataset.validFromYear}
+						else if dataset.validUntilYear
+							|  #{dataset.validUntilYear}
+		.clear
