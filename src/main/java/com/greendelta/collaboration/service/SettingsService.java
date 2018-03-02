@@ -51,12 +51,10 @@ public class SettingsService {
 		}
 		if (key.isImprint() && imprint != null) {
 			update(imprint, key, value);
-		}
-		if (key.isMailConfig() && mailConfig != null) {
+		} else if (key.isMailConfig() && mailConfig != null) {
 			update(mailConfig, key, value);
 			mailConfig.session = null;
-		}
-		if (key.isSearchConfig() && searchConfig != null) {
+		} else if (key.isSearchConfig() && searchConfig != null) {
 			update(searchConfig, key, value);
 			searchConfig.close();
 			searchConfig.client = null;

@@ -26,11 +26,15 @@ public class LibraryService {
 	@Inject
 	public LibraryService(SettingsService settingsService) {
 		this.settingsService = settingsService;
-		initLibraries();
+		resetLibraries();
 	}
 
-	private void initLibraries() {
-		File dir = new File(settingsService.get(Key.LIBRARY_PATH));
+	public void resetLibraries() {
+		refIds.clear();
+		String path = settingsService.get(Key.LIBRARY_PATH);
+		if (path == null || path.isEmpty())
+			return;
+		File dir = new File(path);
 		for (File file : dir.listFiles()) {
 			String filename = file.getName();
 			String libraryName = filename.substring(0, filename.lastIndexOf('.'));

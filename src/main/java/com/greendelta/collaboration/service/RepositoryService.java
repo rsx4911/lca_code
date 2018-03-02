@@ -49,7 +49,7 @@ public class RepositoryService {
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settingsService;
-	
+
 	@Inject
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
 			CommentService commentService, SettingsService settingsService) {
@@ -74,9 +74,12 @@ public class RepositoryService {
 	private String getRootPath() {
 		return settingsService.get(Key.REPOSITORY_PATH);
 	}
-	
+
 	public Repository get(String group, String name) {
-		Repository repo = Repository.get(getRootPath(), group, name);
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			throw new UnauthorizedAccessException(Repository.toId(group, name), "READ");
+		Repository repo = Repository.get(path, group, name);
 		if (!accessService.canRead(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
@@ -104,7 +107,10 @@ public class RepositoryService {
 		User currentUser = userService.getCurrentUser();
 		if (!accessService.canCreateRepositoryIn(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
-		new File(getPath(group, name)).mkdirs();
+		String path = getPath(group, name);
+		if (path == null)
+			throw new UnauthorizedAccessException(group, "WRITE");
+		new File(path).mkdirs();
 		putJsonContext(group, name);
 		putVersion(group, name);
 		Repository repo = get(group, name);
@@ -162,9 +168,12 @@ public class RepositoryService {
 	}
 
 	private void putJsonContext(String group, String name) {
+		String path = getPath(group, name);
+		if (path == null)
+			return;
 		JsonObject context = Context.write(Schema.URI);
 		try {
-			File file = new File(getPath(group, name), "context.json");
+			File file = new File(path, "context.json");
 			file.createNewFile();
 			String json = new Gson().toJson(context);
 			byte[] data = json.getBytes("utf-8");
@@ -175,7 +184,10 @@ public class RepositoryService {
 	}
 
 	private void putVersion(String group, String name) {
-		File versionFile = new File(getPath(group, name), ".version");
+		String path = getPath(group, name);
+		if (path == null)
+			return;
+		File versionFile = new File(path, ".version");
 		if (versionFile.exists())
 			return;
 		try {
@@ -186,7 +198,10 @@ public class RepositoryService {
 	}
 
 	boolean delete(Repository repo) {
-		return Directories.delete(new File(getPath(repo.group, repo.name)));
+		String path = getPath(repo.group, repo.name);
+		if (path == null)
+			return false;
+		return Directories.delete(new File(path));
 	}
 
 	public StreamingOutput pack(Repository repo) {
@@ -215,9 +230,10 @@ public class RepositoryService {
 	}
 
 	private List<Repository> getAll(boolean adminArea) {
-		if (getRootPath() == null)
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
 			return new ArrayList<>();
-		File root = new File(getRootPath());
+		File root = new File(path);
 		List<Repository> repos = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (group.listFiles() == null)
@@ -226,7 +242,7 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				try {
-					Repository repo = Repository.get(getRootPath(), group.getName(), name.getName());
+					Repository repo = Repository.get(path, group.getName(), name.getName());
 					if (!accessService.canRead(repo.toId(), !adminArea))
 						continue;
 					repos.add(repo);
@@ -239,7 +255,10 @@ public class RepositoryService {
 	}
 
 	private String getPath(String group, String name) {
-		return getRootPath() + File.separator + group + File.separator + name;
+		String path = getRootPath();
+		if (path == null)
+			return null;
+		return path + File.separator + group + File.separator + name;
 	}
 
 	public byte[] getAvatar(String group, String name) {

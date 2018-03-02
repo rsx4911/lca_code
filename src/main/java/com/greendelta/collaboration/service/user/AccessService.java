@@ -174,6 +174,8 @@ public class AccessService {
 		if (!settingsService.is(Key.PUBLIC_REPOSITORY_ENABLED))
 			return false;
 		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
+		if (repositoryPath == null)
+			return false;
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {

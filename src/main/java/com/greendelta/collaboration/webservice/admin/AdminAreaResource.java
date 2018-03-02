@@ -28,6 +28,7 @@ import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -50,11 +51,12 @@ public class AdminAreaResource {
 	private final TeamService teamService;
 	private final SettingsService settingsService;
 	private final EmailService emailService;
+	private final LibraryService libraryService;
 
 	@Inject
 	public AdminAreaResource(RepositoryService repoService, ReindexService reindexService, SearchService searchService,
 			UserService service, GroupService groupService, TeamService teamService, SettingsService settingsService,
-			EmailService emailService) {
+			EmailService emailService, LibraryService libraryService) {
 		this.repoService = repoService;
 		this.reindexService = reindexService;
 		this.searchService = searchService;
@@ -63,6 +65,7 @@ public class AdminAreaResource {
 		this.teamService = teamService;
 		this.settingsService = settingsService;
 		this.emailService = emailService;
+		this.libraryService = libraryService;
 	}
 
 	@GET
@@ -91,6 +94,8 @@ public class AdminAreaResource {
 	@Path("settings/{key}")
 	public Response setSetting(@PathParam("key") Key key) {
 		settingsService.set(key, null);
+		if (key == Key.LIBRARY_PATH)
+			libraryService.resetLibraries();
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -98,6 +103,8 @@ public class AdminAreaResource {
 	@Path("settings/{key}/{value}")
 	public Response setSetting(@PathParam("key") Key key, @PathParam("value") String value) {
 		settingsService.set(key, value);
+		if (key == Key.LIBRARY_PATH)
+			libraryService.resetLibraries();
 		return Respond.ok(new HashMap<>());
 	}
 

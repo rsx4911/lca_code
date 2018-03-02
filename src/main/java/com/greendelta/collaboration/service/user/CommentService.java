@@ -182,9 +182,12 @@ public class CommentService {
 			comment.approved = true;
 		} else {
 			String[] split = comment.repositoryPath.split("/");
-			Repository repo = Repository.get(settingsService.get(Key.REPOSITORY_PATH), split[0], split[1]);
-			if (!repo.settings.commentApproval) {
-				comment.approved = true;
+			String repoPath = settingsService.get(Key.REPOSITORY_PATH);
+			if (repoPath != null) {
+				Repository repo = Repository.get(repoPath, split[0], split[1]);
+				if (!repo.settings.commentApproval) {
+					comment.approved = true;
+				}
 			}
 		}
 		return dao.update(comment);

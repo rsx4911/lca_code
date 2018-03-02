@@ -89,7 +89,7 @@ public class UserService {
 		if (currentUser.username == null || currentUser.username.isEmpty())
 			return 0;
 		String path = settingsService.get(Key.REPOSITORY_PATH);
-		if (path == null)
+		if (path == null || path.isEmpty())
 			return 0;
 		File userGroup = new File(path, currentUser.username);
 		if (!userGroup.exists())
@@ -102,6 +102,8 @@ public class UserService {
 		if (currentUser.username == null || currentUser.username.isEmpty())
 			return 0;
 		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
+		if (repositoryPath == null)
+			return 0;
 		File userGroup = new File(repositoryPath, currentUser.username);
 		if (!userGroup.exists())
 			return 0;

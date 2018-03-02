@@ -50,7 +50,10 @@ public class GroupService {
 	}
 
 	public boolean exists(String group, boolean skipAccessCheck) {
-		File root = new File(getRootPath());
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return false;
+		File root = new File(path);
 		if (root.list() == null)
 			return false;
 		for (String child : root.list())
@@ -78,7 +81,10 @@ public class GroupService {
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
-		boolean created = new File(getPath(group)).mkdir();
+		String path = getPath(group);
+		if (path == null || path.isEmpty())
+			return false;
+		boolean created = new File(path).mkdir();
 		if (!created)
 			return false;
 		if (userGroup)
@@ -88,13 +94,19 @@ public class GroupService {
 	}
 
 	boolean delete(String group) {
-		return Directories.delete(new File(getPath(group)));
+		String path = getPath(group);
+		if (path == null || path.isEmpty())
+			return false;
+		return Directories.delete(new File(path));
 	}
 
 	public byte[] getAvatar(String group) {
 		if (!exists(group))
 			return null;
-		File avatarFile = new File(getRootPath(), group + File.separator + "avatar");
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return null;
+		File avatarFile = new File(path, group + File.separator + "avatar");
 		if (!avatarFile.exists())
 			return null;
 		try {
@@ -106,9 +118,12 @@ public class GroupService {
 	}
 
 	public void setAvatar(String group, InputStream file) {
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return;
 		if (!accessService.canWrite(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
-		File avatarFile = new File(getRootPath(), group + File.separator + "avatar");
+		File avatarFile = new File(path, group + File.separator + "avatar");
 		if (file != null)
 			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
 				ByteStreams.copy(file, output);
@@ -129,9 +144,10 @@ public class GroupService {
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
-		if (getRootPath() == null)
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
 			return new ArrayList<>();
-		File root = new File(getRootPath());
+		File root = new File(path);
 		List<String> groups = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
@@ -148,7 +164,10 @@ public class GroupService {
 	}
 
 	private String getPath(String group) {
-		return getRootPath() + File.separator + group;
+		String path = getRootPath();
+		if (path == null)
+			return null;
+		return path + File.separator + group;
 	}
 
 }
