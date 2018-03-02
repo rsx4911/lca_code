@@ -10,7 +10,6 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
@@ -21,15 +20,12 @@ import com.greendelta.collaboration.service.SettingsService;
 
 public class AccessService {
 
-	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final SettingsService settingsService;
 
 	@Inject
-	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
-			MembershipService membershipService, SettingsService settingsService) {
-		this.repositoryPath = repositoryPath;
+	public AccessService(UserService userService, MembershipService membershipService, SettingsService settingsService) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.settingsService = settingsService;
@@ -177,6 +173,7 @@ public class AccessService {
 	private boolean isPublic(String groupOrRepo) {
 		if (!settingsService.is(Key.PUBLIC_REPOSITORY_ENABLED))
 			return false;
+		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {

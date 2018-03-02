@@ -10,6 +10,10 @@ include ../mixins/forms.jade
 			+input('SERVER_URL', 'Server base url (e.g. used in email links)')
 		.clear
 		.two-columns
+			+input('REPOSITORY_PATH', 'Repositories root directory')
+			+input('LIBRARY_PATH', 'Root directory for librariy id files')
+		.clear
+		.two-columns
 			+input('GLAD_URL', 'Glad service base url')
 			+input('GLAD_API_KEY', 'Glad service api-key')
 		.clear

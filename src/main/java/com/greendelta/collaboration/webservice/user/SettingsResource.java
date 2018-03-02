@@ -20,13 +20,13 @@ import com.greendelta.collaboration.webservice.util.Settings;
 
 @Path("settings")
 @Produces(MediaType.APPLICATION_JSON)
-public class SettingResource {
+public class SettingsResource {
 
 	private final SettingsService service;
 	private final UserService userService;
 
 	@Inject
-	public SettingResource(SettingsService service, UserService userService) {
+	public SettingsResource(SettingsService service, UserService userService) {
 		this.service = service;
 		this.userService = userService;
 	}

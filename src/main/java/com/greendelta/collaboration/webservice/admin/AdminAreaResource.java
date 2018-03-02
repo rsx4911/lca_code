@@ -88,6 +88,13 @@ public class AdminAreaResource {
 	}
 
 	@PUT
+	@Path("settings/{key}")
+	public Response setSetting(@PathParam("key") Key key) {
+		settingsService.set(key, null);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
 	@Path("settings/{key}/{value}")
 	public Response setSetting(@PathParam("key") Key key, @PathParam("value") String value) {
 		settingsService.set(key, value);

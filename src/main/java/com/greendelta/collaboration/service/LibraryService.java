@@ -14,23 +14,23 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import com.greendelta.collaboration.model.Setting.Key;
 
 @Singleton
 public class LibraryService {
 
 	private static final Logger log = LogManager.getLogger(LibraryService.class);
 	private final Map<String, Set<String>> refIds = new HashMap<>();
-	private final String libraryPath;
+	private final SettingsService settingsService;
 
 	@Inject
-	public LibraryService(@Named("library.path") String libraryPath) {
-		this.libraryPath = libraryPath;
+	public LibraryService(SettingsService settingsService) {
+		this.settingsService = settingsService;
 		initLibraries();
 	}
 
 	private void initLibraries() {
-		File dir = new File(libraryPath);
+		File dir = new File(settingsService.get(Key.LIBRARY_PATH));
 		for (File file : dir.listFiles()) {
 			String filename = file.getName();
 			String libraryName = filename.substring(0, filename.lastIndexOf('.'));
@@ -88,7 +88,7 @@ public class LibraryService {
 	}
 
 	private File getFile(String libraryName) {
-		return new File(libraryPath + File.separator + libraryName + ".txt");
+		return new File(settingsService.get(Key.LIBRARY_PATH) + File.separator + libraryName + ".txt");
 	}
 
 }

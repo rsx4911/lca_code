@@ -11,7 +11,6 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
@@ -27,11 +26,10 @@ public class MembershipService {
 	private final AccessService accessService;
 
 	@Inject
-	public MembershipService(@Named("repository.path") String repositoryPath, Dao<Membership> dao,
-			UserService userService, SettingsService settingsService) {
+	public MembershipService(Dao<Membership> dao, UserService userService, SettingsService settingsService) {
 		this.dao = dao;
 		// cannot inject access service - would result in a dependency loop
-		this.accessService = new AccessService(repositoryPath, userService, this, settingsService);
+		this.accessService = new AccessService(userService, this, settingsService);
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {

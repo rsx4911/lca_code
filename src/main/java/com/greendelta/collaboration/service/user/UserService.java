@@ -19,9 +19,8 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
@@ -36,16 +35,13 @@ public class UserService {
 	private final static Random random = new SecureRandom();
 	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
-	private final String repositoryPath;
 	private final SettingsService settingsService;
 
 	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, SettingsService settingsService,
-			@Named("repository.path") String repositoryPath) {
+	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, SettingsService settingsService) {
 		this.subjectProvider = subjectProvider;
 		this.dao = dao;
 		this.settingsService = settingsService;
-		this.repositoryPath = repositoryPath;
 	}
 
 	public User getForUsername(String username) {
@@ -92,7 +88,10 @@ public class UserService {
 		User currentUser = getCurrentUser();
 		if (currentUser.username == null || currentUser.username.isEmpty())
 			return 0;
-		File userGroup = new File(repositoryPath, currentUser.username);
+		String path = settingsService.get(Key.REPOSITORY_PATH);
+		if (path == null)
+			return 0;
+		File userGroup = new File(path, currentUser.username);
 		if (!userGroup.exists())
 			return 0;
 		return userGroup.listFiles().length;
@@ -102,6 +101,7 @@ public class UserService {
 		User currentUser = getCurrentUser();
 		if (currentUser.username == null || currentUser.username.isEmpty())
 			return 0;
+		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
 		File userGroup = new File(repositoryPath, currentUser.username);
 		if (!userGroup.exists())
 			return 0;

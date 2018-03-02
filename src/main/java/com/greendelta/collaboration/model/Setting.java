@@ -47,6 +47,8 @@ public class Setting extends AbstractEntity {
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),
 		SERVER_URL(String.class),
+		REPOSITORY_PATH(String.class),
+		LIBRARY_PATH(String.class),
 		GLAD_URL(String.class),
 		GLAD_API_KEY(String.class),
 
@@ -82,7 +84,7 @@ public class Setting extends AbstractEntity {
 
 		public final Class<?> type;
 		private final Object defaultValue;
-
+		
 		private Key(Class<?> type) {
 			this(type, null);
 		}
@@ -157,7 +159,8 @@ public class Setting extends AbstractEntity {
 		}
 
 		public boolean isPublic() {
-			return !isMailConfig() && !isSearchConfig() && this != GLAD_API_KEY;
+			return !isMailConfig() && !isSearchConfig() &&
+					this != GLAD_API_KEY && this != REPOSITORY_PATH && this != LIBRARY_PATH;
 		}
 	}
 
