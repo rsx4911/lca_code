@@ -26,7 +26,7 @@ import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SettingService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.task.ReviewService;
 import com.greendelta.collaboration.service.task.TaskService;
@@ -51,12 +51,12 @@ public class ReviewResource {
 	private final BrowseService browseService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
-	private final SettingService settingService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, HistoryService historyService, NotificationService notificationService,
-			RepositoryService repoService, BrowseService browseService, SettingService settingService) {
+			RepositoryService repoService, BrowseService browseService, SettingsService settingsService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
@@ -65,13 +65,13 @@ public class ReviewResource {
 		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.browseService = browseService;
-		this.settingService = settingService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
 	@Path("{id}")
 	public Response get(@PathParam("id") long id) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -81,7 +81,7 @@ public class ReviewResource {
 
 	@POST
 	public Response start(Review review) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Response invalid = checkValidity(review);
 		if (invalid != null)
@@ -95,7 +95,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}")
 	public Response update(Review review) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		if (Strings.isNullOrEmpty(review.name))
 			return Respond.invalid("name", "Missing input: Name");
@@ -114,7 +114,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/references")
 	public Response setReferences(@PathParam("id") long id, List<Reference> references) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -136,7 +136,7 @@ public class ReviewResource {
 	public Response assignReviewer(
 			@PathParam("id") long id,
 			@PathParam("username") String username) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -156,7 +156,7 @@ public class ReviewResource {
 			@PathParam("id") long id,
 			@PathParam("referenceId") long referenceId,
 			@PathParam("value") boolean value) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -168,7 +168,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/complete/{username}")
 	public Response completeAssignment(@PathParam("id") long id, @PathParam("username") String username) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -184,7 +184,7 @@ public class ReviewResource {
 	public Response cancelAssignment(
 			@PathParam("id") long id,
 			@PathParam("username") String username) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -198,7 +198,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/complete")
 	public Response closeReview(@PathParam("id") long id) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -212,7 +212,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/cancel")
 	public Response cancelReview(@PathParam("id") long id) {
-		if (!settingService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)

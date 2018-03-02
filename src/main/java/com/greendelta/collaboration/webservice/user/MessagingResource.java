@@ -20,7 +20,7 @@ import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
-import com.greendelta.collaboration.service.SettingService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.service.user.TeamService;
@@ -38,20 +38,20 @@ public class MessagingResource {
 	private final MessagingService service;
 	private final UserService userService;
 	private final TeamService teamService;
-	private final SettingService settingService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public MessagingResource(MessagingService service, UserService userService, TeamService teamService,
-			SettingService settingService) {
+			SettingsService settingsService) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;
-		this.settingService = settingService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
 	public Response getConversations() {
-		if (!settingService.is(Key.MESSAGING_ENABLED))
+		if (!settingsService.is(Key.MESSAGING_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User user = userService.getCurrentUser();
 		List<ConversationDescriptor> conversations = service.getConversations(user);
@@ -63,7 +63,7 @@ public class MessagingResource {
 	public Response getMessages(
 			@PathParam("username") String username,
 			@QueryParam("before") long before) {
-		if (!settingService.is(Key.MESSAGING_ENABLED))
+		if (!settingsService.is(Key.MESSAGING_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User user = userService.getCurrentUser();
 		User other = userService.getForUsername(username);
@@ -84,7 +84,7 @@ public class MessagingResource {
 	public Response getTeamMessages(
 			@PathParam("teamname") String teamname,
 			@QueryParam("before") long before) {
-		if (!settingService.is(Key.MESSAGING_ENABLED))
+		if (!settingsService.is(Key.MESSAGING_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		Team team = teamService.getForTeamname(teamname);
 		Calendar cal = Calendar.getInstance();
@@ -101,7 +101,7 @@ public class MessagingResource {
 	@PUT
 	@Path("settings")
 	public Response updateSettings(UserSettings settings) {
-		if (!settingService.is(Key.MESSAGING_ENABLED))
+		if (!settingsService.is(Key.MESSAGING_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User currentUser = userService.getCurrentUser();
 		Beans.populateProperties(settings, currentUser.settings,
@@ -113,7 +113,7 @@ public class MessagingResource {
 	@PUT
 	@Path("block/{username}")
 	public Response blockUser(@PathParam("username") String username) {
-		if (!settingService.is(Key.MESSAGING_ENABLED))
+		if (!settingsService.is(Key.MESSAGING_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User other = userService.getForUsername(username);
 		if (other == null)
@@ -127,7 +127,7 @@ public class MessagingResource {
 	@PUT
 	@Path("unblock/{username}")
 	public Response unblockUser(@PathParam("username") String username) {
-		if (!settingService.is(Key.MESSAGING_ENABLED))
+		if (!settingsService.is(Key.MESSAGING_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Messaging feature not enabled");
 		User other = userService.getForUsername(username);
 		if (other == null)

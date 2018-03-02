@@ -31,6 +31,7 @@ define([
 				'click [data-action=clone-repository]': 'openCloneLayer'
 				'click [data-action=move-repository]': 'openMoveLayer'
 				'click [data-action=export-repository]': 'exportRepository'
+				'click [data-action=push-to-glad]': 'pushToGlad'
 
 			initialize: (options) ->
 				{@repository} = options
@@ -41,6 +42,7 @@ define([
 					repository: repository
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
+					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isAdmin()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
@@ -198,5 +200,24 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'move-form', response
+
+			pushToGlad: () ->
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				Layers.selectModel
+					repositoryPath: fullPath
+					multipleSelection: true
+					type: 'PROCESS'
+					callback: (selection) -> 
+						Layers.showProgressIndicator 'Pushing'
+						$.ajax
+							type: 'PUT'
+							url: "ws/admin/glad/push/#{fullPath}"
+							contentType: 'application/json'
+							data: JSON.stringify(selection)
+							success: (response) ->
+								Layers.closeActive()
+								Status.success 'Successfully pushed selected data to GLAD'
+								Layers.hideProgressIndicator()
 
 )

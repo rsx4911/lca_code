@@ -8,7 +8,12 @@
 						span.sr-only Close
 				h4.modal-title=title
 			.modal-body.clearfix!=body
-			if buttons
+			if buttons || actionButtons
 				.modal-footer
-					each button in buttons
-						button.btn(id=button.id tabindex=50 class=button.className?button.className:'btn-default' type='button' data-dismiss=button.callback?null:'modal')=button.text
+					.pull-left
+						if actionButtons
+							each button in actionButtons
+								button.btn.pull-left(id=button.id, tabindex=50, class=button.className?button.className:'btn-default', type='button')=button.text
+					if buttons
+						each button in buttons
+							button.btn(id=button.id, tabindex=50, class=button.className?button.className:'btn-default', type='button', data-dismiss=button.callback?null:'modal')=button.text

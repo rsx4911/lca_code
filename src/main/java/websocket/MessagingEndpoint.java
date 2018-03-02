@@ -25,7 +25,7 @@ import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.Setting.Key;
-import com.greendelta.collaboration.service.SettingService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -43,10 +43,10 @@ public class MessagingEndpoint {
 	private final MessagingService service;
 	private final UserService userService;
 	private final TeamService teamService;
-	private final SettingService settingService;
+	private final SettingsService settingService;
 
 	@Inject
-	public MessagingEndpoint(MessagingService service, UserService userService, TeamService teamService, SettingService settingService) {
+	public MessagingEndpoint(MessagingService service, UserService userService, TeamService teamService, SettingsService settingService) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;

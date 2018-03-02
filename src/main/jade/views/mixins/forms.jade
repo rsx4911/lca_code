@@ -30,7 +30,10 @@ mixin input(id, label, type, inline, required, hide)
 			label.control-label(for=id)!=label
 				if required
 					sup *
-		input.form-control(id=id name=id type=type)&attributes(attributes)
+		if type === 'integer'
+			input.form-control(id=id name=id type='number' min=0 step=1)&attributes(attributes)
+		else
+			input.form-control(id=id name=id type=type)&attributes(attributes)
 		block
 
 mixin hidden(id, value)

@@ -35,7 +35,7 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SettingService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
@@ -58,12 +58,12 @@ public class CommentResource {
 	private final NotificationService notificationService;
 	private final SearchService searchService;
 	private final HistoryService historyService;
-	private final SettingService settingService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
 			AccessService accessService, NotificationService notificationService, SearchService searchService,
-			HistoryService historyService, SettingService settingService) {
+			HistoryService historyService, SettingsService settingsService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
@@ -71,7 +71,7 @@ public class CommentResource {
 		this.notificationService = notificationService;
 		this.searchService = searchService;
 		this.historyService = historyService;
-		this.settingService = settingService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -83,7 +83,7 @@ public class CommentResource {
 			@QueryParam("page") int page,
 			@QueryParam("pageSize") int pageSize,
 			@QueryParam("includeReplies") @DefaultValue("false") boolean includeReplies) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Repository repo = repoService.get(group, name);
 		List<Comment> comments = includeReplies ? service.getAllFor(repo) : service.getAllTopSorted(repo, filter);
@@ -103,7 +103,7 @@ public class CommentResource {
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Repository repository = repoService.get(group, name);
 		List<Comment> comments = service.getAllFor(repository, type, refId, commitId);
@@ -145,7 +145,7 @@ public class CommentResource {
 	@GET
 	@Path("{id}/replies")
 	public Response getReplies(@PathParam("id") long id) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Comment comment = service.get(id);
 		Repository repo = repoService.get(comment.repositoryPath);
@@ -163,7 +163,7 @@ public class CommentResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId,
 			Map<String, Object> data) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		ObjectMap map = ObjectMap.fromMap(data);
 		Repository repository = repoService.get(group, name);
@@ -193,7 +193,7 @@ public class CommentResource {
 	@Path("{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response edit(@PathParam("id") long id, Map<String, Object> data) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		ObjectMap map = ObjectMap.fromMap(data);
 		Comment comment = service.update(id, map.getString("text"));
@@ -211,7 +211,7 @@ public class CommentResource {
 	public Response changeVisibility(
 			@PathParam("id") long id,
 			@PathParam("role") String roleString) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Role role = "null".equals(roleString) ? null : Role.valueOf(roleString);
 		Comment comment = service.changeVisibility(id, role);
@@ -224,7 +224,7 @@ public class CommentResource {
 	@PUT
 	@Path("{id}/release")
 	public Response release(@PathParam("id") long id) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Comment comment = service.release(id);
 		if (comment == null)
@@ -236,7 +236,7 @@ public class CommentResource {
 	@DELETE
 	@Path("{id}")
 	public Response delete(@PathParam("id") long id) {
-		if (!settingService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		service.delete(id);
 		return Respond.ok(Collections.emptyMap());

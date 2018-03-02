@@ -40,6 +40,12 @@ define([
 						backdrop: 'static'
 				else
 					$('.modal').modal()
+				if options.actionButtons?.length
+					for button in options.actionButtons
+						if button.callback
+							unless button.context
+								button.context = @
+							setListener button
 				if options.buttons?.length
 					for button in options.buttons
 						if button.callback
@@ -135,6 +141,39 @@ define([
 						{id: 'close', text: 'Close', className: 'btn-default', callback: () -> window.location.href = '/login'}
 						{id: 'login', text: 'Login', className: 'btn-primary', callback: 'login'}
 					]
+			
+			promptInput: (label, type, value, callback) ->
+				unless value
+					value = ''
+				buttons = []
+				buttons.push {text: 'Cancel', className: 'btn-default', callback: @closeActive}
+				buttons.push {text: 'Ok', className: 'btn-success', callback: () =>
+					if type is 'file'
+						file = $('#input-data')[0].files[0]
+						fileName = Forms.getFileName 'input-data'
+						if !file or !fileName
+							callback()
+						else 
+							fileData = new FormData()
+							fileData.append 'file', file
+							fileData.append 'fileName', fileName
+							callback fileData
+					else
+						callback $('#input-data').val()
+					@closeActive()
+				}
+				body = null
+				if type is 'textarea'
+					body = "<label for=\"input-data\">#{label}</label><textarea id=\"input-data\" class=\"form-control\" rows=\"5\"></textarea>"
+				else
+					realType = if type is 'date' then 'text' else type
+					body = "<label for=\"input-data\">#{label}</label><input id=\"input-data\" type=\"#{realType}\" class=\"form-control\">"
+				@showMessageInLayer
+					body: body
+					title: "Specify #{label}"
+					buttons: buttons
+				if value
+					$('#input-data').val value
 
 			selectUser: (options) ->
 				unless options
@@ -182,6 +221,10 @@ define([
 						title = "Select #{ModelTypes[options.type].toLowerCase()}"
 					else
 						title = "Select #{ModelTypes.singular(options.type).toLowerCase()}"
+				actionButtons = []
+				if options.multipleSelection
+					actionButtons.push {id: 'check-all', text: 'Check all', callback: () -> $("#model-tree").jstree('check_all')}
+					actionButtons.push {id: 'uncheck-all', text: 'Uncheck all', callback: () -> $("#model-tree").jstree('uncheck_all')}
 				@showTemplateInLayer
 					title: title
 					template: 'select-model-layer'
@@ -203,6 +246,7 @@ define([
 								options.callback refId, commitId
 						}
 					]
+					actionButtons: actionButtons
 					callback: () =>
 						ModelTree.init '#model-tree', options.repositoryPath, 
 							multipleSelection: options.multipleSelection

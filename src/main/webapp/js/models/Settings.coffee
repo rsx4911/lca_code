@@ -8,19 +8,24 @@ define([
 
 			url: 'ws/settings'
 
-			get: (key) ->
+			getVal: (key) ->
 				for model in @models
 					if model.get('name') is key
-						return model.get('value')
+						return model.get 'value'
+
+			setVal: (key, value) ->
+				for model in @models
+					if model.get('name') is key
+						model.set 'value', value
 
 			is: (key) ->
-				value = @get(key)
+				value = @getVal key
 				return value is 'true' or value is true 
 
 			toMap: () ->
 				map = {}
 				for model in @models
-					map[model.get('name')] = model.get('value')
+					map[model.get('name')] = model.get 'value'
 				return map
 
 			toList: () ->

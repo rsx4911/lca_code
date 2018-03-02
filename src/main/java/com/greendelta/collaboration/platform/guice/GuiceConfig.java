@@ -63,13 +63,12 @@ public class GuiceConfig extends GuiceServletContextListener {
 		String env = System.getProperty("app.env");
 		if (!Strings.isNullOrEmpty(env))
 			PropertiesModule.setEnvironment(env);
-		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
-		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
 		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
-		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
+		JpaPersistModule jpaModule = new JpaPersistModule("prod");
 		Properties properties = new Properties();
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
+		String resourcePackages = "com.greendelta.collaboration.webservice";
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroModule(servletContext), jpaModule,
 				new JerseyModule(resourcePackages), new EhCacheModule(),

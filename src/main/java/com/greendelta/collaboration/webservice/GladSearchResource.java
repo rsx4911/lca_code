@@ -20,11 +20,14 @@ import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.SearchFields;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.Glad;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
@@ -36,17 +39,15 @@ import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
 @Path("public/glad")
-public class UnepSearchResource {
+public class GladSearchResource {
 
 	private final RepositoryService repoService;
-	private final SearchClient client;
-	private final String baseUrl;
+	private final SettingsService settingsService;
 
 	@Inject
-	public UnepSearchResource(RepositoryService repoService, SearchClient client, @Named("base.url") String baseUrl) {
+	public GladSearchResource(RepositoryService repoService, SettingsService settingsService) {
 		this.repoService = repoService;
-		this.client = client;
-		this.baseUrl = baseUrl;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -98,12 +99,12 @@ public class UnepSearchResource {
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
+		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
-		prepareResult(result);
-		return result;
+		return prepareResult(result);
 	}
 
-	private void prepareResult(SearchResult<Map<String, Object>> result) {
+	private SearchResult<Map<String, Object>>  prepareResult(SearchResult<Map<String, Object>> result) {
 		for (AggregationResult aggreagtion : new ArrayList<>(result.aggregations)) {
 			if (aggreagtion.name.equals(Aggregations.REPOSITORY.name)) {
 				result.aggregations.remove(aggreagtion);
@@ -111,22 +112,15 @@ public class UnepSearchResource {
 				result.aggregations.remove(aggreagtion);
 			}
 		}
-		for (Map<String, Object> data : result.data) {
-			data.remove("type");
-			data.remove("categoryType");
-			data.remove("categoryRefId");
-			data.remove("commitMessage");
-			data.remove("lastUpdate");
-			String path = data.remove("fullPath").toString();
-			if (path.contains("/")) // full path contains name
-				path = path.substring(0, path.lastIndexOf("/"));
-			data.put("category", path);
+		return SearchResults.convert(result, (data) -> {
 			String repoId = data.remove("repositoryId").toString();
 			String refId = data.get("refId").toString();
 			String commitId = data.remove("commitId").toString();
 			data.put("format", "JSON-LD");
+			String baseUrl = settingsService.get(Key.SERVER_URL);
 			data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/" + refId + "/" + commitId);
-		}
+			return Glad.cleanUp(data);
+		});
 	}
 
 	private SearchResult<Map<String, Object>> buildEmptyResult(int page, int pageSize) {
@@ -138,4 +132,5 @@ public class UnepSearchResource {
 		}
 		return result;
 	}
+
 }
