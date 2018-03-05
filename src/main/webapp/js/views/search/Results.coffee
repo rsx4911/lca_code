@@ -245,22 +245,17 @@ define([
 				aggregations = []
 				repoAggregation = null
 				groupAggregation = null
-				categoryPathsAggregation = null
 				for aggregation in result.aggregations
 					if aggregation.name is 'repositoryId'
 						repoAggregation = aggregation
 						continue
 					if aggregation.name is 'group'
 						groupAggregation = aggregation
-					if aggregation.name is 'categoryPaths'
-						categoryPathsAggregation = aggregation
 					aggregations.push aggregation
 				result.aggregations = aggregations
 				@sortAggregations result
 				if repoAggregation and groupAggregation
 					@groupRepos groupAggregation, repoAggregation
-				if categoryPathsAggregation
-					@groupCategories categoryPathsAggregation
 
 			groupRepos: (groups, repos) ->
 				for entry in repos.entries
@@ -275,39 +270,6 @@ define([
 					if entry.key is key
 						return entry
 				return null
-
-			groupCategories: (aggregation) ->
-				all = {}
-				for entry in aggregation.entries
-					all[entry.key] = entry
-				topLevel = []
-				for entry in aggregation.entries
-					split = entry.key.split '/'
-					depth = 0
-					name = ''
-					parent = ''
-					while !all[parent] and depth < split.length
-						depth++
-						if depth is 1 && split.length is 1
-							name = split[0]
-						else
-							name = @join split, depth, true
-							parent = @join split, split.length - depth
-					if parent
-						all[parent].subEntries = all[parent].subEntries or []
-						all[parent].subEntries.push entry
-					else
-						topLevel.push entry
-				aggregation.entries = topLevel
-
-			join: (array, depth, reverse) ->
-				joined = ''
-				for value, index in array
-					if (!reverse and index < depth) or (reverse and index >= array.length - depth)
-						if joined
-							joined += '/'
-						joined += value
-				return joined
 
 			sortAggregations: (result) ->
 				result.aggregations.sort (a, b) =>

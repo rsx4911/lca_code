@@ -29,6 +29,7 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Glad;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
+import com.greendelta.search.wrapper.Categories;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
@@ -110,6 +111,11 @@ public class GladSearchResource {
 				result.aggregations.remove(aggreagtion);
 			} else if (aggreagtion.name.equals(Aggregations.MODEL_TYPE.name)) {
 				result.aggregations.remove(aggreagtion);
+			}
+		}
+		for (AggregationResult aResult : result.aggregations) {
+			if (aResult.name.equals(Aggregations.CATEGORY.name)) {
+				Categories.groupAggregation(aResult);
 			}
 		}
 		return SearchResults.convert(result, (data) -> {

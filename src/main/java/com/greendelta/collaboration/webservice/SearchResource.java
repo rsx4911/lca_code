@@ -27,10 +27,12 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
+import com.greendelta.search.wrapper.Categories;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
+import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
 
 @Path("public/search")
 public class SearchResource {
@@ -54,7 +56,13 @@ public class SearchResource {
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
-		return Respond.ok(SearchResults.convert(service.search(query, page, pageSize, parameters), (r) -> {
+		SearchResult<IndexEntry> result = service.search(query, page, pageSize, parameters);
+		for (AggregationResult aResult : result.aggregations) {
+			if (aResult.name.equals(Aggregations.CATEGORY.name)) {
+				Categories.groupAggregation(aResult);
+			}
+		}
+		return Respond.ok(SearchResults.convert(result, (r) -> {
 			if (!loggedIn) {
 				r.commitId = null;
 				r.commitMessage = null;

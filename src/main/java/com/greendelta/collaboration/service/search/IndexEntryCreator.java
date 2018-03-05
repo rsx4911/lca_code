@@ -31,6 +31,7 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingAppro
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.search.wrapper.Categories;
 
 public class IndexEntryCreator {
 
@@ -88,7 +89,7 @@ public class IndexEntryCreator {
 		entry.commitTimestamp = commit.timestamp;
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
-		CategoryInfo.fillUp(entry, dataset.categories);
+		fillCategoryInfo(entry, dataset.categories);
 		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;
 		} else {
@@ -206,62 +207,17 @@ public class IndexEntryCreator {
 			return new HashMap<>();
 		}
 	}
-
-	public static class CategoryInfo {
-
-		String category;
-		List<String> categories;
-		List<String> categoryPaths;
-
-		private CategoryInfo(List<String> categories) {
-			this.categories = categories != null ? new ArrayList<>(categories) : null;
-			fill();
+	
+	public static void fillCategoryInfo(IndexEntry entry, List<String> categories) {
+		Categories info = new Categories(categories);
+		if (entry.categories == null) {
+			entry.categories = info.categories;
 		}
-
-		private void fill() {
-			if (categories == null || categories.size() == 0)
-				return;
-			category = org.openlca.util.Strings.join(categories, '/');
-			categoryPaths = new ArrayList<>();
-			String current = null;
-			for (String category : categories) {
-				if (current == null) {
-					current = category;
-				} else {
-					current += '/' + category;
-				}
-				categoryPaths.add(current);
-			}
+		if (entry.category == null) {
+			entry.category = info.category;
 		}
-
-		public static void fillUp(IndexEntry entry) {
-			fillUp(entry, entry.categories);
-		}
-
-		public static void fillUp(IndexEntry entry, List<String> categories) {
-			CategoryInfo info = new CategoryInfo(categories);
-			if (entry.categories == null) {
-				entry.categories = info.categories;
-			}
-			if (entry.category == null) {
-				entry.category = info.category;
-			}
-			if (entry.categoryPaths == null) {
-				entry.categoryPaths = info.categoryPaths;
-			}
-		}
-
-		public static void fillUp(Map<String, Object> map, List<String> categories) {
-			CategoryInfo info = new CategoryInfo(categories);
-			if (!map.containsKey("categories")) {
-				map.put("categories", info.categories);
-			}
-			if (!map.containsKey("category")) {
-				map.put("category", info.category);
-			}
-			if (!map.containsKey("categoryPaths")) {
-				map.put("categoryPaths", info.categoryPaths);
-			}
+		if (entry.categoryPaths == null) {
+			entry.categoryPaths = info.categoryPaths;
 		}
 	}
 
