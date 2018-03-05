@@ -6,14 +6,18 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -29,7 +33,6 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.util.Glad;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
@@ -37,6 +40,13 @@ import com.greendelta.search.wrapper.SearchClient;
 
 @Path("admin/glad")
 public class GladResource {
+
+	private static final List<String> GLAD_FIELDS = new ArrayList<>(Arrays.asList(
+			"refId", "processType", "supportedNomenclatures", "modellingPrinciple", "modellingApproach",
+			"aggregationType", "licenseType", "name", "categories", "location", "completeness",
+			"sampleRepresentativeness", "samplingProcedure", "technology", "representativeness", "biogenicCarbon",
+			"reviewer", "copyrightHolder", "license", "contact", "description", "dataSetUrl", "format", "validFrom",
+			"validFromYear", "validUntil", "validUntilYear", "reviewed", "copyrightProtected", "dataprovider"));
 
 	private final RepositoryService repoService;
 	private final BrowseService browseService;
@@ -54,10 +64,11 @@ public class GladResource {
 
 	@PUT
 	@Path("push/{group}/{name}")
-	public Response setReferences(
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response pushToGlad(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			List<Reference> references) {
+			Input input) {
 		String gladUrl = settingsService.get(Key.GLAD_URL);
 		String gladApiKey = settingsService.get(Key.GLAD_API_KEY);
 		if (gladUrl == null || gladUrl.isEmpty())
@@ -74,7 +85,7 @@ public class GladResource {
 			dsToCommit.put(ref.id, commitId);
 			return IndexEntry.toIndexId(repoId, ref.id, commitId);
 		});
-		Set<String> remaining = collector.getReferences(repo, references);
+		Set<String> remaining = collector.getReferences(repo, input.references);
 		if (remaining.isEmpty())
 			return Respond.notFound("No data in repository " + group + "/" + name + " found");
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
@@ -84,11 +95,16 @@ public class GladResource {
 			List<Map<String, Object>> allData = client.get(next);
 			for (Map<String, Object> data : allData) {
 				data.put("format", "JSON-LD");
+				data.put("dataprovider", input.dataprovider);
 				String baseUrl = settingsService.get(Key.SERVER_URL);
 				String refId = data.get("refId").toString();
 				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/"
 						+ refId + "/" + dsToCommit.get(refId));
-				data = Glad.cleanUp(data);
+				for (String key : new ArrayList<>(data.keySet())) {
+					if (!GLAD_FIELDS.contains(key)) {
+						data.remove(key);
+					}
+				}
 				try {
 					send(gladUrl, gladApiKey, refId, gson.toJson(data));
 				} catch (Exception e) {
@@ -126,6 +142,13 @@ public class GladResource {
 		}
 		br.close();
 		throw new Exception(sb.toString());
+	}
+
+	private static class Input {
+
+		public String dataprovider;
+		public List<Reference> references;
+
 	}
 
 }

@@ -208,16 +208,19 @@ define([
 					repositoryPath: fullPath
 					multipleSelection: true
 					type: 'PROCESS'
-					callback: (selection) -> 
-						Layers.showProgressIndicator 'Pushing'
-						$.ajax
-							type: 'PUT'
-							url: "ws/admin/glad/push/#{fullPath}"
-							contentType: 'application/json'
-							data: JSON.stringify(selection)
-							success: (response) ->
-								Layers.closeActive()
-								Status.success 'Successfully pushed selected data to GLAD'
-								Layers.hideProgressIndicator()
+					callback: (selection) ->
+						Layers.promptInput 'Dataprovider', 'text', settings.getVal('SERVER_NAME'), (dataprovider) ->
+							input = {references: selection, dataprovider: dataprovider}
+							console.log input
+							Layers.showProgressIndicator 'Pushing'
+							$.ajax
+								type: 'PUT'
+								url: "ws/admin/glad/push/#{fullPath}"
+								contentType: 'application/json'
+								data: JSON.stringify(input)
+								success: (response) ->
+									Layers.closeActive()
+									Status.success 'Successfully pushed selected data to GLAD'
+									Layers.hideProgressIndicator()
 
 )

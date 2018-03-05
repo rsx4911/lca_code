@@ -235,8 +235,9 @@ define([
 						{text: 'Cancel', callback: () => @closeActive()}
 						{id: 'select-model-button', text: 'Select', className: 'btn-primary', callback: () => 
 							if options.multipleSelection
-								options.callback ModelTree.getSelection '#model-tree'
+								selection = ModelTree.getSelection '#model-tree'
 								@closeActive()
+								options.callback selection
 							else
 								refId = ModelTree.getSelection('#model-tree', true).id
 								commitId = null
