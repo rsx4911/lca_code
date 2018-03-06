@@ -18,13 +18,19 @@ mixin sub-field-header(ref, ref2, path, alternativePath)
 		+compare-value(value, value2)
 		block
 
-mixin sub-field-cell(ref, ref2, path, alternativePath, formatter, ignoreNull)
+mixin sub-field-cell(ref, ref2, path, alternativePath, formatter, ignoreNull, collapseLongText)
 	- var value = getValue(ref, path, alternativePath, formatter);
 	- var value2 = getValue(ref2, path, alternativePath, formatter); 
 	- var changed = (ref && ref2) || ignoreNull ? compare(value, value2) : null;
 	td(data-compare=changed)&attributes(attributes)
 		+compare-icon(changed)
-		+compare-value(value, value2)
+		if collapseLongText && !changed
+			if collapseLongText === true
+				+long-text(value)
+			else
+				+long-text(value, collapseLongText)
+		else
+			+compare-value(value, value2)
 		block
 
 mixin sub-field-ref-cell(ref, ref2, path)
