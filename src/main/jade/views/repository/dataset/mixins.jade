@@ -312,7 +312,18 @@ mixin ref(ref, ref2, defaultLabel, noCompareIcon)
 			if ref
 				img.model-icon-small(src='images/model/small/#{getIcon(ref)}')
 				- var query = commitId ? '?commitId=' + commitId : ''
-				- var path = ref.category ? ref.category + '/' + ref.name : ref.name
+				- var path = '';
+				if ref.category
+					if $.isArray(ref.category)
+						each category, index in ref.category
+							if index > 0
+								- path += '/';
+							- path += category;
+					else
+						- path = ref.category;
+					- path += '/' + ref.name
+				else
+					- path = ref.name;
 				a(href='#{baseUrl}/#{getTypeAsEnum(ref.type)}/#{ref.id}#{query}' title=path)=ref.name
 			else if defaultLabel && !(compareTo && ref2)
 				| #{defaultLabel}

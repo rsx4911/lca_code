@@ -96,5 +96,5 @@ mixin exchange-row(exchange, other, count, input, show)
 		td
 			if show.avoidedProduct
 				+boolean-sub-field(exchange, other, 'avoidedProduct')
-		+sub-field-cell(exchange, other, 'description')
+		+sub-field-cell(exchange, other, 'description', null, null, false, 75)
 		td(data-path=exchange?'exchanges[' + exchange.internalId +']':null)

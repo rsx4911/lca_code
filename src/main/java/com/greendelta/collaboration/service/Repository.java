@@ -65,6 +65,9 @@ public class Repository {
 		case "publicAccess":
 			settings.publicAccess = Boolean.parseBoolean(value);
 			break;
+		case "prohibitCommits":
+			settings.prohibitCommits = Boolean.parseBoolean(value);
+			break;
 		case "commentApproval":
 			settings.commentApproval = Boolean.parseBoolean(value);
 			break;
@@ -214,6 +217,7 @@ public class Repository {
 	public static class Settings {
 
 		public boolean publicAccess;
+		public boolean prohibitCommits;
 		public boolean commentApproval;
 		public long maxSize;
 

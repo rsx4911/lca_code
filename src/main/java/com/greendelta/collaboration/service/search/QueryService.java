@@ -14,6 +14,7 @@ import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
@@ -27,14 +28,14 @@ import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuild
 
 class QueryService {
 
-	private final SearchClient client;
+	private final SettingsService settingsService;
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	QueryService(SearchClient client, RepositoryService repoService, UserService userService) {
-		this.client = client;
+	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService) {
+		this.settingsService = settingsService;
 		this.repoService = repoService;
 		this.userService = userService;
 	}
@@ -53,6 +54,7 @@ class QueryService {
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
 		builder.pageSize(pageSize);
+		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (loggedIn)
 			return SearchResults.convert(result, parser::parse);

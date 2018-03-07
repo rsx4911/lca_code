@@ -10,25 +10,25 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SettingsService;
 
 public class AccessService {
 
-	private final String repositoryPath;
 	private final UserService userService;
 	private final MembershipService membershipService;
+	private final SettingsService settingsService;
 
 	@Inject
-	public AccessService(@Named("repository.path") String repositoryPath, UserService userService,
-			MembershipService membershipService) {
-		this.repositoryPath = repositoryPath;
+	public AccessService(UserService userService, MembershipService membershipService, SettingsService settingsService) {
 		this.userService = userService;
 		this.membershipService = membershipService;
+		this.settingsService = settingsService;
 	}
 
 	public boolean canRead(String groupOrRepo) {
@@ -74,9 +74,10 @@ public class AccessService {
 	public boolean canCreateRepositoryIn(String group) {
 		User user = userService.getCurrentUser();
 		if (isOwnNamespace(user, group)) {
-			if (!user.settings.canCreateRepositories || user.settings.noOfRepositories == 0)
+			if (!user.settings.canCreateRepositories)
 				return false;
-			return user.settings.noOfRepositories > userService.getNoOfRepositories();
+			int noOfRepos = user.settings.noOfRepositories;
+			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories();
 		}
 		return hasPermissionTo(Permission.CREATE, group);
 	}
@@ -170,6 +171,11 @@ public class AccessService {
 	}
 
 	private boolean isPublic(String groupOrRepo) {
+		if (!settingsService.is(Key.PUBLIC_REPOSITORY_ENABLED))
+			return false;
+		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
+		if (repositoryPath == null)
+			return false;
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {

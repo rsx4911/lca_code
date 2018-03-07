@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -30,13 +31,13 @@ import com.greendelta.search.wrapper.SearchSorting;
 
 public class SearchService {
 
-	private final SearchClient client;
+	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	public SearchService(SearchClient searchClient, QueryService queryService) {
-		this.client = searchClient;
+	public SearchService(SettingsService settingsService, QueryService queryService) {
+		this.settingsService = settingsService;
 		this.queryService = queryService;
 	}
 
@@ -45,11 +46,11 @@ public class SearchService {
 	}
 
 	public SearchResult<IndexEntry> search(SearchQuery query) {
-		return SearchResults.convert(client.search(query), parser::parse);
+		return SearchResults.convert(getClient().search(query), parser::parse);
 	}
 
 	SearchResult<ObjectMap> searchRaw(SearchQuery query) {
-		return SearchResults.convert(client.search(query), parser::convert);
+		return SearchResults.convert(getClient().search(query), parser::convert);
 	}
 
 	public List<IndexEntry> getAll(Repository repo) {
@@ -62,7 +63,7 @@ public class SearchService {
 			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
-		return parser.parse(client.search(builder.build()));
+		return parser.parse(getClient().search(builder.build()));
 	}
 
 	public List<IndexEntry> getAll(Repository repo, Commit commit) {
@@ -70,7 +71,7 @@ public class SearchService {
 		if (commit != null) {
 			builder.filter("commitId", SearchFilterValue.term(commit.id));
 		}
-		return parser.parse(client.search(builder.build()));
+		return parser.parse(getClient().search(builder.build()));
 	}
 
 	public List<IndexEntry> getDescriptors(Repository repo, Commit commit) {
@@ -80,7 +81,7 @@ public class SearchService {
 		}
 		builder.fullResult(false);
 		List<IndexEntry> descriptors = new ArrayList<>();
-		for (Map<String, Object> descriptor : client.search(builder.build()).data) {
+		for (Map<String, Object> descriptor : getClient().search(builder.build()).data) {
 			IndexEntry entry = IndexEntry.descriptor(descriptor.get("documentId").toString());
 			descriptors.add(entry);
 		}
@@ -93,7 +94,7 @@ public class SearchService {
 	}
 
 	ObjectMap getRaw(Repository repo, String refId, String commitId) {
-		return parser.convert(client.get(IndexEntry.toIndexId(repo.toId(), refId, commitId)));
+		return parser.convert(getClient().get(IndexEntry.toIndexId(repo.toId(), refId, commitId)));
 	}
 
 	public IndexAction getMostRecentAction(String repoId, String refId) {
@@ -172,7 +173,7 @@ public class SearchService {
 		builder.filter("refId", SearchFilterValue.term(refId));
 		builder.filter("action", SearchFilterValue.term(IndexAction.ADD.name()));
 		builder.sortBy("commitTimestamp", SearchSorting.ASC);
-		SearchResult<Map<String, Object>> result = client.search(builder.build());
+		SearchResult<Map<String, Object>> result = getClient().search(builder.build());
 		if (result.data.isEmpty())
 			return null;
 		return parser.parse(result.data.get(0));
@@ -188,13 +189,13 @@ public class SearchService {
 				entry.mostRecent = false;
 			}
 			Map<String, Map<String, Object>> contentsById = buildIndexMap(mostRecent);
-			client.index(contentsById);
+			getClient().index(contentsById);
 		}
 		for (IndexEntry entry : entries) {
 			entry.mostRecent = true;
 		}
 		Map<String, Map<String, Object>> contentsById = buildIndexMap(entries);
-		client.index(contentsById);
+		getClient().index(contentsById);
 	}
 
 	public IndexEntry get(Repository repo, String refId, String commitId) {
@@ -202,15 +203,15 @@ public class SearchService {
 	}
 
 	public IndexEntry get(String id) {
-		return parser.parse(client.get(id));
+		return parser.parse(getClient().get(id));
 	}
 
 	public boolean has(String id) {
-		return client.has(id);
+		return getClient().has(id);
 	}
 
 	public List<IndexEntry> get(Set<String> ids) {
-		return parser.parse(client.get(ids));
+		return parser.parse(getClient().get(ids));
 	}
 
 	private Map<String, Map<String, Object>> buildIndexMap(Collection<IndexEntry> entries) {
@@ -246,15 +247,19 @@ public class SearchService {
 		for (IndexEntry entry : entries) {
 			ids.add(entry.toIndexId());
 		}
-		client.remove(ids);
+		getClient().remove(ids);
 	}
 
 	public void remove(IndexEntry entry) {
-		client.remove(entry.toIndexId());
+		getClient().remove(entry.toIndexId());
 	}
 
 	public void clearIndex() {
 		remove(search(new SearchQueryBuilder().page(0).build()).data);
+	}
+	
+	private SearchClient getClient() {
+		return settingsService.getSearchConfig().getSearchClient();
 	}
 
 }

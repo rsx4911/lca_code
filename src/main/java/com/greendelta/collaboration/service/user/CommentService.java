@@ -9,28 +9,29 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SettingsService;
 
 public class CommentService {
 
 	private final Dao<Comment> dao;
 	private final AccessService accessService;
 	private final UserService userService;
-	private final String repoRootPath;
+	private final SettingsService settingsService;
 
 	@Inject
 	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
-			@Named("repository.path") String repoRootPath) {
+			SettingsService settingsService) {
 		this.dao = dao;
 		this.accessService = accessService;
 		this.userService = userService;
-		this.repoRootPath = repoRootPath;
+		this.settingsService = settingsService;
 	}
 
 	public List<Comment> getAllTopSorted(Repository repository, String filter) {
@@ -181,9 +182,12 @@ public class CommentService {
 			comment.approved = true;
 		} else {
 			String[] split = comment.repositoryPath.split("/");
-			Repository repo = Repository.get(repoRootPath, split[0], split[1]);
-			if (!repo.settings.commentApproval) {
-				comment.approved = true;
+			String repoPath = settingsService.get(Key.REPOSITORY_PATH);
+			if (repoPath != null) {
+				Repository repo = Repository.get(repoPath, split[0], split[1]);
+				if (!repo.settings.commentApproval) {
+					comment.approved = true;
+				}
 			}
 		}
 		return dao.update(comment);

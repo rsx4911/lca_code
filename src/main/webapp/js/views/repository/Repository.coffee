@@ -9,10 +9,11 @@ define([
 				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/repository/repository'
 			]
 
-	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, template) ->
+	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, settings, template) ->
 
 		class RepositoryView extends Backbone.View
 
@@ -30,6 +31,7 @@ define([
 				'click [data-action=clone-repository]': 'openCloneLayer'
 				'click [data-action=move-repository]': 'openMoveLayer'
 				'click [data-action=export-repository]': 'exportRepository'
+				'click [data-action=push-to-glad]': 'pushToGlad'
 
 			initialize: (options) ->
 				{@repository} = options
@@ -38,6 +40,9 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
+					commentsEnabled: settings.is('COMMENTS_ENABLED')
+					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
+					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isAdmin()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
@@ -195,5 +200,27 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'move-form', response
+
+			pushToGlad: () ->
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				Layers.selectModel
+					repositoryPath: fullPath
+					multipleSelection: true
+					type: 'PROCESS'
+					callback: (selection) ->
+						Layers.promptInput 'Dataprovider', 'text', settings.getVal('SERVER_NAME'), (dataprovider) ->
+							input = {references: selection, dataprovider: dataprovider}
+							console.log input
+							Layers.showProgressIndicator 'Pushing'
+							$.ajax
+								type: 'PUT'
+								url: "ws/admin/glad/push/#{fullPath}"
+								contentType: 'application/json'
+								data: JSON.stringify(input)
+								success: (response) ->
+									Layers.closeActive()
+									Status.success 'Successfully pushed selected data to GLAD'
+									Layers.hideProgressIndicator()
 
 )

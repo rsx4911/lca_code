@@ -11,7 +11,11 @@ each dataset in data
 					if dataset.added || dataset.deleted
 						- var action = dataset.added ? 'ADD' : 'DELETE';
 						if dataset.type === 'CATEGORY'
-							img.model-icon-small(src='ws/public/cached/overlay/#{dataset.categoryType}/#{action}?category=true')
+							img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/#{dataset.categoryType}/#{action}')
+						else if dataset.type === 'PROCESS' && dataset.processType
+							img.model-icon-small(src='ws/public/cached/overlay/PROCESS/#{dataset.processType}/#{action}')
+						else if dataset.type === 'FLOW' && dataset.flowType
+							img.model-icon-small(src='ws/public/cached/overlay/FLOW/#{dataset.flowType}/#{action}')
 						else
 							img.model-icon-small(src='ws/public/cached/overlay/#{dataset.type}/#{action}')
 					else
@@ -19,9 +23,14 @@ each dataset in data
 							img.model-icon-small(src='images/model/small/category/#{dataset.categoryType.toLowerCase()}.png')
 						else
 							img.model-icon-small(src='images/model/small/#{dataset.type.toLowerCase()}.png')
+					- var path = '';
+					if dataset.categories
+						each category in dataset.categories
+							- path += category + '/';
+					- path += dataset.name;
 					if dataset.deleted
-						del=dataset.fullPath
+						del=path
 					else
-						span=dataset.fullPath
+						span=path
 
 +paging(resultInfo)

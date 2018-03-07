@@ -7,10 +7,11 @@ define([
 				'cs!app/Router'
 				'cs!models/Conversations'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/user-menu'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Router, conversations, currentUser, template) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Router, conversations, currentUser, settings, template) ->
 
 		class UserMenu extends Backbone.View
 
@@ -109,6 +110,7 @@ define([
 					reviewMode: LocalStorage.getValue('reviewMode')
 					activeTasks: currentUser.get('noOfTasks')
 					isPublic: !currentUser.isLoggedIn()
+					settings: settings.toMap()
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 

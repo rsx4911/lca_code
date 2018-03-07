@@ -10,6 +10,8 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Dates;
+import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
@@ -64,7 +66,7 @@ public class ReindexService {
 		dataset.name = map.getString("name");
 		dataset.version = map.getString("version");
 		dataset.categoryRefId = map.getString("category.@id");
-		dataset.lastChange = commit.timestamp;
+		dataset.lastChange = Dates.getTime(map.getString("lastChange"));
 		if (ref.type == ModelType.CATEGORY) {
 			dataset.categoryType = ModelType.valueOf(map.getString("modelType"));
 		}
@@ -113,21 +115,31 @@ public class ReindexService {
 			}
 			for (IndexEntry entry : entries) {
 				Dataset dataset = get(lastDatasets, entry.asFileReference());
-				entry.fullPath = getFullPath(dataset);
+				entry.categories = getCategories(dataset, true);
+				entry.fullPath = entry.name;
+				if (entry.categories != null && entry.categories.size() > 0) {
+					entry.fullPath = Strings.join(entry.categories, '/') + '/' + entry.name;
+				}
+				IndexEntryCreator.fillCategoryInfo(entry, entry.categories);
 			}
 			return entries;
 		}
 
-		private String getFullPath(Dataset dataset) {
+		private List<String> getCategories(Dataset dataset, boolean initialCall) {
 			if (dataset.categoryRefId == null)
-				return dataset.name;
+				return null;
 			Map<String, Dataset> categories = lastDatasets.get(ModelType.CATEGORY);
 			if (categories == null)
-				return dataset.name;
+				return null;
 			Dataset parent = categories.get(dataset.categoryRefId);
 			if (parent == null)
-				return dataset.name;
-			return getFullPath(parent) + "/" + dataset.name;
+				return null;
+			List<String> list = getCategories(parent, false);
+			if (list == null) {
+				list = new ArrayList<>();
+			}
+			list.add(parent.name);
+			return list;
 		}
 
 		private void collectRefs(ModelType type) {

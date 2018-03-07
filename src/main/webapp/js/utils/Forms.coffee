@@ -61,7 +61,7 @@ define([
 					value = getValue json, name
 					if value or value is 0
 						if type is 'checkbox'
-							field.prop 'checked', value
+							field.prop('checked', value is true or value is 'true') 
 						else if type isnt 'file'
 							field.val value				
 

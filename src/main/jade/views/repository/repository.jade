@@ -31,6 +31,10 @@ mixin to-size(value, inGb, round, showUnit)
 			li: a(href='#' data-action='export-repository')
 				span.glyphicon.glyphicon-export
 				| Export
+			if isGladAvailable
+				li: a(href='#' data-action='push-to-glad')
+					span.glyphicon.glyphicon-globe
+					| Push to GLAD
 			if repository.userCanDelete
 				li: a(href='#' data-action='delete-repository')
 					span.glyphicon.glyphicon-remove
@@ -41,6 +45,8 @@ mixin to-size(value, inGb, round, showUnit)
 			if repository.userCanClone
 				button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
 			button.btn.btn-lg.btn-default.pull-right(data-action='export-repository') Export
+			if isGladAvailable
+				button.btn.btn-lg.btn-default.pull-right(data-action='push-to-glad') Push to GLAD
 			if repository.userCanDelete
 				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
 
@@ -72,7 +78,10 @@ mixin to-size(value, inGb, round, showUnit)
 				.size-indicator-container
 					.size-indicator-bar
 						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
-	+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='publicAccess')
-	+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
+	if publicReposEnabled
+		+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='publicAccess')
+	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='prohibitCommits')
+	if commentsEnabled
+		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)

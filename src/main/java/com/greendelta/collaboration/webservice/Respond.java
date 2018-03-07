@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -137,7 +138,15 @@ public class Respond {
 	}
 
 	public static Response status(Status status, Object entity) {
-		return Response.status(status).entity(entity).build();
+		return status(status, entity, null);
+	}
+
+	public static Response status(Status status, Object entity, CacheControl cacheControl) {
+		ResponseBuilder builder = Response.status(status).entity(entity);
+		if (cacheControl != null) {
+			builder.cacheControl(cacheControl);
+		}
+		return builder.build();
 	}
 
 	public static Response invalid(String field, String message) {

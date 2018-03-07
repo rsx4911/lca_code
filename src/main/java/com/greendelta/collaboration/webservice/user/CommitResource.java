@@ -51,6 +51,8 @@ public class CommitResource {
 		Repository repo = repoService.get(group, name);
 		if (!accessService.canWrite(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
+		if (repo.settings.prohibitCommits)
+			throw new UnauthorizedAccessException(repo.toId(), "COMMIT");
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
 		return Respond.ok();
@@ -72,6 +74,10 @@ public class CommitResource {
 			@QueryParam("lastCommitId") String lastCommitId,
 			InputStream commitData) {
 		Repository repo = repoService.get(group, name);
+		if (!accessService.canWrite(repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
+		if (repo.settings.prohibitCommits)
+			throw new UnauthorizedAccessException(repo.toId(), "COMMIT");
 		if (!isUpToDate(repo, lastCommitId))
 			return Respond.conflict("User is out of sync");
 		Commit commit = service.put(repo, commitData);

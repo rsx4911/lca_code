@@ -4,16 +4,29 @@ define([
 				'cs!utils/Icons'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!utils/Toggle'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/search/results'
 			]
 
-	(Backbone, Events, Icons, ModelTypes, Renderer, Router, currentUser, template) ->
+	(Backbone, Events, Icons, ModelTypes, Renderer, Toggle, Router, currentUser, template) ->
 
 		class SearchResultsView extends Backbone.View
 
 			className: 'search-view'
+
+			aggregationOrder: 
+				group: 1
+				type: 2
+				flowType: 3
+				processType: 4
+				modellingApproach: 5
+				location: 6
+				categoryPaths: 7
+				validFromYear: 8
+				validUntilYear: 9
+				contact: 10
 
 			events: 
 				'click a:not([href=#])': (event) -> Events.followLink event
@@ -41,24 +54,52 @@ define([
 					type: 'GET'
 					url: url
 					success: (result) =>
+						allAggregations = []
+						for aggregation in result.aggregations
+							allAggregations.push aggregation 
+						@correctUrl result
+						@prepareAggregations result
+						result.typeFiltered = !!@aggregations['type']
 						result.getIcon = Icons.get
 						result.isPublic = !currentUser.isLoggedIn()
 						result.getAggregationLabel = (type) => @getAggregationLabel type
 						result.getLabel = (type, value) => @getLabel type, value
-						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @pageSize, @aggregations, result
-						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $(value, @aggregations[type]) isnt -1
+						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @pageSize, @aggregations, allAggregations
+						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $.inArray(value, @aggregations[type]) isnt -1
+						result.getSubCount = (entry) => @getSubCount entry
+						result.getTotalCount = (aggregation) => @getTotalCount aggregation
 						result.getAggregationUrl = (type, value, without = false) => 
-							aggregations = if without then @aggreagtionsWithout(type, value, result) else @aggreagtionsWith(type, value, result)
-							return @getUrlPart 'search/', @query, 1, @pageSize, aggregations, result
+							aggregations = if without then @aggreagtionsWithout(type, value) else @aggreagtionsWith(type, value)
+							return @getUrlPart 'search/', @query, 1, @pageSize, aggregations, allAggregations
 						result.query = @query
 						@$el.html template result
 						Renderer.render @, renderOptions
-						@$('#page-size').on 'change', (event) => Router.navigate @getUrlPart 'search/', @query, 1, $(Events.target(event)).val(), @aggregations, result
+						Toggle.init @$el
+						@$('#page-size').on 'change', (event) => Router.navigate @getUrlPart 'search/', @query, 1, $(Events.target(event)).val(), @aggregations, allAggregations
 						if @query
 							for textElement in $('.search-view .content-box .result-text')
 								@highlight @query, $(textElement)
 
-			aggreagtionsWithout: (type, value, result) ->
+			correctUrl: (result) ->
+				copy = {}
+				keys = Object.keys(@aggregations)
+				for key in keys
+					found = false
+					for aggregation in result.aggregations
+						if aggregation.name is key
+							found = true
+							break
+					unless found
+						continue
+					copy[key] = []
+					for v in @aggregations[key]
+						copy[key].push v
+				@aggregations = copy
+				Router.navigate @getUrlPart('search/', @query, @page, @pageSize, @aggregations),
+					trigger: false
+					replace: true
+
+			aggreagtionsWithout: (type, value) ->
 				copy = {}
 				keys = Object.keys(@aggregations)
 				for key in keys
@@ -69,24 +110,41 @@ define([
 						copy[key].push v
 				return copy
 
-			aggreagtionsWith: (type, value, result) ->
+			aggreagtionsWith: (type, value) ->
 				copy = {}
 				unless @aggregations[type]
 					@aggregations[type] = []
 				keys = Object.keys(@aggregations)
 				for key in keys
+					if type is 'repositoryId' and key is 'group'
+						continue						
 					copy[key] = []
 					for v in @aggregations[key]
-						copy[key].push v
+						if type isnt key
+							copy[key].push v
 					if type is key and $.inArray(value, copy[key]) is -1
 						copy[key].push value
 				return copy
 
-			isInResult: (key, result) ->
-				for aggregation in result.aggregations
+			isInResult: (key, allAggregations) ->
+				for aggregation in allAggregations
 					if aggregation.name is key
 						return true
 				return false
+
+			getTotalCount: (aggregation) =>
+				count = aggregation.entries.length
+				for entry in aggregation.entries
+					count += @getSubCount entry
+				return count
+
+			getSubCount: (entry) =>
+				unless entry.subEntries
+					return 0
+				count = entry.subEntries.length
+				for subEntry in entry.subEntries
+					count += @getSubCount subEntry
+				return count
 
 			highlight: (word, element) ->
 				word = word.toLowerCase()
@@ -100,7 +158,7 @@ define([
 				replaced += text
 				element.html replaced
 
-			getUrlPart: (base, query, page, pageSize, aggregations, result) ->
+			getUrlPart: (base, query, page, pageSize, aggregations, allAggregations) ->
 				url = base
 				isFirst = true
 				if query
@@ -118,7 +176,7 @@ define([
 					isFirst = false
 				if aggregations and Object.keys(aggregations).length
 					for key in Object.keys(aggregations)
-						if result and !@isInResult(key, result)
+						if allAggregations and !@isInResult(key, allAggregations)
 							continue
 						for value in aggregations[key]
 							unless isFirst
@@ -162,19 +220,67 @@ define([
 				return value
 
 			getAggregationLabel: (type) ->
-				if type is 'repositoryId'
-					return 'Repository'
+				if type is 'group'
+					return 'Group/Repository'
 				if type is 'type'
 					return 'Model type'
-				if type is 'categoryType'
-					return 'Category type'
-				if type is 'categoryRefId'
-					return 'Category'
-				if type is 'processType'
-					return 'Process type'
 				if type is 'flowType'
 					return 'Flow type'
+				if type is 'processType'
+					return 'Process type'
+				if type is 'location'
+					return 'Location'
+				if type is 'categoryPaths'
+					return 'Category'
+				if type is 'validFromYear'
+					return 'Start of validity'
+				if type is 'validUntilYear'
+					return 'End of validity'
+				if type is 'contact'
+					return 'Data set owner'
 				if type is 'modellingApproach'
 					return 'Modelling approach'
+
+			prepareAggregations: (result) ->
+				aggregations = []
+				repoAggregation = null
+				groupAggregation = null
+				for aggregation in result.aggregations
+					if aggregation.name is 'repositoryId'
+						repoAggregation = aggregation
+						continue
+					if aggregation.name is 'group'
+						groupAggregation = aggregation
+					aggregations.push aggregation
+				result.aggregations = aggregations
+				@sortAggregations result
+				if repoAggregation and groupAggregation
+					@groupRepos groupAggregation, repoAggregation
+
+			groupRepos: (groups, repos) ->
+				for entry in repos.entries
+					group = entry.key.substring 0, entry.key.indexOf('/')
+					groupEntry = @findEntry groups, group
+					groupEntry.subAggregationName = repos.name
+					groupEntry.subEntries = groupEntry.subEntries or []
+					groupEntry.subEntries.push entry
+
+			findEntry: (aggregation, key) ->
+				for entry in aggregation.entries
+					if entry.key is key
+						return entry
+				return null
+
+			sortAggregations: (result) ->
+				result.aggregations.sort (a, b) =>
+					aSelected = if a.name is 'group' then @aggregations['repositoryId'] else @aggregations[a.name]
+					bSelected = if b.name is 'group' then @aggregations['repositoryId'] else @aggregations[b.name]
+					if aSelected and !bSelected
+						return -1
+					if bSelected and !aSelected
+						return 1
+					return @aggregationOrder[a.name] - @aggregationOrder[b.name]
+
+
 
 )

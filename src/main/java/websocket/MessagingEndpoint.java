@@ -24,6 +24,8 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -41,16 +43,20 @@ public class MessagingEndpoint {
 	private final MessagingService service;
 	private final UserService userService;
 	private final TeamService teamService;
+	private final SettingsService settingService;
 
 	@Inject
-	public MessagingEndpoint(MessagingService service, UserService userService, TeamService teamService) {
+	public MessagingEndpoint(MessagingService service, UserService userService, TeamService teamService, SettingsService settingService) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;
+		this.settingService = settingService;
 	}
 
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig config) {
+		if (!settingService.is(Key.MESSAGING_ENABLED))
+			throw new IllegalStateException("Messaging feature not enabled");
 		User user = getUser(config);
 		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
 		if (wasConnected || !user.settings.showOnlineStatus)

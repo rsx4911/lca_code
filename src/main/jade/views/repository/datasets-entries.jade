@@ -2,10 +2,9 @@ mixin count-span()
 	span.dataset-count: img(src='images/loader.gif')
 
 if categoryPath
-	- var path = categoryPath.substring(0, categoryPath.lastIndexOf('/'));
 	- var previousUrl = baseUrl + '/datasets';
-	if path
-		- previousUrl += '/' + path;
+	if previousPath
+		- previousUrl += '/' + previousPath;
 	tr 
 		td 
 		td: a(href=previousUrl): strong ..

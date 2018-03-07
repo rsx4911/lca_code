@@ -6,7 +6,6 @@ import java.util.Calendar;
 import java.util.NoSuchElementException;
 
 import javax.mail.Message.RecipientType;
-import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -16,12 +15,13 @@ import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.platform.mail.EmailJob.Attachment;
 import com.greendelta.collaboration.platform.mail.EmailJob.EmbeddedImage;
+import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.SettingsService.MailConfig;
 import com.sun.mail.smtp.SMTPMessage;
 
 @Singleton
@@ -29,27 +29,41 @@ public class EmailService implements Closeable {
 
 	private static final Logger log = LogManager.getLogger(EmailService.class);
 
-	private final Session session;
-	private final InternetAddress defaultFrom;
-	private final InternetAddress defaultReplyTo;
-	private int senderThreads = 1;
-	private int mailsSentPerConnection = 10;
-	private int connectionLifetimeMs = 60000;
-	private GenericObjectPool<TransportHolder> pool;
+	private final int senderThreads = 1;
+	private final int mailsSentPerConnection = 10;
+	private final int connectionLifetimeMs = 60000;
+	private final GenericObjectPool<TransportHolder> pool;
+	private final SettingsService settingsService;
 
 	@Inject
-	public EmailService(Session session, @Named("defaultFrom") InternetAddress defaultFrom,
-			@Named("defaultReplyTo") InternetAddress defaultReplyTo) {
-		this.session = session;
-		this.defaultFrom = defaultFrom;
-		this.defaultReplyTo = defaultReplyTo;
-	}
-
-	public void init(Provider<Transport> transportProvider) {
-		pool = new GenericObjectPool<>(new TransportObjectFactory(this, transportProvider), senderThreads,
+	public EmailService(SettingsService settingsService) {
+		this.settingsService = settingsService;
+		pool = new GenericObjectPool<>(new TransportObjectFactory(this), senderThreads,
 				GenericObjectPool.WHEN_EXHAUSTED_BLOCK, 8000, senderThreads, true, true, 500, 1000, -1, true);
 		pool.setMaxActive(senderThreads);
 		pool.setMaxIdle(senderThreads);
+	}
+
+	Transport getTransport() {
+		MailConfig config = settingsService.getMailConfig();
+		boolean useAuth = !Strings.isNullOrEmpty(config.user);
+		Transport transport = null;
+		try {
+			transport = config.getSession().getTransport(config.proto);
+			if (useAuth)
+				transport.connect(config.user, config.pass);
+			else
+				transport.connect();
+		} catch (Exception e) {
+			log.error("Error when trying to connect to transport", e);
+			try {
+				if (transport != null)
+					transport.close();
+			} catch (Exception ex) {
+				log.error("Closing transport after exception failed: {}", ex.getMessage());
+			}
+		}
+		return transport;
 	}
 
 	@Override
@@ -90,18 +104,19 @@ public class EmailService implements Closeable {
 
 	private void send(EmailJob mail, Transport transport) throws Exception {
 		try {
-			SMTPMessage message = new SMTPMessage(session);
+			MailConfig config = settingsService.getMailConfig();
+			SMTPMessage message = new SMTPMessage(config.getSession());
 			message.setRecipient(RecipientType.TO, mail.recipient);
 			message.setSentDate(Calendar.getInstance().getTime());
 			message.setSubject(mail.subject, "utf-8");
-			message.setFrom(defaultFrom);
+			message.setFrom(new InternetAddress(config.defaultFrom));
 			for (InternetAddress bcc : mail.bcc)
 				message.addRecipient(RecipientType.BCC, bcc);
 			if (mail.isMixedContent())
 				message.setContent(createMixedContent(mail));
 			else
 				message.setContent(createContent(mail));
-			message.setReplyTo(new InternetAddress[] { defaultReplyTo });
+			message.setReplyTo(new InternetAddress[] { new InternetAddress(config.defaultReplyTo) });
 			message.saveChanges();
 			transport.sendMessage(message, message.getAllRecipients());
 		} catch (Exception e) {
@@ -112,9 +127,10 @@ public class EmailService implements Closeable {
 
 	private MimeMultipart createContent(EmailJob mail) throws Exception {
 		MimeMultipart content = new MimeMultipart();
-		if (mail.textContent != null)
-			content.addBodyPart(createPart(mail.textContent, "plain"));
-		else if (mail.htmlContent != null)
+		if (mail.textContent != null || mail.htmlContent == null) {
+			String textContent = mail.textContent != null ? mail.textContent : "";
+			content.addBodyPart(createPart(textContent, "plain"));
+		} else if (mail.htmlContent != null)
 			content.addBodyPart(createRelated(mail, mail.htmlContent, "html"));
 		for (Attachment attachment : mail.attachments)
 			content.addBodyPart(createPart(attachment));

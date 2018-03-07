@@ -10,11 +10,8 @@ mixin download-dropdown()
 		ul.dropdown-menu
 			li: a(href='#' data-format='json') as JSON-LD
 			- var type = null;
-			if categoryPath
-				if categoryPath.indexOf('/') !== -1
-					- type = categoryPath.substring(0, categoryPath.indexOf('/'));
-				else
-					- type = categoryPath
+			if categoryPath && categoryPath.length
+				- var type = categoryPath[0]
 			- var ilcdAvailable = $.inArray(type, ['Actors', 'Sources', 'Unit groups', 'Flow properties', 'Flows', 'Processes', 'Impact methods']) !== -1;
 				li: a(href='#' data-format='ilcd') as ILCD
 			li.divider(role='separator')
@@ -38,19 +35,19 @@ if showCommitSelection || categoryPath
 			.form-group
 				input#filter.form-control.input-lg(type='text' placeholder='Filter by name')
 			.clear
-if !isPublic || categoryPath
+if !isPublic || pathAsArray
 	.header-box
 		if deleted
 			.pull-left
-				+category-breadcrumb(baseUrl, categoryPath)
+				+category-breadcrumb(baseUrl, pathAsArray)
 			.badge.pull-right.deleted Deleted
 		else if !showCommitSelection
 			.pull-left
-				+category-breadcrumb(baseUrl, categoryPath)
+				+category-breadcrumb(baseUrl, pathAsArray)
 			.pull-right
 				+download-dropdown()
 		else
-			+category-breadcrumb(baseUrl, categoryPath)
+			+category-breadcrumb(baseUrl, pathAsArray)
 		.clear
 
 .content-box

@@ -15,8 +15,8 @@ import org.openlca.cloud.util.Directories;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
@@ -27,18 +27,22 @@ import com.greendelta.search.wrapper.SearchResult;
 public class GroupService {
 
 	private final static Logger log = LogManager.getLogger(GroupService.class);
-	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
+	private final SettingsService settingsService;
 
 	@Inject
-	public GroupService(@Named("repository.path") String repositoryPath,
-			AccessService accessService, MembershipService membershipService, UserService userService) {
-		this.root = repositoryPath;
+	public GroupService(AccessService accessService, MembershipService membershipService, UserService userService,
+			SettingsService settingsService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
+		this.settingsService = settingsService;
+	}
+
+	private String getRootPath() {
+		return settingsService.get(Key.REPOSITORY_PATH);
 	}
 
 	public boolean exists(String group) {
@@ -46,7 +50,10 @@ public class GroupService {
 	}
 
 	public boolean exists(String group, boolean skipAccessCheck) {
-		File root = new File(this.root);
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return false;
+		File root = new File(path);
 		if (root.list() == null)
 			return false;
 		for (String child : root.list())
@@ -74,7 +81,10 @@ public class GroupService {
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
-		boolean created = new File(getPath(group)).mkdir();
+		String path = getPath(group);
+		if (path == null || path.isEmpty())
+			return false;
+		boolean created = new File(path).mkdir();
 		if (!created)
 			return false;
 		if (userGroup)
@@ -84,13 +94,19 @@ public class GroupService {
 	}
 
 	boolean delete(String group) {
-		return Directories.delete(new File(getPath(group)));
+		String path = getPath(group);
+		if (path == null || path.isEmpty())
+			return false;
+		return Directories.delete(new File(path));
 	}
 
 	public byte[] getAvatar(String group) {
 		if (!exists(group))
 			return null;
-		File avatarFile = new File(root, group + File.separator + "avatar");
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return null;
+		File avatarFile = new File(path, group + File.separator + "avatar");
 		if (!avatarFile.exists())
 			return null;
 		try {
@@ -102,9 +118,12 @@ public class GroupService {
 	}
 
 	public void setAvatar(String group, InputStream file) {
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return;
 		if (!accessService.canWrite(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
-		File avatarFile = new File(root, group + File.separator + "avatar");
+		File avatarFile = new File(path, group + File.separator + "avatar");
 		if (file != null)
 			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
 				ByteStreams.copy(file, output);
@@ -125,7 +144,10 @@ public class GroupService {
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
-		File root = new File(this.root);
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return new ArrayList<>();
+		File root = new File(path);
 		List<String> groups = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
@@ -142,7 +164,10 @@ public class GroupService {
 	}
 
 	private String getPath(String group) {
-		return root + File.separator + group;
+		String path = getRootPath();
+		if (path == null)
+			return null;
+		return path + File.separator + group;
 	}
 
 }

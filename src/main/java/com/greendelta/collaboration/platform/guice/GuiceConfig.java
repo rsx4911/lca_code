@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.shiro.guice.aop.ShiroAopModule;
 import org.openlca.cloud.util.Logs;
 
-import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -60,20 +59,16 @@ public class GuiceConfig extends GuiceServletContextListener {
 	}
 
 	private Module[] getModules() {
-		String env = System.getProperty("app.env");
-		if (!Strings.isNullOrEmpty(env))
-			PropertiesModule.setEnvironment(env);
-		String resourcePackages = PropertiesModule.getProperties().getProperty("jersey.resource.packages");
-		String persistenceUnit = PropertiesModule.getProperties().getProperty("persistence.unit");
-		String databasePath = PropertiesModule.getProperties().getProperty("database.path");
-		JpaPersistModule jpaModule = new JpaPersistModule(persistenceUnit);
+		String databasePath = System.getProperty("app.database");
+		JpaPersistModule jpaModule = new JpaPersistModule("prod");
 		Properties properties = new Properties();
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
+		String resourcePackages = "com.greendelta.collaboration.webservice";
 		return new Module[] { new WebappModule(), new ShiroAopModule(),
 				new ShiroModule(servletContext), jpaModule,
 				new JerseyModule(resourcePackages), new EhCacheModule(),
-				new PropertiesModule(), new MailModule(), new ElasticSearchModule() };
+				new MailModule(), new ElasticSearchModule() };
 	}
 
 	private static final class Injections {

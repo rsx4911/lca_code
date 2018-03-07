@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Dates;
 import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
@@ -29,6 +31,7 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingAppro
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.search.wrapper.Categories;
 
 public class IndexEntryCreator {
 
@@ -75,17 +78,23 @@ public class IndexEntryCreator {
 
 	private void fillGeneric(IndexEntry entry, Dataset dataset) {
 		entry.repositoryId = repo.toId();
+		entry.group = repo.group;
 		entry.type = dataset.type;
 		entry.refId = dataset.refId;
 		entry.name = dataset.name;
 		entry.categoryRefId = dataset.categoryRefId;
-		entry.fullPath = dataset.fullPath;
 		entry.categoryType = dataset.categoryType;
 		entry.commitId = commit.id;
 		entry.commitMessage = commit.message;
 		entry.commitTimestamp = commit.timestamp;
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
+		fillCategoryInfo(entry, dataset.categories);
+		if (entry.categories != null && !entry.categories.isEmpty()) {
+			entry.fullPath = entry.category + '/' + dataset.name;
+		} else {
+			entry.fullPath = dataset.name;
+		}
 	}
 
 	private FlowIndexEntry flow(Dataset dataset, Map<String, Object> data) {
@@ -112,9 +121,12 @@ public class IndexEntryCreator {
 		entry.processType = getProcessType(data.getString("processType"));
 		entry.completeness = data.getString("processDocumentation.completenessDescription");
 		entry.samplingProcedure = data.getString("processDocumentation.samplingDescription");
-		entry.validFrom = data.getLong("processDocumentation.validFrom");
-		entry.validUntil = data.getLong("processDocumentation.validUntil");
-		entry.location = data.getString("processDocumentation.location.code");
+		entry.validFrom = Dates.getTime(data.get("processDocumentation.validFrom"));
+		entry.validFromYear = getYear(entry.validFrom);
+		entry.validUntil = Dates.getTime(data.get("processDocumentation.validUntil"));
+		entry.validUntilYear = getYear(entry.validUntil);
+		entry.locationCode = data.getString("location.code");
+		entry.location = data.getString("location.name");
 		entry.technology = data.getString("processDocumentation.technologyDescription");
 		entry.modellingApproach = getModellingApproach(data.getString("defaultAllocationMethod"));
 		entry.reviewer = data.getString("processDocumentation.reviewer.name");
@@ -124,6 +136,14 @@ public class IndexEntryCreator {
 		entry.contact = entry.copyrightHolder;
 		entry.description = data.getString("description");
 		putLinkedFlows(entry, data.get("exchanges"));
+	}
+
+	private static Integer getYear(long time) {
+		if (time == 0l)
+			return null;
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(time);
+		return cal.get(Calendar.YEAR);
 	}
 
 	private static void putLinkedFlows(ProcessIndexEntry entry, List<Map<String, Object>> exchanges) {
@@ -141,8 +161,8 @@ public class IndexEntryCreator {
 				outputs.add(flowRefId);
 			}
 		}
-		entry.inputs = inputs.toArray(new String[inputs.size()]);
-		entry.outputs = outputs.toArray(new String[outputs.size()]);
+		entry.inputs = inputs;
+		entry.outputs = outputs;
 	}
 
 	private static ProcessType getProcessType(String value) {
@@ -170,16 +190,34 @@ public class IndexEntryCreator {
 	}
 
 	public static Map<String, Object> readData(File file) {
+		try {
+			if (Files.size(file.toPath()) == 0)
+				return new HashMap<>();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new HashMap<>();
+		}
 		try (FileInputStream fis = new FileInputStream(file);
 				GZIPInputStream gis = new GZIPInputStream(fis);
 				InputStreamReader isr = new InputStreamReader(gis)) {
-			if (Files.size(file.toPath()) == 0)
-				return new HashMap<>();
 			return gson.fromJson(isr, new TypeToken<Map<String, Object>>() {
 			}.getType());
 		} catch (IOException e) {
 			e.printStackTrace();
 			return new HashMap<>();
+		}
+	}
+	
+	public static void fillCategoryInfo(IndexEntry entry, List<String> categories) {
+		Categories info = new Categories(categories);
+		if (entry.categories == null) {
+			entry.categories = info.categories;
+		}
+		if (entry.category == null) {
+			entry.category = info.category;
+		}
+		if (entry.categoryPaths == null) {
+			entry.categoryPaths = info.categoryPaths;
 		}
 	}
 

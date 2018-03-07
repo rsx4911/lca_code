@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.Nomenclature;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.search.wrapper.Categories;
 import com.greendelta.search.wrapper.SearchResult;
 
 class IndexEntryParser {
@@ -54,6 +56,7 @@ class IndexEntryParser {
 		ModelType type = ModelTypes.from(entry, "type");
 		map.put("type", type);
 		map.put("categoryType", ModelTypes.from(entry, "categoryType"));
+		putCategoryInfo(map);
 		if (type == ModelType.PROCESS) {
 			map.put("processType", ProcessType.from(entry));
 			map.put("validFrom", map.getLong("validFrom"));
@@ -74,6 +77,16 @@ class IndexEntryParser {
 		return map;
 	}
 
+	private void putCategoryInfo(ObjectMap map) {
+		if (!map.containsKey("fullPath"))
+			return;
+		String[] path = map.getString("fullPath").split("/");
+		if (path.length <= 1)
+			return;
+		List<String> categories = Arrays.asList(Arrays.copyOfRange(path, 0, path.length - 1));
+		Categories.fillUp(map, categories);
+	}
+
 	private IndexEntry parse(ObjectMap entry) {
 		if (entry == null)
 			return null;
@@ -89,15 +102,34 @@ class IndexEntryParser {
 		e.commitId = entry.get("commitId");
 		e.commitMessage = entry.get("commitMessage");
 		e.fullPath = entry.get("fullPath");
+		parseCategoryInfo(e, entry);
 		e.lastChange = entry.get("lastChange");
 		e.name = entry.get("name");
 		e.refId = entry.get("refId");
 		e.repositoryId = entry.get("repositoryId");
+		e.group = entry.get("group");
 		e.version = entry.get("version");
 		e.commitTimestamp = entry.get("commitTimestamp");
 		e.action = entry.get("action");
 		e.type = type;
 		return e;
+	}
+
+	private void parseCategoryInfo(IndexEntry e, ObjectMap entry) {
+		if (entry.containsKey("categories")) {
+			e.categories = entry.get("categories");
+		}
+		if (entry.containsKey("categoryPaths")) {
+			e.categoryPaths = entry.get("categoryPaths");
+		}
+		e.category = entry.get("category");
+		if (e.fullPath == null)
+			return;
+		String[] path = e.fullPath.split("/");
+		if (path.length <= 1)
+			return;
+		List<String> categories = Arrays.asList(Arrays.copyOfRange(path, 0, path.length - 1));
+		IndexEntryCreator.fillCategoryInfo(e, categories);
 	}
 
 	// for indexing we have to set a value, this is unset here
@@ -120,7 +152,10 @@ class IndexEntryParser {
 		e.sampleRepresentativeness = entry.get("sampleRepresentativeness");
 		e.samplingProcedure = entry.get("samplingProcedure");
 		e.validFrom = entry.get("validFrom");
+		e.validFromYear = entry.get("validFromYear");
 		e.validUntil = entry.get("validUntil");
+		e.validUntilYear = entry.get("validUntilYear");
+		e.locationCode = entry.get("locationCode");
 		e.location = entry.get("location");
 		e.technology = entry.get("technology");
 		e.supportedNomenclatures = entry.get("supportedNomenclatures");
@@ -137,6 +172,8 @@ class IndexEntryParser {
 		e.license = entry.get("license");
 		e.contact = entry.get("contact");
 		e.description = entry.get("description");
+		e.inputs = entry.get("inputs");
+		e.outputs = entry.get("outputs");
 		return e;
 	}
 

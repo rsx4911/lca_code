@@ -129,6 +129,7 @@ public class RepositoryResource {
 		searchService.remove(entries);
 		for (IndexEntry entry : entries) {
 			entry.repositoryId = newRepo.toId();
+			entry.group = newRepo.group;
 		}
 		searchService.index(newRepo.toId(), entries);
 	}
@@ -260,6 +261,7 @@ public class RepositoryResource {
 		for (IndexEntry entry : entries) {
 			IndexEntry clone = entry.clone();
 			clone.repositoryId = to.toId();
+			clone.group = to.group;
 			cloned.add(clone);
 		}
 		searchService.index(to.toId(), cloned);

@@ -27,9 +27,9 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
@@ -44,20 +44,20 @@ public class RepositoryService {
 	private static final Logger log = LogManager.getLogger(Repository.class);
 	private static final String VERSION = "1";
 
-	private final String root;
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final CommentService commentService;
+	private final SettingsService settingsService;
 
 	@Inject
-	public RepositoryService(@Named("repository.path") String repositoryPath, AccessService accessService,
-			MembershipService membershipService, UserService userService, CommentService commentService) {
-		this.root = repositoryPath;
+	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
+			CommentService commentService, SettingsService settingsService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
+		this.settingsService = settingsService;
 	}
 
 	public Repository get(String id) {
@@ -71,15 +71,22 @@ public class RepositoryService {
 		return get(path[0], path[1]);
 	}
 
+	private String getRootPath() {
+		return settingsService.get(Key.REPOSITORY_PATH);
+	}
+
 	public Repository get(String group, String name) {
-		Repository repo = Repository.get(root, group, name);
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			throw new UnauthorizedAccessException(Repository.toId(group, name), "READ");
+		Repository repo = Repository.get(path, group, name);
 		if (!accessService.canRead(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
 	}
 
 	public boolean exists(String group, String name) {
-		File root = new File(this.root);
+		File root = new File(getRootPath());
 		if (root.listFiles() == null)
 			return false;
 		for (File g : root.listFiles()) {
@@ -100,7 +107,10 @@ public class RepositoryService {
 		User currentUser = userService.getCurrentUser();
 		if (!accessService.canCreateRepositoryIn(group))
 			throw new UnauthorizedAccessException(group, "WRITE");
-		new File(getPath(group, name)).mkdirs();
+		String path = getPath(group, name);
+		if (path == null)
+			throw new UnauthorizedAccessException(group, "WRITE");
+		new File(path).mkdirs();
 		putJsonContext(group, name);
 		putVersion(group, name);
 		Repository repo = get(group, name);
@@ -158,9 +168,12 @@ public class RepositoryService {
 	}
 
 	private void putJsonContext(String group, String name) {
+		String path = getPath(group, name);
+		if (path == null)
+			return;
 		JsonObject context = Context.write(Schema.URI);
 		try {
-			File file = new File(getPath(group, name), "context.json");
+			File file = new File(path, "context.json");
 			file.createNewFile();
 			String json = new Gson().toJson(context);
 			byte[] data = json.getBytes("utf-8");
@@ -171,7 +184,10 @@ public class RepositoryService {
 	}
 
 	private void putVersion(String group, String name) {
-		File versionFile = new File(getPath(group, name), ".version");
+		String path = getPath(group, name);
+		if (path == null)
+			return;
+		File versionFile = new File(path, ".version");
 		if (versionFile.exists())
 			return;
 		try {
@@ -182,7 +198,10 @@ public class RepositoryService {
 	}
 
 	boolean delete(Repository repo) {
-		return Directories.delete(new File(getPath(repo.group, repo.name)));
+		String path = getPath(repo.group, repo.name);
+		if (path == null)
+			return false;
+		return Directories.delete(new File(path));
 	}
 
 	public StreamingOutput pack(Repository repo) {
@@ -211,7 +230,10 @@ public class RepositoryService {
 	}
 
 	private List<Repository> getAll(boolean adminArea) {
-		File root = new File(this.root);
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return new ArrayList<>();
+		File root = new File(path);
 		List<Repository> repos = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (group.listFiles() == null)
@@ -220,7 +242,7 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				try {
-					Repository repo = Repository.get(this.root, group.getName(), name.getName());
+					Repository repo = Repository.get(path, group.getName(), name.getName());
 					if (!accessService.canRead(repo.toId(), !adminArea))
 						continue;
 					repos.add(repo);
@@ -233,7 +255,10 @@ public class RepositoryService {
 	}
 
 	private String getPath(String group, String name) {
-		return root + File.separator + group + File.separator + name;
+		String path = getRootPath();
+		if (path == null)
+			return null;
+		return path + File.separator + group + File.separator + name;
 	}
 
 	public byte[] getAvatar(String group, String name) {

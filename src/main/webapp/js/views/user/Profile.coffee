@@ -57,7 +57,7 @@ define([
 					adminArea: @adminArea
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
-				@setMaxSize user.settings.maxSize
+				@setMaxSize user.settings?.maxSize
 				@updateRights()
 				Avatar.initCropper 'user', @user.get('username')
 
@@ -148,10 +148,12 @@ define([
 				text = if isOwnUser then 'your own user' else "user #{username}"
 				url = if isOwnUser then 'ws/user' else "ws/admin/user/#{username}"
 				Layers.askDeleteQuestion text, username, () =>
+					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
 						url: url
 						success: () -> 
+							Layers.hideProgressIndicator()
 							if currentUser.isAdmin() and !isOwnUser
 								Router.navigate 'administration/overview'
 							else

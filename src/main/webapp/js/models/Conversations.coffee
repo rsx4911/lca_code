@@ -26,6 +26,7 @@ define([
 				schema = if loc.protocol is 'https' or loc.protocol is 'https:' then 'wss' else 'ws'
 				base = $('base').attr('href') or '/'
 				@socket = new WebSocket "#{schema}://#{loc.host}#{base}sockets/messaging"
+				window.onbeforeunload = () => @closeSocket()
 				@socket.onmessage = (msg) =>
 					data = JSON.parse msg.data
 					if data.type is 'NEW_MESSAGE'

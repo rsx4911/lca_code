@@ -43,7 +43,7 @@ define([
 			repositoryPath = repository.get('group') + '/' + repository.get('name')
 			Layers.selectModel 
 				repositoryPath: repositoryPath
-				multiSelection: false
+				multipleSelection: false
 				selectVersion: true
 				type: 'IMPACT_METHOD'
 				callback: (methodId, commitId) =>

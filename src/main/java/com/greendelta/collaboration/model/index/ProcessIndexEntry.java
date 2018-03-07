@@ -1,6 +1,9 @@
 package com.greendelta.collaboration.model.index;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.LoggerFactory;
@@ -14,9 +17,12 @@ public class ProcessIndexEntry extends IndexEntry {
 	public String samplingProcedure;
 	public long validFrom;
 	public long validUntil;
+	public Integer validFromYear;
+	public Integer validUntilYear;
+	public String locationCode;
 	public String location;
 	public String technology;
-	public Nomenclature[] supportedNomenclatures = new Nomenclature[0];
+	public List<Nomenclature> supportedNomenclatures;
 	public String representativeness;
 	public ModellingPrinciple modellingPrinciple = ModellingPrinciple.UNKNOWN;
 	public ModellingApproach modellingApproach = ModellingApproach.UNKNOWN;
@@ -30,8 +36,8 @@ public class ProcessIndexEntry extends IndexEntry {
 	public String license;
 	public String contact;
 	public String description;
-	public String[] inputs = new String[0];
-	public String[] outputs = new String[0];
+	public List<String> inputs;
+	public List<String> outputs;
 
 	public enum AggregationType {
 
@@ -117,29 +123,30 @@ public class ProcessIndexEntry extends IndexEntry {
 
 		ILCD;
 
-		public static Nomenclature[] from(Map<String, Object> map) {
+		@SuppressWarnings("unchecked")
+		public static List<Nomenclature> from(Map<String, Object> map) {
 			if (map == null)
-				return new Nomenclature[0];
+				return null;
 			Object value = map.get("supportedNomenclatures");
 			if (value instanceof Nomenclature[])
-				return (Nomenclature[]) value;
-			String[] values = null;
+				return Arrays.asList((Nomenclature[]) value);
+			if (value instanceof Collection)
+				return new ArrayList<>((Collection<Nomenclature>) value);
+			List<String> values = new ArrayList<>();
 			if (value instanceof String[]) {
-				values = (String[]) value;
+				values = Arrays.asList((String[]) value);
 			} else if (value instanceof Collection) {
 				try {
-					@SuppressWarnings("unchecked")
-					Collection<String> collection = (Collection<String>) value;
-					values = collection.toArray(new String[collection.size()]);
+					values = new ArrayList<>((Collection<String>) value);
 				} catch (Exception e) {
 					LoggerFactory.getLogger(ProcessIndexEntry.class).warn("Could not parse supported nomenclatures", e);
 				}
 			}
-			if (values == null)
-				return new Nomenclature[0];
-			Nomenclature[] result = new Nomenclature[values.length];
-			for (int i = 0; i < values.length; i++) {
-				result[i] = Nomenclature.valueOf(values[i]);
+			if (values == null || values.isEmpty())
+				return null;
+			List<Nomenclature> result = new ArrayList<>();
+			for (int i = 0; i < values.size(); i++) {
+				result.add(Nomenclature.valueOf(values.get(i)));
 			}
 			return result;
 		}
@@ -175,8 +182,11 @@ public class ProcessIndexEntry extends IndexEntry {
 		e.sampleRepresentativeness = sampleRepresentativeness;
 		e.samplingProcedure = samplingProcedure;
 		e.validFrom = validFrom;
+		e.validFromYear = validFromYear;
 		e.validUntil = validUntil;
-		e.location = location;
+		e.validUntilYear = validUntilYear;
+		e.locationCode = locationCode;
+		e.location= location;
 		e.technology = technology;
 		e.representativeness = representativeness;
 		e.modellingPrinciple = modellingPrinciple;
@@ -192,18 +202,13 @@ public class ProcessIndexEntry extends IndexEntry {
 		e.contact = contact;
 		e.description = description;
 		if (supportedNomenclatures != null) {
-			e.supportedNomenclatures = new Nomenclature[supportedNomenclatures.length];
-			for (int i = 0; i < supportedNomenclatures.length; i++) {
-				e.supportedNomenclatures[i] = supportedNomenclatures[i];
-			}
+			e.supportedNomenclatures = new ArrayList<>(supportedNomenclatures);
 		}
-		e.inputs = new String[inputs.length];
-		for (int i = 0; i < inputs.length; i++) {
-			e.inputs[i] = inputs[i];
+		if (inputs != null) {
+			e.inputs = new ArrayList<>(inputs);
 		}
-		e.outputs = new String[outputs.length];
-		for (int i = 0; i < outputs.length; i++) {
-			e.outputs[i] = outputs[i];
+		if (outputs != null) {
+			e.outputs = new ArrayList<>(outputs);
 		}
 		return e;
 	}
