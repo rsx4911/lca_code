@@ -14,8 +14,6 @@ define([
 
 		initializeErrorHandling: () ->
 			$(document).ajaxError (event, response, options, error) ->
-				if options.url.indexOf('ws/admin/area/test') isnt -1
-					return
 				switch response.status
 					when 401
 						unless currentUser.get('inLoginProcess')
