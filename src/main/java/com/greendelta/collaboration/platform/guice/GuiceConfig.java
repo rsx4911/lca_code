@@ -25,7 +25,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 	private static final Logger log = LogManager.getLogger(GuiceConfig.class);
 	private volatile Set<ShutdownListener> shutdownListeners;
 	private ServletContext servletContext;
-
+	
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		servletContext = servletContextEvent.getServletContext();
@@ -59,7 +59,10 @@ public class GuiceConfig extends GuiceServletContextListener {
 	}
 
 	private Module[] getModules() {
-		String databasePath = System.getProperty("app.database");
+		String databasePath = servletContext.getInitParameter("app.database");
+		if (databasePath == null || databasePath.isEmpty()) {
+			databasePath = System.getProperty("app.database");
+		}
 		JpaPersistModule jpaModule = new JpaPersistModule("prod");
 		Properties properties = new Properties();
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
