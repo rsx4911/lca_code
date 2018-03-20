@@ -38,7 +38,9 @@ define([
 				settings.setVal key, value
 				$.ajax
 					type: 'PUT'
-					url: "ws/admin/area/settings/#{key}/#{encodeURIComponent(value)}"
+					url: 'ws/admin/area/settings'
+					contentType: 'application/json'
+					data: JSON.stringify({key: key, value: value})
 					success: () -> callback?()
 
 			testMailConfiguration: (event) ->

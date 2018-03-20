@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -91,17 +91,14 @@ public class AdminAreaResource {
 	}
 
 	@PUT
-	@Path("settings/{key}")
-	public Response setSetting(@PathParam("key") Key key) {
-		settingsService.set(key, null);
-		if (key == Key.LIBRARY_PATH)
-			libraryService.resetLibraries();
-		return Respond.ok(new HashMap<>());
-	}
-
-	@PUT
-	@Path("settings/{key}/{value}")
-	public Response setSetting(@PathParam("key") Key key, @PathParam("value") String value) {
+	@Path("settings")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response setSetting(Map<String, String> data) {
+		Key key = Key.valueOf(data.get("key"));
+		String value = data.get("value");
+		if (value != null && value.trim().isEmpty()) {
+			value = null;
+		}
 		settingsService.set(key, value);
 		if (key == Key.LIBRARY_PATH)
 			libraryService.resetLibraries();
