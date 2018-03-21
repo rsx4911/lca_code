@@ -350,7 +350,7 @@ define([
 				router.routeContext = @
 				Events.setRouter router
 				$('#main .center').empty();
-				$('a').on 'click', (event) -> Events.followLink event
+				$('a:not([data-route=false]):not([target=_blank])').on 'click', (event) -> Events.followLink event
 				if currentUser.isLoggedIn()
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
