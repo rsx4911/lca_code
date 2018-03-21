@@ -35,7 +35,6 @@ import com.greendelta.collaboration.webservice.util.Messages;
 public class MessagingEndpoint {
 
 	private static final Logger log = LogManager.getLogger(MessagingEndpoint.class);
-	// username->sessionId(s)
 	private static volatile Map<String, Set<Session>> online = new HashMap<>();
 
 	private final MessagingService service;
