@@ -12,7 +12,11 @@ stylus = require 'gulp-stylus'
 uglify = require 'gulp-uglify' 
 nib = require 'nib'
 stream = require 'stream'
+params = require('yargs').argv
 $ = require('gulp-load-plugins')()
+
+unless params.contextPath
+	params.contextPath = '/'
 
 timestamp = new Date().getTime()
 
@@ -34,7 +38,7 @@ gulp.task 'default', [], (callback) ->
 	runSequence 'clearTemplates', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
-	runSequence 'default', 'copySprites', 'addTimestampToIndex', 'addTimestampToLogin', 'addTimestampToImprint', 'copyJQueryForLogin', 'jsBuild', callback
+	runSequence 'default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'copyJQueryForLogin', 'jsBuild', callback
 
 gulp.task 'clearTemplates', () ->
 	gulp.src('./src/main/webapp/js/templates', {read: false})
@@ -97,33 +101,36 @@ gulp.task 'collectDependencies', () ->
 		)
 		.pipe gulp.dest './src/main/webapp/js/app'
 
-gulp.task 'addTimestampToIndex', () ->
+gulp.task 'modifyIndexHtml', () ->
 	# replace styles.css and main.js with timestamp filename
 	gulp.src('./src/main/webapp/index.html')
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace(' data-main="js/main"', '')
 			content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"')
+			content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>')
 			return content
 		)
 		.pipe gulp.dest './target/require-build'
 
-gulp.task 'addTimestampToLogin', () ->
+gulp.task 'modifyLoginHtml', () ->
 	# replace styles-login.css with timestamp filename
 	gulp.src('./src/main/webapp/login.html')
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
+			content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>')
 			return content
 		)
 		.pipe gulp.dest './target/require-build'
 
-gulp.task 'addTimestampToImprint', () ->
+gulp.task 'modifyImprintHtml', () ->
 	# replace styles-login.css with timestamp filename
 	gulp.src('./src/main/webapp/imprint.html')
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
+			content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>')
 			return content
 		)
 		.pipe gulp.dest './target/require-build'

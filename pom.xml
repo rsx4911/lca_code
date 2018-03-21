@@ -190,8 +190,12 @@
 			<artifactId>transport</artifactId>
 			<version>6.2.0</version>
 		</dependency>
-		
+
 	</dependencies>
+
+	<properties>
+		<contextPath>/</contextPath>
+	</properties>
 
 	<build>
 
@@ -260,6 +264,7 @@
 							<executable>node_modules/gulp/bin/gulp.js</executable>
 							<arguments>
 								<argument>build</argument>
+								<argument>--contextPath=${contextPath}</argument>
 							</arguments>
 						</configuration>
 					</execution>
