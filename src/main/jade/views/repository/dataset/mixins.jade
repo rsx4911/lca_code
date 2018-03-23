@@ -83,6 +83,7 @@ mixin header()
 				+category-field(dataset.category, getValue(compareTo, 'category'))
 			h3: small: span(data-path='description')
 				+field('description', true)
+			.clear
 	block
 	if !isPublic
 		hr

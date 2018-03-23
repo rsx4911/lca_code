@@ -185,6 +185,7 @@ define([
 					activeAssignments: activeAssignments
 					completedAssignments: completedAssignments
 					canceledAssignments: canceledAssignments
+					closed: review and (review.state is 'COMPLETED' or review.state is 'CANCELED')
 					currentUser: currentUser.get('username')
 					formatDate: Format.date
 					formatDateTime: Format.dateTime

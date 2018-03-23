@@ -59,7 +59,7 @@ mixin data-set-column(elements, col)
 			each reference, index in elements
 				if index % 3 === col - 1
 					.overflow-ellipsis
-						input(type='checkbox' id=reference.id data-action='mark-as-reviewed' checked=!!reference.reviewer)
+						input(type='checkbox' id=reference.id data-action='mark-as-reviewed' checked=!!reference.reviewer, disabled=closed)
 						a(href='#{review.repositoryPath}/dataset/#{reference.type}/#{reference.refId}?commitId=#{reference.commitId}' title=reference.name)
 							img.model-icon-small(src='images/model/small/#{reference.type.toLowerCase()}.png')
 							strong=reference.name
@@ -79,7 +79,6 @@ mixin data-set-selection()
 			| There are not data sets selected yet for this review.
 
 - var isInitiator = review && review.initiator.username === currentUser;
-- var closed = review && (review.state === 'COMPLETED' || review.state === 'CANCELED')
 +review-info()
 if review
 	+data-set-selection()
