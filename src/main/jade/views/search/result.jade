@@ -22,7 +22,8 @@ mixin result-title(dataset)
 mixin result-details(dataset)
 	.details
 		if dataset.categories && dataset.categories.length
-			- var catUrl = dataset.repositoryId + '/datasets/' + getLabel('type', dataset.categoryType);
+			- var type = dataset.type === 'CATEGORY' ? dataset.categoryType : dataset.type
+			- var catUrl = dataset.repositoryId + '/datasets/' + getLabel('type', type);
 			+category-breadcrumb(catUrl, dataset.categories, true)
 		.details-left
 			div Repository: 
