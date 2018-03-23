@@ -82,14 +82,20 @@ public class User extends AbstractEntity {
 	}
 	
 	public boolean isAdmin() {
+		if (settings == null)
+			return false;
 		return settings.admin;
 	}
 	
 	public boolean isUserManager() {
+		if (settings == null)
+			return false;
 		return settings.admin || settings.userManager;
 	}
 	
 	public boolean isDataManager() {
+		if (settings == null)
+			return false;
 		return settings.admin || settings.dataManager;
 	}
 

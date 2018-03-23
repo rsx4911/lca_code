@@ -14,21 +14,21 @@ define([
 				return false
 
 			isAdmin: () ->
-				if @get('settings').admin
+				if @get('settings')?.admin
 					return true
 				return false
 
 			isUserManager: () ->
 				if @isAdmin()
 					return true
-				if @get('settings').userManager
+				if @get('settings')?.userManager
 					return true
 				return false
 
 			isDataManager: () ->
 				if @isAdmin()
 					return true
-				if @get('settings').dataManager
+				if @get('settings')?.dataManager
 					return true
 				return false
 
