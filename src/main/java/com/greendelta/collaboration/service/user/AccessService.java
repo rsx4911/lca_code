@@ -134,7 +134,7 @@ public class AccessService {
 	}
 
 	public boolean canReviewIn(User user, String repositoryPath) {
-		return hasPermissionTo(user, Permission.REVIEW, repositoryPath);
+		return hasPermissionTo(user, Permission.REVIEW, repositoryPath, true);
 	}
 
 	public boolean canManageTaskIn(String repositoryPath) {
