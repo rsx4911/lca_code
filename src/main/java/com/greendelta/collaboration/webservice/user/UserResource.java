@@ -59,7 +59,7 @@ public class UserResource {
 		if (user == null)
 			return Respond.notFound();
 		Map<String, Object> userMap = Users.mapForSelf(user);
-		if (user.admin)
+		if (user.isAdmin())
 			userMap.put("lastAdmin", service.isLastAdmin(user));
 		return Respond.ok(userMap);
 	}
@@ -116,8 +116,10 @@ public class UserResource {
 			return Respond.invalid("email", "Email is already in use");
 		Beans.populateProperties(user, fromDb, "name", "email");
 		User currentUser = service.getCurrentUser();
-		if (currentUser.admin) {
-			Beans.populateProperties(user, fromDb, "admin");
+		if (currentUser.isAdmin()) {
+			Beans.populateProperties(user.settings, fromDb.settings, "admin", "userManager", "dataManager");
+		}
+		if (currentUser.isUserManager()) {
 			Beans.populateProperties(user.settings, fromDb.settings,
 					"canCreateGroups", "canCreateRepositories", "noOfRepositories", "maxSize");
 		}
@@ -202,8 +204,8 @@ public class UserResource {
 	private User authorizedGetUser(String username) {
 		User user = service.getCurrentUser();
 		if (!Strings.isNullOrEmpty(username) && !username.equals(user.username)) {
-			if (!user.admin)
-				throw new UnauthorizedException("Only admin can change other users");
+			if (!user.isUserManager())
+				throw new UnauthorizedException("Not authorized to manage users");
 			user = service.getForUsername(username);
 		}
 		return user;

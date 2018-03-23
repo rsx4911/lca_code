@@ -25,7 +25,7 @@ import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Users;
 
-@Path("admin/user")
+@Path("usermanager/user")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
@@ -52,7 +52,7 @@ public class UserResource {
 		if (!Names.isValid(username))
 			return Respond.invalid("username",
 					"Username must consist of at least 4 characters and can only contain characters, numbers and _");
-		if (groupService.exists(username)) // user or group exists
+		if (groupService.exists(username, true)) // user or group exists
 			return Respond.invalid("username", "Name is already in use");
 		if (service.getForEmail(user.email) != null)
 			return Respond.invalid("email", "Email is already in use");

@@ -74,7 +74,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
 	private boolean isAdmin() {
 		User user = userService.getCurrentUser();
-		return user != null && user.admin;
+		return user != null && user.isAdmin();
 	}
 
 }

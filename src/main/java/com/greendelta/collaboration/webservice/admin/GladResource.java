@@ -38,7 +38,7 @@ import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.search.wrapper.SearchClient;
 
-@Path("admin/glad")
+@Path("datamanager/glad")
 public class GladResource {
 
 	private static final List<String> GLAD_FIELDS = new ArrayList<>(Arrays.asList(

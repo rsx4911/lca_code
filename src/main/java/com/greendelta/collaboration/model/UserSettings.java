@@ -41,6 +41,15 @@ public class UserSettings {
 	@Column(name = "show_read_receipt")
 	public boolean showReadReceipt;
 
+	@Column(name = "admin")
+	public boolean admin;
+
+	@Column(name = "user_manager")
+	public boolean userManager;
+
+	@Column(name = "data_manager")
+	public boolean dataManager;
+
 	@OneToMany
 	@JoinTable(name = "blocked_users", joinColumns = { @JoinColumn(name = "f_user") }, inverseJoinColumns = { @JoinColumn(name = "f_blocked") })
 	public List<User> blockedUsers = new ArrayList<>();

@@ -20,14 +20,14 @@ mixin notification-group(id)
 .content-box Notifications are send by email, everytime specific actions were performed by other users. Below you can specify which actions should trigger a notification. You can change the notification email address in your 
 	a.default-link(href='user/profile') profile
 	| .
-if isAdmin
+if isUserManager
 	.flex-layout.two-columns
 		+notification-group('Group')
 		+notification-group('Repository')
 	.flex-layout.three-columns
 		+notification-group('Team')
 		+notification-group('Task')
-		+notification-group('Admin')
+		+notification-group('Manager')
 else
 	.flex-layout.two-columns
 		+notification-group('Group')

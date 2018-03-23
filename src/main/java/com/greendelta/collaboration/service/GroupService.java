@@ -77,7 +77,9 @@ public class GroupService {
 
 	public boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !currentUser.settings.canCreateGroups)
+		if (userGroup && !currentUser.isUserManager()) 
+			throw new UnauthorizedAccessException("", "CREATE_GROUP");
+		if (!currentUser.isAdmin() && !currentUser.settings.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;

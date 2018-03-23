@@ -17,7 +17,7 @@ mixin comment-visibility(restrictedToRole, roles)
 						li: a(href='#' data-role=role.id)=role.name
 
 mixin comment-info(comment, roles, showDatasetInfo)
-	- var canChangeVisibility = canComment && (currentUser.admin || (comment.user && currentUser.username === comment.user.username));
+	- var canChangeVisibility = canComment && (currentUser.settings.admin || (comment.user && currentUser.username === comment.user.username));
 	span: small wrote on #{formatDate(comment.date)}
 	if canChangeVisibility
 		| &nbsp;

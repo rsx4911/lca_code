@@ -32,7 +32,7 @@ import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Teams;
 
-@Path("admin/team")
+@Path("usermanager/team")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class TeamResource {
@@ -59,7 +59,7 @@ public class TeamResource {
 		Team team = service.getForTeamname(teamname);
 		if (team == null)
 			return Respond.notFound();
-		return Respond.ok(Teams.mapForAdmin(team));
+		return Respond.ok(Teams.mapForManager(team));
 	}
 
 	@POST
@@ -78,7 +78,7 @@ public class TeamResource {
 			return Respond.invalid("teamname", "This is a reserved word");
 		team = service.insert(team);
 		notificationService.teamCreated(team).send();
-		return Respond.created(Teams.mapForAdmin(team));
+		return Respond.created(Teams.mapForManager(team));
 	}
 
 	@PUT
@@ -98,7 +98,7 @@ public class TeamResource {
 		fromDb = service.update(fromDb);
 		for (NotificationJob notification : notifications)
 			notification.send();
-		return Respond.ok(Teams.mapForAdmin(fromDb));
+		return Respond.ok(Teams.mapForManager(fromDb));
 	}
 
 	@DELETE
@@ -139,8 +139,8 @@ public class TeamResource {
 
 	private Team authorizedGetTeam(String teamname) {
 		User user = userService.getCurrentUser();
-		if (!user.admin)
-			throw new UnauthorizedException("Only admin can change teams");
+		if (!user.isUserManager())
+			throw new UnauthorizedException("Not authorized to manage teams");
 		return service.getForTeamname(teamname);
 	}
 

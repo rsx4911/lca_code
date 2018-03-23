@@ -3,7 +3,7 @@ include mixins/forms.jade
 mixin menu-items()
 	a.search-link-icon(href='search')
 		span.glyphicon.glyphicon-search  
-	if isAdmin
+	if isDataManager || isUserManager
 		a(href='administration')
 			span.glyphicon.glyphicon-wrench(data-toggle='tooltip' data-placement='bottom' title='Admin area')
 	if settings['TASKS_ENABLED'] === 'true'

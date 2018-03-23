@@ -28,7 +28,7 @@ define([
 			loadLibraries: (callback) ->
 				$.ajax
 					type: 'GET'
-					url: 'ws/admin/library'
+					url: 'ws/datamanager/library'
 					success: (libraries) ->
 						callback libraries
 
@@ -38,7 +38,7 @@ define([
 				Layers.showProgressIndicator 'Loading'
 				$.ajax
 					type: 'GET'
-					url: "ws/admin/library/#{name}"
+					url: "ws/datamanager/library/#{name}"
 					success: (refIds) -> 
 						Layers.hideProgressIndicator()
 						content = ''
@@ -54,7 +54,7 @@ define([
 				name = target.attr 'data-library'
 				$.ajax
 					type: 'DELETE'
-					url: "ws/admin/library/#{name}"
+					url: "ws/datamanager/library/#{name}"
 					success: () -> Backbone.history.loadUrl()
 
 			showAddDialog: (event, isNew) ->
@@ -79,7 +79,7 @@ define([
 							refIds = refIdsRaw.split '\n'
 							$.ajax
 								type: 'PUT'
-								url: "ws/admin/library/#{name}"
+								url: "ws/datamanager/library/#{name}"
 								data: JSON.stringify refIds
 								contentType: 'application/json'
 								success: () ->

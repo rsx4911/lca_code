@@ -15,6 +15,12 @@ define([
 				if restrictedTo is 'admin' and !currentUser.isAdmin()
 					alert 'This is a restricted area, you do not have permission to enter it'
 					return @navigate ''
+				if restrictedTo is 'userManager' and !currentUser.isUserManager()
+					alert 'This is a restricted area, you do not have permission to enter it'
+					return @navigate ''
+				if restrictedTo is 'dataManager' and !currentUser.isDataManager()
+					alert 'This is a restricted area, you do not have permission to enter it'
+					return @navigate ''
 				callback.apply context, args
 
 			rewriteIfNecessary: (route) ->
@@ -45,10 +51,10 @@ define([
 					@checkAccess route, callback, @routeContext, null, arguments 
 				@router.on "route:#{route}", wrappedCallback
 
-			registerAdminRoute: (route, callback) ->
+			registerAdminRoute: (route, type, callback) ->
 				wrappedCallback = () =>
 					@rewriteIfNecessary route
-					@checkAccess route, callback, @routeContext, 'admin', arguments 
+					@checkAccess route, callback, @routeContext, type, arguments 
 				@router.on "route:#{route}", wrappedCallback
 
 			navigate: (route, options) ->

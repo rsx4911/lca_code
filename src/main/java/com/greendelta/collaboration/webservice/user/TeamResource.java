@@ -95,8 +95,8 @@ public class TeamResource {
 
 	private Team authorizedGetTeam(String teamname) {
 		User user = userService.getCurrentUser();
-		if (!user.admin)
-			throw new UnauthorizedException("Only admin can change teams");
+		if (!user.isUserManager())
+			throw new UnauthorizedException("Not authorized to manage teams");
 		return service.getForTeamname(teamname);
 	}
 

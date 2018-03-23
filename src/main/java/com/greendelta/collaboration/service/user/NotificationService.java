@@ -49,7 +49,7 @@ public class NotificationService {
 		String message = "A new group <a href=\"" + url + "\">" + group + "</a> was created by the user "
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.GROUP_CREATED, true)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.GROUP_CREATED, true)));
 		return new NotificationJob(emails);
 	}
 
@@ -59,7 +59,7 @@ public class NotificationService {
 		String message = "The group " + group + " was deleted by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.GROUP_DELETED, group)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.GROUP_DELETED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.GROUP_DELETED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -72,7 +72,7 @@ public class NotificationService {
 				+ currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_CREATED, repo.group)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_CREATED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.REPOSITORY_CREATED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -84,7 +84,7 @@ public class NotificationService {
 				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_MOVED, newRepo.toId())));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_MOVED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.REPOSITORY_MOVED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -95,7 +95,7 @@ public class NotificationService {
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_DELETED, repo.toId())));
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_DELETED, repo.group)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.REPOSITORY_DELETED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.REPOSITORY_DELETED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -110,7 +110,7 @@ public class NotificationService {
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.toId())));
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.group)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.DATA_COMMITTED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.DATA_COMMITTED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -130,7 +130,7 @@ public class NotificationService {
 		emails.addAll(createEmails(subject, message,
 				getMemberUsers(Notification.FIELD_COMMENTED, comment.repositoryPath)));
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.FIELD_COMMENTED, group)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.FIELD_COMMENTED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.FIELD_COMMENTED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -150,7 +150,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.ADDED_GROUP_MEMBER, false)));
+				getManagerUsers(Notification.ADDED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -170,7 +170,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, false)));
+				getManagerUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -190,7 +190,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.ADDED_GROUP_MEMBER, false)));
+				getManagerUsers(Notification.ADDED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -211,7 +211,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, false)));
+				getManagerUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -229,7 +229,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REMOVED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REMOVED_GROUP_MEMBER, false)));
+				getManagerUsers(Notification.REMOVED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -248,7 +248,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REMOVED_GROUP_MEMBER, group)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REMOVED_GROUP_MEMBER, false)));
+				getManagerUsers(Notification.REMOVED_GROUP_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -269,7 +269,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.ADDED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
+				getManagerUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -290,7 +290,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
+				getManagerUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -310,7 +310,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.ADDED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
+				getManagerUsers(Notification.ADDED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -331,7 +331,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
+				getManagerUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -352,7 +352,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REMOVED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REMOVED_REPOSITORY_MEMBER, false)));
+				getManagerUsers(Notification.REMOVED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -372,7 +372,7 @@ public class NotificationService {
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REMOVED_REPOSITORY_MEMBER, path)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REMOVED_REPOSITORY_MEMBER, false)));
+				getManagerUsers(Notification.REMOVED_REPOSITORY_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -388,7 +388,7 @@ public class NotificationService {
 		if (member.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.ADDED_TEAM_MEMBER, team)));
-		emails.addAll(createEmails(othersSubject, othersMessage, getAdminUsers(Notification.ADDED_TEAM_MEMBER, false)));
+		emails.addAll(createEmails(othersSubject, othersMessage, getManagerUsers(Notification.ADDED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -406,20 +406,20 @@ public class NotificationService {
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.REMOVED_TEAM_MEMBER, team)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
-				getAdminUsers(Notification.REMOVED_TEAM_MEMBER, false)));
+				getManagerUsers(Notification.REMOVED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
 	public NotificationJob userCreated(User user, String password) {
 		User currentUser = userService.getCurrentUser();
-		String adminMessage = "The user " + user.name + " was created by the user  " + currentUser.name;
+		String managerMessage = "The user " + user.name + " was created by the user  " + currentUser.name;
 		String userMessage = "A new account with username " + user.username
 				+ " was created for you by the user  "
 				+ currentUser.name
 				+ ". To login please navigate to " + getBaseUrl()
 				+ " and enter your credentials. The password for this was generated by the system: " + password;
-		Set<EmailJob> emails = createEmails("A user was created", adminMessage,
-				getAdminUsers(Notification.USER_CREATED, true));
+		Set<EmailJob> emails = createEmails("A user was created", managerMessage,
+				getManagerUsers(Notification.USER_CREATED, true));
 		emails.add(createEmail("A user was created for you", userMessage, user));
 		return new NotificationJob(emails);
 	}
@@ -428,7 +428,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A user was deleted";
 		String message = "The user " + user.name + " was deleted by the user " + currentUser.name;
-		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.USER_DELETED, true));
+		Set<EmailJob> emails = createEmails(subject, message, getManagerUsers(Notification.USER_DELETED, true));
 		return new NotificationJob(emails);
 	}
 
@@ -436,7 +436,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A team was created";
 		String message = "The team " + team.name + " was created by the user " + currentUser.name;
-		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.TEAM_CREATED, true));
+		Set<EmailJob> emails = createEmails(subject, message, getManagerUsers(Notification.TEAM_CREATED, true));
 		return new NotificationJob(emails);
 	}
 
@@ -444,7 +444,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String subject = "A team was deleted";
 		String message = "The team " + team.name + " was deleted by the user " + currentUser.name;
-		Set<EmailJob> emails = createEmails(subject, message, getAdminUsers(Notification.TEAM_DELETED, true));
+		Set<EmailJob> emails = createEmails(subject, message, getManagerUsers(Notification.TEAM_DELETED, true));
 		return new NotificationJob(emails);
 	}
 
@@ -458,7 +458,7 @@ public class NotificationService {
 				+ repoUrl + "\">" + repoId + "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getTaskUsers(Notification.TASK_STARTED, repoId, task)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_STARTED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.TASK_STARTED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -472,7 +472,7 @@ public class NotificationService {
 				+ repoUrl + "\">" + repoId + "</a> was completed by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getTaskUsers(Notification.TASK_COMPLETED, repoId, task)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_COMPLETED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.TASK_COMPLETED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -486,7 +486,7 @@ public class NotificationService {
 				+ repoUrl + "\">" + repoId + "</a> was canceled by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getTaskUsers(Notification.TASK_CANCELED, repoId, task)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_CANCELED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.TASK_CANCELED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -507,7 +507,7 @@ public class NotificationService {
 			emails.add(createEmail(personalSubject, personalMessage, assignment.assignedTo));
 		emails.addAll(createEmails(otherSubject, otherMessage,
 				getMemberUsers(Notification.TASK_ASSIGNED, repoId, Permission.MANAGE_TASK)));
-		emails.addAll(createEmails(otherSubject, otherMessage, getAdminUsers(Notification.TASK_ASSIGNED, false)));
+		emails.addAll(createEmails(otherSubject, otherMessage, getManagerUsers(Notification.TASK_ASSIGNED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -522,7 +522,7 @@ public class NotificationService {
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message,
 				getMemberUsers(Notification.TASK_COMPLETED, repoId, Permission.MANAGE_TASK)));
-		emails.addAll(createEmails(subject, message, getAdminUsers(Notification.TASK_COMPLETED, false)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.TASK_COMPLETED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -544,7 +544,7 @@ public class NotificationService {
 			emails.add(createEmail(personalSubject, personalMessage, assignment.assignedTo));
 		emails.addAll(createEmails(otherSubject, otherMessage,
 				getMemberUsers(Notification.TASK_REVOKED, repoId, Permission.MANAGE_TASK)));
-		emails.addAll(createEmails(otherSubject, otherMessage, getAdminUsers(Notification.TASK_REVOKED, false)));
+		emails.addAll(createEmails(otherSubject, otherMessage, getManagerUsers(Notification.TASK_REVOKED, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -631,18 +631,18 @@ public class NotificationService {
 		return users;
 	}
 
-	private Set<User> getAdminUsers(Notification notification, boolean adminMessage) {
-		List<User> admins = userService.getAdmins();
+	private Set<User> getManagerUsers(Notification notification, boolean managerMessage) {
+		List<User> managers = userService.getUserManagers();
 		Set<User> users = new HashSet<>();
 		User currentUser = userService.getCurrentUser();
-		for (User admin : admins) {
-			if (!admin.isEnabled(notification))
+		for (User manager : managers) {
+			if (!manager.isEnabled(notification))
 				continue;
-			if (!adminMessage && !admin.isEnabled(Notification.NOTIFY_FOR_ALL))
+			if (!managerMessage && !manager.isEnabled(Notification.NOTIFY_FOR_ALL))
 				continue;
-			if (currentUser.equals(admin))
+			if (currentUser.equals(manager))
 				continue;
-			users.add(admin);
+			users.add(manager);
 		}
 		return users;
 	}

@@ -70,11 +70,15 @@ define([
 							repoMenu.push {href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
 						repoMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 						return repoMenu
-					when 'admin' then return [
-						{href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
-						{href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
-						{href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
-					]
+					when 'admin'
+						adminMenu = []
+						if currentUser.isUserManager()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
+						if currentUser.isAdmin()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
+						if currentUser.isDataManager()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
+						return adminMenu
 
 			initializeNavigation: () ->
 				@navigation = new Navigation()
@@ -103,41 +107,41 @@ define([
 					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
-				@router.registerAdminRoute 'adminOverview', -> @showView 
+				@router.registerAdminRoute 'adminOverview', 'userManager', -> @showView 
 					view: 'admin/Overview'
 					title: 'Admin area - Overview'
 					nav:
 						type: 'admin'
 						active: 'overview'
-				@router.registerAdminRoute 'adminUserNew', -> @showView 
+				@router.registerAdminRoute 'adminUserNew', 'userManager', -> @showView 
 					view: 'user/Profile'
 					title: 'New profile'
 					viewOptions: 
 						user: new User()
 						adminArea: true
-				@router.registerAdminRoute 'adminUserEdit', (username) -> @showView 
+				@router.registerAdminRoute 'adminUserEdit', 'userManager', (username) -> @showView 
 					view: 'user/Profile'
 					title: "Profile | #{username}"
 					viewOptions: 
 						user: new User {username: username}
 						adminArea: true
-				@router.registerAdminRoute 'adminTeamNew', -> @showView 
+				@router.registerAdminRoute 'adminTeamNew', 'userManager', -> @showView 
 					view: 'team/Profile'
 					title: 'New team'
 					viewOptions: 
 						team: new Team()
-				@router.registerAdminRoute 'adminTeamEdit', (teamname) -> @showView 
+				@router.registerAdminRoute 'adminTeamEdit', 'userManager', (teamname) -> @showView 
 					view: 'team/Profile'
 					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
-				@router.registerAdminRoute 'adminLibraries', -> @showView 
+				@router.registerAdminRoute 'adminLibraries', 'dataManager', -> @showView 
 					view: 'admin/Libraries'
 					title: 'Admin area - Library data sets'
 					nav:
 						type: 'admin'
 						active: 'libraries'
-				@router.registerAdminRoute 'adminSettings', -> @showView 
+				@router.registerAdminRoute 'adminSettings', 'admin', -> @showView 
 					view: 'admin/Settings'
 					title: 'Admin area - Settings'
 					nav:

@@ -24,6 +24,7 @@ define([
 
 			events:
 				'submit #user-form': 'saveUser'
+				'change #admin, #settings-admin': 'updateRights'
 				'change #admin, #settings-canCreateGroups': 'updateRights'
 				'change #admin, #settings-canCreateRepositories': 'updateRights'
 				'submit #password-form': 'savePassword'
@@ -54,6 +55,7 @@ define([
 				user = @user.toJSON()
 				@$el.html template
 					user: user
+					isAdmin: currentUser.isAdmin()
 					adminArea: @adminArea
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
@@ -88,7 +90,7 @@ define([
 				if @adminArea and !@user.get('id')
 						$.ajax
 							type: 'POST'
-							url: "ws/admin/user/#{username}"
+							url: "ws/usermanager/user/#{username}"
 							data: JSON.stringify @user.toJSON()
 							contentType: 'application/json'
 							success: () => @reload()
@@ -146,7 +148,7 @@ define([
 				username = @user.get 'username'
 				isOwnUser = @user.get('id') is currentUser.get('id')
 				text = if isOwnUser then 'your own user' else "user #{username}"
-				url = if isOwnUser then 'ws/user' else "ws/admin/user/#{username}"
+				url = if isOwnUser then 'ws/user' else "ws/usermanager/user/#{username}"
 				Layers.askDeleteQuestion text, username, () =>
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
@@ -154,16 +156,16 @@ define([
 						url: url
 						success: () -> 
 							Layers.hideProgressIndicator()
-							if currentUser.isAdmin() and !isOwnUser
+							if currentUser.isUserManager() and !isOwnUser
 								Router.navigate 'administration/overview'
 							else
 								window.location.href = 'login'
 
 			reload: () ->
 				isOwnUser = @user.get('id') is currentUser.get('id')
-				if currentUser.isAdmin() and isOwnUser and !@user.get('admin')
+				if currentUser.isUserManager() and isOwnUser
 					window.location.href = 'administration/overview'
-				else if currentUser.isAdmin() and @adminArea
+				else if currentUser.isUserManager() and @adminArea
 					Router.navigate 'administration/overview'
 				else
 					Status.success 'Successfully updated profile'
@@ -172,9 +174,15 @@ define([
 			updateRights: () ->
 				@$('#settings-canCreateGroups').prop 'disabled', false
 				@$('#settings-canCreateRepositories').prop 'disabled', false
-				if @$('#admin').is(':checked')
+				@$('#settings-userManager').prop 'disabled', false
+				@$('#settings-dataManager').prop 'disabled', false
+				if @$('#settings-admin').is(':checked')
 					@$('#settings-canCreateGroups').prop 'checked', true
 					@$('#settings-canCreateGroups').prop 'disabled', true
+					@$('#settings-userManager').prop 'checked', true
+					@$('#settings-userManager').prop 'disabled', true
+					@$('#settings-dataManager').prop 'checked', true
+					@$('#settings-dataManager').prop 'disabled', true
 				if @$('#settings-canCreateGroups').is(':checked')
 					@$('#settings-canCreateRepositories').prop 'checked', true
 					@$('#settings-canCreateRepositories').prop 'disabled', true

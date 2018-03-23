@@ -44,6 +44,9 @@ public class Names {
 		RESERVED.add("member");
 		RESERVED.add("references");
 		RESERVED.add("settings");
+		RESERVED.add("admin");
+		RESERVED.add("usermanager");
+		RESERVED.add("datamanager");
 		RESERVED.add("messaging");
 		RESERVED.add("block");
 		RESERVED.add("unblock");

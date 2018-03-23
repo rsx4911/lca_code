@@ -42,7 +42,7 @@ define([
 					repository: repository
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
-					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isAdmin()
+					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
@@ -215,7 +215,7 @@ define([
 							Layers.showProgressIndicator 'Pushing'
 							$.ajax
 								type: 'PUT'
-								url: "ws/admin/glad/push/#{fullPath}"
+								url: "ws/datamanager/glad/push/#{fullPath}"
 								contentType: 'application/json'
 								data: JSON.stringify(input)
 								success: (response) ->

@@ -14,13 +14,11 @@ mixin box(label, plural, count)
 			.clear
 		div(id='#{lcPlural}')
 
-.four-columns
-	div
-		+box('Repository', 'Repositories', repositories)
-	div
-		+box('User', 'Users', users)
-	div
-		+box('Group', 'Groups', groups)
-	div
-		+box('Team', 'Teams', teams)
+div(class=isAdmin?'four-columns':'two-columns')
+	if isAdmin
+		div: +box('Repository', 'Repositories', repositories)
+	div: +box('User', 'Users', users)
+	if isAdmin
+		div: +box('Group', 'Groups', groups)
+	div: +box('Team', 'Teams', teams)
 .clear

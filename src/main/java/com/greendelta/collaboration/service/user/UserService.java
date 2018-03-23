@@ -3,10 +3,13 @@ package com.greendelta.collaboration.service.user;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -57,11 +60,18 @@ public class UserService {
 	}
 
 	public List<User> getAdmins() {
-		return dao.getForAttribute("admin", true);
+		return dao.getForAttribute("settings.admin", true);
+	}
+
+	public List<User> getUserManagers() {
+		Set<User> managers = new HashSet<>();
+		managers.addAll(dao.getForAttribute("settings.admin", true));
+		managers.addAll(dao.getForAttribute("settings.userManager", true));
+		return new ArrayList<>(managers);
 	}
 
 	public boolean isLastAdmin(User user) {
-		if (!user.admin)
+		if (!user.isAdmin())
 			return false;
 		List<User> admins = getAdmins();
 		return admins.size() == 1;

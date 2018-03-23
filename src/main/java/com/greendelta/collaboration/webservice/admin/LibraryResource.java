@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.webservice.Respond;
 
-@Path("admin/library")
+@Path("datamanager/library")
 public class LibraryResource {
 
 	private final LibraryService service;
