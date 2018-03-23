@@ -35,13 +35,13 @@ collect = (directory, finished) ->
 	return all
 
 gulp.task 'default', [], (callback) ->
-	runSequence 'clearTemplates', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
+	runSequence 'clear', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
-	runSequence 'default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'copyJQueryForLogin', 'jsBuild', callback
+	runSequence 'default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modfiyCustomPublicHtml', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback
 
-gulp.task 'clearTemplates', () ->
-	gulp.src('./src/main/webapp/js/templates', {read: false})
+gulp.task 'clear', () ->
+	gulp.src(['./src/main/webapp/js/templates', './src/main/webapp/index.html', './src/main/webapp/login.html', './src/main/webapp/imprint.html'], {read: false})
 		.pipe clean()
 		
 gulp.task 'jadeIndex', () ->
@@ -71,13 +71,13 @@ gulp.task 'stylus', () ->
 		.pipe gulp.dest './src/main/webapp/css/'
 
 gulp.task 'cssBuild', () ->
-	gulp.src('./src/main/webapp/css/styles.css')
+	gulp.src(['./src/main/webapp/css/styles.css', './custom/styles.css'])
 		.pipe(cssConcat("styles#{timestamp}.css"))
 		.pipe(minifyCss({keepSpecialComments: false}))
 		.pipe gulp.dest './target/require-build/css'
 
 gulp.task 'fontBuild', () ->
-	gulp.src('./src/main/webapp/css/fonts/**/*.*')
+	gulp.src(['./src/main/webapp/css/fonts/**/*.*', './custom/fonts/**/*.*'])
 		.pipe gulp.dest './target/require-build/css/fonts'
 
 gulp.task 'copySprites', () ->
@@ -103,7 +103,8 @@ gulp.task 'collectDependencies', () ->
 
 gulp.task 'modifyIndexHtml', () ->
 	# replace styles.css and main.js with timestamp filename
-	gulp.src('./src/main/webapp/index.html')
+	path = if fs.existsSync('./custom/index.html') then './custom/index.html' else './src/main/webapp/index.html'
+	gulp.src(path)
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace(' data-main="js/main"', '')
@@ -115,7 +116,8 @@ gulp.task 'modifyIndexHtml', () ->
 
 gulp.task 'modifyLoginHtml', () ->
 	# replace styles-login.css with timestamp filename
-	gulp.src('./src/main/webapp/login.html')
+	path = if fs.existsSync('./custom/login.html') then './custom/login.html' else './src/main/webapp/login.html'
+	gulp.src(path)
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
@@ -126,7 +128,8 @@ gulp.task 'modifyLoginHtml', () ->
 
 gulp.task 'modifyImprintHtml', () ->
 	# replace styles-login.css with timestamp filename
-	gulp.src('./src/main/webapp/imprint.html')
+	path = if fs.existsSync('./custom/imprint.html') then './custom/imprint.html' else './src/main/webapp/imprint.html'
+	gulp.src(path)
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
@@ -134,6 +137,21 @@ gulp.task 'modifyImprintHtml', () ->
 			return content
 		)
 		.pipe gulp.dest './target/require-build'
+
+gulp.task 'modfiyCustomPublicHtml', () ->
+	# replace styles-login.css with timestamp filename
+	gulp.src('./custom/index_public.html')
+		.pipe(insert.transform (contents) ->
+			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
+			content = content.replace('js/libs/jquery', 'js/jquery')
+			content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>')
+			return content
+		)
+		.pipe gulp.dest './target/require-build'
+
+gulp.task 'copyCustomImages', () ->
+	gulp.src('./custom/images')
+		.pipe gulp.dest './target/require-build/images'
 
 gulp.task 'copyJQueryForLogin', () ->
 	gulp.src('./src/main/webapp/js/libs/jquery.js')
