@@ -187,8 +187,11 @@ public class CommitService {
 				if (file.exists()) {
 					file.delete();
 				}
-				while (!(file = file.getParentFile()).equals(repo.repoDir) && file.listFiles().length == 0) {
+				file = file.getParentFile();
+				while (file != null && file.exists() && !file.equals(repo.repoDir)
+						&& (file.listFiles() == null || file.listFiles().length == 0)) {
 					file.delete();
+					file = file.getParentFile();
 				}
 				file = repo.getBinDir(dataset.type, dataset.refId, commit.id, false);
 				if (file.exists()) {
