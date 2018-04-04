@@ -31,7 +31,6 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingAppro
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
-import com.greendelta.search.wrapper.Categories;
 
 public class IndexEntryCreator {
 
@@ -89,7 +88,7 @@ public class IndexEntryCreator {
 		entry.commitTimestamp = commit.timestamp;
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
-		fillCategoryInfo(entry, dataset.categories);
+		DataFill.categories(entry, dataset.categories);
 		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;
 		} else {
@@ -205,19 +204,6 @@ public class IndexEntryCreator {
 		} catch (IOException e) {
 			e.printStackTrace();
 			return new HashMap<>();
-		}
-	}
-	
-	public static void fillCategoryInfo(IndexEntry entry, List<String> categories) {
-		Categories info = new Categories(categories);
-		if (entry.categories == null) {
-			entry.categories = info.categories;
-		}
-		if (entry.category == null) {
-			entry.category = info.category;
-		}
-		if (entry.categoryPaths == null) {
-			entry.categoryPaths = info.categoryPaths;
 		}
 	}
 

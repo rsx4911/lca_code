@@ -27,7 +27,6 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
-import com.greendelta.search.wrapper.Categories;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
@@ -59,7 +58,7 @@ public class SearchResource {
 		SearchResult<IndexEntry> result = service.search(query, page, pageSize, parameters);
 		for (AggregationResult aResult : result.aggregations) {
 			if (aResult.name.equals(Aggregations.CATEGORY.name)) {
-				Categories.groupAggregation(aResult);
+				aResult.group("/");
 			}
 		}
 		return Respond.ok(SearchResults.convert(result, (r) -> {
