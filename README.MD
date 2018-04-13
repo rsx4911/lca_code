@@ -1,9 +1,8 @@
-lca-collaboration
-========
+# LCA Collaboration Server
+
 This repository contains the source code of the LCA Collaboration Server application. It is a servlet web application build with Google Guice and JAX-RS web services, secured with Shiro. This project depends on some of the [olca-modules](https://github.com/GreenDelta/olca-modules) project which is a plain [Maven](http://maven.apache.org/) project that contains the core functionalities (e.g. the model, database access, calculations, and data exchange) of openLCA. 
 
-Building from source
---------------------
+## Building from source
 To compile it from source you need to have the following tools installed:
 
 * [Git](https://git-scm.com/) (optional)
@@ -13,31 +12,39 @@ To compile it from source you need to have the following tools installed:
 
 When you have these tools installed you can build the application from source via the following steps:
 
-####Install the openLCA core modules
+#### Install the openLCA core modules
 The core modules contain the openLCA application logic that is independent from the collaboration server logic. These modules are plain Maven projects and can be installed via `mvn install`. See the [olca-modules](https://github.com/GreenDelta/olca-modules) repository for a more information.
 
-####Get the source code of the application
+#### Get the source code of the application
 We recommend that to use Git to manage the source code but you can also download the source code as a zip file. Create a development directory (the path should not contain whitespaces):
 
-    mkdir lca-collaboration
-    cd lca-collaboration
+```bash
+mkdir lca-collaboration
+cd lca-collaboration
+```
 
 and get the source code:
 
-    git clone [repository-url]
+```bash
+git clone https://github.com/GreenDelta/lca-collaboration
+```
 
-####Building the HTML pages
+#### Building the HTML pages
 To build the HTML pages of the user interface, install the Node.js modules via [npm](https://www.npmjs.com/) (npm is a package manager that comes with your Node.js installation):
 
-    npm install
+```
+npm install
+```
 
 This will create a folder `lca-collaboration/node_modules` with the dependent modules. After this, you can create the html package via Gulp:
 
-    gulp
+```bash
+gulp
+```
 
 This will build and the HTML files.
 
-####Prepare the Eclipse workspace
+#### Prepare the Eclipse workspace
 Download the current Eclipse package for JEE developers (to have everything together you can extract it into your development directory). Create a workspace directory in your development directory (e.g. under the eclipse folder to have a clean structure):
 
     eclipse
@@ -49,63 +56,79 @@ Download the current Eclipse package for JEE developers (to have everything toge
 
 To create the relevant project files for eclipse run:
 
-	mvn eclipse:eclipse
+```bash
+mvn eclipse:eclipse
+```
 	
 After this, open Eclipse and select the created workspace directory. Import the project into Eclipse via `Import/General/Existing Projects into Workspace`
 (select the lca-collaboration directory). You should now see the project in your Eclipse workspace.
 
-####Build the web application for deployment
+#### Build the web application for deployment
 To build the web application to be deployed on a web server (e.g. tomcat) run:
 
-	mvn package
+```bash
+mvn package
+```
 
 The file 'lca-collaboration.war' in the target sub directory is the deployable application.
 
-####Server specific settings
-The app.properties file contains several values that need to be adjusted before the application can be deployed correctly.
+## Installation
 
-Storage settings
+#### Requirements
+In order to install the application a Java Runtime Environment >= 8 and a servlet container (e.g. tomcat 8) needs to be installed.
 
-	repository.path=/opt/collab/repository
-	database.path=/opt/collab/database
-	library.path=/opt/collab/libraries
+As server hardware, we recommend to configure elasticsearch with at least 2GB heap space, the same goes for the servlet container. This is not the minimum requirements, but rather a recommendation for use in production for a moderate amount of simultaneous requests.
 
-DNS settings
+#### Elasticsearch
+Before deploying the application to the servlet container you will need to set up elasticsearch. For more information on the elasticsearch installation, please take a look at the [official documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup.html).
 
-	base.url=http://localhost:8080
+#### Collaboration Server
+After installing and starting elasticsearch you will need to create the Search Index as well as the LCA Collaboration Server database (Derby) and data directories. The easiest way to do this is to use the Installer application. It is a simple Java JAR, run it e.g. with java -jar lca-collaboration-installer.jar
 
-Two-factor-authentication settings
+The application will ask for the relevant configuration (These values can be reconfigured by the admin user once the application is running) – Directories (incl. parent directories) are not required to exist before running the installer. It will create the directories itself. If existing, the directories must be empty, otherwise the creation is skipped. 
 
-	twofactor.servername=openLCA Collaboration Server
+**Note**: The OS user which is used for running tomcat needs sufficient rights on the directories. If you are e.g. using a non-root user you will need to change the owner of the directories to the tomcat user. (e.g. chown tomcat8:tomcat8 /opt/collab -R on ubuntu with tomcat 8 installed via apt)
+Prompted input:
+-	A directory to create the internal database in (e.g. /opt/collab/database)
+-	A directory where the data sets for each repository will be stored (e.g. /opt/collab/repositories)
+-	A directory for “refId” lists for protected libraries (e.g. /opt/collab/libraries)
+-	The elasticsearch cluster name (e.g. elasticsearch on a fresh installation)
+-	The elasticsearch host address (e.g. localhost if on the same machine)
+-	The index name (e.g. lca-collaboration)
+-	An email address for the initially created admin user
+-	A password for the admin user
 
-Mail settings
+These initial settings or additional optional settings can be configured in the admin area. You can access it by clicking the wrench icon in the top left (if you have sufficient rights).
 
-	mail.user=collab@greendelta.com
-	mail.pass=12345Sechs
-	mail.proto=smtps
-	mail.host=ssl0.ovh.net
-	mail.port=465
-	mail.ssl=true
-	mail.tls=false
-	mail.defaultFrom="LCA Collaboration Server" <no-reply@greendelta.com>
-	mail.defaultReplyTo="LCA Collaboration Server" <collab@greendelta.com>
+##### Error Reporting
+The Collaboration Server uses log4j2 for logging. In addition to write server-side log files, log4j2 can be configured to send error emails to a specified email account. These emails can either be send from the local server directly or via an external email account. You will need to replace the file /WEB-INF/classes/log4j2.xml in the built war-file. The following is an example configuration with an external email account. For more information see the log4j2 
 
-Imprint values
+**Note**: If you want to directly report errors  to us, please use error@greendelta.com as 'to' attribute and append your company or institution name to the 'subject' attribute.
 
-	imprint.company=GreenDelta GmbH
-	imprint.ceo=Dr. Andreas Ciroth
-	imprint.street=Muellerstrasse 135
-	imprint.zipCode=13349
-	imprint.city=Berlin
-	imprint.country=Germany
-	imprint.phone=+49 (0) 30 4849 6030
-	imprint.fax=+ 49 (0) 30 4849 6991
-	imprint.email=gd@greendelta.com
-	imprint.website=http://www.greendelta.com
-	imprint.registration=HRB 92350 AG Charlottenburg
-	imprint.vat=DE813972343
+**Important**: The username and email address of the user encountering the error, will be added to the email. If you do not want this information to be send to us, please configure the logging to send the emails to your email address first and forward the email - cleared from personal information - to us.
 
-Internal application settings
-
-	jersey.resource.packages=com.greendelta.collaboration.webservice
-	persistence.unit=prod
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{yy-MM-dd HH:mm:ss:SSS} %-5p %c:%L - %m%n" />
+		</Console>
+		<SMTP name="Mail" 
+        	from="some-account@your-company.com" 
+            to="error@your-company.com" 
+            subject="Error on LCA Collaboration Server"
+        	smtpPassword="the-password" 
+            smtpUsername="some-account@your-company.com" 
+            smtpProtocol="smtps"
+            smtpPort="465" 
+            smtpHost="your-email-host-address" />
+</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="Console" level="info" />
+			<AppenderRef ref="Mail" level="error"/>
+		</Root>
+	</Loggers>
+</Configuration>
+```
