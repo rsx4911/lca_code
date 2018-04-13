@@ -72,7 +72,7 @@ gulp.task 'stylus', () ->
 
 gulp.task 'cssBuild', () ->
 	gulp.src(['./src/main/webapp/css/styles.css', './custom/styles.css'])
-		.pipe(cssConcat("styles#{timestamp}.css"))
+		.pipe(cssConcat("styles#{timestamp}.css", {rebaseUrls: false}))
 		.pipe(minifyCss({keepSpecialComments: false}))
 		.pipe gulp.dest './target/require-build/css'
 

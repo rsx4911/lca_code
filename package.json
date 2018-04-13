@@ -5,7 +5,7 @@
     "gulp": "~3.9.1",
     "gulp-clean": "~0.3.1",
     "gulp-concat": "~2.3.4",
-    "gulp-concat-css": "~1.1.1",
+    "gulp-concat-css": "~2.1.0",
     "gulp-foreach": "~0.1.0",
     "gulp-insert": "~0.4.0",
     "gulp-jade": "^0.7.0",
