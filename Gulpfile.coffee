@@ -150,7 +150,7 @@ gulp.task 'modfiyCustomPublicHtml', () ->
 		.pipe gulp.dest './target/require-build'
 
 gulp.task 'copyCustomImages', () ->
-	gulp.src('./custom/images')
+	gulp.src('./custom/images/**/*.*')
 		.pipe gulp.dest './target/require-build/images'
 
 gulp.task 'copyJQueryForLogin', () ->
