@@ -265,6 +265,7 @@
 							<arguments>
 								<argument>build</argument>
 								<argument>--contextPath=${contextPath}</argument>
+								<argument>--customDir=${customDir}</argument>
 							</arguments>
 						</configuration>
 					</execution>

@@ -18,6 +18,9 @@ $ = require('gulp-load-plugins')()
 unless params.contextPath
 	params.contextPath = '/'
 
+unless params.customDir
+	params.customDir = './custom'
+
 timestamp = new Date().getTime()
 
 collect = (directory, finished) ->
@@ -71,13 +74,13 @@ gulp.task 'stylus', () ->
 		.pipe gulp.dest './src/main/webapp/css/'
 
 gulp.task 'cssBuild', () ->
-	gulp.src(['./src/main/webapp/css/styles.css', './custom/styles.css'])
+	gulp.src(['./src/main/webapp/css/styles.css', params.customDir + '/styles.css'])
 		.pipe(cssConcat("styles#{timestamp}.css", {rebaseUrls: false}))
 		.pipe(minifyCss({keepSpecialComments: false}))
 		.pipe gulp.dest './target/require-build/css'
 
 gulp.task 'fontBuild', () ->
-	gulp.src(['./src/main/webapp/css/fonts/**/*.*', './custom/fonts/**/*.*'])
+	gulp.src(['./src/main/webapp/css/fonts/**/*.*', params.customDir + '/fonts/**/*.*'])
 		.pipe gulp.dest './target/require-build/css/fonts'
 
 gulp.task 'copySprites', () ->
@@ -103,7 +106,7 @@ gulp.task 'collectDependencies', () ->
 
 gulp.task 'modifyIndexHtml', () ->
 	# replace styles.css and main.js with timestamp filename
-	path = if fs.existsSync('./custom/index.html') then './custom/index.html' else './src/main/webapp/index.html'
+	path = if fs.existsSync(params.customDir + '/index.html') then params.customDir + '/index.html' else './src/main/webapp/index.html'
 	gulp.src(path)
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
@@ -116,7 +119,7 @@ gulp.task 'modifyIndexHtml', () ->
 
 gulp.task 'modifyLoginHtml', () ->
 	# replace styles-login.css with timestamp filename
-	path = if fs.existsSync('./custom/login.html') then './custom/login.html' else './src/main/webapp/login.html'
+	path = if fs.existsSync(params.customDir + '/login.html') then params.customDir + '/login.html' else './src/main/webapp/login.html'
 	gulp.src(path)
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
@@ -128,7 +131,7 @@ gulp.task 'modifyLoginHtml', () ->
 
 gulp.task 'modifyImprintHtml', () ->
 	# replace styles-login.css with timestamp filename
-	path = if fs.existsSync('./custom/imprint.html') then './custom/imprint.html' else './src/main/webapp/imprint.html'
+	path = if fs.existsSync('./' + params.customDir + '/imprint.html') then params.customDir + '/imprint.html' else './src/main/webapp/imprint.html'
 	gulp.src(path)
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
@@ -140,7 +143,7 @@ gulp.task 'modifyImprintHtml', () ->
 
 gulp.task 'modfiyCustomPublicHtml', () ->
 	# replace styles-login.css with timestamp filename
-	gulp.src('./custom/index_public.html')
+	gulp.src(params.customDir + '/index_public.html')
 		.pipe(insert.transform (contents) ->
 			content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"')
 			content = content.replace('js/libs/jquery', 'js/jquery')
@@ -150,7 +153,7 @@ gulp.task 'modfiyCustomPublicHtml', () ->
 		.pipe gulp.dest './target/require-build'
 
 gulp.task 'copyCustomImages', () ->
-	gulp.src('./custom/images/**/*.*')
+	gulp.src(params.customDir + '/images/**/*.*')
 		.pipe gulp.dest './target/require-build/images'
 
 gulp.task 'copyJQueryForLogin', () ->
