@@ -46,6 +46,8 @@ public class EmailService implements Closeable {
 
 	Transport getTransport() {
 		MailConfig config = settingsService.getMailConfig();
+		if (config == null)
+			return null;
 		boolean useAuth = !Strings.isNullOrEmpty(config.user);
 		Transport transport = null;
 		try {
@@ -84,6 +86,10 @@ public class EmailService implements Closeable {
 				TransportHolder transportHolder = null;
 				try {
 					transportHolder = pool.borrowObject();
+					if (transportHolder == null) {
+						log.info("Mail sending aborted, no transport available");
+						return;
+					}
 					log.info("Sending mail with subject {} to {}", mail.subject, mail.recipient);
 					transportHolder.incrementMailsSent();
 					send(mail, transportHolder.getTransport());
