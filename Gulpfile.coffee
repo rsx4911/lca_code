@@ -81,7 +81,7 @@ gulp.task 'cssBuild', () ->
 
 gulp.task 'fontBuild', () ->
 	gulp.src(['./src/main/webapp/css/fonts/**/*.*', params.customDir + '/fonts/**/*.*'])
-		.pipe gulp.dest './target/require-build/css/fonts'
+		.pipe gulp.dest './target/require-build/fonts'
 
 gulp.task 'copySprites', () ->
 	gulp.src(['./src/main/webapp/css/libs/*.png', './src/main/webapp/css/libs/*.gif'])
