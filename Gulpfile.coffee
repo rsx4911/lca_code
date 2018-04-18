@@ -38,7 +38,7 @@ collect = (directory, finished) ->
 	return all
 
 gulp.task 'default', [], (callback) ->
-	runSequence 'clear', 'jadeIndex', 'jadeViews', 'stylus', 'cssBuild', 'fontBuild', 'collectDependencies', callback
+	runSequence 'clear', 'jadeIndex', 'jadeViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', callback
 
 gulp.task 'build', [], (callback) ->
 	runSequence 'default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modfiyCustomPublicHtml', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback
@@ -73,15 +73,25 @@ gulp.task 'stylus', () ->
 		.pipe(concat 'main.css')
 		.pipe gulp.dest './src/main/webapp/css/'
 
+gulp.task 'internalCssBuild', () ->
+	gulp.src('./src/main/webapp/css/styles.css')
+		.pipe(cssConcat("internal-styles#{timestamp}.css"))
+		.pipe gulp.dest './target/css-build'
+
+gulp.task 'customCssBuild', () ->
+	gulp.src(params.customDir + '/styles.css')
+		.pipe(cssConcat("custom-styles#{timestamp}.css", {rebaseUrls: false}))
+		.pipe gulp.dest './target/css-build'
+
 gulp.task 'cssBuild', () ->
-	gulp.src(['./src/main/webapp/css/styles.css', params.customDir + '/styles.css'])
+	gulp.src(["./target/css-build/internal-styles#{timestamp}.css", "./target/css-build/custom-styles#{timestamp}.css"])
 		.pipe(cssConcat("styles#{timestamp}.css", {rebaseUrls: false}))
 		.pipe(minifyCss({keepSpecialComments: false}))
 		.pipe gulp.dest './target/require-build/css'
 
 gulp.task 'fontBuild', () ->
 	gulp.src(['./src/main/webapp/css/fonts/**/*.*', params.customDir + '/fonts/**/*.*'])
-		.pipe gulp.dest './target/require-build/fonts'
+		.pipe gulp.dest './target/require-build/css/fonts'
 
 gulp.task 'copySprites', () ->
 	gulp.src(['./src/main/webapp/css/libs/*.png', './src/main/webapp/css/libs/*.gif'])
