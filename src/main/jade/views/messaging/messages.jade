@@ -12,5 +12,7 @@
 	#conversation
 		#conversation-messages
 		#conversation-input
-			input#next-message(disabled=selected?false:true)
+			span.glyphicon.glyphicon-send(style=selected?null:'display:none')
+			.conversation-input-wrapper
+				input#next-message(disabled=selected?false:true placeholder=selected?'Type your message here...':null)
 	.clear
