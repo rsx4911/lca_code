@@ -40,17 +40,17 @@ Three additional modules are required to build the application:
 
 Clone these modules into your environment:
 
-'''bash
+```bash
 git clone https://github.com/GreenDelta/olca-jsonld-2-ilcd.git
 git clone https://github.com/GreenDelta/search-wrapper.git
 git clone https://github.com/GreenDelta/search-wrapper-es.git
-'''
+```
 
 Then build them using Maven
 
-'''bash
+```bash
 mvn install
-'''
+```
 
 #### Building the HTML pages
 To build the HTML pages of the user interface, install the Node.js modules via [npm](https://www.npmjs.com/) (npm is a package manager that comes with your Node.js installation):
