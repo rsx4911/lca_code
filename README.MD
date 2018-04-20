@@ -10,6 +10,8 @@ To compile it from source you need to have the following tools installed:
 * [Maven](http://maven.apache.org/)
 * [Node.js](https://nodejs.org/) and [Gulp](http://gulpjs.com/) (for building the HTML5 user interface components)
 
+(As of version 1.7, Gulp4 may cause build failures. Revert to Gulp3.9.1 if this should occur)
+
 When you have these tools installed you can build the application from source via the following steps:
 
 #### Install the openLCA core modules
