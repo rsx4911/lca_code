@@ -149,15 +149,6 @@ public class MessagingService {
 		});
 	}
 
-	public List<Team> filterTeams(List<Team> teams) {
-		User currentUser = userService.getCurrentUser();
-		if (currentUser.isUserManager())
-			return teams;
-		return com.greendelta.collaboration.util.Collections.filter(teams, (team) -> {
-			return team.users.contains(currentUser);
-		});
-	}
-
 	public class ConversationDescriptor {
 
 		public final Message lastMessage;
