@@ -1,8 +1,0 @@
-include ../../../mixins/paging.jade
-
-each element in data
-	div 
-		img.model-icon-small(src='images/model/small/#{getIcon(element)}')
-		- var query = commitId ? '?commitId=' + commitId : ''
-		a(href='#{baseUrl}/#{element.type}/#{element.refId}#{query}')=element.name
-+paging(resultInfo)

@@ -1,0 +1,15 @@
+include ./mixins.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+field-link-row('url')
+					+field-row('year')
+					+field-link-row('externalFile', fileBaseUrl)
+					+field-row('textReference')
+	+meta
+	.clear

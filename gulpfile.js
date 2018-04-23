@@ -9,10 +9,9 @@ var minifyCss = require('gulp-clean-css');
 var rjs = require('gulp-requirejs');
 var stylus = require('gulp-stylus');
 var uglify = require('gulp-uglify');
+var pug = require('gulp-pug');
 var stream = require('stream');
 var params = require('yargs').argv;
-
-var $ = require('gulp-load-plugins')();
 
 if (!params.contextPath) {
   params.contextPath = '/';
@@ -48,7 +47,7 @@ var collect = function(directory, finished) {
 };
 
 gulp.task('default', [], function(callback) {
-  return runSequence('clear', 'jadeIndex', 'jadeViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', callback);
+  return runSequence('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', callback);
 });
 
 gulp.task('build', [], function(callback) {
@@ -61,18 +60,18 @@ gulp.task('clear', function() {
   }).pipe(clean());
 });
 
-gulp.task('jadeIndex', function() {
-  return gulp.src('./src/main/jade/*.jade').pipe($.jade({
+gulp.task('pugIndex', function() {
+  return gulp.src('./src/main/pug/*.pug').pipe(pug({
     locals: {}
   })).pipe(gulp.dest('./src/main/webapp/'));
 });
 
-gulp.task('jadeViews', function() {
-  return gulp.src('./src/main/jade/views/**/*.jade').pipe($.jade({
-    client: true
-  })).pipe($.wrapAmd({
-    deps: ['jadeRuntime'],
-    params: ['jade']
+gulp.task('pugViews', function() {
+  return gulp.src('./src/main/pug/views/**/*.pug').pipe(pug({
+    client: true,
+    compileDebug: false
+  })).pipe(insert.transform(function (contents) {
+      return 'define(function(require,exports,module){ ' + contents + ' return template; });'
   })).pipe(gulp.dest('./src/main/webapp/js/templates/views'));
 });
 
@@ -81,17 +80,17 @@ gulp.task('stylus', function() {
 });
 
 gulp.task('internalCssBuild', function() {
-  return gulp.src('./src/main/webapp/css/styles.css').pipe(cssConcat(`internal-styles${timestamp}.css`)).pipe(gulp.dest('./target/css-build'));
+  return gulp.src('./src/main/webapp/css/styles.css').pipe(cssConcat('internal-styles' + timestamp + '.css')).pipe(gulp.dest('./target/css-build'));
 });
 
 gulp.task('customCssBuild', function() {
-  return gulp.src(params.customDir + '/styles.css').pipe(cssConcat(`custom-styles${timestamp}.css`, {
+  return gulp.src(params.customDir + '/styles.css').pipe(cssConcat('custom-styles' + timestamp + '.css', {
     rebaseUrls: false
   })).pipe(gulp.dest('./target/css-build'));
 });
 
 gulp.task('cssBuild', function() {
-  return gulp.src([`./target/css-build/internal-styles${timestamp}.css`, `./target/css-build/custom-styles${timestamp}.css`]).pipe(cssConcat(`styles${timestamp}.css`, {
+  return gulp.src(['./target/css-build/internal-styles' + timestamp + '.css', './target/css-build/custom-styles' + timestamp + '.css']).pipe(cssConcat('styles' + timestamp + '.css', {
     rebaseUrls: false
   })).pipe(minifyCss({
     keepSpecialComments: false
@@ -183,7 +182,7 @@ gulp.task('jsBuild', function() {
   return rjs({
     baseUrl: 'src/main/webapp/js',
     mainConfigFile: 'src/main/webapp/js/main.js',
-    out: `main${timestamp}.js`,
+    out: 'main' + timestamp + '.js',
     name: 'main',
     findNestedDependencies: false,
     include: ['requireLib'],
