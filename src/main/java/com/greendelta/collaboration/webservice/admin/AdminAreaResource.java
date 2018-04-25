@@ -1,7 +1,9 @@
 package com.greendelta.collaboration.webservice.admin;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -17,10 +19,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import joptsimple.internal.Strings;
+
 import org.elasticsearch.client.Client;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.platform.mail.EmailJob;
@@ -116,13 +118,41 @@ public class AdminAreaResource {
 			String gladUrl = settingsService.get(Key.GLAD_URL);
 			if (gladUrl == null || gladUrl.isEmpty())
 				return Respond.error("No glad url specified");
-			InputStream content = new URL(gladUrl + "/search").openStream();
-			JsonObject element = new Gson().fromJson(new InputStreamReader(content), JsonObject.class);
-			if (element.has("resultInfo") && element.has("data") && element.has("aggregations"))
+			String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
+			String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
+			String result = get(gladUrl, gladHeaderField, gladHeaderValue);
+			if (result.contains("\"resultInfo\":") && result.contains("\"data\":") && result.contains("\"aggregations\":"))
 				return Respond.ok(new HashMap<>());
-			return Respond.error("GLAD testcall returned unexpected content: " + new Gson().toJson(element));
+			return Respond.error("GLAD testcall returned unexpected content: " + result);
 		} catch (Exception e) {
 			return Respond.error("Could not reach GLAD service");
 		}
 	}
+
+	private String get(String gladBaseUrl, String headerField, String headerValue) throws Exception {
+		URL object = new URL(gladBaseUrl + "/search");
+		HttpURLConnection con = (HttpURLConnection) object.openConnection();
+		con.setDoOutput(true);
+		con.setRequestProperty("Content-Type", "application/json");
+		con.setRequestProperty("Accept", "application/json");
+		con.setRequestMethod("GET");
+		if (!Strings.isNullOrEmpty(headerField) && !Strings.isNullOrEmpty(headerValue)) {
+			con.addRequestProperty(headerField, headerValue);
+		}
+		int status = con.getResponseCode();
+		if (status != HttpURLConnection.HTTP_OK)
+			return null;
+		InputStream s = con.getInputStream();
+		if (s == null)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		BufferedReader br = new BufferedReader(new InputStreamReader(s, "utf-8"));
+		String line = null;
+		while ((line = br.readLine()) != null) {
+			sb.append(line + "\n");
+		}
+		br.close();
+		return sb.toString();
+	}
+
 }

@@ -21,6 +21,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import joptsimple.internal.Strings;
+
 import org.apache.logging.log4j.LogManager;
 import org.openlca.core.model.ModelType;
 
@@ -70,11 +72,10 @@ public class GladResource {
 			@PathParam("name") String name,
 			Input input) {
 		String gladUrl = settingsService.get(Key.GLAD_URL);
-		String gladApiKey = settingsService.get(Key.GLAD_API_KEY);
+		String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
+		String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
 		if (gladUrl == null || gladUrl.isEmpty())
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "No GLAD service url specified");
-		if (gladApiKey == null || gladApiKey.isEmpty())
-			return Respond.status(Status.SERVICE_UNAVAILABLE, "No GLAD service api-key specified");
 		Repository repo = repoService.get(group, name);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + group + "/" + name + " found");
@@ -106,7 +107,7 @@ public class GladResource {
 					}
 				}
 				try {
-					send(gladUrl, gladApiKey, refId, gson.toJson(data));
+					send(gladUrl, gladHeaderField, gladHeaderValue, refId, gson.toJson(data));
 				} catch (Exception e) {
 					LogManager.getLogger(GladResource.class).error("Error pushing to GLAD", e);
 					return Respond.error(e.getMessage());
@@ -116,7 +117,8 @@ public class GladResource {
 		return Respond.ok();
 	}
 
-	private void send(String gladBaseUrl, String apiKey, String refId, String data) throws Exception {
+	private void send(String gladBaseUrl, String headerField, String headerValue, String refId, String data)
+			throws Exception {
 		URL object = new URL(gladBaseUrl + "/search/index/" + refId);
 		HttpURLConnection con = (HttpURLConnection) object.openConnection();
 		con.setDoOutput(true);
@@ -124,7 +126,9 @@ public class GladResource {
 		con.setRequestProperty("Content-Type", "application/json");
 		con.setRequestProperty("Accept", "application/json");
 		con.setRequestMethod("PUT");
-		con.addRequestProperty("api-key", apiKey);
+		if (!Strings.isNullOrEmpty(headerField) && !Strings.isNullOrEmpty(headerValue)) {
+			con.addRequestProperty(headerField, headerValue);
+		}
 		OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream());
 		wr.write(data);
 		wr.flush();

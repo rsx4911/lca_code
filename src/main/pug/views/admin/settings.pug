@@ -13,9 +13,10 @@ include ../mixins/forms.pug
 			+input('REPOSITORY_PATH', 'Repositories root directory')
 			+input('LIBRARY_PATH', 'Root directory for librariy id files')
 		.clear
-		.two-columns
+		.three-columns
 			+input('GLAD_URL', 'Glad service base url')
-			+input('GLAD_API_KEY', 'Glad service api-key')
+			+input('GLAD_API_KEY_HEADER', 'Glad service api-key header field')
+			+input('GLAD_API_KEY', 'Glad service api-key header value')
 		.clear
 		.three-columns
 			+input('SEARCH_CLUSTER', 'Elasticsearch cluster')
