@@ -1,0 +1,5 @@
+include ../mixins/paging.pug
+
+each user in data
+	div: a.follow(href='administration/user/profile/' + user.username)=user.name
++paging(resultInfo)

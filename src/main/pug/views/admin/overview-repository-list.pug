@@ -1,0 +1,5 @@
+include ../mixins/paging.pug
+
+each repo in data
+	div: a.follow(href=repo.group + '/' + repo.name) #{repo.group}/#{repo.name}
++paging(resultInfo)

@@ -1,0 +1,12 @@
+include comment-entry-mixins.pug
+include ../../mixins/paging.pug
+
+if !data.length
+	.no-content-message No comments found	
+else
+	each comment, index in data
+		+comment-entry(comment, null, true)
+		if index < data.length-1
+			hr
+	if resultInfo
+		+paging(resultInfo)

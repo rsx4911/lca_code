@@ -35,6 +35,8 @@ public class LibraryService {
 		if (path == null || path.isEmpty())
 			return;
 		File dir = new File(path);
+		if (!dir.exists() || !dir.isDirectory())
+			return;
 		for (File file : dir.listFiles()) {
 			String filename = file.getName();
 			String libraryName = filename.substring(0, filename.lastIndexOf('.'));

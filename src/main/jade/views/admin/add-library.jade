@@ -1,9 +1,0 @@
-include ../mixins/forms.jade
-
-#add-library
-	#add-library-general-message-group.alert(role='alert'): span.message
-	if isNew
-		+input('name', 'Library name')
-	else
-		+input('name', 'Library name', 'hidden')
-	+textarea('ref-ids', 'Data set reference ids (one id per line)')(rows=10)

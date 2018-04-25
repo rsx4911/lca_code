@@ -1,0 +1,20 @@
+include ../mixins/forms.pug
+include ../mixins/paging.pug
+include ./result.pug
+include ./aggregation.pug
+
+div(class=typeFiltered?'col-lg-8':'col-lg-9')
+	.header-box #{resultInfo.totalCount} results
+		if query
+			|  for '#{query}'
+	.content-box.search-results
+		each dataset in data
+			+result(dataset)
+		+paging(resultInfo, getPagingUrl)
+div(class=typeFiltered?'col-lg-4':'col-lg-3')
+	.aggregations
+		.header-box Filters
+		.content-box
+			each aggregation in aggregations
+				+aggregation(aggregation)
+.clear

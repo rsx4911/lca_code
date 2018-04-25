@@ -50,6 +50,7 @@ public class Setting extends AbstractEntity {
 		REPOSITORY_PATH(String.class),
 		LIBRARY_PATH(String.class),
 		GLAD_URL(String.class),
+		GLAD_API_KEY_HEADER(String.class, "api-key"),
 		GLAD_API_KEY(String.class),
 
 		// search settings

@@ -150,6 +150,8 @@ public class GroupService {
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
 		File root = new File(path);
+		if (!root.exists() || !root.isDirectory()) 
+			return new ArrayList<>();
 		List<String> groups = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())

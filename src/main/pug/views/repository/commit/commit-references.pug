@@ -1,0 +1,36 @@
+include ../../mixins/paging.pug
+
+each dataset in data
+	if dataset.type !== 'IMPACT_CATEGORY' && dataset.type !== 'NW_SET'
+		.file-reference(id=dataset.id)
+			- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;
+			if dataset.type === 'CATEGORY'
+				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
+			a(href=url)
+				.header
+					if dataset.added || dataset.deleted
+						- var action = dataset.added ? 'ADD' : 'DELETE';
+						if dataset.type === 'CATEGORY'
+							img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/' + dataset.categoryType + '/' + action)
+						else if dataset.type === 'PROCESS' && dataset.processType
+							img.model-icon-small(src='ws/public/cached/overlay/PROCESS/' + dataset.processType + '/' + action)
+						else if dataset.type === 'FLOW' && dataset.flowType
+							img.model-icon-small(src='ws/public/cached/overlay/FLOW/' + dataset.flowType + '/' + action)
+						else
+							img.model-icon-small(src='ws/public/cached/overlay/' + dataset.type + '/' + action)
+					else
+						if dataset.type === 'CATEGORY'
+							img.model-icon-small(src='images/model/small/category/' + dataset.categoryType.toLowerCase() + '.png')
+						else
+							img.model-icon-small(src='images/model/small/' + dataset.type.toLowerCase() + '.png')
+					- var path = '';
+					if dataset.categories
+						each category in dataset.categories
+							- path += category + '/';
+					- path += dataset.name;
+					if dataset.deleted
+						del=path
+					else
+						span=path
+
++paging(resultInfo)

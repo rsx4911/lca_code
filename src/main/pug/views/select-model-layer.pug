@@ -1,0 +1,8 @@
+include mixins/forms.pug
+
+form#model-selection
+	label=label
+	#model-tree
+	if selectVersion
+		br
+		+select('commitId', 'Version')

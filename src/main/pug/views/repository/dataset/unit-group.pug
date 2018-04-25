@@ -1,0 +1,15 @@
+include ./structures/unit-table.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			table.table.no-head
+				tbody
+					+ref-row('defaultFlowProperty')
+			if hasAtLeastOne(dataset, compareTo, 'units') || reviewMode
+				h4(data-path='units')=getLabel('units')
+				+unit-table()
+	+meta
+	.clear
