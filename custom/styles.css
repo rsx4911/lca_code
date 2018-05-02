@@ -1,0 +1,56 @@
+.nalbar {
+	padding: 0;
+	vertical-align: top;
+	clear: both;
+    background: linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url(header_bg.png);
+	max-height:65px;
+}
+
+.navbar-fixed-top{position:relative;right:0;left:0;z-index:1030}
+
+#user-menu .glyphicon{color:#FFFFFF;font-size:20px}
+
+.collab-right {
+	font-weight: bold;
+	clear: none;
+	width: auto;
+	float: right;
+	font-size: 30px;
+	color: #435037;
+	font-weight: bold;
+	width:500px;
+	font-size:14px;
+	padding:15px 15px;
+	text-align:center;
+}
+
+.logo-label{color: #435037;padding: 8px 0 0 8px;display: block;float: left;font-size: 1.3em;}
+
+.logo-label-top{font-weight: bold;float: left;}
+
+.logo-label-bottom{font-weight: normal;float: left;font-size: 0.8em;margin-top: 2px;padding-bottom: 10px;}
+
+.user-menu-home{float:left;padding:18px 48px 18px 18px;color:#FFF;font-size:20px}
+
+.navbar-nav {
+margin:0px;
+}
+@media (max-width: 767px){
+.navbar-default .navbar-nav .open .dropdown-menu > li > a {
+    color: #ffffff;
+}
+}
+.navbar-menu {
+color: #ffffff;
+}
+.nav>li>a:hover{text-decoration:none;background-color:#435037}
+
+.nav .open>a,.nav .open>a:focus,.nav .open>a:hover{background-color:#435037;border-color:#9b1414}
+
+.nav>li>a:focus,.nav>li>a:hover{text-decoration:none;background-color:#435037}
+
+.nav>li {color:#fff}
+
+.dropdown-menu{position:absolute;top:100%;left:0;z-index:1000;display:none;float:left;min-width:160px;padding:5px 0;margin:2px 0 0;list-style:none;font-size:14px;text-align:left;background-color:#435037;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:4px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.175);box-shadow:0 6px 12px rgba(0,0,0,.175);-webkit-background-clip:padding-box;background-clip:padding-box}
+
+.dropdown-menu>li>a:focus,.dropdown-menu>li>a:hover{background-color:#626d5f;background-image:-webkit-linear-gradient(top,#435037 0,#626d5f 100%);background-image:-o-linear-gradient(top,#435037 0,#626d5f 100%);background-image:-webkit-gradient(linear,left top,left bottom,from(#435037),to(#626d5f));background-image:linear-gradient(to bottom,#435037 0,#626d5f 100%);background-repeat:repeat-x}

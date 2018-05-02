@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="en"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/></head><body class="login"><header><div class="logo-container"><a href=""><img src="images/logo1.png" alt="USDA Home" class="logo"/></a></div></header><div id="main-login"><div id="login-description"><h3>Welcome to the LCA Collaboration Server!<br/><small>Manage LCA repositories with user specific access management that keeps your LCA data secure and enables collaboration. </small></h3></div><div id="login-container"><h3>Sign in</h3><form id="login"><div id="login-general-message" role="alert" class="alert alert-danger"><span class="message"></span></div><div id="username-group" class="form-group"><label for="username" class="control-label">Username</label><input id="username" name="username" type="text" class="form-control"/></div><div id="password-group" class="form-group"><label for="password" class="control-label">Password</label><input id="password" name="password" type="password" class="form-control"/></div><div id="token-group" class="form-group hidden"><label for="token" class="control-label">Token</label><input id="token" name="token" type="text" class="form-control"/><a href="login" class="default-link">Login with another user</a></div><button type="submit" class="btn btn-primary btn-block">Login</button></form></div></div><br/><br/><br/><div id="footer">&copy; <a href="http://www.greendelta.com" target="_blank">GreenDelta GmbH</a> <span id="year"></span> | <a href="imprint">Imprint</a></div><script src="js/libs/jquery.js"></script><script>$('#year').html(new Date().getFullYear());
+$('#login').on('submit', function(event) {
+	$('#login-general-message').hide();
+	var data = {username: $('#username').val(), password: $('#password').val()};
+	if ($('#token').is(':visible')) {
+		data.token = $('#token').val();
+	}
+	$.ajax({type: 'POST', url: 'ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
+		success: function(response) {
+			if (response === 'tokenRequired') {
+				$('#username-group').addClass('hidden');
+				$('#password-group').addClass('hidden');
+				$('#token-group').removeClass('hidden');
+				$('#login-general-message').hide();
+				$('#token').focus();
+			} else {
+				window.location.href = '';
+			}
+		}, error: function(response) {
+			$('#login-general-message').show();
+			$('#login-general-message .message').html(response.responseText);
+			$('#token').val('');
+		}});
+	return false;
+});</script></body></html>
