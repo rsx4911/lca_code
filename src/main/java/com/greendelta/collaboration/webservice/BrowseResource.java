@@ -125,8 +125,10 @@ public class BrowseResource {
 		ObjectMap entry = service.getDataset(repo, refId, commitId);
 		if (entry == null)
 			return Respond.notFound("No category '" + category + "' found");
-		List<String> categories = entry.get("categories") != null ? new ArrayList<String>(entry.get("categories"))
-				: new ArrayList<>();
+		List<String> categories = new ArrayList<>();
+		if (entry.get("categories") != null) {
+			categories.addAll(entry.get("categories"));
+		}
 		categories.add(entry.get("name"));
 		Map<String, Object> result = new HashMap<>();
 		result.put("id", refId);

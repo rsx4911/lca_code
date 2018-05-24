@@ -1,13 +1,21 @@
+include ../../mixins/category-breadcrumb.pug
 include ../../mixins/paging.pug
 
 each dataset in data
 	if dataset.type !== 'IMPACT_CATEGORY' && dataset.type !== 'NW_SET'
 		.file-reference(id=dataset.id)
-			- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;
-			if dataset.type === 'CATEGORY'
-				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + dataset.fullPath;
-			a(href=url)
-				.header
+			- var url = '';
+			if dataset.type !== 'CATEGORY'
+				- url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;				
+			else
+				- var fullPath = '';
+				if dataset.categories && dataset.categories.length
+					each category in dataset.categories
+						- fullPath += category + '/';
+				- fullPath += dataset.name;
+				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + fullPath;
+			.header
+				a(href=url)
 					if dataset.added || dataset.deleted
 						- var action = dataset.added ? 'ADD' : 'DELETE';
 						if dataset.type === 'CATEGORY'
@@ -23,14 +31,13 @@ each dataset in data
 							img.model-icon-small(src='images/model/small/category/' + dataset.categoryType.toLowerCase() + '.png')
 						else
 							img.model-icon-small(src='images/model/small/' + dataset.type.toLowerCase() + '.png')
-					- var path = '';
-					if dataset.categories
-						each category in dataset.categories
-							- path += category + '/';
-					- path += dataset.name;
 					if dataset.deleted
-						del=path
+						del=dataset.name
 					else
-						span=path
+						span=dataset.name
+				if dataset.categories && dataset.categories.length
+					- var type = dataset.type === 'CATEGORY' ? dataset.categoryType : dataset.type
+					- var catUrl = baseUrl + 's/' + getTypeLabel(type);
+					+category-breadcrumb(catUrl, dataset.categories, true)
 
 +paging(resultInfo)
