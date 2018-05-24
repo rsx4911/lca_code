@@ -20,7 +20,7 @@ define([
 				filterId: "#{type}-filter"
 				template: template
 				pageSize: 25
-				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&direction=#{direction}&"
+				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&commitId={commitId}&direction=#{direction}&"
 				beforeRender: (result) ->
 					result.getIcon = Icons.get
 					result.commitId = commitId
