@@ -59,7 +59,7 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 	.comment-entry(class=addClass, data-comment-id=comment.id)
 		if showDatasetInfo
 			.pull-left
-				img.avatar.avatar-small(src='ws/user/avatar/' + (comment.user?comment.user.username:'null'))
+				img.avatar.avatar-small(src='ws/user/avatar/' + (comment.user?comment.user.username:'null'), aria-label='Avatar of ' + (comment.user.name || 'Anonymous user'))
 			.comment-info-container
 				strong=comment.user?comment.user.name:'Anonymous user'
 				|  
@@ -71,7 +71,7 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 					- query += 'commitId=' + field.commitId + '&';
 				- query += 'commentPath=' + (field.path || 'null');
 				.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + query) 
-					img.model-icon-small(src='images/model/small/' + field.modelType.toLowerCase() + '.png')
+					img.model-icon-small(src='images/model/small/' + field.modelType.toLowerCase() + '.png', aria-label='Icon of ' + field.modelType)
 					small=comment.dsPath 
 						if label
 							|  - #{label}

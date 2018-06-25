@@ -32,5 +32,5 @@ div(class=team.id?'two-columns special flex-layout':null)
 				.content-box
 					each user in team.users
 						+user-info(user.username, user.name)
-							button.btn.btn-xs.btn-danger.pull-right(data-action='remove-member' data-username=user.username)
+							button.btn.btn-xs.btn-danger.pull-right(data-action='remove-member' data-username=user.username, aria-label='Remove member ' + user.name)
 								span.glyphicon.glyphicon-minus

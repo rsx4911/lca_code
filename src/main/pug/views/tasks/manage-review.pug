@@ -59,9 +59,9 @@ mixin data-set-column(elements, col)
 			each reference, index in elements
 				if index % 3 === col - 1
 					.overflow-ellipsis
-						input(type='checkbox' id=reference.id, data-action='mark-as-reviewed' checked=!!reference.reviewer, disabled=closed)
+						input(type='checkbox' id=reference.id, data-action='mark-as-reviewed' checked=!!reference.reviewer, disabled=closed, aria-label='Mark ' + reference.name + ' as reviewed')
 						a(href=review.repositoryPath + '/dataset/' + reference.type + '/' + reference.refId + '?commitId=' + reference.commitId, title=reference.name)
-							img.model-icon-small(src='images/model/small/' + reference.type.toLowerCase() + '.png')
+							img.model-icon-small(src='images/model/small/' + reference.type.toLowerCase() + '.png' aria-label='Icon of ' + reference.type)
 							strong=reference.name
 
 mixin data-set-selection()

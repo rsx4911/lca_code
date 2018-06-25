@@ -8,7 +8,7 @@ define([
 		class Filter extends Backbone.Model
 
 			initialize: (options) ->
-				{@url, @container, @template, @filterId, @beforeRender, @type, @pageSize, @afterRender} = options
+				{@url, @container, @template, @filterId, @beforeRender, @type, @pageSize, @pageSizeId, @afterRender} = options
 				if options.noPaging
 					@page = 0
 				else
@@ -69,9 +69,10 @@ define([
 
 
 			append: (result) ->
+				result.pageSizeId = @pageSizeId
 				$(@container).html @template result
 				$(@container + ' a.page').on 'click', (event) => @applyFilter event
-				$(@container + ' #page-size').on 'change', (event) => @applyFilter event
+				$(@container + ' #' + (@pageSizeId || 'page-size')).on 'change', (event) => @applyFilter event
 				@afterRender?(result)
 
 			applyFilter: (event) ->
