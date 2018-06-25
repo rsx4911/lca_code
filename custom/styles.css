@@ -57,4 +57,6 @@ color: #ffffff;
 
 ul.dropdown-menu>li {color: #ffffff}
 
- #footer{border-top:1px solid #ddd;width:100%;bottom:0;background:#435037;height:25px;padding:1px;text-align:center;font-weight:100;font-size: smaller;color:#ffffff}
+#footer{border-top:1px solid #ddd;width:100%;bottom:0;background:#435037;height:25px;padding:1px;text-align:center;font-weight:100;font-size: smaller;color:#ffffff}
+ 
+.search-view .result .details{font-size:90%;color: #555;margin-left:21px;}
