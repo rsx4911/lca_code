@@ -27,11 +27,11 @@ include ./structures/flow-property-table.pug
 					+flow-property-table()
 				+nav-tab-pane('used-by', false, true)
 					.form-group
-						input#used-by-filter.form-control(type='text' placeholder='Filter by name')
+						input#used-by-filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
 					#used-by-data
 				+nav-tab-pane(outId, false, true)
 					.form-group
-						input.form-control(id=outId + '-filter' type='text' placeholder='Filter by name')
+						input.form-control(id=outId + '-filter' type='text' placeholder='Filter by name' aria-label='Filter by name')
 					div(id=outId + '-data')
 	+meta
 	.clear

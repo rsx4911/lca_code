@@ -5,6 +5,8 @@ define([
 	(OpenLayers) ->
 
 		initMap: (dataset) ->
+			if !dataset.longitude and !dataset.latitide
+				return
 			map = new OpenLayers.Map
 				layers: [
 					new OpenLayers.layer.Tile

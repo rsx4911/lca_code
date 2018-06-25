@@ -18,7 +18,7 @@ mixin to-size(value, inGb, round, showUnit)
 
 .header-box Info
 	.pull-right.responsive-menu.dropdown
-		a(href='#' data-toggle='dropdown'): span.glyphicon.glyphicon-cog
+		a(href='#' data-toggle='dropdown' aria-label='Toggle repository menu'): span.glyphicon.glyphicon-cog
 		ul.dropdown-menu
 			if repository.userCanMove
 				li: a(href='#' data-action='move-repository')
@@ -66,8 +66,8 @@ mixin to-size(value, inGb, round, showUnit)
 			span#size-value: +to-size(repository.size, inGb, true, showUnit)
 			if repository.userCanSetSettings
 				strong  of 
-				+input('maxSize', null, 'number', true)(class='input-sm', value=0, size=4, min=0)
-					+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
+				+input('maxSize', null, 'number', true)(class='input-sm', value=0, size=4, min=0, aria-label='Maximum repository size')
+					+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm', aria-label='Size type')
 			else if maxSize
 				strong  of 
 				+to-size(maxSize, inGb, false, true)

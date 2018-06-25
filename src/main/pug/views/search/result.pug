@@ -13,7 +13,7 @@ mixin result(dataset)
 		+result-details(dataset)
 
 mixin result-title(dataset)
-	img.model-icon-small(src='images/model/small/' + getIcon(dataset))
+	img.model-icon-small(src='images/model/small/' + getIcon(dataset), aria-label='Model icon of ' + dataset.type)
 	if dataset.action === 'DELETE'
 		del.result-text=dataset.name
 	else 
@@ -35,11 +35,11 @@ mixin result-details(dataset)
 			.details-right
 				if dataset.location
 					div 
-						img(src='images/model/small/location.png')
+						img(src='images/model/small/location.png', aria-label='Location icon')
 						|  #{dataset.location}
 				if dataset.validFromYear || dataset.validUntilYear
 					div
-						img(src='images/calendar.png')
+						img(src='images/calendar.png', aria-label='Calendar icon')
 						if dataset.validFromYear && dataset.validUntilYear && dataset.validFromYear != dataset.validUntilYear
 							|  #{dataset.validFromYear} - #{dataset.validUntilYear}
 						else if dataset.validFromYear

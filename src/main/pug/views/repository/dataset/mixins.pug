@@ -75,7 +75,7 @@ mixin comparison-dropdown()
 
 mixin header()
 	.title(class=isPublic?'header-box':null)
-		img.pull-right.model-icon(src='images/model/large/' + getIcon(dataset))
+		img.pull-right.model-icon(src='images/model/large/' + getIcon(dataset), aria-label='Model icon of ' + dataset.type)
 		.info-header
 			h3(data-path='name')
 				+field('name')
@@ -146,8 +146,8 @@ mixin nav-tab(path, active, label)
 				span.badge.change-count
 
 mixin nav-tab-pane(path, active, renderEmpty)
-	if renderEmpty || hasAtLeastOne(dataset, compareTo, path)
-		.tab-pane(id=path role='tabpanel' class=active?'active':null)
+	.tab-pane(id=path role='tabpanel' class=active?'active':null)
+		if renderEmpty || hasAtLeastOne(dataset, compareTo, path)
 			block
 
 mixin compare-icon(value)
@@ -229,9 +229,9 @@ mixin boolean-field(path)
 	- var changed = compareTo&&value!=value2?'changed':null;
 	span(data-compare=changed)
 		+compare-icon(changed)
-		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png')
+		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
 		if changed
-			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png')
+			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
 
 mixin boolean-field-block(path)
 	- var value = getValue(dataset, path);
@@ -239,9 +239,9 @@ mixin boolean-field-block(path)
 	- var changed = compareTo&&value!=value2?'changed':null;
 	div(data-compare=changed)
 		+compare-icon(changed)
-		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png')
+		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
 		if changed
-			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png')
+			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
 
 mixin field-row-frame(path)
 	tr
@@ -311,7 +311,7 @@ mixin ref(ref, ref2, defaultLabel, noCompareIcon)
 			+compare-icon(changedName)
 		span.original-value
 			if ref
-				img.model-icon-small(src='images/model/small/' + getIcon(ref))
+				img.model-icon-small(src='images/model/small/' + getIcon(ref), aria-label='Model icon of ' + ref.type)
 				- var query = commitId ? '?commitId=' + commitId : ''
 				- var path = '';
 				if ref.category
@@ -330,7 +330,7 @@ mixin ref(ref, ref2, defaultLabel, noCompareIcon)
 				| #{defaultLabel}
 		if changed || changedName
 			span.comparison-value
-				img.model-icon-small(src='images/model/small/' + getIcon(ref2))
+				img.model-icon-small(src='images/model/small/' + getIcon(ref2), aria-label='Model icon of ' + ref2.type)
 				- var query = comparisonCommitId ? '?commitId=' + comparisonCommitId : ''
 				- var path = ref2.category ? ref2.category + '/' + ref2.name : ref2.name
 				a(href=baseUrl + '/' + getTypeAsEnum(ref2.type) + '/' + ref2.id + query, title=path)=ref2.name

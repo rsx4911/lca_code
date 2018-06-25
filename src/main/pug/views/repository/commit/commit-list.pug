@@ -8,7 +8,7 @@ else
 		.commit-group
 			.date-and-count
 				.date 
-					img(src='images/calendar.png')
+					img(src='images/calendar.png' aria-label='Calendar icon')
 					|  #{formatDate(group.date)}
 				.count #{group.count} commit
 					if group.count > 1 

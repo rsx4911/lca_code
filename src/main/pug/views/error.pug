@@ -1,5 +1,5 @@
 .error-page(class=stacktrace?'stacktrace':null)
-	img(src=imageSrc)
+	img(src=imageSrc, aria-label='Error logo')
 	h1=statuscode?statuscode:'Client error'
 	hr
 	if stacktrace
