@@ -72,7 +72,7 @@ mixin exchange-row(exchange, other, count, input, show)
 		- otherCategory.categoryType = otherFlow.type;
 	- var changed = compareTo && !other ? 'added' : (compareTo && !exchange ? 'removed' : null);
 	tr(data-compare=changed, class=clazz?clazz:null, style=style)
-		td: img.icon-small(src='images/' + (input?'input':'output') + '.png')
+		td: img.icon-small(src='images/' + (input?'input':'output') + '.png' aria-label='Icon of ' + (input?'input':'output'))
 		td
 			+compare-icon(changed)
 			+ref(flow, otherFlow)

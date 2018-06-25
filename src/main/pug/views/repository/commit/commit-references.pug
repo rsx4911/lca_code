@@ -19,18 +19,18 @@ each dataset in data
 					if dataset.added || dataset.deleted
 						- var action = dataset.added ? 'ADD' : 'DELETE';
 						if dataset.type === 'CATEGORY'
-							img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/' + dataset.categoryType + '/' + action)
+							img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/' + dataset.categoryType + '/' + action, aria-label='Model icon of ' + dataset.categoryType + ' category ' + action)
 						else if dataset.type === 'PROCESS' && dataset.processType
-							img.model-icon-small(src='ws/public/cached/overlay/PROCESS/' + dataset.processType + '/' + action)
+							img.model-icon-small(src='ws/public/cached/overlay/PROCESS/' + dataset.processType + '/' + action, aria-label='Model icon of ' + dataset.processType + ' ' + action)
 						else if dataset.type === 'FLOW' && dataset.flowType
-							img.model-icon-small(src='ws/public/cached/overlay/FLOW/' + dataset.flowType + '/' + action)
+							img.model-icon-small(src='ws/public/cached/overlay/FLOW/' + dataset.flowType + '/' + action, aria-label='Model icon of ' + dataset.flowType + ' ' + action)
 						else
-							img.model-icon-small(src='ws/public/cached/overlay/' + dataset.type + '/' + action)
+							img.model-icon-small(src='ws/public/cached/overlay/' + dataset.type + '/' + action, aria-label='Model icon of ' + dataset.type + ' ' + action)
 					else
 						if dataset.type === 'CATEGORY'
-							img.model-icon-small(src='images/model/small/category/' + dataset.categoryType.toLowerCase() + '.png')
+							img.model-icon-small(src='images/model/small/category/' + dataset.categoryType.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.categoryType + ' category ')
 						else
-							img.model-icon-small(src='images/model/small/' + dataset.type.toLowerCase() + '.png')
+							img.model-icon-small(src='images/model/small/' + dataset.type.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.type)
 					if dataset.deleted
 						del=dataset.name
 					else

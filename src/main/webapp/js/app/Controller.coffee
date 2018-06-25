@@ -218,7 +218,7 @@ define([
 						view: 'tasks/ManageReview'
 						title: 'Manage review task'
 						viewOptions:
-							id: id
+							reviewId: id
 							userMenu: @userMenu
 				@router.registerUserRoute 'messages', (username) -> 
 					unless window.WebSocket

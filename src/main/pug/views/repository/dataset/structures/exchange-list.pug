@@ -65,7 +65,7 @@ mixin exchange(exchange, other, index)
 	- var changed = amountChanged || unitChanged || flowChanged;
 	tr(class=index>=10?'toggleable':null, style=index>=10?'display:none':null)
 		td: span.same-size-font(title=title, data-compare=amountChanged)
-			img.icon-small(src='images/' + ((exchange?exchange.input:other.input)?'input':'output') + '.png')
+			img.icon-small(src='images/' + ((exchange?exchange.input:other.input)?'input':'output') + '.png' aria-label='Icon of ' + ((exchange?exchange.input:other.input)?'input':'output'))
 			if exchange
 				span.original-value
 					if exchange.amount > 0
