@@ -54,3 +54,9 @@ color: #ffffff;
 .dropdown-menu{position:absolute;top:100%;left:0;z-index:1000;display:none;float:left;min-width:160px;padding:5px 0;margin:2px 0 0;list-style:none;font-size:14px;text-align:left;background-color:#435037;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:4px;-webkit-box-shadow:0 6px 12px rgba(0,0,0,.175);box-shadow:0 6px 12px rgba(0,0,0,.175);-webkit-background-clip:padding-box;background-clip:padding-box}
 
 .dropdown-menu>li>a:focus,.dropdown-menu>li>a:hover{background-color:#626d5f;background-image:-webkit-linear-gradient(top,#435037 0,#626d5f 100%);background-image:-o-linear-gradient(top,#435037 0,#626d5f 100%);background-image:-webkit-gradient(linear,left top,left bottom,from(#435037),to(#626d5f));background-image:linear-gradient(to bottom,#435037 0,#626d5f 100%);background-repeat:repeat-x}
+
+ul.dropdown-menu>li {color: #ffffff}
+
+#footer{border-top:1px solid #ddd;width:100%;bottom:0;background:#435037;height:25px;padding:1px;text-align:center;font-weight:100;font-size: smaller;color:#ffffff}
+ 
+.search-view .result .details{font-size:90%;color: #555;margin-left:21px;}

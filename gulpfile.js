@@ -165,6 +165,8 @@ gulp.task('modfiyCustomPublicHtml', function() {
   return gulp.src(params.customDir + '/index_public.html').pipe(insert.transform(function(contents) {
     var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
     content = content.replace('js/libs/jquery', 'js/jquery');
+    content = content.replace(' data-main="js/main"', '');
+    content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"');	
     content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
     return content;
   })).pipe(gulp.dest('./target/require-build'));
