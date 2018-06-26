@@ -58,20 +58,28 @@ color: #ffffff;
 ul.dropdown-menu>li {color: #ffffff}
 
 #footer{border-top:1px solid #ddd;width:100%;bottom:0;background:#435037;height:25px;padding:1px;text-align:center;font-weight:100;font-size: smaller;color:#ffffff}
+
+.btn-danger  {
+    background-color:#952420;
+}
+
+.btn-success {
+    background-color:#3d6915;
+}
  
 h1 small, h2 small, h3 small, h4 small, h5 small, h6 small, .h1 small, .h2 small, .h3 small, .h4 small, .h5 small, .h6 small, h1 .small, h2 .small, h3 .small, h4 .small, h5 .small, h6 .small, .h1 .small, .h2 .small, .h3 .small, .h4 .small, .h5 .small, .h6 .small {
-    color: #777;
+    color: #555;
 }
 .search-view .result .details {
-    color: #777;
+    color: #555;
 }
 /* Commit history overview */
 .user-info.concealed { 
-    color: #777;
+    color: #555;
 }
 .repository-commits .commit-group .date-and-count .count {
-    color: #777;    
+    color: #555;    
 }
 .repository-commits .commit-group .commit .commit-link > a {
-    color: #777;
+    color: #555;
 }
