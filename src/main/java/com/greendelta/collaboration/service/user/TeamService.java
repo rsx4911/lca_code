@@ -71,17 +71,17 @@ public class TeamService {
 		return dao.getCount();
 	}
 
-	public SearchResult<Team> getAll(int page, String filter) {
+	public SearchResult<Team> getAll(int page, int pageSize, String filter) {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
 		String query = createQuery(filter, true);
 		long subTotal = dao.getCount(query, parameters);
-		int start = page == 0 ? 0 : 1 + (page - 1) * 10;
-		int limit = page == 0 ? 0 : 10;
+		int start = page == 0 ? 0 : 1 + (page - 1) * pageSize;
+		int limit = page == 0 ? 0 : pageSize;
 		query = createQuery(filter, false);
 		List<Team> data = dao.getAll(query, parameters, start, limit);
-		return SearchResults.from(data, page, 10, subTotal);
+		return SearchResults.from(data, page, pageSize, subTotal);
 	}
 
 	private String createQuery(String filter, boolean forCount) {

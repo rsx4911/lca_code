@@ -47,9 +47,10 @@ public class TeamResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module) {
-		SearchResult<Team> result = service.getAll(page, filter);
+		SearchResult<Team> result = service.getAll(page, pageSize, filter);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Teams::mapForOthers));
 		List<Team> teams = result.data;

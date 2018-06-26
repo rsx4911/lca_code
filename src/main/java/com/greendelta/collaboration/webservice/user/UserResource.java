@@ -67,10 +67,11 @@ public class UserResource {
 	@GET
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module,
 			@QueryParam("repositoryPath") String repositoryPath) {
-		SearchResult<User> result = service.getAll(page, filter);
+		SearchResult<User> result = service.getAll(page, pageSize, filter);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Users::mapForOthers));
 		List<User> users = result.data;
