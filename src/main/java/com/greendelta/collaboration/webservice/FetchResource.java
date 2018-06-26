@@ -32,7 +32,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 
-@Path("{a:public/fetch|fetch}") // olca 1.7 support for now
+@Path("public/fetch")
 public class FetchResource {
 
 	private final FetchService service;
