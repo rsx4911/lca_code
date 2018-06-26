@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.user;
+package com.greendelta.collaboration.webservice;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,9 +31,8 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.webservice.Respond;
 
-@Path("fetch")
+@Path("{a:public/fetch|fetch}") // olca 1.7 support for now
 public class FetchResource {
 
 	private final FetchService service;
