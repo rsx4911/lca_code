@@ -7,6 +7,7 @@
 /derby.log
 /dropDDL.jdbc
 /schema.sql
+/src/main/webapp/imprint.html
 /src/main/webapp/index.html
 /src/main/webapp/login.html
 /src/main/webapp/css/main.css
