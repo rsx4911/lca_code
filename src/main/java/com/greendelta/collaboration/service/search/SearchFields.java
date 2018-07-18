@@ -19,9 +19,7 @@ public class SearchFields {
 		if (loggedIn) {
 			fields.add("commitMessage");
 		}
-		if (type == ModelType.PROCESS) {
-			fields.addAll(Arrays.asList(PROCESS_FULL_TEXT_FIELDS));
-		}
+		fields.addAll(Arrays.asList(PROCESS_FULL_TEXT_FIELDS));
 		return fields.toArray(new String[fields.size()]);
 	}
 

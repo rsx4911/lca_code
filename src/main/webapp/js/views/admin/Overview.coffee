@@ -52,21 +52,25 @@ define([
 					container: '#repositories'
 					template: repositoriesTemplate
 					filterId: 'repository-filter'
+					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?adminArea=true&'
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
 					filterId: 'user-filter'
+					pageSizeId: 'users-page-size'
 					url: 'ws/user?'
 				@groupFilter = new Filter
 					container: '#groups'
 					template: groupsTemplate
 					filterId: 'group-filter'
+					pageSizeId: 'groups-page-size'
 					url: 'ws/group?adminArea=true&'
 				@teamFilter = new Filter
 					container: '#teams'
 					template: teamsTemplate
 					filterId: 'team-filter'
+					pageSizeId: 'teams-page-size'
 					url: 'ws/team?'
 
 			render: (renderOptions) ->
