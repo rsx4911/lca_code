@@ -154,7 +154,7 @@ class BrowseReferenceFiller {
 	}
 
 	private void fillUnit(JsonObject unit, JsonObject parent) {
-		if (!unit.has("@id"))
+		if (unit == null || !unit.has("@id"))
 			return;
 		String unitId = unit.get("@id").getAsString();
 		JsonObject u = getUnit(unitId, parent);
@@ -227,6 +227,8 @@ class BrowseReferenceFiller {
 		if (dataCache.containsKey(refId))
 			return dataCache.get(refId);
 		ObjectMap indexEntry = getIndexEntry(refId);
+		if (indexEntry == null)
+			return null;
 		String data = fetchService.getDataset(repo, type, refId, indexEntry.getString("commitId"));
 		JsonObject object = new Gson().fromJson(data, JsonObject.class);
 		dataCache.put(refId, object);
