@@ -76,6 +76,8 @@ class BrowseReferenceFiller {
 		if (type == null || id == null)
 			return;
 		ModelType mType = getType(type);
+		if (hasCompleteInfo(reference, mType)) 
+			return;
 		if (mType == ModelType.UNIT) {
 			fillUnit(reference, parent);
 			return;
@@ -133,6 +135,8 @@ class BrowseReferenceFiller {
 	}
 
 	private void setReferenceUnit(JsonObject reference) {
+		if (reference.has("referenceUnit")) 
+			return;
 		JsonElement flowProperty = reference.get("flowProperty");
 		if (flowProperty == null || !flowProperty.isJsonObject())
 			return;
@@ -235,4 +239,21 @@ class BrowseReferenceFiller {
 		return object;
 	}
 
+	private boolean hasCompleteInfo(JsonObject object, ModelType type) {
+		switch (type) {
+		case PROCESS:
+			return object.has("processType") && object.has("category") && object.get("category").isJsonArray();
+		case FLOW:
+			return object.has("flowType") && object.has("category") && object.get("category").isJsonArray();
+		case CATEGORY:
+			return object.has("name") && object.get("name").isJsonArray();
+		case SOCIAL_INDICATOR:
+		case IMPACT_CATEGORY:
+		case NW_SET:
+			return true;
+		default:
+			return object.has("name");
+		}
+	}
+	
 }
