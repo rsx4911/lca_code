@@ -169,10 +169,15 @@ public class BrowseResource {
 			descriptor.put("deleted", true);
 			return Respond.ok(descriptor);
 		}
-		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
-		BrowseReferenceFiller references = new BrowseReferenceFiller(service, fetchService, repo, commitId);
-		references.fillReferencedElements(json);
-		ObjectMap map = ObjectMap.fromJson(new Gson().toJson(json));
+		ObjectMap  map = null;
+		if (type == ModelType.PRODUCT_SYSTEM) {
+			map = ObjectMap.fromJson(dataset);
+		} else {
+			JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
+			BrowseReferenceFiller references = new BrowseReferenceFiller(service, fetchService, repo, commitId);
+			references.fillReferencedElements(json);
+			map = ObjectMap.fromJson(new Gson().toJson(json));
+		}
 		if (loggedIn) {
 			map.put("commitId", commitId);
 		}
