@@ -21,10 +21,9 @@ define([
 
 		Controller:: = (() ->
 
-			# start build info
-			releaseVersion: '1.0.0'
-			commitVersion: '060b595'
-			buildDate: 1534251225322
+			# start build info			releaseVersion: '1.0.0'
+			commitVersion: '0e53e33'
+			buildDate: 1534259390579
 			# end build info
 
 			concatUrl: (prefix, part) ->
@@ -380,7 +379,6 @@ define([
 				releaseVersion = $ '#release-version', info
 				if releaseVersion
 					releaseVersion.html 'Release version: ' + @releaseVersion
-					console.log(@releaseVersion)
 				commitVersion = $ '#commit-version', info
 				if commitVersion
 					commitVersion.html 'Commit id: ' + @commitVersion
