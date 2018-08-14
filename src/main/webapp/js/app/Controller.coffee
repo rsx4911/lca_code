@@ -2,6 +2,7 @@ define([
 				'cs!app/Navigation'
 				'cs!app/UserMenu'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!models/Repository'
@@ -14,11 +15,17 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, UserMenu, Events, Format, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
 		Controller:: = (() ->
+
+			# start build info
+			releaseVersion: '1.0.0'
+			commitVersion: '060b595'
+			buildDate: 1534251225322
+			# end build info
 
 			concatUrl: (prefix, part) ->
 				if !prefix and !part
@@ -360,6 +367,26 @@ define([
 					@initializeNavigation()
 				@initializeUserMenu()
 				@registerRoutes()
+				@setBuildInfo()
+
+			setBuildInfo: () ->
+				info = $('#build-info')
+				if !info
+					return
+				info.hide()
+				if info.attr('data-admin-only') and (!currentUser or !currentUser.isAdmin())
+					return
+				info.show()
+				releaseVersion = $ '#release-version', info
+				if releaseVersion
+					releaseVersion.html 'Release version: ' + @releaseVersion
+					console.log(@releaseVersion)
+				commitVersion = $ '#commit-version', info
+				if commitVersion
+					commitVersion.html 'Commit id: ' + @commitVersion
+				buildDate = $ '#build-date', info
+				if buildDate
+					buildDate.html 'Build date: ' + Format.date @buildDate
 
 			splitQuery: (query) ->
 				unless query
