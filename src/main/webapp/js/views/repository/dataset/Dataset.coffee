@@ -14,6 +14,7 @@ define([
 				'cs!views/repository/dataset/Flow'
 				'cs!views/repository/dataset/Location'
 				'cs!views/repository/dataset/ProductSystem'
+				'cs!views/repository/Download'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'cs!models/Settings'
@@ -34,7 +35,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Router, currentUser, settings, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -75,13 +76,6 @@ define([
 					url: "ws/history/#{urlPart}"
 					success: callback
 
-			getDownloadUrl: (format = 'json') ->
-				urlPart = @getUrlPart()
-				url = "ws/public/download/#{format}/prepare/#{urlPart}" 
-				if @commitId
-					url +='?commitId=' + @commitId
-				return url
-
 			getFileBaseUrl: () ->
 				urlPart = @getUrlPart()
 				url = "ws/public/repository/file/#{urlPart}"
@@ -95,18 +89,6 @@ define([
 				type = type or @type
 				refId = refId or @refId
 				return "#{group}/#{name}/#{type}/#{refId}"
-
-			downloadData: (event) ->
-				@$('iframe#download-frame').remove()
-				target = $ Events.target event
-				format = target.attr('data-format') or 'json'
-				Layers.showProgressIndicator 'Collecting<br>data sets'
-				$.ajax
-					type: 'GET'
-					url: @getDownloadUrl(format)
-					success: (token) =>
-						Layers.hideProgressIndicator()
-						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
 
 			updateIcon: (path, commentCount) ->
 				if commentCount
@@ -148,7 +130,9 @@ define([
 
 			events: 
 				'click a:not([role]):not([target=_blank]):not([data-action])': (event) -> Events.followLink event
-				'click [data-format]': 'downloadData'
+				'click [data-format]': (event) -> 
+					Events.preventDefault(event)
+					Download.dataset(@repository.get('group'), @repository.get('name'), @type, @refId, @commitId, $(Events.target(event)).attr('data-format'))
 				'click [data-compare-to]': 'initComparison'
 				'click a[data-action=show-data-quality]': 'showDataQuality'
 				'click .maximize-content > a': 'maximizeContent'
