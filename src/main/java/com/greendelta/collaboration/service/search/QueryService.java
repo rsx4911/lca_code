@@ -19,7 +19,6 @@ import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
-import com.greendelta.search.wrapper.SearchSorting;
 import com.greendelta.search.wrapper.aggregations.SearchAggregation;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
@@ -48,9 +47,10 @@ class QueryService {
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, SearchFields.get(type, loggedIn));
 		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
 		builder.pageSize(pageSize);
+		Scoring.applyType(builder);
+		Scoring.applyCommitTimestamp(builder);
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (loggedIn)

@@ -21,7 +21,8 @@ define([
 
 		Controller:: = (() ->
 
-			# start build info			releaseVersion: '1.0.0'
+			# start build info
+			releaseVersion: '1.0.0'
 			commitVersion: '0e53e33'
 			buildDate: 1534259390579
 			# end build info
