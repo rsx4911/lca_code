@@ -11,6 +11,7 @@ var stylus = require('gulp-stylus');
 var uglify = require('gulp-uglify');
 var pug = require('gulp-pug');
 var stream = require('stream');
+var child_process = require('child_process');
 var params = require('yargs').argv;
 
 if (!params.contextPath) {
@@ -19,6 +20,25 @@ if (!params.contextPath) {
 
 if (!params.customDir) {
   params.customDir = './custom';
+}
+
+var getPomVersion = function() {
+  try {
+    var pom = fs.readFileSync('pom.xml', 'utf8')
+    var version = pom.substring(pom.indexOf('<version>') + 9)
+    return version.substring(0, version.indexOf('</version>'))
+  } catch (e) {
+    return 'Unknown'
+  }
+}
+
+var getCommitVersion = function() {
+  var cmd = 'git rev-parse --short HEAD'
+  try {
+    return (child_process.execSync(cmd) + '').trim()
+  } catch (e) {
+    return 'Unknown'
+  }
 }
 
 var timestamp = new Date().getTime();
@@ -47,7 +67,7 @@ var collect = function(directory, finished) {
 };
 
 gulp.task('default', [], function(callback) {
-  return runSequence('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', callback);
+  return runSequence('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', 'setBuildInfo', callback);
 });
 
 gulp.task('build', [], function(callback) {
@@ -123,6 +143,17 @@ gulp.task('collectDependencies', function() {
     }
     content += '], () -> )';
     return content;
+  })).pipe(gulp.dest('./src/main/webapp/js/app'));
+});
+
+gulp.task('setBuildInfo', function() {
+  return gulp.src('./src/main/webapp/js/app/Controller.coffee').pipe(insert.transform(function(contents) {
+    var before = contents.substring(0, contents.indexOf('# start build info') + 19)
+    var buildInfo = "\t\t\treleaseVersion: '" + getPomVersion() + "'\n"
+    buildInfo += "\t\t\tcommitVersion: '" + getCommitVersion() + "'\n"
+    buildInfo += "\t\t\tbuildDate: " + timestamp + "\n"
+    var after = "\t\t\t" + contents.substring(contents.indexOf('# end build info'))
+    return before + buildInfo + after;
   })).pipe(gulp.dest('./src/main/webapp/js/app'));
 });
 

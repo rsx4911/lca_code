@@ -10,12 +10,13 @@ define([
 				'cs!utils/LocalStorage'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!views/repository/Download'
 				'cs!models/CurrentUser'
 				'templates/views/repository/datasets'
 				'templates/views/repository/datasets-entries'
 			]
 
-	(Backbone, Moment, Pace, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, currentUser, template, entriesTemplate) ->
+	(Backbone, Moment, Pace, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, Download, currentUser, template, entriesTemplate) ->
 
 		class RepositoryDatasets extends Backbone.View
 
@@ -39,7 +40,9 @@ define([
 				Events.preventDefault event
 				target = $ Events.target event
 				format = target.attr('data-format') or 'json'
-				@download format
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				Download.repository group, name, @commitId, @getCategoryPath(), format
 
 			selectData: (event) ->
 				Events.preventDefault event
@@ -54,7 +57,7 @@ define([
 					callback: (selection) =>
 						if !selection or !selection.length
 							return
-						@download format, selection
+						Download.repository group, name, @commitId, @getCategoryPath(), format, selection
 
 			download: (format, selection) ->
 				@$('iframe#download-frame').remove()

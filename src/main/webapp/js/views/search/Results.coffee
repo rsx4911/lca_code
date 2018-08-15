@@ -5,12 +5,13 @@ define([
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!utils/Toggle'
+				'cs!views/repository/Download'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/search/results'
 			]
 
-	(Backbone, Events, Icons, ModelTypes, Renderer, Toggle, Router, currentUser, template) ->
+	(Backbone, Events, Icons, ModelTypes, Renderer, Toggle, Download, Router, currentUser, template) ->
 
 		class SearchResultsView extends Backbone.View
 
@@ -75,6 +76,14 @@ define([
 						@$el.html template result
 						Renderer.render @, renderOptions
 						Toggle.init @$el
+						@$('[data-format][data-datatype=dataset]').on 'click', (event) ->
+							Events.preventDefault event
+							target = $ Events.target event
+							Download.dataset(target.attr('data-group'), target.attr('data-repo'), target.attr('data-type'), target.attr('data-ref-id'), target.attr('data-commit-id'), target.attr('data-format'))
+						@$('[data-format][data-datatype=repository]').on 'click', (event) ->
+							Events.preventDefault event
+							target = $ Events.target event
+							Download.repository(target.attr('data-group'), target.attr('data-repo'), target.attr('data-commit-id'), null, target.attr('data-format'))
 						@$('#page-size').on 'change', (event) => Router.navigate @getUrlPart 'search/', @query, 1, $(Events.target(event)).val(), @aggregations, allAggregations
 						if @query
 							for textElement in $('.search-view .content-box .result-text')

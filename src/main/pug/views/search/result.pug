@@ -11,6 +11,9 @@ mixin result(dataset)
 			- var url = dataset.repositoryId + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId' + dataset.commitId;
 			a(href=url): +result-title(dataset)
 		+result-details(dataset)
+		+result-actions(dataset)
+		.clear
+
 
 mixin result-title(dataset)
 	img.model-icon-small(src='images/model/small/' + getIcon(dataset), aria-label='Model icon of ' + dataset.type)
@@ -46,4 +49,18 @@ mixin result-details(dataset)
 							|  #{dataset.validFromYear}
 						else if dataset.validUntilYear
 							|  #{dataset.validUntilYear}
-		.clear
+
+mixin result-actions(dataset)
+	.actions
+		.dropdown.btn-group
+			button.btn.btn-success.btn-sm.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+				span.glyphicon.glyphicon-download
+				span.text Download
+				span.caret
+			- var repo = dataset.repositoryId.split('/')[1]
+			ul.dropdown-menu
+				li: a(href='#', data-format='json', data-datatype='dataset', data-group=dataset.group, data-repo=repo, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=dataset.commitId) Dataset as JSON-LD
+				li: a(href='#', data-format='ilcd', data-datatype='dataset', data-group=dataset.group, data-repo=repo, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=dataset.commitId) Dataset as ILCD
+				li.divider(role='separator')
+				li: a(href='#', data-format='json', data-datatype='repository', data-group=dataset.group, data-repo=repo, data-commit-id=dataset.commitId) Repository as JSON-LD
+				li: a(href='#', data-format='ilcd', data-datatype='repository', data-group=dataset.group, data-repo=repo, data-commit-id=dataset.commitId) Repository as ILCD
