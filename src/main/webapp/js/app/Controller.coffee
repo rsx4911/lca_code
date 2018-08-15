@@ -21,11 +21,6 @@ define([
 
 		Controller:: = (() ->
 
-			# start build info			releaseVersion: '1.0.1'
-			commitVersion: '285f88d'
-			buildDate: 1534344066782
-			# end build info
-
 			concatUrl: (prefix, part) ->
 				if !prefix and !part
 					return ''
@@ -369,6 +364,11 @@ define([
 				@setBuildInfo()
 
 			setBuildInfo: () ->
+				# start build info
+				releaseVersion = '1.0.1'
+				commitVersion = 'd17e55b'
+				buildDate = 1534344918908
+				# end build info
 				info = $('#build-info')
 				if !info
 					return
@@ -376,15 +376,15 @@ define([
 				if info.attr('data-admin-only') and (!currentUser or !currentUser.isAdmin())
 					return
 				info.show()
-				releaseVersion = $ '#release-version', info
-				if releaseVersion
-					releaseVersion.html 'Release version: ' + @releaseVersion
-				commitVersion = $ '#commit-version', info
-				if commitVersion
-					commitVersion.html 'Commit id: ' + @commitVersion
-				buildDate = $ '#build-date', info
-				if buildDate
-					buildDate.html 'Build date: ' + Format.date @buildDate
+				rv = $ '#release-version', info
+				if rv
+					rv.html "Release version: #{releaseVersion}"
+				cv = $ '#commit-version', info
+				if cv
+					cv.html "Commit id: #{commitVersion}"
+				bd = $ '#build-date', info
+				if bd
+					bd.html "Build date: #{Format.date(buildDate)}"
 
 			splitQuery: (query) ->
 				unless query
