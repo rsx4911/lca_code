@@ -365,9 +365,9 @@ define([
 
 			setBuildInfo: () ->
 				# start build info
-				releaseVersion = '1.0.1'
-				commitVersion = 'd17e55b'
-				buildDate = 1534344918908
+				version = '1.0.1'
+				commitVersion = '249d878'
+				buildDate = 1534345678640
 				# end build info
 				info = $('#build-info')
 				if !info
@@ -378,7 +378,7 @@ define([
 				info.show()
 				rv = $ '#release-version', info
 				if rv
-					rv.html "Release version: #{releaseVersion}"
+					rv.html "Release version: #{version}"
 				cv = $ '#commit-version', info
 				if cv
 					cv.html "Commit id: #{commitVersion}"
