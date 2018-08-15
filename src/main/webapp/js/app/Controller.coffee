@@ -21,10 +21,9 @@ define([
 
 		Controller:: = (() ->
 
-			# start build info
-			releaseVersion: '1.0.0'
-			commitVersion: '0e53e33'
-			buildDate: 1534259390579
+			# start build info			releaseVersion: '1.0.1'
+			commitVersion: '285f88d'
+			buildDate: 1534344066782
 			# end build info
 
 			concatUrl: (prefix, part) ->
