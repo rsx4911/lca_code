@@ -19,6 +19,7 @@ import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
+import com.greendelta.search.wrapper.SearchSorting;
 import com.greendelta.search.wrapper.aggregations.SearchAggregation;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
@@ -46,6 +47,8 @@ class QueryService {
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, SearchFields.get(type, loggedIn));
+		} else if (filters.isEmpty()) {
+			builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
