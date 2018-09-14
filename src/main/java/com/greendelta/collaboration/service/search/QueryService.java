@@ -47,7 +47,7 @@ class QueryService {
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, SearchFields.get(type, loggedIn));
-		} else if (filters.isEmpty()) {
+		} else {
 			builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		}
 		builder.page(page);
