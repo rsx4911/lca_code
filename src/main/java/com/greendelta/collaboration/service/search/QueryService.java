@@ -53,7 +53,6 @@ class QueryService {
 		builder.page(page);
 		builder.pageSize(pageSize);
 		Scoring.applyType(builder);
-		Scoring.applyCommitTimestamp(builder);
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (loggedIn)
