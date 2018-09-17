@@ -8,7 +8,9 @@ mixin result(dataset)
 			- var url = dataset.repositoryId + '/datasets/' + getLabel('type', dataset.categoryType) + '/' + dataset.fullPath;
 			a(href=url): +result-title(dataset)
 		else
-			- var url = dataset.repositoryId + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId' + dataset.commitId;
+			- var url = dataset.repositoryId + '/dataset/' + dataset.type + '/' + dataset.refId;
+			if dataset.commidId
+				- url += '?commitId=' + dataset.commitId;
 			a(href=url): +result-title(dataset)
 		+result-details(dataset)
 		+result-actions(dataset)
