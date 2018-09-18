@@ -9,7 +9,7 @@ mixin result(dataset)
 			a(href=url): +result-title(dataset)
 		else
 			- var url = dataset.repositoryId + '/dataset/' + dataset.type + '/' + dataset.refId;
-			if dataset.commidId
+			if dataset.commitId
 				- url += '?commitId=' + dataset.commitId;
 			a(href=url): +result-title(dataset)
 		+result-details(dataset)
