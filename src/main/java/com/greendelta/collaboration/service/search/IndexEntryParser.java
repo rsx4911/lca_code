@@ -110,6 +110,7 @@ class IndexEntryParser {
 		e.version = entry.get("version");
 		e.commitTimestamp = entry.get("commitTimestamp");
 		e.action = entry.get("action");
+		e.mostRecent = entry.getBoolean("mostRecent");
 		e.type = type;
 		return e;
 	}

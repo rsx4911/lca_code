@@ -267,7 +267,8 @@ define([
 						doImport: true
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
-						@router.navigate "#{group}/#{name}/datasets"
+						@router.navigate "#{group}/#{name}/datasets",
+							replace: true
 						return
 					@showView
 						view: 'repository/Repository'
@@ -365,9 +366,9 @@ define([
 
 			setBuildInfo: () ->
 				# start build info
-				version = '1.0.1'
-				commitVersion = 'a12da56'
-				buildDate = 1534408956900
+				version = '1.0.3'
+				commitVersion = '9e56fd0'
+				buildDate = 1537188374730
 				# end build info
 				info = $('#build-info')
 				if !info
