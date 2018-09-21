@@ -1,0 +1,11 @@
+include forms.pug
+
+mixin login-form() 
+	h3 Sign in
+	form#login
+		#login-general-message.alert.alert-danger(role='alert'): span.message
+		+input('username', 'Username')
+		+input('password', 'Password', 'password')
+		+input('token', 'Token', 'text', false, false, true)
+			a.default-link(href='login') Login with another user
+		block

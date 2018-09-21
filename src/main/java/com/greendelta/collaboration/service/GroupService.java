@@ -77,7 +77,9 @@ public class GroupService {
 
 	public boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin && !currentUser.settings.canCreateGroups)
+		if (userGroup && !currentUser.isUserManager()) 
+			throw new UnauthorizedAccessException("", "CREATE_GROUP");
+		if (!currentUser.isAdmin() && !currentUser.settings.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
@@ -148,6 +150,8 @@ public class GroupService {
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
 		File root = new File(path);
+		if (!root.exists() || !root.isDirectory()) 
+			return new ArrayList<>();
 		List<String> groups = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())

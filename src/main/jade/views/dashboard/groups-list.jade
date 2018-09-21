@@ -1,9 +1,0 @@
-include ../mixins/paging.jade
-
-.list-container
-	each group in data
-		.list-entry
-			img.avatar(src='ws/group/avatar/#{group.name}')
-			a.follow(href='groups/#{group.name}')
-				strong=group.name
-	+paging(resultInfo)

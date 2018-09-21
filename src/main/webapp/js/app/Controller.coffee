@@ -2,6 +2,7 @@ define([
 				'cs!app/Navigation'
 				'cs!app/UserMenu'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!models/Repository'
@@ -14,7 +15,7 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Events, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, UserMenu, Events, Format, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -70,11 +71,15 @@ define([
 							repoMenu.push {href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
 						repoMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 						return repoMenu
-					when 'admin' then return [
-						{href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
-						{href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
-						{href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
-					]
+					when 'admin'
+						adminMenu = []
+						if currentUser.isUserManager()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
+						if currentUser.isAdmin()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
+						if currentUser.isDataManager()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
+						return adminMenu
 
 			initializeNavigation: () ->
 				@navigation = new Navigation()
@@ -103,41 +108,41 @@ define([
 					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
-				@router.registerAdminRoute 'adminOverview', -> @showView 
+				@router.registerAdminRoute 'adminOverview', 'userManager', -> @showView 
 					view: 'admin/Overview'
 					title: 'Admin area - Overview'
 					nav:
 						type: 'admin'
 						active: 'overview'
-				@router.registerAdminRoute 'adminUserNew', -> @showView 
+				@router.registerAdminRoute 'adminUserNew', 'userManager', -> @showView 
 					view: 'user/Profile'
 					title: 'New profile'
 					viewOptions: 
 						user: new User()
 						adminArea: true
-				@router.registerAdminRoute 'adminUserEdit', (username) -> @showView 
+				@router.registerAdminRoute 'adminUserEdit', 'userManager', (username) -> @showView 
 					view: 'user/Profile'
 					title: "Profile | #{username}"
 					viewOptions: 
 						user: new User {username: username}
 						adminArea: true
-				@router.registerAdminRoute 'adminTeamNew', -> @showView 
+				@router.registerAdminRoute 'adminTeamNew', 'userManager', -> @showView 
 					view: 'team/Profile'
 					title: 'New team'
 					viewOptions: 
 						team: new Team()
-				@router.registerAdminRoute 'adminTeamEdit', (teamname) -> @showView 
+				@router.registerAdminRoute 'adminTeamEdit', 'userManager', (teamname) -> @showView 
 					view: 'team/Profile'
 					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
-				@router.registerAdminRoute 'adminLibraries', -> @showView 
+				@router.registerAdminRoute 'adminLibraries', 'dataManager', -> @showView 
 					view: 'admin/Libraries'
 					title: 'Admin area - Library data sets'
 					nav:
 						type: 'admin'
 						active: 'libraries'
-				@router.registerAdminRoute 'adminSettings', -> @showView 
+				@router.registerAdminRoute 'adminSettings', 'admin', -> @showView 
 					view: 'admin/Settings'
 					title: 'Admin area - Settings'
 					nav:
@@ -214,7 +219,7 @@ define([
 						view: 'tasks/ManageReview'
 						title: 'Manage review task'
 						viewOptions:
-							id: id
+							reviewId: id
 							userMenu: @userMenu
 				@router.registerUserRoute 'messages', (username) -> 
 					unless window.WebSocket
@@ -262,7 +267,8 @@ define([
 						doImport: true
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
-						@router.navigate "#{group}/#{name}/datasets"
+						@router.navigate "#{group}/#{name}/datasets",
+							replace: true
 						return
 					@showView
 						view: 'repository/Repository'
@@ -350,12 +356,36 @@ define([
 				router.routeContext = @
 				Events.setRouter router
 				$('#main .center').empty();
-				$('a').on 'click', (event) -> Events.followLink event
+				$('a:not([data-route=false]):not([target=_blank])').on 'click', (event) -> Events.followLink event
 				if currentUser.isLoggedIn()
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
 				@initializeUserMenu()
 				@registerRoutes()
+				@setBuildInfo()
+
+			setBuildInfo: () ->
+				# start build info
+				version = '1.0.3'
+				commitVersion = '9e56fd0'
+				buildDate = 1537188374730
+				# end build info
+				info = $('#build-info')
+				if !info
+					return
+				info.hide()
+				if info.attr('data-admin-only') and (!currentUser or !currentUser.isAdmin())
+					return
+				info.show()
+				rv = $ '#release-version', info
+				if rv
+					rv.html "Release version: #{version}"
+				cv = $ '#commit-version', info
+				if cv
+					cv.html "Commit id: #{commitVersion}"
+				bd = $ '#build-date', info
+				if bd
+					bd.html "Build date: #{Format.date(buildDate)}"
 
 			splitQuery: (query) ->
 				unless query

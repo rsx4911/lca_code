@@ -1,0 +1,135 @@
+mixin static(id, label, value, href)
+	- var clazz = null;
+	if inline
+		- clazz = 'form-inline';
+	else
+		- clazz = 'form-group';
+	div(id=id + '-group' class=clazz)
+		if label
+			label.control-label(for=id)!=label
+		div.form-value
+			if href
+				a(href=href)=value
+			else
+				| #{value}
+			block
+
+mixin input(id, label, type, inline, required, hide)
+	- var hidden = type === 'hidden'
+	- var clazz = hidden ? 'hidden ' : ''
+	if inline
+		- clazz += 'form-inline';
+	else
+		- clazz += 'form-group';
+	if hide
+		- clazz += ' hidden'
+	if hidden || !type
+		- type = 'text'
+	div(id=id + '-group' class=clazz)
+		if label
+			label.control-label(for=id)!=label
+				if required
+					sup *
+		if type === 'integer'
+			input.form-control(id=id name=id type='number' min=0 step=1)&attributes(attributes)
+		else
+			input.form-control(id=id name=id type=type)&attributes(attributes)
+		block
+
+mixin hidden(id, value)
+	input(id=id name=id value=value type='hidden')
+
+mixin select(id, label, options, defaultSelection, inline)
+	div(id=id + '-group' class=inline?'form-inline':'form-group' style=inline?'display:inline-block':null)
+		if label
+			label.control-label(for=id)!=label
+		select.form-control(id=id name=id)&attributes(attributes)
+			if options
+				+options(options, defaultSelection)
+			else
+				block
+		if options
+			block
+
+mixin optgroup(label, options, defaultSelection, groupId)
+	optgroup(label!=label)
+		+options(options, defaultSelection, groupId)
+
+mixin options(options, defaultSelection, groupId)
+	each option in options
+		- var value = option;
+		- var label = option;
+		- var disabled = false;
+		- if (Object.prototype.toString.call(option) === '[object Array]') {
+		- 	value = option[0];
+		- 	label = option[1];
+		- 	if (option.length === 3 && option[2]) {
+		- 		disabled = true;
+		- 	}
+		- }
+		if defaultSelection === value
+			option(value=value selected data-group-id=groupId)!=label
+		else
+			option(value=value disabled=disabled data-group-id=groupId)!=label
+
+mixin checkbox(id, label, type)
+	if !type
+		- type = 'success'
+	.checkbox(class='checkbox-' + type)
+		input(id=id name=id type='checkbox')&attributes(attributes)
+		label(for=id)
+			if label
+				| !{label}
+			else
+				block
+		if label
+			block
+
+mixin radio(group, id, label, type)
+	if !type
+		- type = 'success'
+	.radio(class='radio-' + type)
+		input(id=id name=group type='radio')&attributes(attributes)
+		label(for=id)
+			if label
+				| !{label}
+			else
+				block
+		if label
+			block
+
+mixin radios(group, options)
+	.radio
+		each option in options
+			- var id = option;
+			- var label = option;
+			- if (Object.prototype.toString.call(option) === '[object Array]') {
+			- 	id = option[0];
+			- 	label = option[1];
+			- }
+			label(for=id)
+				input(id=id name=group type='radio')&attributes(attributes)
+				| !{label}
+				| &nbsp;
+			block
+
+mixin textarea(id, label)
+	.form-group(id=id + '-group')
+		if label
+			label.control-label(for=id)!=label
+		textarea.form-control(id=id name=id)&attributes(attributes)
+			block
+
+mixin member-selection(multiple)
+	if users && users.length && teams && teams.length
+		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')
+			+optgroup('User', users, null, 'user')
+			+optgroup('Team', teams, null, 'team')
+	else if users && users.length
+		+select('user-selection-name', 'User')(multiple=multiple class='member-selection')
+			+options(users, null, 'user')
+	else if teams && teams.length
+		+select('user-selection-name', 'Team')(multiple=multiple class='member-selection')
+			+options(teams, null, 'team')
+	else
+		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')

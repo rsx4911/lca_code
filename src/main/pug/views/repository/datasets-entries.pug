@@ -1,0 +1,48 @@
+mixin count-span()
+	span.dataset-count: img(src='images/loader.gif' aria-label='Loader icon')
+
+if categoryPath
+	- var previousUrl = baseUrl + '/datasets';
+	if previousPath
+		- previousUrl += '/' + previousPath;
+	tr 
+		td 
+		td: a(href=previousUrl): strong ..
+		if !isPublic
+			td
+			td
+each entry in entries
+	tr
+		if !categoryPath
+			td: img.model-icon-small(src='images/model/small/category/' + entry.type.toLowerCase() + '.png', aria-label='Model icon of ' + entry.type)
+			- var url = baseUrl + '/datasets/' + getRootLabel(entry.type);
+			if commitId
+				- url += '?commitId=' + commitId			
+			td(data-path=entry.type): a(href=url): strong 
+				if entry.deleted
+					del=getRootLabel(entry.type) 
+					+count-span()
+				else
+					|  #{getRootLabel(entry.type)} 
+					+count-span()
+			if !isPublic
+				td=formatLastUpdate(entry.commitTimestamp)
+				td: a(href=baseUrl + '/commit/' + entry.commitId)=entry.commitMessage
+		else
+			td: img.model-icon-small(src='images/model/small/' + getIcon(entry), aria-label='Model icon of ' + entry.type)
+			td(data-path=entry.type==='CATEGORY'?entry.categoryType+(entry.fullPath?'/'+entry.fullPath:''):null)
+				- var url = entry.type === 'CATEGORY' ? '/datasets/' + categoryPath + '/' + entry.name : '/dataset/' + entry.type + '/' + entry.refId;
+				if commitId
+					- url += '?commitId=' + commitId
+				a(href=baseUrl + url): strong
+					if entry.action === 'DELETE'
+						del=entry.name 
+							if entry.type === 'CATEGORY'
+								+count-span()
+					else
+						| #{entry.name} 
+						if entry.type === 'CATEGORY'
+							+count-span()
+			if !isPublic
+				td=formatLastUpdate(entry.commitTimestamp)
+				td: a(href=baseUrl + '/commit/' + entry.commitId)=entry.commitMessage

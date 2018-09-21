@@ -47,7 +47,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
 	private String getUserInfo() {
 		User user = userService.getCurrentUser();
-		if (user == null)
+		if (user == null || user.getId() == 0l)
 			return "anonymous";
 		String info = "{";
 		info += "id: " + user.getId();
@@ -74,7 +74,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
 	private boolean isAdmin() {
 		User user = userService.getCurrentUser();
-		return user != null && user.admin;
+		return user != null && user.isAdmin();
 	}
 
 }

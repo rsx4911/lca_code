@@ -155,6 +155,9 @@ public class BrowseService {
 			type = ModelTypes.from(entry, "categoryType");
 			String path = entry.getString("fullPath");
 			ObjectMap lastChanged = getLastChanged(type, path, params);
+			if (lastChanged == null || lastChanged.getLong("commitTimestamp") < entry.getLong("commitTimestamp")) {
+				lastChanged = entry;
+			}
 			entry.put("commitId", lastChanged.get("commitId"));
 			entry.put("commitMessage", lastChanged.get("commitMessage"));
 			entry.put("commitTimestamp", lastChanged.get("commitTimestamp"));

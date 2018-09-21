@@ -35,9 +35,6 @@ public class User extends AbstractEntity {
 	@Column(name = "two_factor_secret")
 	public String twoFactorSecret;
 
-	@Column(name = "admin")
-	public boolean admin;
-
 	@Embedded
 	public UserSettings settings;
 
@@ -82,6 +79,24 @@ public class User extends AbstractEntity {
 	public boolean isEnabled(Notification notification) {
 		int e = (int) Math.pow(2, notification.ordinal());
 		return (settings.notifications | e) == settings.notifications;
+	}
+	
+	public boolean isAdmin() {
+		if (settings == null)
+			return false;
+		return settings.admin;
+	}
+	
+	public boolean isUserManager() {
+		if (settings == null)
+			return false;
+		return settings.admin || settings.userManager;
+	}
+	
+	public boolean isDataManager() {
+		if (settings == null)
+			return false;
+		return settings.admin || settings.dataManager;
 	}
 
 }

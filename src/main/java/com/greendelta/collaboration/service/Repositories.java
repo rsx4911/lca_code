@@ -20,9 +20,9 @@ class Repositories {
 			for (ModelType type : ModelType.values()) {
 				cloneTypeContents(from, to, commits, type);
 				cloneTypeBinContents(from, to, commits, type);
-			}
-			cloneHistoryContents(from, to, commits);
+			}			
 			cloneDirectFiles(from, to);
+			cloneHistoryContents(from, to, commits);
 			return true;
 		} catch (IOException e) {
 			LoggerFactory.getLogger(Repositories.class).error("Error cloning repository contents", e);
@@ -76,6 +76,7 @@ class Repositories {
 	}
 
 	private static void cloneHistoryContents(Repository from, Repository to, List<Commit> commits) throws IOException {
+		to.getHistoryFile(true).delete();
 		File copy = to.getHistoryFile(true);
 		for (Commit commit : commits)
 			Bytes.appendTo(copy, commit.toString());

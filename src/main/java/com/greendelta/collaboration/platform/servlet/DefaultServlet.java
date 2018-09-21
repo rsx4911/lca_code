@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.platform.servlet;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.servlet.ServletException;
@@ -50,7 +51,12 @@ public class DefaultServlet extends HttpServlet {
 			if (subject != null && subject.isAuthenticated() && !Strings.isNullOrEmpty(redirectUrl)) {
 				response.sendRedirect(redirectUrl);
 			} else {
-				forward("/index.html", request, response);
+				File publicIndex = new File(request.getServletContext().getRealPath("index_public.html"));
+				if (!subject.isAuthenticated() && publicIndex.exists()) {
+					forward("/index_public.html", request, response);
+				} else {
+					forward("/index.html", request, response);					
+				}
 			}
 		}
 	}

@@ -1,0 +1,25 @@
+include ../mixins/forms.pug
+include ../mixins/avatar-box.pug
+
+.two-columns.special.flex-layout
+	div
+		.header-box Info
+			if group.userCanDelete
+				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-group') Delete
+		.content-box
+			+static('name', 'Name', group.name)
+		+avatar-box('group', group.name, group.userCanWrite)
+	.repositories.flex-column
+		.flex-container
+			.header-box Repositories (#{repositories.length})
+				if group.userCanCreate
+					button.btn.btn-lg.btn-success.pull-right(data-action='create-repository')
+						span.glyphicon.glyphicon-plus
+						span.text Create new
+			.list-container
+				each repo in repositories
+					.list-entry
+						- var repoId = repo.group + '/' + repo.name;
+						img.avatar(src='ws/repository/avatar/' + repoId, aria-label='Avatar of ' + repoId)
+						a.follow(href=repoId)
+							strong=repo.name

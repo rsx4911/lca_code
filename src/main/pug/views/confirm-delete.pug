@@ -1,0 +1,7 @@
+include mixins/forms.pug
+
+h4=text
+p Please enter 
+	span.confirmation-phrase=confirmationPhrase
+	|  to proceed
++input('confirmation-phrase')(aria-label='Confirmation phrase')

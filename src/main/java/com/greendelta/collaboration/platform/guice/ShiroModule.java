@@ -27,6 +27,8 @@ class ShiroModule extends ShiroWebModule {
 
 	private static final Logger log = LogManager.getLogger(ShiroModule.class);
 	private static final Key<RolesAuthorizationFilter> ADMIN_USER = config(ROLES, "admin");
+	private static final Key<RolesAuthorizationFilter> USER_MANAGER_USER = config(ROLES, "userManager");
+	private static final Key<RolesAuthorizationFilter> DATA_MANAGER_USER = config(ROLES, "dataManager");
 	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
 	private static final Key<RepoAccessFilter> REPO_ACCESS = Key.get(RepoAccessFilter.class);
 
@@ -44,9 +46,13 @@ class ShiroModule extends ShiroWebModule {
 		expose(CloudSession.class);
 		addFilterChain("/ws/public/**", ANON);
 		addFilterChain("/ws/admin/**", ROLES, ADMIN_USER);
+		addFilterChain("/ws/usermanager/**", ROLES, USER_MANAGER_USER);
+		addFilterChain("/ws/datamanager/**", ROLES, DATA_MANAGER_USER);
 		addFilterChain("/ws/**", LOGGED_IN_USER);
 		addFilterChain("/sockets/public/**", ANON);
 		addFilterChain("/sockets/admin/**", ROLES, ADMIN_USER);
+		addFilterChain("/sockets/usermanager/**", ROLES, USER_MANAGER_USER);
+		addFilterChain("/sockets/datamanager/**", ROLES, DATA_MANAGER_USER);
 		addFilterChain("/sockets/**", LOGGED_IN_USER);
 		for (String userRoute : Names.getUserRoutes())
 			addFilterChain("/" + userRoute + "/**", LOGGED_IN_USER);

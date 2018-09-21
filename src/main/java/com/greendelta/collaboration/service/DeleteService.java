@@ -52,7 +52,7 @@ public class DeleteService {
 
 	public void delete(User user) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin)
+		if (!currentUser.isUserManager())
 			throw new UnauthorizedAccessException("User " + user.getId(), "DELETE");
 		for (Repository repository : repoService.getAll(0, 0, user.username + "/", false).data) {
 			delete(repository);
@@ -104,7 +104,7 @@ public class DeleteService {
 
 	public void delete(Team team) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.admin)
+		if (!currentUser.isUserManager())
 			throw new UnauthorizedAccessException("Team " + team.getId(), "DELETE");
 		memberService.removeMemberships(team);
 		teamService.delete(team);

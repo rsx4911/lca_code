@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.platform.mail;
 
+import javax.mail.Transport;
+
 import org.apache.commons.pool.PoolableObjectFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +17,11 @@ class TransportObjectFactory implements PoolableObjectFactory<TransportHolder> {
 
 	@Override
 	public TransportHolder makeObject() throws Exception {
+		Transport transport = emailService.getTransport();
+		if (transport == null)
+			return null;
 		TransportHolder object = new TransportHolder();
-		object.setTransport(emailService.getTransport());
+		object.setTransport(transport);
 		object.setOpeningTime(System.currentTimeMillis());
 		return object;
 	}

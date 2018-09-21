@@ -35,7 +35,7 @@ define () ->
 	TASK_CANCELED: 'A task I participate in was canceled'
 	TASK_COMPLETED: 'A task I participate in was completed'
 
-	# admin notifications
+	# manager notifications
 	USER_CREATED: 'A user was created'
 	USER_DELETED: 'A user was deleted'
 	TEAM_CREATED: 'A team was created'
@@ -57,7 +57,7 @@ define () ->
 			else if $.inArray(key, ['TASK_ASSIGNED', 'TASK_REVOKED', 'TASK_CANCELED', 'TASK_COMPLETED', 'TASK_STARTED']) isnt -1
 				group = 'Task'
 			else if $.inArray(key, ['USER_CREATED', 'USER_DELETED', 'TEAM_CREATED', 'TEAM_DELETED', 'GROUP_CREATED', 'NOTIFY_FOR_ALL']) isnt -1
-				group = 'Admin'
+				group = 'Manager'
 			else
 				continue
 			all.push

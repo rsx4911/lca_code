@@ -8,7 +8,7 @@ define([
 
 			url: () ->
 				teamname = @get 'teamname'
-				return "ws/admin/team/#{teamname}"
+				return "ws/usermanager/team/#{teamname}"
 
 			isNew: () ->
 				if @get('id')

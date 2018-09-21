@@ -1,0 +1,68 @@
+include ../mixins/category-breadcrumb.pug
+
+mixin result(dataset)
+	.result
+		if dataset.action === 'DELETE' && dataset.type === 'CATEGORY'
+			+result-title(dataset)
+		else if dataset.type === 'CATEGORY'
+			- var url = dataset.repositoryId + '/datasets/' + getLabel('type', dataset.categoryType) + '/' + dataset.fullPath;
+			a(href=url): +result-title(dataset)
+		else
+			- var url = dataset.repositoryId + '/dataset/' + dataset.type + '/' + dataset.refId;
+			if dataset.commitId
+				- url += '?commitId=' + dataset.commitId;
+			a(href=url): +result-title(dataset)
+		+result-details(dataset)
+		+result-actions(dataset)
+		.clear
+
+
+mixin result-title(dataset)
+	img.model-icon-small(src='images/model/small/' + getIcon(dataset), aria-label='Model icon of ' + dataset.type)
+	if dataset.action === 'DELETE'
+		del.result-text=dataset.name
+	else 
+		span.result-text=dataset.name
+
+mixin result-details(dataset)
+	.details
+		if dataset.categories && dataset.categories.length
+			- var type = dataset.type === 'CATEGORY' ? dataset.categoryType : dataset.type
+			- var catUrl = dataset.repositoryId + '/datasets/' + getLabel('type', type);
+			+category-breadcrumb(catUrl, dataset.categories, true)
+		.details-left
+			div Repository: 
+				a(href=dataset.repositoryId)=dataset.repositoryId
+			if !isPublic
+				div Commit: 
+					a(href=dataset.repositoryId + '/commit/' + dataset.commitId)=dataset.commitMessage
+		if dataset.location || dataset.validFromYear || dataset.validUntilYear
+			.details-right
+				if dataset.location
+					div 
+						img(src='images/model/small/location.png', aria-label='Location icon')
+						|  #{dataset.location}
+				if dataset.validFromYear || dataset.validUntilYear
+					div
+						img(src='images/calendar.png', aria-label='Calendar icon')
+						if dataset.validFromYear && dataset.validUntilYear && dataset.validFromYear != dataset.validUntilYear
+							|  #{dataset.validFromYear} - #{dataset.validUntilYear}
+						else if dataset.validFromYear
+							|  #{dataset.validFromYear}
+						else if dataset.validUntilYear
+							|  #{dataset.validUntilYear}
+
+mixin result-actions(dataset)
+	.actions
+		.dropdown.btn-group
+			button.btn.btn-success.btn-sm.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+				span.glyphicon.glyphicon-download
+				span.text Download
+				span.caret
+			- var repo = dataset.repositoryId.split('/')[1]
+			ul.dropdown-menu
+				li: a(href='#', data-format='json', data-datatype='dataset', data-group=dataset.group, data-repo=repo, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=dataset.commitId) Dataset as JSON-LD
+				li: a(href='#', data-format='ilcd', data-datatype='dataset', data-group=dataset.group, data-repo=repo, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=dataset.commitId) Dataset as ILCD
+				li.divider(role='separator')
+				li: a(href='#', data-format='json', data-datatype='repository', data-group=dataset.group, data-repo=repo, data-commit-id=dataset.commitId) Repository as JSON-LD
+				li: a(href='#', data-format='ilcd', data-datatype='repository', data-group=dataset.group, data-repo=repo, data-commit-id=dataset.commitId) Repository as ILCD

@@ -19,7 +19,6 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.Nomenclature;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
-import com.greendelta.search.wrapper.Categories;
 import com.greendelta.search.wrapper.SearchResult;
 
 class IndexEntryParser {
@@ -84,7 +83,7 @@ class IndexEntryParser {
 		if (path.length <= 1)
 			return;
 		List<String> categories = Arrays.asList(Arrays.copyOfRange(path, 0, path.length - 1));
-		Categories.fillUp(map, categories);
+		DataFill.categories(map, categories);
 	}
 
 	private IndexEntry parse(ObjectMap entry) {
@@ -111,6 +110,7 @@ class IndexEntryParser {
 		e.version = entry.get("version");
 		e.commitTimestamp = entry.get("commitTimestamp");
 		e.action = entry.get("action");
+		e.mostRecent = entry.getBoolean("mostRecent");
 		e.type = type;
 		return e;
 	}
@@ -129,7 +129,7 @@ class IndexEntryParser {
 		if (path.length <= 1)
 			return;
 		List<String> categories = Arrays.asList(Arrays.copyOfRange(path, 0, path.length - 1));
-		IndexEntryCreator.fillCategoryInfo(e, categories);
+		DataFill.categories(e, categories);
 	}
 
 	// for indexing we have to set a value, this is unset here

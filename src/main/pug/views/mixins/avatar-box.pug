@@ -1,0 +1,12 @@
+mixin avatar-box(type, id, canWrite) 
+	.header-box Avatar
+		img.pull-right.avatar(src='ws/' + type + '/avatar/' + id, aria-label='Repository avatar')
+	if canWrite
+		form#avatar-form.content-box
+			#avatar-general-message-group.alert(role='alert'): span.message
+			+input('avatar', null, 'file')(aria-label='Avatar file input')
+			if !window.FileReader
+				button.btn.btn-lg.btn-success.pull-right(data-action='save-avatar') Save
+			else
+				button.btn.btn-lg.btn-success.pull-right(data-action='reset-avatar') Clear
+			.clear

@@ -1,0 +1,104 @@
+include ./mixins.pug
+
+mixin exchange-table(field, input)
+	- var count = 0;
+	- var exchanges = getValue(dataset, field);
+	- var otherExchanges = compareTo ? getValue(compareTo, field) : null;
+	each exchange in exchanges
+		if exchange.input === input
+			- count++;
+	if count > 0
+		div
+			table.table(class=input?'inputs':'outputs')
+				- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false, description: false};
+				if exchanges
+					each exchange in exchanges
+						if exchange.input === input
+							- show.costs = show.costs || exchange.costValue || exchange.currency;
+							- show.dqEntry = show.dqEntry || exchange.dqEntry;
+							- show.uncertainty = show.uncertainty || exchange.uncertainty;
+							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
+							- show.avoidedProduct = show.avoidedProduct || exchange.avoidedProduct;
+							- show.description = show.description || exchange.description;
+				if otherExchanges
+					each exchange in otherExchanges
+						if exchange.input === input
+							- show.costs = show.costs || exchange.costValue || exchange.currency;
+							- show.dqEntry = show.dqEntry || exchange.dqEntry;
+							- show.uncertainty = show.uncertainty || exchange.uncertainty;
+							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
+							- show.avoidedProduct = show.avoidedProduct || exchange.avoidedProduct;
+							- show.description = show.description || exchange.description;
+				thead
+					tr
+						th
+						th=getLabel('exchanges.flow')
+						th=getLabel('exchanges.flow.category')
+						th=getLabel('exchanges.amount')
+						th=show.costs?getLabel('exchanges.costs'):''
+						th=show.uncertainty?getLabel('exchanges.uncertainty'):''
+						th=show.dqEntry?getLabel('exchanges.dqEntry'):''
+						th=show.defaultProvider?getLabel('exchanges.defaultProvider'):''
+						th=show.avoidedProduct?(input?getLabel('exchanges.avoidedWaste'):getLabel('exchanges.avoidedProduct')):''
+						th=show.description?(getLabel('exchanges.description')):''
+						th
+				tbody
+					- count = 0;
+					each values in getArrayValues(dataset, compareTo, 'EXCHANGE', field)
+						if (values[0] ? values[0].input : values[1].input) === input
+							+exchange-row(values[0], values[1], count, input, show)
+							- count++;
+			if count > 10 && !compareTo
+				a.toggle-control(href='#') Show #{count - 10} more
+				a.toggle-control(href='#' style='display:none') Show less
+				if input
+					p &nbsp;
+
+mixin exchange-row(exchange, other, count, input, show)
+	- var clazz = getValue(exchange, 'quantitativeReference') ? 'reference' : '';
+	- var style = null;
+	if count >= 10 && !compareTo
+		- clazz += ' toggleable';
+		- style = 'display:none';
+	- var flow = getValue(exchange, 'flow');
+	- var otherFlow = getValue(other, 'flow');
+	- var unit = getValue(exchange, 'unit');
+	- var otherUnit = getValue(other, 'unit');
+	- var category = getValue(flow, 'category');
+	if category
+		- category.categoryType = flow.type;
+	- var otherCategory = getValue(otherFlow, 'category');
+	if otherCategory
+		- otherCategory.categoryType = otherFlow.type;
+	- var changed = compareTo && !other ? 'added' : (compareTo && !exchange ? 'removed' : null);
+	tr(data-compare=changed, class=clazz?clazz:null, style=style)
+		td: img.icon-small(src='images/' + (input?'input':'output') + '.png' aria-label='Icon of ' + (input?'input':'output'))
+		td
+			+compare-icon(changed)
+			+ref(flow, otherFlow)
+		td: +category-field(category, otherCategory, true)
+		- var amount = getValue(exchange, 'amount');
+		- amount = amount || amount === 0
+		- var otherAmount = getValue(other, 'amount');
+		- otherAmount = otherAmount || otherAmount === 0
+		- var amountTitle = amount ? amount + (otherAmount && otherAmount != amount ? ' / ' + otherAmount : '') : (otherAmount ? otherAmount : '');
+		+sub-field-cell(exchange, other, 'amount', null, formatScientific)(title=amountTitle) 
+			|  
+			+sub-field(unit, otherUnit, 'name')
+		- var cost = getValue(exchange, 'costValue');
+		- cost = cost || cost === 0
+		- var otherCost = getValue(other, 'costValue');
+		- otherCost = otherCost || otherCost === 0
+		- var costTitle = cost ? cost + (otherCost && otherCost != cost ? ' / ' + otherCost : '') : (otherCost ? otherCost : '');
+		+sub-field-cell(exchange, other, 'costValue', null, formatScientific)(title=costTitle) 
+			+sub-field-ref(exchange, other, 'currency')
+		+uncertainty-cell(exchange, other, formatScientific)
+		td
+			- var otherSystem = getValue(compareTo, exchangeDqSystem);				
+			+dq-field(exchange, other, 'dqEntry', dataset.exchangeDqSystem, otherSystem, null, true)
+		+sub-field-ref-cell(exchange, other, 'defaultProvider')
+		td
+			if show.avoidedProduct
+				+boolean-sub-field(exchange, other, 'avoidedProduct')
+		+sub-field-cell(exchange, other, 'description', null, null, false, 75)
+		td(data-path=exchange?'exchanges[' + exchange.internalId +']':null)

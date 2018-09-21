@@ -1,0 +1,61 @@
+include views/mixins/login-form.pug
+
+<!DOCTYPE html>
+html(lang='en')
+	head
+		base(href='/lca-collaboration/')
+		title='LCA Collaboration Server'
+		meta(http-equiv='expires' content='0')
+		meta(name='viewport' content='width=device-width, initial-scale=1')
+		meta(name='fragment' content='!')
+		link(rel='shortcut icon' type='image/x-icon' href='images/favicon.ico')
+		link(rel='stylesheet' type='text/css' href='css/styles.css')
+	body.login
+		header
+			.logo-container
+				a(href='')
+					img.logo(src='images/logo.png' title='Logo')
+		#main-login
+			#login-description
+				h3 Welcome to the LCA Collaboration Server!
+					br
+					small Manage LCA repositories with user specific access management that keeps your LCA data secure and enables collaboration. 
+			#login-container
+				+login-form
+					button.btn.btn-primary.btn-block(type='submit') Login
+		br
+		br
+		br
+		#footer &copy; 
+			a(href='http://www.greendelta.com' target='_blank') GreenDelta GmbH
+			|  
+			span#year
+			|  | 
+			a(href='imprint') Imprint
+		script(src='js/libs/jquery.js')
+		script.
+			$('#year').html(new Date().getFullYear());
+			$('#login').on('submit', function(event) {
+				$('#login-general-message').hide();
+				var data = {username: $('#username').val(), password: $('#password').val()};
+				if ($('#token').is(':visible')) {
+					data.token = $('#token').val();
+				}
+				$.ajax({type: 'POST', url: 'ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
+					success: function(response) {
+						if (response === 'tokenRequired') {
+							$('#username-group').addClass('hidden');
+							$('#password-group').addClass('hidden');
+							$('#token-group').removeClass('hidden');
+							$('#login-general-message').hide();
+							$('#token').focus();
+						} else {
+							window.location.href = '';
+						}
+					}, error: function(response) {
+						$('#login-general-message').show();
+						$('#login-general-message .message').html(response.responseText);
+						$('#token').val('');
+					}});
+				return false;
+			});

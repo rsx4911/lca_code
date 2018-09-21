@@ -132,7 +132,9 @@ public class CommentResource {
 		}
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
-			String key = IndexEntry.toIndexId(repoId, comment.field.refId, comment.field.commitId);
+			DatasetField field = comment.field;
+			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+			String key = IndexEntry.toIndexId(repoId, comment.field.refId, commit.id);
 			map.put("dsPath", idToPath.get(key));
 			if (putReplyCount) {
 				map.put("replyCount", service.getRepliesTo(comment.getId()).size());

@@ -1,0 +1,24 @@
+mixin box(label, plural, count)
+	- var lcLabel = label.toLowerCase()	
+	- var lcPlural = plural.toLowerCase()	
+	.header-box
+		h4=plural
+		.count=count
+		hr
+		button.btn.btn-lg.btn-full-width.btn-success(data-action='create-' + lcLabel) Create #{lcLabel}
+	.list-box
+		legend All #{lcPlural} 
+			if label === 'Repository'
+				button.btn.btn-xs.btn-default(data-action='reindex-repositories') Reindex
+			input.form-control.input-sm.filter.pull-right(id=lcLabel + '-filter' type='text' placeholder='filter' aria-label='Filter + ' + label)
+			.clear
+		div(id=lcPlural)
+
+div(class=isAdmin?'four-columns':'two-columns')
+	if isAdmin
+		div: +box('Repository', 'Repositories', repositories)
+	div: +box('User', 'Users', users)
+	if isAdmin
+		div: +box('Group', 'Groups', groups)
+	div: +box('Team', 'Teams', teams)
+.clear

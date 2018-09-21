@@ -19,12 +19,12 @@ define([
 				Events.preventDefault event
 				review = Forms.toJson 'review-form'
 				$.ajax
-					type: if @id then 'PUT' else 'POST'
-					url: 'ws/task/review' + (if @id then '/' + @id else '')
+					type: if @reviewId then 'PUT' else 'POST'
+					url: 'ws/task/review' + (if @reviewId then '/' + @reviewId else '')
 					contentType: 'application/json'
 					data: JSON.stringify(review)
 					success: (review) => 
-						if @id
+						if @reviewId
 							Status.success 'Successfully updated review task'
 							Backbone.history.loadUrl()
 						else
@@ -46,7 +46,7 @@ define([
 					excludeSelf: true
 					teams: false
 					callback: (selection) =>
-						taskId = @id
+						taskId = @reviewId
 						$.ajax
 							type: 'PUT'
 							url: "ws/task/review/#{taskId}/assign/#{selection.id}"
@@ -59,7 +59,7 @@ define([
 				target = $ Events.target event, 'button'
 				user = target.attr('data-username') or ''
 				displayName = target.attr 'data-user-displayname'
-				taskId = @id
+				taskId = @reviewId
 				forUser = if displayName then " for #{displayName}" else ''
 				Layers.askQuestion
 					title: 'Cancel task' + forUser
@@ -80,7 +80,7 @@ define([
 				Events.preventDefault event
 				target = $ Events.target event, 'button'
 				user = target.attr('data-username') or ''
-				taskId = @id
+				taskId = @reviewId
 				$.ajax
 					type: 'PUT'
 					url: "ws/task/review/#{taskId}/complete/#{user}"
@@ -90,7 +90,7 @@ define([
 
 			selectReferences: (event) ->
 				Events.preventDefault event
-				taskId = @id
+				taskId = @reviewId
 				Layers.selectModel
 					repositoryPath: @review.repositoryPath
 					multipleSelection: true
@@ -111,7 +111,7 @@ define([
 				target = $ Events.target event, 'input'
 				refId = target.attr('id') or ''
 				value = target.is ':checked'
-				taskId = @id
+				taskId = @reviewId
 				$.ajax
 					type: 'PUT'
 					url: "ws/task/review/#{taskId}/markAsReviewed/#{refId}/#{value}"
@@ -132,7 +132,7 @@ define([
 				'click [data-action=mark-as-reviewed]': 'markAsReviewed'
 
 			initialize: (options) ->
-				{@id, @userMenu} = options
+				{@reviewId, @userMenu} = options
 
 			render: (renderOptions) ->
 				$.ajax
@@ -142,10 +142,10 @@ define([
 						selectable = ['']
 						for repo in repositories
 							selectable .push "#{repo.group}/#{repo.name}"
-						if @id
+						if @reviewId
 							$.ajax
 								type: 'GET'
-								url: 'ws/task/review/' + @id
+								url: 'ws/task/review/' + @reviewId
 								success: (review) =>
 									@doRender selectable, review, renderOptions
 									Forms.fill 'review-form', review
@@ -185,6 +185,7 @@ define([
 					activeAssignments: activeAssignments
 					completedAssignments: completedAssignments
 					canceledAssignments: canceledAssignments
+					closed: review and (review.state is 'COMPLETED' or review.state is 'CANCELED')
 					currentUser: currentUser.get('username')
 					formatDate: Format.date
 					formatDateTime: Format.dateTime

@@ -1,9 +1,7 @@
 package websocket;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,14 +20,14 @@ import org.apache.shiro.subject.Subject;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.service.user.MessagingService.ConversationDescriptor;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.webservice.util.Messages;
 
@@ -37,8 +35,7 @@ import com.greendelta.collaboration.webservice.util.Messages;
 public class MessagingEndpoint {
 
 	private static final Logger log = LogManager.getLogger(MessagingEndpoint.class);
-	// username->sessionId(s)
-	private static volatile Map<String, Set<String>> online = new HashMap<>();
+	private static volatile Map<String, Set<Session>> online = new HashMap<>();
 
 	private final MessagingService service;
 	private final UserService userService;
@@ -46,7 +43,8 @@ public class MessagingEndpoint {
 	private final SettingsService settingService;
 
 	@Inject
-	public MessagingEndpoint(MessagingService service, UserService userService, TeamService teamService, SettingsService settingService) {
+	public MessagingEndpoint(MessagingService service, UserService userService, TeamService teamService,
+			SettingsService settingService) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;
@@ -58,7 +56,7 @@ public class MessagingEndpoint {
 		if (!settingService.is(Key.MESSAGING_ENABLED))
 			throw new IllegalStateException("Messaging feature not enabled");
 		User user = getUser(config);
-		boolean wasConnected = Collections.addToSet(online, user.username, session.getId()).size() > 1;
+		boolean wasConnected = Collections.addToSet(online, user.username, session).size() > 1;
 		if (wasConnected || !user.settings.showOnlineStatus)
 			return;
 		notifyConnected(session, user);
@@ -119,8 +117,9 @@ public class MessagingEndpoint {
 		if (session == null || !session.isOpen())
 			return null;
 		for (String key : online.keySet())
-			if (online.get(key).contains(session.getId()))
-				return userService.getForUsername(key);
+			for (Session s : online.get(key))
+				if (s.getId().equals(session.getId()))
+					return userService.getForUsername(key);
 		return null;
 	}
 
@@ -129,7 +128,6 @@ public class MessagingEndpoint {
 		notifyNewMessage(session, message, from);
 		if (!online.containsKey(to.username))
 			return;
-		// store but don't notify
 		if (to.settings.blockedUsers.contains(from))
 			return;
 		notifyNewMessage(session, message, to);
@@ -157,7 +155,7 @@ public class MessagingEndpoint {
 	}
 
 	private void notifyNewMessage(Session session, Message message, User user) {
-		Session[] sessions = getSessions(session, online.get(user.username));
+		Set<Session> sessions = online.get(user.username);
 		send(sessions, new Event(EventType.NEW_MESSAGE, Messages.map(message, message.from)));
 	}
 
@@ -178,12 +176,12 @@ public class MessagingEndpoint {
 	}
 
 	private void notifyMessageRead(Session session, User recipient, User sender) {
-		Session[] sessions = getSessions(session, online.get(sender.username));
+		Set<Session> sessions = online.get(sender.username);
 		send(sessions, new Event(EventType.MESSAGE_READ, recipient.username));
 	}
 
 	private void onPingUser(Session session, Recipient user) {
-		boolean isOnline = online.containsKey(user.id);
+		boolean isOnline = online.containsKey(user.id) && !online.get(user.id).isEmpty();
 		if (!isOnline)
 			return;
 		User pinged = userService.getForUsername(user.id);
@@ -192,13 +190,13 @@ public class MessagingEndpoint {
 		User self = getUser(session);
 		if (pinged.settings.blockedUsers.contains(self))
 			return;
-		Session[] sessions = getSessions(session, online.get(self.username));
+		Set<Session> sessions = online.get(self.username);
 		send(sessions, new Event(EventType.IS_ONLINE, user.id));
 	}
 
 	@OnClose
 	public void onClose(Session session) {
-		String username = Collections.remove(online, session.getId());
+		String username = Collections.remove(online, session.getId(), s -> s.getId());
 		if (username == null)
 			return;
 		User pinged = userService.getForUsername(username);
@@ -209,13 +207,15 @@ public class MessagingEndpoint {
 
 	@OnError
 	public void onError(Session session, Throwable throwable) {
-		log.info(throwable.getClass().getCanonicalName() + ": " + throwable.getMessage(), throwable);
+		log.error("Error in messaging endpoint", throwable);
 	}
 
 	private void broadcast(Session session, Event event) {
 		if (session == null || !session.isOpen())
 			return;
-		send(session.getOpenSessions(), event);
+		for (Set<Session> sessions : online.values()) {
+			send(sessions, event);
+		}
 	}
 
 	private void send(Session session, Event event) {
@@ -223,6 +223,8 @@ public class MessagingEndpoint {
 	}
 
 	private void send(Set<Session> sessions, Event event) {
+		if (sessions == null || sessions.isEmpty())
+			return;
 		send(sessions.toArray(new Session[sessions.size()]), event);
 	}
 
@@ -232,18 +234,9 @@ public class MessagingEndpoint {
 		for (Session s : sessions) {
 			if (!s.isOpen())
 				continue;
-			s.getAsyncRemote().sendText(new Gson().toJson(event));
+			String message = new Gson().toJson(event);
+			s.getAsyncRemote().sendText(message);
 		}
-	}
-
-	private Session[] getSessions(Session session, Set<String> sessionIds) {
-		if (session == null || !session.isOpen())
-			return null;
-		List<Session> sessions = new ArrayList<>();
-		for (Session s : session.getOpenSessions())
-			if (sessionIds.contains(s.getId()))
-				sessions.add(s);
-		return sessions.toArray(new Session[sessions.size()]);
 	}
 
 	private class Event {

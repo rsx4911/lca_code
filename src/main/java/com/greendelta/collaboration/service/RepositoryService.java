@@ -229,11 +229,28 @@ public class RepositoryService {
 		return getAll(true);
 	}
 
+	public static void main(String[] args) throws IOException {
+		rename(new File("/home/sebastian/git/lca-collaboration/src/main/pug"));
+	}
+
+	private static void rename(File file) throws IOException {
+		if (file.isDirectory()) {
+			for (File child : file.listFiles()) {
+				rename(child);
+			}
+		} else if (file.getName().endsWith(".jade")) {
+			String name = file.getAbsolutePath();
+			Files.move(file, new File(name.substring(0, name.lastIndexOf(".jade")) + ".pug"));
+		}
+	}
+
 	private List<Repository> getAll(boolean adminArea) {
 		String path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
 		File root = new File(path);
+		if (!root.exists() || !root.isDirectory())
+			return new ArrayList<>();
 		List<Repository> repos = new ArrayList<>();
 		for (File group : root.listFiles()) {
 			if (group.listFiles() == null)

@@ -29,7 +29,7 @@ define([
 							notification.enabled = ($.inArray(notification.id, enabled) > -1)
 						@$el.html template
 							notifications: notifications
-							isAdmin: currentUser.get('admin')
+							isUserManager: currentUser.isUserManager()
 						Renderer.render @, renderOptions
 
 			changeNotificationState: (event) ->

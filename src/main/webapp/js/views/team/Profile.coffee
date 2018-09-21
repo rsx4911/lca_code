@@ -45,6 +45,7 @@ define([
 					team: team
 				Renderer.render @, renderOptions
 				Forms.fill 'team-form', team
+				Avatar.initCropper 'team', @team.get('teamname')
 
 			saveTeam: (event) ->
 				Events.preventDefault event
@@ -56,7 +57,7 @@ define([
 				if !@team.get('id')
 						$.ajax
 							type: 'POST'
-							url: "ws/admin/team/#{teamname}"
+							url: "ws/usermanager/team/#{teamname}"
 							data: JSON.stringify @team.toJSON()
 							contentType: 'application/json'
 							success: () -> Router.navigate 'administration/overview'
@@ -97,11 +98,12 @@ define([
 						Backbone.history.loadUrl()
 
 			deleteTeam: (event) ->
+				teamname = @team.get 'teamname'
 				Layers.askDeleteQuestion "team #{teamname}", teamname, () =>
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
-						url: "ws/admin/team/#{teamname}"
+						url: "ws/usermanager/team/#{teamname}"
 						success: () -> 
 							Layers.hideProgressIndicator()
 							Router.navigate 'administration/overview'

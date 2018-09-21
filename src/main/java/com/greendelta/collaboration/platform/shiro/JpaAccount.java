@@ -28,8 +28,12 @@ public class JpaAccount implements Account, SaltedAuthenticationInfo {
 		ByteSource salt = new SimpleByteSource(Hex.decode(user.salt));
 		authenticationInfo = new SimpleAuthenticationInfo(user.username, hash, salt, realm.getName());
 		roles = new ArrayList<>();
-		if (user.admin)
+		if (user.isAdmin()) 
 			roles.add("admin");
+		if (user.isUserManager())
+			roles.add("userManager");
+		if (user.isDataManager())
+			roles.add("dataManager");
 	}
 
 	@Override

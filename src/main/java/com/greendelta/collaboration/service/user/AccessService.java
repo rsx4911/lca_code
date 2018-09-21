@@ -39,7 +39,7 @@ public class AccessService {
 		if (isPublic(groupOrRepo))
 			return true;
 		User user = userService.getCurrentUser();
-		if (!ignoreAdmin && user.admin)
+		if (!ignoreAdmin && user.isAdmin())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
@@ -87,7 +87,7 @@ public class AccessService {
 		User user = userService.getCurrentUser();
 		Map<String, Role> userRoles = new HashMap<>();
 		for (Comment comment : comments) {
-			if (user.admin || comment.user.equals(user)) {
+			if (user.isAdmin() || comment.user.equals(user)) {
 				canRead.add(comment);
 				continue;
 			}
@@ -122,7 +122,7 @@ public class AccessService {
 
 	public boolean canManageCommentsIn(String repositoryPath) {
 		User user = userService.getCurrentUser();
-		if (user.admin)
+		if (user.isAdmin())
 			return true;
 		if (!canRead(repositoryPath))
 			return false;
@@ -134,7 +134,7 @@ public class AccessService {
 	}
 
 	public boolean canReviewIn(User user, String repositoryPath) {
-		return hasPermissionTo(user, Permission.REVIEW, repositoryPath);
+		return hasPermissionTo(user, Permission.REVIEW, repositoryPath, true);
 	}
 
 	public boolean canManageTaskIn(String repositoryPath) {
@@ -151,7 +151,7 @@ public class AccessService {
 	}
 
 	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo, boolean ignoreAdmin) {
-		if (!ignoreAdmin && user.admin)
+		if (!ignoreAdmin && user.isAdmin())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;

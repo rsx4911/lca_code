@@ -46,6 +46,22 @@ public class Collections {
 		return match;
 	}
 
+	public static <K, V, S> K remove(Map<K, ? extends Collection<V>> map, S value, Function<V, S> converter) {
+		K match = null;
+		for (K key : new ArrayList<>(map.keySet())) {
+			Collection<V> col = map.get(key);
+			for (V val : new ArrayList<>(col)) {
+				if (converter.apply(val).equals(value)) {
+					col.remove(value);
+				}
+			}
+			if (!col.isEmpty())
+				continue;
+			match = key;
+		}
+		return match;
+	}
+
 	public static <V> List<V> parseList(String values, Function<String, V> parse) {
 		return parseList(values, ',', parse);
 	}

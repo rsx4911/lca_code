@@ -104,6 +104,8 @@ define([
 			render: (renderOptions) ->
 				@$el.html template 
 					isAdmin: currentUser.isAdmin()
+					isUserManager: currentUser.isUserManager()
+					isDataManager: currentUser.isDataManager()
 					unreadMessages: conversations.getUnreadMessages()
 					websocketSupported: (window.WebSocket isnt undefined)
 					debugMode: LocalStorage.getValue('debugMode')

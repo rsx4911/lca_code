@@ -1,0 +1,10 @@
+include ../mixins/forms.pug
+
+form#clone-form
+	#clone-form-general-message-group.alert(role='alert'): span.message
+	+input('clone-name', 'Name')
+	+select('clone-group', 'Group', groups)
+	+select('clone-commit', 'Version')
+		each commit, i in commits
+			option(value=commit.id)=i===0?'Latest':commit.id 
+			optgroup.additional-info(label!='&nbsp; &nbsp;' + formatCommitDescription(commit.message))

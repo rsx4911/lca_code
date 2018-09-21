@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.search;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,16 +9,15 @@ import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
+import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
@@ -48,12 +46,17 @@ class QueryService {
 		ModelType type = getFilteredModelType(filters.get(Aggregations.MODEL_TYPE.name));
 		putAggregations(builder, repos, filters, type);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		if (!loggedIn) {
+			builder.filter("mostRecent", SearchFilterValue.term(true));
+		}
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query, SearchFields.get(type, loggedIn));
+		} else {
+			builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		}
-		builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		builder.page(page);
 		builder.pageSize(pageSize);
+		Scoring.apply(builder);
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchResult<Map<String, Object>> result = client.search(builder.build());
 		if (loggedIn)
@@ -84,11 +87,7 @@ class QueryService {
 	}
 
 	private SearchResult<IndexEntry> prepResult(SearchResult<Map<String, Object>> result) {
-		// only return newest and undeleted versions to anonymous users
-		List<Map<String, Object>> entries = new ArrayList<>();
-		Set<String> alreadyAdded = new HashSet<>();
-		entries = Collections.filter(entries, (e) -> !alreadyAdded.add(e.get("refId").toString()));
-		entries = Collections.filter(entries, (e) -> e.get("action") == IndexAction.DELETE);
+		// TODO only return newest and undeleted versions to anonymous users
 		return SearchResults.convert(result, parser::parse);
 	}
 

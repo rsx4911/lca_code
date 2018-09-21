@@ -1,0 +1,8 @@
+mixin user-info(id, name, type)
+	- var lcType = type ? type.toLowerCase() : 'user';		
+	span.user-info&attributes(attributes)
+		img.avatar.avatar-small(src='ws/' + lcType + '/avatar/' + id, aria-label='User avatar')
+		span.username=name 
+			if type
+				| (#{type})
+			block

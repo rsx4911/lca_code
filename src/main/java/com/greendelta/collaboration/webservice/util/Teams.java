@@ -9,7 +9,7 @@ public class Teams {
 		// only static access
 	}
 
-	public static ObjectMap mapForAdmin(Team team) {
+	public static ObjectMap mapForManager(Team team) {
 		ObjectMap map = ObjectMap.fromObject(team);
 		map.removeAllBut("id", "teamname", "name");
 		map.put("users", Client.map(team.users, Users::mapForOthers));

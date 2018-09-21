@@ -19,10 +19,10 @@ import org.apache.shiro.authz.UnauthorizedException;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Bytes;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
@@ -36,28 +36,30 @@ public class TeamResource {
 
 	private final TeamService service;
 	private final UserService userService;
-	private final MessagingService messagingService;
 
 	@Inject
-	public TeamResource(TeamService service, UserService userService, MessagingService messagingService) {
+	public TeamResource(TeamService service, UserService userService) {
 		this.service = service;
 		this.userService = userService;
-		this.messagingService = messagingService;
 	}
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module) {
-		SearchResult<Team> result = service.getAll(page, filter);
+		SearchResult<Team> result = service.getAll(page, pageSize, filter);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Teams::mapForOthers));
 		List<Team> teams = result.data;
 		switch (module) {
 		case MESSAGING:
-			teams = messagingService.filterTeams(teams);
+			User currentUser = userService.getCurrentUser();
+			teams = Collections.filter(teams, (team) -> {
+				return !team.users.contains(currentUser);
+			});
 			break;
 		default:
 			break;
@@ -95,8 +97,8 @@ public class TeamResource {
 
 	private Team authorizedGetTeam(String teamname) {
 		User user = userService.getCurrentUser();
-		if (!user.admin)
-			throw new UnauthorizedException("Only admin can change teams");
+		if (!user.isUserManager())
+			throw new UnauthorizedException("Not authorized to manage teams");
 		return service.getForTeamname(teamname);
 	}
 

@@ -24,7 +24,8 @@ define([
 				'click a[data-action=show-message]': 'onConversationClicked'
 				'click [data-action=start-new-conversation]': 'openSelection'
 				'click .block': 'blockUser'
-				'keypress #conversation-input input': 'sendMessage'
+				'keypress #conversation-input input': (event) -> @sendMessage event, true
+				'click #conversation-input .glyphicon-send': (event) -> @sendMessage event, false
 
 			render: (renderOptions) ->
 				@$el.html template
@@ -167,6 +168,8 @@ define([
 				@$('.list-entry.active').removeClass 'active'
 				@$("[data-type=#{recipient.type}][data-id=#{recipient.id}] .list-entry").addClass 'active'
 				@$('#next-message').prop 'disabled', false
+				@$('#next-message').attr 'placeholder', 'Type your message here...'
+				@$('#conversation-input .glyphicon-send').show()
 				@$('.header-box .username').html recipient.name
 				@$('.header-box .avatar').attr 'src', "ws/#{recipient.type}/avatar/#{recipient.id}"
 				@$('#conversation-messages').empty()
@@ -179,14 +182,17 @@ define([
 			scrollDown: () ->
 				@$('#conversation-messages').scrollTop @$('#conversation-messages').prop 'scrollHeight'
 
-			sendMessage: (event) ->
+			sendMessage: (event, fromInput) ->
 				unless @conversation
 					return
-				keyCode = Events.keyCode event
-				if keyCode isnt 13
-					return
+				if fromInput
+					keyCode = Events.keyCode event
+					if keyCode isnt 13
+						return
 				input = @$ '#next-message'
 				text = input.val()
+				unless text
+					return
 				input.val ''				
 				conversations.sendMessage @conversation.get('recipient'), text
 

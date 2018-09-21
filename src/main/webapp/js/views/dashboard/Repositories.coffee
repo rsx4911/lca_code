@@ -34,9 +34,8 @@ define([
 					success: () =>
 						settings = currentUser.get 'settings'
 						noOfRepositories = currentUser.get 'noOfRepositories'
-						admin = currentUser.get 'admin'
 						@$el.html template
-							canCreateRepositories: admin or (settings and (settings.canCreateRepositories and (!settings.noOfRepositories or settings.noOfRepositories > noOfRepositories)))
+							canCreateRepositories: currentUser.isAdmin() or (settings and (settings.canCreateRepositories and (!settings.noOfRepositories or settings.noOfRepositories > noOfRepositories)))
 						Renderer.render @, renderOptions
 						@filter.init()
 

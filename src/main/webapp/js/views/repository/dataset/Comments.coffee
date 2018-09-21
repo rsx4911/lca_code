@@ -28,7 +28,10 @@ define([
 					style = if visible then '' else 'style="display:none" '
 					highlight = @comments[path]
 					unless $('img[data-action=comment]', element).length
-						$(element).append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
+						elem = $(element)
+						if elem.is('ol') or elem.is('ul')
+							elem = elem.parent()	
+						elem.append '<img ' + style + 'title="' + title + '" src="images/comment' + (if highlight then '_highlighted' else '') + '.png" data-action="comment"></a>'
 				$('[data-path] [data-action=comment]', container).off 'click.comment'
 				$('[data-path] [data-action=comment]', container).on 'click.comment', (event) => 
 					Events.preventDefault event

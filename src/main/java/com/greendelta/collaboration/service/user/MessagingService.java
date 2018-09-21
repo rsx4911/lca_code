@@ -85,7 +85,7 @@ public class MessagingService {
 	}
 
 	public List<Message> getMessages(Team team) {
-		String jpql = "SELECT m FROM Message m WHERE m.team :team";
+		String jpql = "SELECT m FROM Message m WHERE m.team = :team";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("team", team);
 		return dao.getAll(jpql, attributes);
@@ -132,7 +132,7 @@ public class MessagingService {
 
 	public List<User> filterUsers(List<User> users) {
 		User currentUser = userService.getCurrentUser();
-		if (currentUser.admin)
+		if (currentUser.isUserManager())
 			return users;
 		List<Team> teams = teamService.getTeamsFor(currentUser);
 		return com.greendelta.collaboration.util.Collections.filter(users, (user) -> {
@@ -146,15 +146,6 @@ public class MessagingService {
 				if (team.users.contains(user))
 					return false;
 			return true;
-		});
-	}
-
-	public List<Team> filterTeams(List<Team> teams) {
-		User currentUser = userService.getCurrentUser();
-		if (currentUser.admin)
-			return teams;
-		return com.greendelta.collaboration.util.Collections.filter(teams, (team) -> {
-			return team.users.contains(currentUser);
 		});
 	}
 

@@ -16,6 +16,7 @@ import org.openlca.util.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.search.DataFill;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -120,7 +121,7 @@ public class ReindexService {
 				if (entry.categories != null && entry.categories.size() > 0) {
 					entry.fullPath = Strings.join(entry.categories, '/') + '/' + entry.name;
 				}
-				IndexEntryCreator.fillCategoryInfo(entry, entry.categories);
+				DataFill.categories(entry, entry.categories);
 			}
 			return entries;
 		}

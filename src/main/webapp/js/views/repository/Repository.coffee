@@ -42,7 +42,7 @@ define([
 					repository: repository
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
-					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isAdmin()
+					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
@@ -116,8 +116,8 @@ define([
 						model: {commits: commits, groups: groups, formatCommitDescription: Format.formatCommitDescription}
 						buttons: [{text: 'Clone', className: 'btn-success', callback: () => @cloneRepository()}]
 						callback: () =>
-							$('.modal #name').val repository.name
-							$('.modal #group').select repository.group
+							$('.modal #clone-name').val repository.name
+							$('.modal #clone-group').select repository.group
 
 			openMoveLayer: (event) ->
 				Events.preventDefault event
@@ -130,8 +130,8 @@ define([
 						model: {groups: groups}
 						buttons: [{text: 'Move', className: 'btn-success', callback: () => @moveRepository()}]
 						callback: () =>
-							$('.modal #name').val repository.name
-							$('.modal #group').val repository.group
+							$('.modal #move-name').val repository.name
+							$('.modal #move-group').val repository.group
 
 			exportRepository: (event) ->
 				Events.preventDefault event
@@ -153,7 +153,7 @@ define([
 			loadGroups: (callback) ->
 				$.ajax
 					type: 'GET'
-					url: 'ws/group?onlyIfCanWrite=true'
+					url: 'ws/group?onlyIfCanWrite=true&page=0'
 					success: (result) =>
 						options = []
 						if currentUser.get('username')
@@ -164,9 +164,9 @@ define([
 
 			cloneRepository: () ->
 				repo = @repository.toJSON()
-				newGroup = $('#group').val()
-				newName = $('#name').val()
-				commitId = $('#commit').val()
+				newGroup = $('#clone-group').val()
+				newName = $('#clone-name').val()
+				commitId = $('#clone-commit').val()
 				unless newName
 					Forms.handleError 'clone-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
 				Layers.showProgressIndicator 'Cloning'
@@ -184,8 +184,8 @@ define([
 
 			moveRepository: () ->
 				repo = @repository.toJSON()
-				newGroup = $('#group').val()
-				newName = $('#name').val()
+				newGroup = $('#move-group').val()
+				newName = $('#move-name').val()
 				unless newName
 					Forms.handleError 'move-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
 				Layers.showProgressIndicator 'Moving'
@@ -215,7 +215,7 @@ define([
 							Layers.showProgressIndicator 'Pushing'
 							$.ajax
 								type: 'PUT'
-								url: "ws/admin/glad/push/#{fullPath}"
+								url: "ws/datamanager/glad/push/#{fullPath}"
 								contentType: 'application/json'
 								data: JSON.stringify(input)
 								success: (response) ->

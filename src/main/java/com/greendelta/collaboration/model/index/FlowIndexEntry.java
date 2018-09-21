@@ -6,7 +6,6 @@ public class FlowIndexEntry extends IndexEntry {
 
 	private static final long serialVersionUID = 2343644252925342419L;
 	public FlowType flowType = FlowType.ELEMENTARY_FLOW;
-	
 
 	@Override
 	public IndexEntry clone() {
@@ -15,4 +14,5 @@ public class FlowIndexEntry extends IndexEntry {
 		e.flowType = flowType;
 		return e;
 	}
+
 }

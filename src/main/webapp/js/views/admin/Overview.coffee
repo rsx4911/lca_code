@@ -8,6 +8,7 @@ define([
 				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/User'
+				'cs!models/CurrentUser'
 				'templates/views/admin/overview'
 				'templates/views/admin/overview-repository-list'
 				'templates/views/admin/overview-user-list'
@@ -15,7 +16,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Events, Filter, Layers, Model, Renderer, Status, Router, User, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Events, Filter, Layers, Model, Renderer, Status, Router, User, currentUser, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -51,27 +52,32 @@ define([
 					container: '#repositories'
 					template: repositoriesTemplate
 					filterId: 'repository-filter'
+					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?adminArea=true&'
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
 					filterId: 'user-filter'
+					pageSizeId: 'users-page-size'
 					url: 'ws/user?'
 				@groupFilter = new Filter
 					container: '#groups'
 					template: groupsTemplate
 					filterId: 'group-filter'
+					pageSizeId: 'groups-page-size'
 					url: 'ws/group?adminArea=true&'
 				@teamFilter = new Filter
 					container: '#teams'
 					template: teamsTemplate
 					filterId: 'team-filter'
+					pageSizeId: 'teams-page-size'
 					url: 'ws/team?'
 
 			render: (renderOptions) ->
-				$.get 'ws/admin/area/count', (result) =>
+				$.get 'ws/manager/area/count', (result) =>
 					@$el.html template
 						repositories: result.repositories
+						isAdmin: currentUser.isAdmin()
 						users: result.users
 						groups: result.groups
 						teams: result.teams

@@ -1,0 +1,10 @@
+include ../mixins/paging.pug
+
+.list-container
+	each repo in data
+		.list-entry
+			- var repoId = repo.group + '/' + repo.name
+			img.avatar(src='ws/repository/avatar/' + repoId, aria-label='Avatar of ' + repoId)
+			a.follow(href=repoId)
+				strong #{repo.group}/#{repo.name}
+	+paging(resultInfo)

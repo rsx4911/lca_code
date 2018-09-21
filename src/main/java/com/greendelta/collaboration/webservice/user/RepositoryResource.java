@@ -28,12 +28,12 @@ import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.ReindexService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.SearchResults;
@@ -258,7 +258,10 @@ public class RepositoryResource {
 		}
 		List<IndexEntry> entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
+		List<String> commitIds = Collections.convert(commits, commit -> commit.id);
 		for (IndexEntry entry : entries) {
+			if (!commitIds.contains(entry.commitId)) 
+				continue;
 			IndexEntry clone = entry.clone();
 			clone.repositoryId = to.toId();
 			clone.group = to.group;
