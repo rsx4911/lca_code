@@ -100,6 +100,20 @@ Prompted input:
 
 These initial settings or additional optional settings can be configured in the admin area. You can access it by clicking the wrench icon in the top left (if you have sufficient rights).
 
+##### Context variable 'app.database'
+The path to the database has to be set as a context variable, either by setting it as a system variable or by adding a context parameter to the tomcat configuration.
+
+```xml
+...
+<Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="true">
+    <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="localhost_access_log" suffix=".txt" pattern="%h %l %u %t &quot;%r&quot;%s %b"/>
+    <Context path="/lca-collaboration">
+        <Parameter name="app.database" value="/opt/collab/database"/>
+    </Context>
+</Host>
+...
+```
+
 ##### Error Reporting
 The Collaboration Server uses log4j2 for logging. In addition to write server-side log files, log4j2 can be configured to send error emails to a specified email account. These emails can either be send from the local server directly or via an external email account. You will need to replace the file /WEB-INF/classes/log4j2.xml in the built war-file. The following is an example configuration with an external email account. For more information see the log4j2 
 
