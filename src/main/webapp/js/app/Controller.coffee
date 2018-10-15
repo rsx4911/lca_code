@@ -367,8 +367,8 @@ define([
 			setBuildInfo: () ->
 				# start build info
 				version = '1.0.3'
-				commitVersion = '9e56fd0'
-				buildDate = 1537188374730
+				commitVersion = '199ebc5'
+				buildDate = 1539099927611
 				# end build info
 				info = $('#build-info')
 				if !info

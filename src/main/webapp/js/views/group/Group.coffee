@@ -2,24 +2,19 @@ define([
 				'backbone'
 				'cs!utils/Avatar'
 				'cs!utils/Events'
+				'cs!utils/Filter'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!utils/Status'
 				'cs!app/Router'
 				'templates/views/group/group'
+				'templates/views/group/repositories'
 			]
 
-	(Backbone, Avatar, Events, Forms, Layers, Renderer, Status, Router, template) ->
+	(Backbone, Avatar, Events, Filter, Forms, Layers, Renderer, Status, Router, template, listTemplate) ->
 
 		class GroupView extends Backbone.View
-
-			loadRepositories: (callback) ->
-				group = @group.get 'name'
-				$.ajax
-					type: 'GET'
-					url: "ws/repository?filter=#{group}/"
-					success: callback
 
 			className: 'group-view multi-box-view'
 
@@ -33,14 +28,22 @@ define([
 
 			initialize: (options) ->
 				{@group} = options
+				name = @group.get 'name'
+				@filter = new Filter
+					container: '#group-repositories'
+					template: listTemplate
+					filterId: 'filter'
+					filterPrefix: "#{name}/"
+					url: "ws/repository?"
+					afterRender: (result) =>
+						@$('.group-repository-count').html(result.resultInfo.totalCount)
 
 			render: (renderOptions) ->
-				@loadRepositories (repositories) =>
-					@$el.html template
-						group: @group.toJSON()
-						repositories: repositories.data
-					Renderer.render @, renderOptions
-					Avatar.initCropper 'group', @group.get('name')
+				@$el.html template
+					group: @group.toJSON()
+				Renderer.render @, renderOptions
+				Avatar.initCropper 'group', @group.get('name')
+				@filter.init()
 
 			deleteGroup: (event) ->
 				name = @group.get 'name'
