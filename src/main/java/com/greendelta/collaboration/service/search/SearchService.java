@@ -255,7 +255,7 @@ public class SearchService {
 	}
 
 	public void clearIndex() {
-		remove(search(new SearchQueryBuilder().page(0).build()).data);
+		getClient().clear();
 	}
 	
 	private SearchClient getClient() {
