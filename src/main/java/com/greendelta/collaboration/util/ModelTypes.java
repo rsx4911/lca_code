@@ -11,7 +11,7 @@ import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 public class ModelTypes {
 
 	public static final ModelType[] SORTED = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM, ModelType.PROCESS,
-			ModelType.FLOW, ModelType.IMPACT_METHOD, ModelType.SOCIAL_INDICATOR, ModelType.PARAMETER,
+			ModelType.IMPACT_METHOD, ModelType.FLOW, ModelType.SOCIAL_INDICATOR, ModelType.PARAMETER,
 			ModelType.DQ_SYSTEM, ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP, ModelType.CURRENCY,
 			ModelType.ACTOR, ModelType.SOURCE, ModelType.LOCATION };
 

@@ -52,7 +52,7 @@ public class Collections {
 			Collection<V> col = map.get(key);
 			for (V val : new ArrayList<>(col)) {
 				if (converter.apply(val).equals(value)) {
-					col.remove(value);
+					col.remove(val);
 				}
 			}
 			if (!col.isEmpty())

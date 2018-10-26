@@ -250,7 +250,7 @@ class BrowseReferenceFiller {
 		case SOCIAL_INDICATOR:
 		case IMPACT_CATEGORY:
 		case NW_SET:
-			return true;
+			return false;
 		default:
 			return object.has("name");
 		}
