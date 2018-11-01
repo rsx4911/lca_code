@@ -19,7 +19,7 @@ if (!params.contextPath) {
 }
 
 if (!params.customDir) {
-  params.customDir = './custom';
+  params.customDir = 'custom';
 }
 
 var getPomVersion = function() {
