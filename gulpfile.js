@@ -19,7 +19,7 @@ if (!params.contextPath) {
 }
 
 if (!params.customDir) {
-  params.customDir = 'custom';
+  params.customDir = './custom';
 }
 
 var getPomVersion = function() {
@@ -185,7 +185,8 @@ gulp.task('modifyImprintHtml', function() {
   var path = fs.existsSync(params.customDir + '/imprint.html') ? params.customDir + '/imprint.html' : './src/main/webapp/imprint.html';
   return gulp.src(path).pipe(insert.transform(function(contents) {
     var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
-    content = content.replace('js/libs/jquery', 'js/jquery');
+    content = content.replace(' data-main="js/main"', '');
+    content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"');
     content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
     return content;
   })).pipe(gulp.dest('./target/require-build'));
