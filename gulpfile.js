@@ -71,7 +71,7 @@ gulp.task('default', [], function(callback) {
 });
 
 gulp.task('build', [], function(callback) {
-  return runSequence('default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modfiyCustomPublicHtml', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback);
+  return runSequence('default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modifyCustomPublicHtml', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback);
 });
 
 gulp.task('clear', function() {
@@ -182,7 +182,7 @@ gulp.task('modifyLoginHtml', function() {
 
 gulp.task('modifyImprintHtml', function() {
   // replace styles-login.css with timestamp filename
-  var path = fs.existsSync('./' + params.customDir + '/imprint.html') ? params.customDir + '/imprint.html' : './src/main/webapp/imprint.html';
+  var path = fs.existsSync(params.customDir + '/imprint.html') ? params.customDir + '/imprint.html' : './src/main/webapp/imprint.html';
   return gulp.src(path).pipe(insert.transform(function(contents) {
     var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
     content = content.replace('js/libs/jquery', 'js/jquery');
@@ -191,7 +191,7 @@ gulp.task('modifyImprintHtml', function() {
   })).pipe(gulp.dest('./target/require-build'));
 });
 
-gulp.task('modfiyCustomPublicHtml', function() {
+gulp.task('modifyCustomPublicHtml', function() {
   // replace styles-login.css with timestamp filename
   return gulp.src(params.customDir + '/index_public.html').pipe(insert.transform(function(contents) {
     var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
