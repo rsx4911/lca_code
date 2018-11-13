@@ -109,6 +109,11 @@ public class HistoryResource {
 			@PathParam("name") String name,
 			@QueryParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
+		if (lastCommitId != null && !lastCommitId.isEmpty()) {
+			Commit commit = service.getCommit(repo, lastCommitId);
+			if (commit == null)
+				return Respond.badRequest("Unknown commit id");
+		}
 		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
