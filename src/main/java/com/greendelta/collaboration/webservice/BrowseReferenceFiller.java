@@ -76,7 +76,8 @@ class BrowseReferenceFiller {
 		if (type == null || id == null)
 			return;
 		ModelType mType = getType(type);
-		if (hasCompleteInfo(reference, mType)) 
+		correctCategoryStructure(reference);
+		if (hasCompleteInfo(reference, mType))
 			return;
 		if (mType == ModelType.UNIT) {
 			fillUnit(reference, parent);
@@ -120,6 +121,19 @@ class BrowseReferenceFiller {
 		}
 	}
 
+	private void correctCategoryStructure(JsonObject reference) {
+		if (reference.has("category") && reference.get("category").isJsonArray())
+			return;
+		if (reference.has("categoryPath") && reference.get("categoryPath").isJsonArray()) {
+			reference.add("category", reference.remove("categoryPath"));
+			return;
+		}
+		if (reference.has("categoryPaths") && reference.get("categoryPaths").isJsonArray()) {
+			reference.add("category", reference.remove("categoryPaths"));
+			return;
+		}
+	}
+
 	static JsonArray toCategoryArray(ObjectMap indexEntry, boolean appendOwn) {
 		JsonArray array = new JsonArray();
 		List<String> categories = indexEntry.get("categories");
@@ -135,7 +149,7 @@ class BrowseReferenceFiller {
 	}
 
 	private void setReferenceUnit(JsonObject reference) {
-		if (reference.has("referenceUnit")) 
+		if (reference.has("referenceUnit"))
 			return;
 		JsonElement flowProperty = reference.get("flowProperty");
 		if (flowProperty == null || !flowProperty.isJsonObject())
@@ -223,6 +237,10 @@ class BrowseReferenceFiller {
 		if (indexCache.containsKey(refId))
 			return indexCache.get(refId);
 		ObjectMap indexEntry = browseService.getDataset(repo, refId, commitId);
+		ModelType type = indexEntry.get("type");
+		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
+				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)
+			return indexEntry;
 		indexCache.put(refId, indexEntry);
 		return indexEntry;
 	}
@@ -235,6 +253,9 @@ class BrowseReferenceFiller {
 			return null;
 		String data = fetchService.getDataset(repo, type, refId, indexEntry.getString("commitId"));
 		JsonObject object = new Gson().fromJson(data, JsonObject.class);
+		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
+				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)
+			return object;
 		dataCache.put(refId, object);
 		return object;
 	}
@@ -255,5 +276,5 @@ class BrowseReferenceFiller {
 			return object.has("name");
 		}
 	}
-	
+
 }

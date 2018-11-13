@@ -22,6 +22,7 @@ import org.openlca.util.KeyGen;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.service.search.BrowseService;
@@ -172,11 +173,10 @@ public class BrowseResource {
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		BrowseReferenceFiller references = new BrowseReferenceFiller(service, fetchService, repo, commitId);
 		references.fillReferencedElements(json);
-		ObjectMap map = ObjectMap.fromJson(new Gson().toJson(json));
 		if (loggedIn) {
-			map.put("commitId", commitId);
+			json.add("commitId", new JsonPrimitive(commitId));
 		}
-		return Respond.ok(map);
+		return Respond.ok(new Gson().toJson(json));
 	}
 
 	@GET
