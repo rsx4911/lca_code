@@ -18,6 +18,7 @@ define
 	'administration/team/profile/:teamname': 'adminTeamEdit'
 	'administration/libraries': 'adminLibraries'
 	'administration/settings': 'adminSettings'
+	'administration/maintenance': 'adminMaintenance'
 	'messages(/:username)': 'messages'
 	'tasks': 'tasks'
 	'tasks/review/new': 'reviewManage'

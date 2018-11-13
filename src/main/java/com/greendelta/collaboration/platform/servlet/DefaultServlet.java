@@ -20,13 +20,15 @@ import com.greendelta.collaboration.platform.guice.util.CloudSession;
 public class DefaultServlet extends HttpServlet {
 
 	private static final long serialVersionUID = -7021790186597193927L;
-
-	@Inject
 	private Provider<CloudSession> sessionProvider;
-
-	@Inject
 	private Provider<Subject> subjectProvider;
 
+	@Inject
+	public DefaultServlet(Provider<CloudSession> sessionProvider, Provider<Subject> subjectProvider) {
+		this.sessionProvider = sessionProvider;
+		this.subjectProvider = subjectProvider;
+	}
+	
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String url = request.getRequestURL().toString();

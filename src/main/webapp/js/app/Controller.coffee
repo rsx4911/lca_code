@@ -77,6 +77,7 @@ define([
 							adminMenu.push {href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
 						if currentUser.isAdmin()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
+							adminMenu.push {href: @concatUrl(prefix, 'administration/maintenance'), imageSrc: 'images/maintenance.png', label: 'Maintenance', id:'maintenance'}
 						if currentUser.isDataManager()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
 						return adminMenu
@@ -148,6 +149,12 @@ define([
 					nav:
 						type: 'admin'
 						active: 'settings'
+				@router.registerAdminRoute 'adminMaintenance', 'admin', -> @showView 
+					view: 'admin/Maintenance'
+					title: 'Admin area - Maintenance'
+					nav:
+						type: 'admin'
+						active: 'maintenance'
 
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @showError 404
@@ -362,30 +369,6 @@ define([
 					@initializeNavigation()
 				@initializeUserMenu()
 				@registerRoutes()
-				@setBuildInfo()
-
-			setBuildInfo: () ->
-				# start build info
-				version = '1.0.3'
-				commitVersion = '199ebc5'
-				buildDate = 1539099927611
-				# end build info
-				info = $('#build-info')
-				if !info
-					return
-				info.hide()
-				if info.attr('data-admin-only') and (!currentUser or !currentUser.isAdmin())
-					return
-				info.show()
-				rv = $ '#release-version', info
-				if rv
-					rv.html "Release version: #{version}"
-				cv = $ '#commit-version', info
-				if cv
-					cv.html "Commit id: #{commitVersion}"
-				bd = $ '#build-date', info
-				if bd
-					bd.html "Build date: #{Format.date(buildDate)}"
 
 			splitQuery: (query) ->
 				unless query

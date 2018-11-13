@@ -147,14 +147,11 @@ gulp.task('collectDependencies', function() {
 });
 
 gulp.task('setBuildInfo', function() {
-  return gulp.src('./src/main/webapp/js/app/Controller.coffee').pipe(insert.transform(function(contents) {
-    var before = contents.substring(0, contents.indexOf('# start build info') + 18) + '\r\n'
-    var buildInfo = "\t\t\t\tversion = '" + getPomVersion() + "'\r\n"
-    buildInfo += "\t\t\t\tcommitVersion = '" + getCommitVersion() + "'\r\n"
-    buildInfo += "\t\t\t\tbuildDate = " + timestamp + "\r\n"
-    var after = "\t\t\t\t" + contents.substring(contents.indexOf('# end build info'))
-    return before + buildInfo + after;
-  })).pipe(gulp.dest('./src/main/webapp/js/app'));
+  return gulp.src('./src/main/webapp/js/templates/views/admin/maintenance.js').pipe(insert.transform(function(contents) {
+    return contents.replace('{{releaseVersion}}', getPomVersion())
+      .replace('{{commitId}}', getCommitVersion())
+      .replace('{{buildDate}}', new Date(timestamp).toLocaleString())
+  })).pipe(gulp.dest('./src/main/webapp/js/templates/views/admin'));
 });
 
 gulp.task('modifyIndexHtml', function() {

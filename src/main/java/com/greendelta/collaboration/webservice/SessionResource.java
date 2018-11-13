@@ -80,8 +80,6 @@ public class SessionResource {
 				subject.logout();
 				return Respond.unauthorized("Invalid token");
 			}
-			log.info("User {} successfully logged in", username);
-			return Respond.ok();
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();

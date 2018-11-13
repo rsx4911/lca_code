@@ -79,7 +79,7 @@ class ShiroModule extends ShiroWebModule {
 	public Subject provideSubject() {
 		return SecurityUtils.getSubject();
 	}
-
+	
 	@Provides
 	@SessionScoped
 	public CloudSession provideSession() {

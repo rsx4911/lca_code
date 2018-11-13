@@ -81,7 +81,10 @@ public class Setting extends AbstractEntity {
 		MAIL_SSL(Boolean.class, true),
 		MAIL_TLS(Boolean.class, false),
 		MAIL_DEFAULT_FROM(String.class),
-		MAIL_DEFAULT_REPLY_TO(String.class);
+		MAIL_DEFAULT_REPLY_TO(String.class),
+		
+		// maintenance
+		MAINTENANCE_MODE(Boolean.class, false);
 
 		public final Class<?> type;
 		private final Object defaultValue;

@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
@@ -32,6 +33,13 @@ public class SettingsResource {
 	}
 
 	@GET
+	@Path("maintenanceMode")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response getSetting() {
+		return Respond.ok(Boolean.toString(service.get(Key.MAINTENANCE_MODE)));
+	}
+
+	@GET
 	public Response getSettings() {
 		List<Setting> settings = service.getAll();
 		User user = userService.getCurrentUser();
@@ -41,5 +49,4 @@ public class SettingsResource {
 		return Respond.ok(Client.map(settings, Settings::map));
 	}
 
-	
 }
