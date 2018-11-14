@@ -20,28 +20,33 @@ public class WsApiFilter implements Filter {
 	// implemented major versions have to be increased
 	private static final int SERVER_MAJOR_API_VERSION = 1;
 	private static final Logger log = LogManager.getLogger(WsApiFilter.class);
-
+	
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
 			throws IOException, ServletException {
-		if (!(request instanceof HttpServletRequest)) {
-			chain.doFilter(request, response);
+		if (!(servletRequest instanceof HttpServletRequest)) {
+			chain.doFilter(servletRequest, servletResponse);
 			return;
 		}
-		int clientMajorApiVersion = getApiMajorVersion((HttpServletRequest) request);
-		if (clientMajorApiVersion == SERVER_MAJOR_API_VERSION) {
-			chain.doFilter(request, response);
+		HttpServletRequest request = (HttpServletRequest) servletRequest;
+		if (!isCorrectVersion(request)) {
+			HttpServletResponse response = (HttpServletResponse) servletRequest;
+			response.sendError(406, "Client API version does not match");
 			return;
 		}
-		response.reset();
-		((HttpServletResponse) response).setStatus(406);
+		chain.doFilter(servletRequest, servletResponse);
 	}
 
+	private boolean isCorrectVersion(HttpServletRequest request) {
+		int clientMajorApiVersion = getApiMajorVersion(request);
+		return clientMajorApiVersion == SERVER_MAJOR_API_VERSION;
+	}
+	
 	private int getApiMajorVersion(HttpServletRequest request) {
 		String version = request.getHeader("lca-cs-client-api-version");
 		if (version == null || version.isEmpty())

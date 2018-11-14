@@ -22,6 +22,8 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -36,13 +38,15 @@ public class SessionResource {
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;
 	private final TaskService taskService;
+	private final SettingsService settingsService;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService) {
+	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService, SettingsService settingsService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
 		this.taskService = taskService;
+		this.settingsService = settingsService;
 	}
 
 	@POST
@@ -80,6 +84,11 @@ public class SessionResource {
 				subject.logout();
 				return Respond.unauthorized("Invalid token");
 			}
+		}
+		boolean maintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
+		if (maintenanceMode && !user.isAdmin()) {
+			subject.logout();
+			return Respond.forbidden("Server is in maintenance mode");			
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();

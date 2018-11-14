@@ -1,5 +1,10 @@
 package com.greendelta.collaboration.platform.guice;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.servlet.Filter;
 import javax.servlet.ServletContext;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +23,7 @@ import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.SessionScoped;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
+import com.greendelta.collaboration.platform.servlet.MaintenanceModeFilter;
 import com.greendelta.collaboration.platform.shiro.AuthenticationFilter;
 import com.greendelta.collaboration.platform.shiro.JpaRealm;
 import com.greendelta.collaboration.platform.shiro.RepoAccessFilter;
@@ -37,35 +43,77 @@ class ShiroModule extends ShiroWebModule {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void configureShiroWeb() {
 		bindRealm().to(JpaRealm.class).in(Singleton.class);
 		bind(JpaRealm.class);
 		expose(JpaRealm.class);
 		expose(Subject.class);
 		expose(CloudSession.class);
-		addFilterChain("/ws/public/**", ANON);
-		addFilterChain("/ws/admin/**", ROLES, ADMIN_USER);
-		addFilterChain("/ws/usermanager/**", ROLES, USER_MANAGER_USER);
-		addFilterChain("/ws/datamanager/**", ROLES, DATA_MANAGER_USER);
-		addFilterChain("/ws/**", LOGGED_IN_USER);
-		addFilterChain("/sockets/public/**", ANON);
-		addFilterChain("/sockets/admin/**", ROLES, ADMIN_USER);
-		addFilterChain("/sockets/usermanager/**", ROLES, USER_MANAGER_USER);
-		addFilterChain("/sockets/datamanager/**", ROLES, DATA_MANAGER_USER);
-		addFilterChain("/sockets/**", LOGGED_IN_USER);
-		for (String userRoute : Names.getUserRoutes())
-			addFilterChain("/" + userRoute + "/**", LOGGED_IN_USER);
-		addFilterChain("/login", ANON);
-		addFilterChain("/imprint", ANON);
-		addFilterChain("/", ANON);
-		addFilterChain("/search", ANON);
-		addFilterChain("/search/**", ANON);
-		for (String staticResource : WebappModule.STATIC_RESOURCES)
-			addFilterChain("/" + staticResource + "/**", ANON);
-		addFilterChain("/*", LOGGED_IN_USER); // group urls
-		addFilterChain("/**", REPO_ACCESS); // repository urls
+		anonymous("/ws/public/**", "/sockets/public/**");
+		admin("/ws/admin/**", "/sockets/admin/**");
+		userManager("/ws/usermanager/**", "/sockets/usermanager/**");
+		dataManager("/ws/datamanager/**", "/sockets/datamanager/**");
+		user("/ws/**", "/sockets/**");
+		user(matchAll(Names.getUserRoutes()));
+		anonymous("/", "/login", "/imprint", "/search", "/maintenance", "/search/**");
+		anonymous(matchAll(WebappModule.STATIC_RESOURCE_DIRECTORIES));
+		user("/*"); // group urls
+		member("/**"); // repository urls
 		log.info("Successfully configured {}", Logs.simpleClassName(this));
+	}
+
+	private String[] matchAll(String[] in) {
+		List<String> routes = new ArrayList<>();
+		for (String route : in)
+			routes.add("/" + route + "/**");
+		return routes.toArray(new String[routes.size()]);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void anonymous(String... patterns) {
+		filterChains(patterns, ANON);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void admin(String... patterns) {
+		filterChains(patterns, ROLES, ADMIN_USER);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void userManager(String... patterns) {
+		filterChains(patterns, ROLES, USER_MANAGER_USER);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void dataManager(String... patterns) {
+		filterChains(patterns, ROLES, DATA_MANAGER_USER);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void user(String... patterns) {
+		filterChains(patterns, LOGGED_IN_USER);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void member(String... patterns) {
+		filterChains(patterns, REPO_ACCESS);
+	}
+
+	@SuppressWarnings("unchecked")
+	private void filterChains(String[] patterns, Key<? extends Filter>... keys) {
+		for (String pattern : patterns) {
+			filterChain(pattern, keys);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void filterChain(String pattern, Key<? extends Filter>... keys) {
+		List<Key<? extends Filter>> allKeys = new ArrayList<>();
+		if (pattern.startsWith("/ws/") || pattern.startsWith("/socket/")) {
+			allKeys.add(Key.get(MaintenanceModeFilter.class));
+		}
+		allKeys.addAll(Arrays.asList(keys));
+		addFilterChain(pattern, allKeys.toArray(new Key[allKeys.size()]));
 	}
 
 	@Provides
@@ -79,7 +127,7 @@ class ShiroModule extends ShiroWebModule {
 	public Subject provideSubject() {
 		return SecurityUtils.getSubject();
 	}
-	
+
 	@Provides
 	@SessionScoped
 	public CloudSession provideSession() {
