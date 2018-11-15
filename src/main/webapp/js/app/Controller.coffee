@@ -94,6 +94,15 @@ define([
 					container: '#user-menu'
 					noAnimation: true
 
+			initializeMaintenanceMode: () ->
+				notification = $('#maintenance-notification')
+				if !notification.length
+					$('body').append('<div id="maintenance-notification"></div>')
+					notification = $('#maintenance-notification')
+				notification.html 'The server is currently in maintenance mode'
+				if settings.is('MAINTENANCE_MODE')
+					$('body').addClass 'maintenance-mode'
+
 			registerRoutes: () ->
 				@registerRouteRewrites()
 				@registerAdminRoutes()
@@ -368,6 +377,7 @@ define([
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
 				@initializeUserMenu()
+				@initializeMaintenanceMode()
 				@registerRoutes()
 
 			splitQuery: (query) ->

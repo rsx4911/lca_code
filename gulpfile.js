@@ -147,7 +147,7 @@ gulp.task('collectDependencies', function() {
 });
 
 gulp.task('setBuildInfo', function() {
-  return gulp.src('./src/main/webapp/js/templates/views/admin/maintenance.js').pipe(insert.transform(function(contents) {
+  return gulp.src('./src/main/webapp/js/templates/views/admin/overview.js').pipe(insert.transform(function(contents) {
     return contents.replace('{{releaseVersion}}', getPomVersion())
       .replace('{{commitId}}', getCommitVersion())
       .replace('{{buildDate}}', new Date(timestamp).toLocaleString())

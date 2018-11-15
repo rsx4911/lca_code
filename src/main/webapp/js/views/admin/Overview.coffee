@@ -20,7 +20,7 @@ define([
 
 		class AdminOverview extends Backbone.View
 
-			className: 'admin-overview content-box'
+			className: 'admin-overview multi-box-view'
 
 			events: 
 				'click a[href].follow': (event) -> Events.followLink event
@@ -29,6 +29,22 @@ define([
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
 				'click [data-action=create-team]': () -> Router.navigate 'administration/team/new'
+				'click .toggle-maintenance-mode': 'toggleMaintenanceMode'
+
+
+			toggleMaintenanceMode: () ->
+				wasActive = @maintenanceModeActive
+				$.ajax
+					type: 'PUT'
+					url: 'ws/admin/area/settings'
+					contentType: 'application/json'
+					data: JSON.stringify({key: 'MAINTENANCE_MODE', value: !@maintenanceModeActive})
+					success: () -> 
+						Backbone.history.loadUrl()
+						if wasActive
+							$('body').removeClass 'maintenance-mode'
+						else
+							$('body').addClass 'maintenance-mode'
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -74,17 +90,26 @@ define([
 					url: 'ws/team?'
 
 			render: (renderOptions) ->
-				$.get 'ws/manager/area/count', (result) =>
-					@$el.html template
-						repositories: result.repositories
-						isAdmin: currentUser.isAdmin()
-						users: result.users
-						groups: result.groups
-						teams: result.teams
-					Renderer.render @, renderOptions
-					@repositoryFilter.init()
-					@userFilter.init()
-					@groupFilter.init()
-					@teamFilter.init()
+				$.get 'ws/manager/area/count', (counts) =>
+					if currentUser.isAdmin()
+						$.get 'ws/settings/maintenanceMode', (maintenanceModeActive) =>
+							@maintenanceModeActive = maintenanceModeActive is true or maintenanceModeActive is 'true'
+							@doRender renderOptions, counts
+					else
+						@doRender renderOptions, counts
+
+			doRender: (renderOptions, counts) ->
+				@$el.html template
+					repositories: counts.repositories
+					isAdmin: currentUser.isAdmin()
+					users: counts.users
+					groups: counts.groups
+					teams: counts.teams
+					maintenanceModeActive: @maintenanceModeActive
+				Renderer.render @, renderOptions
+				@repositoryFilter.init()
+				@userFilter.init()
+				@groupFilter.init()
+				@teamFilter.init()
 
 )

@@ -7,18 +7,30 @@ mixin box(label, plural, count)
 		hr
 		button.btn.btn-lg.btn-full-width.btn-success(data-action='create-' + lcLabel) Create #{lcLabel}
 	.list-box
-		legend All #{lcPlural} 
+		legend=plural 
 			if label === 'Repository'
-				button.btn.btn-xs.btn-default(data-action='reindex-repositories') Reindex
+				button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repositories') Reindex
 			input.form-control.input-sm.filter.pull-right(id=lcLabel + '-filter' type='text' placeholder='filter' aria-label='Filter + ' + label)
 			.clear
 		div(id=lcPlural)
 
-div(class=isAdmin?'four-columns':'two-columns')
-	if isAdmin
-		div: +box('Repository', 'Repositories', repositories)
-	div: +box('User', 'Users', users)
-	if isAdmin
-		div: +box('Group', 'Groups', groups)
-	div: +box('Team', 'Teams', teams)
-.clear
+.content-box.overview
+	div(class=isAdmin?'four-columns':'two-columns')
+		if isAdmin
+			div: +box('Repository', 'Repositories', repositories)
+		div: +box('User', 'Users', users)
+		if isAdmin
+			div: +box('Group', 'Groups', groups)
+		div: +box('Team', 'Teams', teams)
+	.clear
+if isAdmin
+	.header-box Server info
+		button.btn.btn-lg.pull-right.toggle-maintenance-mode(class=maintenanceModeActive?'btn-success':'btn-warning')
+			if maintenanceModeActive
+				| Deactivate maintenance mode
+			else
+				| Activate maintenance mode
+	.content-box
+		div Release version: {{releaseVersion}}
+		div Commit id: {{commitId}}
+		div Build date: {{buildDate}}
