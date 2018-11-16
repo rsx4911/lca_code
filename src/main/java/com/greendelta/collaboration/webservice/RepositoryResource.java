@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.BinUtils;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -80,7 +81,7 @@ public class RepositoryResource {
 		File file = new File(binDir, filename);
 		if (!file.exists())
 			return Respond.notFound(notFoundMessage(type, refId, filename));
-		return Respond.ok(Files.readAllBytes(file.toPath()));
+		return Respond.ok(BinUtils.gunzip(Files.readAllBytes(file.toPath())));
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
