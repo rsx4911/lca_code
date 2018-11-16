@@ -29,8 +29,8 @@ define([
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
 				'click [data-action=create-team]': () -> Router.navigate 'administration/team/new'
-				'click .toggle-maintenance-mode': 'toggleMaintenanceMode'
-
+				'click [data-action=toggle-maintenance-mode]': 'toggleMaintenanceMode'
+				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 
 			toggleMaintenanceMode: () ->
 				wasActive = @maintenanceModeActive
@@ -45,6 +45,11 @@ define([
 							$('body').removeClass 'maintenance-mode'
 						else
 							$('body').addClass 'maintenance-mode'
+
+			refreshOpenWebServiceRequests: (event) ->
+				Events.preventDefault event
+				$.get 'ws/admin/area/serverInfo', (serverInfo) =>
+					$('#open-web-service-requests').html serverInfo.openWebServiceRequests
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -92,8 +97,9 @@ define([
 			render: (renderOptions) ->
 				$.get 'ws/usermanager/area/count', (counts) =>
 					if currentUser.isAdmin()
-						$.get 'ws/settings/MAINTENANCE_MODE', (maintenanceModeActive) =>
-							@maintenanceModeActive = maintenanceModeActive is true or maintenanceModeActive is 'true'
+						$.get 'ws/admin/area/serverInfo', (serverInfo) =>
+							@maintenanceModeActive = serverInfo.maintenanceModeActive
+							@openWebServiceRequests = serverInfo.openWebServiceRequests
 							@doRender renderOptions, counts
 					else
 						@doRender renderOptions, counts
@@ -106,6 +112,7 @@ define([
 					groups: counts.groups
 					teams: counts.teams
 					maintenanceModeActive: @maintenanceModeActive
+					openWebServiceRequests: @openWebServiceRequests
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()
 				@userFilter.init()

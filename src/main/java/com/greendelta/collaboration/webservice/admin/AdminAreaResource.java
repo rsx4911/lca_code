@@ -12,14 +12,12 @@ import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import joptsimple.internal.Strings;
 
 import org.elasticsearch.client.Client;
 
@@ -27,6 +25,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
+import com.greendelta.collaboration.platform.servlet.RequestListener;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
@@ -36,10 +35,16 @@ import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
 
+import joptsimple.internal.Strings;
+
 @Path("admin/area")
 @Produces(MediaType.APPLICATION_JSON)
 public class AdminAreaResource {
 
+	// request listener is not counting calls to the server info, to avoid counting
+	// itself. To avoid hiding this information in the RequestListener task, the
+	// path is specified here (more obvious when changes on the path occur)
+	public static final String SERVER_INFO_PATH = "admin/area/serverInfo";
 	private final RepositoryService repoService;
 	private final ReindexService reindexService;
 	private final SearchService searchService;
@@ -93,9 +98,9 @@ public class AdminAreaResource {
 		}
 	}
 	
-	@POST
-	@Path("testMailConfig")
-	public Response testMailConfig(String recipient) {
+	@GET
+	@Path("testMailConfig/{email}")
+	public Response testMailConfig(@PathParam("email") String recipient) {
 		EmailJob mail = new EmailJob();
 		mail.setSubject("Collaboration server test email");
 		mail.setRecipient(recipient);
@@ -103,6 +108,15 @@ public class AdminAreaResource {
 		return Respond.ok(new HashMap<>());
 	}
 
+	@GET
+	@Path("serverInfo")
+	public Response getServerInfo() {
+		Map<String, Object> info = new HashMap<>();
+		info.put("maintenanceModeActive", settingsService.is(Key.MAINTENANCE_MODE));
+		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
+		return Respond.ok(info);
+	}
+	
 	@PUT
 	@Path("reindex")
 	public Response reindex() {

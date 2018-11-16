@@ -46,10 +46,8 @@ define([
 			testMailConfiguration: (event) ->
 				Layers.promptInput 'Recipient', 'text', currentUser.get('email'), (recipient) ->
 					$.ajax
-						type: 'POST'
-						url: 'ws/admin/area/testMailConfig'
-						contentType: 'plain/text'
-						data: recipient
+						type: 'GET'
+						url: "ws/admin/area/testMailConfig/#{recipient}"
 						success: () -> Status.success "Test email was send to #{recipient}"
 						error: (error) -> 
 							text = error?.responseText

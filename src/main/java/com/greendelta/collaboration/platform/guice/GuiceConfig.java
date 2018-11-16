@@ -19,6 +19,7 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.greendelta.collaboration.platform.guice.util.ShutdownListener;
 import com.greendelta.collaboration.platform.guice.util.StartupListener;
+import com.greendelta.collaboration.platform.servlet.RequestListener;
 
 public class GuiceConfig extends GuiceServletContextListener {
 
@@ -48,6 +49,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		Injections injected = injector.getInstance(Injections.class);
 		this.shutdownListeners = injected.shutdownListeners;
 		runStartupListeners(injected.startupListeners);
+		servletContext.addListener(RequestListener.getInstance());
 		return injector;
 	}
 
