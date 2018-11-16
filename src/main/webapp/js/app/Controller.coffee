@@ -77,7 +77,6 @@ define([
 							adminMenu.push {href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
 						if currentUser.isAdmin()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
-							adminMenu.push {href: @concatUrl(prefix, 'administration/maintenance'), imageSrc: 'images/maintenance.png', label: 'Maintenance', id:'maintenance'}
 						if currentUser.isDataManager()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Library data sets', id:'libraries'}
 						return adminMenu
