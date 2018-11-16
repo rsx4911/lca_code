@@ -19,6 +19,7 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 
 @Path("fetch") // support for openLCA 1.7 (url changed to public afterwards)
+@Deprecated
 public class FetchResource {
 
 	private com.greendelta.collaboration.webservice.FetchResource publicFetch;
