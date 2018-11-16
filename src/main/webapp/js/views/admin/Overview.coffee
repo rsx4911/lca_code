@@ -90,7 +90,7 @@ define([
 					url: 'ws/team?'
 
 			render: (renderOptions) ->
-				$.get 'ws/manager/area/count', (counts) =>
+				$.get 'ws/usermanager/area/count', (counts) =>
 					if currentUser.isAdmin()
 						$.get 'ws/settings/MAINTENANCE_MODE', (maintenanceModeActive) =>
 							@maintenanceModeActive = maintenanceModeActive is true or maintenanceModeActive is 'true'

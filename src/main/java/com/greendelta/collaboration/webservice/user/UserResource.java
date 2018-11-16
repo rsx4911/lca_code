@@ -53,18 +53,6 @@ public class UserResource {
 	}
 
 	@GET
-	@Path("{username}")
-	public Response get(@PathParam("username") String username) {
-		User user = service.getForUsername(username);
-		if (user == null)
-			return Respond.notFound();
-		Map<String, Object> userMap = Users.mapForSelf(user);
-		if (user.isAdmin())
-			userMap.put("lastAdmin", service.isLastAdmin(user));
-		return Respond.ok(userMap);
-	}
-
-	@GET
 	public Response getAll(
 			@QueryParam("page") @DefaultValue("0") int page,
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
@@ -91,6 +79,18 @@ public class UserResource {
 	}
 
 	@GET
+	@Path("{username}")
+	public Response get(@PathParam("username") String username) {
+		User user = service.getForUsername(username);
+		if (user == null)
+			return Respond.notFound();
+		Map<String, Object> userMap = Users.mapForSelf(user);
+		if (user.isAdmin())
+			userMap.put("lastAdmin", service.isLastAdmin(user));
+		return Respond.ok(userMap);
+	}
+	
+	@GET
 	@Path("avatar/{username}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response getAvatar(@PathParam("username") String username) {
@@ -102,6 +102,19 @@ public class UserResource {
 		return Respond.ok(user.avatar, "avatar-user.png");
 	}
 
+	@GET
+	@Path("twoFactorAuth/{username}")
+	public Response showTwoFactorAuthentication(@PathParam("username") String username) {
+		User user = authorizedGetUser(username);
+		if (user == null)
+			return Respond.notFound();
+		Map<String, Object> response = new HashMap<>();
+		response.put("url", service.getTwoFactorUrl(user));
+		response.put("key", user.twoFactorSecret);
+		response.put("enabled", true);
+		return Respond.ok(response);
+	}
+	
 	@PUT
 	@Path("{username}")
 	public Response update(@PathParam("username") String username, User user) {
@@ -129,6 +142,24 @@ public class UserResource {
 	}
 
 	@PUT
+	@Path("avatar/{username}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response setAvatar(
+			@PathParam("username") String username,
+			@FormDataParam("file") InputStream file) {
+		User user = authorizedGetUser(username);
+		if (user == null)
+			return Respond.notFound();
+		if (file == null)
+			user.avatar = null;
+		else
+			user.avatar = Bytes.readStream(file);
+		user = service.update(user);
+		return getAvatar(username);
+	}
+	
+	@PUT
 	@Path("setpassword/{username}")
 	public Response setPassword(@PathParam("username") String username,
 			Map<String, Object> passwords) {
@@ -149,37 +180,6 @@ public class UserResource {
 		service.setPassword(user, password);
 		service.update(user);
 		return Respond.ok(new HashMap<>());
-	}
-
-	@PUT
-	@Path("avatar/{username}")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(
-			@PathParam("username") String username,
-			@FormDataParam("file") InputStream file) {
-		User user = authorizedGetUser(username);
-		if (user == null)
-			return Respond.notFound();
-		if (file == null)
-			user.avatar = null;
-		else
-			user.avatar = Bytes.readStream(file);
-		user = service.update(user);
-		return getAvatar(username);
-	}
-
-	@GET
-	@Path("twoFactorAuth/{username}")
-	public Response showTwoFactorAuthentication(@PathParam("username") String username) {
-		User user = authorizedGetUser(username);
-		if (user == null)
-			return Respond.notFound();
-		Map<String, Object> response = new HashMap<>();
-		response.put("url", service.getTwoFactorUrl(user));
-		response.put("key", user.twoFactorSecret);
-		response.put("enabled", true);
-		return Respond.ok(response);
 	}
 
 	@PUT

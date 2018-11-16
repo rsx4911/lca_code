@@ -48,6 +48,18 @@ public class SessionResource {
 		this.taskService = taskService;
 		this.settingsService = settingsService;
 	}
+	
+	@GET
+	public Response getCurrentUser() {
+		Subject subject = subjectProvider.get();
+		if (!subject.isAuthenticated())
+			return Respond.ok(Collections.singletonMap("id", 0));
+		User currentUser = userService.getCurrentUser();
+		ObjectMap mapped = Users.mapForSelf(currentUser);
+		mapped.put("noOfTasks", taskService.getAllActiveFor(currentUser).size());
+		mapped.put("noOfRepositories", userService.getNoOfRepositories());
+		return Respond.ok(mapped);
+	}
 
 	@POST
 	@Path("login")
@@ -102,15 +114,4 @@ public class SessionResource {
 		return Respond.ok();
 	}
 
-	@GET
-	public Response getCurrentUser() {
-		Subject subject = subjectProvider.get();
-		if (!subject.isAuthenticated())
-			return Respond.ok(Collections.singletonMap("id", 0));
-		User currentUser = userService.getCurrentUser();
-		ObjectMap mapped = Users.mapForSelf(currentUser);
-		mapped.put("noOfTasks", taskService.getAllActiveFor(currentUser).size());
-		mapped.put("noOfRepositories", userService.getNoOfRepositories());
-		return Respond.ok(mapped);
-	}
 }

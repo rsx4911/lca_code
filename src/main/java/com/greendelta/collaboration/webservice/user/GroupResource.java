@@ -50,6 +50,41 @@ public class GroupResource {
 		this.notificationService = notificationService;
 	}
 
+	@GET
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
+		SearchResult<String> result = service.getAll(page, pageSize, filter, true, onlyIfCanWrite);
+		return Respond.ok(SearchResults.convert(result, (String group) -> {
+			return ObjectMap.fromMap(Collections.singletonMap("name", group));
+		}));
+	}
+
+	@GET
+	@Path("{name}")
+	public Response get(@PathParam("name") String name) {
+		if (!service.exists(name) || service.isUserNamespace(name))
+			return Respond.notFound("Group " + name + " not found");
+		Map<String, Object> group = new HashMap<>();
+		group.put("userCanDelete", accessService.canDelete(name));
+		group.put("userCanWrite", accessService.canWrite(name));
+		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
+		group.put("userCanEditMembers", accessService.canEditMembersOf(name));
+		return Respond.ok(group);
+	}
+
+	@GET
+	@Path("avatar/{name}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response getAvatar(@PathParam("name") String name) {
+		boolean exists = service.exists(name);
+		if (!exists)
+			return Respond.notFound(name);
+		return Respond.ok(service.getAvatar(name), "avatar-group.png");
+	}
+	
 	@POST
 	@Path("{name}")
 	public Response create(@PathParam("name") String name) {
@@ -70,40 +105,6 @@ public class GroupResource {
 		return Respond.created(Collections.singletonMap("name", name));
 	}
 
-	@GET
-	@Path("{name}")
-	public Response get(@PathParam("name") String name) {
-		if (!service.exists(name) || service.isUserNamespace(name))
-			return Respond.notFound("Group " + name + " not found");
-		Map<String, Object> group = new HashMap<>();
-		group.put("userCanDelete", accessService.canDelete(name));
-		group.put("userCanWrite", accessService.canWrite(name));
-		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
-		group.put("userCanEditMembers", accessService.canEditMembersOf(name));
-		return Respond.ok(group);
-	}
-
-	@GET
-	public Response getAll(
-			@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
-			@QueryParam("filter") @DefaultValue("") String filter,
-			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
-		SearchResult<String> result = service.getAll(page, pageSize, filter, true, onlyIfCanWrite);
-		return Respond.ok(SearchResults.convert(result, (String group) -> {
-			return ObjectMap.fromMap(Collections.singletonMap("name", group));
-		}));
-	}
-
-	@DELETE
-	@Path("{name}")
-	public Response delete(@PathParam("name") String name) {
-		NotificationJob notification = notificationService.groupDeleted(name);
-		deleteService.delete(name);
-		notification.send();
-		return Respond.ok(new HashMap<>());
-	}
-
 	@PUT
 	@Path("avatar/{name}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -116,14 +117,13 @@ public class GroupResource {
 		return getAvatar(name);
 	}
 
-	@GET
-	@Path("avatar/{name}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getAvatar(@PathParam("name") String name) {
-		boolean exists = service.exists(name);
-		if (!exists)
-			return Respond.notFound(name);
-		return Respond.ok(service.getAvatar(name), "avatar-group.png");
+	@DELETE
+	@Path("{name}")
+	public Response delete(@PathParam("name") String name) {
+		NotificationJob notification = notificationService.groupDeleted(name);
+		deleteService.delete(name);
+		notification.send();
+		return Respond.ok(new HashMap<>());
 	}
 
 }

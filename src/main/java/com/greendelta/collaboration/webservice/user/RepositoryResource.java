@@ -72,113 +72,24 @@ public class RepositoryResource {
 		this.notificationService = notificationService;
 	}
 
-	@POST
-	@Path("{group}/{name}")
-	public Response create(
-			@PathParam("group") String group,
-			@PathParam("name") String name) {
-		Response response = _create(group, name);
-		if (response.getStatus() != Status.CREATED.getStatusCode())
-			return response;
-		Repository repo = service.get(group, name);
-		notificationService.repositoryCreated(repo).send();
-		return response;
-	}
-
-	private Response _create(String group, String name) {
-		if (Strings.isNullOrEmpty(group))
-			return Respond.invalid("group", "Missing input: Group");
-		if (Strings.isNullOrEmpty(name))
-			return Respond.invalid("name", "Missing input: Name");
-		if (!Names.isValid(name))
-			return Respond.invalid("name",
-					"Name must consist of at least 4 characters and can only contain characters, numbers and _");
-		if (Names.isReserved(name))
-			return Respond.invalid("name", "This is a reserved word");
-		if (service.exists(group, name))
-			return Respond.conflict("Repository " + name + " already exists");
-		if (!groupService.exists(group))
-			return Respond.invalid("group", "Specified group does not exist");
-		Repository repo = service.create(group, name);
-		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
-	}
-
-	@POST
-	@Path("move/{group}/{name}/{newGroup}/{newName}")
-	public Response move(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("newGroup") String newGroup,
-			@PathParam("newName") String newName) {
-		if (!group.equals(newGroup))
-			if (!groupService.exists(newGroup))
-				return Respond.invalid("newGroup", "Specified group does not exist");
-		if (service.exists(newGroup, newName))
-			return Respond.conflict("Specified repository does already exist");
-		Repository repo = service.get(group, name);
-		if (!service.move(repo, newGroup, newName))
-			return Respond.error("Repository could not be moved");
-		Repository newRepo = service.get(newGroup, newName);
-		updateRepoId(repo, newRepo);
-		notificationService.repositoryMoved(repo, newRepo).send();
-		return Respond.ok(newRepo);
-	}
-
-	private void updateRepoId(Repository oldRepo, Repository newRepo) {
-		List<IndexEntry> entries = searchService.getAll(oldRepo);
-		searchService.remove(entries);
-		for (IndexEntry entry : entries) {
-			entry.repositoryId = newRepo.toId();
-			entry.group = newRepo.group;
-		}
-		searchService.index(newRepo.toId(), entries);
-	}
-
-	@DELETE
-	@Path("{group}/{name}")
-	public Response delete(
-			@PathParam("group") String group,
-			@PathParam("name") String name) {
-		Repository repo = service.get(group, name);
-		NotificationJob notification = notificationService.repositoryDeleted(repo);
-		deleteService.delete(repo);
-		notification.send();
-		return Respond.ok(new HashMap<>());
-	}
-
-	@PUT
-	@Path("settings/{group}/{name}/{setting}/{value}")
-	public Response toggleSetting(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("setting") String setting,
-			@PathParam("value") String value) {
-		Repository repo = service.get(group, name);
-		service.setSetting(repo, setting, value);
-		return Respond.ok(new HashMap<>());
-	}
-
 	@GET
-	@Path("export/{group}/{name}")
-	public Response doExport(
-			@PathParam("group") String group,
-			@PathParam("name") String name) {
-		Repository repo = service.get(group, name);
-		String filename = repo.toId().replace('/', '-') + ".zip";
-		return Respond.ok(filename, 0, service.pack(repo));
-	}
-
-	@POST
-	@Path("import/{group}/{name}")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response doImport(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@FormDataParam("file") InputStream input) {
-		Repository repo = service.get(group, name);
-		service.unpack(repo, input);
-		reindexService.reindex(repo);
-		return Respond.ok(new HashMap<>());
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("1") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("group") @DefaultValue("") String group,
+			@QueryParam("module") Module module) {
+		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
+		if (module == null)
+			return Respond.ok(SearchResults.convert(result, Repositories::map));
+		List<Repository> repositories = result.data;
+		switch (module) {
+		case REVIEW:
+			repositories = Collections.filter(repositories, (repo) -> !accessService.canManageTaskIn(repo.toId()));
+		default:
+			break;
+		}
+		return Respond.ok(Client.map(repositories, Repositories::map));
 	}
 
 	@GET
@@ -217,25 +128,80 @@ public class RepositoryResource {
 		Repository repo = service.get(group, name);
 		return Respond.ok("{\"schemaVersion\": \"" + repo.getSchemaVersion() + "\"}");
 	}
-
+	
 	@GET
-	public Response getAll(
-			@QueryParam("page") @DefaultValue("1") int page,
-			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
-			@QueryParam("filter") @DefaultValue("") String filter,
-			@QueryParam("group") @DefaultValue("") String group,
-			@QueryParam("module") Module module) {
-		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
-		if (module == null)
-			return Respond.ok(SearchResults.convert(result, Repositories::map));
-		List<Repository> repositories = result.data;
-		switch (module) {
-		case REVIEW:
-			repositories = Collections.filter(repositories, (repo) -> !accessService.canManageTaskIn(repo.toId()));
-		default:
-			break;
-		}
-		return Respond.ok(Client.map(repositories, Repositories::map));
+	@Path("export/{group}/{name}")
+	public Response doExport(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
+		Repository repo = service.get(group, name);
+		String filename = repo.toId().replace('/', '-') + ".zip";
+		return Respond.ok(filename, 0, service.pack(repo));
+	}
+	
+	@POST
+	@Path("{group}/{name}")
+	public Response create(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
+		Response response = _create(group, name);
+		if (response.getStatus() != Status.CREATED.getStatusCode())
+			return response;
+		Repository repo = service.get(group, name);
+		notificationService.repositoryCreated(repo).send();
+		return response;
+	}
+
+	private Response _create(String group, String name) {
+		if (Strings.isNullOrEmpty(group))
+			return Respond.invalid("group", "Missing input: Group");
+		if (Strings.isNullOrEmpty(name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (!Names.isValid(name))
+			return Respond.invalid("name",
+					"Name must consist of at least 4 characters and can only contain characters, numbers and _");
+		if (Names.isReserved(name))
+			return Respond.invalid("name", "This is a reserved word");
+		if (service.exists(group, name))
+			return Respond.conflict("Repository " + name + " already exists");
+		if (!groupService.exists(group))
+			return Respond.invalid("group", "Specified group does not exist");
+		Repository repo = service.create(group, name);
+		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
+	}
+	
+	@POST
+	@Path("import/{group}/{name}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response doImport(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@FormDataParam("file") InputStream input) {
+		Repository repo = service.get(group, name);
+		service.unpack(repo, input);
+		reindexService.reindex(repo);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@POST
+	@Path("move/{group}/{name}/{newGroup}/{newName}")
+	public Response move(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("newGroup") String newGroup,
+			@PathParam("newName") String newName) {
+		if (!group.equals(newGroup))
+			if (!groupService.exists(newGroup))
+				return Respond.invalid("newGroup", "Specified group does not exist");
+		if (service.exists(newGroup, newName))
+			return Respond.conflict("Specified repository does already exist");
+		Repository repo = service.get(group, name);
+		if (!service.move(repo, newGroup, newName))
+			return Respond.error("Repository could not be moved");
+		Repository newRepo = service.get(newGroup, newName);
+		updateRepoId(repo, newRepo);
+		notificationService.repositoryMoved(repo, newRepo).send();
+		return Respond.ok(newRepo);
 	}
 
 	@POST
@@ -271,6 +237,16 @@ public class RepositoryResource {
 		return response;
 	}
 
+	private void updateRepoId(Repository oldRepo, Repository newRepo) {
+		List<IndexEntry> entries = searchService.getAll(oldRepo);
+		searchService.remove(entries);
+		for (IndexEntry entry : entries) {
+			entry.repositoryId = newRepo.toId();
+			entry.group = newRepo.group;
+		}
+		searchService.index(newRepo.toId(), entries);
+	}
+
 	@PUT
 	@Path("avatar/{group}/{name}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -284,4 +260,28 @@ public class RepositoryResource {
 		return getAvatar(group, name);
 	}
 
+	@PUT
+	@Path("settings/{group}/{name}/{setting}/{value}")
+	public Response toggleSetting(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("setting") String setting,
+			@PathParam("value") String value) {
+		Repository repo = service.get(group, name);
+		service.setSetting(repo, setting, value);
+		return Respond.ok(new HashMap<>());
+	}
+	
+	@DELETE
+	@Path("{group}/{name}")
+	public Response delete(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
+		Repository repo = service.get(group, name);
+		NotificationJob notification = notificationService.repositoryDeleted(repo);
+		deleteService.delete(repo);
+		notification.send();
+		return Respond.ok(new HashMap<>());
+	}
+	
 }

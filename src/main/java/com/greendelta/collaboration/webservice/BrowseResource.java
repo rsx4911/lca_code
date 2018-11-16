@@ -107,37 +107,7 @@ public class BrowseResource {
 			return null;
 		return content;
 	}
-
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("categoryInfo/{group}/{name}")
-	public Response categoryInfo(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("categoryPath") String categoryPath,
-			@QueryParam("commitId") String commitId) {
-		if (categoryPath == null || categoryPath.isEmpty())
-			return Respond.ok(new HashMap<>());
-		if (!categoryPath.contains("/"))
-			return Respond.ok(Collections.emptyMap());
-		Repository repo = repoService.get(group, name);
-		String refId = toId(categoryPath);
-		String category = categoryPath.substring(categoryPath.indexOf('/') + 1);
-		ObjectMap entry = service.getDataset(repo, refId, commitId);
-		if (entry == null)
-			return Respond.notFound("No category '" + category + "' found");
-		List<String> categories = new ArrayList<>();
-		if (entry.get("categories") != null) {
-			categories.addAll(entry.get("categories"));
-		}
-		categories.add(entry.get("name"));
-		Map<String, Object> result = new HashMap<>();
-		result.put("id", refId);
-		result.put("category", categories);
-		result.put("deleted", entry.get("action") == IndexAction.DELETE ? "true" : "false");
-		return Respond.ok(result);
-	}
-
+	
 	@GET
 	@Path("{group}/{name}/{type}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -177,6 +147,36 @@ public class BrowseResource {
 			json.add("commitId", new JsonPrimitive(commitId));
 		}
 		return Respond.ok(new Gson().toJson(json));
+	}
+	
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("categoryInfo/{group}/{name}")
+	public Response categoryInfo(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("categoryPath") String categoryPath,
+			@QueryParam("commitId") String commitId) {
+		if (categoryPath == null || categoryPath.isEmpty())
+			return Respond.ok(new HashMap<>());
+		if (!categoryPath.contains("/"))
+			return Respond.ok(Collections.emptyMap());
+		Repository repo = repoService.get(group, name);
+		String refId = toId(categoryPath);
+		String category = categoryPath.substring(categoryPath.indexOf('/') + 1);
+		ObjectMap entry = service.getDataset(repo, refId, commitId);
+		if (entry == null)
+			return Respond.notFound("No category '" + category + "' found");
+		List<String> categories = new ArrayList<>();
+		if (entry.get("categories") != null) {
+			categories.addAll(entry.get("categories"));
+		}
+		categories.add(entry.get("name"));
+		Map<String, Object> result = new HashMap<>();
+		result.put("id", refId);
+		result.put("category", categories);
+		result.put("deleted", entry.get("action") == IndexAction.DELETE ? "true" : "false");
+		return Respond.ok(result);
 	}
 
 	@GET

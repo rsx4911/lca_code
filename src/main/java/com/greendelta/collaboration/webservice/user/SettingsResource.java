@@ -36,15 +36,6 @@ public class SettingsResource {
 	}
 
 	@GET
-	@Path("{key}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response getSetting(@PathParam("key") Key key) {
-		if (!ALLOWED.contains(key))
-			return Respond.forbidden();
-		return Respond.ok(Boolean.toString(service.get(key)));
-	}
-
-	@GET
 	public Response getSettings() {
 		List<Setting> settings = service.getAll();
 		User user = userService.getCurrentUser();
@@ -52,6 +43,15 @@ public class SettingsResource {
 			Collections.filter(settings, (setting) -> !setting.name.isPublic());
 		}
 		return Respond.ok(Client.map(settings, Settings::map));
+	}
+	
+	@GET
+	@Path("{key}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response getSetting(@PathParam("key") Key key) {
+		if (!ALLOWED.contains(key))
+			return Respond.forbidden();
+		return Respond.ok(Boolean.toString(service.get(key)));
 	}
 
 }

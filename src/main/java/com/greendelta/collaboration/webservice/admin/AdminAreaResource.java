@@ -57,6 +57,51 @@ public class AdminAreaResource {
 		this.emailService = emailService;
 		this.libraryService = libraryService;
 	}
+	
+	@GET
+	@Path("testGladConfig")
+	public Response testGladConfig() {
+		try {
+			String gladUrl = settingsService.get(Key.GLAD_URL);
+			if (gladUrl == null || gladUrl.isEmpty())
+				return Respond.error("No glad url specified");
+			String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
+			String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
+			String result = get(gladUrl, gladHeaderField, gladHeaderValue);
+			if (result.contains("\"resultInfo\":") && result.contains("\"data\":") && result.contains("\"aggregations\":"))
+				return Respond.ok(new HashMap<>());
+			return Respond.error("GLAD testcall returned unexpected content: " + result);
+		} catch (Exception e) {
+			return Respond.error("Could not reach GLAD service");
+		}
+	}
+
+	@GET
+	@Path("testSearchConfig")
+	public Response testSearchConfig() {
+		SearchConfig config = settingsService.getSearchConfig();
+		try {
+			Client client = config.getClient();
+			boolean exists = client.admin().indices().prepareExists(config.indexName).execute().actionGet().isExists();
+			if (!exists)
+				return Respond.error("Index " + config.indexName + " does not exist");
+			return Respond.ok(new HashMap<>());
+		} catch (UnknownHostException e) {
+			return Respond.error("Could not connect to host " + config.host + " on cluster " + config.cluster);
+		} catch (Exception e) {
+			return Respond.error(e.getMessage());
+		}
+	}
+	
+	@POST
+	@Path("testMailConfig")
+	public Response testMailConfig(String recipient) {
+		EmailJob mail = new EmailJob();
+		mail.setSubject("Collaboration server test email");
+		mail.setRecipient(recipient);
+		emailService.send(mail);
+		return Respond.ok(new HashMap<>());
+	}
 
 	@PUT
 	@Path("reindex")
@@ -82,51 +127,6 @@ public class AdminAreaResource {
 		if (key == Key.LIBRARY_PATH)
 			libraryService.resetLibraries();
 		return Respond.ok(new HashMap<>());
-	}
-
-	@POST
-	@Path("testMailConfig")
-	public Response testMailConfig(String recipient) {
-		EmailJob mail = new EmailJob();
-		mail.setSubject("Collaboration server test email");
-		mail.setRecipient(recipient);
-		emailService.send(mail);
-		return Respond.ok(new HashMap<>());
-	}
-
-	@GET
-	@Path("testSearchConfig")
-	public Response testSearchConfig() {
-		SearchConfig config = settingsService.getSearchConfig();
-		try {
-			Client client = config.getClient();
-			boolean exists = client.admin().indices().prepareExists(config.indexName).execute().actionGet().isExists();
-			if (!exists)
-				return Respond.error("Index " + config.indexName + " does not exist");
-			return Respond.ok(new HashMap<>());
-		} catch (UnknownHostException e) {
-			return Respond.error("Could not connect to host " + config.host + " on cluster " + config.cluster);
-		} catch (Exception e) {
-			return Respond.error(e.getMessage());
-		}
-	}
-
-	@GET
-	@Path("testGladConfig")
-	public Response testGladConfig() {
-		try {
-			String gladUrl = settingsService.get(Key.GLAD_URL);
-			if (gladUrl == null || gladUrl.isEmpty())
-				return Respond.error("No glad url specified");
-			String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
-			String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
-			String result = get(gladUrl, gladHeaderField, gladHeaderValue);
-			if (result.contains("\"resultInfo\":") && result.contains("\"data\":") && result.contains("\"aggregations\":"))
-				return Respond.ok(new HashMap<>());
-			return Respond.error("GLAD testcall returned unexpected content: " + result);
-		} catch (Exception e) {
-			return Respond.error("Could not reach GLAD service");
-		}
 	}
 
 	private String get(String gladBaseUrl, String headerField, String headerValue) throws Exception {

@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.task;
+package com.greendelta.collaboration.webservice.user;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

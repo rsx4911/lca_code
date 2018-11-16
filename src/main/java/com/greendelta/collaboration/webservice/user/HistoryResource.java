@@ -60,48 +60,6 @@ public class HistoryResource {
 	}
 
 	@GET
-	@Path("search/{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("filter") String filter,
-			@QueryParam("page") int page,
-			@QueryParam("pageSize") int pageSize) {
-		Repository repo = repoService.get(group, name);
-		List<Commit> commits = service.getCommits(repo);
-		java.util.Collections.reverse(commits);
-		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
-		return Respond.ok(putAdditionalInfo(result, commits));
-	}
-
-	private Map<String, Object> putAdditionalInfo(SearchResult<Commit> result, List<Commit> commits) {
-		Map<String, Integer> groupCount = new HashMap<>();
-		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
-		for (Commit commit : result.data) {
-			int count = 0;
-			for (Commit c : commits) {
-				if (!isSameDay(commit.timestamp, c.timestamp))
-					continue;
-				count++;
-			}
-			groupCount.put(commit.id, count);
-		}
-		map.put("resultInfo.groupCount", groupCount);
-		return map;
-	}
-
-	private boolean isSameDay(long d1, long d2) {
-		Calendar c1 = Calendar.getInstance();
-		c1.setTimeInMillis(d1);
-		Calendar c2 = Calendar.getInstance();
-		c2.setTimeInMillis(d2);
-		if (c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR))
-			return false;
-		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
-	}
-
-	@GET
 	@Path("{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
@@ -153,6 +111,48 @@ public class HistoryResource {
 	}
 
 	@GET
+	@Path("search/{group}/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("filter") String filter,
+			@QueryParam("page") int page,
+			@QueryParam("pageSize") int pageSize) {
+		Repository repo = repoService.get(group, name);
+		List<Commit> commits = service.getCommits(repo);
+		java.util.Collections.reverse(commits);
+		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
+		return Respond.ok(putAdditionalInfo(result, commits));
+	}
+
+	private Map<String, Object> putAdditionalInfo(SearchResult<Commit> result, List<Commit> commits) {
+		Map<String, Integer> groupCount = new HashMap<>();
+		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
+		for (Commit commit : result.data) {
+			int count = 0;
+			for (Commit c : commits) {
+				if (!isSameDay(commit.timestamp, c.timestamp))
+					continue;
+				count++;
+			}
+			groupCount.put(commit.id, count);
+		}
+		map.put("resultInfo.groupCount", groupCount);
+		return map;
+	}
+
+	private boolean isSameDay(long d1, long d2) {
+		Calendar c1 = Calendar.getInstance();
+		c1.setTimeInMillis(d1);
+		Calendar c2 = Calendar.getInstance();
+		c2.setTimeInMillis(d2);
+		if (c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR))
+			return false;
+		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
+	}
+	
+	@GET
 	@Path("category/{group}/{name}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistoryForCategory(
@@ -181,22 +181,6 @@ public class HistoryResource {
 			return Respond.notFound();
 		Map<String, Object> result = putUserName(commit);
 		return Respond.ok(result);
-	}
-
-	@GET
-	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response getPreviousReference(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("type") ModelType type,
-			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId) {
-		Repository repo = repoService.get(group, name);
-		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
-		if (lastCommit == null || lastCommit.id.equals(commitId))
-			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
-		return Respond.ok(lastCommit.id);
 	}
 
 	@GET
@@ -265,5 +249,21 @@ public class HistoryResource {
 			map.put("userDisplayName", commit.user);
 		return map;
 	}
-
+	
+	@GET
+	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response getPreviousReference(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId) {
+		Repository repo = repoService.get(group, name);
+		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
+		if (lastCommit == null || lastCommit.id.equals(commitId))
+			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
+		return Respond.ok(lastCommit.id);
+	}
+	
 }

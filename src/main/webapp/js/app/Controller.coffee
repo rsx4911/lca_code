@@ -113,12 +113,15 @@ define([
 					@router.registerRouteRewrite 'landingPage', 'dashboard/repositories'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
-					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					if currentUser.isDataManager() and !currentUser.isAdmin() and !currentUser.isUserManager()
+						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
+					else
+						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 				else
 					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
-				@router.registerAdminRoute 'adminOverview', 'userManager', -> @showView 
+				@router.registerAdminRoute 'adminOverview', 'manager', -> @showView 
 					view: 'admin/Overview'
 					title: 'Admin area - Overview'
 					nav:

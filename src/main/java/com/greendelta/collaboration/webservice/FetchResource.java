@@ -122,27 +122,6 @@ public class FetchResource {
 		return result;
 	}
 
-	@POST
-	@Path("{group}/{name}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetch(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("commitId") String commitId,
-			@QueryParam("download") @DefaultValue("false") boolean download,
-			List<FileReference> requested) {
-		Repository repo = repoService.get(group, name);
-		List<Commit> commits = getCommits(repo, commitId, download);
-		if (commits.isEmpty())
-			return Respond.noContent();
-		if (requested.isEmpty() && download) {
-			requested = null;
-		}
-		StreamingOutput data = service.prepareData(repo, commits, requested);
-		return Respond.ok(data);
-	}
-
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -162,6 +141,27 @@ public class FetchResource {
 			resultData.add(entry.asFetchRequestData());
 		}
 		return Respond.ok(resultData);
+	}
+
+	@POST
+	@Path("{group}/{name}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetch(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("commitId") String commitId,
+			@QueryParam("download") @DefaultValue("false") boolean download,
+			List<FileReference> requested) {
+		Repository repo = repoService.get(group, name);
+		List<Commit> commits = getCommits(repo, commitId, download);
+		if (commits.isEmpty())
+			return Respond.noContent();
+		if (requested.isEmpty() && download) {
+			requested = null;
+		}
+		StreamingOutput data = service.prepareData(repo, commits, requested);
+		return Respond.ok(data);
 	}
 
 	private List<Commit> getCommits(Repository repo, String commitId, boolean until) {
