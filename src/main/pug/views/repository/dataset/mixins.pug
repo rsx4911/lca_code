@@ -290,7 +290,7 @@ mixin array-field-row(path, type, getSpecificId)
 							+compare-icon('removed')
 							+ref(null, other)
 
-mixin field-link-row(path, urlPrefix)
+mixin field-link-row(path, urlPrefix, query)
 	- var value = getValue(dataset, path);
 	- var value2 = getValue(compareTo, path); 
 	if value || value2 || reviewMode
@@ -299,6 +299,8 @@ mixin field-link-row(path, urlPrefix)
 			+compare-icon(changed)
 			if value
 				- var href = urlPrefix ? urlPrefix + '/' + value : value;
+				if query
+					- href += query
 				a.original-value(href=href target='_blank')=value
 			if changed && value2
 				span.comparison-value=value2
