@@ -92,7 +92,7 @@ define([
 			render: (renderOptions) ->
 				$.get 'ws/manager/area/count', (counts) =>
 					if currentUser.isAdmin()
-						$.get 'ws/settings/maintenanceMode', (maintenanceModeActive) =>
+						$.get 'ws/settings/MAINTENANCE_MODE', (maintenanceModeActive) =>
 							@maintenanceModeActive = maintenanceModeActive is true or maintenanceModeActive is 'true'
 							@doRender renderOptions, counts
 					else
