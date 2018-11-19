@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -108,5 +110,10 @@ public class FetchService {
 			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
 		}
 
+		@Override
+		protected byte[] getBinaryData(Path file) throws IOException {
+			return Files.readAllBytes(file);
+		}
+		
 	}
 }
