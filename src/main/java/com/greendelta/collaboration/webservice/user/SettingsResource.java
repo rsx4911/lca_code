@@ -36,7 +36,7 @@ public class SettingsResource {
 		List<Setting> settings = service.getAll();
 		User user = userService.getCurrentUser();
 		if (!user.isAdmin()) {
-			Collections.filter(settings, (setting) -> !setting.name.isPublic());
+			settings = Collections.filter(settings, (setting) -> !setting.name.isPublic());
 		}
 		return Respond.ok(Client.map(settings, Settings::map));
 	}
