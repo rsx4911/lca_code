@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -48,7 +49,8 @@ public class MaintenanceModeFilter implements Filter {
 			if (!isLoginUrl && !user.isAdmin()) {
 				HttpServletResponse response = (HttpServletResponse) servletResponse;
 				response.setStatus(406);
-				response.getWriter().print("Server is in maintenance mode");
+				String message = settingsService.get(Key.MAINTENANCE_MESSAGE);
+				response.getWriter().print(message);
 				return;
 			}
 		}

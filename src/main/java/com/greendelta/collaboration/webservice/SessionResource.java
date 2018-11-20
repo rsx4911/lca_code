@@ -100,7 +100,7 @@ public class SessionResource {
 		boolean maintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
 		if (maintenanceMode && !user.isAdmin()) {
 			subject.logout();
-			return Respond.forbidden("Server is in maintenance mode");			
+			return Respond.forbidden(settingsService.get(Key.MAINTENANCE_MESSAGE));			
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();

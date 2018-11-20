@@ -85,7 +85,7 @@ public class Setting extends AbstractEntity {
 		
 		// maintenance
 		MAINTENANCE_MODE(Boolean.class, false),
-		MAINTENANCE_MESSAGE(String.class),
+		MAINTENANCE_MESSAGE(String.class, "Server is in maintenance mode. Please try again later"),
 		
 		// announcements
 		ANNOUNCEMENT_ID(String.class),
@@ -123,6 +123,8 @@ public class Setting extends AbstractEntity {
 				return (T) new Boolean(Boolean.parseBoolean(value));
 			if (type == Integer.class && value != null)
 				return (T) new Integer(Integer.parseInt(value));
+			if (type == String.class && value == null || value.isEmpty())
+				return (T) defaultValue;
 			return (T) value;
 		}
 

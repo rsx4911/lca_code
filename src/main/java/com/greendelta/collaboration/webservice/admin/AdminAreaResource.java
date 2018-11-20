@@ -116,6 +116,7 @@ public class AdminAreaResource {
 	public Response getServerInfo() {
 		Map<String, Object> info = new HashMap<>();
 		info.put("maintenanceModeActive", settingsService.is(Key.MAINTENANCE_MODE));
+		info.put("maintenanceMessage", settingsService.get(Key.MAINTENANCE_MESSAGE));
 		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
 		info.put("announcement", settingsService.get(Key.ANNOUNCEMENT_MESSAGE));
 		return Respond.ok(info);

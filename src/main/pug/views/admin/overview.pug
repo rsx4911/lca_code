@@ -14,6 +14,17 @@ mixin box(label, plural, count)
 			.clear
 		div(id=lcPlural)
 
+mixin editable-text(action, label, value, defaultValue)
+	div
+		strong #{label}: 
+		if value
+			| #{value}
+		else
+			i #{defaultValue}
+		|  
+		a(href='#' data-action=action)
+			span.glyphicon.glyphicon-edit
+			
 .content-box.overview
 	div(class=isAdmin?'four-columns':'two-columns')
 		if isAdmin
@@ -42,16 +53,8 @@ if isAdmin
 			| {{buildDate}}
 		div 
 			strong Open web service requests: 
-			span#open-web-service-requests #{openWebServiceRequests}
-			|  
+			span#open-web-service-requests #{openWebServiceRequests} 
 			a(href='#' data-action='refresh-open-web-service-requests')
 				span.glyphicon.glyphicon-refresh
-		div
-			strong Announcement text: 
-			if announcement
-				| #{announcement}
-			else
-				i No announcement
-			|  
-			a(href='#' data-action='set-announcement')
-				span.glyphicon.glyphicon-edit
+		+editable-text('set-maintenance-message', 'Maintenance message', maintenanceMessage, 'Not set') 
+		+editable-text('set-announcement', 'Announcement text', announcement, 'No announcement set') 

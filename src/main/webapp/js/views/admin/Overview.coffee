@@ -31,6 +31,7 @@ define([
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
 				'click [data-action=create-team]': () -> Router.navigate 'administration/team/new'
 				'click [data-action=toggle-maintenance-mode]': 'toggleMaintenanceMode'
+				'click [data-action=set-maintenance-message]': 'setMaintenanceMessage'
 				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
 
@@ -42,6 +43,12 @@ define([
 						$('body').removeClass 'maintenance-mode'
 					else
 						$('body').addClass 'maintenance-mode'
+
+			setMaintenanceMessage: (event) ->
+				Events.preventDefault event
+				Layers.promptInput 'Maintenance message', 'textarea', @serverInfo.maintenanceMessage, (value) =>
+					@setSetting 'MAINTENANCE_MESSAGE', value, () ->
+						Backbone.history.loadUrl()
 
 			refreshOpenWebServiceRequests: (event) ->
 				Events.preventDefault event
@@ -137,6 +144,7 @@ define([
 					data.maintenanceModeActive = @serverInfo.maintenanceModeActive
 					data.openWebServiceRequests = @serverInfo.openWebServiceRequests
 					data.announcement = @serverInfo.announcement
+					data.maintenanceMessage = @serverInfo.maintenanceMessage
 				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()
