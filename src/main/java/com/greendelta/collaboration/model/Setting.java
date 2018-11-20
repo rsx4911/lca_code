@@ -85,6 +85,7 @@ public class Setting extends AbstractEntity {
 		
 		// maintenance
 		MAINTENANCE_MODE(Boolean.class, false),
+		MAINTENANCE_MESSAGE(String.class),
 		
 		// announcements
 		ANNOUNCEMENT_ID(String.class),
