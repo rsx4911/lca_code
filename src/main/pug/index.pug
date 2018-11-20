@@ -9,6 +9,8 @@ html(lang='en')
 		link(rel='shortcut icon' type='image/x-icon' href='images/favicon.ico')
 		link(rel='stylesheet' type='text/css' href='css/styles.css')
 	body.public-mode
+		#announcements
+			table: tbody: tr: td#announcement-message
 		header.navbar-fixed-top
 			.logo-container
 				a(href='')
@@ -21,4 +23,5 @@ html(lang='en')
 		#main
 			.full-size
 				.center
+		#maintenance-notification
 		script(data-main="js/main" src='js/libs/require.js')

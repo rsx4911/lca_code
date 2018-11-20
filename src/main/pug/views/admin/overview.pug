@@ -31,11 +31,27 @@ if isAdmin
 			else
 				| Activate maintenance mode
 	.content-box
-		div Release version: {{releaseVersion}}
-		div Commit id: {{commitId}}
-		div Build date: {{buildDate}}
-		div Open web service requests: 
+		div 
+			strong Release version: 
+			| {{releaseVersion}}
+		div
+			strong Commit id: 
+			| {{commitId}}
+		div
+			strong Build date: 
+			| {{buildDate}}
+		div 
+			strong Open web service requests: 
 			span#open-web-service-requests #{openWebServiceRequests}
 			|  
 			a(href='#' data-action='refresh-open-web-service-requests')
 				span.glyphicon.glyphicon-refresh
+		div
+			strong Announcement text: 
+			if announcement
+				| #{announcement}
+			else
+				i No announcement
+			|  
+			a(href='#' data-action='set-announcement')
+				span.glyphicon.glyphicon-edit

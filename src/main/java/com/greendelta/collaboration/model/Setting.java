@@ -84,7 +84,11 @@ public class Setting extends AbstractEntity {
 		MAIL_DEFAULT_REPLY_TO(String.class),
 		
 		// maintenance
-		MAINTENANCE_MODE(Boolean.class, false);
+		MAINTENANCE_MODE(Boolean.class, false),
+		
+		// announcements
+		ANNOUNCEMENT_ID(String.class),
+		ANNOUNCEMENT_MESSAGE(String.class);
 
 		public final Class<?> type;
 		private final Object defaultValue;

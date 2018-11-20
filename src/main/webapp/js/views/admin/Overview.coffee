@@ -1,5 +1,6 @@
 define([
 				'backbone'
+				'cs!utils/Announcements'
 				'cs!utils/Events'
 				'cs!utils/Filter'
 				'cs!utils/Layers'
@@ -16,7 +17,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Events, Filter, Layers, Model, Renderer, Status, Router, User, currentUser, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Announcements, Events, Filter, Layers, Model, Renderer, Status, Router, User, currentUser, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -31,25 +32,43 @@ define([
 				'click [data-action=create-team]': () -> Router.navigate 'administration/team/new'
 				'click [data-action=toggle-maintenance-mode]': 'toggleMaintenanceMode'
 				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
+				'click [data-action=set-announcement]': 'setAnnouncement'
 
 			toggleMaintenanceMode: () ->
-				wasActive = @maintenanceModeActive
+				wasActive = @serverInfo.maintenanceModeActive
+				@setSetting 'MAINTENANCE_MODE', !wasActive, () ->
+					Backbone.history.loadUrl()
+					if wasActive
+						$('body').removeClass 'maintenance-mode'
+					else
+						$('body').addClass 'maintenance-mode'
+
+			refreshOpenWebServiceRequests: (event) ->
+				Events.preventDefault event
+				$.ajax
+					type: 'GET'
+					url: 'ws/admin/area/serverInfo'
+					success: (serverInfo) =>
+						$('#open-web-service-requests').html serverInfo.openWebServiceRequests
+
+			setAnnouncement: (event) ->
+				Events.preventDefault event
+				announcement = @serverInfo.announcement
+				Layers.promptInput 'Announcement', 'textarea', announcement, (value) =>
+					@setSetting 'ANNOUNCEMENT_MESSAGE', value, () -> 
+						Backbone.history.loadUrl()
+						if value
+							Announcements.announce value
+						else
+							Announcements.clear()						
+
+			setSetting: (key, value, callback) ->
 				$.ajax
 					type: 'PUT'
 					url: 'ws/admin/area/settings'
 					contentType: 'application/json'
-					data: JSON.stringify({key: 'MAINTENANCE_MODE', value: !@maintenanceModeActive})
-					success: () -> 
-						Backbone.history.loadUrl()
-						if wasActive
-							$('body').removeClass 'maintenance-mode'
-						else
-							$('body').addClass 'maintenance-mode'
-
-			refreshOpenWebServiceRequests: (event) ->
-				Events.preventDefault event
-				$.get 'ws/admin/area/serverInfo', (serverInfo) =>
-					$('#open-web-service-requests').html serverInfo.openWebServiceRequests
+					data: JSON.stringify({key: key, value: value})
+					success: callback
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -98,8 +117,7 @@ define([
 				$.get 'ws/usermanager/area/count', (counts) =>
 					if currentUser.isAdmin()
 						$.get 'ws/admin/area/serverInfo', (serverInfo) =>
-							@maintenanceModeActive = serverInfo.maintenanceModeActive
-							@openWebServiceRequests = serverInfo.openWebServiceRequests
+							@serverInfo = serverInfo
 							@doRender renderOptions, counts
 					else
 						@doRender renderOptions, counts
@@ -111,8 +129,9 @@ define([
 					users: counts.users
 					groups: counts.groups
 					teams: counts.teams
-					maintenanceModeActive: @maintenanceModeActive
-					openWebServiceRequests: @openWebServiceRequests
+					maintenanceModeActive: @serverInfo.maintenanceModeActive
+					openWebServiceRequests: @serverInfo.openWebServiceRequests
+					announcement: @serverInfo.announcement
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()
 				@userFilter.init()

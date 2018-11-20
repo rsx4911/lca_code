@@ -26,6 +26,7 @@ import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.platform.servlet.RequestListener;
+import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
@@ -51,16 +52,18 @@ public class AdminAreaResource {
 	private final SettingsService settingsService;
 	private final EmailService emailService;
 	private final LibraryService libraryService;
+	private final AnnouncementService announcementService;
 
 	@Inject
 	public AdminAreaResource(RepositoryService repoService, ReindexService reindexService, SearchService searchService,
-			SettingsService settingsService, EmailService emailService, LibraryService libraryService) {
+			SettingsService settingsService, EmailService emailService, LibraryService libraryService, AnnouncementService announcementService) {
 		this.repoService = repoService;
 		this.reindexService = reindexService;
 		this.searchService = searchService;
 		this.settingsService = settingsService;
 		this.emailService = emailService;
 		this.libraryService = libraryService;
+		this.announcementService = announcementService;
 	}
 	
 	@GET
@@ -114,6 +117,7 @@ public class AdminAreaResource {
 		Map<String, Object> info = new HashMap<>();
 		info.put("maintenanceModeActive", settingsService.is(Key.MAINTENANCE_MODE));
 		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
+		info.put("announcement", settingsService.get(Key.ANNOUNCEMENT_MESSAGE));
 		return Respond.ok(info);
 	}
 	
@@ -125,6 +129,20 @@ public class AdminAreaResource {
 		for (Repository repo : repos) {
 			reindexService.reindex(repo);
 		}
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
+	@Path("announce")
+	public Response announce(String message) {
+		announcementService.announce(message);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
+	@Path("clearAnnouncement")
+	public Response clearAnnouncement() {		
+		announcementService.clear();
 		return Respond.ok(new HashMap<>());
 	}
 

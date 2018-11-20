@@ -1,6 +1,7 @@
 define([
 				'cs!app/Navigation'
 				'cs!app/UserMenu'
+				'cs!utils/Announcements'
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Layers'
@@ -15,7 +16,7 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Events, Format, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, UserMenu, Announcements, Events, Format, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -94,13 +95,18 @@ define([
 					noAnimation: true
 
 			initializeMaintenanceMode: () ->
-				notification = $('#maintenance-notification')
+				notification = $ '#maintenance-notification'
 				if !notification.length
-					$('body').append('<div id="maintenance-notification"></div>')
-					notification = $('#maintenance-notification')
+					$('body').append '<div id="maintenance-notification"></div>'
+					notification = $ '#maintenance-notification'
 				notification.html 'The server is currently in maintenance mode'
 				if settings.is('MAINTENANCE_MODE')
 					$('body').addClass 'maintenance-mode'
+
+			initializeAnnouncements: () ->
+				message = settings.getVal 'ANNOUNCEMENT_MESSAGE'
+				if message
+					Announcements.announce message
 
 			registerRoutes: () ->
 				@registerRouteRewrites()
@@ -379,6 +385,7 @@ define([
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
 				@initializeUserMenu()
+				@initializeAnnouncements()
 				@initializeMaintenanceMode()
 				@registerRoutes()
 
