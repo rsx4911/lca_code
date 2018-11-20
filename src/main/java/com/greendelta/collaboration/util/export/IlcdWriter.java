@@ -21,6 +21,7 @@ import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
 import org.openlca.ilcd.io.DataStore;
 import org.openlca.ilcd.io.ZipStore;
+import org.openlca.util.BinUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -130,7 +131,7 @@ public class IlcdWriter implements DatasetWriter {
 			if (!file.exists())
 				return null;
 			try {
-				return Files.readAllBytes(file.toPath());
+				return BinUtils.gunzip(Files.readAllBytes(file.toPath()));
 			} catch (IOException e) {
 				log.error("Error reading bin file", e);
 				return null;

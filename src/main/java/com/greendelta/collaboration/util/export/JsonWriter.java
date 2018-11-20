@@ -12,6 +12,7 @@ import java.util.Set;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.ZipStore;
+import org.openlca.util.BinUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -63,7 +64,7 @@ public class JsonWriter implements DatasetWriter {
 		File binDir = fetchService.getBinDir(repo, type, refId, commitId);
 		if (binDir.exists())
 			for (File file : binDir.listFiles())
-				zipStore.putBin(type, refId, file.getName(), Files.readAllBytes(file.toPath()));
+				zipStore.putBin(type, refId, file.getName(), BinUtils.gunzip(Files.readAllBytes(file.toPath())));
 		written.add(type.name() + refId);
 		writeReferences(json);
 		for (IndexEntry entry : getGlobalParameters(commitId)) {
