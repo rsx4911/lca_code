@@ -18,3 +18,6 @@ define () ->
 			value = !(window[key] is 'true')
 			window[key] = value.toString()
 		return value
+
+	getString: (key) ->
+		localStorage?.getItem?(key) or window[key]

@@ -104,9 +104,10 @@ define([
 					$('body').addClass 'maintenance-mode'
 
 			initializeAnnouncements: () ->
+				id = settings.getVal 'ANNOUNCEMENT_ID'
 				message = settings.getVal 'ANNOUNCEMENT_MESSAGE'
 				if message
-					Announcements.announce message
+					Announcements.announce message, id
 
 			registerRoutes: () ->
 				@registerRouteRewrites()

@@ -55,12 +55,16 @@ define([
 				Events.preventDefault event
 				announcement = @serverInfo.announcement
 				Layers.promptInput 'Announcement', 'textarea', announcement, (value) =>
-					@setSetting 'ANNOUNCEMENT_MESSAGE', value, () -> 
-						Backbone.history.loadUrl()
-						if value
-							Announcements.announce value
-						else
-							Announcements.clear()						
+					$.ajax
+						type: 'PUT'
+						url: 'ws/admin/area/announce'
+						data: value
+						success: () => 
+							Backbone.history.loadUrl()
+							if value
+								Announcements.announce value
+							else
+								Announcements.clear()						
 
 			setSetting: (key, value, callback) ->
 				$.ajax
@@ -123,15 +127,17 @@ define([
 						@doRender renderOptions, counts
 
 			doRender: (renderOptions, counts) ->
-				@$el.html template
+				data = 
 					repositories: counts.repositories
 					isAdmin: currentUser.isAdmin()
 					users: counts.users
 					groups: counts.groups
 					teams: counts.teams
-					maintenanceModeActive: @serverInfo.maintenanceModeActive
-					openWebServiceRequests: @serverInfo.openWebServiceRequests
-					announcement: @serverInfo.announcement
+				if currentUser.isAdmin()
+					data.maintenanceModeActive = @serverInfo.maintenanceModeActive
+					data.openWebServiceRequests = @serverInfo.openWebServiceRequests
+					data.announcement = @serverInfo.announcement
+				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()
 				@userFilter.init()
