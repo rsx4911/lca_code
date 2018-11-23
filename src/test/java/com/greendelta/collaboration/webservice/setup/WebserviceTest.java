@@ -1,0 +1,73 @@
+package com.greendelta.collaboration.webservice.setup;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.core.NewCookie;
+
+import org.junit.After;
+import org.junit.Before;
+import org.openlca.cloud.api.CredentialSupplier;
+import org.openlca.cloud.api.RepositoryClient;
+import org.openlca.cloud.api.RepositoryConfig;
+import org.openlca.cloud.util.WebRequests;
+import org.openlca.cloud.util.WebRequests.Type;
+import org.openlca.cloud.util.WebRequests.WebRequestException;
+import org.openlca.core.database.IDatabase;
+import org.openlca.core.database.derby.DerbyDatabase;
+
+import com.sun.jersey.api.client.ClientResponse;
+
+public class WebserviceTest {
+
+	private static final String REPOSITORY_ID = "admin/test";
+	private TestServer server;
+	private Setup setup;
+	private IDatabase database;	
+	
+	@Before
+	public void startServer() throws Exception {
+		setup = new Setup();
+		server = new TestServer(setup);
+		server.start();
+		String sessionId = login();
+		createRepository(sessionId);
+	}
+
+	private String login() throws WebRequestException {
+		Map<String, String> data = new HashMap<>();
+		data.put("username", "admin");
+		data.put("password", setup.adminPassword);
+		ClientResponse response = WebRequests.call(Type.POST, setup.getUrl("public/login"), null, data);
+		for (NewCookie cookie : response.getCookies())
+			if (cookie.getName().equals("JSESSIONID"))
+				return cookie.getValue();
+		return null;
+	}
+
+	private void createRepository(String sessionId) throws WebRequestException {
+		WebRequests.call(Type.POST, setup.getUrl("repository/" + REPOSITORY_ID), sessionId);
+	}
+
+	protected IDatabase getDatabase() {
+		if (database != null)
+			return database;
+		database = DerbyDatabase.createInMemory();
+		return database;
+	}
+	
+	protected RepositoryClient getClient() {
+		IDatabase database = getDatabase();
+		RepositoryConfig config = RepositoryConfig.connect(database, setup.getBaseUrl(), REPOSITORY_ID,
+				new CredentialSupplier("admin", setup.adminPassword));
+		return new RepositoryClient(config);
+	}
+
+	@After
+	public void stopServer() throws Exception {
+		if (server != null) {
+			server.stop();
+		}
+	}
+
+}
