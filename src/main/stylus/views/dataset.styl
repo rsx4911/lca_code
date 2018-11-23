@@ -152,12 +152,12 @@
 
 		@media(max-width 767px)
 			
-			.switch-to-list, .exchange-tables
+			.switch-to-list, .exchange-tables, .impact-factor-table
 				display none
 
 		@media(min-width 768px)
 				
-			.switch-to-table, .exchange-list
+			.switch-to-table, .exchange-list, .impact-factor-list
 				display none
 
 		.exchange-list-part 
@@ -210,6 +210,17 @@
 
 				@media(max-width 767px)
 					display none
+
+		.table.impact-categories > thead > tr > th, .table.impact-categories > tbody > tr > td
+
+			&:first-child
+				width 75%
+
+			&:nth-child(2)
+				width 20%
+
+			&:last-child
+				width 5%
 
 		img.icon-small
 			width 16px

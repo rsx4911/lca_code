@@ -3,6 +3,7 @@ define () ->
 	PROJECT: 'Projects'
 	PRODUCT_SYSTEM: 'Product systems'
 	IMPACT_METHOD: 'Impact methods'
+	IMPACT_CATEGORY: 'Impact categories'
 	PROCESS: 'Processes'
 	FLOW: 'Flows'
 	FLOW_PROPERTY: 'Flow properties'

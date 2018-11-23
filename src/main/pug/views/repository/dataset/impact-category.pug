@@ -1,0 +1,18 @@
+include ./structures/impact-factor-list.pug
+include ./structures/impact-factor-table.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
+			.clear
+			.impact-factor-table.toggleable
+				+impact-factor-table()
+			a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
+			.clear
+			.impact-factor-list.toggleable
+				+impact-factor-list(factorMap, otherFactorMap)
+	+meta
+	.clear

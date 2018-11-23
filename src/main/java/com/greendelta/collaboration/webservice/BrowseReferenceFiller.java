@@ -106,7 +106,6 @@ class BrowseReferenceFiller {
 			reference.add("name", toCategoryArray(indexEntry, true));
 			break;
 		case SOCIAL_INDICATOR:
-		case IMPACT_CATEGORY:
 		case NW_SET:
 			String commitId = indexEntry.getString("commitId");
 			String json = fetchService.getDataset(repo, mType, id, commitId);

@@ -12,6 +12,7 @@ define([
 				'cs!views/repository/dataset/DQSystem'
 				'cs!views/repository/dataset/Exchanges'
 				'cs!views/repository/dataset/Flow'
+				'cs!views/repository/dataset/ImpactFactors'
 				'cs!views/repository/dataset/Location'
 				'cs!views/repository/dataset/ProductSystem'
 				'cs!views/repository/Download'
@@ -21,6 +22,7 @@ define([
 				'templates/views/repository/dataset/project'
 				'templates/views/repository/dataset/product-system'
 				'templates/views/repository/dataset/impact-method'
+				'templates/views/repository/dataset/impact-category'
 				'templates/views/repository/dataset/parameter'
 				'templates/views/repository/dataset/process'
 				'templates/views/repository/dataset/flow'
@@ -35,7 +37,7 @@ define([
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, ImpactFactors, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, impactCategory, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -44,6 +46,7 @@ define([
 					when 'PROJECT' then return project
 					when 'PRODUCT_SYSTEM' then return productSystem
 					when 'IMPACT_METHOD' then return impactMethod
+					when 'IMPACT_CATEGORY' then return impactCategory
 					when 'PARAMETER' then return parameter
 					when 'PROCESS' then return process
 					when 'FLOW' then return flow
@@ -191,6 +194,8 @@ define([
 					fileBaseUrl: @getFileBaseUrl()
 					exchangeMap: if exchangesField then Exchanges.map(@dataset[exchangesField], @type) else null
 					otherExchangeMap: if @compareTo and exchangesField then Exchanges.map(@compareTo[exchangesField], @type) else null
+					factorMap: if @dataset.type is 'ImpactCategory' then ImpactFactors.map(@dataset.impactFactors) else null
+					otherFactorMap: if @compareTo and @compareTo.type is 'ImpactCategory' then ImpactFactors.map(@compareTo.impactFactors) else null
 					reviewMode: LocalStorage.getValue('reviewMode')
 					isPublic: !currentUser.isLoggedIn()
 				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo

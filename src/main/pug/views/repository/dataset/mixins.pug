@@ -17,6 +17,7 @@ mixin menubar()
 				.badge.pull-right.deleted Deleted
 			else
 				.btn-group-vertical.pull-right(role='group')
+					if dataset 
 					+download-dropdown
 					+comparison-dropdown
 			.clear
@@ -45,16 +46,17 @@ mixin menubar()
 				.clear
 
 mixin download-dropdown()
-	.dropdown.btn-group
-		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
-			span.glyphicon.glyphicon-download
-			span.text Download 
-			span.caret
-		ul.dropdown-menu
-			li: a(href='#' data-format='json') as JSON-LD
-			- var dsType = dataset ? dataset.type : null;
-			if !dsType || $.inArray(getTypeAsEnum(dsType), ['ACTOR', 'SOURCE', 'UNIT_GROUP', 'FLOW_PROPERTY', 'FLOW', 'PROCESS', 'IMPACT_METHOD']) !== -1
-				li: a(href='#' data-format='ilcd') as ILCD
+	- var dsType = dataset ? dataset.type : compareTo ? compareTo.type : null;
+	if getTypeAsEnum(dsType) !== 'IMPACT_CATEGORY' 
+		.dropdown.btn-group
+			button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+				span.glyphicon.glyphicon-download
+				span.text Download 
+				span.caret
+			ul.dropdown-menu
+				li: a(href='#' data-format='json') as JSON-LD
+				if !dsType || $.inArray(getTypeAsEnum(dsType), ['ACTOR', 'SOURCE', 'UNIT_GROUP', 'FLOW_PROPERTY', 'FLOW', 'PROCESS', 'IMPACT_METHOD']) !== -1
+					li: a(href='#' data-format='ilcd') as ILCD
 
 mixin comparison-dropdown()
 	.dropdown.btn-group
@@ -70,7 +72,8 @@ mixin comparison-dropdown()
 				li.divider(role='separator')
 			if commits.length > 2 || (commits.length === 2 && isFirst)
 				li: a(href='#' data-compare-to='other-version') other version...
-			li: a(href='#' data-compare-to='other-dataset') other data set...
+			if dataset && getTypeAsEnum(dataset.type) !== 'IMPACT_CATEGORY'
+				li: a(href='#' data-compare-to='other-dataset') other data set...
 
 
 mixin header()
@@ -112,30 +115,6 @@ mixin meta()
 
 mixin maximize-icon()
 	li.maximize-content: a(href='#'): span.glyphicon.glyphicon-fullscreen
-
-mixin nav-dropdown(path, type, active)
-	if !path || reviewMode || hasAtLeastOne(dataset, compareTo, path)
-		li.dropdown(role='presentation')
-			a.dropdown-toggle(data-toggle='dropdown' href='#' role='button' aria-haspopup='true' aria-expanded='false' data-path=path)=getLabel(path)
-				|  
-				span.badge.change-count
-				|  
-				span.caret
-			ul.dropdown-menu
-				each values, index in getArrayValues(dataset, compareTo, type, path)
-					- active = active && index === 0;
-					+nav-dropdown-item(values[0], values[1], path, active)
-
-mixin nav-dropdown-item(ref, ref2, path, active)
-	- var id = path + '-' + (ref ? ref.id : ref2.id);
-	- var name = ref ? getValue(ref, 'name') : getValue(ref2, 'name');
-	- var changed = compareTo && !ref2 ? 'added' : (compareTo && !ref ? 'removed' : null);
-	li(role='presentation' class=active?'active':null, data-compare=changed)
-		a(href=('#' + id) aria-controls=id role='tab' data-toggle='tab')
-			if changed
-				+compare-icon(changed)
-			|  #{name} 
-			span.badge.change-count
 
 mixin nav-tab(path, active, label)
 	if !path || reviewMode || hasAtLeastOne(dataset, compareTo, path)
