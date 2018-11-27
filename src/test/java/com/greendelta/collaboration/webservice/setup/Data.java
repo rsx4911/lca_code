@@ -9,7 +9,7 @@ import com.greendelta.collaboration.installer.Search;
 
 public class Data {
 
-	public static void init(Setup setup) throws Exception {
+	public static void init(Setup setup) {
 		Database.init(setup);
 		RepositoryDir.init(setup.repoDir);
 		LibraryDir.init(setup.libDir);
@@ -17,7 +17,7 @@ public class Data {
 		setup.tomcatDir.mkdirs();
 	}
 	
-	public static void clear(Setup setup) throws Exception {
+	public static void clear(Setup setup) {
 		Dirs.delete(setup.repoDir.toPath());
 		Dirs.delete(setup.libDir.toPath());
 		Dirs.delete(setup.dbDir.toPath());

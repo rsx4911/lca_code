@@ -1,5 +1,10 @@
 package com.greendelta.collaboration.webservice.setup;
 
+import java.io.IOException;
+
+import org.apache.catalina.LifecycleException;
+import org.apache.maven.shared.invoker.MavenInvocationException;
+
 public class TestServer {
 
 	private final Setup setup;
@@ -10,7 +15,7 @@ public class TestServer {
 		this.setup = setup;
 	}
 
-	public void start() throws Exception {
+	public void start() throws IOException, InterruptedException, MavenInvocationException, LifecycleException {
 		System.out.println("Starting elastic at port " + setup.searchPort);
 		elastic.start(setup);
 		System.out.println("Initializing data");
@@ -19,25 +24,17 @@ public class TestServer {
 		tomcat.start(setup);
 	}
 
-	public void stop() throws Exception {
+	public void stop() throws LifecycleException {
 		System.out.println("Stopping tomcat");
 		try {
 			tomcat.stop();
-		} catch (Exception e) {
+		} catch (LifecycleException e) {
 			System.out.println("Error stopping tomcat: " + e.getMessage());
 		}
 		System.out.println("Clearing data");
-		try {
-			Data.clear(setup);
-		} catch (Exception e) {
-			System.out.println("Error clearing data: " + e.getMessage());
-		}
+		Data.clear(setup);
 		System.out.println("Stopping elastic");
-		try {
-			elastic.stop();
-		} catch (Exception e) {
-			System.out.println("Error stopping elastic: " + e.getMessage());
-		}
+		elastic.stop();
 		System.out.println("Done");
 	}
 

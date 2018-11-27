@@ -15,7 +15,7 @@ public class Setup extends Input {
 	public int tomcatPort;
 	public String repository = "test/test";
 
-	public Setup() throws Exception {
+	public Setup() throws IOException {
 		File tmp = Files.createTempDirectory("collab-test-server-").toFile();
 		this.dbDir = new File(tmp, "database");
 		this.libDir = new File(tmp, "libraries");

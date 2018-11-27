@@ -74,8 +74,8 @@ public class DefaultServlet extends HttpServlet {
 			response.sendRedirect(redirectUrl);
 			return;
 		}
-		File publicIndex = new File(request.getServletContext().getRealPath("index_public.html"));
-		if (user.hasId() && publicIndex.exists()) {
+		String publicIndex = request.getServletContext().getRealPath("index_public.html");
+		if (!user.hasId() && publicIndex != null && new File(publicIndex).exists()) {
 			forward("/index_public.html", request, response);
 		} else {
 			forward("/index.html", request, response);

@@ -108,11 +108,10 @@ public class Collections {
 		return to;
 	}
 
-	public static <T> Map<String, String> map(Collection<T> col, Function<T, Object> keyGenerator,
-			Function<T, Object> valueMapper) {
-		Map<String, String> map = new HashMap<>();
+	public static <T, K, V> Map<K, V> map(Collection<T> col, Function<T, K> keyGenerator, Function<T, V> valueMapper) {
+		Map<K, V> map = new HashMap<>();
 		for (T elem : col) {
-			map.put(keyGenerator.apply(elem).toString(), valueMapper.apply(elem).toString());
+			map.put(keyGenerator.apply(elem), valueMapper.apply(elem));
 		}
 		return map;
 	}

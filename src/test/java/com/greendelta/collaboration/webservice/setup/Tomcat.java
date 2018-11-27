@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Properties;
 
+import org.apache.catalina.LifecycleException;
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
@@ -15,9 +16,8 @@ public class Tomcat {
 	private org.apache.catalina.startup.Tomcat tomcat;
 	private String dbValue;
 
-	public void start(Setup setup) throws Exception {
-		buildWar();
-		File warFile = new File(new File("").getAbsolutePath(), "target/lca-collaboration.war");
+	public void start(Setup setup) throws MavenInvocationException, LifecycleException {
+		File warFile = buildWar();
 		dbValue = System.getProperty("app.database");
 		System.setProperty("app.database", setup.dbDir.getAbsolutePath());
 		try {
@@ -28,16 +28,17 @@ public class Tomcat {
 			tomcat.getHost().setAutoDeploy(true);
 			tomcat.getHost().setDeployOnStartup(true);
 			tomcat.start();
-		} catch (Exception e) {
+		} catch (LifecycleException e) {
 			tomcat = null;
 			throw e;
 		}
 		tomcat.addWebapp(tomcat.getHost(), "", warFile.getAbsolutePath());
 	}
 
-	private void buildWar() throws MavenInvocationException {
-		if ("true".equals(System.getProperty("collab.skipBuild"))) 
-			return;
+	private File buildWar() throws MavenInvocationException {
+		File warFile = new File(new File("").getAbsolutePath(), "target/lca-collaboration.war");
+		if (!"true".equals(System.getProperty("collab.build")) && warFile.exists())
+			return warFile;
 		InvocationRequest request = new DefaultInvocationRequest();
 		request.setBaseDirectory(new File(""));
 		request.setPomFile(new File(new File(""), "pom.xml"));
@@ -47,13 +48,16 @@ public class Tomcat {
 		request.setProperties(properties);
 		Invoker invoker = new DefaultInvoker();
 		invoker.execute(request);
+		return warFile;
 	}
 
-	public void stop() throws Exception {
+	public void stop() throws LifecycleException {
 		if (tomcat != null) {
 			tomcat.stop();
 		}
-		System.setProperty("app.database", dbValue);
+		if (dbValue != null) {
+			System.setProperty("app.database", dbValue);
+		}
 	}
 
 }
