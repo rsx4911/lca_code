@@ -18,10 +18,11 @@ include ../mixins/forms.pug
 			+input('GLAD_API_KEY_HEADER', 'Glad service api-key header field')
 			+input('GLAD_API_KEY', 'Glad service api-key header value')
 		.clear
-		.three-columns
+		.four-columns
 			+input('SEARCH_CLUSTER', 'Elasticsearch cluster')
-			+input('SEARCH_HOST', 'Elasticsearch server url')
-			+input('SEARCH_INDEX_NAME', 'Elasticsearch index name')
+			+input('SEARCH_HOST', 'Elasticsearch url')
+			+input('SEARCH_PORT', 'Elasticsearch port')
+			+input('SEARCH_INDEX_NAME', 'Elasticsearch index')
 		.clear
 	.header-box Enabled features
 	.content-box

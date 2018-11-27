@@ -124,7 +124,7 @@ public class SettingsService {
 			for (Key key : Key.values()) {
 				if (!key.isSearchConfig())
 					continue;
-				String value = get(key, key.getDefaultValue());
+				Object value = get(key, key.getDefaultValue());
 				if (value == null || value.toString().isEmpty())
 					continue;
 				if (searchConfig == null) {
@@ -138,6 +138,9 @@ public class SettingsService {
 
 	private void update(Object object, Key key, Object value) {
 		String field = getFieldName(key);
+		if (value != null) {
+			value = key.parse(value.toString());
+		}
 		try {
 			object.getClass().getDeclaredField(field).set(object, value);
 		} catch (Exception e) {
@@ -241,6 +244,7 @@ public class SettingsService {
 
 		public String cluster;
 		public String host;
+		public int port;
 		public String indexName;
 		private Client client;
 		private SearchClient searchClient;
@@ -252,7 +256,7 @@ public class SettingsService {
 				Settings settings = settingsBuilder.build();
 				TransportClient client = new PreBuiltTransportClient(settings);
 				try {
-					client.addTransportAddress(new TransportAddress(InetAddress.getByName(host), 9300));
+					client.addTransportAddress(new TransportAddress(InetAddress.getByName(host), port + 100));
 				} catch (UnknownHostException e) {
 					throw e;
 				}

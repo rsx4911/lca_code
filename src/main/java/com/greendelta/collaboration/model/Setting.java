@@ -57,6 +57,7 @@ public class Setting extends AbstractEntity {
 		SEARCH_CLUSTER(String.class, "elasticsearch"),
 		SEARCH_HOST(String.class, "localhost"),
 		SEARCH_INDEX_NAME(String.class, "collaboration-server"),
+		SEARCH_PORT(Integer.class, 9200),
 
 		// imprint
 		IMPRINT_COMPANY(String.class),
