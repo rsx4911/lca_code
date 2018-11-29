@@ -55,8 +55,8 @@ public class ReferenceCollector<T> {
 		List<T> references = new ArrayList<>();
 		for (ObjectMap entry : entries) {
 			Reference ref = new Reference();
-			if (ref.type == ModelType.CATEGORY) {
-				references.addAll(convert(repo, browseService.getForCategory(repo, ref.id)));
+			if (entry.get("type") == ModelType.CATEGORY) {
+				references.addAll(convert(repo, browseService.getForCategory(repo, entry.get("refId"))));
 			} else {
 				ref.type = entry.get("type");
 				ref.id = entry.getString("refId");
