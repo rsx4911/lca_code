@@ -76,11 +76,22 @@ define([
 					type: 'GET'
 					url: 'ws/task/review/' + @reviewId
 					success: (review) =>
-						@$el.html template 
-							review: review
-							references: Util.byType review.references
-						@update()
-						Renderer.render @, renderOptions
+						if !@isActive(review)
+							@close()
+						else
+							@$el.html template 
+								review: review
+								references: Util.byType review.references
+							@update()
+							Renderer.render @, renderOptions
+
+			isActive: (review) ->
+				if review.endDate
+					return false
+				for assignment in review.assignments
+					if !assignment.endDate and assignment.assignedTo.username is currentUser.get('username')
+						return true
+				return false
 
 			update: () ->
 				for key in ['bottom', 'left', 'width', 'height']

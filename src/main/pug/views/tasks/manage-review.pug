@@ -26,7 +26,7 @@ mixin assignments(assignments, type, noContentMessage)
 
 mixin review-info()
 	.header-box Review info
-		if !closed && !isInitiator && review
+		if hasAssignment
 			button.btn.btn-default.pull-right(data-action='open-widget') Open in task widget
 			.clear
 	.content-box

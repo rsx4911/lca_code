@@ -11,7 +11,7 @@ define([
       $.ajax
         type: 'PUT'
         url: "ws/task/review/#{reviewId}/markAsReviewed/#{id}/#{value}"
-        success: (response) => $("[data-id=#{id}]").attr 'checked', response
+        success: (response) => $("[data-id=#{id}]").prop 'checked', value
 
     byType: (references) ->
       referencesMap = {}				
