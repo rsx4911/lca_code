@@ -1,0 +1,6 @@
+mixin reference(review, reference, view)
+  .overflow-ellipsis&attributes(attributes)
+    input(type='checkbox' id=view + reference.id, data-id=reference.id data-action='mark-as-reviewed' checked=!!reference.reviewer, disabled=closed, aria-label='Mark ' + reference.name + ' as reviewed')
+    a(href=review.repositoryPath + '/dataset/' + reference.type + '/' + reference.refId + '?commitId=' + reference.commitId, title=reference.name)
+      img.model-icon-small(src='images/model/small/' + reference.type.toLowerCase() + '.png' aria-label='Icon of ' + reference.type)
+      strong=reference.name

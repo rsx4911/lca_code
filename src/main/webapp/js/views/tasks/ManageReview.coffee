@@ -1,19 +1,27 @@
 define([
 				'backbone'
+				'cs!app/Controller'
 				'cs!app/Router'
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
+				'cs!utils/LocalStorage'
 				'cs!utils/Renderer'
 				'cs!utils/Status'
+				'cs!views/tasks/Util'
+				'cs!views/tasks/ReviewWidget'
 				'cs!models/CurrentUser'
 				'templates/views/tasks/manage-review'
 			]
 
-	(Backbone, Router, Events, Format, Forms, Layers, Renderer, Status, currentUser, template) ->
+	(Backbone, Controller, Router, Events, Format, Forms, Layers, LocalStorage, Renderer, Status, Util, ReviewWidget, currentUser, template) ->
 
 		class CreateReviewView extends Backbone.View
+
+			openWidget: (event) ->
+				LocalStorage.setValue "#{currentUser.get('username')}-active-review-task", @reviewId
+				Controller.initializeReviewWidget()
 
 			createTask: (event) ->
 				Events.preventDefault event
@@ -73,6 +81,8 @@ define([
 							type: 'PUT'
 							url: "ws/task/review/#{taskId}/cancel/#{user}"
 							success: (response) => 
+								if Controller.reviewWidget and Controller.reviewWidget.reviewId is @reviewId
+									Controller.reviewWidget.close()
 								@userMenu.updateNoOfTasks response.activeTasks
 								Router.navigate 'tasks'
 
@@ -84,7 +94,9 @@ define([
 				$.ajax
 					type: 'PUT'
 					url: "ws/task/review/#{taskId}/complete/#{user}"
-					success: (response) => 
+					success: (response) =>
+						if Controller.reviewWidget and Controller.reviewWidget.reviewId is @reviewId
+							Controller.reviewWidget.close()
 						@userMenu.updateNoOfTasks response.activeTasks
 						Router.navigate 'tasks'
 
@@ -107,21 +119,11 @@ define([
 								Backbone.history.loadUrl()
 								Layers.hideProgressIndicator()
 
-			markAsReviewed: (event) ->
-				target = $ Events.target event, 'input'
-				refId = target.attr('id') or ''
-				value = target.is ':checked'
-				taskId = @reviewId
-				$.ajax
-					type: 'PUT'
-					url: "ws/task/review/#{taskId}/markAsReviewed/#{refId}/#{value}"
-					success: (response) => 
-						@userMenu.updateNoOfTasks response.activeTasks
-
 			className: 'tasks-view multi-box-view'
 
 			events: 
 				'click a[href]:not([href=#]):not([data-action])': (event) -> Events.followLink event
+				'click [data-action=open-widget]': 'openWidget'
 				'click [data-action=create-task]': 'createTask'
 				'click [data-action=assign-task]': 'assignTask'
 				'click [data-action=cancel-assignment]': 'cancel'
@@ -129,8 +131,8 @@ define([
 				'click [data-action=cancel-task]': 'cancel'
 				'click [data-action=complete-task]': 'complete'
 				'click [data-action=select-references]': 'selectReferences'
-				'click [data-action=mark-as-reviewed]': 'markAsReviewed'
-
+				'click [data-action=mark-as-reviewed]': (event) -> Util.markAsReviewed event, @reviewId
+				
 			initialize: (options) ->
 				{@reviewId, @userMenu} = options
 
@@ -168,20 +170,10 @@ define([
 				@sort activeAssignments, 'startDate'
 				@sort completedAssignments, 'endDate'
 				@sort canceledAssignments, 'endDate'
-				referencesMap = {}				
-				if review?.references?.length
-					for ref in review.references
-						forType = referencesMap[ref.type] or []
-						forType.push ref
-						referencesMap[ref.type] = forType
-				references = []
-				for type in Object.keys(referencesMap)
-					@sort referencesMap[type], 'name', 'asc'
-					references.push {type: type, references: referencesMap[type]}
 				@$el.html template
 					repositories: repositories
 					review: review
-					references: references
+					references: Util.byType review?.references
 					activeAssignments: activeAssignments
 					completedAssignments: completedAssignments
 					canceledAssignments: canceledAssignments

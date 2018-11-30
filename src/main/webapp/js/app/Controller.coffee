@@ -5,7 +5,9 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Layers'
+				'cs!utils/LocalStorage'
 				'cs!utils/Model'
+				'cs!views/tasks/ReviewWidget'
 				'cs!models/Repository'
 				'cs!models/User'
 				'cs!models/Group'
@@ -16,7 +18,7 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Announcements, Events, Format, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, UserMenu, Announcements, Events, Format, Layers, LocalStorage, Model, ReviewWidget, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -86,6 +88,19 @@ define([
 				@navigation = new Navigation()
 				@navigation.render 
 					container: 'nav'
+					noAnimation: true
+
+			initializeReviewWidget: () ->
+				activeReviewId = LocalStorage.getString "#{currentUser.get('username')}-active-review-task"
+				unless activeReviewId
+					return
+				if @reviewWidget
+					@reviewWidget.el.remove()
+				@reviewWidget = new ReviewWidget
+					reviewId: activeReviewId
+				@reviewWidget.render
+					container: 'body'
+					append: true 
 					noAnimation: true
 
 			initializeUserMenu: () ->
@@ -385,6 +400,7 @@ define([
 				if currentUser.isLoggedIn()
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
+					@initializeReviewWidget()					
 				@initializeUserMenu()
 				@initializeAnnouncements()
 				@initializeMaintenanceMode()
