@@ -43,7 +43,7 @@
 		[data-action]
 			cursor pointer
 
-		[data-action='toggle-size'], [data-action='open-review']
+		.glyphicon
 			font-size 10px
 			margin-top 4px
 			margin-right 4px
@@ -54,3 +54,7 @@
 
 		.review-reference
 			padding 0 10px
+
+		&.filtered .review-reference > input:checked, &.filtered .review-reference > input:checked + a
+			display none
+			visibility hidden

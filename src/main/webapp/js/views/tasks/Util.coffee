@@ -13,6 +13,14 @@ define([
         url: "ws/task/review/#{reviewId}/markAsReviewed/#{id}/#{value}"
         success: (response) => $("[data-id=#{id}]").prop 'checked', value
 
+    hasAssignment: (review, currentUser) ->
+      unless review
+        return false
+      for assignment in review.assignments
+        if assignment.assignedTo.username is currentUser.get('username') and !assignment.endDate
+          return true
+      return false
+
     byType: (references) ->
       referencesMap = {}				
       if references?.length

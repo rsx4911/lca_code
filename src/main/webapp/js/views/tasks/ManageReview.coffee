@@ -181,16 +181,8 @@ define([
 					currentUser: currentUser.get('username')
 					formatDate: Format.date
 					formatDateTime: Format.dateTime
-					hasAssignment: @hasAssignment(review)
+					hasAssignment: Util.hasAssignment(review, currentUser)
 				Renderer.render @, renderOptions
-
-			hasAssignment: (review) ->
-				unless review
-					return false
-				for assignment in review.assignments
-					if assignment.assignedTo.username is currentUser.get('username') and !assignment.endDate
-						return true
-				return false
 
 			sort: (elements, field, order = 'desc') ->
 				factor = if order is 'asc' then -1 else 1
