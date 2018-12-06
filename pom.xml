@@ -143,25 +143,25 @@
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-core</artifactId>
-			<version>1.7.3</version>
+			<version>1.7.4</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-jsonld</artifactId>
-			<version>1.7.3</version>
+			<version>1.7.4</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-cloud</artifactId>
-			<version>1.7.3</version>
+			<version>1.7.4</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-jsonld-2-ilcd</artifactId>
-			<version>1.7.3</version>
+			<version>1.7.4</version>
 		</dependency>
 
 		<!-- Others -->
@@ -263,7 +263,7 @@
 							<arguments>
 								<argument>build</argument>
 								<argument>--contextPath=${contextPath}</argument>
-								<argument>--customDir=${customDir}</argument>
+								<argument>--customDir=./custom</argument>
 							</arguments>
 						</configuration>
 					</execution>

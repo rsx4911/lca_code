@@ -252,6 +252,7 @@ public class SettingsService {
 				Settings settings = settingsBuilder.build();
 				TransportClient client = new PreBuiltTransportClient(settings);
 				try {
+				  
 					client.addTransportAddress(new TransportAddress(InetAddress.getByName(host), 9300));
 				} catch (UnknownHostException e) {
 					throw e;
