@@ -167,7 +167,7 @@ public class BrowseService {
 	private SearchQueryBuilder builder(BrowseParameter params) {
 		SearchQueryBuilder builder = searchService.builder(params.repo.toId());
 		if (!Strings.isNullOrEmpty(params.nameFilter)) {
-			builder.filter("name", SearchFilterValue.wildcard("*" + params.nameFilter + "*"));
+			builder.filter("name", SearchFilterValue.wildcard("*" + params.nameFilter.toLowerCase() + "*"));
 		}
 		builder.fullResult(!params.onlyCount);
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);

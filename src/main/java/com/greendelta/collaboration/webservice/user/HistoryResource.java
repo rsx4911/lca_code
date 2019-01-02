@@ -220,7 +220,7 @@ public class HistoryResource {
 				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.term(repo.toId()))
 				.filter("commitId", SearchFilterValue.term(commit.id));
 		if (!Strings.isNullOrEmpty(filter)) {
-			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
+			builder.filter("name", SearchFilterValue.wildcard("*" + filter.toLowerCase() + "*"));
 		}
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());

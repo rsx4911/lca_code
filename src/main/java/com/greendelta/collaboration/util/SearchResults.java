@@ -74,10 +74,10 @@ public class SearchResults {
 		if (filter == null || filter.isEmpty()) {
 			filtered = new ArrayList<>(toFilter);
 		} else {
-			for (T group : toFilter) {
-				if (!toString.apply(group).contains(filter))
+			for (T element : toFilter) {
+				if (!toString.apply(element).toLowerCase().contains(filter.toLowerCase()))
 					continue;
-				filtered.add(group);
+				filtered.add(element);
 			}
 		}
 		List<T> paged = new ArrayList<>();

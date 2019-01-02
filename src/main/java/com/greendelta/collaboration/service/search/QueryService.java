@@ -50,7 +50,7 @@ class QueryService {
 			builder.filter("mostRecent", SearchFilterValue.term(true));
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, SearchFields.get(type, loggedIn));
+			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
 		} else {
 			builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		}
