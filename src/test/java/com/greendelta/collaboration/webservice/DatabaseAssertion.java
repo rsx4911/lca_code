@@ -196,14 +196,14 @@ public class DatabaseAssertion {
 		assertNull(actor.getCategory());
 		assertEquals("Actor", actor.getName());
 		assertEquals("An actor", actor.getDescription());
-		assertEquals("A street", actor.getAddress());
-		assertEquals("A city", actor.getCity());
-		assertEquals("A country", actor.getCountry());
-		assertEquals("email@test.com", actor.getEmail());
-		assertEquals("030123456", actor.getTelefax());
-		assertEquals("030654321", actor.getTelephone());
-		assertEquals("https://www.example.com", actor.getWebsite());
-		assertEquals("13349", actor.getZipCode());
+		assertEquals("A street", actor.address);
+		assertEquals("A city", actor.city);
+		assertEquals("A country", actor.country);
+		assertEquals("email@test.com", actor.email);
+		assertEquals("030123456", actor.telefax);
+		assertEquals("030654321", actor.telephone);
+		assertEquals("https://www.example.com", actor.website);
+		assertEquals("13349", actor.zipCode);
 	}
 
 	private void currencies() {
@@ -515,11 +515,11 @@ public class DatabaseAssertion {
 		assertEquals("Input_Parameter", parameter.getName());
 		assertEquals("An input parameter", parameter.getDescription());
 		assertNull(parameter.getCategory());
-		assertEquals(ParameterScope.GLOBAL, parameter.getScope());
-		assertTrue(parameter.isInputParameter());
-		assertEquals(4d, parameter.getValue(), 0);
-		assertNull(parameter.getFormula());
-		assertNull(parameter.getUncertainty());
+		assertEquals(ParameterScope.GLOBAL, parameter.scope);
+		assertTrue(parameter.isInputParameter);
+		assertEquals(4d, parameter.value, 0);
+		assertNull(parameter.formula);
+		assertNull(parameter.uncertainty);
 	}
 
 	private void globalParameter2(Parameter parameter) {
@@ -529,11 +529,11 @@ public class DatabaseAssertion {
 		assertEquals("Dependent_Parameter", parameter.getName());
 		assertEquals("A dependent parameter", parameter.getDescription());
 		assertNull(parameter.getCategory());
-		assertEquals(ParameterScope.GLOBAL, parameter.getScope());
-		assertFalse(parameter.isInputParameter());
-		assertEquals(8d, parameter.getValue(), 0);
-		assertEquals("2*Input_Parameter", parameter.getFormula());
-		assertNull(parameter.getUncertainty());
+		assertEquals(ParameterScope.GLOBAL, parameter.scope);
+		assertFalse(parameter.isInputParameter);
+		assertEquals(8d, parameter.value, 0);
+		assertEquals("2*Input_Parameter", parameter.formula);
+		assertNull(parameter.uncertainty);
 	}
 
 	private void globalParameter3(Parameter parameter) {
@@ -542,14 +542,14 @@ public class DatabaseAssertion {
 		assertEquals(1, parameter.getVersion());
 		assertEquals("p1", parameter.getName());
 		assertNull(parameter.getCategory());
-		assertEquals(ParameterScope.GLOBAL, parameter.getScope());
-		assertTrue(parameter.isInputParameter());
-		assertEquals(1d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.LOG_NORMAL, parameter.getUncertainty().distributionType);
-		assertEquals(1d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(1d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(ParameterScope.GLOBAL, parameter.scope);
+		assertTrue(parameter.isInputParameter);
+		assertEquals(1d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.LOG_NORMAL, parameter.uncertainty.distributionType);
+		assertEquals(1d, parameter.uncertainty.parameter1, 0);
+		assertEquals(1d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void globalParameter4(Parameter parameter) {
@@ -558,14 +558,14 @@ public class DatabaseAssertion {
 		assertEquals(1, parameter.getVersion());
 		assertEquals("p2", parameter.getName());
 		assertNull(parameter.getCategory());
-		assertEquals(ParameterScope.GLOBAL, parameter.getScope());
-		assertTrue(parameter.isInputParameter());
-		assertEquals(2d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.NORMAL, parameter.getUncertainty().distributionType);
-		assertEquals(2d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(1d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(ParameterScope.GLOBAL, parameter.scope);
+		assertTrue(parameter.isInputParameter);
+		assertEquals(2d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.NORMAL, parameter.uncertainty.distributionType);
+		assertEquals(2d, parameter.uncertainty.parameter1, 0);
+		assertEquals(1d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void globalParameter5(Parameter parameter) {
@@ -574,14 +574,14 @@ public class DatabaseAssertion {
 		assertEquals(1, parameter.getVersion());
 		assertEquals("p3", parameter.getName());
 		assertNull(parameter.getCategory());
-		assertEquals(ParameterScope.GLOBAL, parameter.getScope());
-		assertTrue(parameter.isInputParameter());
-		assertEquals(3d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.TRIANGLE, parameter.getUncertainty().distributionType);
-		assertEquals(1d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(2d, parameter.getUncertainty().parameter2, 0);
-		assertEquals(3d, parameter.getUncertainty().parameter3, 0);
+		assertEquals(ParameterScope.GLOBAL, parameter.scope);
+		assertTrue(parameter.isInputParameter);
+		assertEquals(3d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.TRIANGLE, parameter.uncertainty.distributionType);
+		assertEquals(1d, parameter.uncertainty.parameter1, 0);
+		assertEquals(2d, parameter.uncertainty.parameter2, 0);
+		assertEquals(3d, parameter.uncertainty.parameter3, 0);
 	}
 
 	private void globalParameter6(Parameter parameter) {
@@ -590,14 +590,14 @@ public class DatabaseAssertion {
 		assertEquals(1, parameter.getVersion());
 		assertEquals("p4", parameter.getName());
 		assertNull(parameter.getCategory());
-		assertEquals(ParameterScope.GLOBAL, parameter.getScope());
-		assertTrue(parameter.isInputParameter());
-		assertEquals(4d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.UNIFORM, parameter.getUncertainty().distributionType);
-		assertEquals(2d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(5d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(ParameterScope.GLOBAL, parameter.scope);
+		assertTrue(parameter.isInputParameter);
+		assertEquals(4d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.UNIFORM, parameter.uncertainty.distributionType);
+		assertEquals(2d, parameter.uncertainty.parameter1, 0);
+		assertEquals(5d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void socialIndicators() {
@@ -994,57 +994,57 @@ public class DatabaseAssertion {
 	private void parameter(Parameter parameter) {
 		assertEquals("cons_irri", parameter.getName());
 		assertEquals("from shapefile: AWARE_SHP", parameter.getDescription());
-		assertEquals("AWARE_SHP", parameter.getExternalSource());
-		assertEquals("SHAPE_FILE", parameter.getSourceType());
-		assertEquals(1.9784885385e9d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.UNIFORM, parameter.getUncertainty().distributionType);
-		assertEquals(0d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(3.956977077e9d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals("AWARE_SHP", parameter.externalSource);
+		assertEquals("SHAPE_FILE", parameter.sourceType);
+		assertEquals(1.9784885385e9d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.UNIFORM, parameter.uncertainty.distributionType);
+		assertEquals(0d, parameter.uncertainty.parameter1, 0);
+		assertEquals(3.956977077e9d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void parameter2(Parameter parameter) {
 		assertEquals("p_2", parameter.getName());
-		assertEquals(2d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.LOG_NORMAL, parameter.getUncertainty().distributionType);
-		assertEquals(3d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(2d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(2d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.LOG_NORMAL, parameter.uncertainty.distributionType);
+		assertEquals(3d, parameter.uncertainty.parameter1, 0);
+		assertEquals(2d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void parameter3(Parameter parameter) {
 		assertEquals("p_3", parameter.getName());
-		assertEquals(3d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.NORMAL, parameter.getUncertainty().distributionType);
-		assertEquals(5d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(2d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(3d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.NORMAL, parameter.uncertainty.distributionType);
+		assertEquals(5d, parameter.uncertainty.parameter1, 0);
+		assertEquals(2d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void parameter4(Parameter parameter) {
 		assertEquals("p_4", parameter.getName());
-		assertEquals(4d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.TRIANGLE, parameter.getUncertainty().distributionType);
-		assertEquals(1d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(4d, parameter.getUncertainty().parameter2, 0);
-		assertEquals(7d, parameter.getUncertainty().parameter3, 0);
+		assertEquals(4d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.TRIANGLE, parameter.uncertainty.distributionType);
+		assertEquals(1d, parameter.uncertainty.parameter1, 0);
+		assertEquals(4d, parameter.uncertainty.parameter2, 0);
+		assertEquals(7d, parameter.uncertainty.parameter3, 0);
 	}
 
 	private void parameter5(Parameter parameter) {
 		assertEquals("p_5", parameter.getName());
-		assertEquals(5d, parameter.getValue(), 0);
-		assertNull(parameter.getUncertainty());
+		assertEquals(5d, parameter.value, 0);
+		assertNull(parameter.uncertainty);
 	}
 
 	private void parameter6(Parameter parameter) {
 		assertEquals("p_6", parameter.getName());
-		assertEquals(6d, parameter.getValue(), 0);
-		assertEquals("2*p_3", parameter.getFormula());
-		assertNull(parameter.getUncertainty());
+		assertEquals(6d, parameter.value, 0);
+		assertEquals("2*p_3", parameter.formula);
+		assertNull(parameter.uncertainty);
 	}
 
 	private void processes() {
@@ -1314,57 +1314,57 @@ public class DatabaseAssertion {
 
 	private void parameter7(Parameter parameter) {
 		assertEquals("p_1", parameter.getName());
-		assertEquals(1d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.LOG_NORMAL, parameter.getUncertainty().distributionType);
-		assertEquals(3d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(2d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(1d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.LOG_NORMAL, parameter.uncertainty.distributionType);
+		assertEquals(3d, parameter.uncertainty.parameter1, 0);
+		assertEquals(2d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void parameter8(Parameter parameter) {
 		assertEquals("p_2", parameter.getName());
-		assertEquals(2d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.NORMAL, parameter.getUncertainty().distributionType);
-		assertEquals(2d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(1d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(2d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.NORMAL, parameter.uncertainty.distributionType);
+		assertEquals(2d, parameter.uncertainty.parameter1, 0);
+		assertEquals(1d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void parameter9(Parameter parameter) {
 		assertEquals("p_3", parameter.getName());
-		assertEquals(3d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.TRIANGLE, parameter.getUncertainty().distributionType);
-		assertEquals(2d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(5d, parameter.getUncertainty().parameter2, 0);
-		assertEquals(6d, parameter.getUncertainty().parameter3, 0);
+		assertEquals(3d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.TRIANGLE, parameter.uncertainty.distributionType);
+		assertEquals(2d, parameter.uncertainty.parameter1, 0);
+		assertEquals(5d, parameter.uncertainty.parameter2, 0);
+		assertEquals(6d, parameter.uncertainty.parameter3, 0);
 	}
 
 	private void parameter10(Parameter parameter) {
 		assertEquals("p_4", parameter.getName());
-		assertEquals(4d, parameter.getValue(), 0);
-		assertNotNull(parameter.getUncertainty());
-		assertEquals(UncertaintyType.UNIFORM, parameter.getUncertainty().distributionType);
-		assertEquals(2d, parameter.getUncertainty().parameter1, 0);
-		assertEquals(5d, parameter.getUncertainty().parameter2, 0);
-		assertNull(parameter.getUncertainty().parameter3);
+		assertEquals(4d, parameter.value, 0);
+		assertNotNull(parameter.uncertainty);
+		assertEquals(UncertaintyType.UNIFORM, parameter.uncertainty.distributionType);
+		assertEquals(2d, parameter.uncertainty.parameter1, 0);
+		assertEquals(5d, parameter.uncertainty.parameter2, 0);
+		assertNull(parameter.uncertainty.parameter3);
 	}
 
 	private void parameter11(Parameter parameter) {
 		assertEquals("p_5", parameter.getName());
 		assertEquals("A description", parameter.getDescription());
-		assertEquals(5d, parameter.getValue(), 0);
-		assertNull(parameter.getUncertainty());
+		assertEquals(5d, parameter.value, 0);
+		assertNull(parameter.uncertainty);
 	}
 
 	private void parameter12(Parameter parameter) {
 		assertEquals("p_6", parameter.getName());
 		assertEquals("Another description", parameter.getDescription());
-		assertEquals(1d, parameter.getValue(), 0);
-		assertEquals("1.0", parameter.getFormula());
-		assertNull(parameter.getUncertainty());
+		assertEquals(1d, parameter.value, 0);
+		assertEquals("1.0", parameter.formula);
+		assertNull(parameter.uncertainty);
 	}
 
 	private void socialAspect(SocialAspect aspect) {
@@ -1465,8 +1465,8 @@ public class DatabaseAssertion {
 		Map<Long, Flow> productMap = Collections.map(process.getExchanges(), e -> e.flow.getId(), e -> e.flow);
 		Set<String> ids = new HashSet<>();
 		for (AllocationFactor factor : process.getAllocationFactors()) {
-			Flow product = productMap.get(factor.getProductId());
-			AllocationMethod type = factor.getAllocationType();
+			Flow product = productMap.get(factor.productId);
+			AllocationMethod type = factor.method;
 			switch (type) {
 			case PHYSICAL:
 				ids.add(type.name() + "-" + product.getRefId());
@@ -1477,7 +1477,7 @@ public class DatabaseAssertion {
 				economicAllocationFactor(factor, product);
 				break;
 			case CAUSAL:
-				ids.add(type.name() + "-" + product.getRefId() + "-" + factor.getExchange().internalId);
+				ids.add(type.name() + "-" + product.getRefId() + "-" + factor.exchange.internalId);
 				causalAllocationFactor(factor, product);
 				break;
 			default:
@@ -1501,15 +1501,15 @@ public class DatabaseAssertion {
 	}
 
 	private void physicalAllocationFactor(AllocationFactor factor) {
-		assertEquals(AllocationMethod.PHYSICAL, factor.getAllocationType());
-		assertNull(factor.getExchange());
-		assertEquals(0.6d, factor.getValue(), 0);
+		assertEquals(AllocationMethod.PHYSICAL, factor.method);
+		assertNull(factor.exchange);
+		assertEquals(0.6d, factor.value, 0);
 	}
 
 	private void physicalAllocationFactor2(AllocationFactor factor) {
-		assertEquals(AllocationMethod.PHYSICAL, factor.getAllocationType());
-		assertNull(factor.getExchange());
-		assertEquals(0.4d, factor.getValue(), 0);
+		assertEquals(AllocationMethod.PHYSICAL, factor.method);
+		assertNull(factor.exchange);
+		assertEquals(0.4d, factor.value, 0);
 	}
 
 	private void economicAllocationFactor(AllocationFactor factor, Flow product) {
@@ -1526,19 +1526,19 @@ public class DatabaseAssertion {
 	}
 
 	private void economicAllocationFactor(AllocationFactor factor) {
-		assertEquals(AllocationMethod.ECONOMIC, factor.getAllocationType());
-		assertNull(factor.getExchange());
-		assertEquals(0.7d, factor.getValue(), 0);
+		assertEquals(AllocationMethod.ECONOMIC, factor.method);
+		assertNull(factor.exchange);
+		assertEquals(0.7d, factor.value, 0);
 	}
 
 	private void economicAllocationFactor2(AllocationFactor factor) {
-		assertEquals(AllocationMethod.ECONOMIC, factor.getAllocationType());
-		assertNull(factor.getExchange());
-		assertEquals(0.3d, factor.getValue(), 0);
+		assertEquals(AllocationMethod.ECONOMIC, factor.method);
+		assertNull(factor.exchange);
+		assertEquals(0.3d, factor.value, 0);
 	}
 
 	private void causalAllocationFactor(AllocationFactor factor, Flow product) {
-		switch (factor.getExchange().flow.getRefId()) {
+		switch (factor.exchange.flow.getRefId()) {
 		case "7a192079-0e37-478c-a24d-4a700887c847":
 			switch (product.getRefId()) {
 			case "81c33501-1706-4a3a-8a9e-5af4a3d064a9":
@@ -1569,27 +1569,27 @@ public class DatabaseAssertion {
 	}
 
 	private void causalAllocationFactor(AllocationFactor factor) {
-		assertEquals(AllocationMethod.CAUSAL, factor.getAllocationType());
-		assertNotNull(factor.getExchange());
-		assertEquals(0.65, factor.getValue(), 0);
+		assertEquals(AllocationMethod.CAUSAL, factor.method);
+		assertNotNull(factor.exchange);
+		assertEquals(0.65, factor.value, 0);
 	}
 
 	private void causalAllocationFactor2(AllocationFactor factor) {
-		assertEquals(AllocationMethod.CAUSAL, factor.getAllocationType());
-		assertNotNull(factor.getExchange());
-		assertEquals(0.35, factor.getValue(), 0);
+		assertEquals(AllocationMethod.CAUSAL, factor.method);
+		assertNotNull(factor.exchange);
+		assertEquals(0.35, factor.value, 0);
 	}
 
 	private void causalAllocationFactor3(AllocationFactor factor) {
-		assertEquals(AllocationMethod.CAUSAL, factor.getAllocationType());
-		assertNotNull(factor.getExchange());
-		assertEquals(0.55, factor.getValue(), 0);
+		assertEquals(AllocationMethod.CAUSAL, factor.method);
+		assertNotNull(factor.exchange);
+		assertEquals(0.55, factor.value, 0);
 	}
 
 	private void causalAllocationFactor4(AllocationFactor factor) {
-		assertEquals(AllocationMethod.CAUSAL, factor.getAllocationType());
-		assertNotNull(factor.getExchange());
-		assertEquals(0.45, factor.getValue(), 0);
+		assertEquals(AllocationMethod.CAUSAL, factor.method);
+		assertNotNull(factor.exchange);
+		assertEquals(0.45, factor.value, 0);
 	}
 
 	private void process3(Process process) {
@@ -1764,9 +1764,9 @@ public class DatabaseAssertion {
 
 	private void parameterRedefs(List<ParameterRedef> redefs) {
 		assertEquals(6, redefs.size());
-		unique(redefs, redef -> redef.getName());
+		unique(redefs, redef -> redef.name);
 		for (ParameterRedef redef : redefs) {
-			switch (redef.getName()) {
+			switch (redef.name) {
 			case "Input_Parameter":
 				parameterRedef(redef);
 				break;
@@ -1792,72 +1792,72 @@ public class DatabaseAssertion {
 	}
 
 	private void parameterRedef(ParameterRedef redef) {
-		assertEquals("Input_Parameter", redef.getName());
-		assertNull(redef.getContextType());
-		assertNull(redef.getContextId());
-		assertNull(redef.getUncertainty());
-		assertEquals(2d, redef.getValue(), 0);
+		assertEquals("Input_Parameter", redef.name);
+		assertNull(redef.contextType);
+		assertNull(redef.contextId);
+		assertNull(redef.uncertainty);
+		assertEquals(2d, redef.value, 0);
 	}
 
 	private void parameterRedef2(ParameterRedef redef) {
-		assertEquals("p_1", redef.getName());
-		assertEquals(ModelType.PROCESS, redef.getContextType());
-		Process processRef1 = new ProcessDao(database).getForId(redef.getContextId());
+		assertEquals("p_1", redef.name);
+		assertEquals(ModelType.PROCESS, redef.contextType);
+		Process processRef1 = new ProcessDao(database).getForId(redef.contextId);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", processRef1);
-		assertEquals(6d, redef.getValue(), 0);
-		assertNotNull(redef.getUncertainty());
-		assertEquals(UncertaintyType.LOG_NORMAL, redef.getUncertainty().distributionType);
-		assertEquals(6d, redef.getUncertainty().parameter1, 0);
-		assertEquals(1d, redef.getUncertainty().parameter2, 0);
-		assertNull(redef.getUncertainty().parameter3);
+		assertEquals(6d, redef.value, 0);
+		assertNotNull(redef.uncertainty);
+		assertEquals(UncertaintyType.LOG_NORMAL, redef.uncertainty.distributionType);
+		assertEquals(6d, redef.uncertainty.parameter1, 0);
+		assertEquals(1d, redef.uncertainty.parameter2, 0);
+		assertNull(redef.uncertainty.parameter3);
 	}
 
 	private void parameterRedef3(ParameterRedef redef) {
-		assertEquals("p_2", redef.getName());
-		assertEquals(ModelType.PROCESS, redef.getContextType());
-		Process processRef2 = new ProcessDao(database).getForId(redef.getContextId());
+		assertEquals("p_2", redef.name);
+		assertEquals(ModelType.PROCESS, redef.contextType);
+		Process processRef2 = new ProcessDao(database).getForId(redef.contextId);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", processRef2);
-		assertEquals(7d, redef.getValue(), 0);
-		assertNotNull(redef.getUncertainty());
-		assertEquals(UncertaintyType.NORMAL, redef.getUncertainty().distributionType);
-		assertEquals(7d, redef.getUncertainty().parameter1, 0);
-		assertEquals(1d, redef.getUncertainty().parameter2, 0);
-		assertNull(redef.getUncertainty().parameter3);
+		assertEquals(7d, redef.value, 0);
+		assertNotNull(redef.uncertainty);
+		assertEquals(UncertaintyType.NORMAL, redef.uncertainty.distributionType);
+		assertEquals(7d, redef.uncertainty.parameter1, 0);
+		assertEquals(1d, redef.uncertainty.parameter2, 0);
+		assertNull(redef.uncertainty.parameter3);
 	}
 
 	private void parameterRedef4(ParameterRedef redef) {
-		assertEquals("p_3", redef.getName());
-		assertEquals(ModelType.PROCESS, redef.getContextType());
-		Process processRef3 = new ProcessDao(database).getForId(redef.getContextId());
+		assertEquals("p_3", redef.name);
+		assertEquals(ModelType.PROCESS, redef.contextType);
+		Process processRef3 = new ProcessDao(database).getForId(redef.contextId);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", processRef3);
-		assertEquals(8d, redef.getValue(), 0);
-		assertNotNull(redef.getUncertainty());
-		assertEquals(UncertaintyType.TRIANGLE, redef.getUncertainty().distributionType);
-		assertEquals(6d, redef.getUncertainty().parameter1, 0);
-		assertEquals(8d, redef.getUncertainty().parameter2, 0);
-		assertEquals(9d, redef.getUncertainty().parameter3, 0);
+		assertEquals(8d, redef.value, 0);
+		assertNotNull(redef.uncertainty);
+		assertEquals(UncertaintyType.TRIANGLE, redef.uncertainty.distributionType);
+		assertEquals(6d, redef.uncertainty.parameter1, 0);
+		assertEquals(8d, redef.uncertainty.parameter2, 0);
+		assertEquals(9d, redef.uncertainty.parameter3, 0);
 	}
 
 	private void parameterRedef5(ParameterRedef redef) {
-		assertEquals("p_4", redef.getName());
-		assertEquals(ModelType.PROCESS, redef.getContextType());
-		Process processRef4 = new ProcessDao(database).getForId(redef.getContextId());
+		assertEquals("p_4", redef.name);
+		assertEquals(ModelType.PROCESS, redef.contextType);
+		Process processRef4 = new ProcessDao(database).getForId(redef.contextId);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", processRef4);
-		assertEquals(9d, redef.getValue(), 0);
-		assertNotNull(redef.getUncertainty());
-		assertEquals(UncertaintyType.UNIFORM, redef.getUncertainty().distributionType);
-		assertEquals(4d, redef.getUncertainty().parameter1, 0);
-		assertEquals(10d, redef.getUncertainty().parameter2, 0);
-		assertNull(redef.getUncertainty().parameter3);
+		assertEquals(9d, redef.value, 0);
+		assertNotNull(redef.uncertainty);
+		assertEquals(UncertaintyType.UNIFORM, redef.uncertainty.distributionType);
+		assertEquals(4d, redef.uncertainty.parameter1, 0);
+		assertEquals(10d, redef.uncertainty.parameter2, 0);
+		assertNull(redef.uncertainty.parameter3);
 	}
 
 	private void parameterRedef6(ParameterRedef redef) {
-		assertEquals("p_5", redef.getName());
-		assertEquals(ModelType.PROCESS, redef.getContextType());
-		Process processRef5 = new ProcessDao(database).getForId(redef.getContextId());
+		assertEquals("p_5", redef.name);
+		assertEquals(ModelType.PROCESS, redef.contextType);
+		Process processRef5 = new ProcessDao(database).getForId(redef.contextId);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", processRef5);
-		assertEquals(10d, redef.getValue(), 0);
-		assertNull(redef.getUncertainty());
+		assertEquals(10d, redef.value, 0);
+		assertNull(redef.uncertainty);
 	}
 
 	private void projects() {
@@ -1890,9 +1890,9 @@ public class DatabaseAssertion {
 
 	private void parameterRedefs2(List<ParameterRedef> redefs) {
 		assertEquals(3, redefs.size());
-		unique(redefs, redef -> redef.getName());
+		unique(redefs, redef -> redef.name);
 		for (ParameterRedef redef : redefs) {
-			switch (redef.getName()) {
+			switch (redef.name) {
 			case "Input_Parameter":
 				parameterRedef7(redef);
 				break;
@@ -1909,26 +1909,26 @@ public class DatabaseAssertion {
 	}
 
 	private void parameterRedef7(ParameterRedef redef) {
-		assertEquals("Input_Parameter", redef.getName());
-		assertNull(redef.getContextType());
-		assertNull(redef.getContextId());
-		assertEquals(2d, redef.getValue(), 0);
+		assertEquals("Input_Parameter", redef.name);
+		assertNull(redef.contextType);
+		assertNull(redef.contextId);
+		assertEquals(2d, redef.value, 0);
 	}
 
 	private void parameterRedef8(ParameterRedef redef) {
-		assertEquals("p_1", redef.getName());
-		assertEquals(ModelType.PROCESS, redef.getContextType());
-		Process processRef = new ProcessDao(database).getForId(redef.getContextId());
+		assertEquals("p_1", redef.name);
+		assertEquals(ModelType.PROCESS, redef.contextType);
+		Process processRef = new ProcessDao(database).getForId(redef.contextId);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", processRef);
-		assertEquals(6d, redef.getValue(), 0);
+		assertEquals(6d, redef.value, 0);
 	}
 
 	private void parameterRedef9(ParameterRedef redef) {
-		assertEquals("p_2", redef.getName());
-		assertEquals(ModelType.IMPACT_METHOD, redef.getContextType());
-		ImpactMethod methodRef = new ImpactMethodDao(database).getForId(redef.getContextId());
+		assertEquals("p_2", redef.name);
+		assertEquals(ModelType.IMPACT_METHOD, redef.contextType);
+		ImpactMethod methodRef = new ImpactMethodDao(database).getForId(redef.contextId);
 		refId("eedd7332-f522-40e6-ae77-9a0083b1b881", methodRef);
-		assertEquals(3d, redef.getValue(), 0);
+		assertEquals(3d, redef.value, 0);
 	}
 
 	private void fileLength(int expected, CategorizedEntity entity, String filename) throws IOException {
