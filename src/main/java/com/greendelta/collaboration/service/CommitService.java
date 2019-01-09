@@ -169,7 +169,7 @@ public class CommitService {
 			int noOfFiles = reader.readNextInt();
 			while (count++ < noOfFiles) {
 				String path = reader.readNextPartAsString();
-				File binFile = new File(binDir, path);
+				File binFile = new File(binDir, path + ".gz");
 				binFile.getParentFile().mkdirs();
 				try (OutputStream out = new FileOutputStream(binFile)) {
 					int size = reader.readNextPartToStream(out);

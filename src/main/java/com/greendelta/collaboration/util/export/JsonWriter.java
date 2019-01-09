@@ -62,9 +62,15 @@ public class JsonWriter implements DatasetWriter {
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		zipStore.put(type, json);
 		File binDir = fetchService.getBinDir(repo, type, refId, commitId);
-		if (binDir.exists())
-			for (File file : binDir.listFiles())
-				zipStore.putBin(type, refId, file.getName(), BinUtils.gunzip(Files.readAllBytes(file.toPath())));
+		if (binDir.exists()) {
+			for (File file : binDir.listFiles()) {
+				String filename = file.getName();
+				if (filename.endsWith(".gz")) {
+					filename = filename.substring(0, filename.lastIndexOf(".gz"));
+				}
+				zipStore.putBin(type, refId, filename, BinUtils.gunzip(Files.readAllBytes(file.toPath())));
+			}
+		}
 		written.add(type.name() + refId);
 		writeReferences(json);
 		for (IndexEntry entry : getGlobalParameters(commitId)) {

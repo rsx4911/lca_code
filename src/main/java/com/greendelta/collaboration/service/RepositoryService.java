@@ -305,7 +305,7 @@ public class RepositoryService {
 			avatarFile.delete();
 	}
 
-	public File getBinDir(Repository repo, ModelType type, String refId, String commitId) {
-		return repo.getBinDir(type, refId, commitId, false);
+	public File getBinFile(Repository repo, ModelType type, String refId, String commitId, String filename) {
+		return repo.getBinFile(type, refId, commitId, filename);
 	}
 }

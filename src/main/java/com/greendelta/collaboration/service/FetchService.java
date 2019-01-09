@@ -55,6 +55,10 @@ public class FetchService {
 		return repo.getBinDir(type, refId, commitId, false);
 	}
 
+	public File getBinFile(Repository repo, ModelType type, String refId, String commitId, String filename) {
+		return repo.getBinFile(type, refId, commitId, filename);
+	}
+
 	public StreamingOutput prepareData(Repository repo, List<Commit> commits, List<FileReference> requested) {
 		Set<FileReference> added = new HashSet<>();
 		Set<Dataset> datasets = new HashSet<>();

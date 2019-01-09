@@ -75,13 +75,10 @@ public class RepositoryResource {
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
 			return Respond.notFound(notFoundMessage(type, refId, null));
-		File binDir = service.getBinDir(repo, type, refId, commitId);
-		if (!binDir.exists())
+		File binFile = service.getBinFile(repo, type, refId, commitId, filename);
+		if (!binFile.exists())
 			return Respond.notFound(notFoundMessage(type, refId, filename));
-		File file = new File(binDir, filename);
-		if (!file.exists())
-			return Respond.notFound(notFoundMessage(type, refId, filename));
-		return Respond.ok(BinUtils.gunzip(Files.readAllBytes(file.toPath())));
+		return Respond.ok(BinUtils.gunzip(Files.readAllBytes(binFile.toPath())));
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {

@@ -124,10 +124,7 @@ public class IlcdWriter implements DatasetWriter {
 			Commit lastCommit = historyService.getLastCommit(repo, ModelType.SOURCE, sourceRefId, commitId);			
 			if (lastCommit == null)
 				return null;
-			File binDir = fetchService.getBinDir(repo, ModelType.SOURCE, sourceRefId, lastCommit.id);
-			if (!binDir.exists())
-				return null;
-			File file = new File(binDir, filename);
+			File file = fetchService.getBinFile(repo, ModelType.SOURCE, sourceRefId, lastCommit.id, filename);
 			if (!file.exists())
 				return null;
 			try {
