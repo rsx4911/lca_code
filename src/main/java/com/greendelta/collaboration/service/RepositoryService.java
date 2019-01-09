@@ -20,6 +20,7 @@ import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.jsonld.output.Context;
+import org.zeroturnaround.zip.ZipUtil;
 
 import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
@@ -37,6 +38,7 @@ import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.util.io.Json2Repository;
 import com.greendelta.search.wrapper.SearchResult;
 
 public class RepositoryService {
@@ -216,6 +218,16 @@ public class RepositoryService {
 		}
 	}
 
+	public void importJsonLd(Repository repo, InputStream input, String commitMessage) {
+		User user = userService.getCurrentUser();
+		ZipUtil.unpack(input, repo.repoDir);
+		try {
+			Json2Repository.convert(repo.repoDir, user, commitMessage);
+		} catch (IOException e) {
+			log.error("Error converting json to repository", e);
+		}
+	}
+
 	public long getCount(boolean adminArea) {
 		return getAll(adminArea).size();
 	}
@@ -227,21 +239,6 @@ public class RepositoryService {
 
 	public List<Repository> getAllAccessible() {
 		return getAll(true);
-	}
-
-	public static void main(String[] args) throws IOException {
-		rename(new File("/home/sebastian/git/lca-collaboration/src/main/pug"));
-	}
-
-	private static void rename(File file) throws IOException {
-		if (file.isDirectory()) {
-			for (File child : file.listFiles()) {
-				rename(child);
-			}
-		} else if (file.getName().endsWith(".jade")) {
-			String name = file.getAbsolutePath();
-			Files.move(file, new File(name.substring(0, name.lastIndexOf(".jade")) + ".pug"));
-		}
 	}
 
 	private List<Repository> getAll(boolean adminArea) {

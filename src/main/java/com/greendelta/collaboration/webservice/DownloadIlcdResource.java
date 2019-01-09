@@ -23,8 +23,8 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.util.export.DatasetWriter;
-import com.greendelta.collaboration.util.export.IlcdWriter;
+import com.greendelta.collaboration.util.io.DatasetWriter;
+import com.greendelta.collaboration.util.io.IlcdWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 
 @Path("public/download/ilcd")

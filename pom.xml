@@ -192,6 +192,12 @@
 			<version>6.2.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.zeroturnaround</groupId>
+			<artifactId>zt-zip</artifactId>
+			<version>1.8</version>
+		</dependency>
+
 		<!-- Tests -->
 
 		<dependency>
@@ -240,12 +246,6 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.zeroturnaround</groupId>
-			<artifactId>zt-zip</artifactId>
-			<version>1.8</version>
 			<scope>test</scope>
 		</dependency>
 

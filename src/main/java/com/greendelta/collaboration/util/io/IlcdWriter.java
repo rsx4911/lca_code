@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.util.export;
+package com.greendelta.collaboration.util.io;
 
 import java.io.File;
 import java.io.IOException;

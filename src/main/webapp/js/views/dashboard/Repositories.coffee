@@ -20,6 +20,7 @@ define([
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
 				'click [data-action=import-repository]': () -> Router.navigate 'repository/import'
+				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json'
 
 			initialize: () ->
 				@filter = new Filter

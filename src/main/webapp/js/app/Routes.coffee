@@ -3,6 +3,7 @@ define
 	'search(/:query)': 'search'
 	'repository/new(/:group)': 'repositoryNew'
 	'repository/import': 'repositoryImport'
+	'repository/import-json': 'repositoryImportJson'
 	'user': 'userProfile'
 	'user/profile': 'userProfile'
 	'user/messaging': 'userMessaging'

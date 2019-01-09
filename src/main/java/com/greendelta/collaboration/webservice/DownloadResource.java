@@ -23,7 +23,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Collections;
-import com.greendelta.collaboration.util.export.DatasetWriter;
+import com.greendelta.collaboration.util.io.DatasetWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 
 abstract class DownloadResource {
