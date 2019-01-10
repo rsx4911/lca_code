@@ -56,7 +56,8 @@ public class AdminAreaResource {
 
 	@Inject
 	public AdminAreaResource(RepositoryService repoService, ReindexService reindexService, SearchService searchService,
-			SettingsService settingsService, EmailService emailService, LibraryService libraryService, AnnouncementService announcementService) {
+			SettingsService settingsService, EmailService emailService, LibraryService libraryService,
+			AnnouncementService announcementService) {
 		this.repoService = repoService;
 		this.reindexService = reindexService;
 		this.searchService = searchService;
@@ -65,7 +66,7 @@ public class AdminAreaResource {
 		this.libraryService = libraryService;
 		this.announcementService = announcementService;
 	}
-	
+
 	@GET
 	@Path("testGladConfig")
 	public Response testGladConfig() {
@@ -76,7 +77,8 @@ public class AdminAreaResource {
 			String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
 			String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
 			String result = get(gladUrl, gladHeaderField, gladHeaderValue);
-			if (result.contains("\"resultInfo\":") && result.contains("\"data\":") && result.contains("\"aggregations\":"))
+			if (result.contains("\"resultInfo\":") && result.contains("\"data\":")
+					&& result.contains("\"aggregations\":"))
 				return Respond.ok(new HashMap<>());
 			return Respond.error("GLAD testcall returned unexpected content: " + result);
 		} catch (Exception e) {
@@ -100,7 +102,7 @@ public class AdminAreaResource {
 			return Respond.error(e.getMessage());
 		}
 	}
-	
+
 	@GET
 	@Path("testMailConfig/{email}")
 	public Response testMailConfig(@PathParam("email") String recipient) {
@@ -121,7 +123,14 @@ public class AdminAreaResource {
 		info.put("announcement", settingsService.get(Key.ANNOUNCEMENT_MESSAGE));
 		return Respond.ok(info);
 	}
-	
+
+	@PUT
+	@Path("clearIndex")
+	public Response clearIndex() {
+		searchService.clearIndex();
+		return Respond.ok(new HashMap<>());
+	}
+
 	@PUT
 	@Path("reindex")
 	public Response reindex() {
@@ -134,6 +143,15 @@ public class AdminAreaResource {
 	}
 
 	@PUT
+	@Path("reindex/{group}/{repository}")
+	public Response reindex(@PathParam("group") String group, @PathParam("repository") String repository) {
+		Repository repo = repoService.get(group, repository);
+		searchService.remove(searchService.getAll(repo));
+		reindexService.reindex(repo);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
 	@Path("announce")
 	public Response announce(String message) {
 		announcementService.announce(message);
@@ -142,7 +160,7 @@ public class AdminAreaResource {
 
 	@PUT
 	@Path("clearAnnouncement")
-	public Response clearAnnouncement() {		
+	public Response clearAnnouncement() {
 		announcementService.clear();
 		return Respond.ok(new HashMap<>());
 	}

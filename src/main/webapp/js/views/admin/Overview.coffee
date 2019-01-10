@@ -25,7 +25,9 @@ define([
 
 			events: 
 				'click a[href].follow': (event) -> Events.followLink event
+				'click [data-action=clear-index]': 'clearIndex'
 				'click [data-action=reindex-repositories]': 'reindexRepositories'
+				'click [data-action=reindex-repository]': 'reindexRepository'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
@@ -81,6 +83,23 @@ define([
 					data: JSON.stringify({key: key, value: value})
 					success: callback
 
+			clearIndex: () ->
+				Layers.askQuestion
+					title: 'Reindex repositories'
+					question: 'Do you really want to clear the search index? This action can not be undone.'
+					type: 'danger'
+					answers: ['Cancel', 'Confirm']
+					onAnswer: (answer) =>
+						if answer isnt 1
+							return
+						Layers.showProgressIndicator 'Clearing index'
+						$.ajax
+							type: 'PUT'
+							url: 'ws/admin/area/clearIndex'
+							success: () ->
+								Layers.hideProgressIndicator()
+								Status.success 'Successfully cleared index'
+
 			reindexRepositories: () ->
 				Layers.askQuestion
 					title: 'Reindex repositories'
@@ -97,6 +116,26 @@ define([
 							success: () ->
 								Layers.hideProgressIndicator()
 								Status.success 'Successfully reindexed repositories'
+
+			reindexRepository: (event) ->
+				target = $ Events.target event
+				group = target.attr 'data-group'
+				repository = target.attr 'data-repository'
+				Layers.askQuestion
+					title: 'Reindex repository'
+					question: "Do you really want to reindex repository #{group}/#{repository} ? This may take a while, depending on the amount and size of the repository."
+					type: 'danger'
+					answers: ['Cancel', 'Confirm']
+					onAnswer: (answer) =>
+						if answer isnt 1
+							return
+						Layers.showProgressIndicator 'Indexing'
+						$.ajax
+							type: 'PUT'
+							url: "ws/admin/area/reindex/#{group}/#{repository}"
+							success: () ->
+								Layers.hideProgressIndicator()
+								Status.success 'Successfully reindexed repository'
 
 			initialize: () ->
 				@repositoryFilter = new Filter

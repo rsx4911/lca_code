@@ -10,6 +10,7 @@ mixin box(label, plural, count)
 		legend=plural 
 			if label === 'Repository'
 				button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repositories') Reindex
+				button.btn.btn-xs.btn-default.pull-right(data-action='clear-index') Clear index
 			input.form-control.input-sm.filter.pull-right(id=lcLabel + '-filter' type='text' placeholder='filter' aria-label='Filter + ' + label)
 			.clear
 		div(id=lcPlural)
