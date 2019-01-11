@@ -43,6 +43,7 @@ public class Setting extends AbstractEntity {
 		COMMENTS_ENABLED(Boolean.class, true),
 		PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
 		NOTIFICATIONS_ENABLED(Boolean.class, true),
+		COUNTING_ENABLED(Boolean.class, true),
 
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),
@@ -154,7 +155,7 @@ public class Setting extends AbstractEntity {
 
 		public boolean isFeature() {
 			List<Key> features = Arrays.asList(MESSAGING_ENABLED, TASKS_ENABLED, COMMENTS_ENABLED,
-					PUBLIC_REPOSITORY_ENABLED);
+					PUBLIC_REPOSITORY_ENABLED, COUNTING_ENABLED);
 			return features.contains(this);
 		}
 

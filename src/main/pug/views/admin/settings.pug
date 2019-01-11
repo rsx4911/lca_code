@@ -32,6 +32,7 @@ include ../mixins/forms.pug
 		- features.push(['MESSAGING_ENABLED', '<strong>Messaging</strong>: Users can write messages to each other']);
 		- features.push(['PUBLIC_REPOSITORY_ENABLED', '<strong>Public repositories</strong>: Repositories can be marked as publicly accessible']);
 		- features.push(['NOTIFICATIONS_ENABLED', '<strong>Notifications</strong>: Users can receive notifications']);
+		- features.push(['COUNTING_ENABLED', '<strong>Data set counts</strong>: Display number of child elements while browsing repositories']);
 		each feature in features
 			- var val = settings[feature[0]];
 			+checkbox(feature[0], feature[1])

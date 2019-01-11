@@ -1,5 +1,6 @@
 mixin count-span()
-	span.dataset-count: img(src='images/loader.gif' aria-label='Loader icon')
+	if countingEnabled
+		span.dataset-count: img(src='images/loader.gif' aria-label='Loader icon')
 
 if categoryPath
 	- var previousUrl = baseUrl + '/datasets';

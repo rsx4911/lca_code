@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
@@ -32,6 +33,7 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
@@ -44,15 +46,17 @@ public class BrowseResource {
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final UserService userService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public BrowseResource(BrowseService service, RepositoryService repoService, FetchService fetchService,
-			HistoryService historyService, UserService userService) {
+			HistoryService historyService, UserService userService, SettingsService settingsService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.userService = userService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -81,7 +85,10 @@ public class BrowseResource {
 				return entry;
 			});
 		}
-		return Respond.ok(Collections.singletonMap("entries", content));
+		Map<String, Object> result = new HashMap<>();
+		result.put("entries", content);
+		result.put("countingEnabled", settingsService.is(Key.COUNTING_ENABLED));
+		return Respond.ok(result);
 	}
 
 	private ModelType getModelType(String categoryPath) {
