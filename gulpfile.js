@@ -22,6 +22,12 @@ if (!params.customDir) {
   params.customDir = './custom';
 }
 
+if (!params.customPublicResources) {
+  params.customPublicResources = [];
+} else {
+  params.customPublicResources = params.customPublicResources.split(',')
+}
+
 var getPomVersion = function() {
   try {
     var pom = fs.readFileSync('pom.xml', 'utf8')
@@ -150,8 +156,23 @@ gulp.task('setBuildInfo', function() {
   return gulp.src('./src/main/webapp/js/templates/views/admin/overview.js').pipe(insert.transform(function(contents) {
     return contents.replace('{{releaseVersion}}', getPomVersion())
       .replace('{{commitId}}', getCommitVersion())
-      .replace('{{buildDate}}', new Date(timestamp).toLocaleString())
+      .replace('{{buildDate}}', new Date(timestamp).toLocaleString());
   })).pipe(gulp.dest('./src/main/webapp/js/templates/views/admin'));
+});
+
+gulp.task('setCustomPublicResources', function() {
+  return gulp.src('./src/main/java/com/greendelta/collaboration/platform/guice/ShiroModule.java').pipe(insert.transform(function(contents) {
+    var member = 'private static final String[] CUSTOM_PUBLIC_RESOURCES = {'
+    var resources = member;
+    for (var i = 0; i < params.customPublicResources.length; i++) {
+      resources += i === 0 ? ' ' : ', ';
+      resources += '"/' + params.customPublicResources[i] + '"';
+      resources += i === params.customPublicResources.length - 1 ? ' ' : '';
+    }
+    resources += '};'
+    var result = contents.substring(0, contents.indexOf(member));
+    return result + resources + contents.substring(contents.indexOf('\n', contents.indexOf(member)));
+  })).pipe(gulp.dest('./src/main/java/com/greendelta/collaboration/platform/guice'));
 });
 
 gulp.task('modifyIndexHtml', function() {

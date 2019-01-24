@@ -40,24 +40,10 @@ public class DefaultServlet extends HttpServlet {
 		boolean isMaintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
 		String url = request.getRequestURL().toString();
 		boolean isLoginUrl = url.endsWith("/login");
-		boolean isImprintUrl = url.endsWith("/imprint");
-		boolean isGraphUrl = url.endsWith("/graph/graph.html");
 		boolean isMaintenanceUrl = url.endsWith("/maintenance");
 		User user = userService.getCurrentUser();
 		if (isMaintenanceMode && !isLoginUrl && !isMaintenanceUrl && !user.isAdmin()) {
 			response.sendRedirect(request.getContextPath() + "/maintenance");
-			return;
-		}
-		if (isGraphUrl) {
-			forward("/graph/graph.html", request, response);
-			return;
-		}
-		if (isImprintUrl) {
-			forward("/imprint.html", request, response);
-			return;
-		}
-		if (isMaintenanceUrl) {
-			forward("/maintenance.html", request, response);
 			return;
 		}
 		if (isLoginUrl && !user.hasId()) {
@@ -66,6 +52,12 @@ public class DefaultServlet extends HttpServlet {
 		}
 		if (isLoginUrl && user.hasId()) {
 			response.sendRedirect(request.getContextPath() + "/");
+			return;
+		}
+		String route = url.substring(url.lastIndexOf('/') + 1);
+		String htmlFile = request.getServletContext().getRealPath(route + ".html");
+		if (!"index_public".equals(route) && new File(htmlFile).exists()) {
+			forward("/" + route + ".html", request, response);
 			return;
 		}
 		String redirectUrl = sessionProvider.get().redirectUrl;

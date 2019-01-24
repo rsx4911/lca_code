@@ -37,6 +37,8 @@ class ShiroModule extends ShiroWebModule {
 	private static final Key<RolesAuthorizationFilter> DATA_MANAGER_USER = config(ROLES, "dataManager");
 	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
 	private static final Key<RepoAccessFilter> REPO_ACCESS = Key.get(RepoAccessFilter.class);
+	// custom gulp build can change the "html" resources that are publicly available
+	private static final String[] CUSTOM_PUBLIC_RESOURCES = {};
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);
@@ -55,7 +57,8 @@ class ShiroModule extends ShiroWebModule {
 		dataManager("/ws/datamanager/**", "/sockets/datamanager/**");
 		user("/ws/**", "/sockets/**");
 		user(matchAll(Names.getUserRoutes()));
-		anonymous("/", "/login", "/imprint", "/search", "/maintenance", "/search/**");
+		anonymous("/", "/login", "/imprint", "/maintenance", "/search", "/search/**");
+		anonymous(CUSTOM_PUBLIC_RESOURCES);
 		anonymous(matchAll(WebappModule.STATIC_RESOURCE_DIRECTORIES));
 		user("/*"); // group urls
 		member("/**"); // repository urls
