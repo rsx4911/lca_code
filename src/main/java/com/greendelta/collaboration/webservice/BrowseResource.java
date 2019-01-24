@@ -15,6 +15,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.KeyGen;
@@ -26,14 +28,14 @@ import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
-import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
@@ -41,6 +43,7 @@ import com.greendelta.collaboration.util.ObjectMap;
 @Produces(MediaType.APPLICATION_JSON)
 public class BrowseResource {
 
+	private static final Logger log = LogManager.getLogger(BrowseResource.class);
 	private final BrowseService service;
 	private final RepositoryService repoService;
 	private final FetchService fetchService;
@@ -68,6 +71,8 @@ public class BrowseResource {
 			@QueryParam("filter") String filter,
 			@QueryParam("commitId") String commitId,
 			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
+		String path = categoryPath != null ? categoryPath : "";
+		log.debug("Getting content for path /{} of repository {}/{}", path, group, name);
 		Repository repo = repoService.get(group, name);
 		List<ObjectMap> content = null;
 		if (Strings.isNullOrEmpty(categoryPath)) {
@@ -147,6 +152,7 @@ public class BrowseResource {
 			descriptor.put("deleted", true);
 			return Respond.ok(descriptor);
 		}
+		log.info("Loading {} {} of repository {}/{} (commit id: {})", type, refId, group, name, commitId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		BrowseReferenceFiller references = new BrowseReferenceFiller(service, fetchService, repo, commitId);
 		references.fillReferencedElements(json);
@@ -164,6 +170,7 @@ public class BrowseResource {
 			@PathParam("name") String name,
 			@QueryParam("categoryPath") String categoryPath,
 			@QueryParam("commitId") String commitId) {
+		log.debug("Getting category info for {} of repository {}/{}", categoryPath, group, name);
 		if (categoryPath == null || categoryPath.isEmpty())
 			return Respond.ok(new HashMap<>());
 		if (!categoryPath.contains("/"))
@@ -194,6 +201,7 @@ public class BrowseResource {
 			@QueryParam("categoryPath") String path,
 			@QueryParam("commitId") String commitId,
 			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
+		log.debug("Getting data set count for {} of repository {}/{}", path, group, name);
 		String typeAsString = path.contains("/") ? path.substring(0, path.indexOf('/')) : path;
 		String category = path.contains("/") ? path.substring(path.indexOf('/') + 1) : null;
 		ModelType type = ModelTypes.parse(typeAsString);

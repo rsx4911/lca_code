@@ -71,6 +71,7 @@ public class IlcdWriter implements DatasetWriter {
 			if (lastCommit == null)
 				return;
 		}
+		log.trace("Exporting {} {} to ilcd", type, refId);
 		JsonObject obj = jsonStore.get(type.getModelClass().getSimpleName(), refId);
 		if (obj == null)
 			return;

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.ZipStore;
@@ -25,6 +27,7 @@ import com.greendelta.collaboration.service.search.SearchService;
 
 public class JsonWriter implements DatasetWriter {
 
+	private final static Logger log = LogManager.getLogger(JsonWriter.class);
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
@@ -59,6 +62,7 @@ public class JsonWriter implements DatasetWriter {
 			if (dataset == null)
 				return;
 		}
+		log.trace("Exporting {} {} to json", type, refId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		zipStore.put(type, json);
 		File binDir = fetchService.getBinDir(repo, type, refId, commitId);

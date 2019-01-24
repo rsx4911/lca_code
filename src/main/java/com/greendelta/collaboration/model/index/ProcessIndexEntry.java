@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
 
 public class ProcessIndexEntry extends IndexEntry {
 
@@ -139,7 +139,7 @@ public class ProcessIndexEntry extends IndexEntry {
 				try {
 					values = new ArrayList<>((Collection<String>) value);
 				} catch (Exception e) {
-					LoggerFactory.getLogger(ProcessIndexEntry.class).warn("Could not parse supported nomenclatures", e);
+					LogManager.getLogger(ProcessIndexEntry.class).warn("Could not parse supported nomenclatures", e);
 				}
 			}
 			if (values == null || values.isEmpty())

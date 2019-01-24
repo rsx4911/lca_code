@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.Strings;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
@@ -31,6 +33,7 @@ import com.greendelta.search.wrapper.SearchSorting;
 
 public class SearchService {
 
+	private final static Logger log = LogManager.getLogger(SearchService.class);
 	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final IndexEntryParser parser = new IndexEntryParser();
@@ -94,6 +97,7 @@ public class SearchService {
 	}
 
 	ObjectMap getRaw(Repository repo, String refId, String commitId) {
+		log.trace("Getting index entry for repository {}, refId {} and commitId {}", repo.toId(), refId, commitId);
 		return parser.convert(getClient().get(IndexEntry.toIndexId(repo.toId(), refId, commitId)));
 	}
 
@@ -182,6 +186,7 @@ public class SearchService {
 	public void index(String repoId, Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
+		log.debug("Indexing {} entries in repository {}", entries.size(), repoId);
 		Set<String> refIds = Collections.convert(new HashSet<>(entries), e -> e.refId);
 		List<IndexEntry> mostRecent = Collections.convert(getMostRecent(repoId, refIds, null), parser::parse);
 		if (!mostRecent.isEmpty()) {
@@ -243,6 +248,7 @@ public class SearchService {
 	public void remove(Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
+		log.debug("Removing {} index entries", entries.size());
 		Set<String> ids = new HashSet<>();
 		for (IndexEntry entry : entries) {
 			ids.add(entry.toIndexId());
@@ -261,5 +267,5 @@ public class SearchService {
 	private SearchClient getClient() {
 		return settingsService.getSearchConfig().getSearchClient();
 	}
-
+	
 }

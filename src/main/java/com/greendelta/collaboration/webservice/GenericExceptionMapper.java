@@ -50,9 +50,8 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 		if (user == null || user.getId() == 0l)
 			return "anonymous";
 		String info = "{";
-		info += "id: " + user.getId();
-		info += ", name: " + user.username;
-		info += ", email: " + user.email;
+		info += "id: " + user.getId() + ", ";
+		info += "name: " + user.username;
 		info += "}";
 		return info;
 	}

@@ -11,6 +11,8 @@ import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.FileReference;
@@ -28,6 +30,8 @@ import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 
 abstract class DownloadResource {
 
+
+	private static final Logger log = LogManager.getLogger(DownloadResource.class);
 	private final static Map<String, String> tokenToPath = new HashMap<>();
 	private final static Map<String, String> tokenToFilename = new HashMap<>();
 	private final RepositoryService repoService;
@@ -53,6 +57,7 @@ abstract class DownloadResource {
 		if (commitId == null)
 			return Respond.notFound(type.name() + " " + refId + " not found");
 		try {
+			log.info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
 			DatasetWriter writer = createWriter(repo, commitId);
 			writer.write(type, refId);
 			File tmpFile = writer.close();
@@ -93,6 +98,7 @@ abstract class DownloadResource {
 				Commit commit = historyService.getLastCommit(repo);
 				commitId = commit.id;
 			}
+			log.info("Exporting repository {}/{} (commit id {})", group, repository, commitId);
 			DatasetWriter writer = createWriter(repo, commitId);
 			for (FileReference element : requested) {
 				writer.write(element.type, element.refId);

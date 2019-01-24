@@ -109,8 +109,10 @@ public class SessionResource {
 	@POST
 	@Path("logout")
 	public Response logout() {
+		User currentUser = userService.getCurrentUser();
 		if (!userService.logout())
 			return Respond.conflict("Not logged in");
+		log.info("User {} logged out", currentUser.username);
 		return Respond.ok();
 	}
 

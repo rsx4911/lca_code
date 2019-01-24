@@ -11,6 +11,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 
@@ -26,6 +28,7 @@ import com.greendelta.collaboration.webservice.Respond;
 @Path("commit")
 public class CommitResource {
 
+	private static final Logger log = LogManager.getLogger(CommitResource.class);
 	private final CommitService service;
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
@@ -48,6 +51,7 @@ public class CommitResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@QueryParam("lastCommitId") String lastCommitId) {
+		log.debug("Requesting commit for repository {}/{}", group, name);
 		Repository repo = repoService.get(group, name);
 		if (!accessService.canWrite(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
@@ -73,6 +77,7 @@ public class CommitResource {
 			@PathParam("name") String name,
 			@QueryParam("lastCommitId") String lastCommitId,
 			InputStream commitData) {
+		log.info("Commiting data to repository {}/{}", group, name);
 		Repository repo = repoService.get(group, name);
 		if (!accessService.canWrite(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "WRITE");
