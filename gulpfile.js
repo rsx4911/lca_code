@@ -22,10 +22,21 @@ if (!params.customDir) {
   params.customDir = './custom';
 }
 
-if (!params.customPublicResources) {
-  params.customPublicResources = [];
-} else {
-  params.customPublicResources = params.customPublicResources.split(',')
+var getCustomHtmlFiles = function(excludePublicIndex) {
+  try {
+    var files = fs.readdirSync(params.customDir)
+    return files.filter(function(file) { return file.indexOf('.html') !== -1 && (!excludePublicIndex || file !== 'index_public.html'); });
+  } catch (e) {
+    return []
+  }
+}
+
+var prependPath = function(path, values) {
+  var result = [];
+  for (var i = 0; i < values.length; i++) {
+    result.push(path + values[i]);  
+  }
+  return result;
 }
 
 var getPomVersion = function() {
@@ -73,11 +84,11 @@ var collect = function(directory, finished) {
 };
 
 gulp.task('default', [], function(callback) {
-  return runSequence('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', 'setBuildInfo', callback);
+  return runSequence('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', 'setBuildInfo', 'setCustomPublicResources', callback);
 });
 
 gulp.task('build', [], function(callback) {
-  return runSequence('default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modifyCustomPublicHtml', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback);
+  return runSequence('default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modifyCustomHtmlPages', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback);
 });
 
 gulp.task('clear', function() {
@@ -162,12 +173,13 @@ gulp.task('setBuildInfo', function() {
 
 gulp.task('setCustomPublicResources', function() {
   return gulp.src('./src/main/java/com/greendelta/collaboration/platform/guice/ShiroModule.java').pipe(insert.transform(function(contents) {
-    var member = 'private static final String[] CUSTOM_PUBLIC_RESOURCES = {'
+    var member = 'public static final String[] CUSTOM_PUBLIC_RESOURCES = {'
     var resources = member;
-    for (var i = 0; i < params.customPublicResources.length; i++) {
+    var customFiles = getCustomHtmlFiles(true);
+    for (var i = 0; i < customFiles.length; i++) {
       resources += i === 0 ? ' ' : ', ';
-      resources += '"/' + params.customPublicResources[i] + '"';
-      resources += i === params.customPublicResources.length - 1 ? ' ' : '';
+      resources += '"/' + customFiles[i].substring(0, customFiles[i].lastIndexOf('.html')) + '"';
+      resources += i === customFiles.length - 1 ? ' ' : '';
     }
     resources += '};'
     var result = contents.substring(0, contents.indexOf(member));
@@ -209,12 +221,13 @@ gulp.task('modifyImprintHtml', function() {
   })).pipe(gulp.dest('./target/require-build'));
 });
 
-gulp.task('modifyCustomPublicHtml', function() {
+gulp.task('modifyCustomHtmlPages', function() {
   // replace styles-login.css with timestamp filename
-  return gulp.src(params.customDir + '/index_public.html').pipe(insert.transform(function(contents) {
+  return gulp.src(prependPath(params.customDir + '/', getCustomHtmlFiles(false))).pipe(insert.transform(function(contents) {
     var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
     content = content.replace(' data-main="js/main"', '');
     content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"');
+    content = content.replace('js/libs/jquery', 'js/jquery');
     content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
     return content;
   })).pipe(gulp.dest('./target/require-build'));

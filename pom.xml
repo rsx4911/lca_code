@@ -259,6 +259,7 @@
 	<build>
 
 		<finalName>${project.artifactId}</finalName>
+		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -298,11 +299,11 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.1</version>
+				<version>1.6.0</version>
 				<executions>
 					<execution>
 						<id>npm_install</id>
-						<phase>prepare-package</phase>
+						<phase>generate-sources</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>
@@ -315,7 +316,7 @@
 					</execution>
 					<execution>
 						<id>exec_gulp</id>
-						<phase>prepare-package</phase>
+						<phase>generate-sources</phase>
 						<goals>
 							<goal>exec</goal>
 						</goals>

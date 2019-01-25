@@ -29,7 +29,7 @@ import com.greendelta.collaboration.platform.shiro.JpaRealm;
 import com.greendelta.collaboration.platform.shiro.RepoAccessFilter;
 import com.greendelta.collaboration.util.Names;
 
-class ShiroModule extends ShiroWebModule {
+public class ShiroModule extends ShiroWebModule {
 
 	private static final Logger log = LogManager.getLogger(ShiroModule.class);
 	private static final Key<RolesAuthorizationFilter> ADMIN_USER = config(ROLES, "admin");
@@ -38,7 +38,7 @@ class ShiroModule extends ShiroWebModule {
 	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
 	private static final Key<RepoAccessFilter> REPO_ACCESS = Key.get(RepoAccessFilter.class);
 	// custom gulp build can change the "html" resources that are publicly available
-	private static final String[] CUSTOM_PUBLIC_RESOURCES = {};
+	public static final String[] CUSTOM_PUBLIC_RESOURCES = { "/contact", "/cookies", "/imprint", "/login", "/privacy" };
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);

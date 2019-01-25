@@ -2,6 +2,7 @@ package com.greendelta.collaboration.platform.servlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -14,6 +15,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.platform.guice.ShiroModule;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -54,10 +56,9 @@ public class DefaultServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
-		String route = url.substring(url.lastIndexOf('/') + 1);
-		String htmlFile = request.getServletContext().getRealPath(route + ".html");
-		if (!"index_public".equals(route) && new File(htmlFile).exists()) {
-			forward("/" + route + ".html", request, response);
+		String route = url.substring(url.lastIndexOf('/'));
+		if (Arrays.asList(ShiroModule.CUSTOM_PUBLIC_RESOURCES).contains(route) || route.equals("/maintenance") || route.equals("/imprint")) {
+			forward(route + ".html", request, response);
 			return;
 		}
 		String redirectUrl = sessionProvider.get().redirectUrl;
