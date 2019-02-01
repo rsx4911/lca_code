@@ -169,11 +169,11 @@ public class DatabaseAssertion {
 		assertEquals(1, source.getVersion());
 		assertEquals("Source", source.getName());
 		assertEquals("A source", source.getDescription());
-		assertEquals("https://www.source.org", source.getUrl());
-		assertEquals("Source 2018", source.getTextReference());
-		assertEquals((short) 2018, (short) source.getYear());
-		assertEquals("sample.pdf", source.getExternalFile());
-		fileLength(3028, source, source.getExternalFile());
+		assertEquals("https://www.source.org", source.url);
+		assertEquals("Source 2018", source.textReference);
+		assertEquals((short) 2018, (short) source.year);
+		assertEquals("sample.pdf", source.externalFile);
+		fileLength(3028, source, source.externalFile);
 	}
 
 	private void source2(Source source) {
@@ -1870,22 +1870,22 @@ public class DatabaseAssertion {
 		assertNull(project.getCategory());
 		assertEquals("Project", project.getName());
 		assertEquals("A project", project.getDescription());
-		ImpactMethod method = new ImpactMethodDao(database).getForId(project.getImpactMethodId());
+		ImpactMethod method = new ImpactMethodDao(database).getForId(project.impactMethodId);
 		refId("eedd7332-f522-40e6-ae77-9a0083b1b881", method);
 		refId("5aa4c338-d52a-44a6-bb6b-e815e295e6c9", method.nwSets.get(0));
-		assertEquals(method.nwSets.get(0).getId(), (long) project.getNwSetId());
-		assertEquals(1, project.getVariants().size());
-		projectVariant(project.getVariants().get(0));
+		assertEquals(method.nwSets.get(0).getId(), (long) project.nwSetId);
+		assertEquals(1, project.variants.size());
+		projectVariant(project.variants.get(0));
 	}
 
 	private void projectVariant(ProjectVariant variant) {
-		assertEquals("Option1", variant.getName());
-		refId("f05fe9b1-9892-4436-be0e-7c92172c5298", variant.getProductSystem());
-		assertEquals(AllocationMethod.CAUSAL, variant.getAllocationMethod());
-		assertEquals(2d, variant.getAmount(), 0);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", variant.getFlowPropertyFactor().getFlowProperty());
-		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", variant.getUnit());
-		parameterRedefs2(variant.getParameterRedefs());
+		assertEquals("Option1", variant.name);
+		refId("f05fe9b1-9892-4436-be0e-7c92172c5298", variant.productSystem);
+		assertEquals(AllocationMethod.CAUSAL, variant.allocationMethod);
+		assertEquals(2d, variant.amount, 0);
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", variant.flowPropertyFactor.getFlowProperty());
+		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", variant.unit);
+		parameterRedefs2(variant.parameterRedefs);
 	}
 
 	private void parameterRedefs2(List<ParameterRedef> redefs) {
