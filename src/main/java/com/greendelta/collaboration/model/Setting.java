@@ -91,7 +91,10 @@ public class Setting extends AbstractEntity {
 		
 		// announcements
 		ANNOUNCEMENT_ID(String.class),
-		ANNOUNCEMENT_MESSAGE(String.class);
+		ANNOUNCEMENT_MESSAGE(String.class),
+
+		// license agreement
+		LICENSE_AGREEMENT_TEXT(String.class);
 
 		public final Class<?> type;
 		private final Object defaultValue;

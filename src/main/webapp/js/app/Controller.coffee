@@ -339,21 +339,22 @@ define([
 						commitId: commitId
 				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, query) -> 
 					params = @splitQuery query
-					@showView 
-						view: 'repository/dataset/Dataset'
-						title: "#{group}/#{name}"
-						subTitle: 'Data sets'
-						fullWidth: true
-						nav: 
-							type: 'repository'
-							active: 'datasets'
-							urlPrefix: "#{group}/#{name}"
-						viewOptions: 
-							repository: new Repository({group: group, name: name})
-							type: type
-							refId: refId
-							commitId: params.commitId
-							commentPath: params.commentPath
+					@checkLicenseAgreement () =>
+						@showView 
+							view: 'repository/dataset/Dataset'
+							title: "#{group}/#{name}"
+							subTitle: 'Data sets'
+							fullWidth: true
+							nav: 
+								type: 'repository'
+								active: 'datasets'
+								urlPrefix: "#{group}/#{name}"
+							viewOptions: 
+								repository: new Repository({group: group, name: name})
+								type: type
+								refId: refId
+								commitId: params.commitId
+								commentPath: params.commentPath
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"
@@ -440,6 +441,23 @@ define([
 						callback?()
 				else
 					callback?()
+		
+			checkLicenseAgreement: (callback) ->
+				licenseAgreementText = settings.getVal 'LICENSE_AGREEMENT_TEXT'
+				if !licenseAgreementText or localStorage.getItem('license-info-accepted') is 'true'
+					callback()
+					return
+				Layers.askQuestion
+					title: 'Licence Agreement Information'
+					question: licenseAgreementText
+					answers: ['I Disagree', 'I Agree']
+					onAnswer: (index) => 
+						Layers.closeActive()
+						if index is 1
+							localStorage.setItem('license-info-accepted', 'true')
+							callback()
+						else
+							Backbone.history.history.back()
 
 			getDocumentTitle: (value) ->
 				unread = 0

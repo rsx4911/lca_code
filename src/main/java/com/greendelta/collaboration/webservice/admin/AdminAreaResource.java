@@ -121,6 +121,7 @@ public class AdminAreaResource {
 		info.put("maintenanceMessage", settingsService.get(Key.MAINTENANCE_MESSAGE));
 		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
 		info.put("announcement", settingsService.get(Key.ANNOUNCEMENT_MESSAGE));
+		info.put("licenseAgreementText", settingsService.get(Key.LICENSE_AGREEMENT_TEXT));
 		return Respond.ok(info);
 	}
 

@@ -36,6 +36,7 @@ define([
 				'click [data-action=set-maintenance-message]': 'setMaintenanceMessage'
 				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
+				'click [data-action=set-license-agreement-text]': 'setLicenseAgreementText'
 
 			toggleMaintenanceMode: () ->
 				wasActive = @serverInfo.maintenanceModeActive
@@ -50,6 +51,12 @@ define([
 				Events.preventDefault event
 				Layers.promptInput 'Maintenance message', 'textarea', @serverInfo.maintenanceMessage, (value) =>
 					@setSetting 'MAINTENANCE_MESSAGE', value, () ->
+						Backbone.history.loadUrl()
+
+			setLicenseAgreementText: (event) ->
+				Events.preventDefault event
+				Layers.promptInput 'License agreement text', 'textarea', @serverInfo.licenseAgreementText, (value) =>
+					@setSetting 'LICENSE_AGREEMENT_TEXT', value, () ->
 						Backbone.history.loadUrl()
 
 			refreshOpenWebServiceRequests: (event) ->
@@ -74,7 +81,7 @@ define([
 								Announcements.announce value
 							else
 								Announcements.clear()						
-
+				
 			setSetting: (key, value, callback) ->
 				$.ajax
 					type: 'PUT'
