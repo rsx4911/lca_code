@@ -112,7 +112,9 @@ define([
 						if @commitId
 							url += '&commitId=' + @commitId
 						return url + '&'
-					afterRender: (result) => @loadCount result
+					afterRender: (result) => 
+						if result.countingEnabled
+							@loadCount result
 					beforeRender: (result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"

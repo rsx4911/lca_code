@@ -52,6 +52,19 @@ public class MembershipResource {
 		this.notificationService = notificationService;
 	}
 
+	@GET
+	@Path("{group}/{repo}")
+	public Response getAll(
+			@PathParam("group") String group,
+			@PathParam("repo") String repo,
+			@QueryParam("filter") @DefaultValue("") String filter) {
+		String path = group;
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			path = Repository.toId(group, repo);
+		SearchResult<Membership> memberships = service.getMemberships(path, filter);
+		return Respond.ok(SearchResults.lconvert(memberships, Memberships::map));
+	}
+	
 	@POST
 	@Path("{group}/{repo}/user/{username}/{role}")
 	public Response addUserRole(
@@ -160,19 +173,6 @@ public class MembershipResource {
 		if (removed)
 			notification.send();
 		return Respond.ok(Collections.singletonMap("removed", removed));
-	}
-
-	@GET
-	@Path("{group}/{repo}")
-	public Response getAll(
-			@PathParam("group") String group,
-			@PathParam("repo") String repo,
-			@QueryParam("filter") @DefaultValue("") String filter) {
-		String path = group;
-		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-			path = Repository.toId(group, repo);
-		SearchResult<Membership> memberships = service.getMemberships(path, filter);
-		return Respond.ok(SearchResults.lconvert(memberships, Memberships::map));
 	}
 
 	private String getAuthorizedPath(String group, String repo) {

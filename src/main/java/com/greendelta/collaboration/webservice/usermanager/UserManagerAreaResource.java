@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.admin;
+package com.greendelta.collaboration.webservice.usermanager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,9 +19,9 @@ import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;
 
-@Path("manager/area")
+@Path("usermanager/area")
 @Produces(MediaType.APPLICATION_JSON)
-public class ManagerAreaResource {
+public class UserManagerAreaResource {
 
 	private final RepositoryService repoService;
 	private final UserService userService;
@@ -29,7 +29,7 @@ public class ManagerAreaResource {
 	private final TeamService teamService;
 
 	@Inject
-	public ManagerAreaResource(RepositoryService repoService, UserService service, GroupService groupService,
+	public UserManagerAreaResource(RepositoryService repoService, UserService service, GroupService groupService,
 			TeamService teamService) {
 		this.repoService = repoService;
 		this.userService = service;
@@ -46,8 +46,10 @@ public class ManagerAreaResource {
 			result.put("repositories", repoService.getCount(true));
 			result.put("groups", groupService.getCount(true));
 		}
-		result.put("users", userService.getCount());
-		result.put("teams", teamService.getCount());
+		if (currentUser.isUserManager()) {
+			result.put("users", userService.getCount());
+			result.put("teams", teamService.getCount());
+		}
 		return Respond.ok(result);
 	}
 

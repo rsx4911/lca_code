@@ -5,34 +5,38 @@ import org.apache.logging.log4j.Logger;
 import org.apache.shiro.web.servlet.ShiroFilter;
 import org.openlca.cloud.util.Logs;
 
-import websocket.WebsocketConfigurator;
-
 import com.google.inject.Singleton;
 import com.google.inject.servlet.ServletModule;
 import com.greendelta.collaboration.platform.servlet.DefaultServlet;
+import com.greendelta.collaboration.platform.servlet.NoCacheFilter;
+import com.greendelta.collaboration.platform.servlet.WsApiFilter;
 
-class WebappModule extends ServletModule {
+import websocket.WebsocketConfigurator;
 
-	static final String[] STATIC_RESOURCES = { "css/", "images/", "fonts/", "js/", "graph/" };
+public class WebappModule extends ServletModule {
+
+	public static final String[] STATIC_RESOURCE_DIRECTORIES = { "css", "images", "fonts", "js", "graph" };
 	private static final Logger log = LogManager.getLogger(WebappModule.class);
 
 	@Override
 	protected void configureServlets() {
-		filter("/ws/*", "/sockets/*").through(PersistFilter.class);
-		requestStaticInjection(WebsocketConfigurator.class);
-		configureNonStaticResources();
+		bind(NoCacheFilter.class).in(Singleton.class);
+		bind(WsApiFilter.class).in(Singleton.class);
 		bind(ShiroFilter.class).in(Singleton.class);
+		requestStaticInjection(WebsocketConfigurator.class);
+		filter("/ws/*", "/sockets/*").through(PersistFilter.class);
+		filter("/ws/*").through(WsApiFilter.class);
+		configureNonStaticResources();
+		filter("/*").through(NoCacheFilter.class); // Filter decides
 		filter("/*").through(ShiroFilter.class);
 		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 
 	private void configureNonStaticResources() {
-		String statics = null;
-		for (String sr : STATIC_RESOURCES)
-			if (statics == null)
-				statics = sr;
-			else
-				statics += "|" + sr;
+		String statics = "";
+		for (String sr : STATIC_RESOURCE_DIRECTORIES) {
+			statics += (statics.isEmpty() ? sr : "|" + sr) + "/";
+		}
 		String webservices = "ws/|sockets/";
 		String webapp = "^/(?!" + statics + "|" + webservices + "|[^/]+[.]html).*";
 		serveRegex(webapp).with(DefaultServlet.class);

@@ -6,9 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Files;
 import com.greendelta.collaboration.util.Bytes;
@@ -25,7 +25,7 @@ class Repositories {
 			cloneHistoryContents(from, to, commits);
 			return true;
 		} catch (IOException e) {
-			LoggerFactory.getLogger(Repositories.class).error("Error cloning repository contents", e);
+			LogManager.getLogger(Repositories.class).error("Error cloning repository contents", e);
 			return false;
 		}
 	}

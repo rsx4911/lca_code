@@ -207,6 +207,18 @@ public class CommentResource {
 		}
 		return Respond.ok(map(comment, repository));
 	}
+	
+	@PUT
+	@Path("{id}/release")
+	public Response release(@PathParam("id") long id) {
+		if (!settingsService.is(Key.COMMENTS_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
+		Comment comment = service.release(id);
+		if (comment == null)
+			return Respond.notFound();
+		Repository repository = repoService.get(comment.repositoryPath);
+		return Respond.ok(map(comment, repository));
+	}
 
 	@PUT
 	@Path("{id}/visibility/{role}")
@@ -217,18 +229,6 @@ public class CommentResource {
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Role role = "null".equals(roleString) ? null : Role.valueOf(roleString);
 		Comment comment = service.changeVisibility(id, role);
-		if (comment == null)
-			return Respond.notFound();
-		Repository repository = repoService.get(comment.repositoryPath);
-		return Respond.ok(map(comment, repository));
-	}
-
-	@PUT
-	@Path("{id}/release")
-	public Response release(@PathParam("id") long id) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
-			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
-		Comment comment = service.release(id);
 		if (comment == null)
 			return Respond.notFound();
 		Repository repository = repoService.get(comment.repositoryPath);

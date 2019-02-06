@@ -67,6 +67,16 @@ public class TeamResource {
 		return Respond.ok(Client.map(teams, Teams::mapForOthers));
 	}
 
+	@GET
+	@Path("avatar/{teamname}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response getAvatar(@PathParam("teamname") String teamname) {
+		Team team = service.getForTeamname(teamname);
+		if (team == null)
+			return Respond.notFound(teamname);
+		return Respond.ok(team.avatar, "avatar-team.png");
+	}
+
 	@PUT
 	@Path("avatar/{teamname}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -83,16 +93,6 @@ public class TeamResource {
 			team.avatar = Bytes.readStream(file);
 		team = service.update(team);
 		return getAvatar(teamname);
-	}
-
-	@GET
-	@Path("avatar/{teamname}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getAvatar(@PathParam("teamname") String teamname) {
-		Team team = service.getForTeamname(teamname);
-		if (team == null)
-			return Respond.notFound(teamname);
-		return Respond.ok(team.avatar, "avatar-team.png");
 	}
 
 	private Team authorizedGetTeam(String teamname) {

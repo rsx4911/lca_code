@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.admin;
+package com.greendelta.collaboration.webservice.usermanager;
 
 import java.util.HashMap;
 

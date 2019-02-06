@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.task;
+package com.greendelta.collaboration.webservice.user;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,8 +17,8 @@ import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -34,8 +34,8 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
-import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.util.Reviews;
 
 @Path("task/review")
@@ -132,6 +132,34 @@ public class ReviewResource {
 	}
 
 	@PUT
+	@Path("{id}/complete")
+	public Response completeReview(@PathParam("id") long id) {
+		if (!settingsService.is(Key.TASKS_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
+		Review review = service.get(id);
+		if (review == null)
+			return Respond.notFound("No review with id " + id + " found");
+		Repository repo = repoService.get(review.repositoryPath);
+		service.end(review, TaskState.COMPLETED);
+		notificationService.taskCompleted(repo, review).send();
+		return createResponse();
+	}
+
+	@PUT
+	@Path("{id}/cancel")
+	public Response cancelReview(@PathParam("id") long id) {
+		if (!settingsService.is(Key.TASKS_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
+		Review review = service.get(id);
+		if (review == null)
+			return Respond.notFound("No review with id " + id + " found");
+		Repository repo = repoService.get(review.repositoryPath);
+		service.end(review, TaskState.CANCELED);
+		notificationService.taskCanceled(repo, review).send();
+		return createResponse();
+	}
+
+	@PUT
 	@Path("{id}/assign/{username}")
 	public Response assignReviewer(
 			@PathParam("id") long id,
@@ -147,21 +175,6 @@ public class ReviewResource {
 		TaskAssignment assignment = service.startAssignment(review, username,
 				(user, repo) -> accessService.canReviewIn(user, repo.toId()));
 		notificationService.taskAssigned(repository, review, assignment).send();
-		return createResponse();
-	}
-
-	@PUT
-	@Path("{id}/markAsReviewed/{referenceId}/{value}")
-	public Response markAsReviewed(
-			@PathParam("id") long id,
-			@PathParam("referenceId") long referenceId,
-			@PathParam("value") boolean value) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
-			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
-		Review review = service.get(id);
-		if (review == null)
-			return Respond.notFound("No review with id " + id + " found");
-		service.markAsReviewed(id, referenceId, value);
 		return createResponse();
 	}
 
@@ -195,34 +208,6 @@ public class ReviewResource {
 		return createResponse();
 	}
 
-	@PUT
-	@Path("{id}/complete")
-	public Response closeReview(@PathParam("id") long id) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
-			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
-		Review review = service.get(id);
-		if (review == null)
-			return Respond.notFound("No review with id " + id + " found");
-		Repository repo = repoService.get(review.repositoryPath);
-		service.end(review, TaskState.COMPLETED);
-		notificationService.taskCompleted(repo, review).send();
-		return createResponse();
-	}
-
-	@PUT
-	@Path("{id}/cancel")
-	public Response cancelReview(@PathParam("id") long id) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
-			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
-		Review review = service.get(id);
-		if (review == null)
-			return Respond.notFound("No review with id " + id + " found");
-		Repository repo = repoService.get(review.repositoryPath);
-		service.end(review, TaskState.CANCELED);
-		notificationService.taskCanceled(repo, review).send();
-		return createResponse();
-	}
-
 	private Response createResponse() {
 		User user = userService.getCurrentUser();
 		int activeTasks = taskService.getAllActiveFor(user).size();
@@ -239,6 +224,21 @@ public class ReviewResource {
 		}
 		reference.name = ref.name;
 		return reference;
+	}
+	
+	@PUT
+	@Path("{id}/markAsReviewed/{referenceId}/{value}")
+	public Response markAsReviewed(
+			@PathParam("id") long id,
+			@PathParam("referenceId") long referenceId,
+			@PathParam("value") boolean value) {
+		if (!settingsService.is(Key.TASKS_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
+		Review review = service.get(id);
+		if (review == null)
+			return Respond.notFound("No review with id " + id + " found");
+		service.markAsReviewed(id, referenceId, value);
+		return createResponse();
 	}
 
 }

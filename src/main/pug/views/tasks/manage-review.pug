@@ -1,4 +1,5 @@
 include ../mixins/forms.pug
+include ./mixins.pug
 
 mixin assignments(assignments, type, noContentMessage)
 	.flex-column
@@ -25,6 +26,9 @@ mixin assignments(assignments, type, noContentMessage)
 
 mixin review-info()
 	.header-box Review info
+		if hasAssignment
+			button.btn.btn-default.pull-right(data-action='open-widget') Open in task widget
+			.clear
 	.content-box
 		if !closed && (isInitiator || !review)
 			form#review-form
@@ -58,11 +62,7 @@ mixin data-set-column(elements, col)
 		.flex-container
 			each reference, index in elements
 				if index % 3 === col - 1
-					.overflow-ellipsis
-						input(type='checkbox' id=reference.id, data-action='mark-as-reviewed' checked=!!reference.reviewer, disabled=closed, aria-label='Mark ' + reference.name + ' as reviewed')
-						a(href=review.repositoryPath + '/dataset/' + reference.type + '/' + reference.refId + '?commitId=' + reference.commitId, title=reference.name)
-							img.model-icon-small(src='images/model/small/' + reference.type.toLowerCase() + '.png' aria-label='Icon of ' + reference.type)
-							strong=reference.name
+					+reference(review, reference, 'manage-review')
 
 mixin data-set-selection()
 	.header-box Data sets to be reviewed
@@ -72,9 +72,9 @@ mixin data-set-selection()
 		if references && references.length
 			each list in references			
 				.flex-layout.three-columns
-					+data-set-column(list.references, 1)
-					+data-set-column(list.references, 2)
-					+data-set-column(list.references, 3)
+					+data-set-column(list, 1)
+					+data-set-column(list, 2)
+					+data-set-column(list, 3)
 		else
 			| There are not data sets selected yet for this review.
 

@@ -160,6 +160,16 @@ public class Repository {
 		return getFile(datasetDir, filename, create);
 	}
 
+	File getBinFile(ModelType type, String refId, String commitId, String filename) {
+		File binDir = getBinDir(type, refId, commitId, false);
+		if (!binDir.exists())
+			return null;
+		File file = new File(binDir, filename + ".gz");
+		if (file.exists())
+			return file;
+		return new File(binDir, filename);
+	}
+
 	File getBinDir(ModelType type, String refId, String commitId, boolean create) {
 		File binDir = getBinDir(type, refId, create);
 		return getDir(binDir, commitId, create);

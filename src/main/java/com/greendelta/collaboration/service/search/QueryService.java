@@ -18,6 +18,7 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
@@ -50,7 +51,7 @@ class QueryService {
 			builder.filter("mostRecent", SearchFilterValue.term(true));
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query, SearchFields.get(type, loggedIn));
+			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
 		} else {
 			builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		}
@@ -58,7 +59,8 @@ class QueryService {
 		builder.pageSize(pageSize);
 		Scoring.apply(builder);
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
-		SearchResult<Map<String, Object>> result = client.search(builder.build());
+		SearchQuery searchQuery = builder.build();
+		SearchResult<Map<String, Object>> result = client.search(searchQuery);
 		if (loggedIn)
 			return SearchResults.convert(result, parser::parse);
 		return prepResult(result);

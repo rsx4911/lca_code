@@ -12,6 +12,7 @@ public class TaskAssignments {
 	public static ObjectMap map(TaskAssignment assignment) {
 		ObjectMap map = ObjectMap.fromObject(assignment);
 		map.put("assignedTo", Users.mapForOthers(assignment.assignedTo));
+		map.put("endedBy", Users.mapForOthers(assignment.endedBy));
 		return map;
 	}
 

@@ -18,6 +18,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.FetchRequestData;
 import org.openlca.cloud.model.data.FileReference;
@@ -35,6 +37,7 @@ import com.greendelta.collaboration.service.search.SearchService;
 @Path("public/fetch")
 public class FetchResource {
 
+	private static final Logger log = LogManager.getLogger(FetchResource.class);
 	private final FetchService service;
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
@@ -58,6 +61,7 @@ public class FetchResource {
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
+		log.debug("Fetching {} {} from repository {}/{} (commit id: {})", type, refId, group, name, commitId);
 		Repository repo = repoService.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
@@ -97,6 +101,7 @@ public class FetchResource {
 			@PathParam("name") String name,
 			@QueryParam("lastCommitId") String lastCommitId,
 			@QueryParam("sync") @DefaultValue("false") boolean sync) {
+		log.debug("Requesting fetch for repository {}/{} (last commit id: {}, sync: {})", group, name, lastCommitId, sync);
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = getCommits(repo, lastCommitId, sync);
 		if (commits.isEmpty())
@@ -122,27 +127,6 @@ public class FetchResource {
 		return result;
 	}
 
-	@POST
-	@Path("{group}/{name}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetch(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("commitId") String commitId,
-			@QueryParam("download") @DefaultValue("false") boolean download,
-			List<FileReference> requested) {
-		Repository repo = repoService.get(group, name);
-		List<Commit> commits = getCommits(repo, commitId, download);
-		if (commits.isEmpty())
-			return Respond.noContent();
-		if (requested.isEmpty() && download) {
-			requested = null;
-		}
-		StreamingOutput data = service.prepareData(repo, commits, requested);
-		return Respond.ok(data);
-	}
-
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -150,6 +134,7 @@ public class FetchResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("commitId") String commitId) {
+		log.debug("Requesting reeferences for repository {}/{} (commit id: {})", group, name, commitId);
 		Repository repo = repoService.get(group, name);
 		Commit commit = historyService.getCommit(repo, commitId);
 		if (commit == null)
@@ -162,6 +147,28 @@ public class FetchResource {
 			resultData.add(entry.asFetchRequestData());
 		}
 		return Respond.ok(resultData);
+	}
+
+	@POST
+	@Path("{group}/{name}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetch(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("commitId") String commitId,
+			@QueryParam("download") @DefaultValue("false") boolean download,
+			List<FileReference> requested) {
+		log.info("Fetching data for repository {}/{} (commit id: {}, download: {})", group, name, commitId, download);
+		Repository repo = repoService.get(group, name);
+		List<Commit> commits = getCommits(repo, commitId, download);
+		if (commits.isEmpty())
+			return Respond.noContent();
+		if (requested.isEmpty() && download) {
+			requested = null;
+		}
+		StreamingOutput data = service.prepareData(repo, commits, requested);
+		return Respond.ok(data);
 	}
 
 	private List<Commit> getCommits(Repository repo, String commitId, boolean until) {

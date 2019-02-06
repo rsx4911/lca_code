@@ -8,14 +8,14 @@ define([
 		class Filter extends Backbone.Model
 
 			initialize: (options) ->
-				{@url, @container, @template, @filterId, @beforeRender, @type, @pageSize, @pageSizeId, @afterRender} = options
+				{@url, @container, @template, @filterId, @beforeRender, @type, @pageSize, @pageSizeId, @afterRender, @filterPrefix} = options
 				if options.noPaging
 					@page = 0
 				else
 					@page = 1
 					unless @pageSize
 						@pageSize = 10
-				@filter = ''
+				@filter = @filterPrefix || ''
 
 			init: (callback) ->
 				@load (result) =>
@@ -80,7 +80,7 @@ define([
 					Events.preventDefault event
 					target = $ Events.target event
 					if target.is('input')
-						@filter = target.val()
+						@filter = (@filterPrefix || '') + target.val()
 						@page = 1
 					else if target.is('select')
 						@page = 1

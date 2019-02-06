@@ -28,6 +28,7 @@ define () ->
 		'targetUnit': 'Unit'
 		'referenceExchange.name': 'Reference product'
 		'impactMethod': 'LCIA method'
+		'impactCategories.refUnit': 'Reference unit'
 		'socialDqSystem': 'Social data quality scheme'
 		'exchanges.dqEntry': 'Data quality'
 		'exchanges.defaultProvider': 'Provider'

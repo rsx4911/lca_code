@@ -60,6 +60,57 @@ public class HistoryResource {
 	}
 
 	@GET
+	@Path("{group}/{name}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("lastCommitId") String lastCommitId) {
+		Repository repo = repoService.get(group, name);
+		if (lastCommitId != null && !lastCommitId.isEmpty()) {
+			Commit commit = service.getCommit(repo, lastCommitId);
+			if (commit == null)
+				return Respond.badRequest("Unknown commit id");
+		}
+		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
+		if (commits.size() == 0)
+			return Respond.noContent();
+		java.util.Collections.reverse(commits);
+		return Respond.ok(putUserName(commits));
+	}
+
+	@GET
+	@Path("{group}/{name}/{type}/{refId}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId) {
+		Repository repo = repoService.get(group, name);
+		IndexEntry first = searchService.getFirst(repo.toId(), refId);
+		if (first == null)
+			return Respond.noContent();
+		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
+		if (commits.size() == 0)
+			return Respond.noContent();
+		java.util.Collections.reverse(commits);
+		List<Map<String, Object>> mapped = new ArrayList<>();
+		List<Commit> ownCommits = service.getCommits(repo, type, refId);
+		for (Commit commit : commits) {
+			Map<String, Object> map = putUserName(commit);
+			for (Commit c : ownCommits) {
+				if (!commit.id.equals(c.id))
+					continue;
+				map.put("modelHasChanged", true);
+				break;
+			}
+			mapped.add(map);
+		}
+		return Respond.ok(mapped);
+	}
+
+	@GET
 	@Path("search/{group}/{name}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
@@ -100,53 +151,7 @@ public class HistoryResource {
 			return false;
 		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
 	}
-
-	@GET
-	@Path("{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("lastCommitId") String lastCommitId) {
-		Repository repo = repoService.get(group, name);
-		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
-		if (commits.size() == 0)
-			return Respond.noContent();
-		java.util.Collections.reverse(commits);
-		return Respond.ok(putUserName(commits));
-	}
-
-	@GET
-	@Path("{group}/{name}/{type}/{refId}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("type") ModelType type,
-			@PathParam("refId") String refId) {
-		Repository repo = repoService.get(group, name);
-		IndexEntry first = searchService.getFirst(repo.toId(), refId);
-		if (first == null)
-			return Respond.noContent();
-		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
-		if (commits.size() == 0)
-			return Respond.noContent();
-		java.util.Collections.reverse(commits);
-		List<Map<String, Object>> mapped = new ArrayList<>();
-		List<Commit> ownCommits = service.getCommits(repo, type, refId);
-		for (Commit commit : commits) {
-			Map<String, Object> map = putUserName(commit);
-			for (Commit c : ownCommits) {
-				if (!commit.id.equals(c.id))
-					continue;
-				map.put("modelHasChanged", true);
-				break;
-			}
-			mapped.add(map);
-		}
-		return Respond.ok(mapped);
-	}
-
+	
 	@GET
 	@Path("category/{group}/{name}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -176,22 +181,6 @@ public class HistoryResource {
 			return Respond.notFound();
 		Map<String, Object> result = putUserName(commit);
 		return Respond.ok(result);
-	}
-
-	@GET
-	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response getPreviousReference(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@PathParam("type") ModelType type,
-			@PathParam("refId") String refId,
-			@PathParam("commitId") String commitId) {
-		Repository repo = repoService.get(group, name);
-		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
-		if (lastCommit == null || lastCommit.id.equals(commitId))
-			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
-		return Respond.ok(lastCommit.id);
 	}
 
 	@GET
@@ -231,7 +220,7 @@ public class HistoryResource {
 				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.term(repo.toId()))
 				.filter("commitId", SearchFilterValue.term(commit.id));
 		if (!Strings.isNullOrEmpty(filter)) {
-			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
+			builder.filter("name", SearchFilterValue.wildcard("*" + filter.toLowerCase() + "*"));
 		}
 		if (type != null) {
 			builder.aggregation(Aggregations.MODEL_TYPE, type.name());
@@ -260,5 +249,21 @@ public class HistoryResource {
 			map.put("userDisplayName", commit.user);
 		return map;
 	}
-
+	
+	@GET
+	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response getPreviousReference(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@PathParam("commitId") String commitId) {
+		Repository repo = repoService.get(group, name);
+		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
+		if (lastCommit == null || lastCommit.id.equals(commitId))
+			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
+		return Respond.ok(lastCommit.id);
+	}
+	
 }

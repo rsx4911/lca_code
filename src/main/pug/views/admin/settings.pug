@@ -18,10 +18,11 @@ include ../mixins/forms.pug
 			+input('GLAD_API_KEY_HEADER', 'Glad service api-key header field')
 			+input('GLAD_API_KEY', 'Glad service api-key header value')
 		.clear
-		.three-columns
+		.four-columns
 			+input('SEARCH_CLUSTER', 'Elasticsearch cluster')
-			+input('SEARCH_HOST', 'Elasticsearch server url')
-			+input('SEARCH_INDEX_NAME', 'Elasticsearch index name')
+			+input('SEARCH_HOST', 'Elasticsearch url')
+			+input('SEARCH_PORT', 'Elasticsearch port')
+			+input('SEARCH_INDEX_NAME', 'Elasticsearch index')
 		.clear
 	.header-box Enabled features
 	.content-box
@@ -31,6 +32,7 @@ include ../mixins/forms.pug
 		- features.push(['MESSAGING_ENABLED', '<strong>Messaging</strong>: Users can write messages to each other']);
 		- features.push(['PUBLIC_REPOSITORY_ENABLED', '<strong>Public repositories</strong>: Repositories can be marked as publicly accessible']);
 		- features.push(['NOTIFICATIONS_ENABLED', '<strong>Notifications</strong>: Users can receive notifications']);
+		- features.push(['COUNTING_ENABLED', '<strong>Data set counts</strong>: Display number of child elements while browsing repositories']);
 		each feature in features
 			- var val = settings[feature[0]];
 			+checkbox(feature[0], feature[1])

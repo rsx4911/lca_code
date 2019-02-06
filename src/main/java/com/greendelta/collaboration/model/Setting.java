@@ -43,6 +43,7 @@ public class Setting extends AbstractEntity {
 		COMMENTS_ENABLED(Boolean.class, true),
 		PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
 		NOTIFICATIONS_ENABLED(Boolean.class, true),
+		COUNTING_ENABLED(Boolean.class, true),
 
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),
@@ -57,6 +58,7 @@ public class Setting extends AbstractEntity {
 		SEARCH_CLUSTER(String.class, "elasticsearch"),
 		SEARCH_HOST(String.class, "localhost"),
 		SEARCH_INDEX_NAME(String.class, "collaboration-server"),
+		SEARCH_PORT(Integer.class, 9200),
 
 		// imprint
 		IMPRINT_COMPANY(String.class),
@@ -81,7 +83,18 @@ public class Setting extends AbstractEntity {
 		MAIL_SSL(Boolean.class, true),
 		MAIL_TLS(Boolean.class, false),
 		MAIL_DEFAULT_FROM(String.class),
-		MAIL_DEFAULT_REPLY_TO(String.class);
+		MAIL_DEFAULT_REPLY_TO(String.class),
+		
+		// maintenance
+		MAINTENANCE_MODE(Boolean.class, false),
+		MAINTENANCE_MESSAGE(String.class, "Server is in maintenance mode. Please try again later"),
+		
+		// announcements
+		ANNOUNCEMENT_ID(String.class),
+		ANNOUNCEMENT_MESSAGE(String.class),
+
+		// license agreement
+		LICENSE_AGREEMENT_TEXT(String.class);
 
 		public final Class<?> type;
 		private final Object defaultValue;
@@ -115,6 +128,8 @@ public class Setting extends AbstractEntity {
 				return (T) new Boolean(Boolean.parseBoolean(value));
 			if (type == Integer.class && value != null)
 				return (T) new Integer(Integer.parseInt(value));
+			if (type == String.class && value == null || value.isEmpty())
+				return (T) defaultValue;
 			return (T) value;
 		}
 
@@ -143,7 +158,7 @@ public class Setting extends AbstractEntity {
 
 		public boolean isFeature() {
 			List<Key> features = Arrays.asList(MESSAGING_ENABLED, TASKS_ENABLED, COMMENTS_ENABLED,
-					PUBLIC_REPOSITORY_ENABLED);
+					PUBLIC_REPOSITORY_ENABLED, COUNTING_ENABLED);
 			return features.contains(this);
 		}
 

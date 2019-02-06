@@ -5,9 +5,15 @@ define () ->
 
 	setValue: (key, value) ->
 		if localStorage and localStorage.getItem and localStorage.setItem
-			localStorage.setItem key, value.toString()
+			if !value and value isnt 0
+				localStorage.removeItem key
+			else
+				localStorage.setItem key, value.toString()
 		else
-			window[key] = value.toString()
+			if !value and value isnt 0
+				delete window[key]
+			else
+				window[key] = value.toString()
 
 	toggleValue: (key) ->
 		value = false
@@ -18,3 +24,6 @@ define () ->
 			value = !(window[key] is 'true')
 			window[key] = value.toString()
 		return value
+
+	getString: (key) ->
+		localStorage?.getItem?(key) or window[key]

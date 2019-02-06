@@ -32,6 +32,12 @@ define([
 				unless @repository.get('name')
 					Forms.handleError 'repository-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
 					return false
+				commitMessage = ''
+				if @doImport and @importFormat is 'json-ld'
+					commitMessage =  @$('#commitMessage').val()
+					unless commitMessage
+						Forms.handleError 'repository-form', {responseJSON: {field: 'commitMessage', message: 'Missing input: Commit message'}}
+						return false
 				Model.save @repository, 
 					success: () => 
 						group = @repository.get 'group'
@@ -40,9 +46,13 @@ define([
 							Layers.showProgressIndicator 'Importing'
 							data = new FormData()
 							data.append('file', $('#data')[0].files[0])
+							url = "ws/repository/import/#{group}/#{name}"
+							if @importFormat is 'json-ld'
+								url += '?format=json-ld'
+								data.append 'commitMessage', commitMessage
 							$.ajax	
 								type: 'POST'
-								url: "ws/repository/import/#{group}/#{name}"
+								url: url
 								cache: false
 								contentType: false
 								processData: false
@@ -62,7 +72,7 @@ define([
 				'click [data-action=create-repository]': 'createRepository'
 
 			initialize: (options) ->
-				{@groupName, @doImport} = options
+				{@groupName, @doImport, @importFormat} = options
 				@repository = new Repository()
 
 			render: (renderOptions) ->
@@ -73,6 +83,7 @@ define([
 						groups: groups
 						selection: @groupName
 						doImport: @doImport
+						importFormat: @importFormat
 					Renderer.render @, renderOptions
 
 )

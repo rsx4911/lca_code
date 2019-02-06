@@ -6,6 +6,8 @@ form#repository-form.content-box
 	+input('name', 'Name')
 	+select('group', 'Group', groups, selection)
 	if doImport
+		if importFormat === 'json-ld'
+			+input('commitMessage', 'Initial commit message')
 		+input('data', 'Data', 'file')
 	button.btn.btn-lg.btn-success.pull-right(data-action='create-repository') Create
 	.clear

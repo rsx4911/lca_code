@@ -58,9 +58,12 @@ public class CommitService {
 	}
 
 	private Commit write(Repository repo, ModelStreamReader reader) throws IOException {
+		log.debug("Committing to repository {}", repo.toId());
 		Commit commit = createCommit(repo, reader.readNextPartAsString());
+		log.debug("Writing data sets", commit.id);
 		DatasetWriter writer = new DatasetWriter(repo, commit, reader);
 		writer.writeDatasets();
+		log.debug("Appending commit {} to commit history", commit.id);
 		File historyFile = repo.getHistoryFile(true);
 		Bytes.appendTo(historyFile, commit.toString());
 		return commit;
@@ -115,13 +118,18 @@ public class CommitService {
 			try {
 				while (reader.hasMore()) {
 					Dataset dataset = reader.readNextPartAsDataset();
+					log.trace("Next: {} {}", dataset.type, dataset.refId);
 					datasets.add(dataset);
 					File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
+					log.trace("Writing data");
 					if (!write(dataset, file)) {
+						log.trace("Creating index entry [DELETED]");
 						indexEntries.add(indexEntryCreator.create(dataset));
 						continue;
 					}
+					log.trace("Creating index entry");
 					createIndexEntry(dataset, file);
+					log.trace("Writing binaries", dataset.type, dataset.refId);
 					writeBinaries(dataset);
 				}
 				searchService.index(repo.toId(), indexEntries);
@@ -169,7 +177,7 @@ public class CommitService {
 			int noOfFiles = reader.readNextInt();
 			while (count++ < noOfFiles) {
 				String path = reader.readNextPartAsString();
-				File binFile = new File(binDir, path);
+				File binFile = new File(binDir, path + ".gz");
 				binFile.getParentFile().mkdirs();
 				try (OutputStream out = new FileOutputStream(binFile)) {
 					int size = reader.readNextPartToStream(out);

@@ -21,14 +21,19 @@ define([
 				if restrictedTo is 'dataManager' and !currentUser.isDataManager()
 					alert 'This is a restricted area, you do not have permission to enter it'
 					return @navigate ''
+				if restrictedTo is 'manager' and !currentUser.isDataManager() and !currentUser.isUserManager()
+					alert 'This is a restricted area, you do not have permission to enter it'
+					return @navigate ''
 				callback.apply context, args
 
 			rewriteIfNecessary: (route) ->
 				fragment = @routeRewrites[route]
-				if fragment and Backbone.history.fragment isnt fragment
-					@router.navigate fragment,
-						trigger: false
-						replace: true
+				if !fragment or Backbone.history.fragment is fragment
+					return false
+				@router.navigate fragment,
+					trigger: true
+					replace: true
+				return true
 
 			constructor: Router
 
@@ -47,13 +52,15 @@ define([
 					if !currentUser.isLoggedIn() and $.inArray(Backbone.history.fragment, @userRoutes) isnt -1
 						window.location.href = 'login'
 						return
-					@rewriteIfNecessary route
+					if @rewriteIfNecessary route
+						return
 					@checkAccess route, callback, @routeContext, null, arguments 
 				@router.on "route:#{route}", wrappedCallback
 
 			registerAdminRoute: (route, type, callback) ->
 				wrappedCallback = () =>
-					@rewriteIfNecessary route
+					if @rewriteIfNecessary route
+						return
 					@checkAccess route, callback, @routeContext, type, arguments 
 				@router.on "route:#{route}", wrappedCallback
 

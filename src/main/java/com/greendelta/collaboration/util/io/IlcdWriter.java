@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.util.export;
+package com.greendelta.collaboration.util.io;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
 import org.openlca.ilcd.io.DataStore;
 import org.openlca.ilcd.io.ZipStore;
+import org.openlca.util.BinUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -70,6 +71,7 @@ public class IlcdWriter implements DatasetWriter {
 			if (lastCommit == null)
 				return;
 		}
+		log.trace("Exporting {} {} to ilcd", type, refId);
 		JsonObject obj = jsonStore.get(type.getModelClass().getSimpleName(), refId);
 		if (obj == null)
 			return;
@@ -123,14 +125,11 @@ public class IlcdWriter implements DatasetWriter {
 			Commit lastCommit = historyService.getLastCommit(repo, ModelType.SOURCE, sourceRefId, commitId);			
 			if (lastCommit == null)
 				return null;
-			File binDir = fetchService.getBinDir(repo, ModelType.SOURCE, sourceRefId, lastCommit.id);
-			if (!binDir.exists())
-				return null;
-			File file = new File(binDir, filename);
+			File file = fetchService.getBinFile(repo, ModelType.SOURCE, sourceRefId, lastCommit.id, filename);
 			if (!file.exists())
 				return null;
 			try {
-				return Files.readAllBytes(file.toPath());
+				return BinUtils.gunzip(Files.readAllBytes(file.toPath()));
 			} catch (IOException e) {
 				log.error("Error reading bin file", e);
 				return null;

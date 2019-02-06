@@ -9,6 +9,8 @@ html(lang='en')
 		link(rel='shortcut icon' type='image/x-icon' href='images/favicon.ico')
 		link(rel='stylesheet' type='text/css' href='css/styles.css')
 	body.public-mode
+		#announcements
+			table: tbody: tr: td#announcement-message
 		header.navbar-fixed-top
 			.logo-container
 				a(href='')
@@ -38,10 +40,5 @@ html(lang='en')
 						a(href='http://www.usa.gov' target='_blank') USA.gov |
 						a(href='http://www.whitehouse.gov' target='_blank') White House
 		script(data-main="js/main" src='js/libs/require.js')
-		div#build-info(data-admin-only=true)
-			span#release-version
-			|  | 
-			span#commit-version
-			|  | 
-			span#build-date
+		#maintenance-notification
 		script(data-main="js/main" src='js/libs/require.js')

@@ -4,5 +4,5 @@ mixin user-info(id, name, type)
 		img.avatar.avatar-small(src='ws/' + lcType + '/avatar/' + id, aria-label='User avatar')
 		span.username=name 
 			if type
-				| (#{type})
+				|  (#{type})
 			block

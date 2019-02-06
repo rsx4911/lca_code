@@ -1,10 +1,13 @@
 define([
 				'cs!app/Navigation'
 				'cs!app/UserMenu'
+				'cs!utils/Announcements'
 				'cs!utils/Events'
 				'cs!utils/Format'
 				'cs!utils/Layers'
+				'cs!utils/LocalStorage'
 				'cs!utils/Model'
+				'cs!views/tasks/ReviewWidget'
 				'cs!models/Repository'
 				'cs!models/User'
 				'cs!models/Group'
@@ -15,7 +18,7 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Events, Format, Layers, Model, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, UserMenu, Announcements, Events, Format, Layers, LocalStorage, Model, ReviewWidget, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -87,11 +90,39 @@ define([
 					container: 'nav'
 					noAnimation: true
 
+			initializeReviewWidget: () ->
+				activeReviewId = LocalStorage.getString "#{currentUser.get('username')}-active-review-task"
+				unless activeReviewId
+					return
+				if @reviewWidget
+					@reviewWidget.el.remove()
+				@reviewWidget = new ReviewWidget
+					reviewId: activeReviewId
+				@reviewWidget.render
+					container: 'body'
+					append: true 
+					noAnimation: true
+
 			initializeUserMenu: () ->
 				@userMenu = new UserMenu()
 				@userMenu.render 
 					container: '#user-menu'
 					noAnimation: true
+
+			initializeMaintenanceMode: () ->
+				notification = $ '#maintenance-notification'
+				if !notification.length
+					$('body').append '<div id="maintenance-notification"></div>'
+					notification = $ '#maintenance-notification'
+				notification.html 'The server is currently in maintenance mode'
+				if settings.is('MAINTENANCE_MODE')
+					$('body').addClass 'maintenance-mode'
+
+			initializeAnnouncements: () ->
+				id = settings.getVal 'ANNOUNCEMENT_ID'
+				message = settings.getVal 'ANNOUNCEMENT_MESSAGE'
+				if message
+					Announcements.announce message, id
 
 			registerRoutes: () ->
 				@registerRouteRewrites()
@@ -103,12 +134,15 @@ define([
 					@router.registerRouteRewrite 'landingPage', 'dashboard/repositories'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
-					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					if currentUser.isDataManager() and !currentUser.isAdmin() and !currentUser.isUserManager()
+						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
+					else
+						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 				else
 					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
-				@router.registerAdminRoute 'adminOverview', 'userManager', -> @showView 
+				@router.registerAdminRoute 'adminOverview', 'manager', -> @showView 
 					view: 'admin/Overview'
 					title: 'Admin area - Overview'
 					nav:
@@ -148,6 +182,12 @@ define([
 					nav:
 						type: 'admin'
 						active: 'settings'
+				@router.registerAdminRoute 'adminMaintenance', 'admin', -> @showView 
+					view: 'admin/Maintenance'
+					title: 'Admin area - Maintenance'
+					nav:
+						type: 'admin'
+						active: 'maintenance'
 
 			registerUserRoutes: () ->
 				@router.registerUserRoute 'notFound', -> @showError 404
@@ -265,6 +305,12 @@ define([
 					title: 'Import repository' 
 					viewOptions: 
 						doImport: true
+				@router.registerUserRoute 'repositoryImportJson', () -> @showView 
+					view: 'repository/Create'
+					title: 'Import repository'
+					viewOptions: 
+						doImport: true
+						importFormat: 'json-ld'
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
 						@router.navigate "#{group}/#{name}/datasets",
@@ -293,21 +339,22 @@ define([
 						commitId: commitId
 				@router.registerUserRoute 'repositoryDataset', (group, name, type, refId, query) -> 
 					params = @splitQuery query
-					@showView 
-						view: 'repository/dataset/Dataset'
-						title: "#{group}/#{name}"
-						subTitle: 'Data sets'
-						fullWidth: true
-						nav: 
-							type: 'repository'
-							active: 'datasets'
-							urlPrefix: "#{group}/#{name}"
-						viewOptions: 
-							repository: new Repository({group: group, name: name})
-							type: type
-							refId: refId
-							commitId: params.commitId
-							commentPath: params.commentPath
+					@checkLicenseAgreement () =>
+						@showView 
+							view: 'repository/dataset/Dataset'
+							title: "#{group}/#{name}"
+							subTitle: 'Data sets'
+							fullWidth: true
+							nav: 
+								type: 'repository'
+								active: 'datasets'
+								urlPrefix: "#{group}/#{name}"
+							viewOptions: 
+								repository: new Repository({group: group, name: name})
+								type: type
+								refId: refId
+								commitId: params.commitId
+								commentPath: params.commentPath
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"
@@ -360,32 +407,11 @@ define([
 				if currentUser.isLoggedIn()
 					$('body').removeClass 'public-mode'
 					@initializeNavigation()
+					@initializeReviewWidget()					
 				@initializeUserMenu()
+				@initializeAnnouncements()
+				@initializeMaintenanceMode()
 				@registerRoutes()
-				@setBuildInfo()
-
-			setBuildInfo: () ->
-				# start build info
-				version = '1.0.3'
-				commitVersion = '11d139c'
-				buildDate = 1543928979927
-				# end build info
-				info = $('#build-info')
-				if !info
-					return
-				info.hide()
-				if info.attr('data-admin-only') and (!currentUser or !currentUser.isAdmin())
-					return
-				info.show()
-				rv = $ '#release-version', info
-				if rv
-					rv.html "Release version: #{version}"
-				cv = $ '#commit-version', info
-				if cv
-					cv.html "Commit id: #{commitVersion}"
-				bd = $ '#build-date', info
-				if bd
-					bd.html "Build date: #{Format.date(buildDate)}"
 
 			splitQuery: (query) ->
 				unless query
@@ -415,6 +441,23 @@ define([
 						callback?()
 				else
 					callback?()
+		
+			checkLicenseAgreement: (callback) ->
+				licenseAgreementText = settings.getVal 'LICENSE_AGREEMENT_TEXT'
+				if !licenseAgreementText or localStorage.getItem('license-info-accepted') is 'true'
+					callback()
+					return
+				Layers.askQuestion
+					title: 'Licence Agreement Information'
+					question: licenseAgreementText
+					answers: ['I Disagree', 'I Agree']
+					onAnswer: (index) => 
+						Layers.closeActive()
+						if index is 1
+							localStorage.setItem('license-info-accepted', 'true')
+							callback()
+						else
+							Backbone.history.history.back()
 
 			getDocumentTitle: (value) ->
 				unread = 0

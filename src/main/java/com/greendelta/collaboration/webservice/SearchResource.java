@@ -14,8 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import joptsimple.internal.Strings;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
@@ -34,9 +34,12 @@ import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
 
+import joptsimple.internal.Strings;
+
 @Path("public/search")
 public class SearchResource {
 
+	private static final Logger log = LogManager.getLogger(SearchResource.class);
 	private final SearchService service;
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
@@ -59,6 +62,7 @@ public class SearchResource {
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
 		SearchResult<IndexEntry> result = service.search(query, page, pageSize, parameters);
 		for (AggregationResult aResult : result.aggregations) {
 			if (aResult.name.equals(Aggregations.CATEGORY.name)) {

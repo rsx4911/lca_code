@@ -11,15 +11,12 @@ include ../mixins/avatar-box.pug
 		+avatar-box('group', group.name, group.userCanWrite)
 	.repositories.flex-column
 		.flex-container
-			.header-box Repositories (#{repositories.length})
+			.header-box Repositories (
+				span.group-repository-count 0
+				| )
 				if group.userCanCreate
 					button.btn.btn-lg.btn-success.pull-right(data-action='create-repository')
 						span.glyphicon.glyphicon-plus
 						span.text Create new
-			.list-container
-				each repo in repositories
-					.list-entry
-						- var repoId = repo.group + '/' + repo.name;
-						img.avatar(src='ws/repository/avatar/' + repoId, aria-label='Avatar of ' + repoId)
-						a.follow(href=repoId)
-							strong=repo.name
+			input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
+			.list-container#group-repositories

@@ -34,6 +34,16 @@ public class CachedResource {
 	private final static Map<String, BufferedImage> imageCache = new HashMap<>();
 
 	@GET
+	@Path("overlay/{modelType}/{overlayType}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response getOverlayedImage(
+			@PathParam("modelType") ModelType modelType,
+			@PathParam("overlayType") IndexAction overlayType,
+			@Context HttpServletRequest request) {
+		return getOverlayedImage(request, modelType, overlayType, null, false);
+	}
+	
+	@GET
 	@Path("overlay/CATEGORY/{modelType}/{overlayType}")
 	public Response getOverlayedCategoryImage(
 			@PathParam("modelType") ModelType modelType,
@@ -57,16 +67,6 @@ public class CachedResource {
 			@PathParam("overlayType") IndexAction overlayType,
 			@Context HttpServletRequest request) {
 		return getOverlayedImage(request, ModelType.PROCESS, overlayType, processType.name(), false);
-	}
-
-	@GET
-	@Path("overlay/{modelType}/{overlayType}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getOverlayedImage(
-			@PathParam("modelType") ModelType modelType,
-			@PathParam("overlayType") IndexAction overlayType,
-			@Context HttpServletRequest request) {
-		return getOverlayedImage(request, modelType, overlayType, null, false);
 	}
 
 	private Response getOverlayedImage(HttpServletRequest request, ModelType modelType, IndexAction overlayType,

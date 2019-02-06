@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,14 +14,14 @@ import java.util.Set;
 
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.data.ModelStream;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.BinUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
@@ -28,7 +30,7 @@ import com.greendelta.collaboration.util.Bytes;
 
 public class FetchService {
 
-	private static final Logger log = LoggerFactory.getLogger(FetchService.class);
+	private static final Logger log = LogManager.getLogger(FetchService.class);
 	private final SearchService searchService;
 
 	@Inject
@@ -37,11 +39,13 @@ public class FetchService {
 	}
 
 	public String getDataset(Repository repo, ModelType type, String refId, String commitId) {
+		log.trace("Loading {} {} from repository {} (commit id {})", type.name(), refId, repo.toId(), commitId);
 		File file = repo.getDatasetFile(type, refId, commitId, false);
 		try {
 			byte[] data = BinUtils.gunzip(Bytes.read(file));
 			if (data == null || data.length == 0)
 				return null;
+			log.trace("Loaded {} bytes of data", data.length);
 			return new String(data, Charset.forName("utf-8"));
 		} catch (IOException e) {
 			log.error("Error gunzipping data set", e);
@@ -53,7 +57,13 @@ public class FetchService {
 		return repo.getBinDir(type, refId, commitId, false);
 	}
 
+	public File getBinFile(Repository repo, ModelType type, String refId, String commitId, String filename) {
+		return repo.getBinFile(type, refId, commitId, filename);
+	}
+
 	public StreamingOutput prepareData(Repository repo, List<Commit> commits, List<FileReference> requested) {
+		log.debug("Preparing {} data sets from repository {} for fetch", repo.toId(),
+				requested != null ? requested.size() : "all");
 		Set<FileReference> added = new HashSet<>();
 		Set<Dataset> datasets = new HashSet<>();
 		Map<Dataset, String> dsToCommit = new HashMap<>();
@@ -70,6 +80,7 @@ public class FetchService {
 				added.add(ref);
 			}
 		}
+		log.debug("Starting to stream fetch data, total of {} data sets", datasets.size());
 		return new StreamingOutput() {
 
 			@Override
@@ -100,6 +111,7 @@ public class FetchService {
 		@Override
 		protected byte[] getData(Dataset dataset) throws IOException {
 			File file = repo.getDatasetFile(dataset.type, dataset.refId, dsToCommitId.get(dataset), false);
+			log.trace("Loading data for {} {}", dataset.type, dataset.refId);
 			return Bytes.read(file);
 		}
 
@@ -108,5 +120,10 @@ public class FetchService {
 			return getBinDir(repo, dataset.type, dataset.refId, dsToCommitId.get(dataset));
 		}
 
+		@Override
+		protected byte[] getBinaryData(Path file) throws IOException {
+			return Files.readAllBytes(file);
+		}
+		
 	}
 }

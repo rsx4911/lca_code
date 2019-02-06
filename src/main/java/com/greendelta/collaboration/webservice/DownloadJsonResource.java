@@ -23,8 +23,8 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.util.export.DatasetWriter;
-import com.greendelta.collaboration.util.export.JsonWriter;
+import com.greendelta.collaboration.util.io.DatasetWriter;
+import com.greendelta.collaboration.util.io.JsonWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 
 @Path("public/download/json")
@@ -42,27 +42,13 @@ public class DownloadJsonResource extends DownloadResource {
 		this.historyService = historyService;
 		this.searchService = searchService;
 	}
-
+	
 	@GET
-	@Path("prepare/{group}/{repository}/{type}/{refId}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response prepareDataset(
-			@PathParam("group") String group,
-			@PathParam("repository") String repository,
-			@PathParam("type") ModelType type,
-			@PathParam("refId") String refId,
-			@QueryParam("commitId") String commitId) {
-		return super.prepare(group, repository, type, refId, commitId);
-	}
-
-	@PUT
-	@Path("prepare/{group}/{repository}")
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response prepareRequested(
-			@PathParam("group") String group,
-			@PathParam("repository") String repository,
-			List<FileReference> requested) {
-		return super.prepare(group, repository, null, requested);
+	@Path("{token}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	@Override
+	public Response download(@PathParam("token") String token) {
+		return super.download(token);
 	}
 
 	@GET
@@ -75,6 +61,18 @@ public class DownloadJsonResource extends DownloadResource {
 			@QueryParam("path") String path) {
 		return super.prepare(group, repository, commitId, path);
 	}
+	
+	@GET
+	@Path("prepare/{group}/{repository}/{type}/{refId}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response prepareDataset(
+			@PathParam("group") String group,
+			@PathParam("repository") String repository,
+			@PathParam("type") ModelType type,
+			@PathParam("refId") String refId,
+			@QueryParam("commitId") String commitId) {
+		return super.prepare(group, repository, type, refId, commitId);
+	}
 
 	@POST
 	@Path("prepare/{group}/{repository}")
@@ -86,13 +84,15 @@ public class DownloadJsonResource extends DownloadResource {
 			List<Reference> references) {
 		return super.prepare(group, repository, commitId, collectRefs(group, repository, references));
 	}
-
-	@GET
-	@Path("{token}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	@Override
-	public Response download(@PathParam("token") String token) {
-		return super.download(token);
+	
+	@PUT
+	@Path("prepare/{group}/{repository}")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response prepareRequested(
+			@PathParam("group") String group,
+			@PathParam("repository") String repository,
+			List<FileReference> requested) {
+		return super.prepare(group, repository, null, requested);
 	}
 
 	@Override

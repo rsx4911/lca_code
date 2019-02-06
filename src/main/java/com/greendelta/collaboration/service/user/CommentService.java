@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
@@ -38,9 +39,9 @@ public class CommentService {
 		String jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath AND c.replyTo IS NULL";
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("repositoryPath", repository.toId());
-		if (filter != null) {
-			jpql += " AND (c.text LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND c1.text LIKE :filter) > 0)";
-			attributes.put("filter", "%" + filter + "%");
+		if (!Strings.nullOrEmpty(filter)) {
+			jpql += " AND (LOWER(c.text) LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND LOWER(c1.text) LIKE :filter) > 0)";
+			attributes.put("filter", "%" + filter.toLowerCase() + "%");
 		}
 		jpql += " ORDER BY c.date DESC";
 		return accessService.filterCanRead(dao.getAll(jpql, attributes));

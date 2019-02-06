@@ -11,6 +11,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.greendelta.collaboration.platform.guice.WebappModule;
+
 public class NoCacheFilter implements Filter {
 
 	@Override
@@ -27,6 +29,11 @@ public class NoCacheFilter implements Filter {
 	}
 
 	private void process(HttpServletRequest request, HttpServletResponse response) {
+		String path = request.getServletPath();
+		if (path != null)
+			for (String resourceDir : WebappModule.STATIC_RESOURCE_DIRECTORIES) 
+				if (path.startsWith("/" + resourceDir + "/")) 
+					return;
 		response.setHeader("Expires", "");
 		response.setHeader("Last-Modified", "");
 		response.setHeader("Pragma", "");
