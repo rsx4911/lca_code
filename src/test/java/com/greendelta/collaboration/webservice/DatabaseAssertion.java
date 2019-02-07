@@ -117,10 +117,10 @@ public class DatabaseAssertion {
 
 	private void category(Category category) {
 		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", category);
-		assertEquals("Elementary", category.getName());
-		assertEquals(ModelType.FLOW, category.getModelType());
-		assertEquals(0, category.getChildCategories().size());
-		assertNull(category.getCategory());
+		assertEquals("Elementary", category.name);
+		assertEquals(ModelType.FLOW, category.modelType);
+		assertEquals(0, category.childCategories.size());
+		assertNull(category.category);
 	}
 
 	private void locations() {
@@ -131,15 +131,15 @@ public class DatabaseAssertion {
 
 	private void location(Location location) {
 		refId("f8e19f44-9f17-39d3-bdcc-93dd244ec3bb", location);
-		assertEquals(1543222759783l, location.getLastChange());
-		assertEquals(1, location.getVersion());
-		assertNull(location.getCategory());
-		assertEquals("Location", location.getName());
-		assertEquals("A location", location.getDescription());
-		assertEquals("LN", location.getCode());
-		assertEquals(5d, location.getLongitude(), 0);
-		assertEquals(10d, location.getLatitude(), 0);
-		assertNotEquals(0, location.getKmz().length);
+		assertEquals(1543222759783l, location.lastChange);
+		assertEquals(1, location.version);
+		assertNull(location.category);
+		assertEquals("Location", location.name);
+		assertEquals("A location", location.description);
+		assertEquals("LN", location.code);
+		assertEquals(5d, location.longitude, 0);
+		assertEquals(10d, location.latitude, 0);
+		assertNotEquals(0, location.kmz.length);
 		// TODO more detailed test, some random ids in the kmz change when converting to
 		// geojson and back, for now ensure, kmz is set
 	}
@@ -149,8 +149,8 @@ public class DatabaseAssertion {
 		assertEquals(2, sources.size());
 		unique(sources);
 		for (Source source : sources) {
-			assertNull(source.getCategory());
-			switch (source.getRefId()) {
+			assertNull(source.category);
+			switch (source.refId) {
 			case "9727bfb0-93dd-475f-be43-f4ada87d9f16":
 				source(source);
 				break;
@@ -165,10 +165,10 @@ public class DatabaseAssertion {
 
 	private void source(Source source) throws IOException {
 		refId("9727bfb0-93dd-475f-be43-f4ada87d9f16", source);
-		assertEquals(1543222834464l, source.getLastChange());
-		assertEquals(1, source.getVersion());
-		assertEquals("Source", source.getName());
-		assertEquals("A source", source.getDescription());
+		assertEquals(1543222834464l, source.lastChange);
+		assertEquals(1, source.version);
+		assertEquals("Source", source.name);
+		assertEquals("A source", source.description);
 		assertEquals("https://www.source.org", source.url);
 		assertEquals("Source 2018", source.textReference);
 		assertEquals((short) 2018, (short) source.year);
@@ -178,9 +178,9 @@ public class DatabaseAssertion {
 
 	private void source2(Source source) {
 		refId("4cac8d31-ce26-4eaf-acfc-d629b1ee9e49", source);
-		assertEquals(1543224656372l, source.getLastChange());
-		assertEquals(0, source.getVersion());
-		assertEquals("Another source", source.getName());
+		assertEquals(1543224656372l, source.lastChange);
+		assertEquals(0, source.version);
+		assertEquals("Another source", source.name);
 	}
 
 	private void actors() {
@@ -191,11 +191,11 @@ public class DatabaseAssertion {
 
 	private void actor(Actor actor) {
 		refId("4f433849-5668-48ec-a646-f26554170e74", actor);
-		assertEquals(1543222927076l, actor.getLastChange());
-		assertEquals(1, actor.getVersion());
-		assertNull(actor.getCategory());
-		assertEquals("Actor", actor.getName());
-		assertEquals("An actor", actor.getDescription());
+		assertEquals(1543222927076l, actor.lastChange);
+		assertEquals(1, actor.version);
+		assertNull(actor.category);
+		assertEquals("Actor", actor.name);
+		assertEquals("An actor", actor.description);
 		assertEquals("A street", actor.address);
 		assertEquals("A city", actor.city);
 		assertEquals("A country", actor.country);
@@ -211,7 +211,7 @@ public class DatabaseAssertion {
 		assertEquals(2, currencies.size());
 		unique(currencies);
 		for (Currency currency : currencies) {
-			switch (currency.getRefId()) {
+			switch (currency.refId) {
 			case "00d03a73-6cb4-4fa5-84bd-d031c73061de":
 				currency(currency);
 				break;
@@ -226,11 +226,11 @@ public class DatabaseAssertion {
 
 	private void currency(Currency currency) {
 		refId("00d03a73-6cb4-4fa5-84bd-d031c73061de", currency);
-		assertEquals(1543222934440l, currency.getLastChange());
-		assertEquals(0, currency.getVersion());
-		assertEquals("Currency", currency.getName());
-		assertEquals("A currency", currency.getDescription());
-		assertNull(currency.getCategory());
+		assertEquals(1543222934440l, currency.lastChange);
+		assertEquals(0, currency.version);
+		assertEquals("Currency", currency.name);
+		assertEquals("A currency", currency.description);
+		assertNull(currency.category);
 		assertEquals("Currency", currency.code);
 		assertEquals(1d, currency.conversionFactor, 0);
 		refId("00d03a73-6cb4-4fa5-84bd-d031c73061de", currency.referenceCurrency);
@@ -238,11 +238,11 @@ public class DatabaseAssertion {
 
 	private void currency2(Currency currency) {
 		refId("12871763-1233-4972-ac31-1d569e6164c6", currency);
-		assertEquals(1543222948934l, currency.getLastChange());
-		assertEquals(1, currency.getVersion());
-		assertEquals("Another currency", currency.getName());
-		assertEquals("Another currency", currency.getDescription());
-		assertNull(currency.getCategory());
+		assertEquals(1543222948934l, currency.lastChange);
+		assertEquals(1, currency.version);
+		assertEquals("Another currency", currency.name);
+		assertEquals("Another currency", currency.description);
+		assertNull(currency.category);
 		assertEquals("Another currency", currency.code);
 		assertEquals(2d, currency.conversionFactor, 0);
 		refId("00d03a73-6cb4-4fa5-84bd-d031c73061de", currency.referenceCurrency);
@@ -253,7 +253,7 @@ public class DatabaseAssertion {
 		assertEquals(2, groups.size());
 		unique(groups);
 		for (UnitGroup group : groups) {
-			switch (group.getRefId()) {
+			switch (group.refId) {
 			case "675a82c5-3ba5-421b-80b4-278e374751f7":
 				unitGroup(group);
 				break;
@@ -268,21 +268,21 @@ public class DatabaseAssertion {
 
 	private void unitGroup(UnitGroup group) {
 		refId("675a82c5-3ba5-421b-80b4-278e374751f7", group);
-		assertEquals(1543223003461l, group.getLastChange());
-		assertEquals(2, group.getVersion());
-		assertEquals("Unit group", group.getName());
-		assertEquals("A unit group", group.getDescription());
-		assertNull(group.getCategory());
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", group.getDefaultFlowProperty());
-		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", group.getReferenceUnit());
-		units(group.getUnits());
+		assertEquals(1543223003461l, group.lastChange);
+		assertEquals(2, group.version);
+		assertEquals("Unit group", group.name);
+		assertEquals("A unit group", group.description);
+		assertNull(group.category);
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", group.defaultFlowProperty);
+		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", group.referenceUnit);
+		units(group.units);
 	}
 
 	private void units(List<Unit> units) {
 		assertEquals(2, units.size());
 		unique(units);
 		for (Unit unit : units) {
-			switch (unit.getRefId()) {
+			switch (unit.refId) {
 			case "47f37b03-1d2c-4460-8b80-5bd0ca519f4e":
 				unit(unit);
 				break;
@@ -297,36 +297,36 @@ public class DatabaseAssertion {
 
 	private void unit(Unit unit) {
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", unit);
-		assertEquals("unit", unit.getName());
-		assertEquals("a unit", unit.getDescription());
-		assertArrayEquals(new String[] { "u" }, unit.getSynonyms().split(";"));
-		assertEquals(1d, unit.getConversionFactor(), 0);
+		assertEquals("unit", unit.name);
+		assertEquals("a unit", unit.description);
+		assertArrayEquals(new String[] { "u" }, unit.synonyms.split(";"));
+		assertEquals(1d, unit.conversionFactor, 0);
 	}
 
 	private void unit2(Unit unit) {
 		refId("cd32dd5c-6a2a-471e-800e-97eb0454dcb2", unit);
-		assertEquals("other", unit.getName());
-		assertEquals("another unit", unit.getDescription());
-		assertArrayEquals(new String[] { "o", "ou" }, unit.getSynonyms().split(";"));
-		assertEquals(2d, unit.getConversionFactor(), 0);
+		assertEquals("other", unit.name);
+		assertEquals("another unit", unit.description);
+		assertArrayEquals(new String[] { "o", "ou" }, unit.synonyms.split(";"));
+		assertEquals(2d, unit.conversionFactor, 0);
 	}
 
 	private void unitGroup2(UnitGroup group) {
 		refId("a642092c-d51d-455e-ab81-5ff6c9e2bfb2", group);
-		assertEquals(1543223595877l, group.getLastChange());
-		assertEquals(0, group.getVersion());
-		assertEquals("Money", group.getName());
-		assertNull(group.getCategory());
-		assertEquals(1, group.getUnits().size());
-		assertNull(group.getDefaultFlowProperty());
-		refId("234b3562-f55a-44e9-8131-70fd9092ed84", group.getReferenceUnit());
-		unit3(group.getUnits().get(0));
+		assertEquals(1543223595877l, group.lastChange);
+		assertEquals(0, group.version);
+		assertEquals("Money", group.name);
+		assertNull(group.category);
+		assertEquals(1, group.units.size());
+		assertNull(group.defaultFlowProperty);
+		refId("234b3562-f55a-44e9-8131-70fd9092ed84", group.referenceUnit);
+		unit3(group.units.get(0));
 	}
 
 	private void unit3(Unit unit) {
-		assertEquals("234b3562-f55a-44e9-8131-70fd9092ed84", unit.getRefId());
-		assertEquals("Dollar", unit.getName());
-		assertEquals(1d, unit.getConversionFactor(), 0);
+		assertEquals("234b3562-f55a-44e9-8131-70fd9092ed84", unit.refId);
+		assertEquals("Dollar", unit.name);
+		assertEquals(1d, unit.conversionFactor, 0);
 	}
 
 	private void flowProperties() {
@@ -334,7 +334,7 @@ public class DatabaseAssertion {
 		assertEquals(2, properties.size());
 		unique(properties);
 		for (FlowProperty property : properties) {
-			switch (property.getRefId()) {
+			switch (property.refId) {
 			case "70a1c611-c314-45ef-8fe0-7129f401df6f":
 				flowProperty(property);
 				break;
@@ -349,23 +349,23 @@ public class DatabaseAssertion {
 
 	private void flowProperty(FlowProperty property) {
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
-		assertEquals(1543222997820l, property.getLastChange());
-		assertEquals(0, property.getVersion());
-		assertEquals("Flow property", property.getName());
-		assertNull(property.getCategory());
-		assertEquals(FlowPropertyType.PHYSICAL, property.getFlowPropertyType());
-		refId("675a82c5-3ba5-421b-80b4-278e374751f7", property.getUnitGroup());
+		assertEquals(1543222997820l, property.lastChange);
+		assertEquals(0, property.version);
+		assertEquals("Flow property", property.name);
+		assertNull(property.category);
+		assertEquals(FlowPropertyType.PHYSICAL, property.flowPropertyType);
+		refId("675a82c5-3ba5-421b-80b4-278e374751f7", property.unitGroup);
 	}
 
 	private void flowProperty2(FlowProperty property) {
 		refId("42d414ef-595f-43ec-94a2-2633de752e72", property);
-		assertEquals(1543223624846l, property.getLastChange());
-		assertEquals(1, property.getVersion());
-		assertEquals("Economic", property.getName());
-		assertEquals("An economic flow property", property.getDescription());
-		assertNull(property.getCategory());
-		assertEquals(FlowPropertyType.ECONOMIC, property.getFlowPropertyType());
-		refId("a642092c-d51d-455e-ab81-5ff6c9e2bfb2", property.getUnitGroup());
+		assertEquals(1543223624846l, property.lastChange);
+		assertEquals(1, property.version);
+		assertEquals("Economic", property.name);
+		assertEquals("An economic flow property", property.description);
+		assertNull(property.category);
+		assertEquals(FlowPropertyType.ECONOMIC, property.flowPropertyType);
+		refId("a642092c-d51d-455e-ab81-5ff6c9e2bfb2", property.unitGroup);
 	}
 
 	private void dataQualitySystems() {
@@ -375,12 +375,12 @@ public class DatabaseAssertion {
 	}
 
 	private void dataQualitySystem(DQSystem system) {
-		assertEquals("44c55909-51dc-49ee-970f-0b13a2da5f21", system.getRefId());
-		assertEquals(1543223255454l, system.getLastChange());
-		assertEquals(1, system.getVersion());
-		assertNull(system.getCategory());
-		assertEquals("Data quality system", system.getName());
-		assertEquals("A data quality system", system.getDescription());
+		assertEquals("44c55909-51dc-49ee-970f-0b13a2da5f21", system.refId);
+		assertEquals(1543223255454l, system.lastChange);
+		assertEquals(1, system.version);
+		assertNull(system.category);
+		assertEquals("Data quality system", system.name);
+		assertEquals("A data quality system", system.description);
 		assertTrue(system.hasUncertainties);
 		assertEquals(2, system.getScoreCount());
 		refId("9727bfb0-93dd-475f-be43-f4ada87d9f16", system.source);
@@ -483,7 +483,7 @@ public class DatabaseAssertion {
 		assertEquals(6, parameters.size());
 		unique(parameters);
 		for (Parameter parameter : parameters) {
-			switch (parameter.getRefId()) {
+			switch (parameter.refId) {
 			case "845e1d93-b217-4cbf-b1da-2f08f1de3287":
 				globalParameter(parameter);
 				break;
@@ -510,11 +510,11 @@ public class DatabaseAssertion {
 
 	private void globalParameter(Parameter parameter) {
 		refId("845e1d93-b217-4cbf-b1da-2f08f1de3287", parameter);
-		assertEquals(1543223279458l, parameter.getLastChange());
-		assertEquals(0, parameter.getVersion());
-		assertEquals("Input_Parameter", parameter.getName());
-		assertEquals("An input parameter", parameter.getDescription());
-		assertNull(parameter.getCategory());
+		assertEquals(1543223279458l, parameter.lastChange);
+		assertEquals(0, parameter.version);
+		assertEquals("Input_Parameter", parameter.name);
+		assertEquals("An input parameter", parameter.description);
+		assertNull(parameter.category);
 		assertEquals(ParameterScope.GLOBAL, parameter.scope);
 		assertTrue(parameter.isInputParameter);
 		assertEquals(4d, parameter.value, 0);
@@ -524,11 +524,11 @@ public class DatabaseAssertion {
 
 	private void globalParameter2(Parameter parameter) {
 		refId("0c63ad51-be49-45e0-aefd-9de1d5f16257", parameter);
-		assertEquals(1543223305339l, parameter.getLastChange());
-		assertEquals(0, parameter.getVersion());
-		assertEquals("Dependent_Parameter", parameter.getName());
-		assertEquals("A dependent parameter", parameter.getDescription());
-		assertNull(parameter.getCategory());
+		assertEquals(1543223305339l, parameter.lastChange);
+		assertEquals(0, parameter.version);
+		assertEquals("Dependent_Parameter", parameter.name);
+		assertEquals("A dependent parameter", parameter.description);
+		assertNull(parameter.category);
 		assertEquals(ParameterScope.GLOBAL, parameter.scope);
 		assertFalse(parameter.isInputParameter);
 		assertEquals(8d, parameter.value, 0);
@@ -538,10 +538,10 @@ public class DatabaseAssertion {
 
 	private void globalParameter3(Parameter parameter) {
 		refId("81466aa1-0673-44f2-a9cb-63fe21c2a71a", parameter);
-		assertEquals(1543231659168l, parameter.getLastChange());
-		assertEquals(1, parameter.getVersion());
-		assertEquals("p1", parameter.getName());
-		assertNull(parameter.getCategory());
+		assertEquals(1543231659168l, parameter.lastChange);
+		assertEquals(1, parameter.version);
+		assertEquals("p1", parameter.name);
+		assertNull(parameter.category);
 		assertEquals(ParameterScope.GLOBAL, parameter.scope);
 		assertTrue(parameter.isInputParameter);
 		assertEquals(1d, parameter.value, 0);
@@ -554,10 +554,10 @@ public class DatabaseAssertion {
 
 	private void globalParameter4(Parameter parameter) {
 		refId("1726a5fa-076c-4320-a28d-24c09a714735", parameter);
-		assertEquals(1543231672692l, parameter.getLastChange());
-		assertEquals(1, parameter.getVersion());
-		assertEquals("p2", parameter.getName());
-		assertNull(parameter.getCategory());
+		assertEquals(1543231672692l, parameter.lastChange);
+		assertEquals(1, parameter.version);
+		assertEquals("p2", parameter.name);
+		assertNull(parameter.category);
 		assertEquals(ParameterScope.GLOBAL, parameter.scope);
 		assertTrue(parameter.isInputParameter);
 		assertEquals(2d, parameter.value, 0);
@@ -570,10 +570,10 @@ public class DatabaseAssertion {
 
 	private void globalParameter5(Parameter parameter) {
 		refId("0fab72cf-89fa-40fc-bc38-b99f519e8b95", parameter);
-		assertEquals(1543231695132l, parameter.getLastChange());
-		assertEquals(1, parameter.getVersion());
-		assertEquals("p3", parameter.getName());
-		assertNull(parameter.getCategory());
+		assertEquals(1543231695132l, parameter.lastChange);
+		assertEquals(1, parameter.version);
+		assertEquals("p3", parameter.name);
+		assertNull(parameter.category);
 		assertEquals(ParameterScope.GLOBAL, parameter.scope);
 		assertTrue(parameter.isInputParameter);
 		assertEquals(3d, parameter.value, 0);
@@ -586,10 +586,10 @@ public class DatabaseAssertion {
 
 	private void globalParameter6(Parameter parameter) {
 		refId("1b724ef1-5c09-4bac-beff-5cef0190c39f", parameter);
-		assertEquals(1543231701239l, parameter.getLastChange());
-		assertEquals(1, parameter.getVersion());
-		assertEquals("p4", parameter.getName());
-		assertNull(parameter.getCategory());
+		assertEquals(1543231701239l, parameter.lastChange);
+		assertEquals(1, parameter.version);
+		assertEquals("p4", parameter.name);
+		assertNull(parameter.category);
 		assertEquals(ParameterScope.GLOBAL, parameter.scope);
 		assertTrue(parameter.isInputParameter);
 		assertEquals(4d, parameter.value, 0);
@@ -607,12 +607,12 @@ public class DatabaseAssertion {
 	}
 
 	private void socialIndicator(SocialIndicator indicator) {
-		assertEquals("9a6bc341-efbd-4227-9d6a-1782b39cded8", indicator.getRefId());
-		assertEquals(1543223421786l, indicator.getLastChange());
-		assertEquals(1, indicator.getVersion());
-		assertNull(indicator.getCategory());
-		assertEquals("Social indicator", indicator.getName());
-		assertEquals("A social indicator", indicator.getDescription());
+		assertEquals("9a6bc341-efbd-4227-9d6a-1782b39cded8", indicator.refId);
+		assertEquals(1543223421786l, indicator.lastChange);
+		assertEquals(1, indicator.version);
+		assertNull(indicator.category);
+		assertEquals("Social indicator", indicator.name);
+		assertEquals("A social indicator", indicator.description);
 		assertEquals("uom", indicator.unitOfMeasurement);
 		assertEquals("A schema", indicator.evaluationScheme);
 		assertEquals("act", indicator.activityVariable);
@@ -625,7 +625,7 @@ public class DatabaseAssertion {
 		assertEquals(10, flows.size());
 		unique(flows);
 		for (Flow flow : flows) {
-			switch (flow.getRefId()) {
+			switch (flow.refId) {
 			case "7a192079-0e37-478c-a24d-4a700887c847":
 				flow(flow);
 				break;
@@ -664,143 +664,143 @@ public class DatabaseAssertion {
 
 	private void flow(Flow flow) {
 		refId("7a192079-0e37-478c-a24d-4a700887c847", flow);
-		assertEquals(1543224456950l, flow.getLastChange());
-		assertEquals(2, flow.getVersion());
-		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.getCategory());
-		assertEquals("Elementary flow", flow.getName());
-		assertEquals(FlowType.ELEMENTARY_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224456950l, flow.lastChange);
+		assertEquals(2, flow.version);
+		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.category);
+		assertEquals("Elementary flow", flow.name);
+		assertEquals(FlowType.ELEMENTARY_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow2(Flow flow) {
 		refId("859f05d5-2db0-4f9f-9635-65c13cbc5666", flow);
-		assertEquals(1543224456969l, flow.getLastChange());
-		assertEquals(2, flow.getVersion());
-		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.getCategory());
-		assertEquals("Elementary flow 2", flow.getName());
-		assertEquals(FlowType.ELEMENTARY_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224456969l, flow.lastChange);
+		assertEquals(2, flow.version);
+		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.category);
+		assertEquals("Elementary flow 2", flow.name);
+		assertEquals(FlowType.ELEMENTARY_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow3(Flow flow) {
 		refId("68d817b0-c50b-48d5-b432-ffa2595ba64d", flow);
-		assertEquals(1543224456971l, flow.getLastChange());
-		assertEquals(2, flow.getVersion());
-		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.getCategory());
-		assertEquals("Elementary flow 3", flow.getName());
-		assertEquals(FlowType.ELEMENTARY_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224456971l, flow.lastChange);
+		assertEquals(2, flow.version);
+		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.category);
+		assertEquals("Elementary flow 3", flow.name);
+		assertEquals(FlowType.ELEMENTARY_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow4(Flow flow) {
 		refId("c9dba359-0cd8-491b-af53-1a0d12123833", flow);
-		assertEquals(1543224456974l, flow.getLastChange());
-		assertEquals(2, flow.getVersion());
-		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.getCategory());
-		assertEquals("Elementary flow 4", flow.getName());
-		assertEquals(FlowType.ELEMENTARY_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224456974l, flow.lastChange);
+		assertEquals(2, flow.version);
+		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.category);
+		assertEquals("Elementary flow 4", flow.name);
+		assertEquals(FlowType.ELEMENTARY_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow5(Flow flow) {
 		refId("04ce7d8a-4d22-4724-8b79-b7189f1b7952", flow);
-		assertEquals(1543224456976l, flow.getLastChange());
-		assertEquals(2, flow.getVersion());
-		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.getCategory());
-		assertEquals("Elementary flow 5", flow.getName());
-		assertEquals(FlowType.ELEMENTARY_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224456976l, flow.lastChange);
+		assertEquals(2, flow.version);
+		refId("f3d7a459-1bef-37da-936c-2499b7b9ed26", flow.category);
+		assertEquals("Elementary flow 5", flow.name);
+		assertEquals(FlowType.ELEMENTARY_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow6(Flow flow) {
 		refId("81c33501-1706-4a3a-8a9e-5af4a3d064a9", flow);
-		assertEquals(1543233726335l, flow.getLastChange());
-		assertEquals(1, flow.getVersion());
-		assertNull(flow.getCategory());
-		assertEquals("Input product", flow.getName());
-		assertEquals(FlowType.PRODUCT_FLOW, flow.getFlowType());
-		assertTrue(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543233726335l, flow.lastChange);
+		assertEquals(1, flow.version);
+		assertNull(flow.category);
+		assertEquals("Input product", flow.name);
+		assertEquals(FlowType.PRODUCT_FLOW, flow.flowType);
+		assertTrue(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow7(Flow flow) {
 		refId("e8d61918-2e62-40cc-bda2-565fbb2f651d", flow);
-		assertEquals(1543224787825l, flow.getLastChange());
-		assertEquals(1, flow.getVersion());
-		assertNull(flow.getCategory());
-		assertEquals("By-product", flow.getName());
-		assertEquals(FlowType.PRODUCT_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224787825l, flow.lastChange);
+		assertEquals(1, flow.version);
+		assertNull(flow.category);
+		assertEquals("By-product", flow.name);
+		assertEquals(FlowType.PRODUCT_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow8(Flow flow) {
 		refId("4ca7a7d1-845e-4e42-b565-c45de118fafe", flow);
-		assertEquals(1543224350460l, flow.getLastChange());
-		assertEquals(0, flow.getVersion());
-		assertNull(flow.getCategory());
-		assertEquals("Waste flow", flow.getName());
-		assertEquals("A waste flow", flow.getDescription());
-		assertEquals(FlowType.WASTE_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224350460l, flow.lastChange);
+		assertEquals(0, flow.version);
+		assertNull(flow.category);
+		assertEquals("Waste flow", flow.name);
+		assertEquals("A waste flow", flow.description);
+		assertEquals(FlowType.WASTE_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow9(Flow flow) {
 		refId("bc9261d4-f083-4697-99a9-354f7b04dd9d", flow);
-		assertEquals(1543224423646l, flow.getLastChange());
-		assertEquals(0, flow.getVersion());
-		assertNull(flow.getCategory());
-		assertEquals("Waste flow avoided", flow.getName());
-		assertEquals(FlowType.WASTE_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		FlowProperty property = flow.getFlowPropertyFactors().get(0).getFlowProperty();
-		assertEquals(1, flow.getFlowPropertyFactors().size());
+		assertEquals(1543224423646l, flow.lastChange);
+		assertEquals(0, flow.version);
+		assertNull(flow.category);
+		assertEquals("Waste flow avoided", flow.name);
+		assertEquals(FlowType.WASTE_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		FlowProperty property = flow.flowPropertyFactors.get(0).flowProperty;
+		assertEquals(1, flow.flowPropertyFactors.size());
 		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", property);
 	}
 
 	private void flow10(Flow flow) {
 		refId("229351c0-5289-4744-82ed-72ce017d135b", flow);
-		assertEquals(1543223637023l, flow.getLastChange());
-		assertEquals(4, flow.getVersion());
-		assertNull(flow.getCategory());
-		assertEquals("Product flow", flow.getName());
-		assertEquals(FlowType.PRODUCT_FLOW, flow.getFlowType());
-		assertFalse(flow.isInfrastructureFlow());
-		assertEquals("123-CAS", flow.getCasNumber());
-		assertEquals("CO2SO3", flow.getFormula());
+		assertEquals(1543223637023l, flow.lastChange);
+		assertEquals(4, flow.version);
+		assertNull(flow.category);
+		assertEquals("Product flow", flow.name);
+		assertEquals(FlowType.PRODUCT_FLOW, flow.flowType);
+		assertFalse(flow.infrastructureFlow);
+		assertEquals("123-CAS", flow.casNumber);
+		assertEquals("CO2SO3", flow.formula);
 		assertEquals("Product", flow.synonyms);
-		refId("f8e19f44-9f17-39d3-bdcc-93dd244ec3bb", flow.getLocation());
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", flow.getReferenceFlowProperty());
-		flowPropertyFactors(flow.getFlowPropertyFactors());
+		refId("f8e19f44-9f17-39d3-bdcc-93dd244ec3bb", flow.location);
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", flow.referenceFlowProperty);
+		flowPropertyFactors(flow.flowPropertyFactors);
 	}
 
 	private void flowPropertyFactors(List<FlowPropertyFactor> factors) {
 		assertEquals(2, factors.size());
-		unique(factors, factor -> factor.getFlowProperty().getRefId());
+		unique(factors, factor -> factor.flowProperty.refId);
 		for (FlowPropertyFactor factor : factors) {
-			switch (factor.getFlowProperty().getRefId()) {
+			switch (factor.flowProperty.refId) {
 			case "70a1c611-c314-45ef-8fe0-7129f401df6f":
 				flowPropertyFactor(factor);
 				break;
@@ -814,14 +814,14 @@ public class DatabaseAssertion {
 	}
 
 	private void flowPropertyFactor(FlowPropertyFactor factor) {
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.getFlowProperty());
-		assertEquals(1d, factor.getConversionFactor(), 0);
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowProperty);
+		assertEquals(1d, factor.conversionFactor, 0);
 
 	}
 
 	private void flowPropertyFactor2(FlowPropertyFactor factor) {
-		refId("42d414ef-595f-43ec-94a2-2633de752e72", factor.getFlowProperty());
-		assertEquals(2d, factor.getConversionFactor(), 0);
+		refId("42d414ef-595f-43ec-94a2-2633de752e72", factor.flowProperty);
+		assertEquals(2d, factor.conversionFactor, 0);
 
 	}
 
@@ -832,12 +832,12 @@ public class DatabaseAssertion {
 	}
 
 	private void impactMethod(ImpactMethod method) throws IOException {
-		assertEquals("eedd7332-f522-40e6-ae77-9a0083b1b881", method.getRefId());
-		assertEquals(1543241115364l, method.getLastChange());
-		assertEquals(14, method.getVersion());
-		assertNull(method.getCategory());
-		assertEquals("Impact method", method.getName());
-		assertEquals("An impact method", method.getDescription());
+		assertEquals("eedd7332-f522-40e6-ae77-9a0083b1b881", method.refId);
+		assertEquals(1543241115364l, method.lastChange);
+		assertEquals(14, method.version);
+		assertNull(method.category);
+		assertEquals("Impact method", method.name);
+		assertEquals("An impact method", method.description);
 		assertEquals(ParameterMean.ARITHMETIC_MEAN, method.parameterMean);
 		assertEquals(1, method.impactCategories.size());
 		impactCategory(method.impactCategories.get(0));
@@ -859,31 +859,31 @@ public class DatabaseAssertion {
 	}
 
 	private void normalizationAndWeightingSet(NwSet set) {
-		assertEquals("Nw set", set.getName());
+		assertEquals("Nw set", set.name);
 		assertEquals("normed", set.weightedScoreUnit);
 		assertEquals(1, set.factors.size());
 		normalizationAndWeightingFactor(set.factors.get(0));
 	}
 
 	private void normalizationAndWeightingFactor(NwFactor factor) {
-		refId("bbf94074-16f3-4acc-bb6a-77ae0d9070de", factor.getImpactCategory());
-		assertEquals(2d, factor.getNormalisationFactor(), 0);
-		assertEquals(3d, factor.getWeightingFactor(), 0);
+		refId("bbf94074-16f3-4acc-bb6a-77ae0d9070de", factor.impactCategory);
+		assertEquals(2d, factor.normalisationFactor, 0);
+		assertEquals(3d, factor.weightingFactor, 0);
 	}
 
 	private void impactCategory(ImpactCategory category) {
-		assertEquals("bbf94074-16f3-4acc-bb6a-77ae0d9070de", category.getRefId());
-		assertEquals("Impact category", category.getName());
-		assertEquals("An impact category", category.getDescription());
+		assertEquals("bbf94074-16f3-4acc-bb6a-77ae0d9070de", category.refId);
+		assertEquals("Impact category", category.name);
+		assertEquals("An impact category", category.description);
 		assertEquals("ref-unit", category.referenceUnit);
 		impactFactors(category.impactFactors);
 	}
 
 	private void impactFactors(List<ImpactFactor> factors) {
 		assertEquals(5, factors.size());
-		unique(factors, factor -> factor.flow.getRefId());
+		unique(factors, factor -> factor.flow.refId);
 		for (ImpactFactor factor : factors) {
-			switch (factor.flow.getRefId()) {
+			switch (factor.flow.refId) {
 			case "7a192079-0e37-478c-a24d-4a700887c847":
 				impactFactor(factor);
 				break;
@@ -907,7 +907,7 @@ public class DatabaseAssertion {
 
 	private void impactFactor(ImpactFactor factor) {
 		refId("7a192079-0e37-478c-a24d-4a700887c847", factor.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", factor.unit);
 		assertEquals(3.956977077e9, factor.value, 0);
 		assertEquals("2*cons_irri", factor.formula);
@@ -916,7 +916,7 @@ public class DatabaseAssertion {
 
 	private void impactFactor2(ImpactFactor factor) {
 		refId("859f05d5-2db0-4f9f-9635-65c13cbc5666", factor.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", factor.unit);
 		assertEquals(2d, factor.value, 0);
 		assertNotNull(factor.uncertainty);
@@ -928,7 +928,7 @@ public class DatabaseAssertion {
 
 	private void impactFactor3(ImpactFactor factor) {
 		refId("68d817b0-c50b-48d5-b432-ffa2595ba64d", factor.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", factor.unit);
 		assertEquals(3d, factor.value, 0);
 		assertNotNull(factor.uncertainty);
@@ -940,7 +940,7 @@ public class DatabaseAssertion {
 
 	private void impactFactor4(ImpactFactor factor) {
 		refId("c9dba359-0cd8-491b-af53-1a0d12123833", factor.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", factor.unit);
 		assertEquals(4d, factor.value, 0);
 		assertNotNull(factor.uncertainty);
@@ -952,7 +952,7 @@ public class DatabaseAssertion {
 
 	private void impactFactor5(ImpactFactor factor) {
 		refId("04ce7d8a-4d22-4724-8b79-b7189f1b7952", factor.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", factor.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", factor.unit);
 		assertEquals(5d, factor.value, 0);
 		assertNotNull(factor.uncertainty);
@@ -964,9 +964,9 @@ public class DatabaseAssertion {
 
 	private void parameters(List<Parameter> parameters) {
 		assertEquals(6, parameters.size());
-		unique(parameters, parameter -> parameter.getName());
+		unique(parameters, parameter -> parameter.name);
 		for (Parameter parameter : parameters) {
-			switch (parameter.getName()) {
+			switch (parameter.name) {
 			case "cons_irri":
 				parameter(parameter);
 				break;
@@ -992,8 +992,8 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter(Parameter parameter) {
-		assertEquals("cons_irri", parameter.getName());
-		assertEquals("from shapefile: AWARE_SHP", parameter.getDescription());
+		assertEquals("cons_irri", parameter.name);
+		assertEquals("from shapefile: AWARE_SHP", parameter.description);
 		assertEquals("AWARE_SHP", parameter.externalSource);
 		assertEquals("SHAPE_FILE", parameter.sourceType);
 		assertEquals(1.9784885385e9d, parameter.value, 0);
@@ -1005,7 +1005,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter2(Parameter parameter) {
-		assertEquals("p_2", parameter.getName());
+		assertEquals("p_2", parameter.name);
 		assertEquals(2d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.LOG_NORMAL, parameter.uncertainty.distributionType);
@@ -1015,7 +1015,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter3(Parameter parameter) {
-		assertEquals("p_3", parameter.getName());
+		assertEquals("p_3", parameter.name);
 		assertEquals(3d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.NORMAL, parameter.uncertainty.distributionType);
@@ -1025,7 +1025,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter4(Parameter parameter) {
-		assertEquals("p_4", parameter.getName());
+		assertEquals("p_4", parameter.name);
 		assertEquals(4d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.TRIANGLE, parameter.uncertainty.distributionType);
@@ -1035,13 +1035,13 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter5(Parameter parameter) {
-		assertEquals("p_5", parameter.getName());
+		assertEquals("p_5", parameter.name);
 		assertEquals(5d, parameter.value, 0);
 		assertNull(parameter.uncertainty);
 	}
 
 	private void parameter6(Parameter parameter) {
-		assertEquals("p_6", parameter.getName());
+		assertEquals("p_6", parameter.name);
 		assertEquals(6d, parameter.value, 0);
 		assertEquals("2*p_3", parameter.formula);
 		assertNull(parameter.uncertainty);
@@ -1052,8 +1052,8 @@ public class DatabaseAssertion {
 		assertEquals(3, processes.size());
 		unique(processes);
 		for (Process process : processes) {
-			assertNull(process.getCategory());
-			switch (process.getRefId()) {
+			assertNull(process.category);
+			switch (process.refId) {
 			case "e25c672d-f31f-4420-a564-274b762b5a3d":
 				process(process);
 				break;
@@ -1071,61 +1071,61 @@ public class DatabaseAssertion {
 
 	private void process(Process process) {
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", process);
-		assertEquals(1543243419254l, process.getLastChange());
-		assertEquals(20, process.getVersion());
-		assertEquals("Process", process.getName());
-		assertEquals("A process", process.getDescription());
-		assertEquals(ProcessType.UNIT_PROCESS, process.getProcessType());
-		assertTrue(process.isInfrastructureProcess());
-		assertEquals(0, process.getAllocationFactors().size());
-		assertNull(process.getDefaultAllocationMethod());
+		assertEquals(1543243419254l, process.lastChange);
+		assertEquals(20, process.version);
+		assertEquals("Process", process.name);
+		assertEquals("A process", process.description);
+		assertEquals(ProcessType.UNIT_PROCESS, process.processType);
+		assertTrue(process.infrastructureProcess);
+		assertEquals(0, process.allocationFactors.size());
+		assertNull(process.defaultAllocationMethod);
 		assertNull(process.currency);
 		assertEquals("(1;2)", process.dqEntry);
 		refId("44c55909-51dc-49ee-970f-0b13a2da5f21", process.dqSystem);
 		refId("44c55909-51dc-49ee-970f-0b13a2da5f21", process.exchangeDqSystem);
 		refId("44c55909-51dc-49ee-970f-0b13a2da5f21", process.socialDqSystem);
-		refId("f8e19f44-9f17-39d3-bdcc-93dd244ec3bb", process.getLocation());
-		documentation(process.getDocumentation());
-		refId("229351c0-5289-4744-82ed-72ce017d135b", process.getQuantitativeReference().flow);
+		refId("f8e19f44-9f17-39d3-bdcc-93dd244ec3bb", process.location);
+		documentation(process.documentation);
+		refId("229351c0-5289-4744-82ed-72ce017d135b", process.quantitativeReference.flow);
 		assertEquals(8, process.lastInternalId);
-		exchanges(process.getExchanges());
+		exchanges(process.exchanges);
 		assertEquals(1, process.socialAspects.size());
 		socialAspect(process.socialAspects.get(0));
-		parameters2(process.getParameters());
+		parameters2(process.parameters);
 	}
 
 	private void documentation(ProcessDocumentation doc) {
-		assertEquals(1541026800000l, doc.getValidFrom().getTime());
-		assertEquals(1543532400000l, doc.getValidUntil().getTime());
-		assertEquals(1543224179304l, doc.getCreationDate().getTime());
-		assertEquals("A time description", doc.getTime());
-		assertEquals("A location description", doc.getGeography());
-		assertEquals("A technology description", doc.getTechnology());
-		assertEquals("An intention", doc.getIntendedApplication());
-		assertEquals("Some restrictions", doc.getRestrictions());
-		assertEquals("A project", doc.getProject());
-		assertTrue(doc.isCopyright());
-		refId("4f433849-5668-48ec-a646-f26554170e74", doc.getDataSetOwner());
-		refId("4f433849-5668-48ec-a646-f26554170e74", doc.getDataGenerator());
-		refId("4f433849-5668-48ec-a646-f26554170e74", doc.getDataDocumentor());
-		refId("9727bfb0-93dd-475f-be43-f4ada87d9f16", doc.getPublication());
-		assertEquals("An LCI method", doc.getInventoryMethod());
-		assertEquals("Some modeling constants", doc.getModelingConstants());
-		assertEquals("Completeness of data", doc.getCompleteness());
-		assertEquals("Selection of data", doc.getDataSelection());
-		assertEquals("Treatment of data", doc.getDataTreatment());
-		assertEquals("A sampling procedure", doc.getSampling());
-		assertEquals("A period in time", doc.getDataCollectionPeriod());
-		refId("4f433849-5668-48ec-a646-f26554170e74", doc.getReviewer());
-		assertEquals("Evalutation", doc.getReviewDetails());
-		sources(doc.getSources());
+		assertEquals(1541026800000l, doc.validFrom.getTime());
+		assertEquals(1543532400000l, doc.validUntil.getTime());
+		assertEquals(1543224179304l, doc.creationDate.getTime());
+		assertEquals("A time description", doc.time);
+		assertEquals("A location description", doc.geography);
+		assertEquals("A technology description", doc.technology);
+		assertEquals("An intention", doc.intendedApplication);
+		assertEquals("Some restrictions", doc.restrictions);
+		assertEquals("A project", doc.project);
+		assertTrue(doc.copyright);
+		refId("4f433849-5668-48ec-a646-f26554170e74", doc.dataSetOwner);
+		refId("4f433849-5668-48ec-a646-f26554170e74", doc.dataGenerator);
+		refId("4f433849-5668-48ec-a646-f26554170e74", doc.dataDocumentor);
+		refId("9727bfb0-93dd-475f-be43-f4ada87d9f16", doc.publication);
+		assertEquals("An LCI method", doc.inventoryMethod);
+		assertEquals("Some modeling constants", doc.modelingConstants);
+		assertEquals("Completeness of data", doc.completeness);
+		assertEquals("Selection of data", doc.dataSelection);
+		assertEquals("Treatment of data", doc.dataTreatment);
+		assertEquals("A sampling procedure", doc.sampling);
+		assertEquals("A period in time", doc.dataCollectionPeriod);
+		refId("4f433849-5668-48ec-a646-f26554170e74", doc.reviewer);
+		assertEquals("Evalutation", doc.reviewDetails);
+		sources(doc.sources);
 	}
 
 	private void sources(List<Source> sources) {
 		assertEquals(2, sources.size());
 		unique(sources);
 		for (Source source : sources) {
-			switch (source.getRefId()) {
+			switch (source.refId) {
 			case "4cac8d31-ce26-4eaf-acfc-d629b1ee9e49":
 			case "9727bfb0-93dd-475f-be43-f4ada87d9f16":
 				continue;
@@ -1173,7 +1173,7 @@ public class DatabaseAssertion {
 	private void exchange(Exchange exchange) {
 		assertEquals(1, exchange.internalId);
 		refId("229351c0-5289-4744-82ed-72ce017d135b", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertFalse(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1184,7 +1184,7 @@ public class DatabaseAssertion {
 	private void exchange2(Exchange exchange) {
 		assertEquals(2, exchange.internalId);
 		refId("859f05d5-2db0-4f9f-9635-65c13cbc5666", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1199,7 +1199,7 @@ public class DatabaseAssertion {
 	private void exchange3(Exchange exchange) {
 		assertEquals(3, exchange.internalId);
 		refId("68d817b0-c50b-48d5-b432-ffa2595ba64d", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1214,7 +1214,7 @@ public class DatabaseAssertion {
 	private void exchange4(Exchange exchange) {
 		assertEquals(4, exchange.internalId);
 		refId("7a192079-0e37-478c-a24d-4a700887c847", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1230,7 +1230,7 @@ public class DatabaseAssertion {
 	private void exchange5(Exchange exchange) {
 		assertEquals(5, exchange.internalId);
 		refId("c9dba359-0cd8-491b-af53-1a0d12123833", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1245,7 +1245,7 @@ public class DatabaseAssertion {
 	private void exchange6(Exchange exchange) {
 		assertEquals(6, exchange.internalId);
 		refId("04ce7d8a-4d22-4724-8b79-b7189f1b7952", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1256,7 +1256,7 @@ public class DatabaseAssertion {
 	private void exchange7(Exchange exchange) {
 		assertEquals(7, exchange.internalId);
 		refId("81c33501-1706-4a3a-8a9e-5af4a3d064a9", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1273,7 +1273,7 @@ public class DatabaseAssertion {
 	private void exchange8(Exchange exchange) {
 		assertEquals(8, exchange.internalId);
 		refId("4ca7a7d1-845e-4e42-b565-c45de118fafe", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertFalse(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1285,9 +1285,9 @@ public class DatabaseAssertion {
 
 	private void parameters2(List<Parameter> parameters) {
 		assertEquals(6, parameters.size());
-		unique(parameters, parameter -> parameter.getName());
+		unique(parameters, parameter -> parameter.name);
 		for (Parameter parameter : parameters) {
-			switch (parameter.getName()) {
+			switch (parameter.name) {
 			case "p_1":
 				parameter7(parameter);
 				break;
@@ -1313,7 +1313,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter7(Parameter parameter) {
-		assertEquals("p_1", parameter.getName());
+		assertEquals("p_1", parameter.name);
 		assertEquals(1d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.LOG_NORMAL, parameter.uncertainty.distributionType);
@@ -1323,7 +1323,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter8(Parameter parameter) {
-		assertEquals("p_2", parameter.getName());
+		assertEquals("p_2", parameter.name);
 		assertEquals(2d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.NORMAL, parameter.uncertainty.distributionType);
@@ -1333,7 +1333,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter9(Parameter parameter) {
-		assertEquals("p_3", parameter.getName());
+		assertEquals("p_3", parameter.name);
 		assertEquals(3d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.TRIANGLE, parameter.uncertainty.distributionType);
@@ -1343,7 +1343,7 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter10(Parameter parameter) {
-		assertEquals("p_4", parameter.getName());
+		assertEquals("p_4", parameter.name);
 		assertEquals(4d, parameter.value, 0);
 		assertNotNull(parameter.uncertainty);
 		assertEquals(UncertaintyType.UNIFORM, parameter.uncertainty.distributionType);
@@ -1353,15 +1353,15 @@ public class DatabaseAssertion {
 	}
 
 	private void parameter11(Parameter parameter) {
-		assertEquals("p_5", parameter.getName());
-		assertEquals("A description", parameter.getDescription());
+		assertEquals("p_5", parameter.name);
+		assertEquals("A description", parameter.description);
 		assertEquals(5d, parameter.value, 0);
 		assertNull(parameter.uncertainty);
 	}
 
 	private void parameter12(Parameter parameter) {
-		assertEquals("p_6", parameter.getName());
-		assertEquals("Another description", parameter.getDescription());
+		assertEquals("p_6", parameter.name);
+		assertEquals("Another description", parameter.description);
 		assertEquals(1d, parameter.value, 0);
 		assertEquals("1.0", parameter.formula);
 		assertNull(parameter.uncertainty);
@@ -1379,22 +1379,22 @@ public class DatabaseAssertion {
 
 	private void process2(Process process) {
 		refId("ca6d3914-a049-4750-9b02-93e1418d7fe6", process);
-		assertEquals(1543254797382l, process.getLastChange());
-		assertEquals(4295098372l, process.getVersion());
-		assertEquals("Input process", process.getName());
-		assertEquals(ProcessType.LCI_RESULT, process.getProcessType());
+		assertEquals(1543254797382l, process.lastChange);
+		assertEquals(4295098372l, process.version);
+		assertEquals("Input process", process.name);
+		assertEquals(ProcessType.LCI_RESULT, process.processType);
 		assertEquals(0, process.socialAspects.size());
-		assertFalse(process.isInfrastructureProcess());
-		assertEquals(AllocationMethod.ECONOMIC, process.getDefaultAllocationMethod());
+		assertFalse(process.infrastructureProcess);
+		assertEquals(AllocationMethod.ECONOMIC, process.defaultAllocationMethod);
 		assertNull(process.currency);
 		assertNull(process.dqEntry);
 		assertNull(process.dqSystem);
 		assertNull(process.exchangeDqSystem);
 		assertNull(process.socialDqSystem);
-		assertNull(process.getLocation());
-		refId("81c33501-1706-4a3a-8a9e-5af4a3d064a9", process.getQuantitativeReference().flow);
+		assertNull(process.location);
+		refId("81c33501-1706-4a3a-8a9e-5af4a3d064a9", process.quantitativeReference.flow);
 		assertEquals(4, process.lastInternalId);
-		exchanges2(process.getExchanges());
+		exchanges2(process.exchanges);
 		allocationFactors(process);
 	}
 
@@ -1424,7 +1424,7 @@ public class DatabaseAssertion {
 	private void exchange9(Exchange exchange) {
 		assertEquals(1, exchange.internalId);
 		refId("81c33501-1706-4a3a-8a9e-5af4a3d064a9", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertFalse(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1434,7 +1434,7 @@ public class DatabaseAssertion {
 	private void exchange10(Exchange exchange) {
 		assertEquals(2, exchange.internalId);
 		refId("7a192079-0e37-478c-a24d-4a700887c847", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1444,7 +1444,7 @@ public class DatabaseAssertion {
 	private void exchange11(Exchange exchange) {
 		assertEquals(3, exchange.internalId);
 		refId("e8d61918-2e62-40cc-bda2-565fbb2f651d", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertFalse(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1454,7 +1454,7 @@ public class DatabaseAssertion {
 	private void exchange12(Exchange exchange) {
 		assertEquals(4, exchange.internalId);
 		refId("859f05d5-2db0-4f9f-9635-65c13cbc5666", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1462,33 +1462,33 @@ public class DatabaseAssertion {
 	}
 
 	private void allocationFactors(Process process) {
-		Map<Long, Flow> productMap = Collections.map(process.getExchanges(), e -> e.flow.getId(), e -> e.flow);
+		Map<Long, Flow> productMap = Collections.map(process.exchanges, e -> e.flow.id, e -> e.flow);
 		Set<String> ids = new HashSet<>();
-		for (AllocationFactor factor : process.getAllocationFactors()) {
+		for (AllocationFactor factor : process.allocationFactors) {
 			Flow product = productMap.get(factor.productId);
 			AllocationMethod type = factor.method;
 			switch (type) {
 			case PHYSICAL:
-				ids.add(type.name() + "-" + product.getRefId());
+				ids.add(type.name() + "-" + product.refId);
 				physicalAllocationFactor(factor, product);
 				break;
 			case ECONOMIC:
-				ids.add(type.name() + "-" + product.getRefId());
+				ids.add(type.name() + "-" + product.refId);
 				economicAllocationFactor(factor, product);
 				break;
 			case CAUSAL:
-				ids.add(type.name() + "-" + product.getRefId() + "-" + factor.exchange.internalId);
+				ids.add(type.name() + "-" + product.refId + "-" + factor.exchange.internalId);
 				causalAllocationFactor(factor, product);
 				break;
 			default:
 				fail("Unexpected allocation factor");
 			}
 		}
-		assertEquals(process.getAllocationFactors().size(), ids.size());
+		assertEquals(process.allocationFactors.size(), ids.size());
 	}
 
 	private void physicalAllocationFactor(AllocationFactor factor, Flow product) {
-		switch (product.getRefId()) {
+		switch (product.refId) {
 		case "81c33501-1706-4a3a-8a9e-5af4a3d064a9":
 			physicalAllocationFactor(factor);
 			break;
@@ -1513,7 +1513,7 @@ public class DatabaseAssertion {
 	}
 
 	private void economicAllocationFactor(AllocationFactor factor, Flow product) {
-		switch (product.getRefId()) {
+		switch (product.refId) {
 		case "81c33501-1706-4a3a-8a9e-5af4a3d064a9":
 			economicAllocationFactor(factor);
 			break;
@@ -1538,9 +1538,9 @@ public class DatabaseAssertion {
 	}
 
 	private void causalAllocationFactor(AllocationFactor factor, Flow product) {
-		switch (factor.exchange.flow.getRefId()) {
+		switch (factor.exchange.flow.refId) {
 		case "7a192079-0e37-478c-a24d-4a700887c847":
-			switch (product.getRefId()) {
+			switch (product.refId) {
 			case "81c33501-1706-4a3a-8a9e-5af4a3d064a9":
 				causalAllocationFactor(factor);
 				break;
@@ -1552,7 +1552,7 @@ public class DatabaseAssertion {
 			}
 			break;
 		case "859f05d5-2db0-4f9f-9635-65c13cbc5666":
-			switch (product.getRefId()) {
+			switch (product.refId) {
 			case "81c33501-1706-4a3a-8a9e-5af4a3d064a9":
 				causalAllocationFactor3(factor);
 				break;
@@ -1594,23 +1594,23 @@ public class DatabaseAssertion {
 
 	private void process3(Process process) {
 		refId("3043dfd7-ab00-4d29-84ea-fc7471f48600", process);
-		assertEquals(1543224577001l, process.getLastChange());
-		assertEquals(5, process.getVersion());
-		assertEquals("Waste treatment", process.getName());
-		assertEquals(ProcessType.UNIT_PROCESS, process.getProcessType());
-		assertFalse(process.isInfrastructureProcess());
-		assertNull(process.getDefaultAllocationMethod());
+		assertEquals(1543224577001l, process.lastChange);
+		assertEquals(5, process.version);
+		assertEquals("Waste treatment", process.name);
+		assertEquals(ProcessType.UNIT_PROCESS, process.processType);
+		assertFalse(process.infrastructureProcess);
+		assertNull(process.defaultAllocationMethod);
 		assertNull(process.currency);
 		assertNull(process.dqEntry);
 		assertNull(process.dqSystem);
 		assertNull(process.exchangeDqSystem);
 		assertNull(process.socialDqSystem);
-		assertNull(process.getLocation());
+		assertNull(process.location);
 		assertEquals(0, process.socialAspects.size());
-		assertEquals(0, process.getAllocationFactors().size());
-		refId("4ca7a7d1-845e-4e42-b565-c45de118fafe", process.getQuantitativeReference().flow);
+		assertEquals(0, process.allocationFactors.size());
+		refId("4ca7a7d1-845e-4e42-b565-c45de118fafe", process.quantitativeReference.flow);
 		assertEquals(3, process.lastInternalId);
-		exchanges3(process.getExchanges());
+		exchanges3(process.exchanges);
 	}
 
 	private void exchanges3(List<Exchange> exchanges) {
@@ -1636,7 +1636,7 @@ public class DatabaseAssertion {
 	private void exchange13(Exchange exchange) {
 		assertEquals(1, exchange.internalId);
 		refId("4ca7a7d1-845e-4e42-b565-c45de118fafe", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertFalse(exchange.isAvoided);
@@ -1646,7 +1646,7 @@ public class DatabaseAssertion {
 	private void exchange14(Exchange exchange) {
 		assertEquals(2, exchange.internalId);
 		refId("bc9261d4-f083-4697-99a9-354f7b04dd9d", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertFalse(exchange.isInput);
 		assertTrue(exchange.isAvoided);
@@ -1656,7 +1656,7 @@ public class DatabaseAssertion {
 	private void exchange15(Exchange exchange) {
 		assertEquals(3, exchange.internalId);
 		refId("229351c0-5289-4744-82ed-72ce017d135b", exchange.flow);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", exchange.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", exchange.unit);
 		assertTrue(exchange.isInput);
 		assertTrue(exchange.isAvoided);
@@ -1667,18 +1667,18 @@ public class DatabaseAssertion {
 		List<ProductSystem> systems = new ProductSystemDao(database).getAll();
 		assertEquals(1, systems.size());
 		ProductSystem system = systems.get(0);
-		assertEquals("f05fe9b1-9892-4436-be0e-7c92172c5298", system.getRefId());
-		assertEquals(1543225363747l, system.getLastChange());
-		assertEquals(5, system.getVersion());
-		assertNull(system.getCategory());
-		assertEquals("Product system", system.getName());
+		assertEquals("f05fe9b1-9892-4436-be0e-7c92172c5298", system.refId);
+		assertEquals(1543225363747l, system.lastChange);
+		assertEquals(5, system.version);
+		assertNull(system.category);
+		assertEquals("Product system", system.name);
 		String expectedDescription = "First created: 2018-11-26T10:40:00\nLinking approach during creation: Prefer default providers; Preferred process type: Unit process";
-		assertEquals(expectedDescription, system.getDescription());
+		assertEquals(expectedDescription, system.description);
 		assertEquals(2d, system.targetAmount, 0);
 		refId("e25c672d-f31f-4420-a564-274b762b5a3d", system.referenceProcess);
 		refId("229351c0-5289-4744-82ed-72ce017d135b", system.referenceExchange.flow);
 		assertEquals(1, system.referenceExchange.internalId);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", system.targetFlowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", system.targetFlowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", system.targetUnit);
 		processes(system.processes);
 		processLinks(system.processLinks);
@@ -1690,8 +1690,8 @@ public class DatabaseAssertion {
 		Set<String> refIds = new HashSet<>();
 		for (Long processId : processIds) {
 			Process process = new ProcessDao(database).getForId(processId);
-			refIds.add(process.getRefId());
-			switch (process.getRefId()) {
+			refIds.add(process.refId);
+			switch (process.refId) {
 			case "e25c672d-f31f-4420-a564-274b762b5a3d":
 			case "ca6d3914-a049-4750-9b02-93e1418d7fe6":
 			case "3043dfd7-ab00-4d29-84ea-fc7471f48600":
@@ -1711,14 +1711,14 @@ public class DatabaseAssertion {
 			Process process = new ProcessDao(database).getForId(link.processId);
 			Process provider = new ProcessDao(database).getForId(link.providerId);
 			Exchange exchange = null;
-			for (Exchange ex : process.getExchanges()) {
-				if (ex.getId() != link.exchangeId)
+			for (Exchange ex : process.exchanges) {
+				if (ex.id != link.exchangeId)
 					continue;
 				exchange = ex;
 				break;
 			}
-			refIds.add(flow.getRefId());
-			switch (flow.getRefId()) {
+			refIds.add(flow.refId);
+			switch (flow.refId) {
 			case "81c33501-1706-4a3a-8a9e-5af4a3d064a9":
 				processLink(process, exchange, provider, flow);
 				break;
@@ -1864,16 +1864,16 @@ public class DatabaseAssertion {
 		List<Project> projects = new ProjectDao(database).getAll();
 		assertEquals(1, projects.size());
 		Project project = projects.get(0);
-		assertEquals("cb629a7d-b7df-478e-a368-cbd25c0cfebb", project.getRefId());
-		assertEquals(1543235240827l, project.getLastChange());
-		assertEquals(2, project.getVersion());
-		assertNull(project.getCategory());
-		assertEquals("Project", project.getName());
-		assertEquals("A project", project.getDescription());
+		assertEquals("cb629a7d-b7df-478e-a368-cbd25c0cfebb", project.refId);
+		assertEquals(1543235240827l, project.lastChange);
+		assertEquals(2, project.version);
+		assertNull(project.category);
+		assertEquals("Project", project.name);
+		assertEquals("A project", project.description);
 		ImpactMethod method = new ImpactMethodDao(database).getForId(project.impactMethodId);
 		refId("eedd7332-f522-40e6-ae77-9a0083b1b881", method);
 		refId("5aa4c338-d52a-44a6-bb6b-e815e295e6c9", method.nwSets.get(0));
-		assertEquals(method.nwSets.get(0).getId(), (long) project.nwSetId);
+		assertEquals(method.nwSets.get(0).id, (long) project.nwSetId);
 		assertEquals(1, project.variants.size());
 		projectVariant(project.variants.get(0));
 	}
@@ -1883,7 +1883,7 @@ public class DatabaseAssertion {
 		refId("f05fe9b1-9892-4436-be0e-7c92172c5298", variant.productSystem);
 		assertEquals(AllocationMethod.CAUSAL, variant.allocationMethod);
 		assertEquals(2d, variant.amount, 0);
-		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", variant.flowPropertyFactor.getFlowProperty());
+		refId("70a1c611-c314-45ef-8fe0-7129f401df6f", variant.flowPropertyFactor.flowProperty);
 		refId("47f37b03-1d2c-4460-8b80-5bd0ca519f4e", variant.unit);
 		parameterRedefs2(variant.parameterRedefs);
 	}
@@ -1944,7 +1944,7 @@ public class DatabaseAssertion {
 	}
 
 	private void unique(List<? extends RootEntity> list) {
-		unique(list, element -> element.getRefId());
+		unique(list, element -> element.refId);
 	}
 
 	private <T, V> void unique(List<T> list, Function<T, V> converter) {
@@ -1955,7 +1955,7 @@ public class DatabaseAssertion {
 
 	private void refId(String expected, RootEntity entity) {
 		assertNotNull(entity);
-		assertEquals(expected, entity.getRefId());
+		assertEquals(expected, entity.refId);
 	}
 
 }
