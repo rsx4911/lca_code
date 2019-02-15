@@ -6,7 +6,7 @@ define([
 
 		class Settings extends Backbone.Collection
 
-			url: 'ws/settings'
+			url: 'ws/public/settings'
 
 			getVal: (key) ->
 				for model in @models

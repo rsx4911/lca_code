@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.webservice.user;
+package com.greendelta.collaboration.webservice;
 
 import java.util.List;
 
@@ -14,11 +14,10 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
-import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Settings;
 
-@Path("settings")
+@Path("public/settings")
 @Produces(MediaType.APPLICATION_JSON)
 public class SettingsResource {
 
@@ -35,7 +34,7 @@ public class SettingsResource {
 	public Response getSettings() {
 		List<Setting> settings = service.getAll();
 		User user = userService.getCurrentUser();
-		if (!user.isAdmin()) {
+		if (user == null || !user.isAdmin()) {
 			settings = Collections.filter(settings, (setting) -> !setting.name.isPublic());
 		}
 		return Respond.ok(Client.map(settings, Settings::map));
