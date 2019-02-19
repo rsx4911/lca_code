@@ -71,15 +71,12 @@ define([
 
 		fetchModels: (callback) ->
 			Model.fetch currentUser, success: () ->
-				if currentUser.isLoggedIn()
-					Model.fetch settings, success: () ->
-						if settings.is('MESSAGING_ENABLED')
-							Model.fetch conversations, success: () ->
-								conversations.initSocket()
-								callback()
-						else
+				Model.fetch settings, success: () ->
+					if currentUser.isLoggedIn() and settings.is('MESSAGING_ENABLED')
+						Model.fetch conversations, success: () ->
+							conversations.initSocket()
 							callback()
-				else
-					callback()
+					else
+						callback()
 				
 )
