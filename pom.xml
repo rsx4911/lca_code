@@ -233,7 +233,7 @@
 		<dependency>
 			<groupId>com.greendelta</groupId>
 			<artifactId>lca-collaboration-installer</artifactId>
-			<version>1.1.0</version>
+			<version>1.1.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
