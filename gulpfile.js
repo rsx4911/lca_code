@@ -1,5 +1,4 @@
 var fs = require('fs');
-var runSequence = require('run-sequence');
 var gulp = require('gulp');
 var concat = require('gulp-concat');
 var clean = require('gulp-clean');
@@ -25,18 +24,13 @@ if (!params.customDir) {
 var getCustomHtmlFiles = function(excludePublicIndex) {
   try {
     var files = fs.readdirSync(params.customDir)
-    return files.filter(function(file) { return file.indexOf('.html') !== -1 && (!excludePublicIndex || file !== 'index_public.html'); });
+    console.log(files);
+    var result = files.filter(function(file) { return file.indexOf('.html') !== -1 && (!excludePublicIndex || file !== 'index_public.html'); });
+    console.log(result);
+    return result;
   } catch (e) {
     return []
   }
-}
-
-var prependPath = function(path, values) {
-  var result = [];
-  for (var i = 0; i < values.length; i++) {
-    result.push(path + values[i]);  
-  }
-  return result;
 }
 
 var getPomVersion = function() {
@@ -83,17 +77,10 @@ var collect = function(directory, finished) {
   return all;
 };
 
-gulp.task('default', [], function(callback) {
-  return runSequence('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', 'setBuildInfo', 'setCustomPublicResources', callback);
-});
-
-gulp.task('build', [], function(callback) {
-  return runSequence('default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modifyCustomHtmlPages', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild', callback);
-});
-
 gulp.task('clear', function() {
   return gulp.src(['./src/main/webapp/js/templates', './src/main/webapp/index.html', './src/main/webapp/login.html', './src/main/webapp/imprint.html'], {
-    read: false
+    read: false,
+    allowEmpty: true
   }).pipe(clean());
 });
 
@@ -121,16 +108,19 @@ gulp.task('internalCssBuild', function() {
 });
 
 gulp.task('customCssBuild', function() {
-  return gulp.src(params.customDir + '/styles.css').pipe(cssConcat('custom-styles' + timestamp + '.css', {
-    rebaseUrls: false
+  return gulp.src(params.customDir + '/styles.css', {allowEmpty: true}).pipe(cssConcat('custom-styles' + timestamp + '.css', {
+    rebaseUrls: false,
+    allowEmpty: true
   })).pipe(gulp.dest('./target/css-build'));
 });
 
 gulp.task('cssBuild', function() {
-  return gulp.src(['./target/css-build/internal-styles' + timestamp + '.css', './target/css-build/custom-styles' + timestamp + '.css']).pipe(cssConcat('styles' + timestamp + '.css', {
-    rebaseUrls: false
+  return gulp.src(['./target/css-build/internal-styles' + timestamp + '.css', './target/css-build/custom-styles' + timestamp + '.css'], {allowEmpty: true}).pipe(cssConcat('styles' + timestamp + '.css', {
+    rebaseUrls: false,
+    allowEmpty: true,
   })).pipe(minifyCss({
-    keepSpecialComments: false
+    keepSpecialComments: false,
+    allowEmpty: true
   })).pipe(gulp.dest('./target/require-build/css'));
 });
 
@@ -223,7 +213,7 @@ gulp.task('modifyImprintHtml', function() {
 
 gulp.task('modifyCustomHtmlPages', function() {
   // replace styles-login.css with timestamp filename
-  return gulp.src(prependPath(params.customDir + '/', getCustomHtmlFiles(false))).pipe(insert.transform(function(contents) {
+  return gulp.src(params.customDir + '/*.html').pipe(insert.transform(function(contents) {
     var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
     content = content.replace(' data-main="js/main"', '');
     content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"');
@@ -257,3 +247,8 @@ gulp.task('jsBuild', function() {
     }
   })).pipe(gulp.dest('./target/require-build/js'));
 });
+
+gulp.task('default', gulp.series('clear', 'pugIndex', 'pugViews', 'stylus', 'internalCssBuild', 'customCssBuild', 'cssBuild', 'fontBuild', 'collectDependencies', 'setBuildInfo', 'setCustomPublicResources'));
+
+gulp.task('build', gulp.series('default', 'copySprites', 'modifyIndexHtml', 'modifyLoginHtml', 'modifyImprintHtml', 'modifyCustomHtmlPages', 'copyCustomImages', 'copyJQueryForLogin', 'jsBuild'));
+
