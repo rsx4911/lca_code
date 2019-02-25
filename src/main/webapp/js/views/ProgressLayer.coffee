@@ -1,12 +1,13 @@
 define([
 				'backbone'
+				'pace'
 				'cs!utils/Events'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'templates/views/progress-layer'
 			]
 
-	(Backbone, Events, Layers, Renderer, template) ->
+	(Backbone, pace, Events, Layers, Renderer, template) ->
 
 		class ProgressLayer extends Backbone.View
 
@@ -20,7 +21,7 @@ define([
 				@setButtons true, false, true
 
 			start: () ->
-				Pace.ignore () =>
+				pace.ignore () =>
 					@setButtons false, true, false
 					@socket = new WebSocket @url
 					@socket.onopen = () =>

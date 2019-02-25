@@ -1,20 +1,21 @@
 define([
-				'open-layers'
+				'leaflet',
 			]
 
-	(OpenLayers) ->
+	(Leaflet) ->
 
 		initMap: (dataset) ->
 			if !dataset.longitude and !dataset.latitide
 				return
-			map = new OpenLayers.Map
-				layers: [
-					new OpenLayers.layer.Tile
-						source: new OpenLayers.source.OSM()
-				]
-				target: 'map'
-				view: new OpenLayers.View
-					center: OpenLayers.proj.transform [dataset.longitude or 0, dataset.latitude or 0], 'EPSG:4326', 'EPSG:3857'
-					zoom: 5
+			map = Leaflet.map('map').setView [dataset.latitude or 0, dataset.longitude or 0], 5
+			Leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+			}).addTo map
+			Leaflet.circle([dataset.latitude, dataset.longitude], {
+				color: 'red',
+				fillColor: '#f03',
+				fillOpacity: 0.5,
+				radius: 1
+			}).addTo map
 
 )

@@ -75,7 +75,7 @@ mixin options(options, defaultSelection, groupId)
 mixin checkbox(id, label, type)
 	if !type
 		- type = 'success'
-	.checkbox(class='checkbox-' + type)
+	.abc-checkbox(class='abc-checkbox-' + type)
 		input(id=id name=id type='checkbox')&attributes(attributes)
 		label(for=id)
 			if label
