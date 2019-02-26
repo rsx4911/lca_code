@@ -314,7 +314,21 @@
 							</arguments>
 						</configuration>
 					</execution>
-					
+					<execution>
+						<id>exec_gulp</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>node_modules/gulp/bin/gulp.js</executable>
+							<arguments>
+								<argument>build</argument>
+								<argument>--contextPath=${contextPath}</argument>
+								<argument>--customDir=${customDir}</argument>
+							</arguments>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 

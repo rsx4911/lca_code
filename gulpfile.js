@@ -5,11 +5,10 @@ var clean = require('gulp-clean');
 var cssConcat = require('gulp-concat-css');
 var insert = require('gulp-insert');
 var minifyCss = require('gulp-clean-css');
-var requirejs = require('requirejs');
+var rjs = require('gulp-requirejs');
 var stylus = require('gulp-stylus');
 var uglify = require('gulp-uglify');
 var pug = require('gulp-pug');
-var stream = require('stream');
 var child_process = require('child_process');
 var params = require('yargs').argv;
 
@@ -95,7 +94,6 @@ gulp.task('copyJsModules', function() {
       'node_modules/backbone/backbone.js',
       'node_modules/bootstrap/dist/js/bootstrap.js',
       'node_modules/cropper/dist/cropper.js',
-      'node_modules/require-cs/cs.js',
       'node_modules/tablesorter/dist/js/jquery.tablesorter.js',
       'node_modules/jquery/dist/jquery.js',
       'node_modules/jstree/dist/jstree.js',
@@ -105,7 +103,8 @@ gulp.task('copyJsModules', function() {
       'node_modules/qrcode/build/qrcode.js',
       'node_modules/requirejs/require.js',
       'node_modules/underscore/underscore.js',
-      'external-libs/coffee-script.js', // coffee script compiler seems to be removed after v. 1.11.1
+      'external-libs/coffee-script.js',
+      'external-libs/cs.js',
     ])
     .pipe(gulp.dest('./src/main/webapp/js/libs'));
 });
@@ -310,20 +309,23 @@ gulp.task('copyJQueryForLogin', function() {
     .pipe(gulp.dest('./target/require-build/js'));
 });
 
-gulp.task('jsBuild', function(done) {
-  requirejs.optimize({
+gulp.task('jsBuild', function() {
+  return rjs({
     baseUrl: 'src/main/webapp/js',
     mainConfigFile: 'src/main/webapp/js/main.js',
-    out: './target/require-build/js/main' + timestamp + '.js',
+    out: 'main' + timestamp + '.js',
     name: 'main',
     findNestedDependencies: false,
     include: ['requireLib'],
     stubModules: ['cs', 'coffee-script'],
     insertRequire: ['main']
-  }, function () {
-    done();
-  }, done);
-
+  })
+  .pipe(uglify({
+    output: {
+      ascii_only: true
+    }
+  }))
+  .pipe(gulp.dest('./target/require-build/js'));
 });
 
 gulp.task('copyFrontendModules', gulp.series(
