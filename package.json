@@ -11,7 +11,8 @@
     "gulp-pug": "^4.0.1",
     "gulp-requirejs": "^1.2.1",
     "gulp-stylus": "^2.7.0",
-    "gulp-uglify": "^3.0.1"
+    "gulp-uglify": "^3.0.1",
+    "yargs": "^13.2.1"
   },
   "engines": {
     "node": ">=0.10.0"
