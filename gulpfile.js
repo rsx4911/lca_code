@@ -257,23 +257,9 @@ gulp.task('modifyIndexHtml', function() {
     .pipe(gulp.dest('./target/require-build'));
 });
 
-gulp.task('modifyLoginHtml', function() {
+gulp.task('modifyOtherHtml', function() {
   // replace styles-login.css with timestamp filename
-  var path = fs.existsSync(params.customDir + '/login.html') ? params.customDir + '/login.html' : './src/main/webapp/login.html';
-  return gulp.src(path)
-    .pipe(insert.transform(function(contents) {
-      var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
-      content = content.replace('js/libs/jquery', 'js/jquery');
-      content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
-      return content;
-    }))
-    .pipe(gulp.dest('./target/require-build'));
-});
-
-gulp.task('modifyImprintHtml', function() {
-  // replace styles-login.css with timestamp filename
-  var path = fs.existsSync(params.customDir + '/imprint.html') ? params.customDir + '/imprint.html' : './src/main/webapp/imprint.html';
-  return gulp.src(path)
+  return gulp.src(['./src/main/webapp/login.html', './src/main/webapp/imprint.html', './src/main/webapp/maintenance.html'])
     .pipe(insert.transform(function(contents) {
       var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
       content = content.replace('js/libs/jquery', 'js/jquery');
@@ -351,8 +337,7 @@ gulp.task('build', gulp.series(
   'default',
   'copySprites',
   'modifyIndexHtml',
-  'modifyLoginHtml',
-  'modifyImprintHtml',
+  'modifyOtherHtml',
   'modifyCustomHtmlPages',
   'copyCustomImages',
   'copyJQueryForLogin',
