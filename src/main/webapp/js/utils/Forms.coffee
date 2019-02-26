@@ -152,8 +152,7 @@ define([
 					for element in elements
 						element = $ element
 						type = element.attr('type')
-						isDatepicker = element.data('datepicker')
-						if type is 'checkbox' or type is 'file' or isDatepicker
+						if type is 'checkbox' or type is 'file'
 							eventName = 'change'
 						element.on "#{eventName}.validator", (event) => 
 							validator = (@_ getValidator) options.validator

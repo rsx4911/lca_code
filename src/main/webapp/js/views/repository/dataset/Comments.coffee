@@ -56,7 +56,7 @@ define([
 					elem = elem.parent()
 				unless elem.is('body')
 					tabId = elem.attr 'id'
-					$("[href=##{tabId}]").click()
+					$("[href='##{tabId}']").click()
 			commentElement = $ "[data-path='#{path}'] [data-action=comment]"
 			pos = commentElement.offset().top - 85
 			if pos > 0

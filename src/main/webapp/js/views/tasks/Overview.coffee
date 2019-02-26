@@ -14,7 +14,7 @@ define([
 			className: 'tasks-view multi-box-view'
 
 			events: 
-				'click a[href]:not([href=#]):not([data-action])': (event) -> Events.followLink event
+				'click a[href]:not([href="#"]):not([data-action])': (event) -> Events.followLink event
 				'click button[data-route]': (event) -> Events.followRoute event
 
 			initialize: (options) ->

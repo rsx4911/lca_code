@@ -20,7 +20,7 @@ define([
 			className: 'comments-view'
 
 			events: 
-				'click a[href]:not([href=#])': (event) -> Events.followLink event
+				'click a[href]:not([href="#"])': (event) -> Events.followLink event
 				'click a.release': (event) -> Actions.release event, @renderData
 				'click a.remove': (event) -> Actions.remove event
 
@@ -58,7 +58,7 @@ define([
 			setRenderData: (resultInfo) ->
 				@renderData = {canApprove: resultInfo.canApprove, canComment: false}
 				clickEvents = 
-					'a[href]:not([href=#])': (event) => Events.followLink event
+					'a[href]:not([href="#"])': (event) => Events.followLink event
 					'a.release': (event) => Actions.release event, @renderData
 					'a.remove': (event) => Actions.remove event
 				@renderData.clickEvents = clickEvents

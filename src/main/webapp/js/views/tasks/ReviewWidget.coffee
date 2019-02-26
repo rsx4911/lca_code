@@ -16,7 +16,7 @@ define([
 			className: 'review-widget'
 
 			events:
-				'click a[href]:not([href=#]):not([data-action])': (event) -> Events.followLink event
+				'click a[href]:not([href="#"]):not([data-action])': (event) -> Events.followLink event
 				'click [data-action=mark-as-reviewed]': (event) -> Util.markAsReviewed event, @reviewId
 				'click [data-action=open-review]': 'openReview'
 				'click [data-action=filter-checked]': 'filterChecked'

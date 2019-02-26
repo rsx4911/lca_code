@@ -211,7 +211,6 @@ define([
 					callback: (selection) ->
 						Layers.promptInput 'Dataprovider', 'text', settings.getVal('SERVER_NAME'), (dataprovider) ->
 							input = {references: selection, dataprovider: dataprovider}
-							console.log input
 							Layers.showProgressIndicator 'Pushing'
 							$.ajax
 								type: 'PUT'

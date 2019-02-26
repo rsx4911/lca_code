@@ -140,8 +140,8 @@ define([
 				'click a[data-action=show-data-quality]': 'showDataQuality'
 				'click .maximize-content > a': 'maximizeContent'
 				'change #commitId': 'switchCommit'
-				'click [href=#supply-chain]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
-				'click [href=#graph]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
+				'click [href="#supply-chain"]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
+				'click [href="#graph"]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
 				'click .select-method': (event) -> ProductSystem.selectImpactMethod @repository, @dataset
 
 			initialize: (options) ->
@@ -283,7 +283,7 @@ define([
 					removedCount = $('[data-compare=removed] .glyphicon-minus-sign', pane).length
 					count = addedCount + changedCount + removedCount
 					if count
-						@$("a[href=##{id}] .change-count").html count
+						@$("a[href='##{id}'] .change-count").html count
 				for dropdown in @$('li.dropdown')
 					count = 0
 					for entry in $('.dropdown-menu li', dropdown)

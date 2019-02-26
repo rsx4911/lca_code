@@ -16,7 +16,7 @@ define([
 				'templates/views/repository/datasets-entries'
 			]
 
-	(Backbone, Moment, Pace, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, Download, currentUser, template, entriesTemplate) ->
+	(Backbone, moment, pace, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, Download, currentUser, template, entriesTemplate) ->
 
 		class RepositoryDatasets extends Backbone.View
 
@@ -84,7 +84,7 @@ define([
 			className: 'repository-datasets'
 
 			events: 
-				'click a:not([href=#])': (event) -> Events.followLink event
+				'click a:not([href="#"])': (event) -> Events.followLink event
 				'click a[data-format]:not([data-action=select-data])': 'downloadData'
 				'click a[data-action=select-data]': 'selectData'
 				'change #show-deleted': 'toggleDeleted'
@@ -151,7 +151,7 @@ define([
 						if @commitId
 							url += '&commitId=' + @commitId
 						url += "&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
-						Pace.ignore () =>
+						pace.ignore () =>
 							$.ajax
 								type: 'GET'
 								url: url

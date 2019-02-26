@@ -1,11 +1,9 @@
 @import 'libs/animate.css';
 @import 'libs/bootstrap.css';
 @import 'libs/bootstrap-theme.css';
-@import 'libs/bootstrap-datepicker.css';
 @import 'libs/font-awesome.css';
 @import 'libs/awesome-bootstrap-checkbox.css';
-@import 'libs/select2.css';
-@import 'libs/select2-bootstrap.css';
 @import 'libs/cropper.css';
-@import 'libs/jstree-theme.css';
+@import 'libs/style.css';
+@import 'libs/leaflet.css';
 @import 'main.css';

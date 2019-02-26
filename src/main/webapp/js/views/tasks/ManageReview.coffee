@@ -122,7 +122,7 @@ define([
 			className: 'tasks-view multi-box-view'
 
 			events: 
-				'click a[href]:not([href=#]):not([data-action])': (event) -> Events.followLink event
+				'click a[href]:not([href="#"]):not([data-action])': (event) -> Events.followLink event
 				'click [data-action=open-widget]': 'openWidget'
 				'click [data-action=create-task]': 'createTask'
 				'click [data-action=assign-task]': 'assignTask'

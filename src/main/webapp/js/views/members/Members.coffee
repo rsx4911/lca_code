@@ -9,7 +9,6 @@ define([
 				'cs!utils/Synchronized'
 				'templates/views/members/members'
 				'templates/views/members/member-list'
-				'select2'
 			]
 
 	(Backbone, Data, Events, Filter, Layers, Renderer, Roles, Synchronized, template, memberTemplate) ->
@@ -39,7 +38,6 @@ define([
 						title: "Add #{type} members"
 						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll()}
 						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
-						callback: () -> $('.modal #user-selection-name').select2 {theme: 'bootstrap'}
 
 			addMembers: () ->
 				users = []

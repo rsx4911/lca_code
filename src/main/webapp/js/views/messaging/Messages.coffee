@@ -11,7 +11,6 @@ define([
 				'templates/views/messaging/messages'
 				'templates/views/messaging/conversation'
 				'templates/views/messaging/message'
-				'select2'
 			]
 
 	(Backbone, Events, Format, Layers, Renderer, Status, Conversation, conversations, currentUser, template, conversationTemplate, messageTemplate) ->

@@ -30,9 +30,6 @@ define([
 					options.viewInstance.render
 						container: $('.modal-body')
 				$('.modal').on 'hidden.bs.modal', (event) ->
-					# Fix for UI glitch when closed by clicking outside of the modal
-					if $('.select2-hidden-accessible').length
-						$('.select2-hidden-accessible').select2('close')
 					$('.modal').remove()
 					options.onClose?()
 				if options.static

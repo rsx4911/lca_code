@@ -30,7 +30,7 @@ define([
 				contact: 10
 
 			events: 
-				'click a:not([href=#])': (event) -> Events.followLink event
+				'click a:not([href="#"])': (event) -> Events.followLink event
 
 			initialize: (options) ->
 				@aggregations = {}

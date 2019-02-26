@@ -28,8 +28,8 @@ define([
 					result.baseUrl = "#{group}/#{name}/dataset"
 			filter.init (result) ->
 				if result.resultInfo.totalCount > 0
-					$("[href=##{type}]").html $("[href=##{type}]").html() + " (#{result.resultInfo.totalCount})"
+					$("[href='##{type}']").html $("[href='##{type}']").html() + " (#{result.resultInfo.totalCount})"
 				else
-					$("[href=##{type}], ##{type}").hide()
+					$("[href='##{type}'], ##{type}").hide()
 
 )
