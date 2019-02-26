@@ -23,9 +23,7 @@ if (!params.customDir) {
 var getCustomHtmlFiles = function(excludePublicIndex) {
   try {
     var files = fs.readdirSync(params.customDir)
-    console.log(files);
     var result = files.filter(function(file) { return file.indexOf('.html') !== -1 && (!excludePublicIndex || file !== 'index_public.html'); });
-    console.log(result);
     return result;
   } catch (e) {
     return []
