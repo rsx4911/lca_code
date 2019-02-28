@@ -191,6 +191,7 @@ define([
 					data.openWebServiceRequests = @serverInfo.openWebServiceRequests
 					data.announcement = @serverInfo.announcement
 					data.maintenanceMessage = @serverInfo.maintenanceMessage
+					data.licenseAgreementText = @serverInfo.licenseAgreementText
 				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()
