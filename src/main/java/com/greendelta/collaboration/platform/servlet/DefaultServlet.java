@@ -52,7 +52,7 @@ public class DefaultServlet extends HttpServlet {
 			forward("/login.html", request, response);
 			return;
 		}
-		if (isLoginUrl && user.hasId()) {
+		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)){
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
