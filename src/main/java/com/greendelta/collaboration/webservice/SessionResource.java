@@ -50,6 +50,7 @@ public class SessionResource {
 	}
 	
 	@GET
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCurrentUser() {
 		Subject subject = subjectProvider.get();
 		if (!subject.isAuthenticated())
