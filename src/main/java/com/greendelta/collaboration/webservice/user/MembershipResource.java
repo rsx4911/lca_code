@@ -14,19 +14,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.error.UnauthorizedAccessException;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.user.MembershipService;
-import com.greendelta.collaboration.service.user.NotificationService;
-import com.greendelta.collaboration.service.user.TeamService;
-import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.user.TeamService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Memberships;
@@ -40,15 +43,17 @@ public class MembershipResource {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final TeamService teamService;
+	private final AccessService accessService;
 	private final NotificationService notificationService;
 
 	@Inject
 	public MembershipResource(MembershipService service, RepositoryService repoService, UserService userService,
-			TeamService teamService, NotificationService notificationService) {
+			TeamService teamService, AccessService accessService, NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.teamService = teamService;
+		this.accessService = accessService;
 		this.notificationService = notificationService;
 	}
 
@@ -58,9 +63,7 @@ public class MembershipResource {
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@QueryParam("filter") @DefaultValue("") String filter) {
-		String path = group;
-		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-			path = Repository.toId(group, repo);
+		String path = getAuthorizedPath(group, repo);
 		SearchResult<Membership> memberships = service.getMemberships(path, filter);
 		return Respond.ok(SearchResults.lconvert(memberships, Memberships::map));
 	}
@@ -177,8 +180,14 @@ public class MembershipResource {
 
 	private String getAuthorizedPath(String group, String repo) {
 		String path = group;
-		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-			path = Repository.toId(group, repo);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null")) {
+			// implicitly checks access
+			Repository repository = repoService.get(group, repo);
+			return repository.toId();
+		}
+		if (!accessService.canRead(group)) {
+			throw new UnauthorizedAccessException(group, "READ");
+		}
 		return path;
 	}
 

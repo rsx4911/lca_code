@@ -124,6 +124,8 @@ public class GroupResource {
 	@DELETE
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {
+		if (!service.exists(name) || service.isUserNamespace(name))
+			return Respond.notFound("Group " + name + " not found");
 		NotificationJob notification = notificationService.groupDeleted(name);
 		deleteService.delete(name);
 		notification.send();
