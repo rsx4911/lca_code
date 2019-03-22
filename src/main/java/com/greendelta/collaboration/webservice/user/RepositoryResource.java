@@ -123,6 +123,7 @@ public class RepositoryResource {
 
 	@GET
 	@Path("export/{group}/{name}")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response doExport(@PathParam("group") String group, @PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		String filename = repo.toId().replace('/', '-') + ".zip";
@@ -157,7 +158,7 @@ public class RepositoryResource {
 		Repository repo = service.create(group, name);
 		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
 	}
-
+	
 	@POST
 	@Path("import/{group}/{name}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -167,6 +168,8 @@ public class RepositoryResource {
 			@FormDataParam("commitMessage") String commitMessage,
 			@FormDataParam("file") InputStream input,
 			@QueryParam("format") String format) {
+		if (Strings.isNullOrEmpty(commitMessage))
+			return Respond.invalid("group", "Missing input: Commit message");
 		Repository repo = service.get(group, name);
 		if (format != null && "json-ld".equals(format.toLowerCase())) {
 			service.importJsonLd(repo, input, commitMessage);
@@ -192,7 +195,7 @@ public class RepositoryResource {
 		Repository newRepo = service.get(newGroup, newName);
 		updateRepoId(repo, newRepo);
 		notificationService.repositoryMoved(repo, newRepo).send();
-		return Respond.ok(newRepo);
+		return Respond.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 	}
 
 	@POST
@@ -248,7 +251,7 @@ public class RepositoryResource {
 
 	@PUT
 	@Path("settings/{group}/{name}/{setting}/{value}")
-	public Response toggleSetting(@PathParam("group") String group, @PathParam("name") String name,
+	public Response setSetting(@PathParam("group") String group, @PathParam("name") String name,
 			@PathParam("setting") String setting, @PathParam("value") String value) {
 		Repository repo = service.get(group, name);
 		service.setSetting(repo, setting, value);
