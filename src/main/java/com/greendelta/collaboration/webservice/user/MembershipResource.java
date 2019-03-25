@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.webservice.user;
 
-import java.util.Collections;
+import java.util.HashMap;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -58,23 +58,48 @@ public class MembershipResource {
 	}
 
 	@GET
+	@Path("{group}")
+	public Response getAllForGroup(
+			@PathParam("group") String group,
+			@QueryParam("filter") @DefaultValue("") String filter) {
+		return getAll(group, null, filter);
+	}
+
+	@GET
 	@Path("{group}/{repo}")
-	public Response getAll(
+	public Response getAllForRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@QueryParam("filter") @DefaultValue("") String filter) {
+		return getAll(group, repo, filter);
+	}
+
+	private Response getAll(String group, String repo, String filter) {
 		String path = getAuthorizedPath(group, repo);
 		SearchResult<Membership> memberships = service.getMemberships(path, filter);
 		return Respond.ok(SearchResults.lconvert(memberships, Memberships::map));
 	}
-	
+
+	@POST
+	@Path("{group}/user/{username}/{role}")
+	public Response addUserRoleToGroup(
+			@PathParam("group") String group,
+			@PathParam("username") String username,
+			@PathParam("role") Role role) {
+		return addUserRole(group, null, username, role);
+	}
+
 	@POST
 	@Path("{group}/{repo}/user/{username}/{role}")
-	public Response addUserRole(
+	public Response addUserRoleToRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("username") String username,
 			@PathParam("role") Role role) {
+		return addUserRole(group, repo, username, role);
+	}
+
+	private Response addUserRole(String group, String repo, String username, Role role) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean added = service.addMembership(user, path, role);
@@ -83,16 +108,29 @@ public class MembershipResource {
 				notificationService.memberAdded(repoService.get(group, repo), user).send();
 			else
 				notificationService.memberAdded(group, user).send();
-		return Respond.ok(Collections.singletonMap("added", added));
+		return Respond.ok(new HashMap<>());
+	}
+
+	@POST
+	@Path("{group}/team/{teamname}/{role}")
+	public Response addTeamRoleToGroup(
+			@PathParam("group") String group,
+			@PathParam("teamname") String teamname,
+			@PathParam("role") Role role) {
+		return addTeamRole(group, null, teamname, role);
 	}
 
 	@POST
 	@Path("{group}/{repo}/team/{teamname}/{role}")
-	public Response addTeamRole(
+	public Response addTeamRoleToRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("teamname") String teamname,
 			@PathParam("role") Role role) {
+		return addTeamRole(group, repo, teamname, role);
+	}
+
+	private Response addTeamRole(String group, String repo, String teamname, Role role) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean added = service.addMemberships(team, path, role);
@@ -101,16 +139,29 @@ public class MembershipResource {
 				notificationService.memberAdded(repoService.get(group, repo), team).send();
 			else
 				notificationService.memberAdded(group, team).send();
-		return Respond.ok(Collections.singletonMap("added", added));
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
+	@Path("{group}/user/{username}/{role}")
+	public Response updateUserRoleInGroup(
+			@PathParam("group") String group,
+			@PathParam("username") String username,
+			@PathParam("role") Role role) {
+		return updateUserRole(group, null, username, role);
 	}
 
 	@PUT
 	@Path("{group}/{repo}/user/{username}/{role}")
-	public Response updateUserRole(
+	public Response updateUserRoleInRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("username") String username,
 			@PathParam("role") Role role) {
+		return updateUserRole(group, repo, username, role);
+	}
+
+	private Response updateUserRole(String group, String repo, String username, Role role) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean updated = service.setRole(user, path, role);
@@ -119,16 +170,29 @@ public class MembershipResource {
 				notificationService.roleChanged(repoService.get(group, repo), user).send();
 			else
 				notificationService.roleChanged(group, user).send();
-		return Respond.ok(Collections.singletonMap("updated", updated));
+		return Respond.ok(new HashMap<>());
+	}
+
+	@PUT
+	@Path("{group}/team/{teamname}/{role}")
+	public Response updateTeamRoleInGroup(
+			@PathParam("group") String group,
+			@PathParam("teamname") String teamname,
+			@PathParam("role") Role role) {
+		return updateTeamRole(group, null, teamname, role);
 	}
 
 	@PUT
 	@Path("{group}/{repo}/team/{teamname}/{role}")
-	public Response updateTeamRole(
+	public Response updateTeamRoleInRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("teamname") String teamname,
 			@PathParam("role") Role role) {
+		return updateTeamRole(group, repo, teamname, role);
+	}
+
+	private Response updateTeamRole(String group, String repo, String teamname, Role role) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean updated = service.setRole(team, path, role);
@@ -137,15 +201,27 @@ public class MembershipResource {
 				notificationService.roleChanged(repoService.get(group, repo), team).send();
 			else
 				notificationService.roleChanged(group, team).send();
-		return Respond.ok(Collections.singletonMap("updated", updated));
+		return Respond.ok(new HashMap<>());
+	}
+
+	@DELETE
+	@Path("{group}/user/{username}")
+	public Response removeUserRoleFromGroup(
+			@PathParam("group") String group,
+			@PathParam("username") String username) {
+		return removeUserRole(group, null, username);
 	}
 
 	@DELETE
 	@Path("{group}/{repo}/user/{username}")
-	public Response removeUserRole(
+	public Response removeUserRoleFromRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("username") String username) {
+		return removeUserRole(group, repo, username);
+	}
+
+	private Response removeUserRole(String group, String repo, String username) {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		NotificationJob notification = null;
@@ -156,15 +232,27 @@ public class MembershipResource {
 		boolean removed = service.removeMembership(user, path);
 		if (removed)
 			notification.send();
-		return Respond.ok(Collections.singletonMap("removed", removed));
+		return Respond.ok(new HashMap<>());
 	}
 
 	@DELETE
 	@Path("{group}/{repo}/team/{teamname}")
-	public Response removeTeamRole(
+	public Response removeTeamRoleFromGroup(
+			@PathParam("group") String group,
+			@PathParam("teamname") String teamname) {
+		return removeTeamRole(group, null, teamname);
+	}
+
+	@DELETE
+	@Path("{group}/{repo}/team/{teamname}")
+	public Response removeTeamRoleFromRepository(
 			@PathParam("group") String group,
 			@PathParam("repo") String repo,
 			@PathParam("teamname") String teamname) {
+		return removeTeamRole(group, repo, teamname);
+	}
+
+	private Response removeTeamRole(String group, String repo, String teamname) {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		NotificationJob notification = null;
@@ -175,7 +263,7 @@ public class MembershipResource {
 		boolean removed = service.removeMemberships(team, path);
 		if (removed)
 			notification.send();
-		return Respond.ok(Collections.singletonMap("removed", removed));
+		return Respond.ok(new HashMap<>());
 	}
 
 	private String getAuthorizedPath(String group, String repo) {
