@@ -84,12 +84,14 @@ public class UserResource {
 		User user = service.getForUsername(username);
 		if (user == null)
 			return Respond.notFound();
-		Map<String, Object> userMap = Users.mapForSelf(user);
+		User currentUser = service.getCurrentUser();
+		Map<String, Object> userMap = currentUser.username.equals(username) ? Users.mapForSelf(user)
+				: Users.mapForOthers(user);
 		if (user.isAdmin())
 			userMap.put("lastAdmin", service.isLastAdmin(user));
 		return Respond.ok(userMap);
 	}
-	
+
 	@GET
 	@Path("avatar/{username}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -114,7 +116,7 @@ public class UserResource {
 		response.put("enabled", true);
 		return Respond.ok(response);
 	}
-	
+
 	@PUT
 	@Path("{username}")
 	public Response update(@PathParam("username") String username, User user) {
@@ -134,8 +136,8 @@ public class UserResource {
 			Beans.populateProperties(user.settings, fromDb.settings, "admin", "userManager", "dataManager");
 		}
 		if (currentUser.isUserManager()) {
-			Beans.populateProperties(user.settings, fromDb.settings,
-					"canCreateGroups", "canCreateRepositories", "noOfRepositories", "maxSize");
+			Beans.populateProperties(user.settings, fromDb.settings, "canCreateGroups", "canCreateRepositories",
+					"noOfRepositories", "maxSize");
 		}
 		fromDb = service.update(fromDb);
 		return Respond.ok(Users.mapForSelf(fromDb));
@@ -146,7 +148,7 @@ public class UserResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response setAvatar(
-			@PathParam("username") String username,
+			@PathParam("username") String username, 
 			@FormDataParam("file") InputStream file) {
 		User user = authorizedGetUser(username);
 		if (user == null)
@@ -158,11 +160,10 @@ public class UserResource {
 		user = service.update(user);
 		return getAvatar(username);
 	}
-	
+
 	@PUT
 	@Path("setpassword/{username}")
-	public Response setPassword(@PathParam("username") String username,
-			Map<String, Object> passwords) {
+	public Response setPassword(@PathParam("username") String username, Map<String, Object> passwords) {
 		ObjectMap map = ObjectMap.fromMap(passwords);
 		String password = map.get("password");
 		String password2 = map.get("password2");
@@ -184,7 +185,8 @@ public class UserResource {
 
 	@PUT
 	@Path("twoFactorAuth/{username}/{enable}")
-	public Response toggleTwoFactorAuthentication(@PathParam("username") String username,
+	public Response toggleTwoFactorAuthentication(
+			@PathParam("username") String username,
 			@PathParam("enable") boolean enable) {
 		User user = authorizedGetUser(username);
 		if (user == null)

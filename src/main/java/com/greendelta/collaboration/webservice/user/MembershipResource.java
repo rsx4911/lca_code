@@ -103,12 +103,13 @@ public class MembershipResource {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean added = service.addMembership(user, path, role);
-		if (added)
-			if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-				notificationService.memberAdded(repoService.get(group, repo), user).send();
-			else
-				notificationService.memberAdded(group, user).send();
-		return Respond.ok(new HashMap<>());
+		if (!added)
+			return Respond.conflict("User " + username + " was already member of " + group + "/" + repo);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notificationService.memberAdded(repoService.get(group, repo), user).send();
+		else
+			notificationService.memberAdded(group, user).send();
+		return Respond.created(new HashMap<>());
 	}
 
 	@POST
@@ -134,12 +135,13 @@ public class MembershipResource {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean added = service.addMemberships(team, path, role);
-		if (added)
-			if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-				notificationService.memberAdded(repoService.get(group, repo), team).send();
-			else
-				notificationService.memberAdded(group, team).send();
-		return Respond.ok(new HashMap<>());
+		if (!added)
+			return Respond.conflict("Team " + teamname + " was already member of " + group + "/" + repo);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notificationService.memberAdded(repoService.get(group, repo), team).send();
+		else
+			notificationService.memberAdded(group, team).send();
+		return Respond.created(new HashMap<>());
 	}
 
 	@PUT
@@ -165,11 +167,12 @@ public class MembershipResource {
 		String path = getAuthorizedPath(group, repo);
 		User user = userService.getForUsername(username);
 		boolean updated = service.setRole(user, path, role);
-		if (updated)
-			if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-				notificationService.roleChanged(repoService.get(group, repo), user).send();
-			else
-				notificationService.roleChanged(group, user).send();
+		if (!updated)
+			return Respond.notFound("User " + username + " is not a member of " + group + "/" + repo);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notificationService.roleChanged(repoService.get(group, repo), user).send();
+		else
+			notificationService.roleChanged(group, user).send();
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -196,11 +199,12 @@ public class MembershipResource {
 		String path = getAuthorizedPath(group, repo);
 		Team team = teamService.getForTeamname(teamname);
 		boolean updated = service.setRole(team, path, role);
-		if (updated)
-			if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
-				notificationService.roleChanged(repoService.get(group, repo), team).send();
-			else
-				notificationService.roleChanged(group, team).send();
+		if (!updated)
+			return Respond.notFound("Team " + teamname + " is not a member of " + group + "/" + repo);
+		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null"))
+			notificationService.roleChanged(repoService.get(group, repo), team).send();
+		else
+			notificationService.roleChanged(group, team).send();
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -230,13 +234,14 @@ public class MembershipResource {
 		else
 			notification = notificationService.memberRemoved(group, user);
 		boolean removed = service.removeMembership(user, path);
-		if (removed)
-			notification.send();
+		if (!removed)
+			return Respond.notFound("User " + username + " is not a member of " + group + "/" + repo);
+		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
 
 	@DELETE
-	@Path("{group}/{repo}/team/{teamname}")
+	@Path("{group}/team/{teamname}")
 	public Response removeTeamRoleFromGroup(
 			@PathParam("group") String group,
 			@PathParam("teamname") String teamname) {
@@ -261,8 +266,9 @@ public class MembershipResource {
 		else
 			notification = notificationService.memberRemoved(group, team);
 		boolean removed = service.removeMemberships(team, path);
-		if (removed)
-			notification.send();
+		if (!removed)
+			return Respond.notFound("Team " + teamname + " is not a member of " + group + "/" + repo);
+		notification.send();
 		return Respond.ok(new HashMap<>());
 	}
 
