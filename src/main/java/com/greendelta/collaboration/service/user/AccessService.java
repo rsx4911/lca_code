@@ -25,7 +25,8 @@ public class AccessService {
 	private final SettingsService settingsService;
 
 	@Inject
-	public AccessService(UserService userService, MembershipService membershipService, SettingsService settingsService) {
+	public AccessService(UserService userService, MembershipService membershipService,
+			SettingsService settingsService) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.settingsService = settingsService;

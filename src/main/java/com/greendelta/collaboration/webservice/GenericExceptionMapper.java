@@ -38,7 +38,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 		if (e instanceof UnsupportedSchemaException)
 			return Response.status(Status.NOT_ACCEPTABLE).entity(e.getMessage()).build();
 		if (e instanceof AuthorizationException)
-			return Response.status(Status.FORBIDDEN).build();
+			return Response.status(Status.FORBIDDEN).entity(e.getMessage()).build();
 		if (e instanceof InsufficientStorageException)
 			return Response.status(507).entity(e.getMessage()).build();
 		log.error("Server error [user=" + getUserInfo() + "]", e);

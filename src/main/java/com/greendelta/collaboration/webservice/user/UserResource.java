@@ -85,7 +85,8 @@ public class UserResource {
 		if (user == null)
 			return Respond.notFound();
 		User currentUser = service.getCurrentUser();
-		Map<String, Object> userMap = currentUser.username.equals(username) ? Users.mapForSelf(user)
+		Map<String, Object> userMap = currentUser.username.equals(username) || currentUser.isUserManager()
+				? Users.mapForSelf(user)
 				: Users.mapForOthers(user);
 		if (user.isAdmin())
 			userMap.put("lastAdmin", service.isLastAdmin(user));
@@ -148,7 +149,7 @@ public class UserResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response setAvatar(
-			@PathParam("username") String username, 
+			@PathParam("username") String username,
 			@FormDataParam("file") InputStream file) {
 		User user = authorizedGetUser(username);
 		if (user == null)

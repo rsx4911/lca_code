@@ -28,6 +28,7 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -58,11 +59,12 @@ public class RepositoryResource {
 	private final ReindexService reindexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
+	private final LibraryService libraryService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
 			HistoryService historyService, SearchService searchService, ReindexService reindexService,
-			DeleteService deleteService, NotificationService notificationService) {
+			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.accessService = accessService;
@@ -71,6 +73,7 @@ public class RepositoryResource {
 		this.reindexService = reindexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
+		this.libraryService = libraryService;
 	}
 
 	@GET
@@ -108,7 +111,7 @@ public class RepositoryResource {
 		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(id));
 		mappedRepo.put("userCanSetSettings", accessService.canSetSettings(id));
 		mappedRepo.put("size", repo.getSize());
-		mappedRepo.put("libraryRestrictions", service.getLibraryRestrictions(repo));
+		mappedRepo.put("libraryRestrictions", libraryService.getRestrictions(repo));
 		return Respond.ok(mappedRepo);
 	}
 
@@ -291,10 +294,10 @@ public class RepositoryResource {
 			@PathParam("library") String library,
 			@PathParam("role") Role role) {
 		Repository repo = service.get(group, name);
-		service.setLibraryRestriction(repo, library, role);
+		libraryService.setRestriction(repo, library, role);
 		return Respond.ok(new HashMap<>());
 	}
-	
+
 	@DELETE
 	@Path("restriction/{group}/{name}/{library}")
 	public Response removeRestriction(
@@ -302,7 +305,7 @@ public class RepositoryResource {
 			@PathParam("name") String name,
 			@PathParam("library") String library) {
 		Repository repo = service.get(group, name);
-		service.setLibraryRestriction(repo, library, null);
+		libraryService.setRestriction(repo, library, null);
 		return Respond.ok(new HashMap<>());
 	}
 
