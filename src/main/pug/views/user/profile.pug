@@ -6,7 +6,7 @@ include ../mixins/avatar-box.pug
 		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 form#user-form.content-box
 	#user-form-general-message-group.alert(role='alert'): span.message
-	unless user.id
+	unless user.username
 		+input('username', 'Username*')
 	else
 		+static('username', 'Username', user.username)
@@ -28,7 +28,7 @@ form#user-form.content-box
 		else
 			| Create
 	.clear
-if user.id
+if user.username
 	+avatar-box('user', user.username, true)
 	.header-box Password
 		button.btn.btn-default.pull-right(data-action='generate-password') Generate password

@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.StreamingOutput;
 
@@ -51,15 +53,17 @@ public class RepositoryService {
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settingsService;
+	private final LibraryService libraryService;
 
 	@Inject
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService) {
+			CommentService commentService, SettingsService settingsService, LibraryService libraryService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settingsService = settingsService;
+		this.libraryService = libraryService;
 	}
 
 	public Repository get(String id) {
@@ -169,7 +173,21 @@ public class RepositoryService {
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);
 	}
+	
+	public void setLibraryRestriction(Repository repo, String library, Role restriction) {
+		if (!accessService.canSetSettings(repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
+		repo.setRestriction(library, restriction);
+	}
 
+	public Map<String, Role> getLibraryRestrictions(Repository repo) {
+		Map<String, Role> restrictions = new HashMap<>();
+		for (String library : libraryService.getLibraryNames()) {
+			restrictions.put(library, repo.libraryRestrictions.get(library));
+		}
+		return restrictions;
+	}
+	
 	private void putJsonContext(String group, String name) {
 		String path = getPath(group, name);
 		if (path == null)

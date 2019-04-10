@@ -85,3 +85,15 @@ mixin to-size(value, inGb, round, showUnit)
 		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)
+
+- var libraries = Object.keys(repository.libraryRestrictions);
+if repository.userCanSetSettings && libraries.length
+	.header-box Library restrictions
+	.content-box.library-restrictions
+		p If a restriction is set, only users with the specified role will be able to commit changes to data sets that are part of that library.
+		each library in libraries
+			- var selectId = library.replace(' ', '@');
+			+select(selectId, library)
+				option --- No restriction ---
+				each role in roles
+					option(value=role.id selected=repository.libraryRestrictions[library]===role.id)=role.name

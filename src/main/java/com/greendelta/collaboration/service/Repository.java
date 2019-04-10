@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +19,8 @@ import org.openlca.util.Dirs;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
+import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.util.ModelTypes;
 
 public class Repository {
@@ -26,6 +30,7 @@ public class Repository {
 	public final String group;
 	public final String name;
 	public final Settings settings;
+	final Map<String, Role> libraryRestrictions;
 
 	public static Repository get(String root, String group, String name) {
 		Repository repo = new Repository(root, group, name);
@@ -38,22 +43,36 @@ public class Repository {
 		this.name = name;
 		String path = root + File.separator + group + File.separator + name;
 		repoDir = new File(path);
-		if (repoDir.exists()) {
-			Settings settings = null;
-			File settingsFile = new File(repoDir, "settings.json");
-			if (!settingsFile.exists())
-				settings = new Settings();
-			else {
-				try {
-					settings = new Gson().fromJson(new FileReader(settingsFile), Settings.class);
-				} catch (IOException e) {
-					log.error("Error loading settings for repository");
-				}
-			}
-			this.settings = settings;
-			return;
+		if (!repoDir.exists())
+			throw new RepositoryNotFoundException(toId());
+		this.settings = loadSettings();
+		this.libraryRestrictions = loadLibraryRestrictions();
+	}
+
+	private Settings loadSettings() {
+		File settingsFile = new File(repoDir, "settings.json");
+		if (!settingsFile.exists())
+			return new Settings();
+		try {
+			return new Gson().fromJson(new FileReader(settingsFile), Settings.class);
+		} catch (IOException e) {
+			log.error("Error loading settings for repository");
+			return new Settings();
 		}
-		throw new RepositoryNotFoundException(toId());
+	}
+
+	private Map<String, Role> loadLibraryRestrictions() {
+		File file = new File(repoDir, "library-restrictions.json");
+		if (!file.exists())
+			return new HashMap<>();
+		try {
+			return new Gson().fromJson(new FileReader(file),
+					new TypeToken<Map<String, Role>>() {
+					}.getType());
+		} catch (IOException e) {
+			log.error("Error loading library restrictions", e);
+			return new HashMap<>();
+		}
 	}
 
 	public String toId() {
@@ -79,6 +98,19 @@ public class Repository {
 			new Gson().toJson(settings, writer);
 		} catch (IOException e) {
 			log.error("Error saving settings", e);
+		}
+	}
+
+	void setRestriction(String library, Role role) {
+		if (role == null) {
+			libraryRestrictions.remove(library);
+		} else {
+			libraryRestrictions.put(library, role);
+		}
+		try (FileWriter writer = new FileWriter(new File(repoDir, "library-restrictions.json"))) {
+			new Gson().toJson(libraryRestrictions, writer);
+		} catch (IOException e) {
+			log.error("Error saving library restrictions", e);
 		}
 	}
 
@@ -230,6 +262,10 @@ public class Repository {
 		public boolean prohibitCommits;
 		public boolean commentApproval;
 		public long maxSize;
+
+		private Settings() {
+
+		}
 
 	}
 

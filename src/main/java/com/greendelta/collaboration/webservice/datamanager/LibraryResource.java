@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("datamanager/library")
@@ -54,6 +55,8 @@ public class LibraryResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("{name}")
 	public Response putLibrary(@PathParam("name") String name, List<String> refIds) {
+		if (!Names.isValid(name, ' ')) 
+			return Respond.invalid("name", "Only letters, numbers, underscore and space are allowed");
 		service.putLibrary(name, refIds);
 		return Respond.ok(new HashMap<>());
 	}

@@ -6,6 +6,7 @@ define([
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
+				'cs!utils/Roles'
 				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
@@ -13,7 +14,7 @@ define([
 				'templates/views/repository/repository'
 			]
 
-	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, settings, template) ->
+	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Roles, Status, Router, currentUser, settings, template) ->
 
 		class RepositoryView extends Backbone.View
 
@@ -26,6 +27,7 @@ define([
 				'change [data-setting][type=checkbox]': 'toggleSetting'
 				'change #maxSize': 'updateMaxSize'
 				'change #unit': 'updateMaxSize'
+				'change .library-restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
 				'click [data-action=clone-repository]': 'openCloneLayer'
@@ -40,6 +42,7 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
+					roles: Roles.getAll()
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
 					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
@@ -93,6 +96,16 @@ define([
 				$.ajax
 					type: 'PUT'
 					url: "ws/repository/settings/#{fullPath}/maxSize/#{value}"
+
+			updateRestriction: (event) ->
+				target = $ Events.target event
+				library = target.attr('id').replace('@', ' ')
+				repository = @repository.toJSON()
+				fullPath = "#{repository.group}/#{repository.name}"
+				role = target.val()
+				$.ajax
+					type: if role then 'PUT' else 'DELETE'
+					url: "ws/repository/restriction/#{fullPath}/#{library}" + (if role then "/#{role}" else '')
 
 			deleteRepository: (event) ->
 				Events.preventDefault event

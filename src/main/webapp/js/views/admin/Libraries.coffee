@@ -85,6 +85,8 @@ define([
 								success: () ->
 									Layers.closeActive()
 									Backbone.history.loadUrl()
+								error: (response) -> 
+									Forms.handleError 'add-library', response
 					}]
 
 )
