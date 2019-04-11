@@ -127,7 +127,7 @@ public class GroupResource {
 		if (!service.exists(name) || service.isUserNamespace(name))
 			return Respond.notFound("Group " + name + " not found");
 		NotificationJob notification = notificationService.groupDeleted(name);
-		deleteService.delete(name);
+		deleteService.deleteGroup(name);
 		notification.send();
 		return Respond.ok(new HashMap<>());
 	}

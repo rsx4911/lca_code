@@ -88,7 +88,7 @@ public class UserResource {
 		Map<String, Object> userMap = currentUser.username.equals(username) || currentUser.isUserManager()
 				? Users.mapForSelf(user)
 				: Users.mapForOthers(user);
-		if (user.isAdmin())
+		if (user.isUserManager())
 			userMap.put("lastAdmin", service.isLastAdmin(user));
 		return Respond.ok(userMap);
 	}
@@ -134,11 +134,11 @@ public class UserResource {
 		Beans.populateProperties(user, fromDb, "name", "email");
 		User currentUser = service.getCurrentUser();
 		if (currentUser.isAdmin()) {
-			Beans.populateProperties(user.settings, fromDb.settings, "admin", "userManager", "dataManager");
+			Beans.populateProperties(user.settings, fromDb.settings, "admin");
 		}
 		if (currentUser.isUserManager()) {
-			Beans.populateProperties(user.settings, fromDb.settings, "canCreateGroups", "canCreateRepositories",
-					"noOfRepositories", "maxSize");
+			Beans.populateProperties(user.settings, fromDb.settings, "userManager", "dataManager", "canCreateGroups",
+					"canCreateRepositories", "noOfRepositories", "maxSize");
 		}
 		fromDb = service.update(fromDb);
 		return Respond.ok(Users.mapForSelf(fromDb));
