@@ -62,15 +62,6 @@ public class LibraryService {
 		}
 	}
 
-	public String getLibraryName(String refId) {
-		for (String libraryName : refIds.keySet()) {
-			Set<String> ids = refIds.get(libraryName);
-			if (ids.contains(refId))
-				return libraryName;
-		}
-		return null;
-	}
-
 	public Set<String> getLibraryNames(String refId) {
 		Set<String> names = new HashSet<>();
 		for (String libraryName : refIds.keySet()) {
