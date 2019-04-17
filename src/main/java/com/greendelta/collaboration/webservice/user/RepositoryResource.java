@@ -185,10 +185,10 @@ public class RepositoryResource {
 			@FormDataParam("commitMessage") String commitMessage,
 			@FormDataParam("file") InputStream input,
 			@QueryParam("format") String format) {
-		if (Strings.isNullOrEmpty(commitMessage))
-			return Respond.invalid("group", "Missing input: Commit message");
 		Repository repo = service.get(group, name);
 		if (format != null && "json-ld".equals(format.toLowerCase())) {
+			if (Strings.isNullOrEmpty(commitMessage))
+				return Respond.invalid("group", "Missing input: Commit message");
 			service.importJsonLd(repo, input, commitMessage);
 		} else {
 			service.unpack(repo, input);
