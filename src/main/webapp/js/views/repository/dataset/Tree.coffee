@@ -15,7 +15,7 @@ define([
 				contextmenu: 
 					items: (node, callback) =>
 						actions = []
-						actions.push label: 'Open process', action: () => @openProcess @toId(node.id)
+						actions.push label: 'Open model', action: () => @openProcess node.original.type, @toId(node.id)
 						if document.queryCommandSupported('copy')
 							actions.push label: 'Copy name', action: () => @copyName node.text
 						callback actions
@@ -40,23 +40,42 @@ define([
 									elements.push @toElement link.provider
 						callback elements
 
-		toElement: (process) ->
-			count = @nodeCount[process.id]
+		toElement: (provider) ->
+			count = @nodeCount[provider.id]
 			unless count
 				count = 0
 			count++
-			@nodeCount[process.id] = count
+			@nodeCount[provider.id] = count
 			element =
-				id: process.id + '@' + count
-				text: process.name
-				children: true # todo
-				icon: "images/model/small/process.png"
+				id: provider.id + '@' + count
+				text: provider.name
+				type: provider.type
+				children: @hasChildren(provider)
+				icon: "images/model/small/#{@getImage(provider)}"
 			return element
 
-		openProcess: (id) ->
+		getImage: (provider) ->
+			if provider.type is 'Process' 
+				if provider.processType is 'SYSTEM'
+					return 'process_system.png'
+				return 'process.png'
+			return 'product_system.png'
+
+		hasChildren: (provider) ->
+			if provider.type is 'ProductSystem'
+				return false
+			for link in @dataset.processLinks
+				if link.process.id is provider.id
+					return true
+			return false
+
+
+		openProcess: (type, id) ->
 			group = @repository.get 'group'
 			name = @repository.get 'name'
-			Router.navigate "#{group}/#{name}/dataset/PROCESS/#{id}?commitId=" + @commitId
+			console.log(type)
+			dsType = if type is 'Process' then 'PROCESS' else 'PRODUCT_SYSTEM'
+			Router.navigate "#{group}/#{name}/dataset/#{dsType}/#{id}?commitId=" + @commitId
 
 		copyName: (name) ->
 			randomId = 'id-' + Math.random()
