@@ -101,7 +101,7 @@ public class UserResource {
 			return Respond.ok(null, "avatar-user.png");
 		User user = service.getForUsername(username);
 		if (user == null)
-			return Respond.notFound(username);
+			return Respond.ok(null, "avatar-user.png");
 		return Respond.ok(user.avatar, "avatar-user.png");
 	}
 
