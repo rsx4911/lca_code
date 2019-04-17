@@ -53,8 +53,8 @@ public class Repository {
 		File settingsFile = new File(repoDir, "settings.json");
 		if (!settingsFile.exists())
 			return new Settings();
-		try {
-			return new Gson().fromJson(new FileReader(settingsFile), Settings.class);
+		try (FileReader reader = new FileReader(settingsFile)) {
+			return new Gson().fromJson(reader, Settings.class);
 		} catch (IOException e) {
 			log.error("Error loading settings for repository");
 			return new Settings();
@@ -65,10 +65,9 @@ public class Repository {
 		File file = new File(repoDir, "library-restrictions.json");
 		if (!file.exists())
 			return new HashMap<>();
-		try {
-			return new Gson().fromJson(new FileReader(file),
-					new TypeToken<Map<String, Role>>() {
-					}.getType());
+		try (FileReader reader = new FileReader(file)) {
+			return new Gson().fromJson(reader, new TypeToken<Map<String, Role>>() {
+			}.getType());
 		} catch (IOException e) {
 			log.error("Error loading library restrictions", e);
 			return new HashMap<>();
