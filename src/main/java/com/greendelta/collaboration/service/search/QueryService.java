@@ -9,6 +9,7 @@ import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -49,6 +50,10 @@ class QueryService {
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn) {
 			builder.filter("mostRecent", SearchFilterValue.term(true));
+			Set<SearchFilterValue> allowed = new HashSet<>();
+			allowed.add(SearchFilterValue.term(IndexAction.ADD.name()));
+			allowed.add(SearchFilterValue.term(IndexAction.UPDATE.name()));
+			builder.filter("action", allowed);
 		}
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
@@ -89,7 +94,6 @@ class QueryService {
 	}
 
 	private SearchResult<IndexEntry> prepResult(SearchResult<Map<String, Object>> result) {
-		// TODO only return newest and undeleted versions to anonymous users
 		return SearchResults.convert(result, parser::parse);
 	}
 
