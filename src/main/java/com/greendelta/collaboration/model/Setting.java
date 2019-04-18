@@ -43,7 +43,6 @@ public class Setting extends AbstractEntity {
 		COMMENTS_ENABLED(Boolean.class, true),
 		PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
 		NOTIFICATIONS_ENABLED(Boolean.class, true),
-		COUNTING_ENABLED(Boolean.class, true),
 
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),
@@ -84,11 +83,11 @@ public class Setting extends AbstractEntity {
 		MAIL_TLS(Boolean.class, false),
 		MAIL_DEFAULT_FROM(String.class),
 		MAIL_DEFAULT_REPLY_TO(String.class),
-		
+
 		// maintenance
 		MAINTENANCE_MODE(Boolean.class, false),
 		MAINTENANCE_MESSAGE(String.class, "Server is in maintenance mode. Please try again later"),
-		
+
 		// announcements
 		ANNOUNCEMENT_ID(String.class),
 		ANNOUNCEMENT_MESSAGE(String.class),
@@ -98,7 +97,7 @@ public class Setting extends AbstractEntity {
 
 		public final Class<?> type;
 		private final Object defaultValue;
-		
+
 		private Key(Class<?> type) {
 			this(type, null);
 		}
@@ -158,7 +157,7 @@ public class Setting extends AbstractEntity {
 
 		public boolean isFeature() {
 			List<Key> features = Arrays.asList(MESSAGING_ENABLED, TASKS_ENABLED, COMMENTS_ENABLED,
-					PUBLIC_REPOSITORY_ENABLED, COUNTING_ENABLED);
+					PUBLIC_REPOSITORY_ENABLED);
 			return features.contains(this);
 		}
 
@@ -175,8 +174,8 @@ public class Setting extends AbstractEntity {
 		}
 
 		public boolean isPublic() {
-			return !isMailConfig() && !isSearchConfig() &&
-					this != GLAD_API_KEY && this != REPOSITORY_PATH && this != LIBRARY_PATH;
+			return !isMailConfig() && !isSearchConfig() && this != GLAD_API_KEY && this != REPOSITORY_PATH
+					&& this != LIBRARY_PATH;
 		}
 	}
 
