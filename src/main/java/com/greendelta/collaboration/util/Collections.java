@@ -93,14 +93,14 @@ public class Collections {
 		}
 	}
 
-	public static <V, T> List<T> convert(List<V> col, Function<V, T> converter) {
+	public static <V, T> List<T> convertToList(Collection<V> col, Function<V, T> converter) {
 		return (List<T>) convert(col, new ArrayList<>(), converter);
 	}
 
-	public static <V, T> Set<T> convert(Set<V> col, Function<V, T> converter) {
+	public static <V, T> Set<T> convertToSet(Collection<V> col, Function<V, T> converter) {
 		return (Set<T>) convert(col, new HashSet<>(), converter);
 	}
-
+	
 	public static <V, T> Collection<T> convert(Collection<V> from, Collection<T> to, Function<V, T> converter) {
 		for (V elem : from) {
 			to.add(converter.apply(elem));

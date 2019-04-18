@@ -53,7 +53,7 @@ public class DataExchangeTest extends WebserviceTest {
 		database.close();
 		database = new DerbyDatabase(emptyDbFolder);
 		client = getClient(database);
-		Set<FileReference> toFetch = Collections.convert(data, dataset -> dataset.asFileReference());
+		Set<FileReference> toFetch = Collections.convertToSet(data, dataset -> dataset.asFileReference());
 		client.fetch(toFetch, null, null);
 		client.getConfig().disconnect();
 		database.close();

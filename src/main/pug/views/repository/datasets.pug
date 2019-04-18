@@ -39,15 +39,15 @@ if !isPublic || pathAsArray
 	.header-box
 		if deleted
 			.pull-left
-				+category-breadcrumb(baseUrl, pathAsArray)
+				+category-breadcrumb(baseUrl, pathAsArray, false, false, commitId)
 			.badge.pull-right.deleted Deleted
 		else if !showCommitSelection
 			.pull-left
-				+category-breadcrumb(baseUrl, pathAsArray)
+				+category-breadcrumb(baseUrl, pathAsArray, false, false, commitId)
 			.pull-right
 				+download-dropdown()
 		else
-			+category-breadcrumb(baseUrl, pathAsArray)
+			+category-breadcrumb(baseUrl, pathAsArray, false, false, commitId)
 		.clear
 
 .content-box

@@ -141,6 +141,7 @@ public class RepositoryService {
 			delete(repo);
 		} catch (IOException e) {
 			log.error("Error moving repository contents", e);
+			return false;
 		}
 		return true;
 	}
@@ -168,7 +169,7 @@ public class RepositoryService {
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);
 	}
-
+	
 	private void putJsonContext(String group, String name) {
 		String path = getPath(group, name);
 		if (path == null)
@@ -212,6 +213,8 @@ public class RepositoryService {
 
 	public void unpack(Repository repo, InputStream input) {
 		try {
+			org.openlca.util.Dirs.delete(repo.repoDir.toPath());
+			create(repo.group, repo.name);
 			new RepositoryInput(repo.repoDir.toPath()).read(input);
 		} catch (IOException e) {
 			log.error("Error unpacking repository", e);
@@ -219,6 +222,8 @@ public class RepositoryService {
 	}
 
 	public void importJsonLd(Repository repo, InputStream input, String commitMessage) {
+		org.openlca.util.Dirs.delete(repo.repoDir.toPath());
+		create(repo.group, repo.name);
 		User user = userService.getCurrentUser();
 		ZipUtil.unpack(input, repo.repoDir);
 		try {

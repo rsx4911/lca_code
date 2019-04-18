@@ -152,7 +152,7 @@ public class FetchResource {
 	@POST
 	@Path("{group}/{name}")
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response fetch(
 			@PathParam("group") String group,
 			@PathParam("name") String name,

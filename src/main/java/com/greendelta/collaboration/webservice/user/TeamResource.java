@@ -73,7 +73,7 @@ public class TeamResource {
 	public Response getAvatar(@PathParam("teamname") String teamname) {
 		Team team = service.getForTeamname(teamname);
 		if (team == null)
-			return Respond.notFound(teamname);
+			return Respond.ok(null, "avatar-team.png");
 		return Respond.ok(team.avatar, "avatar-team.png");
 	}
 

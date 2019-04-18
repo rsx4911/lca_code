@@ -111,6 +111,10 @@ class IndexEntryParser {
 		e.commitTimestamp = entry.get("commitTimestamp");
 		e.action = entry.get("action");
 		e.mostRecent = entry.getBoolean("mostRecent");
+		e.commits = entry.get("commits");
+		if (e.commits == null) {
+			e.commits = new ArrayList<>();
+		}
 		e.type = type;
 		return e;
 	}

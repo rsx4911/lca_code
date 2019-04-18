@@ -11,10 +11,13 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.cloud.error.UnauthorizedAccessException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.service.user.AccessService;
 
 @Singleton
 public class LibraryService {
@@ -22,10 +25,12 @@ public class LibraryService {
 	private static final Logger log = LogManager.getLogger(LibraryService.class);
 	private final Map<String, Set<String>> refIds = new HashMap<>();
 	private final SettingsService settingsService;
+	private final AccessService accessService;
 
 	@Inject
-	public LibraryService(SettingsService settingsService) {
+	public LibraryService(SettingsService settingsService, AccessService accessService) {
 		this.settingsService = settingsService;
+		this.accessService = accessService;
 		resetLibraries();
 	}
 
@@ -57,13 +62,15 @@ public class LibraryService {
 		}
 	}
 
-	public String getLibraryName(String refId) {
+	public Set<String> getLibraryNames(String refId) {
+		Set<String> names = new HashSet<>();
 		for (String libraryName : refIds.keySet()) {
 			Set<String> ids = refIds.get(libraryName);
-			if (ids.contains(refId))
-				return libraryName;
+			if (!ids.contains(refId))
+				continue;
+			names.add(libraryName);
 		}
-		return null;
+		return names;
 	}
 
 	public Set<String> getLibraryNames() {
@@ -95,6 +102,20 @@ public class LibraryService {
 
 	private File getFile(String libraryName) {
 		return new File(settingsService.get(Key.LIBRARY_PATH) + File.separator + libraryName + ".txt");
+	}
+
+	public void setRestriction(Repository repo, String library, Role restriction) {
+		if (!accessService.canSetSettings(repo.toId()))
+			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
+		repo.setRestriction(library, restriction);
+	}
+
+	public Map<String, Role> getRestrictions(Repository repo) {
+		Map<String, Role> restrictions = new HashMap<>();
+		for (String library : getLibraryNames()) {
+			restrictions.put(library, repo.libraryRestrictions.get(library));
+		}
+		return restrictions;
 	}
 
 }

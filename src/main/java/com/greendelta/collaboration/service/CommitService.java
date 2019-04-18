@@ -10,10 +10,12 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.authz.AuthorizationException;
 import org.openlca.cloud.api.data.ModelStreamReader;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
@@ -22,12 +24,14 @@ import org.openlca.cloud.util.Directories;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Bytes;
 
@@ -38,12 +42,17 @@ public class CommitService {
 	private final UserService userService;
 	private final AccessService accessService;
 	private final SearchService searchService;
+	private final LibraryService libraryService;
+	private final MembershipService membershipService;
 
 	@Inject
-	public CommitService(UserService userService, AccessService accessService, SearchService searchService) {
+	public CommitService(UserService userService, AccessService accessService, SearchService searchService,
+			LibraryService libraryService, MembershipService membershipService) {
 		this.userService = userService;
 		this.searchService = searchService;
 		this.accessService = accessService;
+		this.libraryService = libraryService;
+		this.membershipService = membershipService;
 	}
 
 	public Commit put(Repository repo, InputStream data) {
@@ -118,6 +127,9 @@ public class CommitService {
 			try {
 				while (reader.hasMore()) {
 					Dataset dataset = reader.readNextPartAsDataset();
+					if (!canWrite(dataset))
+						throw new AuthorizationException("User is not allowed to commit changes to "
+								+ dataset.type.name() + " " + dataset.refId);
 					log.trace("Next: {} {}", dataset.type, dataset.refId);
 					datasets.add(dataset);
 					File file = repo.getDatasetFile(dataset.type, dataset.refId, commit.id, true);
@@ -132,12 +144,29 @@ public class CommitService {
 					log.trace("Writing binaries", dataset.type, dataset.refId);
 					writeBinaries(dataset);
 				}
-				searchService.index(repo.toId(), indexEntries);
+				searchService.index(repo.toId(), commit.id, indexEntries);
 				repo.updateSize(currentRepoSize);
 			} catch (Exception e) {
 				cleanup(repo, datasets, commit);
 				throw e;
 			}
+		}
+
+		private boolean canWrite(Dataset dataset) {
+			Map<String, Role> libraryRestrictions = libraryService.getRestrictions(repo);
+			Set<String> libraries = libraryService.getLibraryNames(dataset.refId);
+			for (String library : libraries) {
+				Role restrictedTo = libraryRestrictions.get(library);
+				if (restrictedTo == null)
+					continue;
+				User user = userService.getCurrentUser();
+				if (user == null || user.getId() == 0l)
+					return false;
+				Role userRole = membershipService.getRole(user, repo.toId());
+				if (!userRole.matches(restrictedTo))
+					return false;
+			}
+			return true;
 		}
 
 		private boolean write(Dataset dataset, File file) throws IOException {
@@ -155,7 +184,7 @@ public class CommitService {
 		}
 
 		private void createIndexEntry(Dataset dataset, File file) {
-			IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
+			IndexAction lastAction = searchService.getLastAction(repo, dataset.refId);
 			Map<String, Object> data = new HashMap<>();
 			if (dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW)
 				data = IndexEntryCreator.readData(file);

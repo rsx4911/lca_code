@@ -42,7 +42,7 @@ public class UserManagerAreaResource {
 	public Response getCounts(@Context HttpServletRequest request) {
 		Map<String, Object> result = new HashMap<>();
 		User currentUser = userService.getCurrentUser();
-		if (currentUser.isAdmin()) {
+		if (currentUser.isDataManager()) {
 			result.put("repositories", repoService.getCount(true));
 			result.put("groups", groupService.getCount(true));
 		}

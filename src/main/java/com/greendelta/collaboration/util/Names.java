@@ -7,7 +7,6 @@ public class Names {
 
 	private final static List<String> RESERVED;
 	private final static List<String> USER_ROUTES;
-	private final static String REGEX_NAME = "^[a-zA-Z0-9_]+$";
 
 	static {
 		USER_ROUTES = new ArrayList<>();
@@ -70,10 +69,17 @@ public class Names {
 		return isUserRoute(name) || RESERVED.contains(name.toLowerCase());
 	}
 
-	public static boolean isValid(String name) {
+	public static boolean isValid(String name, char... additionalValidChars) {
 		if (name.length() < 4)
 			return false;
-		if (!name.matches(REGEX_NAME))
+		String regex = "^[a-zA-Z0-9_";
+		if (additionalValidChars != null) {
+			for (char character : additionalValidChars) {
+				regex += character;
+			}
+		}
+		regex += "]+$";
+		if (!name.matches(regex))
 			return false;
 		return true;
 	}

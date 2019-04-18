@@ -25,7 +25,8 @@ public class AccessService {
 	private final SettingsService settingsService;
 
 	@Inject
-	public AccessService(UserService userService, MembershipService membershipService, SettingsService settingsService) {
+	public AccessService(UserService userService, MembershipService membershipService,
+			SettingsService settingsService) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.settingsService = settingsService;
@@ -39,7 +40,7 @@ public class AccessService {
 		if (isPublic(groupOrRepo))
 			return true;
 		User user = userService.getCurrentUser();
-		if (!ignoreAdmin && user.isAdmin())
+		if (!ignoreAdmin && user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
@@ -87,7 +88,7 @@ public class AccessService {
 		User user = userService.getCurrentUser();
 		Map<String, Role> userRoles = new HashMap<>();
 		for (Comment comment : comments) {
-			if (user.isAdmin() || comment.user.equals(user)) {
+			if (user.isDataManager() || comment.user.equals(user)) {
 				canRead.add(comment);
 				continue;
 			}
@@ -122,7 +123,7 @@ public class AccessService {
 
 	public boolean canManageCommentsIn(String repositoryPath) {
 		User user = userService.getCurrentUser();
-		if (user.isAdmin())
+		if (user.isDataManager())
 			return true;
 		if (!canRead(repositoryPath))
 			return false;
@@ -151,7 +152,7 @@ public class AccessService {
 	}
 
 	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo, boolean ignoreAdmin) {
-		if (!ignoreAdmin && user.isAdmin())
+		if (!ignoreAdmin && user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;

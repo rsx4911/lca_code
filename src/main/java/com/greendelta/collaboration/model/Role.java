@@ -43,6 +43,10 @@ public enum Role {
 		return permissions;
 	}
 
+	public boolean matches(Role role) {
+		return this.level >= role.level;
+	}
+
 	public static Role best(Role r1, Role r2) {
 		if (r1.level > r2.level)
 			return r1;
