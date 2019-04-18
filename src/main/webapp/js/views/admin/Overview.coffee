@@ -8,7 +8,6 @@ define([
 				'cs!utils/Renderer'
 				'cs!utils/Status'
 				'cs!app/Router'
-				'cs!models/User'
 				'cs!models/CurrentUser'
 				'templates/views/admin/overview'
 				'templates/views/admin/overview-repository-list'
@@ -17,7 +16,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Announcements, Events, Filter, Layers, Model, Renderer, Status, Router, User, currentUser, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Announcements, Events, Filter, Layers, Model, Renderer, Status, Router, currentUser, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -191,6 +190,7 @@ define([
 					data.openWebServiceRequests = @serverInfo.openWebServiceRequests
 					data.announcement = @serverInfo.announcement
 					data.maintenanceMessage = @serverInfo.maintenanceMessage
+					data.licenseAgreementText = @serverInfo.licenseAgreementText
 				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()

@@ -23,10 +23,12 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReindexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -57,11 +59,12 @@ public class RepositoryResource {
 	private final ReindexService reindexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
+	private final LibraryService libraryService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
 			HistoryService historyService, SearchService searchService, ReindexService reindexService,
-			DeleteService deleteService, NotificationService notificationService) {
+			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.accessService = accessService;
@@ -70,12 +73,15 @@ public class RepositoryResource {
 		this.reindexService = reindexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
+		this.libraryService = libraryService;
 	}
 
 	@GET
-	public Response getAll(@QueryParam("page") @DefaultValue("1") int page,
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
-			@QueryParam("filter") @DefaultValue("") String filter, @QueryParam("group") @DefaultValue("") String group,
+			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("group") @DefaultValue("") String group,
 			@QueryParam("module") Module module) {
 		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
 		if (module == null)
@@ -92,7 +98,9 @@ public class RepositoryResource {
 
 	@GET
 	@Path("{group}/{name}")
-	public Response get(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response get(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		Map<String, Object> mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
 		String id = repo.toId();
@@ -103,27 +111,35 @@ public class RepositoryResource {
 		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(id));
 		mappedRepo.put("userCanSetSettings", accessService.canSetSettings(id));
 		mappedRepo.put("size", repo.getSize());
+		mappedRepo.put("libraryRestrictions", libraryService.getRestrictions(repo));
 		return Respond.ok(mappedRepo);
 	}
 
 	@GET
 	@Path("avatar/{group}/{name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response getAvatar(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response getAvatar(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		byte[] avatar = service.getAvatar(group, name);
 		return Respond.ok(avatar, "avatar-repository.png");
 	}
 
 	@GET
 	@Path("meta/{group}/{name}")
-	public Response getMeta(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response getMeta(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		return Respond.ok("{\"schemaVersion\": \"" + repo.getSchemaVersion() + "\"}");
 	}
 
 	@GET
 	@Path("export/{group}/{name}")
-	public Response doExport(@PathParam("group") String group, @PathParam("name") String name) {
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public Response doExport(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		String filename = repo.toId().replace('/', '-') + ".zip";
 		return Respond.ok(filename, 0, service.pack(repo));
@@ -131,7 +147,9 @@ public class RepositoryResource {
 
 	@POST
 	@Path("{group}/{name}")
-	public Response create(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response create(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		Response response = _create(group, name);
 		if (response.getStatus() != Status.CREATED.getStatusCode())
 			return response;
@@ -169,6 +187,8 @@ public class RepositoryResource {
 			@QueryParam("format") String format) {
 		Repository repo = service.get(group, name);
 		if (format != null && "json-ld".equals(format.toLowerCase())) {
+			if (Strings.isNullOrEmpty(commitMessage))
+				return Respond.invalid("group", "Missing input: Commit message");
 			service.importJsonLd(repo, input, commitMessage);
 		} else {
 			service.unpack(repo, input);
@@ -179,8 +199,11 @@ public class RepositoryResource {
 
 	@POST
 	@Path("move/{group}/{name}/{newGroup}/{newName}")
-	public Response move(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("newGroup") String newGroup, @PathParam("newName") String newName) {
+	public Response move(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("newGroup") String newGroup,
+			@PathParam("newName") String newName) {
 		if (!group.equals(newGroup))
 			if (!groupService.exists(newGroup))
 				return Respond.invalid("newGroup", "Specified group does not exist");
@@ -192,13 +215,16 @@ public class RepositoryResource {
 		Repository newRepo = service.get(newGroup, newName);
 		updateRepoId(repo, newRepo);
 		notificationService.repositoryMoved(repo, newRepo).send();
-		return Respond.ok(newRepo);
+		return Respond.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 	}
 
 	@POST
 	@Path("clone/{group}/{name}/{commitId}/{newGroup}/{newName}")
-	public Response clone(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("commitId") String commitId, @PathParam("newGroup") String newGroup,
+	public Response clone(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("commitId") String commitId,
+			@PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
 		Response response = _create(newGroup, newName);
 		if (response.getStatus() != Status.CREATED.getStatusCode())
@@ -212,7 +238,7 @@ public class RepositoryResource {
 		}
 		List<IndexEntry> entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
-		List<String> commitIds = Collections.convert(commits, commit -> commit.id);
+		List<String> commitIds = Collections.convertToList(commits, commit -> commit.id);
 		for (IndexEntry entry : entries) {
 			if (!commitIds.contains(entry.commitId))
 				continue;
@@ -239,7 +265,9 @@ public class RepositoryResource {
 	@Path("avatar/{group}/{name}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response setAvatar(@PathParam("group") String group, @PathParam("name") String name,
+	public Response setAvatar(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
 			@FormDataParam("file") InputStream file) {
 		service.get(group, name); // to ensure repo exists and user has access
 		service.setAvatar(group, name, file);
@@ -248,16 +276,44 @@ public class RepositoryResource {
 
 	@PUT
 	@Path("settings/{group}/{name}/{setting}/{value}")
-	public Response toggleSetting(@PathParam("group") String group, @PathParam("name") String name,
-			@PathParam("setting") String setting, @PathParam("value") String value) {
+	public Response setSetting(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("setting") String setting,
+			@PathParam("value") String value) {
 		Repository repo = service.get(group, name);
 		service.setSetting(repo, setting, value);
 		return Respond.ok(new HashMap<>());
 	}
 
+	@PUT
+	@Path("restriction/{group}/{name}/{library}/{role}")
+	public Response setRestriction(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("library") String library,
+			@PathParam("role") Role role) {
+		Repository repo = service.get(group, name);
+		libraryService.setRestriction(repo, library, role);
+		return Respond.ok(new HashMap<>());
+	}
+
+	@DELETE
+	@Path("restriction/{group}/{name}/{library}")
+	public Response removeRestriction(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@PathParam("library") String library) {
+		Repository repo = service.get(group, name);
+		libraryService.setRestriction(repo, library, null);
+		return Respond.ok(new HashMap<>());
+	}
+
 	@DELETE
 	@Path("{group}/{name}")
-	public Response delete(@PathParam("group") String group, @PathParam("name") String name) {
+	public Response delete(
+			@PathParam("group") String group,
+			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		NotificationJob notification = notificationService.repositoryDeleted(repo);
 		deleteService.delete(repo);

@@ -70,7 +70,7 @@ public class HistoryResource {
 		if (lastCommitId != null && !lastCommitId.isEmpty()) {
 			Commit commit = service.getCommit(repo, lastCommitId);
 			if (commit == null)
-				return Respond.badRequest("Unknown commit id");
+				return Respond.notFound("Commit " + lastCommitId + " not found");
 		}
 		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
 		if (commits.size() == 0)
@@ -90,7 +90,7 @@ public class HistoryResource {
 		Repository repo = repoService.get(group, name);
 		IndexEntry first = searchService.getFirst(repo.toId(), refId);
 		if (first == null)
-			return Respond.noContent();
+			return Respond.notFound();
 		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
 		if (commits.size() == 0)
 			return Respond.noContent();
@@ -121,6 +121,8 @@ public class HistoryResource {
 			@QueryParam("pageSize") int pageSize) {
 		Repository repo = repoService.get(group, name);
 		List<Commit> commits = service.getCommits(repo);
+		if (commits.size() == 0)
+			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
 		return Respond.ok(putAdditionalInfo(result, commits));
@@ -164,6 +166,8 @@ public class HistoryResource {
 		if (first == null)
 			return Respond.noContent();
 		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
+		if (commits.size() == 0)
+			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		return Respond.ok(putUserName(commits));
 	}
@@ -179,8 +183,7 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		Map<String, Object> result = putUserName(commit);
-		return Respond.ok(result);
+		return Respond.ok(putUserName(commit));
 	}
 
 	@GET

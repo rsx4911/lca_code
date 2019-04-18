@@ -16,17 +16,21 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("datamanager/library")
 public class LibraryResource {
 
 	private final LibraryService service;
+	private final DeleteService deleteService;
 
 	@Inject
-	public LibraryResource(LibraryService service) {
+	public LibraryResource(LibraryService service, DeleteService deleteService) {
 		this.service = service;
+		this.deleteService = deleteService;
 	}
 
 	@GET
@@ -54,6 +58,8 @@ public class LibraryResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("{name}")
 	public Response putLibrary(@PathParam("name") String name, List<String> refIds) {
+		if (!Names.isValid(name, ' ')) 
+			return Respond.invalid("name", "Only letters, numbers, underscore and space are allowed");
 		service.putLibrary(name, refIds);
 		return Respond.ok(new HashMap<>());
 	}
@@ -62,7 +68,7 @@ public class LibraryResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("{name}")
 	public Response removeLibrary(@PathParam("name") String name) {
-		service.removeLibrary(name);
+		deleteService.deleteLibrary(name);
 		return Respond.ok(new HashMap<>());
 	}
 

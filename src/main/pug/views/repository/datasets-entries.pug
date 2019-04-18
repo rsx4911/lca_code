@@ -1,11 +1,13 @@
-mixin count-span()
-	if countingEnabled
-		span.dataset-count: img(src='images/loader.gif' aria-label='Loader icon')
+mixin count-span(entry)
+	if entry.count !== -1
+		span  (#{entry.count})
 
 if categoryPath
 	- var previousUrl = baseUrl + '/datasets';
 	if previousPath
 		- previousUrl += '/' + previousPath;
+	if commitId
+		- previousUrl += '?commitId=' + commitId	
 	tr 
 		td 
 		td: a(href=previousUrl): strong ..
@@ -22,10 +24,10 @@ each entry in entries
 			td(data-path=entry.type): a(href=url): strong 
 				if entry.deleted
 					del=getRootLabel(entry.type) 
-					+count-span()
+					+count-span(entry)
 				else
 					|  #{getRootLabel(entry.type)} 
-					+count-span()
+					+count-span(entry)
 			if !isPublic
 				td=formatLastUpdate(entry.commitTimestamp)
 				td: a(href=baseUrl + '/commit/' + entry.commitId)=entry.commitMessage
@@ -39,11 +41,11 @@ each entry in entries
 					if entry.action === 'DELETE'
 						del=entry.name 
 							if entry.type === 'CATEGORY'
-								+count-span()
+								+count-span(entry)
 					else
 						| #{entry.name} 
 						if entry.type === 'CATEGORY'
-							+count-span()
+							+count-span(entry)
 			if !isPublic
 				td=formatLastUpdate(entry.commitTimestamp)
 				td: a(href=baseUrl + '/commit/' + entry.commitId)=entry.commitMessage

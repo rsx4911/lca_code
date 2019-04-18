@@ -79,7 +79,7 @@ public class GroupService {
 		User currentUser = userService.getCurrentUser();
 		if (userGroup && !currentUser.isUserManager()) 
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
-		if (!currentUser.isAdmin() && !currentUser.settings.canCreateGroups)
+		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;

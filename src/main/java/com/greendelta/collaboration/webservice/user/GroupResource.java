@@ -18,6 +18,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.openlca.cloud.error.UnauthorizedAccessException;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.DeleteService;
@@ -67,6 +69,8 @@ public class GroupResource {
 	public Response get(@PathParam("name") String name) {
 		if (!service.exists(name) || service.isUserNamespace(name))
 			return Respond.notFound("Group " + name + " not found");
+		if (!accessService.canRead(name))
+			throw new UnauthorizedAccessException(name, "READ");
 		Map<String, Object> group = new HashMap<>();
 		group.put("userCanDelete", accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
@@ -120,8 +124,10 @@ public class GroupResource {
 	@DELETE
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {
+		if (!service.exists(name) || service.isUserNamespace(name))
+			return Respond.notFound("Group " + name + " not found");
 		NotificationJob notification = notificationService.groupDeleted(name);
-		deleteService.delete(name);
+		deleteService.deleteGroup(name);
 		notification.send();
 		return Respond.ok(new HashMap<>());
 	}

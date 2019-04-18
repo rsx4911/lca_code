@@ -40,7 +40,7 @@ public class ReindexService {
 			List<IndexEntry> entries = runner.run(commit);
 			if (entries.isEmpty())
 				return;
-			searchService.index(repo.toId(), entries);
+			searchService.index(repo.toId(), commit.id, entries);
 		}
 	}
 

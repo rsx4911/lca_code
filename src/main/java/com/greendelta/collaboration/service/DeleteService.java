@@ -32,12 +32,13 @@ public class DeleteService {
 	private final AccessService accessService;
 	private final SearchService searchService;
 	private final CommentService commentService;
-
+	private final LibraryService libraryService;
+	
 	@Inject
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, SearchService searchService,
-			CommentService commentService) {
+			CommentService commentService, LibraryService libraryService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -48,6 +49,7 @@ public class DeleteService {
 		this.accessService = accessService;
 		this.searchService = searchService;
 		this.commentService = commentService;
+		this.libraryService = libraryService;
 	}
 
 	public void delete(User user) {
@@ -128,14 +130,21 @@ public class DeleteService {
 		}
 	}
 
-	public void delete(String group) {
-		if (!accessService.canDelete(group))
-			throw new UnauthorizedAccessException(group, "DELETE");
-		for (Repository repo : repoService.getAll(0, 0, group + "/", false).data) {
+	public void deleteGroup(String name) {
+		if (!accessService.canDelete(name))
+			throw new UnauthorizedAccessException(name, "DELETE");
+		for (Repository repo : repoService.getAll(0, 0, name + "/", false).data) {
 			delete(repo);
 		}
-		memberService.removeMemberships(group);
-		groupService.delete(group);
+		memberService.removeMemberships(name);
+		groupService.delete(name);
 	}
 
+	public void deleteLibrary(String name) {
+		for (Repository repo : repoService.getAllAccessible()) {
+			repo.setRestriction(name, null);
+		}
+		libraryService.removeLibrary(name);
+	}
+	
 }
