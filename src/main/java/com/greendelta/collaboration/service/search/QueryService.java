@@ -59,6 +59,7 @@ class QueryService {
 			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
 		} else {
 			builder.sortBy("typeOrdinal", SearchSorting.DESC);
+			builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);

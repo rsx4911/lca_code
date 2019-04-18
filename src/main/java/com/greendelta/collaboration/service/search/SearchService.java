@@ -114,11 +114,10 @@ public class SearchService {
 			return null;
 		return latest.get(0);
 	}
-
+	
 	List<ObjectMap> getMostRecent(String repoId, Set<String> refIds, Commit until) {
 		List<ObjectMap> results = new ArrayList<>();
 		Set<String> remaining = new HashSet<>(refIds);
-		Set<String> added = new HashSet<>();
 		while (!remaining.isEmpty()) {
 			Set<String> next = Collections.pop(remaining, 1000);
 			SearchQueryBuilder builder = builder(repoId);
@@ -131,24 +130,21 @@ public class SearchService {
 				builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
 			}
 			builder.sortBy("commitTimestamp", SearchSorting.DESC);
-			SearchResult<ObjectMap> result = searchRaw(builder.build());
-			if (result.data.isEmpty())
-				continue;
-			for (ObjectMap data : result.data) {
-				String refId = data.get("refId").toString();
-				if (added.contains(refId))
-					continue;
-				results.add(data);
-				added.add(refId);
-			}
+			results.addAll(searchRaw(builder.build()).data);
 		}
 		return results;
 	}
 
+	private List<IndexEntry> getMostRecent(String repoId) {
+		SearchQueryBuilder builder = builder(repoId);
+		builder.filter("mostRecent", SearchFilterValue.term(true));
+		builder.sortBy("commitTimestamp", SearchSorting.DESC);
+		return search(builder.build()).data;
+	}
+	
 	public List<IndexEntry> getMostRecent(Repository repo, ModelType type, String path, Commit until) {
-		List<IndexEntry> results = new ArrayList<>();
-		Set<String> added = new HashSet<>();
 		SearchQueryBuilder builder = builder(repo.toId());
+		builder.filter("mostRecent", SearchFilterValue.term(true));
 		if (until != null) {
 			builder.filter("commitTimestamp", SearchFilterValue.to(until.timestamp));
 		}
@@ -159,17 +155,7 @@ public class SearchService {
 			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/?*"));
 		}
 		builder.sortBy("commitTimestamp", SearchSorting.DESC);
-		SearchResult<ObjectMap> result = searchRaw(builder.build());
-		if (result.data.isEmpty())
-			return results;
-		for (ObjectMap data : result.data) {
-			String refId = data.get("refId").toString();
-			if (added.contains(refId))
-				continue;
-			results.add(parser.parse(data));
-			added.add(refId);
-		}
-		return results;
+		return search(builder.build()).data;
 	}
 
 	public IndexEntry getFirst(String repoId, String refId) {
@@ -184,14 +170,22 @@ public class SearchService {
 	}
 
 	public void index(String repoId, Collection<IndexEntry> entries) {
+		index(repoId, entries);
+	}
+
+	public void index(String repoId, String commitId, Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
+		Set<String> refIds = Collections.convertToSet(entries, (entry) -> entry.refId);
 		log.debug("Indexing {} entries in repository {}", entries.size(), repoId);
-		Set<String> refIds = Collections.convert(new HashSet<>(entries), e -> e.refId);
-		List<IndexEntry> mostRecent = Collections.convert(getMostRecent(repoId, refIds, null), parser::parse);
+		List<IndexEntry> mostRecent = getMostRecent(repoId);
 		if (!mostRecent.isEmpty()) {
 			for (IndexEntry entry : mostRecent) {
-				entry.mostRecent = false;
+				if (refIds.contains(entry.refId)) {
+					entry.mostRecent = false;
+				} else if (!Strings.isNullOrEmpty(commitId)) {
+					entry.commits.add(commitId);					
+				}
 			}
 			Map<String, Map<String, Object>> contentsById = buildIndexMap(mostRecent);
 			getClient().index(contentsById);

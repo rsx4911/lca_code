@@ -21,7 +21,7 @@ define([
 				template: template
 				pageSize: 25
 				pageSizeId: direction + '-page-size'
-				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&commitId={commitId}&direction=#{direction}&"
+				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&commitId=#{commitId}&direction=#{direction}&"
 				beforeRender: (result) ->
 					result.getIcon = Icons.get
 					result.commitId = commitId

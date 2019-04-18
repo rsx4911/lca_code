@@ -68,7 +68,7 @@ abstract class DownloadResource {
 			}
 		}
 		List<IndexEntry> entries = searchService.getMostRecent(repo, type, subPath, commit);
-		List<FileReference> references = Collections.convert(entries, (e) -> e.asFileReference());
+		List<FileReference> references = Collections.convertToList(entries, (e) -> e.asFileReference());
 		return prepare(group, repository, commitId, references);
 	}
 

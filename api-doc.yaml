@@ -700,6 +700,12 @@ definitions:
           description: 'Indicates if this is the most recent entry in the index, if false, newer versions of the data set exist'
           type: boolean
           default: false
+        commits:
+          description: 'A list of all commits this data set is referenced in (the initial commit and all commits where the data set did NOT change)'
+          type: array
+          items:
+            type: string
+          example: '[43a523f2-057d-a05a-694c-2d89078724ed]'
         fullPath:
           description: 'The full category path including the name of the element at last, concatenated with a slash'
           type: string

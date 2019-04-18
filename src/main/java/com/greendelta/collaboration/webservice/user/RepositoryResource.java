@@ -238,7 +238,7 @@ public class RepositoryResource {
 		}
 		List<IndexEntry> entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
-		List<String> commitIds = Collections.convert(commits, commit -> commit.id);
+		List<String> commitIds = Collections.convertToList(commits, commit -> commit.id);
 		for (IndexEntry entry : entries) {
 			if (!commitIds.contains(entry.commitId))
 				continue;

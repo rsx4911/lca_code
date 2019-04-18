@@ -26,13 +26,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.user.UserService;
@@ -49,17 +47,15 @@ public class BrowseResource {
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final UserService userService;
-	private final SettingsService settingsService;
 
 	@Inject
 	public BrowseResource(BrowseService service, RepositoryService repoService, FetchService fetchService,
-			HistoryService historyService, UserService userService, SettingsService settingsService) {
+			HistoryService historyService, UserService userService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.userService = userService;
-		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -85,15 +81,27 @@ public class BrowseResource {
 		if (content == null)
 			content = new ArrayList<>();
 		if (userService.getCurrentUser().getId() == 0) {
-			content = com.greendelta.collaboration.util.Collections.convert(content, (entry) -> {
+			content = com.greendelta.collaboration.util.Collections.convertToList(content, (entry) -> {
 				entry.remove("commitTimestamp", "commitMessage", "commitId");
 				return entry;
 			});
 		}
-		Map<String, Object> result = new HashMap<>();
-		result.put("entries", content);
-		result.put("countingEnabled", settingsService.is(Key.COUNTING_ENABLED));
-		return Respond.ok(result);
+		for (ObjectMap entry : content) {
+			entry.put("count", getCount(entry, new BrowseParameter(repo, commitId).includeDeleted(showDeleted)));
+		}
+		return Respond.ok(Collections.singletonMap("entries", content));
+	}
+		
+	private long getCount(ObjectMap entry, BrowseParameter params) {
+		ModelType type = ModelType.valueOf(entry.getString("type"));
+		String refId = entry.getString("refId");
+		if (type != ModelType.CATEGORY && !Strings.isNullOrEmpty(refId))
+			return -1;
+		if (type == ModelType.CATEGORY) {
+			type = ModelType.valueOf(entry.getString("categoryType"));
+		}
+		String fullPath = entry.getString("fullPath");
+		return service.getCount(type, fullPath, params);
 	}
 
 	private ModelType getModelType(String categoryPath) {
@@ -119,7 +127,7 @@ public class BrowseResource {
 			return null;
 		return content;
 	}
-	
+
 	@GET
 	@Path("{group}/{name}/{type}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -161,7 +169,7 @@ public class BrowseResource {
 		}
 		return Respond.ok(new Gson().toJson(json));
 	}
-	
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("categoryInfo/{group}/{name}")
@@ -190,29 +198,6 @@ public class BrowseResource {
 		result.put("id", refId);
 		result.put("category", categories);
 		result.put("deleted", entry.get("action") == IndexAction.DELETE ? "true" : "false");
-		return Respond.ok(result);
-	}
-
-	@GET
-	@Path("count/{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCount(@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("categoryPath") String path,
-			@QueryParam("commitId") String commitId,
-			@QueryParam("showDeleted") @DefaultValue("false") boolean showDeleted) {
-		log.debug("Getting data set count for {} of repository {}/{}", path, group, name);
-		String typeAsString = path.contains("/") ? path.substring(0, path.indexOf('/')) : path;
-		String category = path.contains("/") ? path.substring(path.indexOf('/') + 1) : null;
-		ModelType type = ModelTypes.parse(typeAsString);
-		Repository repo = repoService.get(group, name);
-		if (commitId == null) {
-			commitId = historyService.getLastCommit(repo).id;
-		}
-		long count = service.getCount(type, category, new BrowseParameter(repo, commitId).includeDeleted(showDeleted));
-		Map<String, Object> result = new HashMap<>();
-		result.put("count", count);
-		result.put("path", path);
 		return Respond.ok(result);
 	}
 

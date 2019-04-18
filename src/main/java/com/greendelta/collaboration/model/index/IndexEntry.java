@@ -16,6 +16,10 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public long commitTimestamp;
 	public IndexAction action;
 	public boolean mostRecent;
+	// if other commits afterwards did not change this data set, add the commit
+	// to commits (so all data sets, part of a commit can be identified
+	// without furhter aggregation)
+	public List<String> commits;
 	public String fullPath;
 	public String category;
 	public List<String> categoryPaths;
@@ -70,6 +74,8 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.fullPath = fullPath;
 		e.category = category;
 		e.categoryPaths = categoryPaths != null ? new ArrayList<>(categoryPaths) : null;
+		e.mostRecent = mostRecent;
+		e.commits = commits != null ? new ArrayList<>(commits) : null;
 	}
 
 	public static String toIndexId(String repositoryId, String refId, String commitId) {

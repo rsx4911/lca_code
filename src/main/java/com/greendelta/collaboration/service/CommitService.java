@@ -144,7 +144,7 @@ public class CommitService {
 					log.trace("Writing binaries", dataset.type, dataset.refId);
 					writeBinaries(dataset);
 				}
-				searchService.index(repo.toId(), indexEntries);
+				searchService.index(repo.toId(), commit.id, indexEntries);
 				repo.updateSize(currentRepoSize);
 			} catch (Exception e) {
 				cleanup(repo, datasets, commit);

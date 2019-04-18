@@ -97,7 +97,6 @@ public class SearchResource {
 		putDefaultFilter(builder, page, pageSize, filter);
 		putFlowFilter(builder, repo, flowRefId, commitId, direction);
 		SearchResult<IndexEntry> result = service.search(builder.build());
-		// TODO only return newest and undeleted versions
 		return Respond.ok(result);
 	}
 
@@ -111,12 +110,14 @@ public class SearchResource {
 		} else {
 			builder.filter(new String[] { "inputs", "outputs" }, value);
 		}
-		if (commitId == null)
+		if (commitId == null) {
+			builder.filter("mostRecent", SearchFilterValue.term(true));
 			return;
+		}
 		Commit commit = historyService.getCommit(repo, commitId);
 		if (commit == null)
 			return;
-		builder.filter("commitTimestamp", SearchFilterValue.to(commit.timestamp));
+		builder.filter("commits", SearchFilterValue.term(commitId));
 	}
 
 	private void putDefaultFilter(SearchQueryBuilder builder, int page, int pageSize, String filter) {
