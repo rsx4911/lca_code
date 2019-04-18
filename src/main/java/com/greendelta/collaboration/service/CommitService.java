@@ -184,7 +184,7 @@ public class CommitService {
 		}
 
 		private void createIndexEntry(Dataset dataset, File file) {
-			IndexAction lastAction = searchService.getMostRecentAction(repo.toId(), dataset.refId);
+			IndexAction lastAction = searchService.getLastAction(repo, dataset.refId);
 			Map<String, Object> data = new HashMap<>();
 			if (dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW)
 				data = IndexEntryCreator.readData(file);
