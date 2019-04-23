@@ -188,6 +188,7 @@ public class SearchService {
 		if (value != null)
 			return parser.convert(value);
 		SearchQueryBuilder builder = builder(repo.toId());
+		builder.filter("refId", SearchFilterValue.term(refId));
 		if (commitId != null) {
 			builder.filter("commits", SearchFilterValue.term(commitId));
 		}
