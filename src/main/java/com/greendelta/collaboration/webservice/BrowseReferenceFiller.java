@@ -236,6 +236,8 @@ class BrowseReferenceFiller {
 		if (indexCache.containsKey(refId))
 			return indexCache.get(refId);
 		ObjectMap indexEntry = browseService.getDataset(repo, refId, commitId);
+		if (indexEntry == null)
+			return null;
 		ModelType type = indexEntry.get("type");
 		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
 				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)
