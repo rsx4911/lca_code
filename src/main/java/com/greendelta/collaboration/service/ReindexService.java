@@ -40,7 +40,7 @@ public class ReindexService {
 			List<IndexEntry> entries = runner.run(commit);
 			if (entries.isEmpty())
 				return;
-			searchService.index(repo.toId(), commit.id, entries);
+			searchService.index(repo, commit.id, entries);
 		}
 	}
 
@@ -59,7 +59,7 @@ public class ReindexService {
 		inner.put(ref.refId, value);
 	}
 
-	private Dataset toDataset(Commit commit, FileReference ref, Map<String, Object> data) {
+	private Dataset toDataset(FileReference ref, Map<String, Object> data) {
 		ObjectMap map = ObjectMap.fromMap(data);
 		Dataset dataset = new Dataset();
 		dataset.type = ref.type;
@@ -107,7 +107,7 @@ public class ReindexService {
 					dataset = get(lastDatasets, ref);
 					entry = indexEntryCreator.create(dataset);
 				} else {
-					dataset = toDataset(commit, ref, data);
+					dataset = toDataset(ref, data);
 					entry = indexEntryCreator.create(dataset, lastAction, data);
 				}
 				put(lastActions, ref, entry.action);

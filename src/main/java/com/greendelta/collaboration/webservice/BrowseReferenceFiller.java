@@ -235,7 +235,7 @@ class BrowseReferenceFiller {
 	private ObjectMap getIndexEntry(String refId) {
 		if (indexCache.containsKey(refId))
 			return indexCache.get(refId);
-		ObjectMap indexEntry = browseService.getDataset(repo, refId, commitId);
+		ObjectMap indexEntry = browseService.getMostRecent(repo, refId, commitId);
 		if (indexEntry == null)
 			return null;
 		ModelType type = indexEntry.get("type");

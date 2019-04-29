@@ -112,7 +112,8 @@ define([
 						if @commitId
 							url += '&commitId=' + @commitId
 						return url + '&'
-					beforeRender: (result) =>
+					beforeRender: (entries) =>
+						result.entries = entries
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
@@ -135,6 +136,25 @@ define([
 							@$('.no-content-message').show()
 							@$('.table-browse').hide()
 						@initialized = true
+
+			loadCount: (result) ->
+				group = @repository.get 'group'
+				name = @repository.get 'name'				
+				for entry in result.entries
+					if entry.type is 'CATEGORY' or !entry.refId
+						path = if entry.type is 'CATEGORY' then entry.categoryType else entry.type
+						if entry.fullPath
+							path += "/#{entry.fullPath}"
+						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{encodeURIComponent(path)}"
+						if @commitId
+							url += '&commitId=' + @commitId
+						url += "&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
+						pace.ignore () =>
+							$.ajax
+								type: 'GET'
+								url: url
+								success: (result) ->
+									$("td[data-path='#{result.path}'] .dataset-count").html "(#{result.count})"
 
 			render: (renderOptions) ->
 				group = @repository.get 'group'
