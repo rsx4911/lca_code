@@ -3,7 +3,6 @@ package com.greendelta.collaboration.util.io;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -19,11 +18,13 @@ import org.openlca.util.BinUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.util.Collections;
 
 public class JsonWriter implements DatasetWriter {
 
@@ -83,22 +84,8 @@ public class JsonWriter implements DatasetWriter {
 	}
 
 	private List<IndexEntry> getGlobalParameters(String untilCommitId) {
-		Set<String> relevantCommits = new HashSet<>();
-		for (Commit commit : historyService.getCommitsUntil(repo, untilCommitId)) {
-			relevantCommits.add(commit.id);
-		}
-		List<IndexEntry> all = searchService.getAll(repo, ModelType.PARAMETER);
-		List<IndexEntry> entries = new ArrayList<>();
-		Set<String> added = new HashSet<>();
-		for (IndexEntry entry : all) {
-			if (added.contains(entry.refId))
-				continue;
-			if (!relevantCommits.contains(entry.commitId))
-				continue;
-			entries.add(entry);
-			added.add(entry.refId);
-		}
-		return entries;
+		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, ModelType.PARAMETER, null, commitId);
+		return Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 	}
 
 	@Override

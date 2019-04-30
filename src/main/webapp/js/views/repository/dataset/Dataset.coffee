@@ -106,7 +106,7 @@ define([
 				target = $ Events.target event
 				entry = target.attr 'data-entry'
 				schemaId = target.attr 'data-scheme'
-				DQLayer.open @repository.toJSON(), @commitId, schemaId, entry, (object, path) => return @getValue object, path
+				DQLayer.open @repository.toJSON(), @commitId, schemaId, entry, @dataset
 
 			switchCommit: (event) ->
 				repo = @repository.toJSON()

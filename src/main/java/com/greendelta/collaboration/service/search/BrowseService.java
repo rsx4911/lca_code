@@ -172,7 +172,7 @@ public class BrowseService {
 	}
 
 	private SearchQueryBuilder builder(BrowseParameter params) {
-		SearchQueryBuilder builder = searchService.builder(params.repo.toId());
+		SearchQueryBuilder builder = searchService.builder(params.repo);
 		if (!Strings.isNullOrEmpty(params.nameFilter)) {
 			builder.filter("name", SearchFilterValue.wildcard("*" + params.nameFilter.toLowerCase() + "*"));
 		}
@@ -209,6 +209,10 @@ public class BrowseService {
 
 	public ObjectMap getDataset(Repository repo, String refId, String commitId) {
 		return searchService.getRaw(repo, refId, commitId);
+	}
+
+	public ObjectMap getMostRecent(Repository repo, String refId, String commitId) {
+		return searchService.getMostRecentUntil(repo, refId, commitId);
 	}
 
 	public static class BrowseParameter implements Cloneable {
