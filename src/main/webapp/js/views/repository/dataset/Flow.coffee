@@ -15,13 +15,14 @@ define([
 			group = repository.get 'group'
 			name = repository.get 'name'
 			direction = if type is 'used-by' then 'in' else 'out' 
+			commitIdParam = if commitId then "&commitId=#{commitId}" else ''
 			filter = new Filter
 				container: "##{type}-data"
 				filterId: "#{type}-filter"
 				template: template
 				pageSize: 25
 				pageSizeId: direction + '-page-size'
-				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}&commitId=#{commitId}&direction=#{direction}&"
+				url: "ws/public/search/flowLinks/#{refId}?repositoryId=#{group}/#{name}#{commitIdParam}&direction=#{direction}&"
 				beforeRender: (result) ->
 					result.getIcon = Icons.get
 					result.commitId = commitId
