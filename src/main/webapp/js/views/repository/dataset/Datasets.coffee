@@ -112,8 +112,7 @@ define([
 						if @commitId
 							url += '&commitId=' + @commitId
 						return url + '&'
-					beforeRender: (entries) =>
-						result.entries = entries
+					beforeRender: (result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
