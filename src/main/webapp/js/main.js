@@ -36,8 +36,8 @@ require.config({
 })
 
 define(['cs!app/App', 'pace'], function(App, pace) {
-	pace.on('start', function() {$('body').append('<div id="block-interaction"></div>')});
-	pace.on('hide', function() {$('#block-interaction').remove()});
+	// pace.on('start', function() {$('body').append('<div id="block-interaction"></div>')});
+	// pace.on('hide', function() {$('#block-interaction').remove()});
 	pace.start();
 	App.initialize();
 });
