@@ -54,7 +54,8 @@ if isAdmin
 			| {{buildDate}}
 		div 
 			strong Open web service requests: 
-			span#open-web-service-requests #{openWebServiceRequests} 
+			span#open-web-service-requests #{openWebServiceRequests}
+			|  
 			a(href='#' data-action='refresh-open-web-service-requests')
 				span.glyphicon.glyphicon-refresh
 		+editable-text('set-maintenance-message', 'Maintenance message', maintenanceMessage, 'Not set') 

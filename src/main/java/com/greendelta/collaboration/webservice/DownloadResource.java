@@ -13,7 +13,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
@@ -29,6 +28,7 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.io.DatasetWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
+import com.greendelta.collaboration.webservice.util.Client;
 
 abstract class DownloadResource {
 
@@ -51,36 +51,21 @@ abstract class DownloadResource {
 
 	protected Response prepare(String group, String repository, String commitId, String path) {
 		Repository repo = repoService.get(group, repository);
-		Commit commit = null;
-		if (commitId != null) {
-			commit = historyService.getCommit(repo, commitId);
-			if (commit == null)
-				return Respond.notFound(commitId);
-		}
-		ModelType type = null;
-		String subPath = null;
-		if (!Strings.isEmpty(path)) {
-			if (path.contains("/")) {
-				type = ModelType.valueOf(path.substring(0, path.indexOf('/')));
-				subPath = path.substring(path.indexOf('/') + 1);
-			} else {
-				type = ModelType.valueOf(path);
-			}
-		}
-		List<IndexEntry> entries = searchService.getAll(repo, type, subPath, commit);
+		Commit commit = getCommit(repo, commitId);
+		if (commit == null)
+			return Respond.notFound(commitId);
+		ModelType type = Client.getTypeFromPath(path);
+		String subPath = Client.getCategoryFromPath(path);
+		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, type, subPath, commit.id);
 		List<FileReference> references = Collections.convertToList(entries, (e) -> e.asFileReference());
 		return prepare(group, repository, commitId, references);
 	}
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
 		Repository repo = repoService.get(group, repository);
-		if (commitId == null) {
-			Commit commit = historyService.getLastCommit(repo, type, refId);
-			if (commit != null)
-				commitId = commit.id;
-		}
-		if (commitId == null)
-			return Respond.notFound(type.name() + " " + refId + " not found");
+		Commit commit = getCommit(repo, commitId);
+		if (commit == null)
+			return Respond.notFound(type.name() + " " + refId);
 		try {
 			log.info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
 			DatasetWriter writer = createWriter(repo, commitId);
@@ -96,12 +81,11 @@ abstract class DownloadResource {
 	protected Response prepare(String group, String repository, String commitId, Collection<FileReference> requested) {
 		try {
 			Repository repo = repoService.get(group, repository);
-			if (commitId == null) {
-				Commit commit = historyService.getLastCommit(repo);
-				commitId = commit.id;
-			}
-			log.info("Exporting repository {}/{} (commit id {})", group, repository, commitId);
-			DatasetWriter writer = createWriter(repo, commitId);
+			Commit commit = getCommit(repo, commitId);
+			if (commit == null)
+				return Respond.notFound(commitId);
+			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
+			DatasetWriter writer = createWriter(repo, commit.id);
 			for (FileReference element : requested) {
 				writer.write(element.type, element.refId);
 			}
@@ -111,6 +95,13 @@ abstract class DownloadResource {
 		} catch (IOException e) {
 			return Respond.error("Error writing data sets to tmp file");
 		}
+	}
+
+	private Commit getCommit(Repository repo, String commitId) {
+		Commit commit = historyService.getCommit(repo, commitId);
+		if (commit != null)
+			return commit;
+		return historyService.getLastCommit(repo);
 	}
 
 	protected Set<FileReference> collectRefs(String group, String repository, List<Reference> references) {
@@ -138,13 +129,13 @@ abstract class DownloadResource {
 			return user.username;
 		return "anonymous";
 	}
-	
+
 	protected Response download(String token) {
 		TokenInfo info = tokens.get(token);
 		if (info == null)
 			return Respond.notFound();
 		User user = userService.getCurrentUser();
-		if (!getUserId(user).equals(info.userId)) 
+		if (!getUserId(user).equals(info.userId))
 			return Respond.forbidden();
 		File tmpFile = new File(info.path);
 		return Respond.ok(info.filename, tmpFile, () -> tmpFile.delete());

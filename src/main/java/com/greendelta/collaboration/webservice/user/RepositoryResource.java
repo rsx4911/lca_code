@@ -247,7 +247,7 @@ public class RepositoryResource {
 			clone.group = to.group;
 			cloned.add(clone);
 		}
-		searchService.index(to.toId(), cloned);
+		searchService.index(cloned);
 		return response;
 	}
 
@@ -258,7 +258,7 @@ public class RepositoryResource {
 			entry.repositoryId = newRepo.toId();
 			entry.group = newRepo.group;
 		}
-		searchService.index(newRepo.toId(), entries);
+		searchService.index(entries);
 	}
 
 	@PUT

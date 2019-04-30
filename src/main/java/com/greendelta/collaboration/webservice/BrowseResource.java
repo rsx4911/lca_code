@@ -123,7 +123,7 @@ public class BrowseResource {
 			return service.getUncategorized(type, params);
 		}
 		List<ObjectMap> content = service.getForCategory(categoryRefId, params);
-		if (content.isEmpty() || service.getDataset(params.repo, categoryRefId, params.commitId) == null)
+		if (content.isEmpty() || service.getMostRecent(params.repo, categoryRefId, params.commitId) == null)
 			return null;
 		return content;
 	}
@@ -138,19 +138,17 @@ public class BrowseResource {
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		String lastCommitId = getLastCommitId(repo, type, refId, commitId);
-		if (lastCommitId == null) {
-			String message = notFoundMessage(type, refId, commitId);
-			return Respond.notFound(message);
-		}
+		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
+		if (commit == null) 
+			return Respond.notFound(notFoundMessage(type, refId, commitId));
 		if (commitId == null) {
 			commitId = historyService.getLastCommit(repo).id;
 		}
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
-		String dataset = fetchService.getDataset(repo, type, refId, lastCommitId);
+		String dataset = fetchService.getDataset(repo, type, refId, commit.id);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
-			Map<String, Object> entry = service.getDataset(repo, refId, lastCommitId);
+			Map<String, Object> entry = service.getMostRecent(repo, refId, commit.id);
 			descriptor.put("@id", refId);
 			descriptor.put("@type", type.getModelClass().getSimpleName());
 			descriptor.put("name", entry.get("name"));
@@ -186,7 +184,7 @@ public class BrowseResource {
 		Repository repo = repoService.get(group, name);
 		String refId = toId(categoryPath);
 		String category = categoryPath.substring(categoryPath.indexOf('/') + 1);
-		ObjectMap entry = service.getDataset(repo, refId, commitId);
+		ObjectMap entry = service.getMostRecent(repo, refId, commitId);
 		if (entry == null)
 			return Respond.notFound("No category '" + category + "' found");
 		List<String> categories = new ArrayList<>();
@@ -215,10 +213,4 @@ public class BrowseResource {
 		return base + " for commit id " + commitId;
 	}
 
-	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
-		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
-		if (commit == null)
-			return null;
-		return commit.id;
-	}
 }

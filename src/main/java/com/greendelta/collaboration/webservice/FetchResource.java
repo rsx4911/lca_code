@@ -1,10 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -16,12 +12,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.FetchRequestData;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
@@ -33,6 +27,7 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.util.Collections;
 
 @Path("public/fetch")
 public class FetchResource {
@@ -63,20 +58,13 @@ public class FetchResource {
 			@QueryParam("commitId") String commitId) {
 		log.debug("Fetching {} {} from repository {}/{} (commit id: {})", type, refId, group, name, commitId);
 		Repository repo = repoService.get(group, name);
-		commitId = getLastCommitId(repo, type, refId, commitId);
-		if (commitId == null)
-			return Respond.notFound(notFoundMessage(type, refId, null));
-		String dataset = service.getDataset(repo, type, refId, commitId);
-		if (dataset == null)
-			return Respond.notFound(notFoundMessage(type, refId, commitId));
-		return Respond.ok(dataset);
-	}
-
-	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
 		if (commit == null)
-			return null;
-		return commit.id;
+			return Respond.notFound(notFoundMessage(type, refId, null));
+		String dataset = service.getDataset(repo, type, refId, commit.id);
+		if (dataset == null)
+			return Respond.notFound(notFoundMessage(type, refId, commit.id));
+		return Respond.ok(dataset);
 	}
 
 	private String notFoundMessage(ModelType type, String refId, String commitId) {
@@ -103,28 +91,13 @@ public class FetchResource {
 			@QueryParam("sync") @DefaultValue("false") boolean sync) {
 		log.debug("Requesting fetch for repository {}/{} (last commit id: {}, sync: {})", group, name, lastCommitId, sync);
 		Repository repo = repoService.get(group, name);
-		List<Commit> commits = getCommits(repo, lastCommitId, sync);
-		if (commits.isEmpty())
+		Commit commit = historyService.getCommit(repo, lastCommitId);
+		List<IndexEntry> data = sync
+				? searchService.getMostRecentUntil(repo, commit != null ? commit.id : null)
+				: searchService.getMostRecentAfter(repo, commit);
+		if (data.isEmpty())
 			return Respond.noContent();
-		List<FetchRequestData> result = getData(commits, repo);
-		if (result.isEmpty())
-			return Respond.noContent();
-		return Respond.ok(new ArrayList<>(result));
-	}
-
-	private List<FetchRequestData> getData(List<Commit> commits, Repository repo) {
-		List<FetchRequestData> result = new ArrayList<>();
-		Set<String> alreadyAdded = new HashSet<>();
-		for (Commit commit : commits) {
-			List<IndexEntry> descriptors = searchService.getAll(repo, commit);
-			for (IndexEntry descriptor : descriptors) {
-				if (alreadyAdded.contains(descriptor.refId))
-					continue;
-				result.add(descriptor.asFetchRequestData());
-				alreadyAdded.add(descriptor.refId);
-			}
-		}
-		return result;
+		return Respond.ok(Collections.convertToList(data, entry -> entry.asFetchRequestData()));
 	}
 
 	@GET
@@ -139,14 +112,10 @@ public class FetchResource {
 		Commit commit = historyService.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound("Commit with id " + commitId + " not found");
-		List<IndexEntry> datasets = searchService.getAll(repo, commit);
+		List<IndexEntry> datasets = searchService.getAll(repo, commit.id);
 		if (datasets.isEmpty())
 			return Respond.notFound("Commit with id " + commitId + " not found");
-		List<FetchRequestData> resultData = new ArrayList<>();
-		for (IndexEntry entry : datasets) {
-			resultData.add(entry.asFetchRequestData());
-		}
-		return Respond.ok(resultData);
+		return Respond.ok(Collections.convertToList(datasets, entry -> entry.asFetchRequestData()));
 	}
 
 	@POST
@@ -161,25 +130,14 @@ public class FetchResource {
 			List<FileReference> requested) {
 		log.info("Fetching data for repository {}/{} (commit id: {}, download: {})", group, name, commitId, download);
 		Repository repo = repoService.get(group, name);
-		List<Commit> commits = getCommits(repo, commitId, download);
-		if (commits.isEmpty())
+		Commit commit = historyService.getCommit(repo, commitId);
+		if (commit == null && historyService.getCommits(repo).isEmpty())
 			return Respond.noContent();
-		if (requested.isEmpty() && download) {
-			requested = null;
-		}
-		StreamingOutput data = service.prepareData(repo, commits, requested);
-		return Respond.ok(data);
-	}
-
-	private List<Commit> getCommits(Repository repo, String commitId, boolean until) {
-		List<Commit> commits = null;
-		if (until) {
-			commits = historyService.getCommitsUntil(repo, commitId);
-		} else {
-			commits = historyService.getCommitsAfter(repo, commitId);
-		}
-		Collections.reverse(commits);
-		return commits;
+		if (!download)
+			return Respond.ok(service.prepareDataForFetch(repo, requested, commit));
+		if (commit == null)
+			return Respond.noContent();
+		return Respond.ok(service.prepareDataForDownload(repo, requested, commit));
 	}
 
 }

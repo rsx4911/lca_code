@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +27,7 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.util.Collections;
 
 public class IlcdWriter implements DatasetWriter {
 
@@ -139,48 +136,15 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<IndexEntry> entries = searchService.getAll(repo, ModelType.PARAMETER);
-			Set<String> added = new HashSet<>();
-			List<Commit> commits = historyService.getCommitsUntil(repo, commitId);
-			List<IndexEntry> filtered = new ArrayList<>();
+			List<IndexEntry> entries = searchService.getMostRecentUntil(repo, ModelType.PARAMETER, null, commitId);
+			entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 			for (IndexEntry entry : entries) {
-				if (entry.action == IndexAction.DELETE)
-					continue;
-				for (Commit commit : commits) {
-					if (entry.commitId.equals(commit.id)) {
-						filtered.add(entry);
-					}
-				}
-			}
-			Collections.sort(filtered, new EntryComparator(commits));
-			for (IndexEntry entry : filtered) {
-				if (added.contains(entry.refId))
-					continue;
 				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);
 				if (data == null)
 					continue;
 				parameters.add(gson.fromJson(data, JsonObject.class));
-				added.add(entry.refId);
 			}
 			return parameters;
-		}
-
-	}
-
-	private class EntryComparator implements Comparator<IndexEntry> {
-
-		private Map<String, Integer> commitOrder = new HashMap<>();
-
-		private EntryComparator(List<Commit> commits) {
-			int count = 1;
-			for (Commit commit : commits) {
-				commitOrder.put(commit.id, count++);
-			}
-		}
-
-		@Override
-		public int compare(IndexEntry o1, IndexEntry o2) {
-			return commitOrder.get(o2.commitId) - commitOrder.get(o1.commitId);
 		}
 
 	}

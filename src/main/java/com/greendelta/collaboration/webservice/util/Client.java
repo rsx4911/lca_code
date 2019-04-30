@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 import javax.ws.rs.core.UriInfo;
 
+import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.util.ObjectMap;
@@ -67,6 +68,22 @@ public class Client {
 
 	private static String decode(String value) {
 		return UriComponent.decode(value, UriComponent.Type.PATH_SEGMENT);
+	}
+
+	public static ModelType getTypeFromPath(String path) {
+		if (Strings.nullOrEmpty(path))
+			return null;
+		if (!path.contains("/"))
+			return ModelType.valueOf(path);
+		return ModelType.valueOf(path.substring(0, path.indexOf('/')));
+	}
+
+	public static String getCategoryFromPath(String path) {
+		if (Strings.nullOrEmpty(path))
+			return null;
+		if (!path.contains("/"))
+			return null;
+		return path.substring(path.indexOf('/') + 1);
 	}
 
 }

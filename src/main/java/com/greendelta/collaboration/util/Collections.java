@@ -101,7 +101,7 @@ public class Collections {
 		return (Set<T>) convert(col, new HashSet<>(), converter);
 	}
 	
-	public static <V, T> Collection<T> convert(Collection<V> from, Collection<T> to, Function<V, T> converter) {
+	private static <V, T> Collection<T> convert(Collection<V> from, Collection<T> to, Function<V, T> converter) {
 		for (V elem : from) {
 			to.add(converter.apply(elem));
 		}
