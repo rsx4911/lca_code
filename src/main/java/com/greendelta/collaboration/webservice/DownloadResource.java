@@ -125,9 +125,9 @@ abstract class DownloadResource {
 	}
 
 	private String getUserId(User user) {
-		if (user.getId() == 0l || user.username == null)
-			return user.username;
-		return "anonymous";
+		if (user == null ||user.getId() == 0l || user.username == null)
+			return "anonymous";
+		return user.username;
 	}
 
 	protected Response download(String token) {
