@@ -32,7 +32,6 @@ import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 public class DownloadJsonResource extends DownloadResource {
 
 	private final FetchService fetchService;
-	private final HistoryService historyService;
 	private final SearchService searchService;
 
 	@Inject
@@ -40,7 +39,6 @@ public class DownloadJsonResource extends DownloadResource {
 			SearchService searchService, BrowseService browseService, UserService userService) {
 		super(repoService, historyService, searchService, browseService, userService);
 		this.fetchService = fetchService;
-		this.historyService = historyService;
 		this.searchService = searchService;
 	}
 
@@ -99,7 +97,7 @@ public class DownloadJsonResource extends DownloadResource {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, String commitId) throws IOException {
-		return new JsonWriter(fetchService, historyService, searchService, repo, commitId);
+		return new JsonWriter(fetchService, searchService, repo, commitId);
 	}
 
 }

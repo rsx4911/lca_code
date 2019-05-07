@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -14,12 +13,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.greendelta.collaboration.model.index.FlowIndexEntry;
+import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.util.ModelTypes;
-import com.greendelta.collaboration.util.ObjectMap;
 
 class BrowseReferenceFiller {
 
@@ -27,7 +27,7 @@ class BrowseReferenceFiller {
 	private final FetchService fetchService;
 	private final Repository repo;
 	private final String commitId;
-	private final Map<String, ObjectMap> indexCache = new HashMap<>();
+	private final Map<String, IndexEntry> indexCache = new HashMap<>();
 	private final Map<String, JsonObject> dataCache = new HashMap<>();
 
 	BrowseReferenceFiller(BrowseService browseService, FetchService fetchService, Repository repo, String commitId) {
@@ -83,20 +83,20 @@ class BrowseReferenceFiller {
 			fillUnit(reference, parent);
 			return;
 		}
-		ObjectMap indexEntry = getIndexEntry(id);
+		IndexEntry indexEntry = getIndexEntry(id);
 		if (indexEntry == null)
 			return;
-		reference.addProperty("name", indexEntry.getString("name"));
+		reference.addProperty("name", indexEntry.name);
 		switch (mType) {
 		case PROCESS:
-			ProcessType processType = ProcessType.from(indexEntry);
+			ProcessType processType = ((ProcessIndexEntry) indexEntry).processType;
 			if (processType != null) {
 				reference.addProperty("processType", processType.name());
 			}
 			reference.add("category", toCategoryArray(indexEntry, false));
 			break;
 		case FLOW:
-			FlowType flowType = ModelTypes.flowType(indexEntry);
+			FlowType flowType = ((FlowIndexEntry) indexEntry).flowType;
 			if (flowType != null) {
 				reference.addProperty("flowType", flowType.name());
 			}
@@ -107,8 +107,7 @@ class BrowseReferenceFiller {
 			break;
 		case SOCIAL_INDICATOR:
 		case NW_SET:
-			String commitId = indexEntry.getString("commitId");
-			String json = fetchService.getDataset(repo, mType, id, commitId);
+			String json = fetchService.getDataset(repo, mType, id, indexEntry.commitId);
 			JsonObject dataset = new Gson().fromJson(json, JsonObject.class);
 			fillReferencedElements(dataset);
 			for (Entry<String, JsonElement> entry : dataset.entrySet()) {
@@ -133,16 +132,15 @@ class BrowseReferenceFiller {
 		}
 	}
 
-	static JsonArray toCategoryArray(ObjectMap indexEntry, boolean appendOwn) {
+	static JsonArray toCategoryArray(IndexEntry indexEntry, boolean appendOwn) {
 		JsonArray array = new JsonArray();
-		List<String> categories = indexEntry.get("categories");
-		if (categories != null) {
-			for (String category : categories) {
+		if (indexEntry.categories != null) {
+			for (String category : indexEntry.categories) {
 				array.add(new JsonPrimitive(category));
 			}
 		}
 		if (appendOwn) {
-			array.add(new JsonPrimitive(indexEntry.getString("name")));
+			array.add(new JsonPrimitive(indexEntry.name));
 		}
 		return array;
 	}
@@ -232,13 +230,13 @@ class BrowseReferenceFiller {
 		return null;
 	}
 
-	private ObjectMap getIndexEntry(String refId) {
+	private IndexEntry getIndexEntry(String refId) {
 		if (indexCache.containsKey(refId))
 			return indexCache.get(refId);
-		ObjectMap indexEntry = browseService.getMostRecent(repo, refId, commitId);
+		IndexEntry indexEntry = browseService.getMostRecent(repo, refId, commitId);
 		if (indexEntry == null)
 			return null;
-		ModelType type = indexEntry.get("type");
+		ModelType type = indexEntry.type;
 		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
 				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)
 			return indexEntry;
@@ -249,10 +247,10 @@ class BrowseReferenceFiller {
 	private JsonObject getDataset(ModelType type, String refId) {
 		if (dataCache.containsKey(refId))
 			return dataCache.get(refId);
-		ObjectMap indexEntry = getIndexEntry(refId);
+		IndexEntry indexEntry = getIndexEntry(refId);
 		if (indexEntry == null)
 			return null;
-		String data = fetchService.getDataset(repo, type, refId, indexEntry.getString("commitId"));
+		String data = fetchService.getDataset(repo, type, refId, indexEntry.commitId);
 		JsonObject object = new Gson().fromJson(data, JsonObject.class);
 		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
 				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)

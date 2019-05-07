@@ -249,6 +249,11 @@ public class Repository {
 	}
 
 	private File getDir(File dir, String name, boolean create) {
+		if (dir == null)
+			throw new IllegalArgumentException("Repository.getDir: Illegal argument: directory is null");
+		if (name == null)
+			throw new IllegalArgumentException(
+					"Repository.getDir(" + dir.getAbsolutePath() + ") : Illegal argument: name is null");
 		File file = new File(dir, name);
 		if (create && !file.exists())
 			file.mkdir();
