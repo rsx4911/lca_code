@@ -12,6 +12,7 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Aggregations;
@@ -211,7 +212,7 @@ public class BrowseService {
 		return searchService.getRaw(repo, refId, commitId);
 	}
 
-	public ObjectMap getMostRecent(Repository repo, String refId, String commitId) {
+	public IndexEntry getMostRecent(Repository repo, String refId, String commitId) {
 		return searchService.getMostRecentUntil(repo, refId, commitId);
 	}
 

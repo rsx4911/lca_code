@@ -68,7 +68,7 @@ public class SearchService {
 		return parser.parse(getClient().search(builder.build()));
 	}
 	
-	public ObjectMap getMostRecentUntil(Repository repo, String refId, String commitId) {
+	public IndexEntry getMostRecentUntil(Repository repo, String refId, String commitId) {
 		if (refId == null)
 			return null;
 		SearchQueryBuilder builder = builder(repo);
@@ -79,7 +79,7 @@ public class SearchService {
 		SearchResult<Map<String, Object>> results = getClient().search(builder.build());
 		if (results.data.isEmpty())
 			return null;
-		return parser.convert(results.data.get(0));
+		return parser.parse(results.data.get(0));
 	}
 
 	public List<IndexEntry> getMostRecentUntil(Repository repo, String commitId) {

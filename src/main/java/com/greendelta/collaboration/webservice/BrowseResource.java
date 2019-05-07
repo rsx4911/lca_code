@@ -27,6 +27,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
@@ -148,10 +149,10 @@ public class BrowseResource {
 		String dataset = fetchService.getDataset(repo, type, refId, commit.id);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
-			Map<String, Object> entry = service.getMostRecent(repo, refId, commit.id);
+			IndexEntry entry = service.getMostRecent(repo, refId, commit.id);
 			descriptor.put("@id", refId);
 			descriptor.put("@type", type.getModelClass().getSimpleName());
-			descriptor.put("name", entry.get("name"));
+			descriptor.put("name", entry.name);
 			if (loggedIn) {
 				descriptor.put("commitId", commitId);
 			}
@@ -184,18 +185,18 @@ public class BrowseResource {
 		Repository repo = repoService.get(group, name);
 		String refId = toId(categoryPath);
 		String category = categoryPath.substring(categoryPath.indexOf('/') + 1);
-		ObjectMap entry = service.getMostRecent(repo, refId, commitId);
+		IndexEntry entry = service.getMostRecent(repo, refId, commitId);
 		if (entry == null)
 			return Respond.notFound("No category '" + category + "' found");
 		List<String> categories = new ArrayList<>();
-		if (entry.get("categories") != null) {
-			categories.addAll(entry.get("categories"));
+		if (entry.categories != null) {
+			categories.addAll(entry.categories);
 		}
-		categories.add(entry.get("name"));
+		categories.add(entry.name);
 		Map<String, Object> result = new HashMap<>();
 		result.put("id", refId);
 		result.put("category", categories);
-		result.put("deleted", entry.get("action") == IndexAction.DELETE ? "true" : "false");
+		result.put("deleted", entry.action == IndexAction.DELETE ? "true" : "false");
 		return Respond.ok(result);
 	}
 

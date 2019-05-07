@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.model.data.FileReference;
 import org.openlca.convert.jsonld.ilcd.Json2IlcdStore;
 import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
@@ -42,7 +43,7 @@ public class IlcdWriter implements DatasetWriter {
 	private final Gson gson = new Gson();
 	private final File tmpFile;
 	private final String commitId;
-	private Set<Ref> collectedRefs;
+	private Set<FileReference> collectedRefs;
 
 	public IlcdWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
 			Repository repo, String commitId) throws IOException {
@@ -73,8 +74,8 @@ public class IlcdWriter implements DatasetWriter {
 		if (obj == null)
 			return;
 		converter.convertAndPut(obj);
-		for (Ref ref : new ArrayList<>(collectedRefs)) {
-			write(ref.modelType, ref.refId);
+		for (FileReference ref : new ArrayList<>(collectedRefs)) {
+			write(ref.type, ref.refId);
 		}
 	}
 
@@ -85,7 +86,10 @@ public class IlcdWriter implements DatasetWriter {
 	}
 
 	private void collectRefs(String type, String refId) {
-		collectedRefs.add(new Ref(getType(type), refId));
+		FileReference ref = new FileReference();
+		ref.type = getType(type);
+		ref.refId = refId;
+		collectedRefs.add(ref);
 	}
 
 	private ModelType getType(String type) {
@@ -145,32 +149,6 @@ public class IlcdWriter implements DatasetWriter {
 				parameters.add(gson.fromJson(data, JsonObject.class));
 			}
 			return parameters;
-		}
-
-	}
-
-	private class Ref {
-
-		private ModelType modelType;
-		private String refId;
-
-		private Ref(ModelType modelType, String refId) {
-			this.modelType = modelType;
-			this.refId = refId;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this)
-				return true;
-			if (!(obj instanceof Ref))
-				return false;
-			Ref other = (Ref) obj;
-			if (other.modelType != modelType)
-				return false;
-			if (refId == null)
-				return other.refId == null;
-			return other.refId.equals(refId);
 		}
 
 	}
