@@ -79,7 +79,7 @@ public class JsonWriter implements DatasetWriter {
 		log.trace("Exporting {} {} to json", ref.type, ref.refId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		zipStore.put(ref.type, json);
-		File binDir = fetchService.getBinDir(repo, ref.type, ref.refId, commitId);
+		File binDir = fetchService.getBinDir(repo, ref.type, ref.refId, entry.commitId);
 		if (binDir.exists()) {
 			for (File file : binDir.listFiles()) {
 				String filename = file.getName();
