@@ -7,10 +7,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Stack;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.util.BinUtils;
@@ -21,7 +22,6 @@ import com.google.gson.JsonObject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
-import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Collections;
@@ -30,18 +30,17 @@ public class JsonWriter implements DatasetWriter {
 
 	private final static Logger log = LogManager.getLogger(JsonWriter.class);
 	private final FetchService fetchService;
-	private final HistoryService historyService;
 	private final SearchService searchService;
 	private final Repository repo;
 	private final String commitId;
 	private final ZipStore zipStore;
 	private final File tmpFile;
-	private final Set<String> written = new HashSet<>();
+	private final Set<FileReference> processed = new HashSet<>();
+	private final Stack<FileReference> refStack = new Stack<>();
 
-	public JsonWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
-			Repository repo, String commitId) throws IOException {
+	public JsonWriter(FetchService fetchService, SearchService searchService, Repository repo, String commitId)
+			throws IOException {
 		this.fetchService = fetchService;
-		this.historyService = historyService;
 		this.searchService = searchService;
 		this.repo = repo;
 		this.commitId = commitId;
@@ -52,35 +51,46 @@ public class JsonWriter implements DatasetWriter {
 
 	@Override
 	public void write(ModelType type, String refId) throws IOException {
-		if (written.contains(type.name() + refId))
-			return;
-		String dataset = fetchService.getDataset(repo, type, refId, commitId);
-		if (dataset == null) {
-			Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
-			if (commit == null)
-				return;
-			dataset = fetchService.getDataset(repo, type, refId, commit.id);
-			if (dataset == null)
-				return;
+		FileReference ref = ref(type, refId);
+		refStack.add(ref);
+		for (IndexEntry entry : getGlobalParameters(commitId)) {
+			refStack.add(ref(ModelType.PARAMETER, entry.refId));
 		}
-		log.trace("Exporting {} {} to json", type, refId);
+		while (!refStack.isEmpty()) {
+			write(refStack.pop());
+		}
+	}
+
+	private void write(FileReference ref) throws IOException {
+		if (processed.contains(ref))
+			return;
+		IndexEntry entry = searchService.getMostRecentUntil(repo, ref.refId, commitId);
+		if (entry == null) {
+			log.trace("No data set found: " + ref.type.name() + " " + ref.refId);
+			processed.add(ref);
+			return;
+		}
+		String dataset = fetchService.getDataset(repo, ref.type, ref.refId, entry.commitId);
+		if (dataset == null) {
+			log.trace("No data set found: " + ref.type.name() + " " + ref.refId + " (commit " + commitId + ")");
+			processed.add(ref);
+			return;
+		}
+		log.trace("Exporting {} {} to json", ref.type, ref.refId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
-		zipStore.put(type, json);
-		File binDir = fetchService.getBinDir(repo, type, refId, commitId);
+		zipStore.put(ref.type, json);
+		File binDir = fetchService.getBinDir(repo, ref.type, ref.refId, entry.commitId);
 		if (binDir.exists()) {
 			for (File file : binDir.listFiles()) {
 				String filename = file.getName();
 				if (filename.endsWith(".gz")) {
 					filename = filename.substring(0, filename.lastIndexOf(".gz"));
 				}
-				zipStore.putBin(type, refId, filename, BinUtils.gunzip(Files.readAllBytes(file.toPath())));
+				zipStore.putBin(ref.type, ref.refId, filename, BinUtils.gunzip(Files.readAllBytes(file.toPath())));
 			}
 		}
-		written.add(type.name() + refId);
-		writeReferences(json);
-		for (IndexEntry entry : getGlobalParameters(commitId)) {
-			write(ModelType.PARAMETER, entry.refId);
-		}
+		processed.add(ref);
+		collectReferences(json);
 	}
 
 	private List<IndexEntry> getGlobalParameters(String untilCommitId) {
@@ -88,13 +98,7 @@ public class JsonWriter implements DatasetWriter {
 		return Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 	}
 
-	@Override
-	public File close() throws IOException {
-		zipStore.close();
-		return tmpFile;
-	}
-
-	private void writeReferences(JsonObject object) throws IOException {
+	private void collectReferences(JsonObject object) throws IOException {
 		if (object == null)
 			return;
 		for (Entry<String, JsonElement> entry : object.entrySet()) {
@@ -102,27 +106,28 @@ public class JsonWriter implements DatasetWriter {
 			if (element.isJsonArray()) {
 				for (JsonElement arrayElement : element.getAsJsonArray())
 					if (arrayElement.isJsonObject())
-						write(arrayElement.getAsJsonObject());
+						collectReference(arrayElement.getAsJsonObject());
 				continue;
 			}
 			if (!element.isJsonObject())
 				continue;
-			write(element.getAsJsonObject());
+			collectReference(element.getAsJsonObject());
 		}
 	}
 
-	private void write(JsonObject object) throws IOException {
+	private void collectReference(JsonObject object) throws IOException {
 		if (!(object.has("@type") && object.has("@id"))) {
-			writeReferences(object);
+			collectReferences(object);
 			return;
 		}
 		ModelType type = getType(object.get("@type").getAsString());
 		if (type == null)
 			return;
-		String id = object.get("@id").getAsString();
-		if (written.contains(type.name() + id))
+		String refId = object.get("@id").getAsString();
+		FileReference ref = ref(type, refId);
+		if (processed.contains(ref))
 			return;
-		write(type, id);
+		refStack.add(ref);
 	}
 
 	private ModelType getType(String name) {
@@ -134,6 +139,19 @@ public class JsonWriter implements DatasetWriter {
 			return type;
 		}
 		return null;
+	}
+
+	private FileReference ref(ModelType type, String refId) {
+		FileReference ref = new FileReference();
+		ref.type = type;
+		ref.refId = refId;
+		return ref;
+	}
+
+	@Override
+	public File close() throws IOException {
+		zipStore.close();
+		return tmpFile;
 	}
 
 }

@@ -53,25 +53,25 @@ abstract class DownloadResource {
 		Repository repo = repoService.get(group, repository);
 		Commit commit = getCommit(repo, commitId);
 		if (commit == null)
-			return Respond.notFound(commitId);
+			return Respond.notFound("commit " + commitId + " not found");
 		ModelType type = Client.getTypeFromPath(path);
 		String subPath = Client.getCategoryFromPath(path);
 		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, type, subPath, commit.id);
 		List<FileReference> references = Collections.convertToList(entries, (e) -> e.asFileReference());
-		return prepare(group, repository, commitId, references);
+		return prepare(group, repository, commit.id, references);
 	}
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
 		Repository repo = repoService.get(group, repository);
 		Commit commit = getCommit(repo, commitId);
 		if (commit == null)
-			return Respond.notFound(type.name() + " " + refId);
+			return Respond.notFound("commit " + commitId + " not found");
 		try {
-			log.info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
-			DatasetWriter writer = createWriter(repo, commitId);
+			log.info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commit.id);
+			DatasetWriter writer = createWriter(repo, commit.id);
 			writer.write(type, refId);
 			File tmpFile = writer.close();
-			String token = put(tmpFile, refId + "_" + commitId + ".zip");
+			String token = put(tmpFile, refId + "_" + commit.id + ".zip");
 			return Respond.ok(token);
 		} catch (IOException e) {
 			return Respond.error("Error writing data sets to tmp file");
@@ -83,7 +83,7 @@ abstract class DownloadResource {
 			Repository repo = repoService.get(group, repository);
 			Commit commit = getCommit(repo, commitId);
 			if (commit == null)
-				return Respond.notFound(commitId);
+				return Respond.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
 			DatasetWriter writer = createWriter(repo, commit.id);
 			for (FileReference element : requested) {
@@ -125,9 +125,9 @@ abstract class DownloadResource {
 	}
 
 	private String getUserId(User user) {
-		if (user.getId() == 0l || user.username == null)
-			return user.username;
-		return "anonymous";
+		if (user == null ||user.getId() == 0l || user.username == null)
+			return "anonymous";
+		return user.username;
 	}
 
 	protected Response download(String token) {
