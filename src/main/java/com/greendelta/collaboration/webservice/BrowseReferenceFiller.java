@@ -53,16 +53,14 @@ class BrowseReferenceFiller {
 					if (!element.isJsonObject())
 						continue;
 					JsonObject oValue = element.getAsJsonObject();
-					if (oValue.has("@id")) {
+					String type = oValue.has("@type") ? oValue.get("@type").getAsString() : null;
+					ModelType mType = getType(type);
+					if (oValue.has("@id") && mType != null) {
 						fillReference(oValue, dataset);
 					} else {
 						fillReferencedElements(oValue);
-						if (oValue.has("@type")) {
-							String type = oValue.get("@type").getAsString();
-							if (type.equals(FlowPropertyFactor.class.getSimpleName())) {
-								setReferenceUnit(oValue);
-								return;
-							}
+						if (FlowPropertyFactor.class.getSimpleName().equals(type)) {
+							setReferenceUnit(oValue);
 						}
 					}
 				}
@@ -221,6 +219,8 @@ class BrowseReferenceFiller {
 	}
 
 	private ModelType getType(String type) {
+		if (type == null)
+			return null;
 		for (ModelType modelType : ModelType.values()) {
 			if (modelType.getModelClass() == null)
 				continue;
