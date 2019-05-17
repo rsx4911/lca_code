@@ -42,8 +42,12 @@ class BrowseReferenceFiller {
 			JsonElement value = entry.getValue();
 			if (value.isJsonObject()) {
 				JsonObject oValue = value.getAsJsonObject();
-				if (oValue.has("@id")) {
+				String type = oValue.has("@type") ? oValue.get("@type").getAsString() : null;
+				ModelType mType = getType(type);
+				if (oValue.has("@id") && mType != null) {
 					fillReference(oValue, dataset);
+				} else if (isReferenceExchange(dataset, entry)) {
+					addFlowToReferenceExchange(dataset, oValue);
 				} else {
 					fillReferencedElements(oValue);
 				}
@@ -65,6 +69,43 @@ class BrowseReferenceFiller {
 					}
 				}
 			}
+		}
+	}
+
+	private boolean isReferenceExchange(JsonObject dataset, Entry<String, JsonElement> entry) {
+		if (!dataset.has("@type") || !dataset.has("@id"))
+			return false;
+		String type = dataset.get("@type").getAsString();
+		ModelType mType = getType(type);
+		if (mType != ModelType.PRODUCT_SYSTEM)
+			return false;
+		if (!entry.getKey().equals("referenceExchange"))
+			return false;
+		return entry.getValue().isJsonObject();
+	}
+
+	private void addFlowToReferenceExchange(JsonObject dataset, JsonObject oExchange) {
+		if (oExchange.has("flow") ||  !oExchange.has("internalId"))
+			return;
+		if (!dataset.has("referenceProcess") || !dataset.get("referenceProcess").isJsonObject())
+			return;
+		JsonObject oProcess = dataset.get("referenceProcess").getAsJsonObject();
+		if (!oProcess.has("@id"))
+			return;
+		String processId = oProcess.get("@id").getAsString();
+		int internalId = oExchange.get("internalId").getAsInt();
+		JsonObject process = getDataset(ModelType.PROCESS, processId);
+		if (!process.has("exchanges") || !process.get("exchanges").isJsonArray())
+			return;
+		JsonArray exchanges = process.get("exchanges").getAsJsonArray();
+		for (JsonElement elem : exchanges) {
+			if (!elem.isJsonObject())
+				continue;
+			JsonObject exchange = elem.getAsJsonObject();
+			if (!exchange.has("flow") || !exchange.has("internalId") || exchange.get("internalId").getAsInt() != internalId)
+				continue;
+			oExchange.add("flow", exchange.get("flow"));
+			return;
 		}
 	}
 
