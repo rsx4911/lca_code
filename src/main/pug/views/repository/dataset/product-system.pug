@@ -32,11 +32,14 @@ mixin target-amount-row()
 					table.table.no-head
 						tbody
 							+ref-row('referenceProcess')
-							- var name = dataset.referenceExchange ? dataset.referenceExchange.name : null;
-							- var otherName = compareTo && compareTo.referenceExchange ? compareTo.referenceExchange.name : null;
-							if name || otherName || reviewMode
-								+field-row-frame('referenceExchange.name')
-									+field-row-value(name, otherName)
+							if dataset.referenceExchange && dataset.referenceExchange.flow
+								+ref-row('referenceExchange.flow')
+							else
+								- var name = dataset.referenceExchange ? dataset.referenceExchange.name : null;
+								- var otherName = compareTo && compareTo.referenceExchange ? compareTo.referenceExchange.name : null;
+								if name || otherName || reviewMode
+									+field-row-frame('referenceExchange.name')
+										+field-row-value(name, otherName)
 							+ref-row('targetFlowProperty')
 							+target-amount-row()
 				+nav-tab-pane('inventory')
