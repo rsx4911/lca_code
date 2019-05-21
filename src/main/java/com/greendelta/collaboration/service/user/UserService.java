@@ -128,27 +128,38 @@ public class UserService {
 		return size;
 	}
 
-	public SearchResult<User> getAll(int page, int pageSize, String filter) {
+	public SearchResult<User> getVisible(int page, int pageSize, String filter) {
+		User user = getCurrentUser();
+		if (user == null)
+			return SearchResults.from(new ArrayList<>());
 		Map<String, Object> parameters = new HashMap<>();
+		if (!user.isUserManager())
+			parameters.put("user", user);
 		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		String query = createQuery(filter, true);
+		String query = createQuery(user, filter, true);
 		long subTotal = dao.getCount(query, parameters);
 		int start = page == 0 ? 0 : 1 + (page - 1) * pageSize;
 		int limit = page == 0 ? 0 : pageSize;
-		query = createQuery(filter, false);
+		query = createQuery(user, filter, false);
 		List<User> data = dao.getAll(query, parameters, start, limit);
 		return SearchResults.from(data, page, pageSize, subTotal);
 	}
 
-	private String createQuery(String filter, boolean forCount) {
+	private String createQuery(User user, String filter, boolean forCount) {
 		StringBuilder jpql = new StringBuilder();
-		if (forCount)
-			jpql.append("SELECT count(u) FROM User u");
-		else
-			jpql.append("SELECT u FROM User u");
-		if (!Strings.isNullOrEmpty(filter))
-			jpql.append(" WHERE LOWER(u.name) LIKE :name");
+		if (user.isUserManager()) {
+			jpql.append("SELECT " + (forCount ? "count(u)" : "u") + " FROM User u");
+			if (!Strings.isNullOrEmpty(filter)) {
+				jpql.append(" WHERE LOWER(u.name) LIKE :name");
+			}
+		} else {
+			jpql.append("SELECT " + (forCount ? "count(u)" : "u")
+					+ " FROM Team t JOIN t.users u WHERE :user MEMBER OF t.users AND u != :user");
+			if (!Strings.isNullOrEmpty(filter)) {
+				jpql.append(" AND LOWER(u.name) LIKE :name");
+			}
+		}
 		return jpql.toString();
 	}
 
