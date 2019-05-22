@@ -27,6 +27,7 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -137,25 +138,21 @@ public class UserService {
 			parameters.put("user", user);
 		if (!Strings.isNullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		String query = createQuery(user, filter, true);
-		long subTotal = dao.getCount(query, parameters);
-		int start = page == 0 ? 0 : 1 + (page - 1) * pageSize;
-		int limit = page == 0 ? 0 : pageSize;
-		query = createQuery(user, filter, false);
-		List<User> data = dao.getAll(query, parameters, start, limit);
-		return SearchResults.from(data, page, pageSize, subTotal);
+		String query = createQuery(user, filter);
+		List<User> data = Collections.filterDuplicates(dao.getAll(query, parameters));
+		java.util.Collections.sort(data, (u1, u2) -> u1.name.toLowerCase().compareTo(u2.name.toLowerCase()));
+		return SearchResults.paged(page, pageSize, data);
 	}
 
-	private String createQuery(User user, String filter, boolean forCount) {
+	private String createQuery(User user, String filter) {
 		StringBuilder jpql = new StringBuilder();
 		if (user.isUserManager()) {
-			jpql.append("SELECT " + (forCount ? "count(u)" : "u") + " FROM User u");
+			jpql.append("SELECT u FROM User u");
 			if (!Strings.isNullOrEmpty(filter)) {
 				jpql.append(" WHERE LOWER(u.name) LIKE :name");
 			}
 		} else {
-			jpql.append("SELECT " + (forCount ? "count(u)" : "u")
-					+ " FROM Team t JOIN t.users u WHERE :user MEMBER OF t.users AND u != :user");
+			jpql.append("SELECT u FROM Team t JOIN t.users u WHERE :user MEMBER OF t.users AND u != :user");
 			if (!Strings.isNullOrEmpty(filter)) {
 				jpql.append(" AND LOWER(u.name) LIKE :name");
 			}

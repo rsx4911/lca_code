@@ -48,7 +48,7 @@ public class TeamResource {
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module) {
-		SearchResult<Team> result = service.getAll(page, pageSize, filter);
+		SearchResult<Team> result = service.getVisible(page, pageSize, filter);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Teams::mapForOthers));
 		return Respond.ok(Client.map(result.data, Teams::mapForOthers));
