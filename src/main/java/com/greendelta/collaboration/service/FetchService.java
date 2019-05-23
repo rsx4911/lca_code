@@ -91,7 +91,15 @@ public class FetchService {
 			@Override
 			public void write(OutputStream output) throws IOException {
 				int read = -1;
-				try (FetchStream stream = new FetchStream(repo, commitId, entries)) {
+				Map<String, String> commitIds = new HashMap<>();
+				for (IndexEntry entry : entries) {
+					commitIds.put(entry.refId, entry.commitId);
+				}
+				try (FetchStream stream = new FetchStream(repo, commitId, entries) {
+					protected Map<String, String> getCommitIds() {
+						return commitIds;
+					}
+				}) {
 					while ((read = stream.read()) != -1) {
 						output.write(read);
 					}
@@ -100,35 +108,33 @@ public class FetchService {
 		};
 	}
 
-	private class FetchStream extends ModelStream {
+	private abstract class FetchStream extends ModelStream {
 
 		private final Repository repo;
-		private final Map<Dataset, String> commitIds = new HashMap<>();
 
 		private FetchStream(Repository repo, String commitId, List<IndexEntry> entries) {
 			super(commitId, Collections.convertToSet(entries, entry -> entry.asDataset()));
 			this.repo = repo;
-			for (IndexEntry entry : entries) {
-				commitIds.put(entry.asDataset(), entry.commitId);
-			}
 		}
 
 		@Override
 		protected byte[] getData(Dataset dataset) throws IOException {
-			File file = repo.getDatasetFile(dataset.type, dataset.refId, commitIds.get(dataset), false);
+			File file = repo.getDatasetFile(dataset.type, dataset.refId, getCommitIds().get(dataset.refId), false);
 			log.trace("Loading data for {} {}", dataset.type, dataset.refId);
 			return Bytes.read(file);
 		}
 
 		@Override
 		protected File getBinaryFilesLocation(Dataset dataset) {
-			return getBinDir(repo, dataset.type, dataset.refId, commitIds.get(dataset));
+			return getBinDir(repo, dataset.type, dataset.refId, getCommitIds().get(dataset.refId));
 		}
 
 		@Override
 		protected byte[] getBinaryData(Path file) throws IOException {
 			return Files.readAllBytes(file);
 		}
+
+		protected abstract Map<String, String> getCommitIds();
 
 	}
 }

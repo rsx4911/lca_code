@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -8,6 +9,8 @@ import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
@@ -50,6 +53,10 @@ public class UserSettings {
 	@Column(name = "data_manager")
 	public boolean dataManager;
 
+	@Column(name = "active_until")
+	@Temporal(TemporalType.DATE)
+	public Date activeUntil;
+	
 	@OneToMany
 	@JoinTable(name = "blocked_users", joinColumns = { @JoinColumn(name = "f_user") }, inverseJoinColumns = { @JoinColumn(name = "f_blocked") })
 	public List<User> blockedUsers = new ArrayList<>();

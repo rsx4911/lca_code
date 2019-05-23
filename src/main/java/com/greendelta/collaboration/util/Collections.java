@@ -147,6 +147,10 @@ public class Collections {
 		}
 		return filtered;
 	}
+	
+	public static <T> List<T> filterDuplicates(List<T> values) {
+		return new ArrayList<>(new HashSet<>(values));
+	}
 
 	public static <T> List<T> pop(List<T> col, int amount) {
 		List<T> sublist = new ArrayList<>();

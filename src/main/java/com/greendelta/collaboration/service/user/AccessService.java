@@ -11,6 +11,7 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
@@ -36,18 +37,43 @@ public class AccessService {
 		return canRead(groupOrRepo, false);
 	}
 
-	public boolean canRead(String groupOrRepo, boolean ignoreAdmin) {
+	public boolean canRead(String groupOrRepo, boolean ignoreDataManager) {
 		if (isPublic(groupOrRepo))
 			return true;
 		User user = userService.getCurrentUser();
-		if (!ignoreAdmin && user.isDataManager())
+		if (!ignoreDataManager && user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
 		if (isGroup(groupOrRepo))
 			if (membershipService.hasMembershipInAnyRepoInGroup(user, groupOrRepo))
 				return true;
-		return hasPermissionTo(user, Permission.READ, groupOrRepo, ignoreAdmin);
+		if (!repositoryIsActive(groupOrRepo))
+			return false;
+		return hasPermissionTo(user, Permission.READ, groupOrRepo, ignoreDataManager);
+	}
+
+	private boolean repositoryIsActive(String repository) {
+		if (!repository.contains("/"))
+			return true; // groups are always active
+		String group = repository.split("/")[0];
+		if (userService.exists(group)) {
+			User user = userService.getForUsername(group);
+			return !user.isDeactivated();
+		}
+		List<Membership> memberships = membershipService.getMemberships(repository);
+		for (Membership membership : memberships) {
+			if (membership.role != Role.OWNER) 
+				continue;
+			if (membership.user != null && !membership.user.isDeactivated())
+				return true;
+			if (membership.team == null)
+				continue;
+			for (User user : membership.team.users)
+				if (!user.isDeactivated())
+					return true;
+		}
+		return false;
 	}
 
 	public boolean canWrite(String groupOrRepo) {
@@ -151,8 +177,8 @@ public class AccessService {
 		return hasPermissionTo(user, permission, groupOrRepo, false);
 	}
 
-	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo, boolean ignoreAdmin) {
-		if (!ignoreAdmin && user.isDataManager())
+	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo, boolean ignoreDataManager) {
+		if (!ignoreDataManager && user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;

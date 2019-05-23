@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.model;
 
+import java.util.Calendar;
+
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -98,5 +100,22 @@ public class User extends AbstractEntity {
 			return false;
 		return settings.admin || settings.dataManager;
 	}
-
+	
+	public boolean isDeactivated() {
+		if (settings == null)
+			return false;
+		if (settings.activeUntil == null)
+			return false;
+		if (isAdmin())
+			return false;		
+		Calendar now = Calendar.getInstance();
+		now.set(Calendar.HOUR_OF_DAY, 0);
+		now.set(Calendar.MINUTE, 0);
+		now.set(Calendar.SECOND, 0);
+		now.set(Calendar.MILLISECOND, 0);
+		Calendar activeUntil = Calendar.getInstance();
+		activeUntil.setTime(settings.activeUntil);
+		return now.after(activeUntil);
+	}
+	
 }
