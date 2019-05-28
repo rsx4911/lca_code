@@ -187,7 +187,7 @@ define([
 				model =
 					dataset: @dataset
 					commits: @commits
-					commitId: @commitId or commits?[0]?.id
+					commitId: @commitId or @commits?[0]?.id
 					compareTo: @compareTo
 					comparisonCommitId: comparisonCommitId
 					baseUrl: "#{group}/#{name}/dataset"

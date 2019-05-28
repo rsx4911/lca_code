@@ -38,8 +38,8 @@ define([
 				$.ajax
 					type: 'POST'
 					url: 'ws/public/error'
-					contentType: 'text/plain'
-					data: error.stack
+					contentType: 'application/json'
+					data: JSON.stringify({ stacktrace: error.stack, path: Backbone.history.fragment })
 					complete: () -> 
 						if localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
 							localStorage?.setItem?('errorMessage', error.stack)
