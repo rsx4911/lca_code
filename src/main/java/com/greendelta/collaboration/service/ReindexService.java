@@ -70,6 +70,8 @@ public class ReindexService {
 		dataset.lastChange = Dates.getTime(map.getString("lastChange"));
 		if (ref.type == ModelType.CATEGORY) {
 			dataset.categoryType = ModelType.valueOf(map.getString("modelType"));
+		} else {
+			dataset.categoryType = dataset.type;
 		}
 		return dataset;
 	}
