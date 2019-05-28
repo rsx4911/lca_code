@@ -86,6 +86,10 @@ public class SessionResource {
 		if (!subject.isAuthenticated())
 			return Respond.unauthorized("Unknown error");
 		User user = userService.getCurrentUser();
+		if (user.isDeactivated()) {
+			subject.logout();
+			return Respond.unauthorized("User is deactivated");
+		}
 		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) {
 			Integer token = (int) formMap.getLong("token");
 			if (token == null || token == 0) {

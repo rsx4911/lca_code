@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.webservice.user;
 
 import java.io.InputStream;
-import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -22,7 +21,6 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Bytes;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
@@ -50,21 +48,10 @@ public class TeamResource {
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("module") Module module) {
-		SearchResult<Team> result = service.getAll(page, pageSize, filter);
+		SearchResult<Team> result = service.getVisible(page, pageSize, filter);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Teams::mapForOthers));
-		List<Team> teams = result.data;
-		switch (module) {
-		case MESSAGING:
-			User currentUser = userService.getCurrentUser();
-			teams = Collections.filter(teams, (team) -> {
-				return !team.users.contains(currentUser);
-			});
-			break;
-		default:
-			break;
-		}
-		return Respond.ok(Client.map(teams, Teams::mapForOthers));
+		return Respond.ok(Client.map(result.data, Teams::mapForOthers));
 	}
 
 	@GET

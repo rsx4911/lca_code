@@ -1,7 +1,9 @@
 define([
 				'backbone'
+				'qrcode'
 				'cs!utils/Avatar'
 				'cs!utils/Events'
+				'cs!utils/Format'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Model'
@@ -11,12 +13,11 @@ define([
 				'cs!app/Router'
 				'cs!models/User'
 				'cs!models/CurrentUser'
-				'qrcode'
 				'templates/views/user/profile'
 				'cropper'
 			]
 
-	(Backbone, Avatar, Events, Forms, Layers, Model, Password, Renderer, Status, Router, User, currentUser, QRCode, template) ->
+	(Backbone, QRCode, Avatar, Events, Format, Forms, Layers, Model, Password, Renderer, Status, Router, User, currentUser, template) ->
 
 		class UserProfile extends Backbone.View
 
@@ -30,6 +31,7 @@ define([
 				'submit #password-form': 'savePassword'
 				'keydown #settings-maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-user]': 'deleteUser'
+				'click [data-action=toggle-active]': 'toggleActive'
 				'click [data-action=generate-password]': 'generatePassword'
 				'click [data-action=show-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication ''
 				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication true
@@ -53,10 +55,13 @@ define([
 
 			doRender: (renderOptions) ->
 				user = @user.toJSON()
+				if user.settings?.activeUntil
+					user.settings.activeUntil = Format.moment user.settings.activeUntil, 'YYYY-MM-DD'
 				@$el.html template
 					user: user
 					isAdmin: currentUser.isAdmin()
 					adminArea: @adminArea
+					formatDate: Format.date
 				Renderer.render @, renderOptions
 				Forms.fill 'user-form', user
 				@setMaxSize user.settings?.maxSize
@@ -87,6 +92,7 @@ define([
 				unless username
 					Forms.handleError 'user-form', {responseJSON: {field: 'username', message: 'Missing input: Username'}}
 					return false
+				activeUntil = @$('#settings-activeUntil').val()
 				if @adminArea and !@user.get('id')
 						$.ajax
 							type: 'POST'
@@ -160,6 +166,13 @@ define([
 								Router.navigate 'administration/overview'
 							else
 								window.location.href = 'login'
+
+			toggleActive: (event) ->
+				if @user.get('deactivated') is true
+					@$('#settings-activeUntil').val('')
+				else
+					@$('#settings-activeUntil').val Format.moment new Date().setDate(new Date().getDate() - 1) , 'YYYY-MM-DD'
+				@saveUser event
 
 			reload: () ->
 				isOwnUser = @user.get('id') is currentUser.get('id')

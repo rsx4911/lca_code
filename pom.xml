@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greendelta</groupId>
 	<artifactId>lca-collaboration</artifactId>
-	<version>1.1.1</version>
+	<version>1.2.0-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>LCA Collaboration Server</name>
 
@@ -185,11 +185,13 @@
 			<artifactId>googleauth</artifactId>
 			<version>1.1.2</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>transport</artifactId>
 			<version>6.2.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.zeroturnaround</groupId>
 			<artifactId>zt-zip</artifactId>
@@ -250,6 +252,7 @@
 	</dependencies>
 
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<contextPath>/</contextPath>
 		<customDir></customDir>
 	</properties>
@@ -293,7 +296,7 @@
 					</extraDependencies>
 				</configuration>
 			</plugin>
-
+			
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
@@ -329,8 +332,8 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<plugin>
+			
+<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.3</version>

@@ -2,8 +2,19 @@ include ../mixins/forms.pug
 include ../mixins/avatar-box.pug
 
 .header-box Account
-	if user.id && adminArea && !user.lastAdmin
-		button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
+	if user.id && adminArea
+		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactive'
+		if !user.lastAdmin
+			button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
+	span.badge.pull-right.user-status(class=user.deactivated?'deactivated':'active')=user.deactivated ? 'Deactivated': 'Active'
+		if user.settings && user.settings.activeUntil
+			if user.deactivated
+				- var activeUntil = new Date(user.settings.activeUntil);
+				|  since #{formatDate(activeUntil.setDate(activeUntil.getDate() + 1))}
+			else
+				|  until #{formatDate(user.settings.activeUntil)}
+	
+	
 form#user-form.content-box
 	#user-form-general-message-group.alert(role='alert'): span.message
 	unless user.id
@@ -22,6 +33,7 @@ form#user-form.content-box
 		+input('settings-noOfRepositories', 'No. of user group repositories (0 = unlimited)', 'number')(class='input-sm', value=user&&user.settings?(user.settings.noOfRepositories||0):0, size=4, min=0)
 		+input('settings-maxSize', 'Maximum user group size', 'number', true)(class='input-sm', value=0, size=4, min=0)
 			+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
+		+input('settings-activeUntil', 'Active until (unlimited if empty)', 'date', true)(class='input-sm')
 	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
 		if user.id
 			| Save
