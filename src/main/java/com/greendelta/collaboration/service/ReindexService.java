@@ -107,9 +107,13 @@ public class ReindexService {
 				Map<String, Object> data = IndexEntryCreator.readData(file);
 				if (data.isEmpty()) {
 					dataset = get(lastDatasets, ref);
+					if (dataset == null)
+						continue;
 					entry = indexEntryCreator.create(dataset);
 				} else {
 					dataset = toDataset(ref, data);
+					if (dataset == null)
+						continue;
 					entry = indexEntryCreator.create(dataset, lastAction, data);
 				}
 				put(lastActions, ref, entry.action);
