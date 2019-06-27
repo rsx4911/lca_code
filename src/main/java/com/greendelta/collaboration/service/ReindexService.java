@@ -70,6 +70,8 @@ public class ReindexService {
 		dataset.lastChange = Dates.getTime(map.getString("lastChange"));
 		if (ref.type == ModelType.CATEGORY) {
 			dataset.categoryType = ModelType.valueOf(map.getString("modelType"));
+		} else {
+			dataset.categoryType = dataset.type;
 		}
 		return dataset;
 	}
@@ -105,9 +107,13 @@ public class ReindexService {
 				Map<String, Object> data = IndexEntryCreator.readData(file);
 				if (data.isEmpty()) {
 					dataset = get(lastDatasets, ref);
+					if (dataset == null)
+						continue;
 					entry = indexEntryCreator.create(dataset);
 				} else {
 					dataset = toDataset(ref, data);
+					if (dataset == null)
+						continue;
 					entry = indexEntryCreator.create(dataset, lastAction, data);
 				}
 				put(lastActions, ref, entry.action);

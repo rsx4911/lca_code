@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.Collections;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -28,16 +29,16 @@ public class ClientErrorResource {
 	}
 
 	@POST
-	@Consumes(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response handleClientError(String stacktrace) {
-		log.error("Client error [user=" + getUserInfo() + "]", createException(stacktrace));
+	public Response handleClientError(Map<String, String> info) {
+		log.error("Client error [user=" + getUserInfo() + ", path=" + info.get("path") + "]", createException(info.get("stacktrace")));
 		return Respond.ok(Collections.singletonMap("logged", true));
 	}
 
 	private String getUserInfo() {
 		User user = userService.getCurrentUser();
-		if (user == null)
+		if (user == null || user.getId() == 0l)
 			return "anonymous";
 		String info = "{";
 		info += "id: " + user.getId();

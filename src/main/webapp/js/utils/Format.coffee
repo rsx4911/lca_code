@@ -73,7 +73,7 @@ define([
 					foundE = true
 				if index <= minLength or foundE
 					if foundE and corrected.length <= minLength
-						if corrected is '1' or corrected is '-1'
+						if corrected.indexOf('.') is -1
 							corrected += '.'
 						for i in [corrected.length..minLength]
 							corrected += '0'
