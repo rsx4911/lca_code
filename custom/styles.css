@@ -83,3 +83,68 @@ h1 small, h2 small, h3 small, h4 small, h5 small, h6 small, .h1 small, .h2 small
 .repository-commits .commit-group .commit .commit-link > a {
     color: #555;
 }
+/**
+ *  * Styles for the official government website banner.
+ *   */
+.official-website-banner {
+  background: #f7f7f7;
+  color: #212121;
+  font-size: 1.3rem;
+  font-weight: normal;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.official-website-banner__message,
+.official-website-banner__content {
+  margin: 0 auto;
+  max-width: 1170px;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+.official-website-banner__message {
+  font-size: 1.2rem;
+}
+.official-website-banner__message img{
+  margin-right: .5rem;
+  width: 2.5rem;
+}
+.official-website-banner__trigger {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #0071bc;
+  padding-right: 20px;
+}
+.official-website-banner__trigger:focus {
+  border: 1px dotted #000;
+}
+.official-website-banner__trigger.content-collapsed {
+  background: url(/lca-collaboration/images/bluedownv.png) right 6px center no-repeat;
+}
+.official-website-banner__trigger.content-expanded {
+  background: url(/lca-collaboration/images/blueupv.png) right 6px center no-repeat;
+}
+.official-website-banner__content {
+  display: none;
+  /** Clearfix */
+  overflow: auto;
+}
+.official-website-banner__content > .content-region {
+  float: left;
+  padding: 15px 0;
+  width: 100%;
+}
+@media screen and (min-width: 60em) {
+  .official-website-banner__content > .content-region__first,
+  .official-website-banner__content > .content-region__second {
+    width: 50%;
+  }
+}
+.content-region img {
+  float: left;
+  height: 4rem;
+  width: 4rem;
+}
+.content-region p {
+  padding-left: 5.5rem;
+  padding-right: 15px;
+}
