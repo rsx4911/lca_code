@@ -57,7 +57,6 @@ color: #ffffff;
 
 ul.dropdown-menu>li {color: #ffffff}
 
-#footer{border-top:1px solid #ddd;width:100%;bottom:0;background:#435037;height:25px;padding:1px;text-align:center;font-weight:100;font-size: smaller;color:#ffffff}
 
 .btn-danger  {
     background-color:#952420;
@@ -148,4 +147,93 @@ h1 small, h2 small, h3 small, h4 small, h5 small, h6 small, .h1 small, .h2 small
 .content-region p {
   padding-left: 5.5rem;
   padding-right: 15px;
+}
+/* line 1, ../scss/components/_footer.scss */
+.footer {
+  padding: 0;
+  border: none;
+}
+
+/* line 5, ../scss/components/_footer.scss */
+.footer__primary-section {
+  background-color: #f0f0f0;
+}
+/* line 7, ../scss/components/_footer.scss */
+.footer__primary-section ul.nav {
+  display: flex;
+  flex-wrap: wrap;
+}
+/* line 10, ../scss/components/_footer.scss */
+.footer__primary-section ul.nav li {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+/* line 13, ../scss/components/_footer.scss */
+.footer__primary-section ul.nav li:first-child {
+  padding-left: 0;
+}
+/* line 15, ../scss/components/_footer.scss */
+.footer__primary-section ul.nav li a {
+  color: #446443;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  font-weight: 700;
+}
+/* line 22, ../scss/components/_footer.scss */
+.footer__primary-section ul.nav li a:hover {
+  color: #37493b;
+  text-decoration: underline;
+}
+
+/* line 31, ../scss/components/_footer.scss */
+.footer__secondary-section {
+  background-color: #dcdee0;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+/* line 36, ../scss/components/_footer.scss */
+.footer__secondary-section ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+/* line 6, ../scss/utils/_unstyled-list.scss */
+.footer__secondary-section ul > li {
+  margin-bottom: 0;
+  max-width: unset;
+}
+@media screen and (min-width: 480px) {
+  /* line 36, ../scss/components/_footer.scss */
+  .footer__secondary-section ul {
+    column-count: 2;
+  }
+}
+@media screen and (min-width: 768px) {
+  /* line 36, ../scss/components/_footer.scss */
+  .footer__secondary-section ul {
+    column-count: 3;
+  }
+}
+@media screen and (min-width: 992px) {
+  /* line 36, ../scss/components/_footer.scss */
+  .footer__secondary-section ul {
+    column-count: 4;
+  }
+}
+/* line 42, ../scss/components/_footer.scss */
+.footer__secondary-section ul li {
+  margin-top: 1rem;
+}
+/* line 45, ../scss/components/_footer.scss */
+.footer__secondary-section ul li:first-child {
+  margin-top: 0;
+}
+/* line 49, ../scss/components/_footer.scss */
+.footer__secondary-section ul li a {
+  color: #446443;
+}
+/* line 51, ../scss/components/_footer.scss */
+.footer__secondary-section ul li a:hover {
+  color: #37493b;
 }
