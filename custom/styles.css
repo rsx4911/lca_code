@@ -237,3 +237,12 @@ h1 small, h2 small, h3 small, h4 small, h5 small, h6 small, .h1 small, .h2 small
 .footer__secondary-section ul li a:hover {
   color: #37493b;
 }
+.site-branding__usda-logo {
+  width: 80px;
+}
+@media screen and (min-width: 768px) {
+  /* line 5, ../scss/components/_site-branding.scss */
+  .site-branding__usda-logo {
+    width: 100px;
+  }
+}
