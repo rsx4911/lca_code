@@ -1,4 +1,169 @@
-<!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/></head><body class="public-mode">
+<!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/>
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<style>
+.navbar-default .navbar-collapse {
+  background-color: #008817;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+/* line 35, ../scss/components/_navigation.scss */
+.navbar-default ul.navbar-nav {
+  margin: 0;
+}
+
+/* line 39, ../scss/components/_navigation.scss */
+.navbar-default li {
+  border-top: 1px solid #dcdee0;
+  min-height: 44px;
+}
+/* line 41, ../scss/components/_navigation.scss */
+.navbar-default li:first-child {
+  border-top: none;
+}
+
+/* line 45, ../scss/components/_navigation.scss */
+.navbar-default .navbar-nav li a {
+  color: white;
+}
+/* line 49, ../scss/components/_navigation.scss */
+.navbar-default .navbar-nav li a.is-active, .navbar-default .navbar-nav li a:hover, .navbar-default .navbar-nav li a:focus {
+  font-weight: 700;
+  color: white;
+}
+/* line 55, ../scss/components/_navigation.scss */
+.navbar-default .navbar-nav li a.is-active:after, .navbar-default .navbar-nav li a:hover:after, .navbar-default .navbar-nav li a:focus:after {
+  background-color: white;
+  border-radius: 99rem;
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: .25rem;
+  top: .25rem;
+  width: .25rem;
+  left: .25rem;
+}
+
+/*
+----------------------------------------
+DESKTOP & TABLET STYLES
+----------------------------------------
+*/
+@media screen and (min-width: 768px) {
+  /* line 77, ../scss/components/_navigation.scss */
+  .navbar-default .navbar-collapse {
+    background-color: transparent;
+    margin-left: 0px;
+    margin-right: 0px;
+    float: right;
+  }
+
+  /* line 85, ../scss/components/_navigation.scss */
+  .navbar-default ul.navbar-nav {
+    margin: 30px 0 0 0;
+  }
+
+  /* line 90, ../scss/components/_navigation.scss */
+  .navbar-default li {
+    border-top: none;
+    min-height: unset;
+  }
+
+  /* line 96, ../scss/components/_navigation.scss */
+  .navbar-default .navbar-nav li a {
+    color: #565c65;
+    font-weight: 700;
+  }
+  /* line 100, ../scss/components/_navigation.scss */
+  .navbar-default .navbar-nav li a:after {
+    background-color: transparent;
+    border-radius: 0;
+    bottom: -.25rem;
+    top: unset;
+    width: unset;
+    left: 1rem;
+    right: 1rem;
+    height: .25rem;
+  }
+  /* line 112, ../scss/components/_navigation.scss */
+  .navbar-default .navbar-nav li a:hover, .navbar-default .navbar-nav li a:focus, .navbar-default .navbar-nav li a.is-active {
+    color: #008817;
+    background-color: transparent;
+  }
+  /* line 117, ../scss/components/_navigation.scss */
+  .navbar-default .navbar-nav li a:hover:after, .navbar-default .navbar-nav li a:focus:after, .navbar-default .navbar-nav li a.is-active:after {
+    background-color: #008817;
+    border-radius: 0;
+    content: "";
+    display: block;
+    position: absolute;
+    height: .25rem;
+    left: 1rem;
+    right: 1rem;
+    bottom: -.25rem;
+    width: unset;
+    top: unset;
+  }
+}
+/**
+ * Styles for the site branding in the page header.
+ */
+/* line 5, ../scss/components/_site-branding.scss */
+.site-branding__usda-logo {
+  width: 80px;
+}
+@media screen and (min-width: 768px) {
+  /* line 5, ../scss/components/_site-branding.scss */
+  .site-branding__usda-logo {
+    width: 100px;
+  }
+}
+
+/* line 14, ../scss/components/_site-branding.scss */
+.site-branding__text {
+  font-size: 1rem;
+}
+
+/* line 5, ../scss/components/_block--partners.scss */
+.block-views-blockpartners-block-1 h2 {
+  text-align: center;
+}
+/* line 9, ../scss/components/_block--partners.scss */
+.block-views-blockpartners-block-1 .view-partners ul {
+  list-style-type: none;
+  padding-left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+/* line 6, ../scss/utils/_unstyled-list.scss */
+.block-views-blockpartners-block-1 .view-partners ul > li {
+  margin-bottom: 0;
+  max-width: unset;
+}
+@media screen and (min-width: 1200px) {
+  /* line 16, ../scss/components/_block--partners.scss */
+  .block-views-blockpartners-block-1 .view-partners ul li {
+    flex: 1 0 20%;
+  }
+}
+/* line 23, ../scss/components/_block--partners.scss */
+.block-views-blockpartners-block-1 img {
+  margin: 0 auto;
+}
+/* line 27, ../scss/components/_block--partners.scss */
+.block-views-blockpartners-block-1 a.partner {
+  display: block;
+  margin: 2rem;
+}
+/* line 33, ../scss/components/_block--partners.scss */
+.block-views-blockpartners-block-1 a.partner.image-link:hover img {
+  transform: translateY(-10px);
+}
+</style>
+</head>
+<body class="public-mode">
 <div class="official-website-banner">
   <div class="official-website-banner__message">
     <img src="./images/amflag.jpg" alt="">An official website of the United States government.
@@ -15,45 +180,39 @@
     </div>
   </div>
 </div>
+<header>
+    <div class="container">
+        <div class="row">
+                            <div class="col-xs-2 site-branding clearfix">
+                    <a href="/">
+                        <img alt="" class="site-branding__usda-logo"
+                             src="images/lca_logo.png"/>
+ <span class="site-branding__site-name sr-only">Life Cycle Assessment Commons</span>
+                              </a>
+                </div>
+<nav class="navbar navbar-default col-md-10" id="navbar">
+                        <div class="navbar-header">
+                            
+                                                                                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                                        data-target="#navbar-collapse">
+                                    <span>MENU</span>
+                                </button>
+                                                    </div>
 
-<div class="navbar-fixed-top ">
-	<a id="logo"  class="logo navbar-btn pull-left" href="/" title="Federal LCA Commons Home">
-	  <img src="./images/lca_logo.png" style="width:80px" class="site-branding__usda-logo"  alt="USDA Home" />
-	</a>
+                                                                            <div id="navbar-collapse" class="navbar-collapse collapse">
+                                  <div class="region region-navigation-collapsible">
+    <nav aria-labelledby="block-bootstrap-lca-main-menu-menu" id="block-bootstrap-lca-main-menu">
+            <h2 class="sr-only" id="block-bootstrap-lca-main-menu-menu">Main navigation</h2>
 
+      
+      <ul class="menu menu--main nav navbar-nav">
+    <li class="first"><a href="/" data-drupal-link-system-path="&lt;front&gt;" class="is-active">Home</a></li><li><a href="/node/2" data-drupal-link-system-path="node/2">About Us</a></li><li><a href="/node/7" data-drupal-link-system-path="node/7">Documentation</a></li><li class="last"><a href="/contact" data-drupal-link-system-path="contact">Contact</a></li>    </ul>
+  
+	<div id="user-menu"></div>
 
-	<a class="collab-right"  href="/" title="Home">LCA Collaboration Server</a>
+  </nav>
+</header>
 
-</div>
-
-<div style="padding: 0;vertical-align: top;clear: both;background: linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url(./images/header_bg.png);max-height:65px;">
-	<span class="caret"></span>
-
-	<ul class="menu nav navbar-nav ">
-		<li><a href="https://www.lcacommons.gov" target="_blank" aria-label="Home">Home</a>
-		</li>
-		<li ><a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown" target="_blank" aria-label="Data & Tools" >Data & Tools<span class="caret"></span></a>
-			<ul class="dropdown-menu">
-
-			<li><a href="https://data.nal.usda.gov/life-cycle-assessment" target="_blank" aria-label="Ag Data and Tools Catalog">Ag Data and Tools Catalog</a></li>				
-			<li><a href="https://www.lcacommons.gov/catalog" target="_blank" aria-label="Federal Data and Tools Catalog" >Federal Data and Tools Catalog</a></li>
-			</ul>
-		</li>				
-		<li ><a href="https://www.lcacommons.gov/content/lca-commons-life-cycle-inventory-data-documentation" target="_blank" >Data Documentation</a></li>				
-		<li><a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown" target="_blank">About<span class="caret"></span></a>
-			<ul class="dropdown-menu">
-				<li><a href="https://www.lcacommons.gov/content/about" target="_blank" aria-label="About the Project">About the Project</a></li>
-				<li><a href="https://www.lcacommons.gov/content/data-use-disclaimer-agreement" target="_blank" aria-label="Data Use Disclaimer Agreement">Data Use Disclaimer Agreement</a></li>
-				<li><a href="https://www.lcacommons.gov/content/data-contributors-content-license-agreement" target="_blank" aria-label="Content License Agreement">Data Contributor&#039;s Content License Agreement</a></li>
-			</ul>
-		</li>
-		<li class="leaf "><a href="https://www.lcacommons.gov/contact" target="_blank" aria-label="Contact Us">Contact Us</a>
-		</li>
-		<li class="last leaf "><a href="https://www.lcacommons.gov/discovery/about" target="_blank" aria-label="Help">Help</a>
-		</li>				
-	</ul>
-	<div id="user-menu">
-</div>
 <div id="main" role="heading" aria-level="1">
 	<div class="full-size">
 		<div class="center"></div>
