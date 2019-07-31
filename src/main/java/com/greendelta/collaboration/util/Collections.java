@@ -148,8 +148,19 @@ public class Collections {
 		return filtered;
 	}
 	
-	public static <T> List<T> filterDuplicates(List<T> values) {
+	public static <V> List<V> filterDuplicates(List<V> values) {
 		return new ArrayList<>(new HashSet<>(values));
+	}
+
+	public static <V, I> List<V> filterDuplicates(List<V> values, Function<V, I> getId) {
+		Set<I> existing = new HashSet<>();
+		return Collections.filter(values, e -> {
+			I id = getId.apply(e);
+			if (existing.contains(id))
+				return true;
+			existing.add(id);
+			return false;
+		});
 	}
 
 	public static <T> List<T> pop(List<T> col, int amount) {
