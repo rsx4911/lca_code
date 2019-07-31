@@ -1,165 +1,296 @@
 <!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/>
  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+
 <style>
-.navbar-default .navbar-collapse {
-  background-color: #008817;
-  margin-left: -15px;
-  margin-right: -15px;
+/*
+========================================
+OVERRIDES
+----------------------------------------
+Any overrides to the application or
+bootstrap default styles. 
+----------------------------------------
+*/
+
+header.drupal {
+  height: unset; 
 }
 
-/* line 35, ../scss/components/_navigation.scss */
-.navbar-default ul.navbar-nav {
-  margin: 0;
+body.public-mode header.drupal nav {
+  width: unset; 
 }
 
-/* line 39, ../scss/components/_navigation.scss */
-.navbar-default li {
-  border-top: 1px solid #dcdee0;
-  min-height: 44px;
-}
-/* line 41, ../scss/components/_navigation.scss */
-.navbar-default li:first-child {
-  border-top: none;
+header.drupal nav {
+  position: relative; 
+  background-color: transparent; 
+  width: unset; 
+  margin-top: 0; 
 }
 
-/* line 45, ../scss/components/_navigation.scss */
-.navbar-default .navbar-nav li a {
-  color: white;
+header.drupal nav.navbar-default {
+  background-image: none; 
+  box-shadow: none;
+  border: none; 
 }
-/* line 49, ../scss/components/_navigation.scss */
-.navbar-default .navbar-nav li a.is-active, .navbar-default .navbar-nav li a:hover, .navbar-default .navbar-nav li a:focus {
-  font-weight: 700;
-  color: white;
+
+header.drupal nav ul li {
+  width: unset; 
 }
-/* line 55, ../scss/components/_navigation.scss */
-.navbar-default .navbar-nav li a.is-active:after, .navbar-default .navbar-nav li a:hover:after, .navbar-default .navbar-nav li a:focus:after {
-  background-color: white;
-  border-radius: 99rem;
-  content: "";
-  display: block;
-  position: absolute;
-  bottom: .25rem;
-  top: .25rem;
-  width: .25rem;
-  left: .25rem;
+
+header.drupal nav ul li:not(.active):hover {
+  background-color: transparent; 
+  transition: none; 
+}
+
+header.drupal .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.open>a {
+  background-image: none; 
+  box-shadow: none; 
+}
+
+header.drupal .dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
+  background-image: none; 
+}
+
+@media (min-width: 992px){
+  body.public-mode header.drupal nav.col-md-10 {
+    width: 83.3333333%; 
+  }
 }
 
 /*
+========================================
+Drupal Styles
 ----------------------------------------
-DESKTOP & TABLET STYLES
+CSS taken from the drupal site
 ----------------------------------------
 */
+
+/* line 3, ../scss/components/_header.scss */
+header {
+  margin-bottom: 16px;
+}
+
 @media screen and (min-width: 768px) {
-  /* line 77, ../scss/components/_navigation.scss */
-  .navbar-default .navbar-collapse {
-    background-color: transparent;
-    margin-left: 0px;
-    margin-right: 0px;
-    float: right;
-  }
-
-  /* line 85, ../scss/components/_navigation.scss */
-  .navbar-default ul.navbar-nav {
-    margin: 30px 0 0 0;
-  }
-
-  /* line 90, ../scss/components/_navigation.scss */
-  .navbar-default li {
-    border-top: none;
+  /* line 9, ../scss/components/_header.scss */
+  nav.navbar.navbar-default {
     min-height: unset;
+    border-radius: 0;
   }
+}
 
-  /* line 96, ../scss/components/_navigation.scss */
-  .navbar-default .navbar-nav li a {
+@media screen and (max-width: 767px) {
+  /* line 18, ../scss/components/_header.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav {
+    list-style-type: none;
+    padding-left: 0;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  /* line 6, ../scss/utils/_unstyled-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li {
+    margin-bottom: 0;
+    max-width: unset;
+  }
+  /* line 18, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li {
+    border-top: 1px solid #dcdee0;
+  }
+  /* line 21, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li:first-child {
+    border-top: none;
+  }
+  /* line 23, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.active a {
+    background-color: transparent;
+  }
+  /* line 28, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav a {
     color: #565c65;
-    font-weight: 700;
+    display: block;
+    padding: 8px 16px;
+    text-decoration: none;
   }
-  /* line 100, ../scss/components/_navigation.scss */
-  .navbar-default .navbar-nav li a:after {
-    background-color: transparent;
-    border-radius: 0;
-    bottom: -.25rem;
-    top: unset;
-    width: unset;
-    left: 1rem;
-    right: 1rem;
-    height: .25rem;
-  }
-  /* line 112, ../scss/components/_navigation.scss */
-  .navbar-default .navbar-nav li a:hover, .navbar-default .navbar-nav li a:focus, .navbar-default .navbar-nav li a.is-active {
+  /* line 34, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav a:hover {
+    background-color: #f0f0f0;
     color: #008817;
-    background-color: transparent;
+    text-decoration: none;
   }
-  /* line 117, ../scss/components/_navigation.scss */
-  .navbar-default .navbar-nav li a:hover:after, .navbar-default .navbar-nav li a:focus:after, .navbar-default .navbar-nav li a.is-active:after {
+  /* line 40, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav a:focus {
+    outline-offset: 0;
+  }
+  /* line 44, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav a.is-active {
+    color: #008817;
+    font-weight: 700;
+    position: relative;
+  }
+  /* line 4, ../scss/utils/_add-bar.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav a.is-active:after {
     background-color: #008817;
-    border-radius: 0;
     content: "";
     display: block;
     position: absolute;
-    height: .25rem;
-    left: 1rem;
-    right: 1rem;
-    bottom: -.25rem;
-    width: unset;
-    top: unset;
+    border-radius: 99rem;
+    bottom: 4px;
+    top: 4px;
+    width: 4px;
+    left: 0;
   }
-}
-/**
- * Styles for the site branding in the page header.
- */
-/* line 5, ../scss/components/_site-branding.scss */
-.site-branding__usda-logo {
-  width: 80px;
 }
 @media screen and (min-width: 768px) {
-  /* line 5, ../scss/components/_site-branding.scss */
-  .site-branding__usda-logo {
-    width: 100px;
+  /* line 18, ../scss/components/_header.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav {
+    display: flex;
+  }
+  /* line 18, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li a {
+    text-decoration: none;
+    font-size: 16px;
+  }
+  /* line 37, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li > a {
+    color: #1b1b1b;
+    display: block;
+    font-weight: 700;
+  }
+  /* line 50, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li > a:hover {
+    color: #008817;
+    position: relative;
+  }
+  /* line 4, ../scss/utils/_add-bar.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li > a:hover:after {
+    background-color: #008817;
+    content: "";
+    display: block;
+    position: absolute;
+    height: 4px;
+    left: 16px;
+    right: 16px;
+    bottom: -4px;
+  }
+  /* line 55, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li > a.is-active {
+    position: relative;
+    background-color: transparent;
+  }
+  /* line 4, ../scss/utils/_add-bar.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li > a.is-active:after {
+    background-color: #008817;
+    content: "";
+    display: block;
+    position: absolute;
+    height: 4px;
+    left: 16px;
+    right: 16px;
+    bottom: -4px;
+  }
+  /* line 69, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li.active > a {
+    background-color: transparent;
+  }
+  /* line 73, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li.active:not(.open) > a:hover {
+    color: #008817;
+    position: relative;
+  }
+  /* line 4, ../scss/utils/_add-bar.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav > li.active:not(.open) > a:hover:after {
+    background-color: #008817;
+    content: "";
+    display: block;
+    position: absolute;
+    height: 4px;
+    left: 16px;
+    right: 16px;
+    bottom: -4px;
+  }
+}
+@media screen and (max-width: 767px) {
+  /* line 89, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 16px;
+  }
+  /* line 6, ../scss/utils/_unstyled-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu > li {
+    margin-bottom: 0;
+    max-width: unset;
+  }
+  /* line 60, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li {
+    border-top: 1px solid #dcdee0;
+  }
+  /* line 64, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li a {
+    padding-left: 32px;
+  }
+  /* line 69, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li a {
+    padding-left: 48px;
+  }
+  /* line 74, ../scss/utils/_nav-list.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu li a {
+    padding-left: 64px;
+  }
+}
+@media screen and (min-width: 768px) {
+  /* line 97, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open a {
+    background-color: #37493b;
+    color: #fff;
+  }
+  /* line 102, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu {
+    border: none;
+    border-radius: 0;
+    background-color: #37493b;
+  }
+  /* line 107, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu a {
+    font-weight: 400;
+  }
+  /* line 109, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu a:hover {
+    text-decoration: underline;
+  }
+  /* line 112, ../scss/utils/_navigation.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav li.open ul.dropdown-menu a.is-active {
+    background-color: #008817;
+  }
+}
+@media screen and (min-width: 768px) {
+  /* line 18, ../scss/components/_header.scss */
+  nav.navbar-default .navbar-collapse ul.navbar-nav {
+    float: right;
+    margin-top: 30px;
   }
 }
 
-/* line 14, ../scss/components/_site-branding.scss */
-.site-branding__text {
-  font-size: 1rem;
+/* line 29, ../scss/components/_header.scss */
+.navbar-default .navbar-toggle {
+  border: none;
+  border-radius: 0;
+  background-color: #008817;
+  color: #fff;
+  height: 48px;
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 0 15px 0 15px;
+  margin-right: 0;
 }
-
-/* line 5, ../scss/components/_block--partners.scss */
-.block-views-blockpartners-block-1 h2 {
-  text-align: center;
+/* line 40, ../scss/components/_header.scss */
+.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle[aria-expanded=true] {
+  background-color: #37493b;
 }
-/* line 9, ../scss/components/_block--partners.scss */
-.block-views-blockpartners-block-1 .view-partners ul {
-  list-style-type: none;
-  padding-left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
-/* line 6, ../scss/utils/_unstyled-list.scss */
-.block-views-blockpartners-block-1 .view-partners ul > li {
-  margin-bottom: 0;
-  max-width: unset;
-}
-@media screen and (min-width: 1200px) {
-  /* line 16, ../scss/components/_block--partners.scss */
-  .block-views-blockpartners-block-1 .view-partners ul li {
-    flex: 1 0 20%;
-  }
-}
-/* line 23, ../scss/components/_block--partners.scss */
-.block-views-blockpartners-block-1 img {
-  margin: 0 auto;
-}
-/* line 27, ../scss/components/_block--partners.scss */
-.block-views-blockpartners-block-1 a.partner {
-  display: block;
-  margin: 2rem;
-}
-/* line 33, ../scss/components/_block--partners.scss */
-.block-views-blockpartners-block-1 a.partner.image-link:hover img {
-  transform: translateY(-10px);
+/* line 44, ../scss/components/_header.scss */
+.navbar-default .navbar-toggle[aria-expanded=false] {
+  background-color: #008817;
 }
 </style>
 </head>
@@ -180,41 +311,59 @@ DESKTOP & TABLET STYLES
     </div>
   </div>	
 </div>
-<div style="padding: 0;vertical-align: top;clear: both;background: linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url(./images/header_bg.png);max-height:65px;">
-<header>
-    <div class="container">
-        <div class="row">
-                            <div class="col-xs-2 site-branding clearfix">
-                    <a href="/">
-                        <img alt="" class="site-branding__usda-logo"
-                             src="images/lca_logo.png"/>
- <span class="site-branding__site-name sr-only">Life Cycle Assessment Commons</span>
-                              </a>
-                </div>
-<nav class="navbar navbar-default col-md-10" id="navbar">
-                        <div class="navbar-header">
-                            
-                                                                                        <button type="button" class="navbar-toggle" data-toggle="collapse"
-                                        data-target="#navbar-collapse">
-                                    <span>MENU</span>
-                                </button>
-                                                    </div>
+<header class="drupal">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-2 site-branding clearfix">
+        <a href="/">
+          <img alt="" style="width:80px" class="site-branding__usda-logo" src="images/lca_logo.png">
+          <span class="site-branding__site-name sr-only">Life Cycle Assessment Commons</span>
+        </a>
+      </div>
 
-                                                                            <div id="navbar-collapse" class="navbar-collapse collapse">
-                                  <div class="region region-navigation-collapsible">
-    <nav aria-labelledby="block-bootstrap-lca-main-menu-menu" id="block-bootstrap-lca-main-menu">
-            <h2 class="sr-only" id="block-bootstrap-lca-main-menu-menu">Main navigation</h2>
+      <nav class="navbar navbar-default col-md-10" id="navbar">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+            <span>MENU</span>
+          </button>
+        </div>
 
-      
-      <ul class="menu menu--main nav navbar-nav">
-    <li class="first"><a href="/" data-drupal-link-system-path="&lt;front&gt;" class="is-active">Home</a></li><li><a href="/node/2" data-drupal-link-system-path="node/2">About Us</a></li><li><a href="/node/7" data-drupal-link-system-path="node/7">Documentation</a></li><li class="last"><a href="/contact" data-drupal-link-system-path="contact">Contact</a></li>    </ul>
-  
-
-  </nav>
-  <div id="user-menu"></div>
+<div id="user-menu"> </div>
+        <div id="navbar-collapse" class="navbar-collapse collapse" aria-expanded="false" style="height: 1px;">
+          <div class="region region-navigation-collapsible">
+            <nav aria-labelledby="block-bootstrap-lca-main-menu-menu" id="block-bootstrap-lca-main-menu">
+              <h2 class="sr-only" id="block-bootstrap-lca-main-menu-menu">Main navigation</h2>
+              
+              <ul class="menu menu--main nav navbar-nav">
+                <li class="first">
+                  <a href="/" data-drupal-link-system-path="<front>" class="is-active">Home</a>
+                </li>
+                <li>
+                  <a href="/about-lca-federal-commons" data-drupal-link-system-path="node/2">About Us</a>
+                </li>
+                <li class="expanded dropdown">
+                  <a href="/data-documentation" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
+                  
+                  <ul class="dropdown-menu">
+                    <li class="first">
+                      <a href="/memo-understanding" data-drupal-link-system-path="node/21">Memo of Understanding</a>
+                    </li>
+                    <li class="last">
+                      <a href="/submission-guidelines" data-drupal-link-system-path="node/20">Submission Guidelines</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="last">
+                  <a href="/contact" data-drupal-link-system-path="contact">Contact</a>
+                </li>    
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
 </header>
-</div>
-
 <div id="main" role="heading" aria-level="1">
 	<div class="full-size">
 		<div class="center"></div>
