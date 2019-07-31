@@ -97,17 +97,20 @@ public class SearchService {
 		if (path != null) {
 			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/*"));
 		}
-		return parser.parse(getClient().search(builder.build()));
+		List<IndexEntry> entries = parser.parse(getClient().search(builder.build()));
+		return Collections.filterDuplicates(entries, e -> e.refId);
 	}
 
 	public List<IndexEntry> getMostRecentAfter(Repository repo, Commit commit) {
 		SearchQueryBuilder builder = builder(repo);
+		builder.filter("mostRecent", SearchFilterValue.term(true));
 		if (commit != null) {
 			builder.filter("commitTimestamp", SearchFilterValue.from(commit.timestamp + 1));
 		}
-		return parser.parse(getClient().search(builder.build()));
+		List<IndexEntry> entries = parser.parse(getClient().search(builder.build()));
+		return Collections.filterDuplicates(entries, e -> e.refId);
 	}
-
+	
 	public IndexEntry getFirst(Repository repo, String refId) {
 		SearchQueryBuilder builder = builder(repo);
 		builder.filter("refId", SearchFilterValue.term(refId));

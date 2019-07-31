@@ -18,6 +18,7 @@ import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
@@ -57,6 +58,7 @@ abstract class DownloadResource {
 		ModelType type = Client.getTypeFromPath(path);
 		String subPath = Client.getCategoryFromPath(path);
 		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, type, subPath, commit.id);
+		entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 		List<FileReference> references = Collections.convertToList(entries, (e) -> e.asFileReference());
 		return prepare(group, repository, commit.id, references);
 	}
