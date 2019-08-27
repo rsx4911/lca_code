@@ -234,6 +234,11 @@ header.drupal .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav
 header.drupal .dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
   background-image: none; 
 }
+header.drupal .form-control {
+    border: 1px solid #565c65;
+    border-radius: 0;
+    color: #1b1b1b;
+}
 
 @media (min-width: 992px){
   body.public-mode header.drupal nav.col-md-10 {
@@ -477,3 +482,102 @@ header {
 .navbar-default .navbar-toggle[aria-expanded=false] {
   background-color: #008817;
 }
+button.btn-success {
+    background-image: none;
+    font-weight: bold;
+    background-color: #008817;
+}
+
+button.btn-success:hover {
+    background-color: #446443;
+}
+
+button.btn-success:focus {
+    outline: #00a91c;
+    outline-offset: 2px;
+    outline-style: solid;
+    outline-width: 3px;
+}
+#user-menu {
+  float: none;
+  padding: 0;
+  background-color: #446443;
+  padding: 15px;
+}
+
+#user-menu .form-group {
+  margin-bottom: 0;
+}
+
+#user-menu input {
+  border: 1px solid #565c65;
+  border-radius: 0;
+  color: #1b1b1b;
+}
+#user-menu input:focus {
+	border: 4px solid #98d035;
+}
+#user-menu input::placeholder {
+  color: #71767A;
+  font-style: italic;
+}
+#user-menu a.login {
+    display:  none;
+}
+
+#user-menu > div {
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media all and (min-width: 768px){
+    #user-menu > div {
+        width: 750px;
+    }        
+}
+
+@media all and (min-width: 992px){
+    #user-menu > div {
+        width: 970px;
+    }    
+}
+
+@media all and (min-width: 1200px){
+    #user-menu > div {
+        width: 1170px;
+    }    
+}
+
+
+#user-menu .pull-left {
+    float: none !important;
+}
+
+@media (max-width: 991px) {
+   #user-menu {
+       display: none; 
+   }
+}
+@media screen and (min-width: 768px) {
+  .drupal a.login.default-button span{
+    background-color: #008817;
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: .25rem;
+  }
+  .drupal a.login.default-button:hover span {
+    background-color: #446443;
+  }
+  nav.navbar-default .navbar-collapse ul.navbar-nav>li>a.login.default-button:hover:after {
+    display:none;
+  }
+}
+.visually-hidden 
+{position:absolute;
+left:-10000px;
+top:auto;
+width:1px;
+height:1px;
+overflow:hidden;}
