@@ -1,64 +1,100 @@
-<!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/></head><body class="public-mode">
+<!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/>
+</head>
+<body class="public-mode">
+ <a href="#" onclick="javascript:skipto()"class="visually-hidden focusable skip-link">
+      Skip to main content
+    </a>
 <div class="official-website-banner">
   <div class="official-website-banner__message">
     <img src="./images/amflag.jpg" alt="">An official website of the United States government.
-    <button class="official-website-banner__trigger content-collapsed"">Here's how you know.</button>
+    <button class="official-website-banner__trigger content-collapsed"">Here&#39;s how you know.</button>
   </div>
   <div class="official-website-banner__content" style="display:none;">
     <div class="content-region content-region__first">
       <img src="./images/icon-dot-gov.svg" alt="">
-      <p><strong>The .gov means it’s official.</strong><br>Federal government websites always use a .gov or .mil domain. Before sharing sensitive information online, make sure you’re on a .gov or .mil site by inspecting your browser’s address (or “location”) bar.</p>
+      <p><strong>The .gov means it&#39;s official.</strong><br>Federal government websites always use a .gov or .mil domain. Before sharing sensitive information online, make sure you&#39;re on a .gov or .mil site by inspecting your browser&#39;s address (or &quot;location&quot;) bar.</p>
     </div>
     <div class="content-region content-region__second">
       <img src="./images/icon-https.svg" alt="">
-      <p>This site is also protected by an SSL (Secure Sockets Layer) certificate that’s been signed by the U.S. government. The https:// means all transmitted data is encrypted  — in other words, any information or browsing history that you provide is transmitted securely.</p>
+      <p>This site is also protected by an SSL (Secure Sockets Layer) certificate that&#39;s been signed by the U.S. government. The https:// means all transmitted data is encrypted  &mdash; in other words, any information or browsing history that you provide is transmitted securely.</p>
+    </div>
+  </div>	
+</div>
+<header class="drupal">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-2 site-branding clearfix">
+	<a href="#" onclick="javascript:window.location.href='https://www.lcacommons.gov'">
+          <img alt="" class="site-branding__usda-logo" src="images/lca_logo.png">
+          <span class="site-branding__site-name sr-only">Life Cycle Assessment Commons</span>
+	</a>
+      </div>
+
+      <nav class="navbar navbar-default col-md-10" id="navbar">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+            <span>MENU</span>
+          </button>
+        </div>
+
+        <div id="navbar-collapse" class="navbar-collapse collapse" aria-expanded="false" style="height: 1px;">
+          <div class="region region-navigation-collapsible">
+            <nav aria-labelledby="block-bootstrap-lca-main-menu-menu" id="block-bootstrap-lca-main-menu">
+              <h2 class="sr-only" id="block-bootstrap-lca-main-menu-menu">Main navigation</h2>
+              
+              <ul class="menu menu--main nav navbar-nav">
+                <li class="first">
+                  <a href="#" onclick="javascript:window.location.href='https://www.lcacommons.gov'" data-drupal-link-system-path="<front>" class="is-active">Home</a>
+                </li>
+		<li class="expanded dropdown">
+			<a href="#" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/2">About Us <span class="caret"></span></a>
+                	<ul class="dropdown-menu">
+                	<li class="first">
+                        <a href="/about" data-drupal-link-system-path="/node/25" target="_blank">About LCA Commons</a>
+                	</li>
+                	<li class="last">
+                        <a href="/memorandum-understanding-0" data-drupal-link-system-path="/node/24" target="_blank">Memorandum of Understanding</a>
+                	</li>
+                	</ul>
+                </li>
+                <li class="expanded dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
+                  
+                  <ul class="dropdown-menu">
+                    <li class="first">
+                      <a href="/draft-data-handbook" data-drupal-link-system-path="node/22" target="_blank">Draft Data Handbook</a>
+                    </li>
+                    <li >
+                      <a href="/openlca-collaboration-server" data-drupal-link-system-path="node/23" target="_blank">openLCA Collaboration Server</a>
+                    </li>
+                    <li class="last">
+                      <a href="/data-documentation" data-drupal-link-system-path="node/7" target="_blank">Agency Data Catalogs</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="last">
+                  <a href="/contact" target="_blank" data-drupal-link-system-path="contact">Contact</a>
+                </li>    
+<!--                <li><a class="login default-button" href="#" onClick="javascript:window.location.href='login'"><span>Sign In</span></a></li>-->
+              </ul>
+              
+            </nav>
+          </div>
+        </div>
+      </nav>
     </div>
   </div>
-</div>
-
-<div class="navbar-fixed-top ">
-	<a id="logo" class="logo navbar-btn pull-left" href="http://www.usda.gov" target="_blank" title="USDA Home">
-	  <img src="./images/logo1.png" alt="USDA Home" />
-	</a>
-
-	<span class = "logo-label">
-	   <span class = "logo-label-top">National Agricultural Library </span>
-	   <br><span class = "logo-label-bottom" >United States Department of Agriculture </span>
-	</span>
-    
-
-	<a class="collab-right"  href="/" title="Home">LCA Collaboration Server</a>
-
-</div>
-
-<div style="padding: 0;vertical-align: top;clear: both;background: linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url(./images/header_bg.png);max-height:65px;">
-	<span class="caret"></span>
-
-	<ul class="menu nav navbar-nav ">
-		<li><a href="https://www.lcacommons.gov" target="_blank" aria-label="Home">Home</a>
-		</li>
-		<li ><a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown" target="_blank" aria-label="Data & Tools" >Data & Tools<span class="caret"></span></a>
-			<ul class="dropdown-menu">
-
-			<li><a href="https://data.nal.usda.gov/life-cycle-assessment" target="_blank" aria-label="Ag Data and Tools Catalog">Ag Data and Tools Catalog</a></li>				
-			<li><a href="https://www.lcacommons.gov/catalog" target="_blank" aria-label="Federal Data and Tools Catalog" >Federal Data and Tools Catalog</a></li>
-			</ul>
-		</li>				
-		<li ><a href="https://www.lcacommons.gov/content/lca-commons-life-cycle-inventory-data-documentation" target="_blank" >Data Documentation</a></li>				
-		<li><a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown" target="_blank">About<span class="caret"></span></a>
-			<ul class="dropdown-menu">
-				<li><a href="https://www.lcacommons.gov/content/about" target="_blank" aria-label="About the Project">About the Project</a></li>
-				<li><a href="https://www.lcacommons.gov/content/data-use-disclaimer-agreement" target="_blank" aria-label="Data Use Disclaimer Agreement">Data Use Disclaimer Agreement</a></li>
-				<li><a href="https://www.lcacommons.gov/content/data-contributors-content-license-agreement" target="_blank" aria-label="Content License Agreement">Data Contributor&#039;s Content License Agreement</a></li>
-			</ul>
-		</li>
-		<li class="leaf "><a href="https://www.lcacommons.gov/contact" target="_blank" aria-label="Contact Us">Contact Us</a>
-		</li>
-		<li class="last leaf "><a href="https://www.lcacommons.gov/discovery/about" target="_blank" aria-label="Help">Help</a>
-		</li>				
-	</ul>
-	<div id="user-menu">
-</div>
+  <div id="user-menu">
+    <div class="container">
+      <div class="has-feedback row">
+        <div class="form-group" id="global-search-group">
+          <input class="form-control" id="global-search" name="global-search" type="text" aria-label="Search" placeholder="Search">
+          <span class="glyphicon glyphicon-search form-control-feedback"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 <div id="main" role="heading" aria-level="1">
 	<div class="full-size">
 		<div class="center"></div>
@@ -86,7 +122,6 @@
                 </div>
             </div>
         </footer>
-
 	<div id="build-info" data-admin-only="true">
 		<span id="release-version"></span>, 
 		<span id="commit-version"></span>, 
@@ -104,6 +139,9 @@ gtag('config', 'UA-100195319-1');
 </script>
 <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=USDA&subagency=ARS-NAL"></script>
 <script>
+function skipto() {
+        window.location+'#main';
+}
 (function ($) {
   let trigger = $('.official-website-banner__trigger');
 

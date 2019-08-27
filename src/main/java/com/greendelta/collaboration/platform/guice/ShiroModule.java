@@ -38,7 +38,7 @@ public class ShiroModule extends ShiroWebModule {
 	private static final Key<AuthenticationFilter> LOGGED_IN_USER = Key.get(AuthenticationFilter.class);
 	private static final Key<RepoAccessFilter> REPO_ACCESS = Key.get(RepoAccessFilter.class);
 	// custom gulp build can change the "html" resources that are publicly available
-	public static final String[] CUSTOM_PUBLIC_RESOURCES = { "/imprint", "/index", "/login", "/test" };
+	public static final String[] CUSTOM_PUBLIC_RESOURCES = { "/header", "/imprint",  "/index", "/login"};
 
 	ShiroModule(ServletContext servletContext) {
 		super(servletContext);
