@@ -574,6 +574,14 @@ button.btn-success:focus {
     display:none;
   }
 }
+a.visually-hidden.focusable.skip-link:focus {
+    position: relative;
+    height: unset;
+    width: unset;
+    /* display: block; */
+    left: 0;
+}
+
 .visually-hidden 
 {position:absolute;
 left:-10000px;

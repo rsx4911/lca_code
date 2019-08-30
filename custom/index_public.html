@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/>
 </head>
 <body class="public-mode">
- <a href="#" onclick="javascript:skipto()"class="visually-hidden focusable skip-link">
+ <a href="#" class="visually-hidden focusable skip-link">
       Skip to main content
     </a>
 <div class="official-website-banner">
@@ -24,10 +24,8 @@
   <div class="container">
     <div class="row">
       <div class="col-xs-2 site-branding clearfix">
-	<a href="#" onclick="javascript:window.location.href='https://www.lcacommons.gov'">
           <img alt="" class="site-branding__usda-logo" src="images/lca_logo.png">
           <span class="site-branding__site-name sr-only">Life Cycle Assessment Commons</span>
-	</a>
       </div>
 
       <nav class="navbar navbar-default col-md-10" id="navbar">
@@ -140,8 +138,28 @@ gtag('config', 'UA-100195319-1');
 <script async type="text/javascript" id="_fed_an_ua_tag" src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=USDA&subagency=ARS-NAL"></script>
 <script>
 function skipto() {
-        window.location+'#main';
+	document.getElementById("main").scrollIntoView(true);
 }
+$( document ).ready(function() {
+        // bind a click event to the 'skip' link
+        $(".skip-link").click(function(event){
+
+            // strip the leading hash and declare
+            // the content we're skipping to
+            //var skipTo="#"+this.href.split('#')[1];
+                var skipTo="#main";
+                skipto();
+            // Setting 'tabindex' to -1 takes an element out of normal
+            // tab flow but allows it to be focused via javascript
+            $(skipTo).attr('tabindex', -1).on('blur focusout', function () {
+
+                // when focus leaves this element,
+                // remove the tabindex attribute
+                $(this).removeAttr('tabindex');
+
+            }).focus(); // focus on the content container
+        });
+    });
 (function ($) {
   let trigger = $('.official-website-banner__trigger');
 
