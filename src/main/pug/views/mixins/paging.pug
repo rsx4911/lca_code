@@ -16,8 +16,8 @@ mixin paging(resultInfo, getUrl, pageSizeId)
 			if pageCount <= endPage
 				- endPage = pageCount;
 			if page > 1
-				span: a.page(href=getUrl(1) title="Link to page 1" data-page=1) <<
-				span: a.page(href=getUrl(page-1) title="Link to page "+page-1  data-page=page-1) <
+				span: a.page(href=getUrl(1) aria-label="Link to page 1" data-page=1) <<
+				span: a.page(href=getUrl(page-1) aria-label="Link to page "+page-1  data-page=page-1) <
 			- var p = startPage
 			while p <= endPage
 				- var isActive = (p === page)
@@ -25,11 +25,11 @@ mixin paging(resultInfo, getUrl, pageSizeId)
 				if isActive
 					span=p
 				else
-					span(class=isFirstAfterActive?'indent':''): a.page(href=getUrl(p) title="Link to page "+p data-page=p)=p
+					span(class=isFirstAfterActive?'indent':''): a.page(href=getUrl(p) aria-label="Link to page "+p data-page=p)=p
 				- p++;
 			if page < pageCount
-				span: a.page(href=getUrl(page+1) title='Link to page '+page data-page=page+1) >
-				span: a.page(href=getUrl(pageCount) title='Link to page '+pageCount data-page=pageCount) >>
+				span: a.page(href=getUrl(page+1) aria-label='Link to page '+page data-page=page+1) >
+				span: a.page(href=getUrl(pageCount) aria-label='Link to page '+pageCount data-page=pageCount) >>
 			- values = [10, 25, 50, 100];
 			- pageSizeId = pageSizeId || 'page-size'
 			+select(pageSizeId, null, [10, 25, 50, 100], pageSize, true)(class='input-sm' aria-label='Select page size')
