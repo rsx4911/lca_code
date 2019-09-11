@@ -45,7 +45,7 @@
                   <a href="#" onclick="javascript:window.location.href='https://www.lcacommons.gov'" data-drupal-link-system-path="<front>" class="is-active">Home</a>
                 </li>
 		<li class="expanded dropdown">
-			<a href="#" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/2">About Us <span class="caret"></span></a>
+			<a href="#about" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/2">About Us <span class="caret"></span></a>
                 	<ul class="dropdown-menu">
                 	<li class="first">
                         <a href="/about" data-drupal-link-system-path="/node/25" target="_blank">About LCA Commons</a>
@@ -56,7 +56,7 @@
                 	</ul>
                 </li>
                 <li class="expanded dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
+                  <a href="#doc" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
                   
                   <ul class="dropdown-menu">
                     <li class="first">
@@ -73,7 +73,7 @@
                 <li class="last">
                   <a href="/contact" target="_blank" data-drupal-link-system-path="contact">Contact</a>
                 </li>    
-<!--                <li><a class="login default-button" href="#" onClick="javascript:window.location.href='login'"><span>Sign In</span></a></li>-->
+                <li><a class="login default-button" href="#" onClick="javascript:window.location.href='login'"><span>Sign In</span></a></li>
               </ul>
               
             </nav>
@@ -141,12 +141,16 @@ function skipto() {
 	document.getElementById("main").scrollIntoView(true);
 }
 $( document ).ready(function() {
+	var href="";
+         $(".dropdown-toggle").click(function(event) {
+                href=this.href;
+                this.href="#";
+        });
+         $(".dropdown-toggle").focusout(function(event) {
+                this.href=href;
+        });
         // bind a click event to the 'skip' link
         $(".skip-link").click(function(event){
-
-            // strip the leading hash and declare
-            // the content we're skipping to
-            //var skipTo="#"+this.href.split('#')[1];
                 var skipTo="#main";
                 skipto();
             // Setting 'tabindex' to -1 takes an element out of normal
