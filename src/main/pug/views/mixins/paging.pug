@@ -25,7 +25,7 @@ mixin paging(resultInfo, getUrl, pageSizeId)
 				if isActive
 					span=p
 				else
-					span(class=isFirstAfterActive?'indent':''): a.page(href=getUrl(p) data-page=p)=p
+					span(class=isFirstAfterActive?'indent':''): a.page(href=getUrl(p) aria-label='Page '+p data-page=p)=p
 				- p++;
 			if page < pageCount
 				span: a.page(href=getUrl(page+1) aria-label='Next page' data-page=page+1) >
