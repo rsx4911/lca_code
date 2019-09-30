@@ -16,8 +16,8 @@ mixin paging(resultInfo, getUrl, pageSizeId)
 			if pageCount <= endPage
 				- endPage = pageCount;
 			if page > 1
-				span: a.page(href=getUrl(1) aria-label="first page" data-page=1) [First page]
-				span: a.page(href=getUrl(page-1) aria-label="previous page"   data-page=page-1) [Previous page] 
+				span: a.page(href=getUrl(1) aria-label='First page' data-page=1) [First page]
+				span: a.page(href=getUrl(page-1) aria-label='Previous page' data-page=page-1) [Previous page]
 			- var p = startPage
 			while p <= endPage
 				- var isActive = (p === page)
@@ -25,11 +25,11 @@ mixin paging(resultInfo, getUrl, pageSizeId)
 				if isActive
 					span=p
 				else
-					span(class=isFirstAfterActive?'indent':''): a.page(href=getUrl(p) aria-label="page "+p data-page=p)=p
+					span(class=isFirstAfterActive?'indent':''): a.page(href=getUrl(p) aria-label='Page '+p data-page=p)=p
 				- p++;
 			if page < pageCount
-				span: a.page(href=getUrl(page+1) aria-label="next page" data-page=page+1) [Next page]
-				span: a.page(href=getUrl(pageCount) aria-label="Last page" data-page=pageCount) [Last page] 
+				span: a.page(href=getUrl(page+1) aria-label='Next page' data-page=page+1) [Next page]
+				span: a.page(href=getUrl(pageCount) aria-label='Last page' data-page=pageCount) [Last page]
 			- values = [10, 25, 50, 100];
 			- pageSizeId = pageSizeId || 'page-size'
 			+select(pageSizeId, null, [10, 25, 50, 100], pageSize, true)(class='input-sm' aria-label='Select page size')
