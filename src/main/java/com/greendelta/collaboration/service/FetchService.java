@@ -76,10 +76,11 @@ public class FetchService {
 	}
 
 	public StreamingOutput prepareDataForFetch(Repository repo, List<FileReference> requested, Commit commit) {
-		List<IndexEntry> entries = searchService.getMostRecentAfter(repo, commit);
 		String commitId = historyService.getLastCommit(repo).id;
 		if (requested == null || requested.isEmpty())
 			return prepareData(repo, new ArrayList<>(), commitId);
+		List<IndexEntry> entries = searchService.getMostRecentAfter(repo, commit);
+		entries = Collections.filter(entries, entry -> !requested.contains(entry.asFileReference()));
 		return prepareData(repo, entries, commitId);
 	}
 
