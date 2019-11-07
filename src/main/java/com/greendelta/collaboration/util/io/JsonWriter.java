@@ -64,16 +64,15 @@ public class JsonWriter implements DatasetWriter {
 	private void write(FileReference ref) throws IOException {
 		if (processed.contains(ref))
 			return;
+		processed.add(ref);
 		IndexEntry entry = searchService.getMostRecentUntil(repo, ref.refId, commitId);
 		if (entry == null) {
 			log.trace("No data set found: " + ref.type.name() + " " + ref.refId);
-			processed.add(ref);
 			return;
 		}
 		String dataset = fetchService.getDataset(repo, ref.type, ref.refId, entry.commitId);
 		if (dataset == null) {
 			log.trace("No data set found: " + ref.type.name() + " " + ref.refId + " (commit " + commitId + ")");
-			processed.add(ref);
 			return;
 		}
 		log.trace("Exporting {} {} to json", ref.type, ref.refId);
@@ -89,7 +88,6 @@ public class JsonWriter implements DatasetWriter {
 				zipStore.putBin(ref.type, ref.refId, filename, BinUtils.gunzip(Files.readAllBytes(file.toPath())));
 			}
 		}
-		processed.add(ref);
 		collectReferences(json);
 	}
 
