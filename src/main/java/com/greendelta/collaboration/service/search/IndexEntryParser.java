@@ -46,6 +46,7 @@ class IndexEntryParser {
 			ObjectMap map = new ObjectMap();
 			IndexEntry descriptor = IndexEntry.descriptor(entry.get("documentId").toString());
 			map.put("repositoryId", descriptor.repositoryId);
+			map.put("type", descriptor.type);
 			map.put("refId", descriptor.refId);
 			map.put("commitId", descriptor.commitId);
 			return map;

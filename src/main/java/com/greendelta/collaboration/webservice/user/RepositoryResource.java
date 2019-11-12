@@ -188,12 +188,16 @@ public class RepositoryResource {
 		Repository repo = service.get(group, name);
 		if (format != null && "json-ld".equals(format.toLowerCase())) {
 			if (Strings.isNullOrEmpty(commitMessage))
-				return Respond.invalid("group", "Missing input: Commit message");
+				return Respond.invalid("commitMessage", "Missing input: Commit message");
 			service.importJsonLd(repo, input, commitMessage);
 		} else {
 			service.unpack(repo, input);
 		}
 		reindexService.reindex(repo);
+		repo = service.get(group, name);
+		if (repo.settings.publicAccess) {
+			service.setSetting(repo, "publicAccess", "false");
+		}
 		return Respond.ok(new HashMap<>());
 	}
 

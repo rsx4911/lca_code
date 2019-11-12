@@ -57,7 +57,7 @@ abstract class DownloadResource {
 			return Respond.notFound("commit " + commitId + " not found");
 		ModelType type = Client.getTypeFromPath(path);
 		String subPath = Client.getCategoryFromPath(path);
-		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, type, subPath, commit.id);
+		List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, type, subPath, commit.id);
 		entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 		List<FileReference> references = Collections.convertToList(entries, (e) -> e.asFileReference());
 		return prepare(group, repository, commit.id, references);

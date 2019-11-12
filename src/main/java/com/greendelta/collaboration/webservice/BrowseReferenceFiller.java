@@ -122,7 +122,7 @@ class BrowseReferenceFiller {
 			fillUnit(reference, parent);
 			return;
 		}
-		IndexEntry indexEntry = getIndexEntry(id);
+		IndexEntry indexEntry = getIndexEntry(mType, id);
 		if (indexEntry == null)
 			return;
 		reference.addProperty("name", indexEntry.name);
@@ -271,13 +271,12 @@ class BrowseReferenceFiller {
 		return null;
 	}
 
-	private IndexEntry getIndexEntry(String refId) {
-		if (indexCache.containsKey(refId))
-			return indexCache.get(refId);
-		IndexEntry indexEntry = browseService.getMostRecent(repo, refId, commitId);
+	private IndexEntry getIndexEntry(ModelType type, String refId) {
+		if (indexCache.containsKey(type.name() + refId))
+			return indexCache.get(type.name() + refId);
+		IndexEntry indexEntry = browseService.getMostRecent(repo, type, refId, commitId);
 		if (indexEntry == null)
 			return null;
-		ModelType type = indexEntry.type;
 		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
 				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)
 			return indexEntry;
@@ -286,9 +285,9 @@ class BrowseReferenceFiller {
 	}
 
 	private JsonObject getDataset(ModelType type, String refId) {
-		if (dataCache.containsKey(refId))
-			return dataCache.get(refId);
-		IndexEntry indexEntry = getIndexEntry(refId);
+		if (dataCache.containsKey(type.name() + refId))
+			return dataCache.get(type.name() + refId);
+		IndexEntry indexEntry = getIndexEntry(type, refId);
 		if (indexEntry == null)
 			return null;
 		String data = fetchService.getDataset(repo, type, refId, indexEntry.commitId);

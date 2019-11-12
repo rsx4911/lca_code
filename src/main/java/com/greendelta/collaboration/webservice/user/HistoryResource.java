@@ -88,7 +88,7 @@ public class HistoryResource {
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
-		IndexEntry first = searchService.getFirst(repo, refId);
+		IndexEntry first = searchService.getFirst(repo, type, refId);
 		if (first == null)
 			return Respond.notFound();
 		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
@@ -162,7 +162,7 @@ public class HistoryResource {
 			@PathParam("name") String name,
 			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
-		IndexEntry first = searchService.getFirst(repo, refId);
+		IndexEntry first = searchService.getFirst(repo, ModelType.CATEGORY, refId);
 		if (first == null)
 			return Respond.noContent();
 		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);

@@ -68,10 +68,11 @@ public class SearchService {
 		return parser.parse(getClient().search(builder.build()));
 	}
 	
-	public IndexEntry getMostRecentUntil(Repository repo, String refId, String commitId) {
+	public IndexEntry getMostRecentUntil(Repository repo, ModelType type, String refId, String commitId) {
 		if (refId == null)
 			return null;
 		SearchQueryBuilder builder = builder(repo);
+		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		builder.filter("refId", SearchFilterValue.term(refId));
 		if (commitId != null) {
 			builder.filter("commits", SearchFilterValue.term(commitId));
@@ -83,10 +84,10 @@ public class SearchService {
 	}
 
 	public List<IndexEntry> getMostRecentUntil(Repository repo, String commitId) {
-		return getMostRecentUntil(repo, null, null, commitId);
+		return getMostRecentUntilForPath(repo, null, null, commitId);
 	}
 
-	public List<IndexEntry> getMostRecentUntil(Repository repo, ModelType type, String path, String commitId) {
+	public List<IndexEntry> getMostRecentUntilForPath(Repository repo, ModelType type, String path, String commitId) {
 		SearchQueryBuilder builder = builder(repo);
 		if (commitId != null) {
 			builder.filter("commits", SearchFilterValue.term(commitId));
@@ -98,7 +99,7 @@ public class SearchService {
 			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/*"));
 		}
 		List<IndexEntry> entries = parser.parse(getClient().search(builder.build()));
-		return Collections.filterDuplicates(entries, e -> e.refId);
+		return Collections.filterDuplicates(entries, e -> e.toId());
 	}
 
 	public List<IndexEntry> getMostRecentAfter(Repository repo, Commit commit) {
@@ -108,12 +109,13 @@ public class SearchService {
 			builder.filter("commitTimestamp", SearchFilterValue.from(commit.timestamp + 1));
 		}
 		List<IndexEntry> entries = parser.parse(getClient().search(builder.build()));
-		return Collections.filterDuplicates(entries, e -> e.refId);
+		return Collections.filterDuplicates(entries, e -> e.toId());
 	}
-	
-	public IndexEntry getFirst(Repository repo, String refId) {
+
+	public IndexEntry getFirst(Repository repo, ModelType type, String refId) {
 		SearchQueryBuilder builder = builder(repo);
 		builder.filter("refId", SearchFilterValue.term(refId));
+		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		builder.filter("action", SearchFilterValue.term(IndexAction.ADD.name()));
 		builder.sortBy("commitTimestamp", SearchSorting.ASC);
 		SearchResult<Map<String, Object>> result = getClient().search(builder.build());
@@ -122,23 +124,23 @@ public class SearchService {
 		return parser.parse(result.data.get(0));
 	}
 
-	public IndexEntry get(Repository repo, String refId, String commitId) {
-		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), refId, commitId));
+	public IndexEntry get(Repository repo, ModelType type, String refId, String commitId) {
+		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), type, refId, commitId));
 		if (value == null)
 			return null;
 		return parser.parse(value);
 	}
 
-	public IndexAction getMostRecentAction(Repository repo, String refId) {
-		IndexEntry mostRecent = getMostRecent(repo, refId);
+	public IndexAction getMostRecentAction(Repository repo, ModelType type, String refId) {
+		IndexEntry mostRecent = getMostRecent(repo, type, refId);
 		if (mostRecent == null)
 			return null;
 		return mostRecent.action;
 	}
 
-	ObjectMap getRaw(Repository repo, String refId, String commitId) {
-		log.trace("Getting index entry for repository {}, refId {} and commitId {}", repo.toId(), refId, commitId);
-		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), refId, commitId));
+	ObjectMap getRaw(Repository repo, ModelType type, String refId, String commitId) {
+		log.trace("Getting index entry for repository {}, type {} refId {} and commitId {}", repo.toId(), type.name(), refId, commitId);
+		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), type, refId, commitId));
 		if (value == null)
 			return null;
 		return parser.convert(value);
@@ -156,9 +158,10 @@ public class SearchService {
 		return search(builder.build()).data;
 	}
 
-	private IndexEntry getMostRecent(Repository repo, String refId) {
+	private IndexEntry getMostRecent(Repository repo, ModelType type, String refId) {
 		SearchQueryBuilder builder = builder(repo);
 		builder.filter("mostRecent", SearchFilterValue.term(true));
+		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
 		builder.filter("refId", SearchFilterValue.term(refId));
 		List<IndexEntry> data = search(builder.build()).data;
 		if (data.isEmpty())
@@ -181,12 +184,12 @@ public class SearchService {
 	public void index(Repository repo, String commitId, Collection<IndexEntry> entries) {
 		if (entries.isEmpty())
 			return;
-		Set<String> refIds = Collections.convertToSet(entries, (entry) -> entry.refId);
+		Set<String> refIds = Collections.convertToSet(entries, (entry) -> entry.toId());
 		log.debug("Indexing {} entries in repository {}", entries.size(), repo.toId());
 		List<IndexEntry> mostRecent = getMostRecent(repo);
 		if (!mostRecent.isEmpty()) {
 			for (IndexEntry entry : mostRecent) {
-				if (refIds.contains(entry.refId)) {
+				if (refIds.contains(entry.toId())) {
 					entry.mostRecent = false;
 				} else if (!Strings.isNullOrEmpty(commitId)) {
 					entry.commits.add(commitId);

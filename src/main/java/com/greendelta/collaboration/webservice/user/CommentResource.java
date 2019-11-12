@@ -123,7 +123,7 @@ public class CommentResource {
 		for (Comment comment : comments) {
 			DatasetField field = comment.field;
 			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
-			ids.add(IndexEntry.toIndexId(repoId, field.refId, commit.id));
+			ids.add(IndexEntry.toIndexId(repoId, field.modelType, field.refId, commit.id));
 		}
 		List<IndexEntry> entries = searchService.get(ids);
 		Map<String, String> idToPath = new HashMap<>();
@@ -134,7 +134,7 @@ public class CommentResource {
 			ObjectMap map = Comments.map(comment);
 			DatasetField field = comment.field;
 			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
-			String key = IndexEntry.toIndexId(repoId, comment.field.refId, commit.id);
+			String key = IndexEntry.toIndexId(repoId, comment.field.modelType, comment.field.refId, commit.id);
 			map.put("dsPath", idToPath.get(key));
 			if (putReplyCount) {
 				map.put("replyCount", service.getRepliesTo(comment.getId()).size());
@@ -248,7 +248,7 @@ public class CommentResource {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
 		Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
-		IndexEntry ds = searchService.get(repository, field.refId, commit.id);
+		IndexEntry ds = searchService.get(repository, field.modelType, field.refId, commit.id);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

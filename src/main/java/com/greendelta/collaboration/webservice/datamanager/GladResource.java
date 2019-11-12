@@ -84,7 +84,7 @@ public class GladResource {
 		ReferenceCollector<String> collector = new ReferenceCollector<>(browseService, (ref) -> {
 			String commitId = historyService.getLastCommit(repo, ModelType.PROCESS, ref.id).id;
 			dsToCommit.put(ref.id, commitId);
-			return IndexEntry.toIndexId(repoId, ref.id, commitId);
+			return IndexEntry.toIndexId(repoId, ref.type, ref.id, commitId);
 		});
 		Set<String> remaining = collector.getReferences(repo, input.references);
 		if (remaining.isEmpty())

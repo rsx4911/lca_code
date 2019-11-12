@@ -66,7 +66,7 @@ public class IlcdWriter implements DatasetWriter {
 			return;
 		processed.add(type.name() + refId);
 		this.collectedRefs = new HashSet<>();
-		IndexEntry entry = searchService.get(repo, refId, commitId);
+		IndexEntry entry = searchService.get(repo, type, refId, commitId);
 		boolean exists = entry != null && entry.action != IndexAction.DELETE;
 		if (!exists) {
 			Commit lastCommit = historyService.getLastCommitBefore(repo, type, refId, commitId);
@@ -144,7 +144,7 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<IndexEntry> entries = searchService.getMostRecentUntil(repo, ModelType.PARAMETER, null, commitId);
+			List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId);
 			entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 			for (IndexEntry entry : entries) {
 				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);

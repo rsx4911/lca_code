@@ -65,7 +65,7 @@ public class JsonWriter implements DatasetWriter {
 		if (processed.contains(ref))
 			return;
 		processed.add(ref);
-		IndexEntry entry = searchService.getMostRecentUntil(repo, ref.refId, commitId);
+		IndexEntry entry = searchService.getMostRecentUntil(repo, ref.type, ref.refId, commitId);
 		if (entry == null) {
 			log.trace("No data set found: " + ref.type.name() + " " + ref.refId);
 			return;
@@ -92,7 +92,7 @@ public class JsonWriter implements DatasetWriter {
 	}
 
 	private List<IndexEntry> getGlobalParameters(String untilCommitId) {
-		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, ModelType.PARAMETER, null, commitId);
+		List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId);
 		return Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 	}
 
