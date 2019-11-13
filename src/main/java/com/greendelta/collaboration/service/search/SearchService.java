@@ -67,7 +67,7 @@ public class SearchService {
 		}
 		return parser.parse(getClient().search(builder.build()));
 	}
-	
+
 	public IndexEntry getMostRecentUntil(Repository repo, ModelType type, String refId, String commitId) {
 		if (refId == null)
 			return null;
@@ -139,7 +139,8 @@ public class SearchService {
 	}
 
 	ObjectMap getRaw(Repository repo, ModelType type, String refId, String commitId) {
-		log.trace("Getting index entry for repository {}, type {} refId {} and commitId {}", repo.toId(), type.name(), refId, commitId);
+		log.trace("Getting index entry for repository {}, type {} refId {} and commitId {}", repo.toId(), type.name(),
+				refId, commitId);
 		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), type, refId, commitId));
 		if (value == null)
 			return null;
@@ -255,6 +256,31 @@ public class SearchService {
 
 	private SearchClient getClient() {
 		return settingsService.getSearchConfig().getSearchClient();
+	}
+	
+	public class BulkUpdate {
+
+		private Map<String, Map<String, Object>> entries = new HashMap<>();
+
+		public void update(String id, BulkUpdateProcessor processor) {
+			Map<String, Object> entry = getClient().get(id);
+			processor.process(entry);
+			entries.put(id, entry);
+		}
+
+		public void commit() {
+			if (entries.isEmpty())
+				return;
+			getClient().index(entries);
+			entries.clear();
+		}
+
+	}
+
+	public interface BulkUpdateProcessor {
+
+		public void process(Map<String, Object> data);
+
 	}
 
 }

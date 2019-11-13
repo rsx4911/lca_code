@@ -101,10 +101,9 @@ public class ReindexService {
 			IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
 			for (FileReference ref : refs) {
 				IndexAction lastAction = get(lastActions, ref);
-				File file = repo.getDatasetFile(ref.type, ref.refId, commit.id, false);
 				IndexEntry entry = null;
 				Dataset dataset = null;
-				Map<String, Object> data = IndexEntryCreator.readData(file);
+				Map<String, Object> data = repo.readData(ref.type, ref.refId, commit.id);
 				if (data.isEmpty()) {
 					dataset = get(lastDatasets, ref);
 					if (dataset == null)

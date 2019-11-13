@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import org.openlca.core.model.FlowPropertyFactor;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
+import org.openlca.core.model.ProcessType;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -16,7 +17,6 @@ import com.google.gson.JsonPrimitive;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.BrowseService;

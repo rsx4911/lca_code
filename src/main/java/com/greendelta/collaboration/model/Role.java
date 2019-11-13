@@ -44,7 +44,8 @@ public enum Role {
 	}
 
 	public boolean matches(Role role) {
-		return this.level >= role.level;
+		int roleLevel = role != null ? role.level : NONE.level;
+		return this.level >= roleLevel;
 	}
 
 	public static Role best(Role r1, Role r2) {

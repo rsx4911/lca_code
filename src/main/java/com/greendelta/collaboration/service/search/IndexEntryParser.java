@@ -7,16 +7,11 @@ import java.util.Map;
 
 import org.openlca.core.model.ModelType;
 
+import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.AggregationType;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.LicenseType;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingApproach;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ModellingPrinciple;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.Nomenclature;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.search.wrapper.SearchResult;
@@ -30,7 +25,7 @@ class IndexEntryParser {
 	List<IndexEntry> parse(List<Map<String, Object>> entries) {
 		List<IndexEntry> parsed = new ArrayList<>();
 		for (Map<String, Object> entry : entries) {
-			parsed.add(parse(convert(entry)));
+			parsed.add(parse(entry));
 		}
 		return parsed;
 	}
@@ -58,16 +53,8 @@ class IndexEntryParser {
 		map.put("categoryType", ModelTypes.from(entry, "categoryType"));
 		putCategoryInfo(map);
 		if (type == ModelType.PROCESS) {
-			map.put("processType", ProcessType.from(entry));
-			map.put("validFrom", map.getLong("validFrom"));
-			map.put("validUntil", map.getLong("validUntil"));
-			map.put("supportedNomenclatures", Nomenclature.from(entry));
-			map.put("modellingPrinciple", ModellingPrinciple.from(entry));
+			map.put("processType", ModelTypes.processType(entry));
 			map.put("modellingApproach", ModellingApproach.from(entry));
-			map.put("reviewed", map.getBoolean("reviewed"));
-			map.put("aggregationType", AggregationType.from(entry));
-			map.put("copyrightProtected", map.getBoolean("copyrightProtected"));
-			map.put("licenseType", LicenseType.from(entry));
 		} else if (type == ModelType.FLOW) {
 			map.put("flowType", ModelTypes.flowType(entry));
 		}
@@ -152,33 +139,12 @@ class IndexEntryParser {
 
 	private ProcessIndexEntry parseProcessSpecific(ObjectMap entry) {
 		ProcessIndexEntry e = new ProcessIndexEntry();
-		e.processType = entry.get("processType");
-		e.completeness = entry.get("completeness");
-		e.sampleRepresentativeness = entry.get("sampleRepresentativeness");
-		e.samplingProcedure = entry.get("samplingProcedure");
-		e.validFrom = entry.get("validFrom");
+		e.processType = ModelTypes.processType(entry);
 		e.validFromYear = entry.get("validFromYear");
-		e.validUntil = entry.get("validUntil");
 		e.validUntilYear = entry.get("validUntilYear");
-		e.locationCode = entry.get("locationCode");
 		e.location = entry.get("location");
-		e.technology = entry.get("technology");
-		e.supportedNomenclatures = entry.get("supportedNomenclatures");
-		e.representativeness = entry.get("representativeness");
-		e.modellingPrinciple = entry.get("modellingPrinciple");
 		e.modellingApproach = entry.get("modellingApproach");
-		e.biogenicCarbon = entry.get("biogenicCarbon");
-		e.reviewer = entry.get("reviewer");
-		e.reviewed = entry.get("reviewed");
-		e.aggregationType = entry.get("aggregationType");
-		e.copyrightProtected = entry.get("copyrightProtected");
-		e.copyrightHolder = entry.get("copyrightHolder");
-		e.licenseType = entry.get("licenseType");
-		e.license = entry.get("license");
 		e.contact = entry.get("contact");
-		e.description = entry.get("description");
-		e.inputs = entry.get("inputs");
-		e.outputs = entry.get("outputs");
 		return e;
 	}
 

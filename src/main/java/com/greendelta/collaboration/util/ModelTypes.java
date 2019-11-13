@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
+import org.openlca.core.model.ProcessType;
 
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 
 public class ModelTypes {
 
@@ -70,31 +70,18 @@ public class ModelTypes {
 		return FlowType.valueOf(sValue.toUpperCase());
 	}
 
-	public static org.openlca.core.model.ProcessType processType(ProcessType internal) {
-		switch (internal) {
-		case SYSTEM:
-			return org.openlca.core.model.ProcessType.LCI_RESULT;
-		case UNIT:
-			return org.openlca.core.model.ProcessType.UNIT_PROCESS;
-		default:
-			return null;
-		}
-	}
-
-	public static org.openlca.core.model.ProcessType processType(Map<String, Object> map) {
+	public static ProcessType processType(Map<String, Object> map) {
 		if (map == null)
 			return null;
 		Object value = map.get("processType");
 		if (value == null)
 			return null;
-		if (value instanceof org.openlca.core.model.ProcessType)
-			return (org.openlca.core.model.ProcessType) value;
 		if (value instanceof ProcessType)
-			return processType((ProcessType) value);
+			return (ProcessType) value;
 		String sValue = value.toString();
 		if (sValue.isEmpty())
 			return null;
-		return org.openlca.core.model.ProcessType.valueOf(sValue.toUpperCase());
+		return ProcessType.valueOf(sValue.toUpperCase());
 	}
 
 	private static class TypeComparator implements Comparator<ModelType> {
