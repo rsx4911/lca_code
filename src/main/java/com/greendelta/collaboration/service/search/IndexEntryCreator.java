@@ -37,7 +37,7 @@ public class IndexEntryCreator {
 	}
 
 	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
-		if (data == null) {
+		if (data == null || data.isEmpty()) {
 			IndexEntry entry = generic(dataset);
 			entry.action = IndexAction.DELETE;
 			return entry;
