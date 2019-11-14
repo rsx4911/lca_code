@@ -29,7 +29,7 @@ import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.ReindexService;
+import com.greendelta.collaboration.service.IndexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
@@ -56,21 +56,21 @@ public class RepositoryResource {
 	private final AccessService accessService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
-	private final ReindexService reindexService;
+	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 	private final LibraryService libraryService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
-			HistoryService historyService, SearchService searchService, ReindexService reindexService,
+			HistoryService historyService, SearchService searchService, IndexService indexService,
 			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.historyService = historyService;
 		this.searchService = searchService;
-		this.reindexService = reindexService;
+		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 		this.libraryService = libraryService;
@@ -193,7 +193,7 @@ public class RepositoryResource {
 		} else {
 			service.unpack(repo, input);
 		}
-		reindexService.reindex(repo);
+		indexService.index(repo);
 		repo = service.get(group, name);
 		if (repo.settings.publicAccess) {
 			service.setSetting(repo, "publicAccess", "false");
