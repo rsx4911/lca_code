@@ -131,7 +131,6 @@ public class GladResource {
 		d.put("samplingProcedure", data.getString("processDocumentation.samplingDescription"));
 		d.put("validFrom", Dates.getTime(data.get("processDocumentation.validFrom")));
 		d.put("validUntil", Dates.getTime(data.get("processDocumentation.validUntil")));
-		d.put("locationCode", data.getString("location.code"));
 		d.put("technology", data.getString("processDocumentation.technologyDescription"));
 		d.put("reviewer", reviewer);
 		d.put("reviewed", !Strings.isNullOrEmpty(reviewer));
@@ -147,9 +146,9 @@ public class GladResource {
 			return ProcessType.SYSTEM;
 		if (type.equals(Enums.getLabel(org.openlca.core.model.ProcessType.UNIT_PROCESS)))
 			return ProcessType.UNIT;
-		return ProcessType.UNKNOWN;		
+		return ProcessType.UNKNOWN;
 	}
-	
+
 	private void send(String gladBaseUrl, String headerField, String headerValue, String refId, String data)
 			throws Exception {
 		URL object = new URL(gladBaseUrl + "/search/index/" + refId);
