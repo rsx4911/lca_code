@@ -3,9 +3,9 @@ mixin long-text(value, length)
 		- length = 250;
 	if value && value.length > length
 		div
-			.toggleable=value.substring(0, length - 50) + '... '
+			span.toggleable(title=value)=value.substring(0, Math.floor(length - length / 5)) + '... '
 			a.toggle-control(href='#' aria-label='Show more') Show more
-			.toggleable(style='display:none')=value
+			span.toggleable(style='display:none')=value
 			a.toggle-control(href='#' style='display:none' aria-label='Show less') Show less
 	else
 		| #{value}

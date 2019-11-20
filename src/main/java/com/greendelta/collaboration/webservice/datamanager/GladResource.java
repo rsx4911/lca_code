@@ -21,24 +21,28 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import joptsimple.internal.Strings;
-
 import org.apache.logging.log4j.LogManager;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.Dates;
+import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.glad.ProcessType;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.search.wrapper.SearchClient;
+
+import joptsimple.internal.Strings;
 
 @Path("datamanager/glad")
 public class GladResource {
@@ -84,7 +88,7 @@ public class GladResource {
 		ReferenceCollector<String> collector = new ReferenceCollector<>(browseService, (ref) -> {
 			String commitId = historyService.getLastCommit(repo, ModelType.PROCESS, ref.id).id;
 			dsToCommit.put(ref.id, commitId);
-			return IndexEntry.toIndexId(repoId, ref.id, commitId);
+			return IndexEntry.toIndexId(repoId, ref.type, ref.id, commitId);
 		});
 		Set<String> remaining = collector.getReferences(repo, input.references);
 		if (remaining.isEmpty())
@@ -95,6 +99,7 @@ public class GladResource {
 			Set<String> next = com.greendelta.collaboration.util.Collections.pop(remaining, 1000);
 			List<Map<String, Object>> allData = client.get(next);
 			for (Map<String, Object> data : allData) {
+				putProcessData(repo, dsToCommit, data);
 				data.put("format", "JSON-LD");
 				data.put("dataprovider", input.dataprovider);
 				String baseUrl = settingsService.get(Key.SERVER_URL);
@@ -115,6 +120,33 @@ public class GladResource {
 			}
 		}
 		return Respond.ok();
+	}
+
+	private void putProcessData(Repository repo, Map<String, String> dsToCommit, Map<String, Object> d) {
+		String refId = d.get("refId").toString();
+		ObjectMap data = ObjectMap.fromMap(repo.readData(ModelType.PROCESS, refId, dsToCommit.get(refId)));
+		String reviewer = data.getString("processDocumentation.reviewer.name");
+		d.put("processType", getProcessType(data.getString("processType")));
+		d.put("completeness", data.getString("processDocumentation.completenessDescription"));
+		d.put("samplingProcedure", data.getString("processDocumentation.samplingDescription"));
+		d.put("validFrom", Dates.getTime(data.get("processDocumentation.validFrom")));
+		d.put("validUntil", Dates.getTime(data.get("processDocumentation.validUntil")));
+		d.put("technology", data.getString("processDocumentation.technologyDescription"));
+		d.put("reviewer", reviewer);
+		d.put("reviewed", !Strings.isNullOrEmpty(reviewer));
+		d.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
+		d.put("copyrightHolder", data.getString("processDocumentation.dataSetOwner.name"));
+		d.put("description", data.getString("description"));
+	}
+
+	private ProcessType getProcessType(String type) {
+		if (type == null)
+			return ProcessType.UNKNOWN;
+		if (type.equals(Enums.getLabel(org.openlca.core.model.ProcessType.LCI_RESULT)))
+			return ProcessType.SYSTEM;
+		if (type.equals(Enums.getLabel(org.openlca.core.model.ProcessType.UNIT_PROCESS)))
+			return ProcessType.UNIT;
+		return ProcessType.UNKNOWN;
 	}
 
 	private void send(String gladBaseUrl, String headerField, String headerValue, String refId, String data)

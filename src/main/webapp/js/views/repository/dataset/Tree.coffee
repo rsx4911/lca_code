@@ -56,7 +56,7 @@ define([
 
 		getImage: (provider) ->
 			if provider.type is 'Process' 
-				if provider.processType is 'SYSTEM'
+				if provider.processType is 'LCI_RESULT' or provider.processType.is 'SYSTEM'
 					return 'process_system.png'
 				return 'process.png'
 			return 'product_system.png'

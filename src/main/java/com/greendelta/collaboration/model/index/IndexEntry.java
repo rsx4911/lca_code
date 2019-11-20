@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FetchRequestData;
+import org.openlca.core.model.ModelType;
 
 public class IndexEntry extends Dataset implements Cloneable {
 
@@ -25,7 +26,7 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public List<String> categoryPaths;
 
 	public String toIndexId() {
-		return toIndexId(repositoryId, refId, commitId);
+		return toIndexId(repositoryId, type, refId, commitId);
 	}
 
 	public Dataset asDataset() {
@@ -78,16 +79,17 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.commits = commits != null ? new ArrayList<>(commits) : null;
 	}
 
-	public static String toIndexId(String repositoryId, String refId, String commitId) {
-		return repositoryId + "/" + refId + "/" + commitId;
+	public static String toIndexId(String repositoryId, ModelType type, String refId, String commitId) {
+		return repositoryId + "/" + type.name() + "/" + refId + "/" + commitId;
 	}
 
 	public static IndexEntry descriptor(String indexId) {
 		String[] ids = indexId.split("/");
 		IndexEntry entry = new IndexEntry();
 		entry.repositoryId = ids[0] + "/" + ids[1];
-		entry.refId = ids[2];
-		entry.commitId = ids[3];
+		entry.type = ModelType.valueOf(ids[2]);
+		entry.refId = ids[3];
+		entry.commitId = ids[4];
 		return entry;
 	}
 

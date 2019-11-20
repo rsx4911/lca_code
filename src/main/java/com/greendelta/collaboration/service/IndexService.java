@@ -19,44 +19,27 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.search.DataFill;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
-public class ReindexService {
+public class IndexService {
 
 	private final HistoryService historyService;
 	private final SearchService searchService;
 
 	@Inject
-	public ReindexService(HistoryService historyService, SearchService searchService) {
+	public IndexService(HistoryService historyService, SearchService searchService) {
 		this.historyService = historyService;
 		this.searchService = searchService;
 	}
 
-	public void reindex(Repository repo) {
+	public void index(Repository repo) {
 		List<Commit> commits = historyService.getCommits(repo);
 		Runner runner = new Runner(repo);
 		for (Commit commit : commits) {
-			List<IndexEntry> entries = runner.run(commit);
-			if (entries.isEmpty())
-				return;
-			searchService.index(repo, commit.id, entries);
+			runner.run(commit);
 		}
-	}
-
-	private <T> T get(Map<ModelType, Map<String, T>> map, FileReference ref) {
-		Map<String, T> inner = map.get(ref.type);
-		if (inner == null)
-			return null;
-		return inner.get(ref.refId);
-	}
-
-	private <T> void put(Map<ModelType, Map<String, T>> map, FileReference ref, T value) {
-		Map<String, T> inner = map.get(ref.type);
-		if (inner == null) {
-			map.put(ref.type, inner = new HashMap<>());
-		}
-		inner.put(ref.refId, value);
 	}
 
 	private Dataset toDataset(FileReference ref, Map<String, Object> data) {
@@ -93,62 +76,6 @@ public class ReindexService {
 			collectRefs(ModelType.NW_SET);
 		}
 
-		private List<IndexEntry> run(Commit commit) {
-			List<IndexEntry> entries = new ArrayList<>();
-			List<FileReference> refs = commitRefs.get(commit.id);
-			if (refs == null || refs.isEmpty())
-				return entries;
-			IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
-			for (FileReference ref : refs) {
-				IndexAction lastAction = get(lastActions, ref);
-				File file = repo.getDatasetFile(ref.type, ref.refId, commit.id, false);
-				IndexEntry entry = null;
-				Dataset dataset = null;
-				Map<String, Object> data = IndexEntryCreator.readData(file);
-				if (data.isEmpty()) {
-					dataset = get(lastDatasets, ref);
-					if (dataset == null)
-						continue;
-					entry = indexEntryCreator.create(dataset);
-				} else {
-					dataset = toDataset(ref, data);
-					if (dataset == null)
-						continue;
-					entry = indexEntryCreator.create(dataset, lastAction, data);
-				}
-				put(lastActions, ref, entry.action);
-				put(lastDatasets, ref, dataset);
-				entries.add(entry);
-			}
-			for (IndexEntry entry : entries) {
-				Dataset dataset = get(lastDatasets, entry.asFileReference());
-				entry.categories = getCategories(dataset, true);
-				entry.fullPath = entry.name;
-				if (entry.categories != null && entry.categories.size() > 0) {
-					entry.fullPath = Strings.join(entry.categories, '/') + '/' + entry.name;
-				}
-				DataFill.categories(entry, entry.categories);
-			}
-			return entries;
-		}
-
-		private List<String> getCategories(Dataset dataset, boolean initialCall) {
-			if (dataset.categoryRefId == null)
-				return null;
-			Map<String, Dataset> categories = lastDatasets.get(ModelType.CATEGORY);
-			if (categories == null)
-				return null;
-			Dataset parent = categories.get(dataset.categoryRefId);
-			if (parent == null)
-				return null;
-			List<String> list = getCategories(parent, false);
-			if (list == null) {
-				list = new ArrayList<>();
-			}
-			list.add(parent.name);
-			return list;
-		}
-
 		private void collectRefs(ModelType type) {
 			File modelDir = repo.getModelDir(type, false);
 			if (!modelDir.exists())
@@ -170,6 +97,69 @@ public class ReindexService {
 				}
 			}
 		}
+
+		private void run(Commit commit) {
+			InputOutputList ioList = new InputOutputList(searchService, repo, commit);
+			List<IndexEntry> entries = createIndexEntries(commit, ioList);
+			if (entries == null || entries.isEmpty())
+				return;
+			for (IndexEntry entry : entries) {
+				fillCategory(entry);
+			}
+			searchService.index(repo, commit.id, entries);
+			ioList.index();
+		}
+
+		@SuppressWarnings("unchecked")
+		private List<IndexEntry> createIndexEntries(Commit commit, InputOutputList ioList) {
+			List<FileReference> refs = commitRefs.get(commit.id);
+			if (refs == null || refs.isEmpty())
+				return null;
+			List<IndexEntry> entries = new ArrayList<>();
+			IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo, commit);
+			for (FileReference ref : refs) {
+				IndexAction lastAction = Collections.get(lastActions, ref.type, ref.refId);
+				Map<String, Object> data = repo.readData(ref.type, ref.refId, commit.id);
+				Dataset dataset = data.isEmpty() ? Collections.get(lastDatasets, ref.type, ref.refId)
+						: toDataset(ref, data);
+				IndexEntry entry = indexEntryCreator.create(dataset, lastAction, data);
+				if (dataset.type == ModelType.PROCESS && !data.isEmpty()) {
+					ioList.append(dataset.refId, (List<Map<String, Object>>) data.get("exchanges"));
+				}
+				Collections.put(lastActions, ref.type, ref.refId, entry.action);
+				Collections.put(lastDatasets, ref.type, ref.refId, dataset);
+				entries.add(entry);
+			}
+			return entries;
+		}
+
+		private void fillCategory(IndexEntry entry) {
+			Dataset dataset = Collections.get(lastDatasets, entry.type, entry.refId);
+			entry.categories = getCategories(dataset, true);
+			entry.fullPath = entry.name;
+			if (entry.categories != null && entry.categories.size() > 0) {
+				entry.fullPath = Strings.join(entry.categories, '/') + '/' + entry.name;
+			}
+			DataFill.categories(entry, entry.categories);
+		}
+
+		private List<String> getCategories(Dataset dataset, boolean initialCall) {
+			if (dataset.categoryRefId == null)
+				return null;
+			Map<String, Dataset> categories = lastDatasets.get(ModelType.CATEGORY);
+			if (categories == null)
+				return null;
+			Dataset parent = categories.get(dataset.categoryRefId);
+			if (parent == null)
+				return null;
+			List<String> list = getCategories(parent, false);
+			if (list == null) {
+				list = new ArrayList<>();
+			}
+			list.add(parent.name);
+			return list;
+		}
+
 	}
 
 }

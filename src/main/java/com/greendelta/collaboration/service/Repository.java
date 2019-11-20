@@ -1,13 +1,16 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,10 +29,11 @@ import com.greendelta.collaboration.util.ModelTypes;
 public class Repository {
 
 	private final static Logger log = LogManager.getLogger(Repository.class);
-	final File repoDir;
+	private final Gson gson = new Gson();
 	public final String group;
 	public final String name;
 	public final Settings settings;
+	final File repoDir;
 	final Map<String, Role> libraryRestrictions;
 
 	public static Repository get(String root, String group, String name) {
@@ -182,6 +186,26 @@ public class Repository {
 
 	File getHistoryFile(boolean create) {
 		return getFile(repoDir, "history.txt", create);
+	}
+
+	public Map<String, Object> readData(ModelType type, String refId, String commitId) {
+		File file = getDatasetFile(type, refId, commitId, false);
+		try {
+			if (Files.size(file.toPath()) == 0)
+				return new HashMap<>();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new HashMap<>();
+		}
+		try (FileInputStream fis = new FileInputStream(file);
+				GZIPInputStream gis = new GZIPInputStream(fis);
+				InputStreamReader isr = new InputStreamReader(gis)) {
+			return gson.fromJson(isr, new TypeToken<Map<String, Object>>() {
+			}.getType());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new HashMap<>();
+		}
 	}
 
 	File getDatasetFile(ModelType type, String refId, String commitId,

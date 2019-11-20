@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +78,11 @@ public class BrowseResource {
 		} else {
 			ModelType type = getModelType(categoryPath);
 			BrowseParameter params = new BrowseParameter(repo, filter, commitId).includeDeleted(showDeleted);
-			content = getCategoryContent(type, toId(categoryPath), params);
+			if (type.name().equals(categoryPath)) {
+				content = getRootCategoryContent(type, params);
+			} else {
+				content = getCategoryContent(type, toId(categoryPath), params);
+			}
 		}
 		if (content == null)
 			content = new ArrayList<>();
@@ -92,7 +97,7 @@ public class BrowseResource {
 		}
 		return Respond.ok(Collections.singletonMap("entries", content));
 	}
-		
+
 	private long getCount(ObjectMap entry, BrowseParameter params) {
 		ModelType type = ModelType.valueOf(entry.getString("type"));
 		String refId = entry.getString("refId");
@@ -117,14 +122,17 @@ public class BrowseResource {
 		return categoryPath;
 	}
 
+	private List<ObjectMap> getRootCategoryContent(ModelType type, BrowseParameter params) {
+		if (!Arrays.asList(ModelTypes.SORTED).contains(type))
+			return null;
+		return service.getUncategorized(type, params);
+	}
+
 	private List<ObjectMap> getCategoryContent(ModelType type, String categoryRefId, BrowseParameter params) {
-		for (ModelType t : ModelTypes.SORTED) {
-			if (!t.name().equals(categoryRefId))
-				continue;
-			return service.getUncategorized(type, params);
-		}
-		List<ObjectMap> content = service.getForCategory(categoryRefId, params);
-		if (content.isEmpty() || service.getMostRecent(params.repo, categoryRefId, params.commitId) == null)
+		if (service.getMostRecent(params.repo, ModelType.CATEGORY, categoryRefId, params.commitId) == null)
+			return null;
+		List<ObjectMap> content = service.getForCategory(type, categoryRefId, params);
+		if (content.isEmpty())
 			return null;
 		return content;
 	}
@@ -140,7 +148,7 @@ public class BrowseResource {
 			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
 		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
-		if (commit == null) 
+		if (commit == null)
 			return Respond.notFound(notFoundMessage(type, refId, commitId));
 		if (commitId == null) {
 			commitId = historyService.getLastCommit(repo).id;
@@ -149,7 +157,7 @@ public class BrowseResource {
 		String dataset = fetchService.getDataset(repo, type, refId, commit.id);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
-			IndexEntry entry = service.getMostRecent(repo, refId, commit.id);
+			IndexEntry entry = service.getMostRecent(repo, type, refId, commit.id);
 			descriptor.put("@id", refId);
 			descriptor.put("@type", type.getModelClass().getSimpleName());
 			descriptor.put("name", entry.name);
@@ -185,7 +193,7 @@ public class BrowseResource {
 		Repository repo = repoService.get(group, name);
 		String refId = toId(categoryPath);
 		String category = categoryPath.substring(categoryPath.indexOf('/') + 1);
-		IndexEntry entry = service.getMostRecent(repo, refId, commitId);
+		IndexEntry entry = service.getMostRecent(repo, ModelType.CATEGORY, refId, commitId);
 		if (entry == null)
 			return Respond.notFound("No category '" + category + "' found");
 		List<String> categories = new ArrayList<>();

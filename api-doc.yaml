@@ -40,16 +40,8 @@ definitions:
   ProcessType:
     type: string
     enum: &PROCESS_TYPE
-      - 'UNIT'
-      - 'SYSTEM'
-      - 'UNKNOWN'
-  AggregationType:
-    type: string
-    enum: &AGGREGATION_TYPE
-      - 'HORIZONTAL'
-      - 'VERTICAL'
-      - 'NONE'
-      - 'UNKNOWN'
+      - 'UNIT_PROCESS'
+      - 'LCI_RESULT'
   ModellingApproach:
     type: string
     enum: &MODELLING_APPROACH
@@ -58,19 +50,6 @@ definitions:
       - 'CAUSAL'
       - 'NONE'
       - 'UNKNOWN'
-  ModellingPrinciple:
-    type: string
-    enum: &MODELLING_PRINCIPLE
-      - 'ATTRIBUTIONAL'
-      - 'CONSEQUENTIAL'
-      - 'UNKNOWN'  
-  LicenseType:
-    type: string
-    enum: &LICENSE_TYPE
-      - 'FREE'
-      - 'MIXED'
-      - 'CHARGED'
-      - 'UNKNOWN'    
   IndexAction:
     type: string
     enum: &INDEX_ACTION
@@ -743,26 +722,7 @@ definitions:
           description: 'The type of process'
           type: string
           enum: *PROCESS_TYPE
-          example: 'UNIT' 
-        completeness:
-          description: 'A text describing the completeness'
-          type: string
-        sampleRepresentativeness:
-          description: 'A text describing the representativeness of the samples'
-          type: string
-        samplingProcedure:
-          description: 'A text describing the sampling procedure'
-          type: string
-        validFrom:
-          type: integer
-          format: int64
-          description: 'The start of the validity of the data set in milliseconds since 01/01/1970 (unix-time tims 1000)'
-          example: '1552893525562'
-        validUntil:
-          type: integer
-          format: int64
-          description: 'The end of the validity of the data set in milliseconds  since 01/01/1970 (unix-time tims 1000)'
-          example: '1552893525563'
+          example: 'UNIT_PROCESS' 
         validFromYear:
           type: integer
           format: int32
@@ -777,78 +737,14 @@ definitions:
           type: string
           description: 'The name of the location'
           example: 'Switzerland'
-        locationCode:
-          type: string
-          description: 'The code of the location'
-          example: 'CH'
-        technology:
-          type: string
-          description: A description of the technology used in the data set
-        description:
-          type: string
-          description: 'A description'
-        supportedNomenclatures:
-          description: 'The nomenclatures, the data set is compliant to'
-          type: array
-          items:
-            type: string
-            enum: ['ILCD']
-        representativeness:
-          description: 'A text describing the representativenes'
-          type: string
-        modellingPrinciple:
-          type: string
-          enum: *MODELLING_PRINCIPLE
-          default: 'UNKNOWN'
         modellingApproach:
           type: string
           enum: *MODELLING_APPROACH
           default: 'UNKNOWN'
-        biogenicCarbon:
-          description: 'A text describing the biogenic carbon modelling'
-          type: string
-        reviewed:
-          description: 'Indicates if the data set was reviewed or not'
-          type: boolean
-          default: false
-        reviewer:
-          description: 'The name of the reviewer'
-          type: string
-          example: 'John Doe'
-        aggregationType:
-          type: string
-          enum: *AGGREGATION_TYPE  
-          default: 'UNKNOWN'
-        copyrightProtected:
-          description: 'Indicates if the data set is copyright protected or not'
-          type: boolean
-          default: false
-        copyrightHolder:
-          description: 'The name of the copyright holder'
-          type: string
-          example: 'John Doe'
-        licenseType:
-          description: 'The type of license'
-          type: string
-          enum: *LICENSE_TYPE
-          default: 'UNKNOWN'
-        license:
-          description: 'A license description'
-          type: string
         contact:
           description: 'The name of the contact person'
           type: string
           example: 'John Doe'        
-        inputs:
-          description: 'A list of flow ids that are an input of the process'
-          type: array
-          items:
-            type: string
-        outputs:
-          description: 'A list of flow ids that are an output of the process'
-          type: array
-          items:
-            type: string
       required:
         - processType
 parameters:
