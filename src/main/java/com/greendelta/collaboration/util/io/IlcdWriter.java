@@ -43,6 +43,7 @@ public class IlcdWriter implements DatasetWriter {
 	private final Gson gson = new Gson();
 	private final File tmpFile;
 	private final String commitId;
+	private final Set<String> processed = new HashSet<>();
 	private Set<FileReference> collectedRefs;
 
 	public IlcdWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
@@ -61,8 +62,11 @@ public class IlcdWriter implements DatasetWriter {
 
 	@Override
 	public void write(ModelType type, String refId) throws IOException {
+		if (processed.contains(type.name() + refId))
+			return;
+		processed.add(type.name() + refId);
 		this.collectedRefs = new HashSet<>();
-		IndexEntry entry = searchService.get(repo, refId, commitId);
+		IndexEntry entry = searchService.get(repo, type, refId, commitId);
 		boolean exists = entry != null && entry.action != IndexAction.DELETE;
 		if (!exists) {
 			Commit lastCommit = historyService.getLastCommitBefore(repo, type, refId, commitId);
@@ -123,7 +127,7 @@ public class IlcdWriter implements DatasetWriter {
 
 		@Override
 		public byte[] getExternalFile(String sourceRefId, String filename) {
-			Commit lastCommit = historyService.getLastCommit(repo, ModelType.SOURCE, sourceRefId, commitId);			
+			Commit lastCommit = historyService.getLastCommit(repo, ModelType.SOURCE, sourceRefId, commitId);
 			if (lastCommit == null)
 				return null;
 			File file = fetchService.getBinFile(repo, ModelType.SOURCE, sourceRefId, lastCommit.id, filename);
@@ -140,7 +144,7 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<IndexEntry> entries = searchService.getMostRecentUntil(repo, ModelType.PARAMETER, null, commitId);
+			List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId);
 			entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
 			for (IndexEntry entry : entries) {
 				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);

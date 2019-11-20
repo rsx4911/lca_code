@@ -138,17 +138,10 @@ public class BrowseService {
 		return searchService.searchRaw(builder.build()).data;
 	}
 
-	public List<ObjectMap> getForCategory(Repository repo, String refId) {
-		BrowseParameter params = new BrowseParameter(repo);
+	public List<ObjectMap> getForCategory(ModelType categoryType, String refId, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params)
 				.filter("categoryRefId", SearchFilterValue.term(refId));
-		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
-		return sort(convert(result));
-	}
-
-	public List<ObjectMap> getForCategory(String refId, BrowseParameter params) {
-		SearchQueryBuilder builder = builder(params)
-				.filter("categoryRefId", SearchFilterValue.term(refId));
+		builder.filter(Aggregations.CATEGORY_TYPE.field, SearchFilterValue.term(categoryType.name()));
 		List<ObjectMap> result = searchService.searchRaw(builder.build()).data;
 		appendCommitInfo(result, params);
 		return sort(convert(result));
@@ -208,12 +201,12 @@ public class BrowseService {
 		return Collections.convertToList(entries, parser::convert);
 	}
 
-	public ObjectMap getDataset(Repository repo, String refId, String commitId) {
-		return searchService.getRaw(repo, refId, commitId);
+	public ObjectMap getDataset(Repository repo, ModelType type, String refId, String commitId) {
+		return searchService.getRaw(repo, type, refId, commitId);
 	}
 
-	public IndexEntry getMostRecent(Repository repo, String refId, String commitId) {
-		return searchService.getMostRecentUntil(repo, refId, commitId);
+	public IndexEntry getMostRecent(Repository repo, ModelType type, String refId, String commitId) {
+		return searchService.getMostRecentUntil(repo, type, refId, commitId);
 	}
 
 	public static class BrowseParameter implements Cloneable {

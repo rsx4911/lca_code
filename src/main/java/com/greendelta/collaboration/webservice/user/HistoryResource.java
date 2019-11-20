@@ -15,8 +15,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import joptsimple.internal.Strings;
-
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
@@ -25,14 +23,12 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
@@ -41,6 +37,8 @@ import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
+
+import joptsimple.internal.Strings;
 
 @Path("history")
 public class HistoryResource {
@@ -88,7 +86,7 @@ public class HistoryResource {
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
-		IndexEntry first = searchService.getFirst(repo, refId);
+		IndexEntry first = searchService.getFirst(repo, type, refId);
 		if (first == null)
 			return Respond.notFound();
 		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
@@ -162,7 +160,7 @@ public class HistoryResource {
 			@PathParam("name") String name,
 			@PathParam("refId") String refId) {
 		Repository repo = repoService.get(group, name);
-		IndexEntry first = searchService.getFirst(repo, refId);
+		IndexEntry first = searchService.getFirst(repo, ModelType.CATEGORY, refId);
 		if (first == null)
 			return Respond.noContent();
 		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
@@ -208,8 +206,7 @@ public class HistoryResource {
 			if (entry instanceof FlowIndexEntry) {
 				map.put("flowType", ((FlowIndexEntry) entry).flowType);
 			} else if (entry instanceof ProcessIndexEntry) {
-				ProcessType pType = ((ProcessIndexEntry) entry).processType;
-				map.put("processType", ModelTypes.processType(pType));
+				map.put("processType", ((ProcessIndexEntry) entry).processType);
 			}
 			return map;
 		}));

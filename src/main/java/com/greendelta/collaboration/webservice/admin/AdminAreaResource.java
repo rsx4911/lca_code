@@ -28,7 +28,7 @@ import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.platform.servlet.RequestListener;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.ReindexService;
+import com.greendelta.collaboration.service.IndexService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -47,7 +47,7 @@ public class AdminAreaResource {
 	// path is specified here (more obvious when changes on the path occur)
 	public static final String SERVER_INFO_PATH = "admin/area/serverInfo";
 	private final RepositoryService repoService;
-	private final ReindexService reindexService;
+	private final IndexService indexService;
 	private final SearchService searchService;
 	private final SettingsService settingsService;
 	private final EmailService emailService;
@@ -55,11 +55,11 @@ public class AdminAreaResource {
 	private final AnnouncementService announcementService;
 
 	@Inject
-	public AdminAreaResource(RepositoryService repoService, ReindexService reindexService, SearchService searchService,
+	public AdminAreaResource(RepositoryService repoService, IndexService indexService, SearchService searchService,
 			SettingsService settingsService, EmailService emailService, LibraryService libraryService,
 			AnnouncementService announcementService) {
 		this.repoService = repoService;
-		this.reindexService = reindexService;
+		this.indexService = indexService;
 		this.searchService = searchService;
 		this.settingsService = settingsService;
 		this.emailService = emailService;
@@ -138,7 +138,7 @@ public class AdminAreaResource {
 		searchService.clearIndex();
 		List<Repository> repos = repoService.getAllAccessible();
 		for (Repository repo : repos) {
-			reindexService.reindex(repo);
+			indexService.index(repo);
 		}
 		return Respond.ok(new HashMap<>());
 	}
@@ -148,7 +148,7 @@ public class AdminAreaResource {
 	public Response reindex(@PathParam("group") String group, @PathParam("repository") String repository) {
 		Repository repo = repoService.get(group, repository);
 		searchService.remove(searchService.getAll(repo));
-		reindexService.reindex(repo);
+		indexService.index(repo);
 		return Respond.ok(new HashMap<>());
 	}
 

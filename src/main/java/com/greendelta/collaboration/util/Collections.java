@@ -12,6 +12,21 @@ import java.util.function.Function;
 
 public class Collections {
 
+	public static <K1, K2, V> V get(Map<K1, Map<K2, V>> map, K1 key1, K2 key2) {
+		Map<K2, V> inner = map.get(key1);
+		if (inner == null)
+			return null;
+		return inner.get(key2);
+	}
+
+	public static <K1, K2, V> void put(Map<K1, Map<K2, V>> map, K1 key1, K2 key2, V value) {
+		Map<K2, V> inner = map.get(key1);
+		if (inner == null) {
+			map.put(key1, inner = new HashMap<>());
+		}
+		inner.put(key2, value);
+	}
+	
 	public static <K, V> Set<V> addToSet(Map<K, Set<V>> map, K key, V setValue) {
 		Set<V> set = map.get(key);
 		if (set == null) {

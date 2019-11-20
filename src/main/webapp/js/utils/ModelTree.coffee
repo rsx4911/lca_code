@@ -64,13 +64,13 @@ define([
 			for e in selected
 				if !e.original.type 
 					types.push e.original.id
-					elements.push {type: e.original.id, id: null}
+					elements.push {type: e.original.id, categoryType: e.original.id, id: null}
 			for e in selected
 				if e.original.type is 'CATEGORY'
 					if $.inArray(e.original.categoryType, types) isnt -1
 						continue
 					paths.push e.original.id
-					elements.push {type: 'CATEGORY', id: e.original.id}
+					elements.push {type: 'CATEGORY', categoryType: e.original.categoryType, id: e.original.id}
 			for e in selected
 				if e.original.type && e.original.type isnt 'CATEGORY'
 					if $.inArray(e.original.type, types) isnt -1
@@ -82,7 +82,7 @@ define([
 							break
 					if skip
 						continue
-					elements.push {type: e.original.type, id: e.original.id, name: e.original.text, commitId: e.commitId}
+					elements.push {type: e.original.type, categoryType: e.original.type, id: e.original.id, name: e.original.text, commitId: e.commitId}
 			if firstOnly
 				if elements.length
 					return elements[0]

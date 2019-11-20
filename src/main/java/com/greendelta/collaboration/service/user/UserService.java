@@ -108,20 +108,19 @@ public class UserService {
 		return userGroup.listFiles().length;
 	}
 
-	public long getUserGroupSize() {
-		User currentUser = getCurrentUser();
-		if (currentUser.username == null || currentUser.username.isEmpty())
+	public long getUserGroupSize(User user) {
+		if (user == null || user.username == null || user.username.isEmpty())
 			return 0;
 		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
 		if (repositoryPath == null)
 			return 0;
-		File userGroup = new File(repositoryPath, currentUser.username);
+		File userGroup = new File(repositoryPath, user.username);
 		if (!userGroup.exists())
 			return 0;
 		long size = 0;
 		for (File file : userGroup.listFiles()) {
 			try {
-				size += Repository.get(repositoryPath, currentUser.username, file.getName()).getSize();
+				size += Repository.get(repositoryPath, user.username, file.getName()).getSize();
 			} catch (UnsupportedSchemaException e) {
 				// ignore
 			}

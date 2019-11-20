@@ -31,7 +31,7 @@ public class ReferenceCollector<T> {
 			if (reference.type != null && Strings.isNullOrEmpty(reference.id)) {
 				all.addAll(collectForType(repo, reference.type));
 			} else if (reference.type == ModelType.CATEGORY && !Strings.isNullOrEmpty(reference.id)) {
-				all.addAll(collectForCategory(repo, toId(reference.id)));
+				all.addAll(collectForCategory(repo, reference.categoryType, toId(reference.id)));
 			} else {
 				all.add(converter.apply(reference));
 			}
@@ -43,8 +43,8 @@ public class ReferenceCollector<T> {
 		return convert(repo, browseService.getAll(type, new BrowseParameter(repo)));
 	}
 
-	private List<T> collectForCategory(Repository repo, String id) {
-		return convert(repo, browseService.getForCategory(repo, id));
+	private List<T> collectForCategory(Repository repo, ModelType type, String id) {
+		return convert(repo, browseService.getForCategory(type, id, new BrowseParameter(repo)));
 	}
 
 	private String toId(String categoryPath) {
@@ -53,15 +53,17 @@ public class ReferenceCollector<T> {
 
 	private List<T> convert(Repository repo, List<ObjectMap> entries) {
 		List<T> references = new ArrayList<>();
-		for (ObjectMap entry : entries) {
+		for (ObjectMap e : entries) {
 			Reference ref = new Reference();
-			if (entry.get("type") == ModelType.CATEGORY) {
-				references.addAll(convert(repo, browseService.getForCategory(repo, entry.get("refId"))));
+			if (e.get("type") == ModelType.CATEGORY) {
+				references.addAll(convert(repo, browseService.getForCategory(e.get("categoryType"), e.get("refId"),
+						new BrowseParameter(repo))));
 			} else {
-				ref.type = entry.get("type");
-				ref.id = entry.getString("refId");
-				ref.commitId = entry.getString("commitId");
-				ref.name = entry.getString("name");
+				ref.type = e.get("type");
+				ref.categoryType = e.get("categoryType");
+				ref.id = e.getString("refId");
+				ref.commitId = e.getString("commitId");
+				ref.name = e.getString("name");
 				references.add(converter.apply(ref));
 			}
 		}
@@ -70,8 +72,9 @@ public class ReferenceCollector<T> {
 
 	public static class Reference {
 
-		public String id;
 		public ModelType type;
+		public String id;
+		public ModelType categoryType;
 		public String name;
 		public String commitId;
 

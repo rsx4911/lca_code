@@ -5,8 +5,7 @@ import java.util.Map;
 
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
-
-import com.greendelta.collaboration.model.index.ProcessIndexEntry.ProcessType;
+import org.openlca.core.model.ProcessType;
 
 public class ModelTypes {
 
@@ -70,31 +69,27 @@ public class ModelTypes {
 		return FlowType.valueOf(sValue.toUpperCase());
 	}
 
-	public static org.openlca.core.model.ProcessType processType(ProcessType internal) {
-		switch (internal) {
-		case SYSTEM:
-			return org.openlca.core.model.ProcessType.LCI_RESULT;
-		case UNIT:
-			return org.openlca.core.model.ProcessType.UNIT_PROCESS;
-		default:
-			return null;
-		}
-	}
-
-	public static org.openlca.core.model.ProcessType processType(Map<String, Object> map) {
+	public static ProcessType processType(Map<String, Object> map) {
 		if (map == null)
 			return null;
 		Object value = map.get("processType");
 		if (value == null)
 			return null;
-		if (value instanceof org.openlca.core.model.ProcessType)
-			return (org.openlca.core.model.ProcessType) value;
 		if (value instanceof ProcessType)
-			return processType((ProcessType) value);
+			return (ProcessType) value;
+		if (value instanceof com.greendelta.collaboration.model.glad.ProcessType) {
+			if (value == com.greendelta.collaboration.model.glad.ProcessType.SYSTEM)
+				return ProcessType.LCI_RESULT;
+			return ProcessType.UNIT_PROCESS;
+		}
 		String sValue = value.toString();
 		if (sValue.isEmpty())
 			return null;
-		return org.openlca.core.model.ProcessType.valueOf(sValue.toUpperCase());
+		if (sValue.toLowerCase().equals("system"))
+			return ProcessType.LCI_RESULT;
+		if (sValue.toLowerCase().equals("unit") || sValue.toLowerCase().equals("unknown"))
+			return ProcessType.UNIT_PROCESS;
+		return ProcessType.valueOf(sValue.toUpperCase());
 	}
 
 	private static class TypeComparator implements Comparator<ModelType> {
