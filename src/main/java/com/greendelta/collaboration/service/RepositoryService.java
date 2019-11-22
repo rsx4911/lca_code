@@ -115,9 +115,8 @@ public class RepositoryService {
 		new File(path).mkdirs();
 		putJsonContext(group, name);
 		putVersion(group, name);
-		Repository repo = get(group, name);
-		membershipService.addMembership(currentUser, repo.toId(), Role.OWNER, true);
-		return repo;
+		membershipService.addMembership(currentUser, Repository.toId(group, name), Role.OWNER, true);
+		return get(group, name);
 	}
 
 	public boolean move(Repository repo, String group, String name) {

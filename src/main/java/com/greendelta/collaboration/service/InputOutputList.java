@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
@@ -24,7 +26,8 @@ import com.greendelta.collaboration.service.search.SearchService.BulkUpdate;
  * the collected input/output lists in chunks of 100
  */
 class InputOutputList {
-
+	
+	private static final Logger log = LogManager.getLogger(InputOutputList.class);
 	private final SearchService searchService;
 	private final Repository repo;
 	private final Commit commit;
@@ -46,6 +49,10 @@ class InputOutputList {
 			return;
 		for (Map<String, Object> e : exchanges) {
 			Map<String, Object> f = (Map<String, Object>) e.get("flow");
+			if (f == null || f.get("@id") == null) {
+				log.debug("Missing flow or flow['@id'] on exchange in process {} in repository {}" , process, repo.toId());
+				continue;
+			}
 			String flow = f.get("@id").toString();
 			boolean input = e.get("input") != null && e.get("input").toString().toLowerCase().equals("true");
 			append(process, flow, input);
