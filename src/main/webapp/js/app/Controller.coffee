@@ -300,17 +300,19 @@ define([
 					title: 'New repository' 
 					viewOptions: 
 						groupName: groupName
-				@router.registerUserRoute 'repositoryImport', () -> @showView 
+				@router.registerUserRoute 'repositoryImport', (groupName) -> @showView 
 					view: 'repository/Create'
 					title: 'Import repository' 
 					viewOptions: 
 						doImport: true
-				@router.registerUserRoute 'repositoryImportJson', () -> @showView 
+						groupName: groupName
+				@router.registerUserRoute 'repositoryImportJson', (groupName) -> @showView 
 					view: 'repository/Create'
 					title: 'Import repository'
 					viewOptions: 
 						doImport: true
 						importFormat: 'json-ld'
+						groupName: groupName
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
 						@router.navigate "#{group}/#{name}/datasets",

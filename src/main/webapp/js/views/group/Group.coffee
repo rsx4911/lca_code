@@ -24,6 +24,8 @@ define([
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
+				'click [data-action=import-repository]': () -> Router.navigate 'repository/import/' + @group.get('name')
+				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json/' + @group.get('name')
 				'click [data-action=delete-group]': 'deleteGroup'
 
 			initialize: (options) ->
