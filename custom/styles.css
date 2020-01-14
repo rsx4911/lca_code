@@ -246,6 +246,11 @@ header.drupal .form-control {
   }
 }
 
+/*Fix menu overlap issue*/
+.navbar-default .responsive-menu .default-menu {
+    display: block;
+}
+
 /*
 ========================================
 Drupal Styles
