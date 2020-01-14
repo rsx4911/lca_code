@@ -46,7 +46,7 @@ public class EmailService implements Closeable {
 
 	Transport getTransport() {
 		MailConfig config = settingsService.getMailConfig();
-		if (config == null)
+		if (config == null || !config.isValid())
 			return null;
 		boolean useAuth = !Strings.isNullOrEmpty(config.user);
 		Transport transport = null;
@@ -80,6 +80,11 @@ public class EmailService implements Closeable {
 	}
 
 	public void send(EmailJob mail) {
+		MailConfig config = settingsService.getMailConfig();
+		if (config == null || !config.isValid()) {
+			log.info("Aborting mail sending, because of missing or invalid email config");
+			return;
+		}
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -122,7 +127,8 @@ public class EmailService implements Closeable {
 				message.setContent(createMixedContent(mail));
 			else
 				message.setContent(createContent(mail));
-			message.setReplyTo(new InternetAddress[] { new InternetAddress(config.defaultReplyTo) });
+			if (!Strings.isNullOrEmpty(config.defaultReplyTo))
+				message.setReplyTo(new InternetAddress[] { new InternetAddress(config.defaultReplyTo) });
 			message.saveChanges();
 			transport.sendMessage(message, message.getAllRecipients());
 		} catch (Exception e) {
