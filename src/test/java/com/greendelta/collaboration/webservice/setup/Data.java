@@ -13,7 +13,7 @@ public class Data {
 		Database.init(setup);
 		RepositoryDir.init(setup.repoDir);
 		LibraryDir.init(setup.libDir);
-		Search.init(setup.searchCluster, setup.searchHost, setup.searchPort, setup.searchIndex);
+		Search.configure(setup.searchCluster, setup.searchHost, setup.searchPort, setup.searchIndex);
 		setup.tomcatDir.mkdirs();
 	}
 	
