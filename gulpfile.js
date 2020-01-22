@@ -111,7 +111,6 @@ gulp.task('copyCssModules', function() {
   return gulp.src([
       'node_modules/animate.css/animate.css',
       'node_modules/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css',
-      'node_modules/bootstrap/dist/css/bootstrap-theme.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
       'node_modules/cropper/dist/cropper.css',
       'node_modules/font-awesome/css/font-awesome.css',
