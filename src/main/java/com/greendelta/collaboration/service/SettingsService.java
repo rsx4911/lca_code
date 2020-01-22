@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.transport.TransportAddress;
@@ -238,6 +239,12 @@ public class SettingsService {
 			return session;
 		}
 
+		public boolean isValid() {
+			if (Strings.isNullOrEmpty(defaultFrom) || Strings.isNullOrEmpty(proto) || Strings.isNullOrEmpty(host) || port == null || port == 0)
+				return false;
+			return true;
+		}
+		
 	}
 
 	public class SearchConfig {
