@@ -42,6 +42,7 @@ public class DefaultServlet extends HttpServlet {
 		boolean isMaintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
 		String url = request.getRequestURL().toString();
 		boolean isLoginUrl = url.endsWith("/login");
+		boolean isJobUrl = url.endsWith("/job");
 		boolean isMaintenanceUrl = url.endsWith("/maintenance");
 		User user = userService.getCurrentUser();
 		if (isMaintenanceMode && !isLoginUrl && !isMaintenanceUrl && !user.isAdmin()) {
@@ -54,6 +55,10 @@ public class DefaultServlet extends HttpServlet {
 		}
 		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)){
 			response.sendRedirect(request.getContextPath() + "/");
+			return;
+		}
+		if (isJobUrl) {
+			forward("/job.html", request, response);
 			return;
 		}
 		String route = url.substring(url.lastIndexOf('/'));

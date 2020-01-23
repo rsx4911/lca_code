@@ -199,6 +199,12 @@ public class SettingsService {
 
 		}
 
+		public String toEmailFooter() {
+			return company + ", " + street + ", " + zipCode + " " + city + ", " + country + "<br>"
+					+ "Companies' Register: " + registration + "<br>"
+					+ "Managing Director: " + ceo;
+		}
+		
 	}
 
 	public class MailConfig {

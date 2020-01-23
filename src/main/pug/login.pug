@@ -23,6 +23,8 @@ html(lang='en')
 			#login-container
 				+login-form
 					button.btn.btn-primary.btn-block(type='submit') Login
+				+reset-password-form()(style='display:none')
+					button#reset.btn.btn-primary.btn-block(type='submit' disabled) Request password reset
 		br
 		br
 		br
@@ -35,6 +37,21 @@ html(lang='en')
 		script(src='js/libs/jquery.js')
 		script.
 			$('#year').html(new Date().getFullYear());
+			$("[data-action='reset-password']").on('click', function(e) { 
+				e.preventDefault();
+				$('#login').hide()
+				$('#reset-password').show()
+				return false;
+			});
+			$("[data-action='login']").on('click', function(e) { 
+				e.preventDefault();
+				$('#reset-password').hide()
+				$('#login').show()
+				return false;
+			});
+			$('#email').on('keyup', function() {
+				$('#reset').attr('disabled', !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($('#email').val()))
+			})
 			$('#login').on('submit', function(event) {
 				$('#login-general-message').hide();
 				var data = {username: $('#username').val(), password: $('#password').val()};
@@ -56,6 +73,16 @@ html(lang='en')
 						$('#login-general-message').show();
 						$('#login-general-message .message').html(response.responseText);
 						$('#token').val('');
+					}});
+				return false;
+			});
+			$('#reset-password').on('submit', function(event) {
+				$('#reset-password-general-message').hide();
+				var data = {email: $('#email').val()};
+				$.ajax({type: 'POST', url: 'ws/public/request-password-reset', contentType: 'application/json', data: JSON.stringify(data), 
+					success: function(response) {
+						$('#reset, #email').attr('disabled', true)
+						$('#reset').removeClass('btn-primary').addClass('btn-success').html('Password reset requested')
 					}});
 				return false;
 			});

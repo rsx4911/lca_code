@@ -57,7 +57,7 @@ public class ShiroModule extends ShiroWebModule {
 		dataManager("/ws/datamanager/**", "/sockets/datamanager/**");
 		user("/ws/**", "/sockets/**");
 		user(matchAll(Names.getUserRoutes()));
-		anonymous("/", "/login", "/imprint", "/maintenance", "/search", "/search/**");
+		anonymous("/", "/login", "/imprint", "/maintenance", "/job", "/search", "/search/**");
 		anonymous(CUSTOM_PUBLIC_RESOURCES);
 		anonymous(matchAll(WebappModule.STATIC_RESOURCE_DIRECTORIES));
 		user("/*"); // group urls

@@ -21,8 +21,10 @@ import org.apache.shiro.subject.Subject;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.job.JobResult;
+import com.greendelta.collaboration.service.JobService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -39,16 +41,19 @@ public class SessionResource {
 	private final UserService userService;
 	private final TaskService taskService;
 	private final SettingsService settingsService;
+	private final JobService jobService;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService, SettingsService settingsService) {
+	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService,
+			SettingsService settingsService, JobService jobService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
 		this.taskService = taskService;
 		this.settingsService = settingsService;
+		this.jobService = jobService;
 	}
-	
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCurrentUser() {
@@ -105,7 +110,7 @@ public class SessionResource {
 		boolean maintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
 		if (maintenanceMode && !user.isAdmin()) {
 			subject.logout();
-			return Respond.forbidden(settingsService.get(Key.MAINTENANCE_MESSAGE));			
+			return Respond.forbidden(settingsService.get(Key.MAINTENANCE_MESSAGE));
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();
@@ -119,6 +124,28 @@ public class SessionResource {
 			return Respond.conflict("Not logged in");
 		log.info("User {} logged out", currentUser.username);
 		return Respond.ok();
+	}
+
+	@POST
+	@Path("request-password-reset")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response requestPasswordReset(Map<String, Object> data) {
+		String email = data.get("email").toString();
+		jobService.requestPasswordReset(email);
+		log.info("Requested password reset for {}", email);
+		return Respond.ok();
+	}
+
+	@POST
+	@Path("run-job")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response runJob(Map<String, Object> data) {
+		if (data.get("token") == null || data.get("token").toString().isEmpty())
+			return Respond.badRequest("Invalid token");
+		String token = data.get("token").toString();
+		JobResult result = jobService.run(token);
+		return Respond.ok(result.toString());
 	}
 
 }

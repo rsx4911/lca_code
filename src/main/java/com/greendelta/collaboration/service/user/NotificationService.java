@@ -566,10 +566,7 @@ public class NotificationService {
 		Imprint imprint = settingsService.getImprint();
 		if (imprint == null)
 			return content;
-		content += imprint.company + ", " + imprint.street + ", " + imprint.zipCode + " " + imprint.city + ", "
-				+ imprint.country + "<br>";
-		content += "Companies' Register: " + imprint.registration + "<br>";
-		content += "Managing Director: " + imprint.ceo + "</div>";
+		content += imprint.toEmailFooter();
 		return content;
 	}
 
