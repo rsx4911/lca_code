@@ -38,7 +38,7 @@ public class User extends AbstractEntity {
 	public String twoFactorSecret;
 
 	@Embedded
-	public UserSettings settings;
+	public UserSettings settings = new UserSettings();
 
 	@Override
 	public long getId() {

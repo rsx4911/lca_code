@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -24,11 +25,14 @@ import com.google.inject.Provider;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.job.JobResult;
+import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.JobService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.webservice.util.Users;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
@@ -39,16 +43,18 @@ public class SessionResource {
 
 	private final Provider<Subject> subjectProvider;
 	private final UserService userService;
+	private final GroupService groupService;
 	private final TaskService taskService;
 	private final SettingsService settingsService;
 	private final JobService jobService;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
-	public SessionResource(Provider<Subject> subjectProvider, UserService userService, TaskService taskService,
-			SettingsService settingsService, JobService jobService) {
+	public SessionResource(Provider<Subject> subjectProvider, UserService userService, GroupService groupService,
+			TaskService taskService, SettingsService settingsService, JobService jobService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
+		this.groupService = groupService;
 		this.taskService = taskService;
 		this.settingsService = settingsService;
 		this.jobService = jobService;
@@ -72,9 +78,9 @@ public class SessionResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response login(Map<String, Object> credentials) {
-		ObjectMap formMap = ObjectMap.fromMap(credentials);
-		String username = formMap.getString("username");
-		String password = formMap.getString("password");
+		ObjectMap form = ObjectMap.fromMap(credentials);
+		String username = form.getString("username");
+		String password = form.getString("password");
 		log.info("User {} attempts to login", username);
 		Subject subject = subjectProvider.get();
 		if (subject.isAuthenticated())
@@ -96,7 +102,7 @@ public class SessionResource {
 			return Respond.unauthorized("User is deactivated");
 		}
 		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) {
-			Integer token = (int) formMap.getLong("token");
+			Integer token = (int) form.getLong("token");
 			if (token == null || token == 0) {
 				subject.logout();
 				return Respond.ok("tokenRequired");
@@ -114,6 +120,64 @@ public class SessionResource {
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();
+	}
+
+	@POST
+	@Path("register")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response register(Map<String, Object> data) {
+		ObjectMap form = ObjectMap.fromMap(data);
+		String username = form.getString("username");
+		String name = form.getString("name");
+		String email = form.getString("email");
+		String password = form.getString("password");
+		String password2 = form.getString("password2");
+		log.info("User {} attempts to register", username);
+		Subject subject = subjectProvider.get();
+		if (subject.isAuthenticated())
+			return Respond.conflict(null, "Already authenticated");
+		if (Strings.isNullOrEmpty(username))
+			return Respond.invalid("username", "Missing input: Username");
+		User userWithSameUsername = userService.getForUsername(username);
+		if (userWithSameUsername != null)
+			return Respond.invalid("username", "Username is already in use");
+		if (!Names.isValid(username))
+			return Respond.invalid("username",
+					"Username must consist of at least 4 characters and can only contain characters, numbers and _");
+		if (groupService.exists(username, true)) // user or group exists
+			return Respond.invalid("username", "Name is already in use");
+		if (Names.isReserved(username))
+			return Respond.invalid("username", "This is a reserved word");
+		if (Strings.isNullOrEmpty(email))
+			return Respond.invalid("email", "Missing input: E-Mail");
+		User userWithSameMail = userService.getForEmail(email);
+		if (userWithSameMail != null)
+			return Respond.invalid("email", "Email is already in use");
+		if (Strings.isNullOrEmpty(name))
+			return Respond.invalid("name", "Missing input: Name");
+		if (Strings.isNullOrEmpty(password))
+			return Respond.invalid("password", "Missing input: Password");
+		String passwordMessage = "Password must consist of at least 8 characters and must contain at least 1 digit, 2 different lowercase letters and 2 different uppercase letters";
+		if (!Password.isValid(password))
+			return Respond.invalid("password", passwordMessage);
+		if (Strings.isNullOrEmpty(password2))
+			return Respond.invalid("password2", "Missing input: Password (repeat)");
+		if (!password.equals(password2))
+			return Respond.invalid("password2", "Passwords do not match");
+		User user = new User();
+		user.username = username;
+		user.name = name;
+		user.email = email;
+		userService.setPassword(user, password);
+		user = userService.insert(user);
+		try {
+			subject.login(new UsernamePasswordToken(username, password));
+		} catch (IncorrectCredentialsException | UnknownAccountException e) {
+			return Respond.unauthorized("Invalid credentials");
+		}
+		log.info("User {} successfully registered", username);
+		return Respond.ok(new HashMap<>());
 	}
 
 	@POST

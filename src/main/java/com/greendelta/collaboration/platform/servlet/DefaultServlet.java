@@ -41,7 +41,7 @@ public class DefaultServlet extends HttpServlet {
 			throws ServletException, IOException {
 		boolean isMaintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
 		String url = request.getRequestURL().toString();
-		boolean isLoginUrl = url.endsWith("/login");
+		boolean isLoginUrl = url.endsWith("/login") || url.endsWith("/reset-password") || url.endsWith("/sign-up");
 		boolean isJobUrl = url.endsWith("/job");
 		boolean isMaintenanceUrl = url.endsWith("/maintenance");
 		User user = userService.getCurrentUser();
