@@ -27,12 +27,17 @@ define([
 					settings: settings.toMap()
 				Renderer.render @, renderOptions
 				Forms.fill 'settings-form', settings.toMap()
+				@updateUI()
 
 			updateSetting: (event) ->
 				target = $ Events.target event
 				key = target.attr 'id'
 				value = if target.attr('type') is 'checkbox' then target.is ':checked' else target.val()
 				@setSetting key, value
+				@updateUI()
+
+			updateUI: () ->
+				@$('#USER_REGISTRATION_APPROVAL').prop 'disabled', !@$('#USER_REGISTRATION').is(':checked')			
 
 			setSetting: (key, value, callback) ->
 				settings.setVal key, value

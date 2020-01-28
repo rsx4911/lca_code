@@ -57,7 +57,7 @@ public class NotificationsResource {
 		userService.update(currentUser);
 		return Respond.ok();
 	}
-
+	
 	@PUT
 	@Path("disable/{notifications}")
 	public Response disable(@PathParam("notifications") String notifications) {
@@ -66,6 +66,7 @@ public class NotificationsResource {
 		User currentUser = userService.getCurrentUser();
 		for (Notification notification : parse(notifications))
 			currentUser.disable(notification);
+		System.out.println(currentUser.settings.notifications);
 		userService.update(currentUser);
 		return Respond.ok();
 	}

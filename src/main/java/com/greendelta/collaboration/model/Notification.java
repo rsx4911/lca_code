@@ -2,7 +2,7 @@ package com.greendelta.collaboration.model;
 
 public enum Notification {
 
-	GROUP_DELETED,
+	GROUP_DELETED(),
 	REPOSITORY_CREATED,
 	REPOSITORY_MOVED,
 	REPOSITORY_DELETED,
@@ -34,7 +34,8 @@ public enum Notification {
 	TASK_ASSIGNED,
 	TASK_REVOKED,
 	TASK_CANCELED,
-	TASK_COMPLETED;
+	TASK_COMPLETED,
+	USER_REGISTERED;
 
 	public boolean isOneOf(Notification... notifications) {
 		if (notifications == null)

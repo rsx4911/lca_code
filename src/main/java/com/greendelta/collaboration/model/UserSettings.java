@@ -62,7 +62,7 @@ public class UserSettings {
 	public List<User> blockedUsers = new ArrayList<>();
 
 	@Column(name = "notifications")
-	int notifications;
+	public long notifications;
 
 	@JsonAnySetter
 	public void handleUnknown(String name, Object value) {

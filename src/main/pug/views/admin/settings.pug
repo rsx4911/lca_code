@@ -26,15 +26,14 @@ include ../mixins/forms.pug
 		.clear
 	.header-box Enabled features
 	.content-box
-		- var features = [];
-		- features.push(['COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields']); 
-		- features.push(['TASKS_ENABLED', 'Tasks: Editors can create review tasks']);
-		- features.push(['MESSAGING_ENABLED', 'Messaging: Users can write messages to each other']);
-		- features.push(['PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible']);
-		- features.push(['NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications']);
-		each feature in features
-			- var val = settings[feature[0]];
-			+checkbox(feature[0], feature[1])
+		+checkbox('COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
+		+checkbox('TASKS_ENABLED', 'Tasks: Editors can create review tasks')
+		+checkbox('MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
+		+checkbox('PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
+		+checkbox('NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
+		+checkbox('USER_REGISTRATION', 'User registration</strong>: Users can create accounts themselfes')
+		.indented-setting
+			+checkbox('USER_REGISTRATION_APPROVAL', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear

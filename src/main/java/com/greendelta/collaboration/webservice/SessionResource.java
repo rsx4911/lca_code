@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +31,9 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.JobService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
+import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.Password;
@@ -47,17 +51,20 @@ public class SessionResource {
 	private final TaskService taskService;
 	private final SettingsService settingsService;
 	private final JobService jobService;
+	private final NotificationService notificationService;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Inject
 	public SessionResource(Provider<Subject> subjectProvider, UserService userService, GroupService groupService,
-			TaskService taskService, SettingsService settingsService, JobService jobService) {
+			TaskService taskService, SettingsService settingsService, JobService jobService,
+			NotificationService notificationService) {
 		this.subjectProvider = subjectProvider;
 		this.userService = userService;
 		this.groupService = groupService;
 		this.taskService = taskService;
 		this.settingsService = settingsService;
 		this.jobService = jobService;
+		this.notificationService = notificationService;
 	}
 
 	@GET
@@ -99,7 +106,7 @@ public class SessionResource {
 		User user = userService.getCurrentUser();
 		if (user.isDeactivated()) {
 			subject.logout();
-			return Respond.unauthorized("User is deactivated");
+			return Respond.unauthorized("User is deactivated or approval is pending");
 		}
 		if (!Strings.isNullOrEmpty(user.twoFactorSecret)) {
 			Integer token = (int) form.getLong("token");
@@ -127,6 +134,8 @@ public class SessionResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response register(Map<String, Object> data) {
+		if (!settingsService.is(Key.USER_REGISTRATION))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "User registration feature not enabled");
 		ObjectMap form = ObjectMap.fromMap(data);
 		String username = form.getString("username");
 		String name = form.getString("name");
@@ -169,12 +178,23 @@ public class SessionResource {
 		user.username = username;
 		user.name = name;
 		user.email = email;
+		boolean adminApproval = settingsService.is(Key.USER_REGISTRATION_APPROVAL);
+		if (adminApproval) {
+			Calendar cal = Calendar.getInstance();
+			cal.add(Calendar.DAY_OF_MONTH, -1);
+			Dates.removeTimeInformation(cal);
+			user.settings.activeUntil = cal.getTime();
+		}
 		userService.setPassword(user, password);
 		user = userService.insert(user);
-		try {
-			subject.login(new UsernamePasswordToken(username, password));
-		} catch (IncorrectCredentialsException | UnknownAccountException e) {
-			return Respond.unauthorized("Invalid credentials");
+		if (adminApproval) {
+			notificationService.userRegistered(user).send();
+		} else {
+			try {
+				subject.login(new UsernamePasswordToken(username, password));
+			} catch (IncorrectCredentialsException | UnknownAccountException e) {
+				return Respond.unauthorized("Invalid credentials");
+			}
 		}
 		log.info("User {} successfully registered", username);
 		return Respond.ok(new HashMap<>());

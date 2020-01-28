@@ -67,19 +67,19 @@ public class User extends AbstractEntity {
 	public void enable(Notification notification) {
 		if (isEnabled(notification))
 			return;
-		int e = (int) Math.pow(2, notification.ordinal());
+		long e = (long) Math.pow(2, notification.ordinal());
 		settings.notifications += e;
 	}
 
 	public void disable(Notification notification) {
 		if (!isEnabled(notification))
 			return;
-		int e = (int) Math.pow(2, notification.ordinal());
+		long e = (long) Math.pow(2, notification.ordinal());
 		settings.notifications -= e;
 	}
 
 	public boolean isEnabled(Notification notification) {
-		int e = (int) Math.pow(2, notification.ordinal());
+		long e = (long) Math.pow(2, notification.ordinal());
 		return (settings.notifications | e) == settings.notifications;
 	}
 	
