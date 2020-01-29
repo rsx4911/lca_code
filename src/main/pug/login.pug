@@ -41,6 +41,14 @@ html(lang='en')
 			a(href='imprint') Imprint
 		script(src='js/libs/jquery.js')
 		script.
+			$('.sign-up-link-container').hide()
+			$.ajax({type: 'GET', url: 'ws/public/settings', success: function(settings) {
+				for (var i = 0; i < settings.length; i++) {
+					if (settings[i].name === 'USER_REGISTRATION' && settings[i].value === 'true' || settings[i].value === true) {
+						$('.sign-up-link-container').show()
+					}
+				}
+			}});
 			if (window.location.pathname.endsWith('/reset-password')) {
 				$('#login').hide()
 				$('#reset-password').show()

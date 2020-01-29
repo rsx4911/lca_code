@@ -2,7 +2,7 @@ package com.greendelta.collaboration.model;
 
 public enum Notification {
 
-	GROUP_DELETED(),
+	GROUP_DELETED,
 	REPOSITORY_CREATED,
 	REPOSITORY_MOVED,
 	REPOSITORY_DELETED,
@@ -28,7 +28,7 @@ public enum Notification {
 	GROUP_ROLE_OF_MEMBER_CHANGED,
 	REPOSITORY_ROLE_CHANGED,
 	REPOSITORY_ROLE_OF_MEMBER_CHANGED,
-	NOTIFY_FOR_ALL, // also notify about above events when not member
+	NOTIFY_FOR_ALL, // also notify about events when not member
 	FIELD_COMMENTED,
 	TASK_STARTED,
 	TASK_ASSIGNED,

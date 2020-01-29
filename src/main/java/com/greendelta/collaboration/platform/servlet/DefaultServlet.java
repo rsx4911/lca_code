@@ -50,10 +50,14 @@ public class DefaultServlet extends HttpServlet {
 			return;
 		}
 		if (isLoginUrl && !user.hasId()) {
+			if (!settingsService.is(Key.USER_REGISTRATION) && url.endsWith("/sign-up")) {
+				response.sendRedirect("/login");
+				return;
+			}
 			forward("/login.html", request, response);
 			return;
 		}
-		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)){
+		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)) {
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
@@ -62,7 +66,8 @@ public class DefaultServlet extends HttpServlet {
 			return;
 		}
 		String route = url.substring(url.lastIndexOf('/'));
-		if (Arrays.asList(ShiroModule.CUSTOM_PUBLIC_RESOURCES).contains(route) || route.equals("/maintenance") || route.equals("/imprint")) {
+		if (Arrays.asList(ShiroModule.CUSTOM_PUBLIC_RESOURCES).contains(route) || route.equals("/maintenance")
+				|| route.equals("/imprint")) {
 			forward(route + ".html", request, response);
 			return;
 		}
