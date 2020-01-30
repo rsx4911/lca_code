@@ -44,6 +44,7 @@ define([
 				# they need only to be unique within 'type'
 				switch type
 					when 'dashboard' then return [
+						{href: @concatUrl(prefix, 'dashboard/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						{href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
 						{href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
 					]
@@ -131,7 +132,7 @@ define([
 
 			registerRouteRewrites: () ->
 				if currentUser.isLoggedIn()
-					@router.registerRouteRewrite 'landingPage', 'dashboard/repositories'
+					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
 					if currentUser.isDataManager() and !currentUser.isAdmin() and !currentUser.isUserManager()
@@ -223,16 +224,22 @@ define([
 				@router.registerUserRoute 'landingPage', -> 
 					if currentUser.isLoggedIn()
 						@showView 
-							view: 'dashboard/Repositories'
-							title: 'Repositories' 
+							view: 'dashboard/Activities'
+							title: 'Activities' 
 							nav: 
 								type: 'dashboard'
-								active: 'repositories'
+								active: 'activities'
 					else
 						@showView 
 							view: 'search/Results'
 							title: 'Search' 
 							fullWidth: true
+				@router.registerUserRoute 'dashboardActivities', -> @showView 
+					view: 'dashboard/Activities'
+					title: 'Activities' 
+					nav: 
+						type: 'dashboard'
+						active: 'activities'
 				@router.registerUserRoute 'dashboardRepositories', -> @showView 
 					view: 'dashboard/Repositories'
 					title: 'Repositories' 

@@ -2,6 +2,7 @@ package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import com.greendelta.search.wrapper.SearchSorting;
 import joptsimple.internal.Strings;
 
 @Path("history")
+@Produces(MediaType.APPLICATION_JSON)
 public class HistoryResource {
 
 	private final HistoryService service;
@@ -59,7 +61,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -79,7 +80,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("{group}/{name}/{type}/{refId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -110,7 +110,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("search/{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -151,10 +150,9 @@ public class HistoryResource {
 			return false;
 		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
 	}
-	
+
 	@GET
 	@Path("category/{group}/{name}/{refId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistoryForCategory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -172,7 +170,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("commit/{group}/{name}/{commitId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommit(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -186,7 +183,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getReferences(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -249,7 +245,7 @@ public class HistoryResource {
 			map.put("userDisplayName", commit.user);
 		return map;
 	}
-	
+
 	@GET
 	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.TEXT_PLAIN)
@@ -265,5 +261,23 @@ public class HistoryResource {
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
 		return Respond.ok(lastCommit.id);
 	}
-	
+
+	@GET
+	@Path("activities")
+	public Response getAll(
+			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize) {
+		List<Repository> repositories = repoService.getAllAccessible();
+		List<Map<String, Object>> commits = new ArrayList<>();
+		repositories.forEach(repo -> {
+			for (Commit commit : service.getCommits(repo)) {
+				Map<String, Object> commitMap = putUserName(commit);
+				commitMap.put("repositoryId", repo.toId());
+				commits.add(commitMap);
+			}
+		});
+		Collections.sort(commits, (c1, c2) -> Long.compare((long) c2.get("timestamp"), (long) c1.get("timestamp")));
+		return Respond.ok(SearchResults.paged(page, pageSize, commits));
+	}
+
 }

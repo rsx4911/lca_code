@@ -5,9 +5,9 @@ define([
 
 	(Backbone, Events) ->
 
-		class Filter extends Backbone.Model
+		class Filter
 
-			initialize: (options) ->
+			constructor: (options) ->
 				{@url, @container, @template, @filterId, @beforeRender, @type, @pageSize, @pageSizeId, @afterRender, @filterPrefix} = options
 				if options.noPaging
 					@page = 0
