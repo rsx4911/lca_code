@@ -1,7 +1,7 @@
 include ../../mixins/paging.pug
 include ../../mixins/user-info.pug
 
-if !data.length
+if !groups || !groups.length
 	.no-content-message No commits found	
 else
 	each group in groups

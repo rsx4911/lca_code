@@ -69,7 +69,8 @@ define([
 
 
 			append: (result) ->
-				result.pageSizeId = @pageSizeId
+				if result
+					result.pageSizeId = @pageSizeId
 				$(@container).html @template result
 				$(@container + ' a.page').on 'click', (event) => @applyFilter event
 				$(@container + ' #' + (@pageSizeId || 'page-size')).on 'change', (event) => @applyFilter event
