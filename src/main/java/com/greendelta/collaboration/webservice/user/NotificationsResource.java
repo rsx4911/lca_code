@@ -66,7 +66,6 @@ public class NotificationsResource {
 		User currentUser = userService.getCurrentUser();
 		for (Notification notification : parse(notifications))
 			currentUser.disable(notification);
-		System.out.println(currentUser.settings.notifications);
 		userService.update(currentUser);
 		return Respond.ok();
 	}
