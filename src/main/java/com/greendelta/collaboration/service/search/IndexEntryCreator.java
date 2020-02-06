@@ -33,11 +33,19 @@ public class IndexEntryCreator {
 	}
 
 	public IndexEntry create(Dataset dataset) {
-		return create(dataset, null, null);
+		return create(dataset, null, null, true);
+	}
+
+	public IndexEntry create(Dataset dataset, IndexAction previousAction) {
+		return create(dataset, previousAction, null, false);		
 	}
 
 	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
-		if (data == null || data.isEmpty()) {
+		return create(dataset, previousAction, data, true);
+	}
+		
+	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data, boolean withData) {
+		if (withData && (data == null || data.isEmpty())) {
 			IndexEntry entry = generic(dataset);
 			entry.action = IndexAction.DELETE;
 			return entry;
