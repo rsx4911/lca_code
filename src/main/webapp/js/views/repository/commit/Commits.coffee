@@ -27,6 +27,8 @@ define([
 					filterId: 'filter'
 					url: "ws/history/search/#{group}/#{name}?"
 					beforeRender: (result) =>
+						unless result
+							return
 						result.repository = {group: group, name: name}
 						@prepareModel result
 						result.formatDate = Format.date
