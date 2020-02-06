@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +52,7 @@ class DatasetWriter {
 
 	void writeDatasets(ModelStreamReader reader) throws IOException {
 		try {
-			InputOutputList ioList = new InputOutputList(searchService, repo, commit) ;
+			InputOutputList ioList = new InputOutputList(searchService, repo, commit);
 			while (reader.hasMore()) {
 				Dataset dataset = reader.readNextPartAsDataset();
 				if (!checkLibraryRestrictions(dataset))
@@ -109,12 +108,13 @@ class DatasetWriter {
 	@SuppressWarnings("unchecked")
 	private void createIndexEntry(Dataset dataset, InputOutputList ioList) {
 		IndexAction lastAction = searchService.getMostRecentAction(repo, dataset.type, dataset.refId);
-		Map<String, Object> data = new HashMap<>();
-		if (dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW) {
-			data = repo.readData(dataset.type, dataset.refId, commit.id);
-			if (dataset.type == ModelType.PROCESS) {
-				ioList.append(dataset.refId, (List<Map<String, Object>>) data.get("exchanges"));
-			}
+		if (!(dataset.type == ModelType.PROCESS || dataset.type == ModelType.FLOW)) {
+			indexEntries.add(indexEntryCreator.create(dataset, lastAction));
+			return;
+		}
+		Map<String, Object> data = repo.readData(dataset.type, dataset.refId, commit.id);
+		if (dataset.type == ModelType.PROCESS) {
+			ioList.append(dataset.refId, (List<Map<String, Object>>) data.get("exchanges"));
 		}
 		indexEntries.add(indexEntryCreator.create(dataset, lastAction, data));
 	}
@@ -168,5 +168,4 @@ class DatasetWriter {
 		}
 	}
 
-	
 }
