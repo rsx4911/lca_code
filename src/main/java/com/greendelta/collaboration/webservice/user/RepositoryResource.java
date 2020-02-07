@@ -28,9 +28,10 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.IndexService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryMigrator;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
@@ -38,13 +39,13 @@ import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
 import com.greendelta.search.wrapper.SearchResult;
-import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("repository")
@@ -150,15 +151,15 @@ public class RepositoryResource {
 	public Response create(
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
-		Response response = _create(group, name);
-		if (response.getStatus() != Status.CREATED.getStatusCode())
+		Response response = checkValid(group, name);
+		if (response != null)
 			return response;
-		Repository repo = service.get(group, name);
+		Repository repo = service.create(group, name);
 		notificationService.repositoryCreated(repo).send();
-		return response;
+		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
 	}
 
-	private Response _create(String group, String name) {
+	private Response checkValid(String group, String name) {
 		if (Strings.isNullOrEmpty(group))
 			return Respond.invalid("group", "Missing input: Group");
 		if (Strings.isNullOrEmpty(name))
@@ -172,8 +173,7 @@ public class RepositoryResource {
 			return Respond.conflict("Repository " + name + " already exists");
 		if (!groupService.exists(group))
 			return Respond.invalid("group", "Specified group does not exist");
-		Repository repo = service.create(group, name);
-		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
+		return null;
 	}
 
 	@POST
@@ -230,11 +230,11 @@ public class RepositoryResource {
 			@PathParam("commitId") String commitId,
 			@PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
-		Response response = _create(newGroup, newName);
-		if (response.getStatus() != Status.CREATED.getStatusCode())
+		Response response = checkValid(newGroup, newName);
+		if (response != null)
 			return response;
 		Repository from = service.get(group, name);
-		Repository to = service.get(newGroup, newName);
+		Repository to = service.create(newGroup, newName);
 		List<Commit> commits = historyService.getCommitsUntil(from, commitId);
 		if (!service.clone(from, to, commits)) {
 			deleteService.delete(to);
@@ -263,6 +263,36 @@ public class RepositoryResource {
 			entry.group = newRepo.group;
 		}
 		searchService.index(entries);
+	}
+
+	@POST
+	@Path("import/external/{group}/{name}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response importExternal(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			Map<String, Object> data) {
+		ObjectMap map = ObjectMap.fromMap(data);
+		String url = map.getString("url");
+		if (Strings.isNullOrEmpty(url))
+			return Respond.invalid("url", "Missing input: Url");
+		while (url.endsWith("/")) {
+			url = url.substring(0, url.length() - 1);
+		}
+		String username = map.getString("username");
+		if (Strings.isNullOrEmpty(username))
+			return Respond.invalid("username", "Missing input: Username");
+		String password = map.getString("password");
+		if (Strings.isNullOrEmpty(password))
+			return Respond.invalid("password", "Missing input: Password");
+		Repository repo = service.get(group, name);
+		RepositoryMigrator migrator = new RepositoryMigrator(service, indexService);
+		try {
+			migrator.migrate(url, repo, username, password);
+		} catch (Exception e) {
+			Respond.error(e.getMessage());
+		}
+		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT
