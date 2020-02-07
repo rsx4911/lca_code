@@ -37,7 +37,7 @@ define([
 				@updateUI()
 
 			updateUI: () ->
-				@$('#USER_REGISTRATION_APPROVAL').prop 'disabled', !@$('#USER_REGISTRATION').is(':checked')			
+				@$('#USER_REGISTRATION_APPROVAL_ENABLED').prop 'disabled', !@$('#USER_REGISTRATION_ENABLED').is(':checked')			
 
 			setSetting: (key, value, callback) ->
 				settings.setVal key, value

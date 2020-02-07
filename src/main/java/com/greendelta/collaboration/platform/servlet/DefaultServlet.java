@@ -50,7 +50,7 @@ public class DefaultServlet extends HttpServlet {
 			return;
 		}
 		if (isLoginUrl && !user.hasId()) {
-			if (!settingsService.is(Key.USER_REGISTRATION) && url.endsWith("/sign-up")) {
+			if (!settingsService.is(Key.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
 				response.sendRedirect("/login");
 				return;
 			}

@@ -43,11 +43,13 @@ define([
 				# the ids are used in Navigation to identify which menu item is currently active
 				# they need only to be unique within 'type'
 				switch type
-					when 'dashboard' then return [
-						{href: @concatUrl(prefix, 'dashboard/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
-						{href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
-						{href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
-					]
+					when 'dashboard' 
+						userMenu = []
+						if settings.is('DASHBOARD_ACTIVITIES_ENABLED')
+							userMenu.push {href: @concatUrl(prefix, 'dashboard/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
+						userMenu.push {href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
+						userMenu.push {href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
+						return userMenu
 					when 'tasks' then return [
 						{href: @concatUrl(prefix, 'tasks'), imageSrc: 'images/tasks.png', label: 'Overview', id: 'overview'}
 					]
@@ -69,7 +71,8 @@ define([
 					when 'repository' 
 						repoMenu = []
 						repoMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
-						repoMenu.push {href: @concatUrl(prefix, 'activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
+						if settings.is('REPOSITORY_ACTIVITIES_ENABLED')
+							repoMenu.push {href: @concatUrl(prefix, 'activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						repoMenu.push {href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
 						repoMenu.push {href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
 						if settings.is('COMMENTS_ENABLED')

@@ -14,15 +14,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -43,15 +46,17 @@ public class ActivityResource {
 	private final HistoryService historyService;
 	private final CommentService commentService;
 	private final TaskService taskService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public ActivityResource(UserService userService, RepositoryService repoService, HistoryService historyService,
-			CommentService commentService, TaskService taskService) {
+			CommentService commentService, TaskService taskService, SettingsService settingsService) {
 		this.userService = userService;
 		this.repoService = repoService;
 		this.historyService = historyService;
 		this.commentService = commentService;
 		this.taskService = taskService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -59,6 +64,10 @@ public class ActivityResource {
 			@QueryParam("page") @DefaultValue("0") int page,
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("repositoryPath") String repositoryPath) {
+		if (repositoryPath == null && !settingsService.is(Key.DASHBOARD_ACTIVITIES_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Dashboard activities feature not enabled");
+		if (repositoryPath != null && !settingsService.is(Key.REPOSITORY_ACTIVITIES_ENABLED))
+			return Respond.status(Status.SERVICE_UNAVAILABLE, "Repository activities feature not enabled");
 		User user = userService.getCurrentUser();
 		List<Repository> repositories = getRepositories(repositoryPath);
 		List<ObjectMap> activities = new ArrayList<>();

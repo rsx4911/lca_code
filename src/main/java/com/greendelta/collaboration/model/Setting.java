@@ -43,8 +43,10 @@ public class Setting extends AbstractEntity {
 		COMMENTS_ENABLED(Boolean.class, true),
 		PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
 		NOTIFICATIONS_ENABLED(Boolean.class, true),
-		USER_REGISTRATION(Boolean.class, true),
-		USER_REGISTRATION_APPROVAL(Boolean.class, false),
+		USER_REGISTRATION_ENABLED(Boolean.class, true),
+		USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, true),
+		DASHBOARD_ACTIVITIES_ENABLED(Boolean.class, true),
+		REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
 
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),

@@ -31,9 +31,11 @@ include ../mixins/forms.pug
 		+checkbox('MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
 		+checkbox('PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
 		+checkbox('NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
-		+checkbox('USER_REGISTRATION', 'User registration</strong>: Users can create accounts themselfes')
+		+checkbox('USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselfes')
 		.indented-setting
-			+checkbox('USER_REGISTRATION_APPROVAL', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
+			+checkbox('USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
+		+checkbox('DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
+		+checkbox('REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear

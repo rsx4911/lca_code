@@ -429,7 +429,7 @@ public class NotificationService {
 	public NotificationJob userRegistered(User user) {
 		String subject = "A new user registered";
 		String message = "A new user with username " + user.username + " registered.";
-		if (settingsService.is(Key.USER_REGISTRATION_APPROVAL)) {
+		if (settingsService.is(Key.USER_REGISTRATION_APPROVAL_ENABLED)) {
 			subject += " and is awaiting approval";
 			String profileUrl = getBaseUrl() + "/administration/user/profile/" + user.username;
 			message += " To approve the new user account you need to active the user at <a href=\"" + profileUrl + "\">"
