@@ -21,6 +21,12 @@
 
 .activity
 
+	&[data-activity=COMMENT]
+		background-color rgb(255, 250, 240)
+
+	&[data-activity^=TASK]
+		background-color rgb(250, 240, 255)
+
 	.activity-info
 		margin-left 63px
 
@@ -32,3 +38,4 @@
 
 	.user-info .user-info-content span:not(.username)
 		color rgb(127, 143, 164) 
+	

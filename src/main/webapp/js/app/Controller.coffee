@@ -69,6 +69,7 @@ define([
 					when 'repository' 
 						repoMenu = []
 						repoMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
+						repoMenu.push {href: @concatUrl(prefix, 'activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						repoMenu.push {href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
 						repoMenu.push {href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
 						if settings.is('COMMENTS_ENABLED')
@@ -331,6 +332,17 @@ define([
 						nav: 
 							type: 'repository'
 							active: 'repository'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryActivities', (group, name) ->
+					@showView
+						view: 'dashboard/Activities'
+						title: "#{group}/#{name}"
+						subtitle: 'Activities'
+						nav: 
+							type: 'repository'
+							active: 'activities'
 							urlPrefix: "#{group}/#{name}"
 						viewOptions: 
 							repository: new Repository({group: group, name: name})

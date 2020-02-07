@@ -2,7 +2,6 @@ package com.greendelta.collaboration.webservice.user;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -260,24 +259,6 @@ public class HistoryResource {
 		if (lastCommit == null || lastCommit.id.equals(commitId))
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
 		return Respond.ok(lastCommit.id);
-	}
-
-	@GET
-	@Path("activities")
-	public Response getAll(
-			@QueryParam("page") @DefaultValue("0") int page,
-			@QueryParam("pageSize") @DefaultValue("10") int pageSize) {
-		List<Repository> repositories = repoService.getAllAccessible();
-		List<Map<String, Object>> commits = new ArrayList<>();
-		repositories.forEach(repo -> {
-			for (Commit commit : service.getCommits(repo)) {
-				Map<String, Object> commitMap = putUserName(commit);
-				commitMap.put("repositoryId", repo.toId());
-				commits.add(commitMap);
-			}
-		});
-		Collections.sort(commits, (c1, c2) -> Long.compare((long) c2.get("timestamp"), (long) c1.get("timestamp")));
-		return Respond.ok(SearchResults.paged(page, pageSize, commits));
 	}
 
 }

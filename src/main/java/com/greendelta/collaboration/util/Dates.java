@@ -5,6 +5,18 @@ import java.util.Date;
 
 public class Dates {
 
+	public static Date getLatest(Date... dates) {
+		if (dates == null)
+			return null;
+		Date latest = null;
+		for (Date date : dates) {
+			if (date != null && latest != null && isBefore(date, latest))
+				continue;
+			latest = date;
+		}
+		return latest;
+	}
+
 	public static boolean isBefore(Date toCompare, Date toCompareTo) {
 		return isBefore(toCompare, toCompareTo, true);
 	}

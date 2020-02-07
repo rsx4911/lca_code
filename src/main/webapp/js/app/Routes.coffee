@@ -30,6 +30,7 @@ define
 	'groups/:group/members': 'groupMembers'	
 	'error(/:statuscode)':'error'
 	':group/:name': 'repositoryInfo'
+	':group/:name/activities': 'repositoryActivities'
 	':group/:name/datasets(/*categoryPath)(?commitId=:commitId)': 'repositoryDatasets'
 	':group/:name/dataset/:type/:refId(?:query)': 'repositoryDataset'
 	':group/:name/commits': 'repositoryCommits'

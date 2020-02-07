@@ -17,11 +17,19 @@ define([
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 
+			initialize: (options) ->
+				if options
+					{@repository} = options
+
 			render: (renderOptions) ->
-				@$el.html template()
+				@$el.html template
+					repository: if @repository then @repository.toJSON() else null
 				Renderer.render @, renderOptions
+				url = 'ws/activities?'
+				if @repository
+					url += "repositoryPath=#{@repository.get('group')}/#{@repository.get('name')}&"
 				new FeedScroll({
-					url: 'ws/history/activities'
+					url: url
 					container: '#activity-feed'
 					template: resultTemplate
 					pageSize: 5

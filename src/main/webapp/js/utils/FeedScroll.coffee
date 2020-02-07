@@ -35,7 +35,7 @@ define () ->
 				url = @url
 				if $.isFunction(@url)
 					url = @url()
-				return url + '?page=' + @page + '&pageSize=' + @pageSize
+				return url + 'page=' + @page + '&pageSize=' + @pageSize
 
 			onScroll: () ->
 				if @scrollEventRunning
