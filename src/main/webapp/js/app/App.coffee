@@ -65,8 +65,8 @@ define([
 				type: 'GET'
 				url: 'ws/public/config/userRoutes'
 				success: (userRoutes) =>
-					Router.initialize userRoutes
 					@fetchModels () ->
+						Router.initialize userRoutes
 						Controller.initialize Router
 						Backbone.history.start
 							pushState: true

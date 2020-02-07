@@ -8,6 +8,11 @@ form#repository-form.content-box
 	if doImport
 		if importFormat === 'json-ld'
 			+input('commitMessage', 'Initial commit message')
-		+input('data', 'Data', 'file')
-	button.btn.btn-lg.btn-success.pull-right(data-action='create-repository') Create
+		if importFormat === 'external'
+			+input('url', 'External url')
+			+input('username', 'Username')
+			+input('password', 'Password', 'password')
+		else
+			+input('data', 'Data', 'file')
+	button.btn.btn-lg.btn-success.pull-right(data-action='create-repository')=doImport?'Import':'Create'
 	.clear

@@ -324,6 +324,12 @@ define([
 						doImport: true
 						importFormat: 'json-ld'
 						groupName: groupName
+				@router.registerUserRoute 'repositoryImportExternal', () -> @showView 
+					view: 'repository/Create'
+					title: 'Import repository'
+					viewOptions: 
+						doImport: true
+						importFormat: 'external'
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
 						@router.navigate "#{group}/#{name}/datasets",

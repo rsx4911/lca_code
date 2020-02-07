@@ -39,7 +39,7 @@ define([
 
 			initialize: (userRoutes) ->
 				AppRouter = Backbone.Router.extend
-					routes: Routes
+					routes: Routes.init()
 				@userRoutes = userRoutes
 				@routeRewrites = {}
 				@router = new AppRouter
