@@ -4,13 +4,14 @@ define([
 				'cs!utils/Filter'
 				'cs!utils/Model'
 				'cs!utils/Renderer'
+				'cs!utils/Roles'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/dashboard/repositories'
 				'templates/views/dashboard/repositories-list'
 			]
 
-	(Backbone, Events, Filter, Model, Renderer, Router, currentUser, template, listTemplate) ->
+	(Backbone, Events, Filter, Model, Renderer, Roles, Router, currentUser, template, listTemplate) ->
 
 		class DashboardRepositories extends Backbone.View
 
@@ -28,7 +29,10 @@ define([
 					container: '#repositories'
 					template: listTemplate
 					filterId: 'filter'
-					url: 'ws/repository?'
+					url: 'ws/repository?module=DASHBOARD&'
+					beforeRender: (result) =>
+						setRole = (r) -> r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+						setRole r for r in result.data
 
 			render: (renderOptions) ->
 				Model.fetch currentUser, 

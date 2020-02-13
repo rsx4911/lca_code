@@ -6,13 +6,14 @@ define([
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
+				'cs!utils/Roles'
 				'cs!utils/Status'
 				'cs!app/Router'
 				'templates/views/group/group'
 				'templates/views/group/repositories'
 			]
 
-	(Backbone, Avatar, Events, Filter, Forms, Layers, Renderer, Status, Router, template, listTemplate) ->
+	(Backbone, Avatar, Events, Filter, Forms, Layers, Renderer, Roles, Status, Router, template, listTemplate) ->
 
 		class GroupView extends Backbone.View
 
@@ -36,7 +37,10 @@ define([
 					template: listTemplate
 					filterId: 'filter'
 					filterPrefix: "#{name}/"
-					url: "ws/repository?"
+					url: "ws/repository?module=GROUP&"
+					beforeRender: (result) =>
+						setRole = (r) -> r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+						setRole r for r in result.data
 					afterRender: (result) =>
 						@$('.group-repository-count').html(result.resultInfo.totalCount)
 

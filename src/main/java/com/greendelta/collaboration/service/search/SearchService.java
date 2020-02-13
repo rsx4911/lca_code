@@ -67,7 +67,7 @@ public class SearchService {
 		}
 		return parser.parse(getClient().search(builder.build()));
 	}
-
+	
 	public IndexEntry getMostRecentUntil(Repository repo, ModelType type, String refId, String commitId) {
 		if (refId == null)
 			return null;

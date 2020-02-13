@@ -149,7 +149,7 @@ define([
 					template: repositoriesTemplate
 					filterId: 'repository-filter'
 					pageSizeId: 'repositories-page-size'
-					url: 'ws/repository?adminArea=true&'
+					url: 'ws/repository?'
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
@@ -161,7 +161,7 @@ define([
 					template: groupsTemplate
 					filterId: 'group-filter'
 					pageSizeId: 'groups-page-size'
-					url: 'ws/group?adminArea=true&'
+					url: 'ws/group?'
 				@teamFilter = new Filter
 					container: '#teams'
 					template: teamsTemplate

@@ -7,38 +7,33 @@
 	.header-box
 		font-size 18px
 
-.list-container
+	.paging
+		padding-bottom 20px
 
-	.list-entry
-		padding 10px 25px
-		border-bottom 1px solid rgb(241, 242, 244)
-		
-		.avatar
-			margin-right 20px
+	.activity
 
-.paging
-	padding-bottom 20px
+		[data-activity^=COMMIT]
+			color rgb(216, 149, 110)
 
-.activity
+		[data-activity=COMMENT]
+			color rgb(26, 174, 142)
 
-	&[data-activity=COMMENT]
-		background-color rgb(255, 250, 240)
+		[data-activity^=TASK]
+			color rgb(159, 113, 185)
 
-	&[data-activity^=TASK]
-		background-color rgb(250, 240, 255)
+		.calendar-icon
+			margin-top -5px
 
-	.activity-info
-		margin-left 63px
+		.user-info .user-info-content a, .user-info .user-info-content span:not(.username):not(.message):not([data-activity])
+			font-weight normal
 
-	.calendar-icon
-		margin-top -5px
+		.user-info .user-info-content span:not(.username):not([data-activity])
+			color rgb(127, 143, 164) 
 
-	.user-info .user-info-content a, .user-info .user-info-content span:not(.username):not(.message)
-		font-weight normal
+	#activities-config .abc-checkbox label
+		font-size initial
+		font-weight initial
 
-	.user-info .user-info-content span:not(.username)
-		color rgb(127, 143, 164) 
-
-#activities-config .abc-checkbox label
-	font-size initial
-	font-weight initial
+	.public-access-badge
+		margin-left 5px
+		margin-top -3px

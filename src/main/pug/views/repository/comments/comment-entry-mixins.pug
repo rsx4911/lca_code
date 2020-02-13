@@ -18,7 +18,7 @@ mixin comment-visibility(restrictedToRole, roles)
 
 mixin comment-info(comment, roles, showDatasetInfo)
 	- var canChangeVisibility = canComment && (currentUser.admin || (comment.user && currentUser.username === comment.user.username));
-	span: small commented on #{formatDate(comment.date)}
+	span.user-extra-info  commented on #{formatDate(comment.date)}
 	if canChangeVisibility
 		| &nbsp;
 		+comment-visibility(comment.restrictedToRole, roles)
@@ -57,13 +57,11 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 				- addClass += ' '
 			- addClass += c;
 	.comment-entry(class=addClass, data-comment-id=comment.id)
-		if showDatasetInfo
-			.pull-left
-				img.avatar.avatar-small(src='ws/user/avatar/' + (comment.user?comment.user.username:'null'), aria-label='Avatar of ' + (comment.user.name || 'Anonymous user'))
-			.comment-info-container
-				strong=comment.user?comment.user.name:'Anonymous user'
-				|  
-				+comment-info(comment, roles, true)
+		- var username = comment.user ? comment.user.username : 'null'
+		- var name = comment.user ? comment.user.name : 'Anonymous user'
+		+user-info(username, name)
+			+comment-info(comment, roles, false)
+			if showDatasetInfo
 				- var field = comment.field;
 				- var label = getLabel(field);
 				- var query = '?';
@@ -72,24 +70,18 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 				- query += 'commentPath=' + (field.path || 'null');
 				.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + query) 
 					img.model-icon-small(src='images/model/small/' + field.modelType.toLowerCase() + '.png', aria-label='Icon of ' + field.modelType)
-					small=comment.dsPath 
+					span=comment.dsPath 
 						if label
 							|  - #{label}
-			.clear
-		else
-			if comment.user
-				+user-info(comment.user.username, comment.user.name)
-			else
-				+user-info('null', 'Anonymous user')
-			+comment-info(comment, roles, false)
-		.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
-		if comment.replyCount
-			.replies
-				a.toggle-control(href='#')
-					span.glyphicon.glyphicon-chevron-down
-					|  Show #{comment.replyCount} replies
-				.toggleable(style='display:none')
-					img.loader(src='images/loader.gif')
-				a.toggle-control(href='#' style='display:none') 
-					span.glyphicon.glyphicon-chevron-up
-					|  Hide #{comment.replyCount} replies
+			.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
+			if comment.replyCount
+				.replies
+					a.toggle-control(href='#')
+						span.glyphicon.glyphicon-chevron-down
+						|  Show #{comment.replyCount} replies
+					.toggleable(style='display:none')
+						img.loader(src='images/loader.gif')
+					a.toggle-control(href='#' style='display:none') 
+						span.glyphicon.glyphicon-chevron-up
+						|  Hide #{comment.replyCount} replies
+		.clear

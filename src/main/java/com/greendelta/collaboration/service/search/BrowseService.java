@@ -58,6 +58,15 @@ public class BrowseService {
 		return types;
 	}
 
+	public long getCount(BrowseParameter params) {
+		SearchQueryBuilder builder = builder(params);
+		builder.page(1);
+		builder.pageSize(1);
+		builder.filter("mostRecent", SearchFilterValue.term(true));
+		SearchResult<ObjectMap> result = searchService.searchRaw(builder.build());
+		return result.resultInfo.totalCount;	
+	}
+	
 	public long getCount(ModelType type, String path, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params);
 		builder.page(1);

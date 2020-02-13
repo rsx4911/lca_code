@@ -144,6 +144,19 @@ public class GroupService {
 		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
 	}
+	
+	public long getRepositoryCount(String group) {
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return 0;
+		File root = new File(path);
+		if (!root.exists() || !root.isDirectory()) 
+			return 0;
+		File groupDir = new File(root, group);
+		if (!accessService.canRead(group, false))
+			return 0;
+		return groupDir.listFiles().length;
+	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
 		String path = getRootPath();

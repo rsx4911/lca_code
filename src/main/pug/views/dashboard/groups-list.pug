@@ -1,9 +1,17 @@
+include ../mixins/repository-entry.pug
 include ../mixins/paging.pug
 
 .list-container
 	each group in data
 		.list-entry
-			img.avatar(src='ws/group/avatar/' + group.name, aria-label='Avator of group ' + group.name)
-			a.follow(href='groups/' + group.name)
-				strong=group.name
+			.pull-left
+				img.avatar(src='ws/group/avatar/' + group.name, aria-label='Avator of group ' + group.name)
+			.pull-left
+				a.follow(href='groups/' + group.name)
+					strong=group.name
+				div: i
+					+count-info(group.repositories, 'repository', 'repositories', false)
+					+count-info(group.members, 'member', 'members', true)
+			span.pull-right.role.badge(title=group.role.description)=group.role.name
+			.clear
 	+paging(resultInfo)

@@ -1,7 +1,7 @@
 include ../mixins/user-info.pug
 
 mixin type-text()
-    span  
+    span(data-activity=type)  
         if type === 'COMMIT'
             | committed data
         else if type === 'COMMENT'
@@ -25,7 +25,7 @@ mixin type-text()
                 | canceled a task assignment
                 if assignedTo
                     |  for #{assignedTo}
-        |  on 
+    |  on 
 
 mixin link()
     - var href = '';
@@ -41,13 +41,13 @@ mixin link()
         - text = 'Go to task';
     a.pull-right.default-link(href=href)=text
 
-.list-entry.activity(data-activity=type)
+.list-entry.activity
     +user-info(user, userDisplayName)
         +type-text()
         a.default-link(href=repositoryPath)=repositoryPath
         if timestamp
             span  on #{formatDate(timestamp)} at #{formatTime(timestamp)}
         br
-        +link()
-        .activity-info
-            span.message  #{message}
+        span.message  #{message}
+    +link()
+    .clear

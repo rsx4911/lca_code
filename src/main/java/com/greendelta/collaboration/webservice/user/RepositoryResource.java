@@ -24,6 +24,7 @@ import org.openlca.cloud.model.data.Commit;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
@@ -33,10 +34,14 @@ import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryMigrator;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -54,23 +59,30 @@ public class RepositoryResource {
 
 	private final RepositoryService service;
 	private final GroupService groupService;
+	private final UserService userService;
+	private final MembershipService membershipService;
 	private final AccessService accessService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
+	private final BrowseService browseService;
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 	private final LibraryService libraryService;
 
 	@Inject
-	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
-			HistoryService historyService, SearchService searchService, IndexService indexService,
+	public RepositoryResource(RepositoryService service, GroupService groupService, MembershipService membershipService,
+			UserService userService, AccessService accessService, HistoryService historyService,
+			SearchService searchService, BrowseService browseService, IndexService indexService,
 			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService) {
 		this.service = service;
 		this.groupService = groupService;
+		this.userService = userService;
+		this.membershipService = membershipService;
 		this.accessService = accessService;
 		this.historyService = historyService;
 		this.searchService = searchService;
+		this.browseService = browseService;
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
@@ -87,14 +99,26 @@ public class RepositoryResource {
 		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Repositories::map));
-		List<Repository> repositories = result.data;
+		User user = userService.getCurrentUser();
 		switch (module) {
+		case DASHBOARD:
+		case GROUP:
+			return Respond.ok(SearchResults.convert(result,
+					repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
 		case REVIEW:
-			repositories = Collections.filter(repositories, (repo) -> !accessService.canManageTaskIn(repo.toId()));
+			return Respond.ok(Client.map(Collections.filter(result.data,
+					repo -> !accessService.canManageTaskIn(repo.toId())), Repositories::map));
 		default:
-			break;
+			return Respond.ok(Client.map(result.data, Repositories::map));
 		}
-		return Respond.ok(Client.map(repositories, Repositories::map));
+	}
+
+	private ObjectMap putRepositoryInfo(ObjectMap map, Repository repo, User user) {
+		map.put("role", membershipService.getRole(user, repo.toId()));
+		map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
+		map.put("commits", historyService.getCommits(repo).size());
+		map.put("members", membershipService.getMemberships(repo.toId()).size());
+		return map;
 	}
 
 	@GET
