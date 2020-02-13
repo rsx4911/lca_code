@@ -1,5 +1,12 @@
+include ../mixins/forms.pug
+
 .header-box Latest activities
     if repository
         |  on #{repository.group}/#{repository.name}
+    form#activities-config.pull-right
+        +checkbox('showCommitActivities', 'Commits', 'success', true)
+        +checkbox('showCommentActivities', 'Comments', 'success', true)
+        +checkbox('showTaskActivities', 'Tasks', 'success', true)
+    .clear
 .content-box
     .list-container#activity-feed

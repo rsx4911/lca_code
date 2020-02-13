@@ -14,6 +14,7 @@ define([
 				'repository/import-external': 'repositoryImportExternal'
 				'user': 'userProfile'
 				'user/profile': 'userProfile'
+				'user/activities': 'userActivities'
 				'user/messaging': 'userMessaging'
 				'user/notifications': 'userNotifications'
 				'dashboard': 'dashboardActivities'

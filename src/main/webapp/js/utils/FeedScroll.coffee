@@ -3,7 +3,7 @@ define () ->
 		class FeedScroll
 
 			constructor: (options) ->
-				{@url, @container, @template, @extendModel, @page, @pageSize} = options
+				{@url, @container, @template, @extendModel, @page, @pageSize, @onEmpty} = options
 				@id = 'feed-scroll-' + (Math.random() * Math.pow(100, 8)).toString().replace('.', '') 
 				@eventName = 'scroll.' + @id
 				@page = @page or 1
@@ -24,6 +24,9 @@ define () ->
 			loadInitial: () ->
 				@loadNext (result) =>
 					@append result
+					if result.resultInfo.totalCount is 0
+						@onEmpty?()
+						return
 					wasLastPage = result.resultInfo.currentPage is result.resultInfo.pageCount
 					if !@bottomAnchor.is(':offscreen') and !wasLastPage
 						@loadInitial()
@@ -79,3 +82,7 @@ define () ->
 				for entry in result.data
 					@extendModel entry
 					@results.append @template entry 
+
+			destroy: () ->
+				$(@container).empty()
+				$(window).off @eventName
