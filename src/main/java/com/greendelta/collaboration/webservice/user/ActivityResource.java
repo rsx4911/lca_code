@@ -21,6 +21,7 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
 import com.greendelta.collaboration.model.task.Task;
@@ -28,6 +29,7 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -47,16 +49,19 @@ public class ActivityResource {
 	private final UserService userService;
 	private final RepositoryService repoService;
 	private final HistoryService historyService;
+	private final SearchService searchService;
 	private final CommentService commentService;
 	private final TaskService taskService;
 	private final SettingsService settingsService;
 
 	@Inject
 	public ActivityResource(UserService userService, RepositoryService repoService, HistoryService historyService,
-			CommentService commentService, TaskService taskService, SettingsService settingsService) {
+			SearchService searchService, CommentService commentService, TaskService taskService,
+			SettingsService settingsService) {
 		this.userService = userService;
 		this.repoService = repoService;
 		this.historyService = historyService;
+		this.searchService = searchService;
 		this.commentService = commentService;
 		this.taskService = taskService;
 		this.settingsService = settingsService;
@@ -78,6 +83,7 @@ public class ActivityResource {
 		List<Repository> repositories = getRepositories(repositoryPath);
 		List<ObjectMap> activities = new ArrayList<>();
 		Map<String, Commit> commits = new HashMap<>();
+		Map<String, Repository> repos = new HashMap<>();
 		repositories.forEach(repo -> {
 			if (showCommitActivities) {
 				List<Commit> nextCommits = historyService.getCommits(repo);
@@ -87,6 +93,9 @@ public class ActivityResource {
 						commit -> commit));
 				activities.addAll(Client.map(nextCommits,
 						commit -> Activities.map(commit, repo.toId())));
+				for (Commit commit : nextCommits) {
+					repos.put(commit.id, repo);
+				}
 			}
 			if (showCommentActivities) {
 				activities.addAll(Client.map(commentService.getAllFor(repo), Activities::map));
@@ -108,7 +117,8 @@ public class ActivityResource {
 		SearchResult<ObjectMap> result = SearchResults.paged(page, pageSize, activities);
 		for (ObjectMap entry : result.data) {
 			if (entry.get("type") == ActivityType.COMMIT) {
-				entry.put("userDisplayName", getUserName(commits.get(entry.getString("id"))));
+				String id = entry.getString("id");
+				putAdditionalInfo(entry, repos.get(id), commits.get(id));
 			}
 		}
 		return Respond.ok(result);
@@ -120,11 +130,12 @@ public class ActivityResource {
 		return Arrays.asList(repoService.get(repositoryPath));
 	}
 
-	private String getUserName(Commit commit) {
+	private void putAdditionalInfo(ObjectMap entry, Repository repo, Commit commit) {
 		User user = userService.getForUsername(commit.user);
-		if (user != null)
-			return user.name;
-		return commit.user;
+		entry.put("userDisplayName", user != null ? user.name : commit.user);
+		entry.put("additions", searchService.getDatasetCount(repo, commit.id, IndexAction.ADD));
+		entry.put("deletions", searchService.getDatasetCount(repo, commit.id, IndexAction.DELETE));
+		entry.put("updates", searchService.getDatasetCount(repo, commit.id, IndexAction.UPDATE));
 	}
 
 	@PUT

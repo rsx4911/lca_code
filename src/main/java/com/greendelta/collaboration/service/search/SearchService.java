@@ -67,7 +67,17 @@ public class SearchService {
 		}
 		return parser.parse(getClient().search(builder.build()));
 	}
-	
+
+	public long getDatasetCount(Repository repo, String commitId, IndexAction action) {
+		SearchQueryBuilder builder = new SearchQueryBuilder().page(1).pageSize(1)
+				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()))
+				.filter("commitId", SearchFilterValue.term(commitId));
+		if (action != null) {
+			builder.filter("action", SearchFilterValue.term(action.name()));
+		}
+		return getClient().search(builder.build()).resultInfo.totalCount;
+	}
+
 	public IndexEntry getMostRecentUntil(Repository repo, ModelType type, String refId, String commitId) {
 		if (refId == null)
 			return null;
@@ -257,7 +267,7 @@ public class SearchService {
 	private SearchClient getClient() {
 		return settingsService.getSearchConfig().getSearchClient();
 	}
-	
+
 	public class BulkUpdate {
 
 		private Map<String, Map<String, Object>> entries = new HashMap<>();

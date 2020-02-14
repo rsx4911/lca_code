@@ -1,3 +1,4 @@
+include ../mixins/commit-info.pug
 include ../mixins/user-info.pug
 
 mixin type-text()
@@ -48,6 +49,9 @@ mixin link()
         if timestamp
             span  on #{formatDate(timestamp)} at #{formatTime(timestamp)}
         br
+        if type === 'COMMIT'
+            +commit-info(additions, updates, deletions)
+            br
         span.message  #{message}
     +link()
     .clear

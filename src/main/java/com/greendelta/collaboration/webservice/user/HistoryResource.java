@@ -21,6 +21,7 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
@@ -121,22 +122,29 @@ public class HistoryResource {
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
-		return Respond.ok(putAdditionalInfo(result, commits));
+		return Respond.ok(putAdditionalInfo(SearchResults.convert(result, c -> ObjectMap.fromObject(c)), repo, commits));
 	}
 
-	private Map<String, Object> putAdditionalInfo(SearchResult<Commit> result, List<Commit> commits) {
+	private Map<String, Object> putAdditionalInfo(SearchResult<ObjectMap> result, Repository repo, List<Commit> commits) {
 		Map<String, Integer> groupCount = new HashMap<>();
 		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
-		for (Commit commit : result.data) {
+		List<ObjectMap> data = new ArrayList<>();
+		for (ObjectMap commit : result.data) {
 			int count = 0;
 			for (Commit c : commits) {
-				if (!isSameDay(commit.timestamp, c.timestamp))
+				if (!isSameDay(commit.getLong("timestamp"), c.timestamp))
 					continue;
 				count++;
 			}
-			groupCount.put(commit.id, count);
+			groupCount.put(commit.getString("id"), count);
+			String commitId = commit.getString("id");
+			commit.put("additions", searchService.getDatasetCount(repo, commitId, IndexAction.ADD));
+			commit.put("deletions", searchService.getDatasetCount(repo, commitId, IndexAction.DELETE));
+			commit.put("updates", searchService.getDatasetCount(repo, commitId, IndexAction.UPDATE));
+			data.add(commit);
 		}
 		map.put("resultInfo.groupCount", groupCount);
+		map.put("data", data);
 		return map;
 	}
 
@@ -177,7 +185,11 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		return Respond.ok(putUserName(commit));
+		Map<String, Object> map = putUserName(commit);
+		map.put("additions", searchService.getDatasetCount(repo, commitId, IndexAction.ADD));
+		map.put("deletions", searchService.getDatasetCount(repo, commitId, IndexAction.DELETE));
+		map.put("updates", searchService.getDatasetCount(repo, commitId, IndexAction.UPDATE));
+		return Respond.ok(map);
 	}
 
 	@GET
@@ -234,14 +246,17 @@ public class HistoryResource {
 			mapped.add(putUserName(commit));
 		return mapped;
 	}
-
+	
 	private Map<String, Object> putUserName(Commit commit) {
-		ObjectMap map = ObjectMap.fromObject(commit);
-		User user = userService.getForUsername(commit.user);
+		return putUserName(ObjectMap.fromObject(commit));
+	}
+
+	private Map<String, Object> putUserName(ObjectMap map) {
+		User user = userService.getForUsername(map.getString("user"));
 		if (user != null)
 			map.put("userDisplayName", user.name);
 		else
-			map.put("userDisplayName", commit.user);
+			map.put("userDisplayName", map.getString("user"));
 		return map;
 	}
 
