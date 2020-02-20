@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.util.WebRequests.WebRequestException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -51,6 +52,7 @@ import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
 import com.greendelta.search.wrapper.SearchResult;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("repository")
@@ -313,8 +315,12 @@ public class RepositoryResource {
 		RepositoryMigrator migrator = new RepositoryMigrator(service, indexService);
 		try {
 			migrator.migrate(url, repo, username, password);
+		} catch (WebRequestException e) {
+			if (e.isConnectException() || e.getCause() instanceof ClientHandlerException)
+				return Respond.invalid("url", "Cannot connect to " + map.getString("url"));
+			return Respond.badRequest(e.getMessage());
 		} catch (Exception e) {
-			Respond.error(e.getMessage());
+			return Respond.invalid("url", "Cannot connect to " + map.getString("url"));
 		}
 		return Respond.ok(new HashMap<>());
 	}

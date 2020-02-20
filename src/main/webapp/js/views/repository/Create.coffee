@@ -62,8 +62,11 @@ define([
 								success: () -> 
 									Layers.hideProgressIndicator()
 									Router.navigate "#{group}/#{name}"						
-								error: () => 
-									@repository.destroy
+								error: (response) =>
+									Forms.handleError 'repository-form', response
+									$.ajax
+										type: 'DELETE'
+										url: "ws/repository/#{group}/#{name}"
 										success: () => Layers.hideProgressIndicator()
 										error: () => Layers.hideProgressIndicator()
 						else
