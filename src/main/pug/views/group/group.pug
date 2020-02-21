@@ -1,7 +1,7 @@
 include ../mixins/forms.pug
 include ../mixins/avatar-box.pug
 
-.two-columns.special.flex-layout
+.two-columns
 	div
 		.header-box Info
 			if group.userCanDelete
@@ -9,27 +9,26 @@ include ../mixins/avatar-box.pug
 		.content-box
 			+static('name', 'Name', group.name)
 		+avatar-box('group', group.name, group.userCanWrite)
-	.repositories.flex-column
-		.flex-container
-			.header-box Repositories (
-				span.group-repository-count 0
-				| )
-			.input-group.input-group-lg
-				input#filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
-				if group.userCanCreate
-						span.input-group-btn
-							button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' aria-label='Toggle repository menu')
+	.repositories
+		.header-box Repositories (
+			span.group-repository-count 0
+			| )
+		.input-group.input-group-lg
+			input#filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
+			if group.userCanCreate
+					span.input-group-btn
+						button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' aria-label='Toggle repository menu')
+							span.glyphicon.glyphicon-plus
+							|  
+							span.caret
+						ul.dropdown-menu
+							li: a(href='#' data-action='create-repository')
 								span.glyphicon.glyphicon-plus
-								|  
-								span.caret
-							ul.dropdown-menu
-								li: a(href='#' data-action='create-repository')
-									span.glyphicon.glyphicon-plus
-									| Create new repository
-								li: a(href='#' data-action='import-repository')
-									span.glyphicon.glyphicon-import
-									| Import repository
-								li: a(href='#' data-action='import-json')
-									span.glyphicon.glyphicon-import
-									| Import JSON-LD			
-			.list-container#group-repositories
+								| Create new repository
+							li: a(href='#' data-action='import-repository')
+								span.glyphicon.glyphicon-import
+								| Import repository
+							li: a(href='#' data-action='import-json')
+								span.glyphicon.glyphicon-import
+								| Import JSON-LD			
+		.list-container#group-repositories

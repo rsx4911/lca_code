@@ -3,6 +3,7 @@ package com.greendelta.collaboration.webservice;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -23,6 +24,10 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
+import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
 
 @Path("public/repository")
@@ -32,12 +37,25 @@ public class RepositoryResource {
 	private final RepositoryService service;
 	private final GroupService groupService;
 	private final HistoryService historyService;
+	private final BrowseService browseService;
 
 	@Inject
-	public RepositoryResource(RepositoryService service, GroupService groupService, HistoryService historyService) {
+	public RepositoryResource(RepositoryService service, GroupService groupService, HistoryService historyService,
+			BrowseService browseService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.historyService = historyService;
+		this.browseService = browseService;
+	}
+
+	@GET
+	public Response getPinned() {
+		List<Repository> repositories = service.getAllAccessible();
+		return Respond.ok(Client.map(repositories, repo -> {
+			ObjectMap map = Repositories.map(repo);
+			map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
+			return map;
+		}));
 	}
 
 	@GET

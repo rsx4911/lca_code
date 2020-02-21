@@ -21,8 +21,8 @@ define([
 				$.ajax
 					type: 'POST' 
 					url: 'ws/public/logout'
-					success: () -> window.location.href = 'login'
-					error: () -> window.location.href = 'login'
+					success: () -> window.location.href = ''
+					error: () -> window.location.href = ''
 
 			toggleDebug: (event) ->
 				Events.preventDefault event

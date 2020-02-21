@@ -52,6 +52,7 @@ if isAdmin
 		div
 			strong Build date: 
 			| {{buildDate}}
+		hr
 		div 
 			strong Open web service requests: 
 			span#open-web-service-requests #{openWebServiceRequests}
@@ -61,3 +62,7 @@ if isAdmin
 		+editable-text('set-maintenance-message', 'Maintenance message', maintenanceMessage, 'Not set') 
 		+editable-text('set-announcement', 'Announcement text', announcement, 'No announcement set') 
 		+editable-text('set-license-agreement-text', 'License agreement text', licenseAgreementText, 'No license agreement set') 
+		hr
+		+editable-text('set-home-title', 'Home title', homeTitle, 'Not set') 
+		+editable-text('set-home-text', 'Home welcome text', homeTitle, 'Not set') 
+		

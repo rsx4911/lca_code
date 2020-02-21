@@ -58,9 +58,9 @@ define([
 						model.fetched = true
 						model.syncing = false
 						options.success?()
-					error: (newModel, response) ->
+					error: (model, response) ->
 						model.syncing = false
-						options.error?(newModel, response)
+						options.error?(model, response)
 
 		createFrom: (collection) ->
 			# this is used to create new models which dont have its own defined class without adding them directly to the collection

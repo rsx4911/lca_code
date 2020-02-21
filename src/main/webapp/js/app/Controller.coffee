@@ -145,8 +145,6 @@ define([
 						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
 					else
 						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
-				else
-					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', 'manager', -> @showView 
@@ -243,9 +241,8 @@ define([
 								active: 'activities'
 					else
 						@showView 
-							view: 'search/Results'
-							title: 'Search' 
-							fullWidth: true
+							view: 'Home'
+							hideSearchBar: true
 				@router.registerUserRoute 'dashboardActivities', -> @showView 
 					view: 'dashboard/Activities'
 					title: 'Activities' 
@@ -498,6 +495,8 @@ define([
 							Backbone.history.history.back()
 
 			getDocumentTitle: (value) ->
+				unless value
+					return 'LCA Collaboration Server'
 				unread = 0
 				if window.WebSocket and currentUser.isLoggedIn()
 					unread = conversations.getUnreadMessages()
@@ -515,6 +514,9 @@ define([
 				return reversed
 
 			showView: (options) ->
+				$('#global-search-group').show()
+				if options?.hideSearchBar
+					$('#global-search-group').hide()
 				$('#global-search').val options?.viewOptions?.query	
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main .center').empty()
@@ -522,8 +524,8 @@ define([
 						$('#main .full-size').addClass 'full-width'
 					else
 						$('#main .full-size').removeClass 'full-width'
-					title1 = options.title
-					title2 = options.title
+					title1 = options.title or ''
+					title2 = options.title or ''
 					if options.title and options.subTitle and currentUser.isLoggedIn()
 						title1 += ' - ' + options.subTitle
 						title2 += ' | ' + options.subTitle

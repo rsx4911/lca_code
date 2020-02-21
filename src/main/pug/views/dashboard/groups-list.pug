@@ -12,6 +12,7 @@ include ../mixins/paging.pug
 				div: i
 					+count-info(group.repositories, 'repository', 'repositories', false)
 					+count-info(group.members, 'member', 'members', true)
-			span.pull-right.role.badge(title=group.role.description)=group.role.name
+			if group.role
+				span.pull-right.role.badge(title=group.role.description)=group.role.name
 			.clear
 	+paging(resultInfo)

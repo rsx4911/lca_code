@@ -31,7 +31,12 @@ define([
 					filterId: 'filter'
 					url: 'ws/repository?module=DASHBOARD&'
 					beforeRender: (result) =>
-						setRole = (r) -> r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+						setRole = (r) ->
+							role = Roles[r.role]
+							if role
+								r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForRepository} 
+							else
+								r.role = undefined
 						setRole r for r in result.data
 
 			render: (renderOptions) ->
@@ -44,9 +49,5 @@ define([
 							canCreateRepositories: currentUser.isAdmin() or (settings and (settings.canCreateRepositories and (!settings.noOfRepositories or settings.noOfRepositories > noOfRepositories)))
 						Renderer.render @, renderOptions
 						@filter.init()
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 )

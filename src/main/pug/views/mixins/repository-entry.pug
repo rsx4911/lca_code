@@ -12,7 +12,8 @@ mixin repository-entry(repo)
             strong #{repo.group}/#{repo.name}
         if repo.settings.publicAccess
             span.badge.badge-success.public-access-badge Public
-        span.pull-right.role.badge(title=repo.role.description)=repo.role.name
+        if repo.role
+            span.pull-right.role.badge(title=repo.role.description)=repo.role.name
         div: i
             +count-info(repo.commits, 'commit', 'commits', false)
             +count-info(repo.datasets, 'data set', 'data sets', false)

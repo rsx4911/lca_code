@@ -39,7 +39,12 @@ define([
 					filterPrefix: "#{name}/"
 					url: "ws/repository?module=GROUP&"
 					beforeRender: (result) =>
-						setRole = (r) -> r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+						setRole = (r) ->
+							role = Roles[r.role]
+							if role
+								r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+							else
+								r.role = undefined
 						setRole r for r in result.data
 					afterRender: (result) =>
 						@$('.group-repository-count').html(result.resultInfo.totalCount)
