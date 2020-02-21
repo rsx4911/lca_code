@@ -59,6 +59,7 @@ define([
 							array.push @serverInfo.homeOrderedRepositories[index + 1]
 							array.push @serverInfo.homeOrderedRepositories[index]
 				@setSetting 'HOME_REPOSITORY_ORDER', array.join(';'), () =>
+					@serverInfo.homeOrderedRepositories = array
 					sibling = if up then target.prev() else target.next()
 					target.remove()
 					if up
