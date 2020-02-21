@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.StreamingOutput;
 
@@ -36,6 +37,7 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.util.io.Json2Repository;
@@ -168,7 +170,7 @@ public class RepositoryService {
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);
 	}
-	
+
 	private void putJsonContext(String group, String name) {
 		String path = getPath(group, name);
 		if (path == null)
@@ -270,6 +272,25 @@ public class RepositoryService {
 			}
 		}
 		return repos;
+	}
+
+	public List<String> getPublicRepositoryOrder() {
+		String[] repositoryOrder = ((String) settingsService.get(Key.HOME_REPOSITORY_ORDER)).split(";");
+		List<Repository> publicRepos = Collections.filter(getAllAccessible(), repo -> !repo.settings.publicAccess);
+		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId(), repo -> repo);
+		List<String> orderedRepositories = new ArrayList<>();
+		for (String repoId : repositoryOrder) {
+			Repository repo = repos.remove(repoId);
+			if (repo == null)
+				continue;
+			orderedRepositories.add(repoId);
+		}
+		for (Repository repo : repos.values()) {
+			orderedRepositories.add(repo.toId());
+		}
+		// update in case repositories were deleted/added
+		settingsService.set(Key.HOME_REPOSITORY_ORDER, Collections.join(orderedRepositories, ";"));
+		return orderedRepositories;
 	}
 
 	private String getPath(String group, String name) {

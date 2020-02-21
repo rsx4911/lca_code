@@ -32,10 +32,39 @@ define([
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
 				'click [data-action=create-team]': () -> Router.navigate 'administration/team/new'
 				'click [data-action=toggle-maintenance-mode]': 'toggleMaintenanceMode'
-				'click [data-action=set-maintenance-message]': 'setMaintenanceMessage'
+				'click [data-action=set-maintenance-message]': (event) -> @set event, 'Maintenance message', 'maintenanceMessage', 'MAINTENANCE_MESSAGE'
+				'click [data-action=set-license-agreement-text]': (event) -> @set event, 'License agreement text', 'licenseAgreementText', 'LICENSE_AGREEMENT_TEXT'
+				'click [data-action=set-home-title]': (event) -> @set event, 'Home title', 'homeTitle', 'HOME_TITLE'
+				'click [data-action=set-home-text]': (event) -> @set event, 'Home text', 'homeText', 'HOME_TEXT'
+				'click .glyphicon-upload': (event) -> @changeOrder event, true
+				'click .glyphicon-download': (event) -> @changeOrder event, false
 				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
-				'click [data-action=set-license-agreement-text]': 'setLicenseAgreementText'
+
+			changeOrder: (event, up) ->
+				target = $ Events.target event, 'li'
+				index = @$('li', target.parent()).index(target)
+				array = []	
+				for val, i in @serverInfo.homeOrderedRepositories
+					if up
+						if i < index - 1 or i > index
+							array.push val
+						if i is index 
+							array.push @serverInfo.homeOrderedRepositories[index]
+							array.push @serverInfo.homeOrderedRepositories[index - 1]
+					else
+						if i < index or i > index + 1
+							array.push val
+						if i is index 
+							array.push @serverInfo.homeOrderedRepositories[index + 1]
+							array.push @serverInfo.homeOrderedRepositories[index]
+				@setSetting 'HOME_REPOSITORY_ORDER', array.join(';'), () =>
+					sibling = if up then target.prev() else target.next()
+					target.remove()
+					if up
+						target.insertBefore sibling
+					else
+						target.insertAfter sibling
 
 			toggleMaintenanceMode: () ->
 				wasActive = @serverInfo.maintenanceModeActive
@@ -46,16 +75,10 @@ define([
 					else
 						$('body').addClass 'maintenance-mode'
 
-			setMaintenanceMessage: (event) ->
+			set: (event, label, field, key) ->
 				Events.preventDefault event
-				Layers.promptInput 'Maintenance message', 'textarea', @serverInfo.maintenanceMessage, (value) =>
-					@setSetting 'MAINTENANCE_MESSAGE', value, () ->
-						Backbone.history.loadUrl()
-
-			setLicenseAgreementText: (event) ->
-				Events.preventDefault event
-				Layers.promptInput 'License agreement text', 'textarea', @serverInfo.licenseAgreementText, (value) =>
-					@setSetting 'LICENSE_AGREEMENT_TEXT', value, () ->
+				Layers.promptInput label, 'textarea', @serverInfo[field], (value) =>
+					@setSetting key, value, () ->
 						Backbone.history.loadUrl()
 
 			refreshOpenWebServiceRequests: (event) ->
@@ -179,18 +202,14 @@ define([
 						@doRender renderOptions, counts
 
 			doRender: (renderOptions, counts) ->
-				data = 
-					repositories: counts.repositories
-					isAdmin: currentUser.isAdmin()
-					users: counts.users
-					groups: counts.groups
-					teams: counts.teams
+				data = {}
 				if currentUser.isAdmin()
-					data.maintenanceModeActive = @serverInfo.maintenanceModeActive
-					data.openWebServiceRequests = @serverInfo.openWebServiceRequests
-					data.announcement = @serverInfo.announcement
-					data.maintenanceMessage = @serverInfo.maintenanceMessage
-					data.licenseAgreementText = @serverInfo.licenseAgreementText
+					data = @serverInfo
+				data.repositories = counts.repositories
+				data.isAdmin = currentUser.isAdmin()
+				data.users = counts.users
+				data.groups = counts.groups
+				data.teams =  counts.teams
 				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()

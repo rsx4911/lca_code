@@ -26,7 +26,7 @@ public class Collections {
 		}
 		inner.put(key2, value);
 	}
-	
+
 	public static <K, V> Set<V> addToSet(Map<K, Set<V>> map, K key, V setValue) {
 		Set<V> set = map.get(key);
 		if (set == null) {
@@ -115,7 +115,7 @@ public class Collections {
 	public static <V, T> Set<T> convertToSet(Collection<V> col, Function<V, T> converter) {
 		return (Set<T>) convert(col, new HashSet<>(), converter);
 	}
-	
+
 	private static <V, T> Collection<T> convert(Collection<V> from, Collection<T> to, Function<V, T> converter) {
 		for (V elem : from) {
 			to.add(converter.apply(elem));
@@ -162,7 +162,7 @@ public class Collections {
 		}
 		return filtered;
 	}
-	
+
 	public static <V> List<V> filterDuplicates(List<V> values) {
 		return new ArrayList<>(new HashSet<>(values));
 	}
@@ -194,6 +194,24 @@ public class Collections {
 		}
 		col.removeAll(sublist);
 		return sublist;
+	}
+
+	public static String join(Collection<String> col, String delimiter) {
+		return join(col, v -> v, delimiter);
+	}
+
+	public static <T> String join(Collection<T> col, Function<T, String> toString, String delimiter) {
+		StringBuilder s = new StringBuilder();
+		boolean first = true;
+		for (T val : col) {
+			if (!first) {
+				s.append(delimiter);
+			} else {
+				first = false;
+			}
+			s.append(toString.apply(val));
+		}
+		return s.toString();
 	}
 
 }
