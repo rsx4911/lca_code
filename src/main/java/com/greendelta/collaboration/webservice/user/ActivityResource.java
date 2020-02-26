@@ -21,9 +21,9 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Setting.Key;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
@@ -79,7 +79,6 @@ public class ActivityResource {
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Dashboard activities feature not enabled");
 		if (repositoryPath != null && !settingsService.is(Key.REPOSITORY_ACTIVITIES_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Repository activities feature not enabled");
-		User user = userService.getCurrentUser();
 		List<Repository> repositories = getRepositories(repositoryPath);
 		List<ObjectMap> activities = new ArrayList<>();
 		Map<String, Commit> commits = new HashMap<>();
@@ -87,29 +86,20 @@ public class ActivityResource {
 		repositories.forEach(repo -> {
 			if (showCommitActivities) {
 				List<Commit> nextCommits = historyService.getCommits(repo);
-				commits.putAll(com.greendelta.collaboration.util.Collections.map(
-						nextCommits,
-						commit -> commit.id,
-						commit -> commit));
-				activities.addAll(Client.map(nextCommits,
-						commit -> Activities.map(commit, repo.toId())));
+				commits.putAll(com.greendelta.collaboration.util.Collections.map(nextCommits, commit -> commit.id));
+				activities.addAll(Client.map(nextCommits, commit -> Activities.map(commit, repo)));
 				for (Commit commit : nextCommits) {
 					repos.put(commit.id, repo);
 				}
 			}
 			if (showCommentActivities) {
-				activities.addAll(Client.map(commentService.getAllFor(repo), Activities::map));
+				activities.addAll(Client.map(commentService.getAllFor(repo), comment -> Activities.map(comment, repo)));
 			}
 		});
 		if (showTaskActivities) {
-			if (repositoryPath != null && repositories.size() != 0) {
-				Repository repo = repositories.get(0);
+			for (Repository repo : repositories) {
 				for (Task task : taskService.getAllFor(repo)) {
-					activities.addAll(Activities.map(task));
-				}
-			} else {
-				for (Task task : taskService.getAllFor(user)) {
-					activities.addAll(Activities.map(task));
+					activities.addAll(Activities.map(task, repo));
 				}
 			}
 		}

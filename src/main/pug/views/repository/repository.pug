@@ -53,6 +53,13 @@ mixin to-size(value, inGb, round, showUnit)
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
+	if repository.userCanSetSettings
+		+input('label', 'Label')(value=repository.settings.label)
+		+textarea('description', 'Description')(rows=3)
+			| #{repository.settings.description}
+	else
+		+static('label', 'Label', repository.settings.label||'-')
+		+static('description', 'Description', repository.settings.description||'-')
 	- var maxSize = repository.settings.maxSize; 
 	- var inGb = false;
 	if maxSize

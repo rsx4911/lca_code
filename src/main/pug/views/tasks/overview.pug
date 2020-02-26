@@ -7,7 +7,7 @@ mixin task-box(label, tasks)
 				- var lastRepo = '';
 				each task in tasks
 					if lastRepo !== task.repositoryPath
-						div: a(href=task.repositoryPath)=task.repositoryPath
+						div: a(href=task.repositoryPath)=task.repositoryLabel||task.repositoryPath
 						- lastRepo = task.repositoryPath
 					div: a.task-link.default-link(href='tasks/' + task.type.toLowerCase() + '/' + task.id)=task.name
 			else

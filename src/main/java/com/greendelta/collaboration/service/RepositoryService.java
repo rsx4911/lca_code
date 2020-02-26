@@ -277,7 +277,7 @@ public class RepositoryService {
 	public List<String> getPublicRepositoryOrder() {
 		String[] repositoryOrder = ((String) settingsService.get(Key.HOME_REPOSITORY_ORDER)).split(";");
 		List<Repository> publicRepos = Collections.filter(getAllAccessible(), repo -> !repo.settings.publicAccess);
-		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId(), repo -> repo);
+		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId());
 		List<String> orderedRepositories = new ArrayList<>();
 		for (String repoId : repositoryOrder) {
 			Repository repo = repos.remove(repoId);

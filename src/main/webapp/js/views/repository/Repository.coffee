@@ -27,6 +27,8 @@ define([
 				'change [data-setting][type=checkbox]': 'toggleSetting'
 				'change #maxSize': 'updateMaxSize'
 				'change #unit': 'updateMaxSize'
+				'change #label': (event) -> @setSetting event, 'label'
+				'change #description': (event) -> @setSetting event, 'description'
 				'change .library-restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
@@ -63,13 +65,18 @@ define([
 			toggleSetting: (event) ->
 				target = $ Events.target event
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
 				setting = target.attr 'data-setting'
 				value = target.is ':checked'
 				repository.settings[setting] = value
+				@setSetting setting, value
+
+			setSetting: (event, setting) ->
+				target = $ Events.target event
+				value = target.val()
+				repository = @repository.toJSON()
 				$.ajax
 					type: 'PUT'
-					url: "ws/repository/settings/#{fullPath}/#{setting}/#{value}"
+					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}/#{value||'null'}"
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()
@@ -93,9 +100,7 @@ define([
 				size = parseInt size
 				value = size * unit
 				repository.settings.maxSize = value
-				$.ajax
-					type: 'PUT'
-					url: "ws/repository/settings/#{fullPath}/maxSize/#{value}"
+				@setSetting 'maxSize', value
 
 			updateRestriction: (event) ->
 				target = $ Events.target event

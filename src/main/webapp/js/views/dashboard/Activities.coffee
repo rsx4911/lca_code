@@ -49,6 +49,7 @@ define([
 					extendModel: (model) =>
 						model.formatDate = Format.date
 						model.formatTime = Format.time
+						model.showRepositoryPath = !@repository
 					onEmpty: () =>
 						@$('#activity-feed').append('<div class="no-content-message">No activities found</div>')
 				})

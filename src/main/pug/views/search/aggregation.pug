@@ -24,8 +24,8 @@ mixin aggregation(aggregation)
 
 mixin aggregation-entry(aggregationName, entry, singleton, depth, parentLabel, previousCount) 
 	li
-		- var label = getLabel(aggregationName, entry.key);
-		if parentLabel
+		- var label = getLabel(aggregationName, entry.key, entry.label);
+		if parentLabel && label.indexOf(parentLabel) === 0
 			- label = label.substring(parentLabel.length + 1);
 		if !singleton
 			a(href=getAggregationUrl(aggregationName, entry.key)) #{label} (#{entry.count})

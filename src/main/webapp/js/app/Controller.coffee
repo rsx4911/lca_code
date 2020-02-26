@@ -353,7 +353,7 @@ define([
 					@showView
 						view: 'dashboard/Activities'
 						title: "#{group}/#{name}"
-						subtitle: 'Activities'
+						subTitle: 'Activities'
 						nav: 
 							type: 'repository'
 							active: 'activities'

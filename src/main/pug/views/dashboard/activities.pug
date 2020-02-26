@@ -2,7 +2,10 @@ include ../mixins/forms.pug
 
 .header-box Latest activities
     if repository
-        |  on #{repository.group}/#{repository.name}
+        if repository.settings.label
+            |  on #{repository.settings.label}
+        else
+            |  on #{repository.group}/#{repository.name}
     form#activities-config.pull-right
         +checkbox('showCommitActivities', 'Commits', 'success', true)
         +checkbox('showCommentActivities', 'Comments', 'success', true)

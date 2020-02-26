@@ -346,7 +346,7 @@ public class RepositoryResource {
 			@PathParam("setting") String setting,
 			@PathParam("value") String value) {
 		Repository repo = service.get(group, name);
-		service.setSetting(repo, setting, value);
+		service.setSetting(repo, setting, value.equals("null") ? null : value);
 		return Respond.ok(new HashMap<>());
 	}
 

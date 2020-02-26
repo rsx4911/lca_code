@@ -45,7 +45,8 @@ mixin link()
 .list-entry.activity
     +user-info(user, userDisplayName)
         +type-text()
-        a.default-link(href=repositoryPath)=repositoryPath
+        if showRepositoryPath
+            a.default-link(href=repositoryPath)=repositoryLabel||repositoryPath
         if timestamp
             span  on #{formatDate(timestamp)} at #{formatTime(timestamp)}
         br

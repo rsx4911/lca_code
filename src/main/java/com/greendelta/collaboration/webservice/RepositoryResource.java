@@ -49,7 +49,7 @@ public class RepositoryResource {
 	}
 
 	@GET
-	public Response getPinned() {
+	public Response getPublic() {
 		List<Repository> repositories = service.getAllAccessible();
 		return Respond.ok(Client.map(repositories, repo -> {
 			ObjectMap map = Repositories.map(repo);

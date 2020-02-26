@@ -123,6 +123,10 @@ public class Collections {
 		return to;
 	}
 
+	public static <T, K> Map<K, T> map(Collection<T> col, Function<T, K> keyGenerator) {
+		return map(col, keyGenerator, v -> v);
+	}
+
 	public static <T, K, V> Map<K, V> map(Collection<T> col, Function<T, K> keyGenerator, Function<T, V> valueMapper) {
 		Map<K, V> map = new HashMap<>();
 		for (T elem : col) {

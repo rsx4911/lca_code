@@ -76,7 +76,7 @@ public class ReviewResource {
 		Review review = service.get(id);
 		if (review == null)
 			return Respond.notFound("No review with id " + id + " found");
-		return Respond.ok(Reviews.map(review));
+		return Respond.ok(Reviews.map(review, repoService.get(review.repositoryPath)));
 	}
 
 	@POST
@@ -225,7 +225,7 @@ public class ReviewResource {
 		reference.name = ref.name;
 		return reference;
 	}
-	
+
 	@PUT
 	@Path("{id}/markAsReviewed/{referenceId}/{value}")
 	public Response markAsReviewed(

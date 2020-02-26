@@ -94,7 +94,13 @@ public class Repository {
 			settings.commentApproval = Boolean.parseBoolean(value);
 			break;
 		case "maxSize":
-			settings.maxSize = Long.parseLong(value);
+			settings.maxSize = value != null ? Long.parseLong(value) : 0;
+			break;
+		case "label":
+			settings.label = value;
+			break;
+		case "description":
+			settings.description = value;
 			break;
 		}
 		try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
@@ -290,6 +296,8 @@ public class Repository {
 		public boolean prohibitCommits;
 		public boolean commentApproval;
 		public long maxSize;
+		public String label;
+		public String description;
 
 		private Settings() {
 

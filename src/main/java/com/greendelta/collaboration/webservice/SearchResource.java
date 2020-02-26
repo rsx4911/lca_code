@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,7 +28,8 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
@@ -61,7 +64,6 @@ public class SearchResource {
 		String query = Client.removeStringFilter("query", parameters);
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
 		SearchResult<IndexEntry> result = service.search(query, page, pageSize, parameters);
 		for (AggregationResult aResult : result.aggregations) {
@@ -69,15 +71,35 @@ public class SearchResource {
 				aResult.group("/");
 			}
 		}
-		return Respond.ok(SearchResults.convert(result, (r) -> {
+		return Respond.ok(map(result));
+	}
+
+	private Map<String, Object> map(SearchResult<IndexEntry> result) {
+		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
+		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
+		map.put("resultInfo", result.resultInfo);
+		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		List<ObjectMap> data = Client.map(result.data, r -> {
+			ObjectMap rMap = ObjectMap.fromObject(r);
+			rMap.put("repositoryLabel", repositories.get(r.repositoryId).settings.label);
 			if (!loggedIn) {
-				r.commitId = null;
-				r.commitMessage = null;
-				r.commitTimestamp = 0;
-				r.action = null;
+				rMap.nullify("commitId", "commitMessage", "commitTimestamp", "action");
 			}
-			return r;
+			return rMap;
+		});
+		map.put("data", data);
+		map.put("aggregations", Client.map(result.aggregations, a -> {
+			ObjectMap aMap = ObjectMap.fromObject(a);
+			if (!a.name.equals(Aggregations.REPOSITORY.name))
+				return aMap;
+			aMap.put("entries", Client.map(a.entries, e -> {
+				ObjectMap eMap = ObjectMap.fromObject(e);
+				eMap.put("label", repositories.get(e.key).settings.label);
+				return eMap;
+			}));
+			return aMap;
 		}));
+		return map;
 	}
 
 	@GET

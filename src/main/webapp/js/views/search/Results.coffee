@@ -64,7 +64,7 @@ define([
 						result.getIcon = Icons.get
 						result.isPublic = !currentUser.isLoggedIn()
 						result.getAggregationLabel = (type) => @getAggregationLabel type
-						result.getLabel = (type, value) => @getLabel type, value
+						result.getLabel = (type, value, label) => @getLabel type, value, label
 						result.getPagingUrl = (page) => return @getUrlPart 'search/', @query, page, @pageSize, @aggregations, allAggregations
 						result.isSelectedAggregationValue = (type, value) => return @aggregations[type] and $.inArray(value, @aggregations[type]) isnt -1
 						result.getSubCount = (entry) => @getSubCount entry
@@ -198,7 +198,10 @@ define([
 					url = url.substring(0, url.length - 1)
 				return url
 
-			getLabel: (type, value) ->
+			getLabel: (type, value, label) ->
+				console.log(label)
+				if label
+					return label
 				if type is 'type'
 					return ModelTypes[value]
 				if type is 'modellingApproach'
