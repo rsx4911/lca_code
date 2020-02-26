@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
+import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.util.BinUtils;
 
@@ -76,8 +77,7 @@ public class JsonWriter implements DatasetWriter {
 			return;
 		}
 		log.trace("Exporting {} {} to json", ref.type, ref.refId);
-		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
-		zipStore.put(ref.type, json);
+		zipStore.put(ModelPath.get(ref.type, ref.refId), dataset.getBytes("utf-8"));
 		File binDir = fetchService.getBinDir(repo, ref.type, ref.refId, entry.commitId);
 		if (binDir.exists()) {
 			for (File file : binDir.listFiles()) {
@@ -88,6 +88,7 @@ public class JsonWriter implements DatasetWriter {
 				zipStore.putBin(ref.type, ref.refId, filename, BinUtils.gunzip(Files.readAllBytes(file.toPath())));
 			}
 		}
+		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		collectReferences(json);
 	}
 
