@@ -66,10 +66,13 @@ define([
 						if settings.is('NOTIFICATIONS_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
 						return userMenu
-					when 'group' then return [
-						{href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
-						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
-					]
+					when 'group'
+						isUserspace = currentUser.isLoggedIn() && currentUser.get('username') is options.urlPrefix
+						groupMenu = []
+						groupMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
+						unless isUserspace
+							groupMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
+						return groupMenu
 					when 'repository' 
 						repoMenu = []
 						repoMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}

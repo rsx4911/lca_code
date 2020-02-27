@@ -77,7 +77,7 @@ public class GroupService {
 
 	public boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
-		if (userGroup && !currentUser.isUserManager()) 
+		if (userGroup && !currentUser.isUserManager())
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
@@ -140,17 +140,18 @@ public class GroupService {
 		return getAll(adminArea, false).size();
 	}
 
-	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea, boolean onlyIfCanWrite) {
+	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea,
+			boolean onlyIfCanWrite) {
 		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
 	}
-	
+
 	public long getRepositoryCount(String group) {
 		String path = getRootPath();
 		if (path == null || path.isEmpty())
 			return 0;
 		File root = new File(path);
-		if (!root.exists() || !root.isDirectory()) 
+		if (!root.exists() || !root.isDirectory())
 			return 0;
 		File groupDir = new File(root, group);
 		if (!accessService.canRead(group, false))
@@ -163,9 +164,10 @@ public class GroupService {
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
 		File root = new File(path);
-		if (!root.exists() || !root.isDirectory()) 
+		if (!root.exists() || !root.isDirectory())
 			return new ArrayList<>();
 		List<String> groups = new ArrayList<>();
+		User user = userService.getCurrentUser();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
@@ -173,7 +175,7 @@ public class GroupService {
 				continue;
 			if (onlyIfCanWrite && !accessService.canWrite(group.getName()))
 				continue;
-			if (isUserNamespace(group.getName()))
+			if (isUserNamespace(group.getName()) && (user == null || !group.getName().equals(user.username)))
 				continue;
 			groups.add(group.getName());
 		}

@@ -83,7 +83,8 @@ public class GroupResource {
 	@GET
 	@Path("{name}")
 	public Response get(@PathParam("name") String name) {
-		if (!service.exists(name) || service.isUserNamespace(name))
+		User user = userService.getCurrentUser();
+		if (!service.exists(name) || (service.isUserNamespace(name) && (user == null || !name.equals(user.username))))
 			return Respond.notFound("Group " + name + " not found");
 		if (!accessService.canRead(name))
 			throw new UnauthorizedAccessException(name, "READ");
@@ -91,7 +92,8 @@ public class GroupResource {
 		group.put("userCanDelete", accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
 		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
-		group.put("userCanEditMembers", accessService.canEditMembersOf(name));
+		boolean isUserspace = user != null && name.equals(user.username);
+		group.put("userCanEditMembers", !isUserspace && accessService.canEditMembersOf(name));
 		return Respond.ok(group);
 	}
 

@@ -18,5 +18,5 @@ mixin repository-entry(repo)
             +count-info(repo.commits, 'commit', 'commits', false)
             +count-info(repo.datasets, 'data set', 'data sets', false)
             +count-info(repo.members, 'member', 'members', true)
-        div.repo-description=repo.settings.description
+        div.repo-description: i=repo.settings.description
     .clear

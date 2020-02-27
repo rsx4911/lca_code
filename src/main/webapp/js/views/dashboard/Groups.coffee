@@ -27,6 +27,9 @@ define([
 					filterId: 'filter'
 					url: 'ws/group?module=DASHBOARD&'
 					beforeRender: (result) =>
+						for data in result.data
+							if data.name is currentUser.get('username')
+								data.isUserspace = true
 						setRole = (r) ->
 							role = Roles[r.role]
 							if role
