@@ -97,8 +97,9 @@ public class RepositoryResource {
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("group") @DefaultValue("") String group,
+			@QueryParam("onlyPublic") @DefaultValue("false") boolean onlyPublic,
 			@QueryParam("module") Module module) {
-		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
+		SearchResult<Repository> result = service.getAll(page, pageSize, filter, onlyPublic, true);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Repositories::map));
 		User user = userService.getCurrentUser();

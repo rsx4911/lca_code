@@ -23,13 +23,18 @@ define([
 				'click [data-action=import-repository]': () -> Router.navigate 'repository/import'
 				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json'
 				'click [data-action=import-external]': () -> Router.navigate 'repository/import-external'
+				'change #only-public': 'onOnlyPublicChange'
+
+			onOnlyPublicChange: () ->
+				@filter.url = 'ws/repository?module=DASHBOARD&onlyPublic=' + @$('#only-public').is(':checked') + '&'
+				@filter.applyFilter()
 
 			initialize: () ->
 				@filter = new Filter
 					container: '#repositories'
 					template: listTemplate
 					filterId: 'filter'
-					url: 'ws/repository?module=DASHBOARD&'
+					url: 'ws/repository?module=DASHBOARD&onlyPublic=false'
 					beforeRender: (result) =>
 						setRole = (r) ->
 							role = Roles[r.role]

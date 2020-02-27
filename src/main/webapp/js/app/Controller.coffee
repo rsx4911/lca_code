@@ -346,6 +346,7 @@ define([
 					@showView
 						view: 'repository/Repository'
 						title: "#{group}/#{name}"
+						href: "#{group}/#{name}"
 						nav: 
 							type: 'repository'
 							active: 'repository'
@@ -357,6 +358,7 @@ define([
 						view: 'dashboard/Activities'
 						title: "#{group}/#{name}"
 						subTitle: 'Activities'
+						href: "#{group}/#{name}"
 						nav: 
 							type: 'repository'
 							active: 'activities'
@@ -367,6 +369,7 @@ define([
 					view: 'repository/dataset/Datasets'
 					title: "#{group}/#{name}"
 					subTitle: 'Data sets'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'datasets'
@@ -383,6 +386,7 @@ define([
 							title: "#{group}/#{name}"
 							subTitle: 'Data sets'
 							fullWidth: true
+							href: "#{group}/#{name}"
 							nav: 
 								type: 'repository'
 								active: 'datasets'
@@ -397,6 +401,7 @@ define([
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"
 					subTitle: 'Commits'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -407,6 +412,7 @@ define([
 					view: 'repository/commit/Commit'
 					title: "#{group}/#{name}"
 					subTitle: 'Commits'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -418,6 +424,7 @@ define([
 					view: 'repository/Comments'
 					title: "#{group}/#{name}"
 					subTitle: 'Comments'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'comments'
@@ -428,6 +435,7 @@ define([
 					view: 'members/Members'
 					title: "#{group}/#{name}"
 					subTitle: 'Members'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'members'
@@ -532,10 +540,10 @@ define([
 					if options.title and options.subTitle and currentUser.isLoggedIn()
 						title1 += ' - ' + options.subTitle
 						title2 += ' | ' + options.subTitle
-					if currentUser.isLoggedIn()
+					if currentUser.isLoggedIn() && !options.href
 						$('#header-title').html title1
 					else
-						$('#header-title').html '<a href="' + title1 + '">' + title1 + '</a>'
+						$('#header-title').html '<a href="' + (options.href||title1) + '">' + title1 + '</a>'
 						$('#header-title a').on 'click', (event) -> Events.followLink event
 					$('#header-title').attr 'title', title1
 					document.title = @getDocumentTitle title2

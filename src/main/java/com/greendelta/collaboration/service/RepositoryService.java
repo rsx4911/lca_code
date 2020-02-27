@@ -238,19 +238,19 @@ public class RepositoryService {
 	}
 
 	public long getCount(boolean adminArea) {
-		return getAll(adminArea).size();
+		return getAll(false, adminArea).size();
 	}
 
-	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean adminArea) {
-		List<Repository> accessible = getAll(adminArea);
+	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean onlyPublic, boolean adminArea) {
+		List<Repository> accessible = getAll(onlyPublic, adminArea);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.toId());
 	}
 
 	public List<Repository> getAllAccessible() {
-		return getAll(true);
+		return getAll(false, true);
 	}
 
-	private List<Repository> getAll(boolean adminArea) {
+	private List<Repository> getAll(boolean onlyPublic, boolean adminArea) {
 		String path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
@@ -266,6 +266,8 @@ public class RepositoryService {
 					continue;
 				try {
 					Repository repo = Repository.get(path, group.getName(), name.getName());
+					if (onlyPublic && !repo.settings.publicAccess)
+						continue;
 					if (!accessService.canRead(repo.toId(), !adminArea))
 						continue;
 					repo.groupSettings = groupService.getSettings(group.getName());
@@ -334,4 +336,5 @@ public class RepositoryService {
 	public File getBinFile(Repository repo, ModelType type, String refId, String commitId, String filename) {
 		return repo.getBinFile(type, refId, commitId, filename);
 	}
+
 }
