@@ -27,7 +27,7 @@ public class Activities {
 		map.put("timestamp", commit.timestamp);
 		map.put("id", commit.id);
 		map.put("repositoryPath", repo.toId());
-		map.put("repositoryLabel", repo.settings.label);
+		map.put("label", repo.getLabel());
 		map.put("message", commit.message);
 		map.put("user", commit.user);
 		return map;
@@ -39,7 +39,7 @@ public class Activities {
 		map.put("timestamp", comment.date.getTime());
 		map.put("id", comment.getId());
 		map.put("repositoryPath", comment.repositoryPath);
-		map.put("repositoryLabel", repo.settings.label);
+		map.put("label", repo.getLabel());
 		map.put("message", comment.text);
 		map.put("user", comment.user.username);
 		map.put("userDisplayName", comment.user.name);
@@ -72,7 +72,7 @@ public class Activities {
 		map.put("timestamp", date != null ? date.getTime() : getLatestDate(task));
 		map.put("id", task.getId());
 		map.put("repositoryPath", task.repositoryPath);
-		map.put("repositoryLabel", repo.settings.label);
+		map.put("label", repo.getLabel());
 		map.put("message", task.name);
 		map.put("taskType", task.getType());
 		map.put("user", task.initiator.username);
@@ -111,9 +111,9 @@ public class Activities {
 		ObjectMap map = new ObjectMap();
 		map.put("type", type);
 		map.put("timestamp", date.getTime());
-		map.put("id", assignment.getId());
+		map.put("id", task.getId());
 		map.put("repositoryPath", task.repositoryPath);
-		map.put("repositoryLabel", repo.settings.label);
+		map.put("label", repo.getLabel());
 		map.put("message", task.name);
 		map.put("taskType", task.getType());
 		if (assignment.assignedTo.equals(assignment.endedBy)

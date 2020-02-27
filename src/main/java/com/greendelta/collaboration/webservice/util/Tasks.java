@@ -12,7 +12,7 @@ public class Tasks {
 
 	public static ObjectMap map(Task task, Repository repo) {
 		ObjectMap map = ObjectMap.fromObject(task);
-		map.put("repositoryLabel", repo.settings.label);
+		map.put("repositoryLabel", repo.getLabel());
 		map.put("initiator", Users.mapForOthers(task.initiator));
 		map.put("assignments", Client.map(task.assignments, TaskAssignments::map));
 		map.put("type", task.getType().name());

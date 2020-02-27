@@ -14,6 +14,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.common.Strings;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Schema;
@@ -24,6 +25,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.service.GroupService.GroupSettings;
 import com.greendelta.collaboration.util.ModelTypes;
 
 public class Repository {
@@ -32,7 +34,8 @@ public class Repository {
 	private final Gson gson = new Gson();
 	public final String group;
 	public final String name;
-	public final Settings settings;
+	public final RepositorySettings settings;
+	public GroupSettings groupSettings;
 	final File repoDir;
 	final Map<String, Role> libraryRestrictions;
 
@@ -53,15 +56,15 @@ public class Repository {
 		this.libraryRestrictions = loadLibraryRestrictions();
 	}
 
-	private Settings loadSettings() {
+	private RepositorySettings loadSettings() {
 		File settingsFile = new File(repoDir, "settings.json");
 		if (!settingsFile.exists())
-			return new Settings();
+			return new RepositorySettings();
 		try (FileReader reader = new FileReader(settingsFile)) {
-			return new Gson().fromJson(reader, Settings.class);
+			return new Gson().fromJson(reader, RepositorySettings.class);
 		} catch (IOException e) {
 			log.error("Error loading settings for repository");
-			return new Settings();
+			return new RepositorySettings();
 		}
 	}
 
@@ -155,6 +158,12 @@ public class Repository {
 			log.error("Error getting size of repository", e);
 			return 0;
 		}
+	}
+
+	public String getLabel() {
+		String group = Strings.isNullOrEmpty(groupSettings.label) ? this.group : groupSettings.label;
+		String repo = Strings.isNullOrEmpty(settings.label) ? this.name : settings.label;
+		return group + "/" + repo;
 	}
 
 	public boolean has(ModelType type) {
@@ -290,7 +299,7 @@ public class Repository {
 		return file;
 	}
 
-	public static class Settings {
+	public static class RepositorySettings {
 
 		public boolean publicAccess;
 		public boolean prohibitCommits;
@@ -299,7 +308,7 @@ public class Repository {
 		public String label;
 		public String description;
 
-		private Settings() {
+		private RepositorySettings() {
 
 		}
 

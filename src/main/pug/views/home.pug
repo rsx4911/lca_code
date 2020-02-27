@@ -10,7 +10,7 @@
 	each repo in repositories
 		.pinned-repository
 			.header-box
-				h4=repo.settings.label ? repo.settings.label : repo.group + '/' + repo.name
+				h4=repo.label
 					div: small=repo.settings.description
 				.count #{repo.datasets} data sets
 				hr

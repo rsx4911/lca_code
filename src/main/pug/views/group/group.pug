@@ -8,6 +8,13 @@ include ../mixins/avatar-box.pug
 				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-group') Delete
 		.content-box
 			+static('name', 'Name', group.name)
+			if group.userCanSetSettings
+				+input('label', 'Label')(value=group.settings.label)
+				+textarea('description', 'Description')(rows=3)
+					| #{group.settings.description}
+			else
+				+static('label', 'Label', group.settings.label||'-')
+				+static('description', 'Description', group.settings.description||'-')
 		+avatar-box('group', group.name, group.userCanWrite)
 	.repositories
 		.header-box Repositories (

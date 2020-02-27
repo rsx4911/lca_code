@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.GroupService.GroupSettings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -71,6 +72,9 @@ public class GroupResource {
 		User user = userService.getCurrentUser();
 		return Respond.ok(SearchResults.convert(result, group -> {
 			ObjectMap map = ObjectMap.fromMap(Collections.singletonMap("name", group));
+			GroupSettings settings = service.getSettings(group);
+			map.put("settings", settings);
+			map.put("label", settings.label != null ? settings.label : group);
 			if (module != Module.DASHBOARD)
 				return map;
 			map.put("role", membershipService.getRole(user, group));
@@ -92,6 +96,8 @@ public class GroupResource {
 		group.put("userCanDelete", accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
 		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
+		group.put("userCanSetSettings", accessService.canSetSettings(name));
+		group.put("settings", service.getSettings(name));
 		boolean isUserspace = user != null && name.equals(user.username);
 		group.put("userCanEditMembers", !isUserspace && accessService.canEditMembersOf(name));
 		return Respond.ok(group);
@@ -138,6 +144,20 @@ public class GroupResource {
 		return getAvatar(name);
 	}
 
+	@PUT
+	@Path("settings/{name}/{setting}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response setSetting(
+			@PathParam("name") String name,
+			@PathParam("setting") String setting,
+			Map<String, Object> data) {
+		String value = data.get("value").toString();
+		if (!service.exists(name))
+			return Respond.notFound();
+		service.setSetting(name, setting, value);
+		return Respond.ok(new HashMap<>());
+	}
+	
 	@DELETE
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {

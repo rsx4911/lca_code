@@ -32,7 +32,7 @@ mixin result-details(dataset)
 			+category-breadcrumb(catUrl, dataset.categories, true)
 		.details-left
 			div Repository: 
-				a(href=dataset.repositoryId)=dataset.repositoryLabel||dataset.repositoryId
+				a(href=dataset.repositoryId)=dataset.repositoryLabel
 			if !isPublic
 				div Commit: 
 					a(href=dataset.repositoryId + '/commit/' + dataset.commitId)=dataset.commitMessage

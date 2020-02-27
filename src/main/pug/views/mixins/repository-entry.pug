@@ -3,13 +3,13 @@ mixin count-info(amount, label, labelPlural, last)
     if !last
         | , 
 
-mixin repository-entry(repo)
+mixin repository-entry(repo, inGroupView)
     - var repoId = repo.group + '/' + repo.name
     .pull-left
         img.avatar(src='ws/repository/avatar/' + repoId, aria-label='Avatar of ' + repoId)
     .pull-left.repository-entry-content
         a.follow(href=repoId)
-            strong=repo.settings.label||(repo.group + '/' + repo.name)
+            strong=inGroupView ? repo.settings.label||repo.name : repo.label
         if repo.settings.publicAccess
             span.badge.badge-success.public-access-badge Public
         if repo.role
@@ -18,5 +18,5 @@ mixin repository-entry(repo)
             +count-info(repo.commits, 'commit', 'commits', false)
             +count-info(repo.datasets, 'data set', 'data sets', false)
             +count-info(repo.members, 'member', 'members', true)
-        div.repo-description: i=repo.settings.description
+        div.description: i=repo.settings.description
     .clear

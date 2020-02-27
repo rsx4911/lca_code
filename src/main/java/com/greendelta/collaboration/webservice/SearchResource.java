@@ -22,6 +22,8 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.GroupService.GroupSettings;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -45,14 +47,16 @@ public class SearchResource {
 	private static final Logger log = LogManager.getLogger(SearchResource.class);
 	private final SearchService service;
 	private final RepositoryService repoService;
+	private final GroupService groupService;
 	private final HistoryService historyService;
 	private final UserService userService;
 
 	@Inject
-	public SearchResource(SearchService service, RepositoryService repoService, HistoryService historyService,
-			UserService userService) {
+	public SearchResource(SearchService service, RepositoryService repoService, GroupService groupService,
+			HistoryService historyService, UserService userService) {
 		this.service = service;
 		this.repoService = repoService;
+		this.groupService = groupService;
 		this.historyService = historyService;
 		this.userService = userService;
 	}
@@ -81,7 +85,8 @@ public class SearchResource {
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		List<ObjectMap> data = Client.map(result.data, r -> {
 			ObjectMap rMap = ObjectMap.fromObject(r);
-			rMap.put("repositoryLabel", repositories.get(r.repositoryId).settings.label);
+			Repository repo = repositories.get(r.repositoryId);
+			rMap.put("repositoryLabel", repo.getLabel());
 			if (!loggedIn) {
 				rMap.nullify("commitId", "commitMessage", "commitTimestamp", "action");
 			}
@@ -90,13 +95,21 @@ public class SearchResource {
 		map.put("data", data);
 		map.put("aggregations", Client.map(result.aggregations, a -> {
 			ObjectMap aMap = ObjectMap.fromObject(a);
-			if (!a.name.equals(Aggregations.REPOSITORY.name))
-				return aMap;
-			aMap.put("entries", Client.map(a.entries, e -> {
-				ObjectMap eMap = ObjectMap.fromObject(e);
-				eMap.put("label", repositories.get(e.key).settings.label);
-				return eMap;
-			}));
+			if (a.name.equals(Aggregations.REPOSITORY.name)) {
+				aMap.put("entries", Client.map(a.entries, e -> {
+					ObjectMap eMap = ObjectMap.fromObject(e);
+					Repository repo = repositories.get(e.key);
+					eMap.put("label", Strings.isNullOrEmpty(repo.settings.label) ? repo.name : repo.settings.label);
+					return eMap;
+				}));
+			} else if (a.name.equals(Aggregations.GROUP.name)) {
+				aMap.put("entries", Client.map(a.entries, e -> {
+					ObjectMap eMap = ObjectMap.fromObject(e);
+					GroupSettings groupSettings = groupService.getSettings(e.key);
+					eMap.put("label", Strings.isNullOrEmpty(groupSettings.label) ? e.key : groupSettings.label );
+					return eMap;
+				}));
+			}
 			return aMap;
 		}));
 		return map;

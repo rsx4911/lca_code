@@ -339,14 +339,16 @@ public class RepositoryResource {
 	}
 
 	@PUT
-	@Path("settings/{group}/{name}/{setting}/{value}")
+	@Path("settings/{group}/{name}/{setting}")
+	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setSetting(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@PathParam("setting") String setting,
-			@PathParam("value") String value) {
+			Map<String, Object> data) {
+		String value = data.get("value").toString();
 		Repository repo = service.get(group, name);
-		service.setSetting(repo, setting, value.equals("null") ? null : value);
+		service.setSetting(repo, setting, value);
 		return Respond.ok(new HashMap<>());
 	}
 

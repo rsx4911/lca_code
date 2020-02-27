@@ -53,15 +53,17 @@ public class RepositoryService {
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settingsService;
+	private final GroupService groupService;
 
 	@Inject
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService) {
+			CommentService commentService, SettingsService settingsService, GroupService groupService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settingsService = settingsService;
+		this.groupService = groupService;
 	}
 
 	public Repository get(String id) {
@@ -84,6 +86,7 @@ public class RepositoryService {
 		if (path == null || path.isEmpty())
 			throw new UnauthorizedAccessException(Repository.toId(group, name), "READ");
 		Repository repo = Repository.get(path, group, name);
+		repo.groupSettings = groupService.getSettings(group);
 		if (!accessService.canRead(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
@@ -265,6 +268,7 @@ public class RepositoryService {
 					Repository repo = Repository.get(path, group.getName(), name.getName());
 					if (!accessService.canRead(repo.toId(), !adminArea))
 						continue;
+					repo.groupSettings = groupService.getSettings(group.getName());
 					repos.add(repo);
 				} catch (UnsupportedSchemaException e) {
 					// ignore, just don't add to list

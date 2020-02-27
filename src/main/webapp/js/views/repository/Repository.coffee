@@ -76,7 +76,9 @@ define([
 				repository = @repository.toJSON()
 				$.ajax
 					type: 'PUT'
-					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}/#{value||'null'}"
+					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}"
+					contentType: 'application/json'
+					data: JSON.stringify({value: value || ''})
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()

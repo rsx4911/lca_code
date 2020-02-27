@@ -24,6 +24,8 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
+				'change #label': (event) -> @setSetting event, 'label'
+				'change #description': (event) -> @setSetting event, 'description'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
 				'click [data-action=import-repository]': () -> Router.navigate 'repository/import/' + @group.get('name')
 				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json/' + @group.get('name')
@@ -55,6 +57,16 @@ define([
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'group', @group.get('name')
 				@filter.init()
+
+			setSetting: (event, setting) ->
+				target = $ Events.target event
+				value = target.val()
+				group = @group.toJSON()
+				$.ajax
+					type: 'PUT'
+					url: "ws/group/settings/#{group.name}/#{setting}"
+					contentType: 'application/json'
+					data: JSON.stringify({value: value || ''})
 
 			deleteGroup: (event) ->
 				name = @group.get 'name'

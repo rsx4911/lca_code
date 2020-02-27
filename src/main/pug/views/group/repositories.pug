@@ -4,5 +4,5 @@ include ../mixins/repository-entry.pug
 .list-container
 	each repo in data
 		.list-entry.small-padding
-			+repository-entry(repo)
+			+repository-entry(repo, true)
 	+paging(resultInfo)
