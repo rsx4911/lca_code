@@ -148,6 +148,8 @@ define([
 						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
 					else
 						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+				else if !settings.is('HOMEPAGE_ENABLED')
+					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', 'manager', -> @showView 

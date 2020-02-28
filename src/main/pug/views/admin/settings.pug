@@ -36,6 +36,7 @@ include ../mixins/forms.pug
 			+checkbox('USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
 		+checkbox('DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
 		+checkbox('REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
+		+checkbox('HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page for anonymous users')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear
