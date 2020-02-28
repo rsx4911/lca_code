@@ -241,7 +241,8 @@ public class RepositoryService {
 		return getAll(false, adminArea).size();
 	}
 
-	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean onlyPublic, boolean adminArea) {
+	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean onlyPublic,
+			boolean adminArea) {
 		List<Repository> accessible = getAll(onlyPublic, adminArea);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.toId());
 	}
@@ -281,22 +282,31 @@ public class RepositoryService {
 	}
 
 	public List<String> getPublicRepositoryOrder() {
-		String[] repositoryOrder = ((String) settingsService.get(Key.HOME_REPOSITORY_ORDER)).split(";");
+		return getRepositoryList(Key.HOME_REPOSITORY_ORDER, true);
+	}
+
+	public List<String> getPublicHiddenRepositories() {
+		return getRepositoryList(Key.HOME_HIDDEN_REPOSITORIES, false);
+	}
+
+	private List<String> getRepositoryList(Key key, boolean addMissing) {
+		String[] repositoryArray = ((String) settingsService.get(key)).split(";");
 		List<Repository> publicRepos = Collections.filter(getAllAccessible(), repo -> !repo.settings.publicAccess);
 		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId());
-		List<String> orderedRepositories = new ArrayList<>();
-		for (String repoId : repositoryOrder) {
+		List<String> repositories = new ArrayList<>();
+		for (String repoId : repositoryArray) {
 			Repository repo = repos.remove(repoId);
 			if (repo == null)
 				continue;
-			orderedRepositories.add(repoId);
+			repositories.add(repoId);
 		}
-		for (Repository repo : repos.values()) {
-			orderedRepositories.add(repo.toId());
+		if (addMissing) {
+			for (Repository repo : repos.values()) {
+				repositories.add(repo.toId());
+			}
 		}
-		// update in case repositories were deleted/added
-		settingsService.set(Key.HOME_REPOSITORY_ORDER, Collections.join(orderedRepositories, ";"));
-		return orderedRepositories;
+		settingsService.set(key, Collections.join(repositories, ";"));
+		return repositories;
 	}
 
 	private String getPath(String group, String name) {

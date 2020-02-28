@@ -35,10 +35,15 @@ define([
 					type: 'GET'
 					url: 'ws/public/repository'
 					success: (repositories) =>
+						visible = []
+						hiddenRepositories = (settings.getVal('HOME_HIDDEN_REPOSITORIES') || []).split ';'
+						for repo in repositories
+							if $.inArray(repo.group+'/'+repo.name, hiddenRepositories) is -1
+								visible.push repo
 						@$el.html template
 							title: settings.getVal('HOME_TITLE')
 							welcomeText: settings.getVal('HOME_TEXT')
-							repositories: repositories
+							repositories: visible
 						Renderer.render @, renderOptions
 
 )

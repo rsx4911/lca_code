@@ -9,6 +9,7 @@ define([
 				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/admin/overview'
 				'templates/views/admin/overview-repository-list'
 				'templates/views/admin/overview-user-list'
@@ -16,7 +17,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Announcements, Events, Filter, Layers, Model, Renderer, Status, Router, currentUser, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Announcements, Events, Filter, Layers, Model, Renderer, Status, Router, currentUser, settings, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -38,6 +39,7 @@ define([
 				'click [data-action=set-home-text]': (event) -> @set event, 'Home text', 'homeText', 'HOME_TEXT'
 				'click .glyphicon-upload': (event) -> @changeOrder event, true
 				'click .glyphicon-download': (event) -> @changeOrder event, false
+				'click [data-action=change-visibility]': (event) -> @changeVisibility event
 				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
 
@@ -66,6 +68,24 @@ define([
 						target.insertBefore sibling
 					else
 						target.insertAfter sibling
+
+			changeVisibility: (event) ->
+				target = $ Events.target event
+				value = target.attr 'data-repo'
+				hide = target.hasClass 'glyphicon-eye-open'
+				array = []
+				for val in @serverInfo.homeHiddenRepositories
+					if hide or val isnt value
+						array.push val
+				if hide
+					array.push value
+				@setSetting 'HOME_HIDDEN_REPOSITORIES', array.join(';'), () =>
+					@serverInfo.homeHiddenRepositories = array
+				target.removeClass 'glyphicon-eye-close glyphicon-eye-open'
+				if hide
+					target.addClass 'glyphicon-eye-close'
+				else
+					target.addClass 'glyphicon-eye-open'
 
 			toggleMaintenanceMode: () ->
 				wasActive = @serverInfo.maintenanceModeActive
@@ -206,11 +226,16 @@ define([
 				data = {}
 				if currentUser.isAdmin()
 					data = @serverInfo
+					homeOrderedRepositories = []
+					for repo in data.homeOrderedRepositories
+						homeOrderedRepositories.push {path: repo, hidden: $.inArray(repo, @serverInfo.homeHiddenRepositories) isnt -1}
+					data.homeOrderedRepositories = homeOrderedRepositories
 				data.repositories = counts.repositories
 				data.isAdmin = currentUser.isAdmin()
 				data.users = counts.users
 				data.groups = counts.groups
 				data.teams =  counts.teams
+				data.isHomepageEnabled = settings.is 'HOMEPAGE_ENABLED'
 				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()

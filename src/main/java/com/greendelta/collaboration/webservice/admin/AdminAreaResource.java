@@ -126,6 +126,7 @@ public class AdminAreaResource {
 		info.put("homeTitle", settingsService.get(Key.HOME_TITLE));
 		info.put("homeText", settingsService.get(Key.HOME_TEXT));
 		info.put("homeOrderedRepositories", repoService.getPublicRepositoryOrder());
+		info.put("homeHiddenRepositories", repoService.getPublicHiddenRepositories());
 		return Respond.ok(info);
 	}
 

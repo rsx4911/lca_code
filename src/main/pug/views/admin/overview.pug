@@ -30,11 +30,13 @@ mixin home-repository-order()
 	.ordered-repositories
 		strong Home public repository order: 
 		ol
-			each repo, index in homeOrderedRepositories
-				li #{repo} 
+			each repo in homeOrderedRepositories
+				li=repo.path
 					span.glyphicon.glyphicon-upload
 					|  
 					span.glyphicon.glyphicon-download
+					|  
+					span.glyphicon(class='glyphicon-eye-' + (repo.hidden ? 'close' : 'open') data-action='change-visibility' data-repo=repo.path)
 			
 .content-box.overview
 	div(class=isAdmin?'four-columns':'two-columns')
@@ -73,7 +75,8 @@ if isAdmin
 		+editable-text('set-maintenance-message', 'Maintenance message', maintenanceMessage, 'Not set') 
 		+editable-text('set-announcement', 'Announcement text', announcement, 'No announcement set') 
 		+editable-text('set-license-agreement-text', 'License agreement text', licenseAgreementText, 'No license agreement set') 
-		hr
-		+editable-text('set-home-title', 'Home title', homeTitle, 'Not set') 
-		+editable-text('set-home-text', 'Home welcome text', homeText, 'Not set') 
-		+home-repository-order()
+		if isHomepageEnabled
+			hr
+			+editable-text('set-home-title', 'Home title', homeTitle, 'Not set') 
+			+editable-text('set-home-text', 'Home welcome text', homeText, 'Not set') 
+			+home-repository-order()
