@@ -11,8 +11,8 @@
 		.pinned-repository
 			.header-box
 				h4=repo.label
+				.dataset-count #{repo.datasets} data sets
 				.repo-description
 					if repo.settings.description
 						h4: small=repo.settings.description
-				.dataset-count #{repo.datasets} data sets
 				button.btn.btn-lg.btn-full-width.btn-success(data-repo=repo.group+'/'+repo.name) Browse 

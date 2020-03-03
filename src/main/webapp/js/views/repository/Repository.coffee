@@ -27,8 +27,9 @@ define([
 				'change [data-setting][type=checkbox]': 'toggleSetting'
 				'change #maxSize': 'updateMaxSize'
 				'change #unit': 'updateMaxSize'
-				'change #label': (event) -> @setSetting event, 'label'
-				'change #description': (event) -> @setSetting event, 'description'
+				'change #label': (event) -> @setSetting event, 'LABEL'
+				'change #description': (event) -> @setSetting event, 'DESCRIPTION'
+				'change #tags': 'setTags'
 				'change .library-restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
@@ -52,6 +53,14 @@ define([
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
 
+			setTags: () ->
+				tags = []
+				for tag in $('#tags').val().split(',')
+					if tag.trim()
+						tags.push tag.trim()
+				$('#tags').val(tags.join(','))
+				@putSetting 'TAGS', tags
+
 			setMaxSize: (size) ->
 				unless size
 					return
@@ -68,17 +77,20 @@ define([
 				setting = target.attr 'data-setting'
 				value = target.is ':checked'
 				repository.settings[setting] = value
-				@setSetting setting, value
+				@putSetting setting, value
 
 			setSetting: (event, setting) ->
 				target = $ Events.target event
 				value = target.val()
+				@putSetting setting, value 
+			
+			putSetting: (setting, value) ->
 				repository = @repository.toJSON()
 				$.ajax
 					type: 'PUT'
 					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}"
 					contentType: 'application/json'
-					data: JSON.stringify({value: value || ''})
+					data: JSON.stringify({value: value})
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()
@@ -102,7 +114,7 @@ define([
 				size = parseInt size
 				value = size * unit
 				repository.settings.maxSize = value
-				@setSetting 'maxSize', value
+				@putSetting 'MAX_SIZE', value
 
 			updateRestriction: (event) ->
 				target = $ Events.target event

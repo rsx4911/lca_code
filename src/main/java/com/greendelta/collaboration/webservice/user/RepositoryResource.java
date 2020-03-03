@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -33,6 +34,7 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.IndexService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositorySetting;
 import com.greendelta.collaboration.service.RepositoryMigrator;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
@@ -223,7 +225,7 @@ public class RepositoryResource {
 		indexService.index(repo);
 		repo = service.get(group, name);
 		if (repo.settings.publicAccess) {
-			service.setSetting(repo, "publicAccess", "false");
+			service.setSetting(repo, RepositorySetting.PUBLIC_ACCESS, false);
 		}
 		return Respond.ok(new HashMap<>());
 	}
@@ -283,13 +285,11 @@ public class RepositoryResource {
 	}
 
 	private void updateRepoId(Repository oldRepo, Repository newRepo) {
-		List<IndexEntry> entries = searchService.getAll(oldRepo);
-		searchService.remove(entries);
-		for (IndexEntry entry : entries) {
-			entry.repositoryId = newRepo.toId();
-			entry.group = newRepo.group;
-		}
-		searchService.index(entries);
+		Set<String> documentIds = searchService.getDocumentIds(oldRepo);
+		Map<String, Object> update = new HashMap<>();
+		update.put("repositoryId", newRepo.toId());
+		update.put("group", newRepo.group);
+		searchService.update(documentIds, update);
 	}
 
 	@POST
@@ -345,11 +345,20 @@ public class RepositoryResource {
 	public Response setSetting(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("setting") String setting,
+			@PathParam("setting") RepositorySetting setting,
 			Map<String, Object> data) {
-		String value = data.get("value").toString();
+		Object value = data.get("value");
 		Repository repo = service.get(group, name);
 		service.setSetting(repo, setting, value);
+		if (setting == RepositorySetting.TAGS) {
+			Set<String> documentIds = searchService.getDocumentIds(repo);
+			List<String> tags = RepositorySetting.TAGS.parse(value);
+			if (tags != null && tags.isEmpty()) {
+				tags = null;
+			}
+			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
+			searchService.update(documentIds, update);
+		}
 		return Respond.ok(new HashMap<>());
 	}
 

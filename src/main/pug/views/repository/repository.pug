@@ -57,9 +57,15 @@ mixin to-size(value, inGb, round, showUnit)
 		+input('label', 'Label')(value=repository.settings.label)
 		+textarea('description', 'Description')(rows=3)
 			| #{repository.settings.description}
+		+input('tags', 'Tags')(value=repository.settings.tags?repository.settings.tags.join(','):'')
 	else
 		+static('label', 'Label', repository.settings.label||'-')
 		+static('description', 'Description', repository.settings.description||'-')
+		+static('tags', 'Tags')
+			.tags
+				if repository.settings.tags
+					each tag in repository.settings.tags
+						span.badge=tag
 	- var maxSize = repository.settings.maxSize; 
 	- var inGb = false;
 	if maxSize
@@ -86,10 +92,10 @@ mixin to-size(value, inGb, round, showUnit)
 					.size-indicator-bar
 						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
 	if publicReposEnabled
-		+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='publicAccess')
-	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='prohibitCommits')
+		+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='PUBLIC_ACCESS')
+	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='PROHIBIT_COMMITS')
 	if commentsEnabled
-		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
+		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='COMMENT_APPROVAL')
 - var repositoryId = repository.group + '/' + repository.name
 +avatar-box('repository', repositoryId, repository.userCanWrite)
 

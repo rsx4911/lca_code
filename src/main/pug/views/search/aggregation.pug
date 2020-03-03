@@ -7,7 +7,7 @@ mixin aggregation(aggregation)
 				- var count = getTotalCount(aggregation);
 				if count <= 12
 					each entry, index in aggregation.entries
-						+aggregation-entry(aggregation.name, entry, singleton, 0, null, -1)
+						+aggregation-entry(aggregation.name, entry, selected, 0, null, -1)
 				else
 					div
 						.toggleable
@@ -19,7 +19,7 @@ mixin aggregation(aggregation)
 						a.toggle-control.default-link(href='#') Show #{count - 10} more
 						.toggleable(style='display:none')
 							each entry, index in aggregation.entries
-								+aggregation-entry(aggregation.name, entry, singleton, 0, null, -1)
+								+aggregation-entry(aggregation.name, entry, selected, 0, null, -1)
 						a.toggle-control.default-link(href='#' style='display:none') Show less
 
 mixin aggregation-entry(aggregationName, entry, singleton, depth, parentLabel, previousCount) 
@@ -27,11 +27,12 @@ mixin aggregation-entry(aggregationName, entry, singleton, depth, parentLabel, p
 		- var label = getLabel(aggregationName, entry.key, entry.label);
 		if parentLabel && label.indexOf(parentLabel) === 0
 			- label = label.substring(parentLabel.length + 1);
-		if !singleton
+		- var selected = isSelectedAggregationValue(aggregationName, entry.key)
+		if !singleton && !selected
 			a(href=getAggregationUrl(aggregationName, entry.key)) #{label} (#{entry.count})
 		else
 			| #{label} (#{entry.count}) 
-			if isSelectedAggregationValue(aggregationName, entry.key)
+			if selected
 				a(href=getAggregationUrl(aggregationName, entry.key, true)): span.glyphicon.glyphicon-remove
 		if entry.subEntries
 			ul

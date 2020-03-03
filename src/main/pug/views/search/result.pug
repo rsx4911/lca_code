@@ -36,6 +36,11 @@ mixin result-details(dataset)
 			if !isPublic
 				div Commit: 
 					a(href=dataset.repositoryId + '/commit/' + dataset.commitId)=dataset.commitMessage
+			if dataset.tags && dataset.tags.length
+				.tags
+					each tag in dataset.tags
+						span.badge=tag
+					
 		if dataset.location || dataset.validFromYear || dataset.validUntilYear
 			.details-right
 				if dataset.location

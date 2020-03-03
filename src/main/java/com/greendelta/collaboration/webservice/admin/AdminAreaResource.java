@@ -152,7 +152,7 @@ public class AdminAreaResource {
 	@Path("reindex/{group}/{repository}")
 	public Response reindex(@PathParam("group") String group, @PathParam("repository") String repository) {
 		Repository repo = repoService.get(group, repository);
-		searchService.remove(searchService.getAll(repo));
+		searchService.remove(searchService.getDocumentIds(repo));
 		indexService.index(repo);
 		return Respond.ok(new HashMap<>());
 	}

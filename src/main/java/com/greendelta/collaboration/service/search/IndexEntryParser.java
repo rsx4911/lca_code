@@ -103,6 +103,10 @@ class IndexEntryParser {
 		if (e.commits == null) {
 			e.commits = new ArrayList<>();
 		}
+		e.tags = entry.get("tags");
+		if (e.tags == null) {
+			e.tags = new ArrayList<>();
+		}
 		e.type = type;
 		return e;
 	}

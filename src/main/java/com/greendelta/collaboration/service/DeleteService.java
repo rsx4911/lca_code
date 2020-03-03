@@ -119,7 +119,7 @@ public class DeleteService {
 		if (!accessService.canDelete(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
 		memberService.removeMemberships(repo.toId());
-		searchService.remove(searchService.getAll(repo));
+		searchService.remove(searchService.getDocumentIds(repo));
 		deleteTasksOf(repo);
 		repoService.delete(repo);
 	}

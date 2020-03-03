@@ -6,10 +6,15 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -85,27 +90,8 @@ public class Repository {
 		return toId(group, name);
 	}
 
-	void setSetting(String setting, String value) {
-		switch (setting) {
-		case "publicAccess":
-			settings.publicAccess = Boolean.parseBoolean(value);
-			break;
-		case "prohibitCommits":
-			settings.prohibitCommits = Boolean.parseBoolean(value);
-			break;
-		case "commentApproval":
-			settings.commentApproval = Boolean.parseBoolean(value);
-			break;
-		case "maxSize":
-			settings.maxSize = value != null ? Long.parseLong(value) : 0;
-			break;
-		case "label":
-			settings.label = value;
-			break;
-		case "description":
-			settings.description = value;
-			break;
-		}
+	void setSetting(RepositorySetting setting, Object value) {
+		setting.set(settings, value);
 		try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
 			new Gson().toJson(settings, writer);
 		} catch (IOException e) {
@@ -307,11 +293,95 @@ public class Repository {
 		public long maxSize;
 		public String label;
 		public String description;
+		public List<String> tags;
 
 		private RepositorySettings() {
 
 		}
 
+	}
+
+	public static enum RepositorySetting {
+
+		PUBLIC_ACCESS("publicAccess", RepositorySetting::parseBoolean),
+		PROHIBIT_COMMITS("prohibitCommits", RepositorySetting::parseBoolean),
+		COMMENT_APPROVAL("commentApproval", RepositorySetting::parseBoolean),
+		MAX_SIZE("maxSize", RepositorySetting::parseLong),
+		LABEL("label", RepositorySetting::parseString),
+		DESCRIPTION("description", RepositorySetting::parseString),
+		TAGS("tags", RepositorySetting::parseStringList);
+
+		private final Field field;
+		private final Function<Object, ?> converter;
+		
+		private RepositorySetting(String fieldName, Function<Object, ?> converter) {
+			this.converter = converter;
+			this.field = getField(fieldName);
+		}
+
+		private Field getField(String fieldName) {
+			try {
+				return RepositorySettings.class.getDeclaredField(fieldName);
+			} catch (Exception e) {
+				log.error("Error registering repository settings field " + fieldName, e);
+				return null;
+			}
+		}
+
+		private void set(RepositorySettings settings, Object value) {
+			try {
+				value = converter.apply(value);
+				boolean wasAccessible = field.isAccessible();
+				if (!wasAccessible) {
+					field.setAccessible(true);
+				}
+				field.set(settings, value);
+				if (!wasAccessible) {
+					field.setAccessible(false);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		private static boolean parseBoolean(Object value) {
+			if (value == null)
+				return false;
+			if (value instanceof Boolean)
+				return (boolean) value;
+			return Boolean.parseBoolean(value.toString());
+		}
+
+		private static long parseLong(Object value) {
+			if (value == null)
+				return 0;
+			if (value instanceof Long || value instanceof Integer)
+				return (long) value;
+			return Long.parseLong(value.toString());
+		}
+
+		private static String parseString(Object value) {
+			if (value == null)
+				return null;
+			return value.toString();
+		}
+
+		@SuppressWarnings("unchecked")
+		private static List<String> parseStringList(Object value) {
+			if (value == null)
+				return new ArrayList<>();
+			if (value instanceof String[])
+				return Arrays.asList((String[]) value);
+			if (value instanceof List)
+				return (List<String>) value;
+			return new ArrayList<>();
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> T parse(Object value) {
+			return (T) converter.apply(value);
+		}
+		
 	}
 
 }

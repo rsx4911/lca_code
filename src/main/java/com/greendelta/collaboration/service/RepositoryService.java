@@ -33,6 +33,7 @@ import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Repository.RepositorySetting;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
@@ -168,7 +169,7 @@ public class RepositoryService {
 		return true;
 	}
 
-	public void setSetting(Repository repo, String setting, String value) {
+	public void setSetting(Repository repo, RepositorySetting setting, Object value) {
 		if (!accessService.canSetSettings(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);

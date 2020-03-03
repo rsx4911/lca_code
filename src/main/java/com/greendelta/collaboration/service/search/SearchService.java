@@ -2,7 +2,6 @@ package com.greendelta.collaboration.service.search;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +65,11 @@ public class SearchService {
 			builder.filter("commitId", SearchFilterValue.term(commitId));
 		}
 		return parser.parse(getClient().search(builder.build()));
+	}
+
+	public Set<String> getDocumentIds(Repository repo) {
+		SearchQueryBuilder builder = builder(repo);
+		return getClient().searchIds(builder.build());
 	}
 
 	public long getDatasetCount(Repository repo, String commitId, IndexAction action) {
@@ -197,6 +201,7 @@ public class SearchService {
 			return;
 		Set<String> refIds = Collections.convertToSet(entries, (entry) -> entry.toId());
 		log.debug("Indexing {} entries in repository {}", entries.size(), repo.toId());
+		// TODO updating without loading all index entries
 		List<IndexEntry> mostRecent = getMostRecent(repo);
 		if (!mostRecent.isEmpty()) {
 			for (IndexEntry entry : mostRecent) {
@@ -217,6 +222,18 @@ public class SearchService {
 	public void index(Collection<IndexEntry> entries) {
 		Map<String, Map<String, Object>> contentsById = buildIndexMap(entries);
 		getClient().index(contentsById);
+	}
+
+	public void update(String id, Map<String, Object> content) {
+		getClient().update(id, content);
+	}
+
+	public void update(Set<String> ids, Map<String, Object> content) {
+		getClient().update(ids, content);
+	}
+
+	public void update(Map<String, Map<String, Object>> contentsById) {
+		getClient().update(contentsById);
 	}
 
 	private Map<String, Map<String, Object>> buildIndexMap(Collection<IndexEntry> entries) {
@@ -245,19 +262,11 @@ public class SearchService {
 		}
 	}
 
-	public void remove(Collection<IndexEntry> entries) {
-		if (entries.isEmpty())
+	public void remove(Set<String> ids) {
+		if (ids.isEmpty())
 			return;
-		log.debug("Removing {} index entries", entries.size());
-		Set<String> ids = new HashSet<>();
-		for (IndexEntry entry : entries) {
-			ids.add(entry.toIndexId());
-		}
+		log.debug("Removing {} index entries", ids.size());
 		getClient().remove(ids);
-	}
-
-	public void remove(IndexEntry entry) {
-		getClient().remove(entry.toIndexId());
 	}
 
 	public void clearIndex() {
@@ -266,31 +275,6 @@ public class SearchService {
 
 	private SearchClient getClient() {
 		return settingsService.getSearchConfig().getSearchClient();
-	}
-
-	public class BulkUpdate {
-
-		private Map<String, Map<String, Object>> entries = new HashMap<>();
-
-		public void update(String id, BulkUpdateProcessor processor) {
-			Map<String, Object> entry = getClient().get(id);
-			processor.process(entry);
-			entries.put(id, entry);
-		}
-
-		public void commit() {
-			if (entries.isEmpty())
-				return;
-			getClient().index(entries);
-			entries.clear();
-		}
-
-	}
-
-	public interface BulkUpdateProcessor {
-
-		public void process(Map<String, Object> data);
-
 	}
 
 }

@@ -19,15 +19,16 @@ define([
 
 			aggregationOrder: 
 				group: 1
-				type: 2
-				flowType: 3
-				processType: 4
-				modellingApproach: 5
-				location: 6
-				categoryPaths: 7
-				validFromYear: 8
-				validUntilYear: 9
-				contact: 10
+				tags: 2
+				type: 3
+				flowType: 4
+				processType: 5
+				modellingApproach: 6
+				location: 7
+				categoryPaths: 8
+				validFromYear: 9
+				validUntilYear: 10
+				contact: 11
 
 			events: 
 				'click a:not([href="#"])': (event) -> Events.followLink event
@@ -199,11 +200,10 @@ define([
 				return url
 
 			getLabel: (type, value, label) ->
-				console.log(label)
 				if label
 					return label
 				if type is 'type'
-					return ModelTypes[value]
+					return ModelTypes[value]					
 				if type is 'modellingApproach'
 					if value is 'PHYSICAL'
 						return 'Phsycial allocation'
@@ -234,6 +234,8 @@ define([
 			getAggregationLabel: (type) ->
 				if type is 'group'
 					return 'Group/Repository'
+				if type is 'tags'
+					return 'Tag'
 				if type is 'type'
 					return 'Model type'
 				if type is 'flowType'

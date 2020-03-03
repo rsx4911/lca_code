@@ -34,7 +34,7 @@ define([
 					container: '#repositories'
 					template: listTemplate
 					filterId: 'filter'
-					url: 'ws/repository?module=DASHBOARD&onlyPublic=false'
+					url: 'ws/repository?module=DASHBOARD&onlyPublic=false&'
 					beforeRender: (result) =>
 						setRole = (r) ->
 							role = Roles[r.role]
