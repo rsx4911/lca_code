@@ -157,6 +157,20 @@ public class CommentService {
 		return clone;
 	}
 
+	public void delete(Repository repo) {
+		List<Comment> comments = getAllFor(repo);
+		for (Comment comment : comments) {
+			if (comment.replyTo != null) {
+				delete(comment.getId());
+			}
+		}
+		for (Comment comment : comments) {
+			if (comment.replyTo == null) {
+				delete(comment.getId());
+			}
+		}
+	}
+
 	public Comment changeVisibility(long commentId, Role role) {
 		Comment comment = dao.get(commentId);
 		if (comment == null)
