@@ -121,6 +121,7 @@ public class DeleteService {
 		memberService.removeMemberships(repo.toId());
 		searchService.remove(searchService.getDocumentIds(repo));
 		deleteTasksOf(repo);
+		commentService.delete(repo);
 		repoService.delete(repo);
 	}
 

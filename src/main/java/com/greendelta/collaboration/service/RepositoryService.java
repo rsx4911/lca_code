@@ -34,6 +34,7 @@ import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Repository.RepositorySetting;
+import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
@@ -55,16 +56,18 @@ public class RepositoryService {
 	private final CommentService commentService;
 	private final SettingsService settingsService;
 	private final GroupService groupService;
+	private final TaskService taskService;
 
 	@Inject
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService, GroupService groupService) {
+			CommentService commentService, SettingsService settingsService, GroupService groupService, TaskService taskService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settingsService = settingsService;
 		this.groupService = groupService;
+		this.taskService = taskService;
 	}
 
 	public Repository get(String id) {
@@ -143,6 +146,7 @@ public class RepositoryService {
 			}
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
+			taskService.move(repo, newRepo);
 			delete(repo);
 		} catch (IOException e) {
 			log.error("Error moving repository contents", e);
