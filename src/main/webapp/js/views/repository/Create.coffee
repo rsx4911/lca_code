@@ -41,6 +41,7 @@ define([
 									url: @$('#url').val()
 									username: @$('#username').val()
 									password: @$('#password').val()
+									token: @$('#token').val()
 							else
 								data = new FormData()
 								data.append('file', @$('#data')[0].files[0])
@@ -62,6 +63,8 @@ define([
 									Layers.hideProgressIndicator()
 									Router.navigate "#{group}/#{name}"						
 								error: (response) =>
+									if response.responseJSON and response.responseJSON.field is 'token'
+										@$('#token-input').show()
 									Forms.handleError 'repository-form', response
 									$.ajax
 										type: 'DELETE'

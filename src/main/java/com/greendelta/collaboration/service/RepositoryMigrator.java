@@ -19,23 +19,48 @@ public class RepositoryMigrator {
 		this.indexService = indexService;
 	}
 
-	public void migrate(String url, Repository repo, String username, String password)
+	public MigrateResponse migrate(String url, Repository repo, String username, String password, Integer token)
 			throws MalformedURLException, IOException, WebRequestException {
 		String repoId = url.substring(url.lastIndexOf("/") + 1);
 		url = url.substring(0, url.lastIndexOf("/"));
 		repoId = url.substring(url.lastIndexOf("/") + 1) + '/' + repoId;
 		url = url.substring(0, url.lastIndexOf("/")) + "/ws";
-		RepositoryConfig config = new RepositoryConfig(null, url, repoId, new CredentialSupplier(username, password));
+		RepositoryConfig config = new RepositoryConfig(null, url, repoId);
+		config.credentials = new CredentialSupplier(username, password);
+		config.credentials.setTokenSupplier(() -> {
+			if (token != null && token != 0)
+				return token;
+			throw new TokenRequiredException();
+		});
 		RepositoryClient client = new RepositoryClient(config);
 		try {
 			InputStream stream = client.export();
 			if (stream == null)
-				return;
+				return MigrateResponse.NO_CONTENT;
 			service.unpack(repo, stream);
 			indexService.index(repo);
+			return MigrateResponse.SUCCESS;
+		} catch (TokenRequiredException e) {
+			return MigrateResponse.TOKEN_REQUIRED;
 		} finally {
 			client.logout();
 		}
 	}
 
+	public static enum MigrateResponse {
+		
+		SUCCESS,
+		
+		NO_CONTENT,
+		
+		TOKEN_REQUIRED;
+		
+	}
+	
+	private class TokenRequiredException extends IllegalStateException {
+
+		private static final long serialVersionUID = 7824693893433376344L;
+		
+	}
+	
 }

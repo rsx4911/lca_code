@@ -262,6 +262,19 @@ public class ObjectMap extends HashMap<String, Object> {
 		}
 	}
 
+	public int getInteger(String field) {
+		Object value = get(field);
+		if (value == null)
+			return 0;
+		try {
+			if (value instanceof String[])
+				return Integer.parseInt(((String[]) value)[0]);
+			return Integer.parseInt(value.toString());
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+	
 	public boolean getBoolean(String field) {
 		Object value = get(field);
 		if (value == null)

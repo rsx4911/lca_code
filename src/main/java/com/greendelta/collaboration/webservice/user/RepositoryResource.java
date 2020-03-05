@@ -36,6 +36,7 @@ import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositorySetting;
 import com.greendelta.collaboration.service.RepositoryMigrator;
+import com.greendelta.collaboration.service.RepositoryMigrator.MigrateResponse;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
@@ -315,7 +316,9 @@ public class RepositoryResource {
 		Repository repo = service.get(group, name);
 		RepositoryMigrator migrator = new RepositoryMigrator(service, indexService);
 		try {
-			migrator.migrate(url, repo, username, password);
+			MigrateResponse response = migrator.migrate(url, repo, username, password, map.getInteger("token"));
+			if (response == MigrateResponse.TOKEN_REQUIRED) 
+				return Respond.invalid("token", "Token required");
 		} catch (WebRequestException e) {
 			if (e.isConnectException() || e.getCause() instanceof ClientHandlerException)
 				return Respond.invalid("url", "Cannot connect to " + map.getString("url"));
