@@ -49,6 +49,8 @@ define([
 							userMenu.push {href: @concatUrl(prefix, 'dashboard/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						userMenu.push {href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
 						userMenu.push {href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
+						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_DASHBOARD_ENABLED')
+							userMenu.push {href: @concatUrl(prefix, 'dashboard/tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
 						return userMenu
 					when 'tasks' then return [
 						{href: @concatUrl(prefix, 'tasks'), imageSrc: 'images/tasks.png', label: 'Overview', id: 'overview'}
@@ -70,6 +72,8 @@ define([
 						isUserspace = currentUser.isLoggedIn() && currentUser.get('username') is options.urlPrefix
 						groupMenu = []
 						groupMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
+						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_GROUPS_ENABLED')
+							groupMenu.push {href: @concatUrl(prefix, 'tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
 						unless isUserspace
 							groupMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 						return groupMenu
@@ -82,6 +86,8 @@ define([
 						repoMenu.push {href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
 						if settings.is('COMMENTS_ENABLED')
 							repoMenu.push {href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
+						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_REPOSITORIES_ENABLED')
+							repoMenu.push {href: @concatUrl(prefix, 'tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
 						repoMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 						return repoMenu
 					when 'admin'
@@ -266,6 +272,12 @@ define([
 					nav: 
 						type: 'dashboard'
 						active: 'groups'
+				@router.registerUserRoute 'dashboardTags', -> @showView 
+					view: 'tags/Tags'
+					title: 'Tags' 
+					nav: 
+						type: 'dashboard'
+						active: 'tags'
 				@router.registerUserRoute 'tasks', () -> 
 					@showView 
 						view: 'tasks/Overview'
@@ -305,6 +317,14 @@ define([
 						active: 'group'
 						urlPrefix: group
 					viewOptions: 
+						group: new Group({name: group})
+				@router.registerUserRoute 'groupTags', (group) -> @showView 
+					view: 'tags/Tags'
+					title: 'Tags' 
+					nav: 
+						type: 'group'
+						active: 'tags'
+					viewOptions:
 						group: new Group({name: group})
 				@router.registerUserRoute 'groupMembers', (group) -> @showView 
 					view: 'members/Members'
@@ -432,6 +452,14 @@ define([
 						active: 'comments'
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
+						repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryTags', (group, name) -> @showView 
+					view: 'tags/Tags'
+					title: 'Tags' 
+					nav: 
+						type: 'repository'
+						active: 'tags'
+					viewOptions:
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryMembers', (group, name) -> @showView 
 					view: 'members/Members'

@@ -38,6 +38,7 @@ define([
 
 			updateUI: () ->
 				@$('#USER_REGISTRATION_APPROVAL_ENABLED').prop 'disabled', !@$('#USER_REGISTRATION_ENABLED').is(':checked')			
+				@$('#DATASET_TAGS_ON_DASHBOARD_ENABLED, #DATASET_TAGS_ON_GROUPS_ENABLED, #DATASET_TAGS_ON_REPOSITORIES_ENABLED').prop 'disabled', !@$('#DATASET_TAGS_ENABLED').is(':checked')			
 
 			setSetting: (key, value, callback) ->
 				settings.setVal key, value

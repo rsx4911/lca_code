@@ -15,7 +15,9 @@ require.config({
 		'pace': 'libs/pace',
 		'qrcode': 'libs/qrcode',
 		'requireLib': 'libs/require',
-		'underscore': 'libs/underscore'
+		'underscore': 'libs/underscore',
+		'd3': 'libs/d3',
+		'd3cloud': 'libs/d3.layout.cloud'
 	},
 	shim: {
 			'bootstrap': {

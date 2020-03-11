@@ -82,32 +82,32 @@ public class User extends AbstractEntity {
 		long e = (long) Math.pow(2, notification.ordinal());
 		return (settings.notifications | e) == settings.notifications;
 	}
-	
+
 	public boolean isAdmin() {
 		if (settings == null)
 			return false;
 		return settings.admin;
 	}
-	
+
 	public boolean isUserManager() {
 		if (settings == null)
 			return false;
 		return settings.admin || settings.userManager;
 	}
-	
+
 	public boolean isDataManager() {
 		if (settings == null)
 			return false;
 		return settings.admin || settings.dataManager;
 	}
-	
+
 	public boolean isDeactivated() {
 		if (settings == null)
 			return false;
 		if (settings.activeUntil == null)
 			return false;
 		if (isAdmin())
-			return false;		
+			return false;
 		Calendar now = Calendar.getInstance();
 		now.set(Calendar.HOUR_OF_DAY, 0);
 		now.set(Calendar.MINUTE, 0);
@@ -117,5 +117,5 @@ public class User extends AbstractEntity {
 		activeUntil.setTime(settings.activeUntil);
 		return now.after(activeUntil);
 	}
-	
+
 }

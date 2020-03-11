@@ -86,7 +86,8 @@ public class IndexEntryCreator {
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
 		entry.commits = new ArrayList<>(Collections.singletonList(commit.id));
-		entry.tags = repo.settings.tags != null ? new ArrayList<>(repo.settings.tags) : new ArrayList<>();
+		entry.repositoryTags = repo.settings.tags != null ? new ArrayList<>(repo.settings.tags) : new ArrayList<>();
+		entry.datasetTags = dataset.tags != null ? new ArrayList<>(dataset.tags) : new ArrayList<>();
 		DataFill.categories(entry, dataset.categories);
 		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;

@@ -2,6 +2,7 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,8 @@ public class IndexService {
 		} else {
 			dataset.categoryType = dataset.type;
 		}
+		String[] tags = map.getStringArray("tags");
+		dataset.tags = tags != null ? Arrays.asList(tags) : null;
 		return dataset;
 	}
 

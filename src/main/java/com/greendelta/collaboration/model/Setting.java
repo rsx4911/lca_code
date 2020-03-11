@@ -48,6 +48,11 @@ public class Setting extends AbstractEntity {
 		DASHBOARD_ACTIVITIES_ENABLED(Boolean.class, true),
 		REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
 		HOMEPAGE_ENABLED(Boolean.class, true),
+		REPOSITORY_TAGS_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ON_GROUPS_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, true),
 
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),

@@ -21,12 +21,14 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.GroupService.GroupSettings;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
@@ -50,15 +52,17 @@ public class SearchResource {
 	private final GroupService groupService;
 	private final HistoryService historyService;
 	private final UserService userService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public SearchResource(SearchService service, RepositoryService repoService, GroupService groupService,
-			HistoryService historyService, UserService userService) {
+			HistoryService historyService, UserService userService, SettingsService settingsService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.groupService = groupService;
 		this.historyService = historyService;
 		this.userService = userService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -93,7 +97,14 @@ public class SearchResource {
 			return rMap;
 		});
 		map.put("data", data);
-		map.put("aggregations", Client.map(result.aggregations, a -> {
+		List<AggregationResult> aggregations = Collections.filter(result.aggregations, a -> {
+			if (!settingsService.is(Key.REPOSITORY_TAGS_ENABLED) && a.name.equals(Aggregations.REPOSITORY_TAGS.name))
+				return true;
+			if (!settingsService.is(Key.DATASET_TAGS_ENABLED) && a.name.equals(Aggregations.DATASET_TAGS.name))
+				return true;
+			return false;
+		});
+		map.put("aggregations", Client.map(aggregations, a -> {
 			ObjectMap aMap = ObjectMap.fromObject(a);
 			if (a.name.equals(Aggregations.REPOSITORY.name)) {
 				aMap.put("entries", Client.map(a.entries, e -> {

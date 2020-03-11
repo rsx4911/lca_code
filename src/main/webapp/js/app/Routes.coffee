@@ -21,6 +21,7 @@ define([
 				'dashboard/activities': if settings.is('DASHBOARD_ACTIVITIES_ENABLED') then 'dashboardActivities' else 'dashboardRepositories'
 				'dashboard/repositories': 'dashboardRepositories'
 				'dashboard/groups': 'dashboardGroups'
+				'dashboard/tags': 'dashboardTags'
 				'administration': 'adminOverview'
 				'administration/overview': 'adminOverview'
 				'administration/user/new': 'adminUserNew'
@@ -36,6 +37,7 @@ define([
 				'tasks/review/:id': 'reviewManage'
 				'group/new': 'groupNew'
 				'groups/:group': 'groupInfo'
+				'groups/:group/tags': 'groupTags'
 				'groups/:group/members': 'groupMembers'	
 				'error(/:statuscode)':'error'
 				':group/:name': 'repositoryInfo'
@@ -45,6 +47,7 @@ define([
 				':group/:name/commits': 'repositoryCommits'
 				':group/:name/commit/:commitId': 'repositoryCommit'
 				':group/:name/comments': 'repositoryComments'
+				':group/:name/tags': 'repositoryTags'
 				':group/:name/members': 'repositoryMembers'
 				'*path':'notFound'
 			}

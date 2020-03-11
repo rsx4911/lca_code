@@ -227,6 +227,22 @@ public class ObjectMap extends HashMap<String, Object> {
 		return 0;
 	}
 
+	public String[] getStringArray(String field) {
+		Object value = get(field);
+		if (value == null)
+			return null;
+		if (value instanceof String[])
+			return (String[]) value;
+		if (value instanceof Collection) {
+			List<String> values = new ArrayList<>();
+			for (Object v : (Collection<?>) value) {
+				values.add(v.toString());
+			}
+			return values.toArray(new String[values.size()]);
+		}
+		return null;
+	}
+
 	public String getString(String field) {
 		Object value = get(field);
 		if (value == null)
@@ -274,7 +290,7 @@ public class ObjectMap extends HashMap<String, Object> {
 			return 0;
 		}
 	}
-	
+
 	public boolean getBoolean(String field) {
 		Object value = get(field);
 		if (value == null)

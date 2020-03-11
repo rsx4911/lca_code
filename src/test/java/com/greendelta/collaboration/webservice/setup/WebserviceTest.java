@@ -54,7 +54,7 @@ public class WebserviceTest {
 	}
 
 	protected RepositoryClient getClient(IDatabase database) {
-		RepositoryConfig config = RepositoryConfig.connect(database, setup.getBaseUrl(), REPOSITORY_ID,
+		RepositoryConfig config = RepositoryConfig.add(database, setup.getBaseUrl(), REPOSITORY_ID,
 				new CredentialSupplier("admin", setup.adminPassword));
 		return new RepositoryClient(config);
 	}
