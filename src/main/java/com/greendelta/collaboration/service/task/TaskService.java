@@ -69,6 +69,14 @@ public class TaskService {
 		return active;
 	}
 
+	public void move(Repository from, Repository to) {
+		List<Task> tasks = getAllFor(from);
+		for (Task task : tasks) {
+			task.repositoryPath = to.toId();
+			update(task);
+		}
+	}
+
 	public Task update(Task task) {
 		return dao.update(task);
 	}

@@ -135,16 +135,14 @@ define([
 				Layers.showMessageInLayer
 					title: 'Register Authenticator Device'
 					body: '<p>To register your mobile device scan the QR code below in your Authenticator App:</p>
-								 <div id="two-auth-link"></div>
+								 <canvas id="two-auth-link" class="center-block"></canvas>
 								 <div style="text-align:center"><a class="default-link" href="#" id="show-secret">Show secret key</a></div>
 								 <div id="two-auth-key" class="well well-sm" style="display:none; text-align:center; margin-top:20px">' + response.key + '</div>'
 					buttons: [
 						{text: 'Disable', className: 'btn-warning', callback: () => @toggleTwoFactorAuthentication(false)},
 						{text: 'Close', className: 'btn-default', callback: Layers.closeActive}
 					]
-				new QRCode($('#two-auth-link')[0], response.url)
-				$('#two-auth-link').removeAttr 'title'
-				$('#two-auth-link img').addClass 'center-block'
+				QRCode.toCanvas($('#two-auth-link')[0], response.url)
 				$('#show-secret').on 'click', (event) -> 
 					Events.preventDefault event
 					$('#two-auth-key').show()
