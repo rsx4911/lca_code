@@ -250,6 +250,32 @@
 		</dependency>
 
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>appserver-stage</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>stage</value>
+				</property>
+			</activation>
+			<properties>
+				<appserver>stage</appserver>
+			</properties>
+		</profile>
+		<profile>
+			<id>appserver-prod</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>prod</value>
+				</property>
+			</activation>
+			<properties>
+				<appserver>prod</appserver>
+			</properties>
+		</profile>
+	</profiles>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -326,6 +352,7 @@
 							<arguments>
 								<argument>build</argument>
 								<argument>--contextPath=${contextPath}</argument>
+								<argument>--appserver=${appserver}</argument>
 								<argument>--customDir=${customDir}</argument>
 							</arguments>
 						</configuration>

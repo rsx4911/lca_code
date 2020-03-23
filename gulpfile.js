@@ -9,6 +9,8 @@ var rjs = require('gulp-requirejs');
 var stylus = require('gulp-stylus');
 var uglify = require('gulp-uglify');
 var pug = require('gulp-pug');
+var htmlreplace=require('gulp-html-replace');
+var gulpif=require('gulp-if');
 var child_process = require('child_process');
 var params = require('yargs').argv;
 
@@ -268,7 +270,6 @@ gulp.task('modifyOtherHtml', function() {
     }))
     .pipe(gulp.dest('./target/require-build'));
 });
-
 gulp.task('modifyCustomHtmlPages', function() {
   // replace styles-login.css with timestamp filename
   return gulp.src(params.customDir + '/*.html')
@@ -282,7 +283,16 @@ gulp.task('modifyCustomHtmlPages', function() {
     }))
     .pipe(gulp.dest('./target/require-build'));
 });
-
+gulp.task('modifyCustomPublicHtml', function() {
+    return  gulp.src('./target/require-build//index_public.html')
+		.pipe(gulpif(params.appserver == 'stage',htmlreplace( {
+			'google':{
+				src: null,
+				tpl: ''
+			 }
+		})))
+		.pipe(gulp.dest('./target/require-build'));
+});
 gulp.task('copyCustomImages', function() {
   return gulp.src(params.customDir + '/images/**/*.*')
     .pipe(gulp.dest('./target/require-build/images'));
@@ -339,6 +349,7 @@ gulp.task('build', gulp.series(
   'modifyIndexHtml',
   'modifyOtherHtml',
   'modifyCustomHtmlPages',
+  'modifyCustomPublicHtml',
   'copyCustomImages',
   'copyJQueryForLogin',
   'jsBuild'
