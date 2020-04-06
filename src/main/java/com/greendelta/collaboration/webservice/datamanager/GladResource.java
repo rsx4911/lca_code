@@ -48,11 +48,10 @@ import joptsimple.internal.Strings;
 public class GladResource {
 
 	private static final List<String> GLAD_FIELDS = new ArrayList<>(Arrays.asList(
-			"refId", "processType", "supportedNomenclatures", "modellingPrinciple", "modellingApproach",
-			"aggregationType", "licenseType", "name", "categories", "location", "completeness",
-			"sampleRepresentativeness", "samplingProcedure", "technology", "representativeness", "biogenicCarbon",
-			"reviewer", "copyrightHolder", "license", "contact", "description", "dataSetUrl", "format", "validFrom",
-			"validFromYear", "validUntil", "validUntilYear", "reviewed", "copyrightProtected", "dataprovider"));
+			"refId", "processType", "supportedNomenclatures", "aggregationType", "name", "categories", "location",
+			"completeness", "technology", "copyrightHolder", "license", "contact", "description", "dataSetUrl",
+			"format", "validFrom", "validFromYear", "validUntil", "validUntilYear", "copyrightProtected",
+			"dataprovider"));
 
 	private final RepositoryService repoService;
 	private final BrowseService browseService;
@@ -100,12 +99,12 @@ public class GladResource {
 			List<Map<String, Object>> allData = client.get(next);
 			for (Map<String, Object> data : allData) {
 				putProcessData(repo, dsToCommit, data);
-				data.put("format", "JSON-LD");
+				data.put("format", "JSON_LD");
 				data.put("dataprovider", input.dataprovider);
 				String baseUrl = settingsService.get(Key.SERVER_URL);
 				String refId = data.get("refId").toString();
 				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/"
-						+ refId + "/" + dsToCommit.get(refId));
+						+ refId + "?commitId=" + dsToCommit.get(refId));
 				for (String key : new ArrayList<>(data.keySet())) {
 					if (!GLAD_FIELDS.contains(key)) {
 						data.remove(key);
@@ -128,11 +127,12 @@ public class GladResource {
 		String reviewer = data.getString("processDocumentation.reviewer.name");
 		d.put("processType", getProcessType(data.getString("processType")));
 		d.put("completeness", data.getString("processDocumentation.completenessDescription"));
-		d.put("samplingProcedure", data.getString("processDocumentation.samplingDescription"));
 		d.put("validFrom", Dates.getTime(data.get("processDocumentation.validFrom")));
 		d.put("validUntil", Dates.getTime(data.get("processDocumentation.validUntil")));
 		d.put("technology", data.getString("processDocumentation.technologyDescription"));
-		d.put("reviewer", reviewer);
+		if (!Strings.isNullOrEmpty(reviewer)) {
+			d.put("reviewers", new String[] { reviewer });
+		}
 		d.put("reviewed", !Strings.isNullOrEmpty(reviewer));
 		d.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
 		d.put("copyrightHolder", data.getString("processDocumentation.dataSetOwner.name"));
