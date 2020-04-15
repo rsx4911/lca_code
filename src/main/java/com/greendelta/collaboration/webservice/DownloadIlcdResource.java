@@ -93,7 +93,7 @@ public class DownloadIlcdResource extends DownloadResource {
 			@PathParam("group") String group, 
 			@PathParam("repository") String repository,
 			List<FileReference> requested) {
-		return super.prepare(group, repository, null, requested);
+		return super.prepare(group, repository, null, requested.iterator());
 	}
 
 	@Override

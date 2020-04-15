@@ -2,11 +2,10 @@ package com.greendelta.collaboration.webservice;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
@@ -18,15 +17,14 @@ import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.DeletedFilter;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.io.DatasetWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.util.Client;
@@ -57,10 +55,8 @@ abstract class DownloadResource {
 			return Respond.notFound("commit " + commitId + " not found");
 		ModelType type = Client.getTypeFromPath(path);
 		String subPath = Client.getCategoryFromPath(path);
-		List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, type, subPath, commit.id);
-		entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
-		List<FileReference> references = Collections.convertToList(entries, (e) -> e.asFileReference());
-		return prepare(group, repository, commit.id, references);
+		IndexIterator entries = searchService.getMostRecentUntilForPath(repo, type, subPath, commit.id, new DeletedFilter());
+		return prepare(group, repository, commit.id, entries);
 	}
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
@@ -80,7 +76,7 @@ abstract class DownloadResource {
 		}
 	}
 
-	protected Response prepare(String group, String repository, String commitId, Collection<FileReference> requested) {
+	protected Response prepare(String group, String repository, String commitId, Iterator<? extends FileReference> requested) {
 		try {
 			Repository repo = repoService.get(group, repository);
 			Commit commit = getCommit(repo, commitId);
@@ -88,8 +84,9 @@ abstract class DownloadResource {
 				return Respond.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
 			DatasetWriter writer = createWriter(repo, commit.id);
-			for (FileReference element : requested) {
-				writer.write(element.type, element.refId);
+			while (requested.hasNext()) {
+				FileReference next = requested.next();
+				writer.write(next.type, next.refId);
 			}
 			File tmpFile = writer.close();
 			String token = put(tmpFile, group + "_" + repository + ".zip");
@@ -106,10 +103,10 @@ abstract class DownloadResource {
 		return historyService.getLastCommit(repo);
 	}
 
-	protected Set<FileReference> collectRefs(String group, String repository, List<Reference> references) {
+	protected Iterator<FileReference> collectRefs(String group, String repository, List<Reference> references) {
 		Repository repo = repoService.get(group, repository);
 		ReferenceCollector<FileReference> collector = new ReferenceCollector<>(browseService, this::toRef);
-		return collector.getReferences(repo, references);
+		return collector.getReferences(repo, references).iterator();
 	}
 
 	private FileReference toRef(Reference ref) {

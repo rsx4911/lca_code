@@ -28,7 +28,8 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.service.search.SearchService.DeletedFilter;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 
 public class IlcdWriter implements DatasetWriter {
 
@@ -144,9 +145,9 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId);
-			entries = Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
-			for (IndexEntry entry : entries) {
+			IndexIterator entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId, new DeletedFilter());
+			while (entries.hasNext()) {
+				IndexEntry entry = entries.next();
 				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);
 				if (data == null)
 					continue;

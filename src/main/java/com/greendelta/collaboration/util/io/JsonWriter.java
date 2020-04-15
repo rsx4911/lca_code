@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
@@ -20,12 +19,12 @@ import org.openlca.util.BinUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.service.search.SearchService.DeletedFilter;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 
 public class JsonWriter implements DatasetWriter {
 
@@ -54,8 +53,9 @@ public class JsonWriter implements DatasetWriter {
 	public void write(ModelType type, String refId) throws IOException {
 		FileReference ref = ref(type, refId);
 		refStack.add(ref);
-		for (IndexEntry entry : getGlobalParameters(commitId)) {
-			refStack.add(ref(ModelType.PARAMETER, entry.refId));
+		IndexIterator entries = getGlobalParameters(commitId);
+		while (entries.hasNext()) {
+			refStack.add(ref(ModelType.PARAMETER, entries.next().refId));
 		}
 		while (!refStack.isEmpty()) {
 			write(refStack.pop());
@@ -92,9 +92,8 @@ public class JsonWriter implements DatasetWriter {
 		collectReferences(json);
 	}
 
-	private List<IndexEntry> getGlobalParameters(String untilCommitId) {
-		List<IndexEntry> entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId);
-		return Collections.filter(entries, entry -> entry.action == IndexAction.DELETE);
+	private IndexIterator getGlobalParameters(String untilCommitId) {
+		return searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId, new DeletedFilter());
 	}
 
 	private void collectReferences(JsonObject object) throws IOException {

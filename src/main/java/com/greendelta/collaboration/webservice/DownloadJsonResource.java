@@ -92,7 +92,7 @@ public class DownloadJsonResource extends DownloadResource {
 			@PathParam("repository") String repository,
 			@QueryParam("commitId") String commitId,
 			List<FileReference> requested) {
-		return super.prepare(group, repository, commitId, requested);
+		return super.prepare(group, repository, commitId, requested.iterator());
 	}
 
 	@Override

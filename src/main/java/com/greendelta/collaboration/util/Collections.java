@@ -26,7 +26,7 @@ public class Collections {
 		}
 		inner.put(key2, value);
 	}
-	
+
 	public static <K, V> Set<V> addToSet(Map<K, Set<V>> map, K key, V setValue) {
 		Set<V> set = map.get(key);
 		if (set == null) {
@@ -107,7 +107,7 @@ public class Collections {
 			col.add(parsed);
 		}
 	}
-
+	
 	public static <V, T> List<T> convertToList(Collection<V> col, Function<V, T> converter) {
 		return (List<T>) convert(col, new ArrayList<>(), converter);
 	}
@@ -115,10 +115,25 @@ public class Collections {
 	public static <V, T> Set<T> convertToSet(Collection<V> col, Function<V, T> converter) {
 		return (Set<T>) convert(col, new HashSet<>(), converter);
 	}
-	
+
 	private static <V, T> Collection<T> convert(Collection<V> from, Collection<T> to, Function<V, T> converter) {
 		for (V elem : from) {
 			to.add(converter.apply(elem));
+		}
+		return to;
+	}
+	
+	public static <V, T> List<T> convertToList(Iterator<V> col, Function<V, T> converter) {
+		return (List<T>) convert(col, new ArrayList<>(), converter);
+	}
+
+	public static <V, T> Set<T> convertToSet(Iterator<V> col, Function<V, T> converter) {
+		return (Set<T>) convert(col, new HashSet<>(), converter);
+	}
+
+	private static <V, T> Collection<T> convert(Iterator<V> from, Collection<T> to, Function<V, T> converter) {
+		while (from.hasNext()) {
+			to.add(converter.apply(from.next()));
 		}
 		return to;
 	}
@@ -162,7 +177,7 @@ public class Collections {
 		}
 		return filtered;
 	}
-	
+
 	public static <V> List<V> filterDuplicates(List<V> values) {
 		return new ArrayList<>(new HashSet<>(values));
 	}

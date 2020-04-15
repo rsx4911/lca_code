@@ -27,13 +27,14 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.util.io.JsonIteratorStreamingOutput;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.search.wrapper.SearchFilterValue;
-import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
@@ -151,7 +152,7 @@ public class HistoryResource {
 			return false;
 		return c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
 	}
-	
+
 	@GET
 	@Path("category/{group}/{name}/{refId}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -199,20 +200,27 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		SearchQuery query = createReferencesQuery(repo, commit, type, page, pageSize, filter);
-		SearchResult<IndexEntry> result = searchService.search(query);
-		return Respond.ok(SearchResults.convert(result, (entry) -> {
-			ObjectMap map = ObjectMap.fromObject(entry.asFetchRequestData());
-			if (entry instanceof FlowIndexEntry) {
-				map.put("flowType", ((FlowIndexEntry) entry).flowType);
-			} else if (entry instanceof ProcessIndexEntry) {
-				map.put("processType", ((ProcessIndexEntry) entry).processType);
-			}
-			return map;
-		}));
+		SearchQueryBuilder builder = createReferencesQueryBuilder(repo, commit, type, page, pageSize, filter);
+		if (page > 0) {
+			SearchResult<IndexEntry> result = searchService.search(builder.build());
+			return Respond.ok(SearchResults.convert(result, this::convertToFetchRequestData));
+		}
+		IndexIterator entries = searchService.iterator(builder);
+		return Respond.ok(new JsonIteratorStreamingOutput<IndexEntry>(entries, this::convertToFetchRequestData));
 	}
 
-	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize,
+	private ObjectMap convertToFetchRequestData(IndexEntry entry) {
+		ObjectMap map = ObjectMap.fromObject(entry.asFetchRequestData());
+		if (entry instanceof FlowIndexEntry) {
+			map.put("flowType", ((FlowIndexEntry) entry).flowType);
+		} else if (entry instanceof ProcessIndexEntry) {
+			map.put("processType", ((ProcessIndexEntry) entry).processType);
+		}
+		return map;
+	}
+
+	private SearchQueryBuilder createReferencesQueryBuilder(Repository repo, Commit commit, ModelType type, int page,
+			int pageSize,
 			String filter) {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
@@ -230,7 +238,7 @@ public class HistoryResource {
 			}
 		}
 		builder.sortBy("typeOrdinal", SearchSorting.DESC);
-		return builder.build();
+		return builder;
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
@@ -249,7 +257,7 @@ public class HistoryResource {
 			map.put("userDisplayName", commit.user);
 		return map;
 	}
-	
+
 	@GET
 	@Path("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
 	@Produces(MediaType.TEXT_PLAIN)
@@ -265,5 +273,5 @@ public class HistoryResource {
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
 		return Respond.ok(lastCommit.id);
 	}
-	
+
 }

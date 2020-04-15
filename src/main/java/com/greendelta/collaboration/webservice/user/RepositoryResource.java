@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -28,11 +29,12 @@ import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.IndexService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
@@ -240,29 +242,34 @@ public class RepositoryResource {
 			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		List<IndexEntry> entries = searchService.getAll(from);
+		IndexIterator entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
 		List<String> commitIds = Collections.convertToList(commits, commit -> commit.id);
-		for (IndexEntry entry : entries) {
-			if (!commitIds.contains(entry.commitId))
+		while (entries.hasNext()) {
+			IndexEntry next = entries.next();
+			if (!commitIds.contains(next.commitId))
 				continue;
-			IndexEntry clone = entry.clone();
+			IndexEntry clone = next.clone();
 			clone.repositoryId = to.toId();
 			clone.group = to.group;
 			cloned.add(clone);
+			if (cloned.size() == 1000) {
+				searchService.index(cloned);
+				cloned.clear();
+			}
 		}
-		searchService.index(cloned);
+		if (!cloned.isEmpty()) {
+			searchService.index(cloned);
+		}
 		return response;
 	}
 
 	private void updateRepoId(Repository oldRepo, Repository newRepo) {
-		List<IndexEntry> entries = searchService.getAll(oldRepo);
-		searchService.remove(entries);
-		for (IndexEntry entry : entries) {
-			entry.repositoryId = newRepo.toId();
-			entry.group = newRepo.group;
-		}
-		searchService.index(entries);
+		Set<String> documentIds = searchService.getDocumentIds(oldRepo);
+		Map<String, Object> update = new HashMap<>();
+		update.put("repositoryId", newRepo.toId());
+		update.put("group", newRepo.group);
+		searchService.update(documentIds, update);
 	}
 
 	@PUT

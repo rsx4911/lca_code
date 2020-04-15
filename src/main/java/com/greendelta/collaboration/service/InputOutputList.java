@@ -14,19 +14,18 @@ import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.search.SearchService.BulkUpdate;
 
 /**
  * When committing big amount of system processes (e.g. ecoinvent lci db) the
  * server ran into memory issues while indexing, when directly holding
- * input/output lists of all processes. To avoid incomplete commit indexing, we
- * first collect the (flat) dataset index entries and put them into the search
+ * input/output lists of all processes. To avoid incomplete commit indexing,
+ * first the (flat) dataset index entries are collected and put into the search
  * index, while collecting the input/output lists in a memory efficient way.
- * After sucessfully indexing the whole commit we update the index entries with
- * the collected input/output lists in chunks of 100
+ * After sucessfully indexing the whole commit the index entries with
+ * the collected input/output lists are updated in chunks of 100
  */
 class InputOutputList {
-	
+
 	private static final Logger log = LogManager.getLogger(InputOutputList.class);
 	private final SearchService searchService;
 	private final Repository repo;
@@ -50,7 +49,8 @@ class InputOutputList {
 		for (Map<String, Object> e : exchanges) {
 			Map<String, Object> f = (Map<String, Object>) e.get("flow");
 			if (f == null || f.get("@id") == null) {
-				log.debug("Missing flow or flow['@id'] on exchange in process {} in repository {}" , process, repo.toId());
+				log.debug("Missing flow or flow['@id'] on exchange in process {} in repository {}", process,
+						repo.toId());
 				continue;
 			}
 			String flow = f.get("@id").toString();
@@ -77,23 +77,23 @@ class InputOutputList {
 	}
 
 	void index() {
-		BulkUpdate bulkUpdate = searchService.new BulkUpdate();
 		Set<String> processes = new HashSet<>();
 		processes.addAll(processToInputs.keySet());
 		processes.addAll(processToOutputs.keySet());
 		int count = 0;
+		Map<String, Map<String, Object>> updates = new HashMap<>();
 		for (String process : processes) {
 			String id = IndexEntry.toIndexId(repo.toId(), ModelType.PROCESS, process, commit.id);
-			bulkUpdate.update(id, (data) -> {
-				data.put("inputs", popFlowList(process, processToInputs));
-				data.put("outputs", popFlowList(process, processToOutputs));
-			});
-			if (++count == 100) {
-				bulkUpdate.commit();
+			Map<String, Object> update = new HashMap<>();
+			update.put("inputs", popFlowList(process, processToInputs));
+			update.put("outputs", popFlowList(process, processToOutputs));
+			updates.put(id, update);
+			if (++count == 100 || count == processes.size()) {
+				searchService.update(updates);
+				updates.clear();
 				count = 0;
 			}
 		}
-		bulkUpdate.commit();
 	}
 
 	private List<String> popFlowList(String process, Map<String, List<Integer>> map) {

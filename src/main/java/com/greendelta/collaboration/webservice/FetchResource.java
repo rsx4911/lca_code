@@ -27,7 +27,8 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
+import com.greendelta.collaboration.util.io.JsonIteratorStreamingOutput;
 
 @Path("public/fetch")
 public class FetchResource {
@@ -89,15 +90,16 @@ public class FetchResource {
 			@PathParam("name") String name,
 			@QueryParam("lastCommitId") String lastCommitId,
 			@QueryParam("sync") @DefaultValue("false") boolean sync) {
-		log.debug("Requesting fetch for repository {}/{} (last commit id: {}, sync: {})", group, name, lastCommitId, sync);
+		log.debug("Requesting fetch for repository {}/{} (last commit id: {}, sync: {})", group, name, lastCommitId,
+				sync);
 		Repository repo = repoService.get(group, name);
 		Commit commit = historyService.getCommit(repo, lastCommitId);
-		List<IndexEntry> data = sync
+		IndexIterator entries = sync
 				? searchService.getMostRecentUntil(repo, commit != null ? commit.id : null)
 				: searchService.getMostRecentAfter(repo, commit);
-		if (data.isEmpty())
+		if (entries.isEmpty())
 			return Respond.noContent();
-		return Respond.ok(Collections.convertToList(data, entry -> entry.asFetchRequestData()));
+		return Respond.ok(new JsonIteratorStreamingOutput<IndexEntry>(entries, e -> e.asFetchRequestData()));
 	}
 
 	@GET
@@ -112,10 +114,10 @@ public class FetchResource {
 		Commit commit = historyService.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound("Commit with id " + commitId + " not found");
-		List<IndexEntry> datasets = searchService.getAll(repo, commit.id);
-		if (datasets.isEmpty())
+		IndexIterator entries = searchService.getAll(repo, commit.id);
+		if (entries.isEmpty())
 			return Respond.notFound("Commit with id " + commitId + " not found");
-		return Respond.ok(Collections.convertToList(datasets, entry -> entry.asFetchRequestData()));
+		return Respond.ok(new JsonIteratorStreamingOutput<IndexEntry>(entries, e -> e.asFetchRequestData()));
 	}
 
 	@POST
