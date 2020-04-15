@@ -284,7 +284,7 @@ gulp.task('modifyCustomHtmlPages', function() {
     .pipe(gulp.dest('./target/require-build'));
 });
 gulp.task('modifyCustomPublicHtml', function() {
-    return  gulp.src('./target/require-build//index_public.html')
+    return  gulp.src('./target/require-build/index_public.html')
 		.pipe(gulpif(params.appserver == 'stage',htmlreplace( {
 			'google':{
 				src: null,
