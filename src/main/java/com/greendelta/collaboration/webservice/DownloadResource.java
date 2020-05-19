@@ -89,7 +89,7 @@ abstract class DownloadResource {
 				writer.write(next.type, next.refId);
 			}
 			File tmpFile = writer.close();
-			String token = put(tmpFile, group + "_" + repository + ".zip");
+			String token = put(tmpFile, repo.toFilename());
 			return Respond.ok(token);
 		} catch (IOException e) {
 			return Respond.error("Error writing data sets to tmp file");

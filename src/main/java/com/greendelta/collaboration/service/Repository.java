@@ -82,6 +82,10 @@ public class Repository {
 		return toId(group, name);
 	}
 
+	public String toFilename() {
+		return group + '-' + name + ".zip";
+	}
+
 	void setSetting(String setting, String value) {
 		switch (setting) {
 		case "publicAccess":
@@ -92,6 +96,9 @@ public class Repository {
 			break;
 		case "commentApproval":
 			settings.commentApproval = Boolean.parseBoolean(value);
+			break;
+		case "jsonFileGeneration":
+			settings.jsonFileGeneration = Boolean.parseBoolean(value);
 			break;
 		case "maxSize":
 			settings.maxSize = Long.parseLong(value);
@@ -234,6 +241,10 @@ public class Repository {
 		return new File(repoDir, "avatar");
 	}
 
+	public File getCachedJsonFile() {
+		return new File(repoDir, "cached-json.zip");
+	}
+
 	private File getDatasetDir(ModelType type, String refId, boolean create) {
 		File modelDir = getModelDir(type, create);
 		File intermediateDir = getDir(modelDir, refId.substring(0, 2), create);
@@ -289,6 +300,7 @@ public class Repository {
 		public boolean publicAccess;
 		public boolean prohibitCommits;
 		public boolean commentApproval;
+		public boolean jsonFileGeneration;
 		public long maxSize;
 
 		private Settings() {

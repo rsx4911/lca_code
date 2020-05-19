@@ -67,9 +67,20 @@ define([
 				setting = target.attr 'data-setting'
 				value = target.is ':checked'
 				repository.settings[setting] = value
+				if setting is 'publicAccess'
+					@$('#jsonFileGeneration').attr 'disabled', !value
+				if setting is 'jsonFileGeneration'
+					Layers.showProgressIndicator 'Generating'
 				$.ajax
 					type: 'PUT'
 					url: "ws/repository/settings/#{fullPath}/#{setting}/#{value}"
+					success: () =>
+						if setting is 'jsonFileGeneration'
+							Layers.hideProgressIndicator()
+					error: () =>
+						if setting is 'jsonFileGeneration'
+							Layers.hideProgressIndicator()
+
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()
