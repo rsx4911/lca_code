@@ -6,10 +6,7 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.core.StreamingOutput;
 
@@ -17,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.data.ModelStream;
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.BinUtils;
@@ -25,8 +21,9 @@ import org.openlca.util.BinUtils;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
+import com.greendelta.collaboration.service.search.SearchService.RequestedFilter;
 import com.greendelta.collaboration.util.Bytes;
-import com.greendelta.collaboration.util.Collections;
 
 public class FetchService {
 
@@ -65,42 +62,30 @@ public class FetchService {
 
 	public StreamingOutput prepareDataForDownload(Repository repo, List<FileReference> requested, Commit commit) {
 		String commitId = commit != null ? commit.id : null;
-		List<IndexEntry> entries = searchService.getMostRecentUntil(repo, commitId);
-		if (requested != null && !requested.isEmpty()) {
-			entries = Collections.filter(entries, entry -> !requested.contains(entry.asFileReference()));
-		}
+		IndexIterator entries = searchService.getMostRecentUntil(repo, commitId, new RequestedFilter(requested));
 		if (commitId == null) {
 			commitId = historyService.getLastCommit(repo).id;
 		}
-		return prepareData(repo, entries, commitId);
+		return prepareData(repo, entries, requested.size(), commitId);
 	}
 
 	public StreamingOutput prepareDataForFetch(Repository repo, List<FileReference> requested, Commit commit) {
 		String commitId = historyService.getLastCommit(repo).id;
 		if (requested == null || requested.isEmpty())
-			return prepareData(repo, new ArrayList<>(), commitId);
-		List<IndexEntry> entries = searchService.getMostRecentAfter(repo, commit);
-		entries = Collections.filter(entries, entry -> !requested.contains(entry.asFileReference()));
-		return prepareData(repo, entries, commitId);
+			return prepareData(repo, null, 0, commitId);
+		IndexIterator entries = searchService.getMostRecentAfter(repo, commit, new RequestedFilter(requested));
+		return prepareData(repo, entries, requested.size(), commitId);
 	}
 
-	public StreamingOutput prepareData(Repository repo, List<IndexEntry> entries, String commitId) {
-		log.debug("Starting to stream fetch data, total of {} data sets", entries.size());
+	public StreamingOutput prepareData(Repository repo, IndexIterator entries, int total, String commitId) {
+		log.debug("Starting to stream fetch data");
 
 		return new StreamingOutput() {
 
 			@Override
 			public void write(OutputStream output) throws IOException {
 				int read = -1;
-				Map<String, String> commitIds = new HashMap<>();
-				for (IndexEntry entry : entries) {
-					commitIds.put(entry.toId(), entry.commitId);
-				}
-				try (FetchStream stream = new FetchStream(repo, commitId, entries) {
-					protected Map<String, String> getCommitIds() {
-						return commitIds;
-					}
-				}) {
+				try (FetchStream stream = new FetchStream(repo, commitId, entries, total)) {
 					while ((read = stream.read()) != -1) {
 						output.write(read);
 					}
@@ -109,33 +94,31 @@ public class FetchService {
 		};
 	}
 
-	private abstract class FetchStream extends ModelStream {
+	private class FetchStream extends ModelStream<IndexEntry> {
 
 		private final Repository repo;
 
-		private FetchStream(Repository repo, String commitId, List<IndexEntry> entries) {
-			super(commitId, Collections.convertToSet(entries, entry -> entry.asDataset()));
+		private FetchStream(Repository repo, String commitId, IndexIterator entries, int total) {
+			super(commitId, entries, total);
 			this.repo = repo;
 		}
 
 		@Override
-		protected byte[] getData(Dataset dataset) throws IOException {
-			File file = repo.getDatasetFile(dataset.type, dataset.refId, getCommitIds().get(dataset.toId()), false);
+		protected byte[] getData(IndexEntry dataset) throws IOException {
+			File file = repo.getDatasetFile(dataset.type, dataset.refId, dataset.commitId, false);
 			log.trace("Loading data for {} {}", dataset.type, dataset.refId);
 			return Bytes.read(file);
 		}
 
 		@Override
-		protected File getBinaryFilesLocation(Dataset dataset) {
-			return getBinDir(repo, dataset.type, dataset.refId, getCommitIds().get(dataset.toId()));
+		protected File getBinaryFilesLocation(IndexEntry dataset) {
+			return getBinDir(repo, dataset.type, dataset.refId, dataset.commitId);
 		}
 
 		@Override
 		protected byte[] getBinaryData(Path file) throws IOException {
 			return Files.readAllBytes(file);
 		}
-
-		protected abstract Map<String, String> getCommitIds();
 
 	}
 }

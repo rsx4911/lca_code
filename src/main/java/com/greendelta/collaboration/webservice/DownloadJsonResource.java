@@ -13,6 +13,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.elasticsearch.common.Strings;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
@@ -33,6 +34,8 @@ public class DownloadJsonResource extends DownloadResource {
 
 	private final FetchService fetchService;
 	private final SearchService searchService;
+	private final HistoryService historyService;
+	private final RepositoryService repoService;
 
 	@Inject
 	public DownloadJsonResource(RepositoryService repoService, HistoryService historyService, FetchService fetchService,
@@ -40,6 +43,8 @@ public class DownloadJsonResource extends DownloadResource {
 		super(repoService, historyService, searchService, browseService, userService);
 		this.fetchService = fetchService;
 		this.searchService = searchService;
+		this.historyService = historyService;
+		this.repoService = repoService;
 	}
 
 	@GET
@@ -47,6 +52,11 @@ public class DownloadJsonResource extends DownloadResource {
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	@Override
 	public Response download(@PathParam("token") String token) {
+		if (token.startsWith("repository_")) {
+			Repository repo = repoService.get(token.substring(11).replace("@", "/"));
+			if (repo.getCachedJsonFile().exists())
+				return Respond.ok(repo.toFilename(), repo.getCachedJsonFile());
+		}
 		return super.download(token);
 	}
 
@@ -54,20 +64,33 @@ public class DownloadJsonResource extends DownloadResource {
 	@Path("prepare/{group}/{repository}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareByPath(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			@QueryParam("commitId") String commitId, 
+			@QueryParam("commitId") String commitId,
 			@QueryParam("path") String path) {
+		if (isCompleteCurrentRepo(group, repository, commitId, path))
+			return Respond.ok("repository_" + group + "@" + repository);
 		return super.prepare(group, repository, commitId, path);
+	}
+
+	private boolean isCompleteCurrentRepo(String group, String repository, String commitId, String path) {
+		Repository repo = repoService.get(group, repository);
+		if (!repo.getCachedJsonFile().exists())
+			return false; // is not cached
+		if (!Strings.isNullOrEmpty(path))
+			return false; // is not complete repo
+		if (commitId != null && !historyService.getLastCommit(repo).id.equals(commitId))
+			return false; // is not current state (last commit)
+		return true;
 	}
 
 	@GET
 	@Path("prepare/{group}/{repository}/{type}/{refId}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareDataset(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			@PathParam("type") ModelType type, 
+			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
 		return super.prepare(group, repository, type, refId, commitId);
@@ -77,9 +100,9 @@ public class DownloadJsonResource extends DownloadResource {
 	@Path("prepare/{group}/{repository}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareSelection(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			@QueryParam("commitId") String commitId, 
+			@QueryParam("commitId") String commitId,
 			List<Reference> references) {
 		return super.prepare(group, repository, commitId, collectRefs(group, repository, references));
 	}
@@ -92,7 +115,7 @@ public class DownloadJsonResource extends DownloadResource {
 			@PathParam("repository") String repository,
 			@QueryParam("commitId") String commitId,
 			List<FileReference> requested) {
-		return super.prepare(group, repository, commitId, requested);
+		return super.prepare(group, repository, commitId, requested.iterator());
 	}
 
 	@Override
