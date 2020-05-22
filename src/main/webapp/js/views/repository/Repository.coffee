@@ -86,11 +86,21 @@ define([
 			
 			putSetting: (setting, value) ->
 				repository = @repository.toJSON()
+				if setting is 'PUBLIC_ACCESS'
+					@$('#jsonFileGeneration').attr 'disabled', !value
+				if setting is 'JSON_FILE_GENERATION'
+					Layers.showProgressIndicator 'Generating'
 				$.ajax
 					type: 'PUT'
 					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}"
 					contentType: 'application/json'
 					data: JSON.stringify({value: value})
+					success: () =>
+						if setting is 'JSON_FILE_GENERATION'
+							Layers.hideProgressIndicator()
+					error: () =>
+						if setting is 'JSON_FILE_GENERATION'
+							Layers.hideProgressIndicator()
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()

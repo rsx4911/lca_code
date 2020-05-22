@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice.user;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.ws.rs.GET;
@@ -18,11 +19,14 @@ import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.CommitService;
+import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("commit")
@@ -34,15 +38,20 @@ public class CommitResource {
 	private final HistoryService historyService;
 	private final NotificationService notificationService;
 	private final AccessService accessService;
+	private final FetchService fetchService;
+	private final SearchService searchService;
 
 	@Inject
 	public CommitResource(CommitService service, RepositoryService repoService, HistoryService historyService,
-			NotificationService notificationService, AccessService accessService) {
+			NotificationService notificationService, AccessService accessService, FetchService fetchService,
+			SearchService searchService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.historyService = historyService;
 		this.notificationService = notificationService;
 		this.accessService = accessService;
+		this.fetchService = fetchService;
+		this.searchService = searchService;
 	}
 
 	@GET
@@ -89,6 +98,13 @@ public class CommitResource {
 		if (commit == null)
 			return Respond.error("Unknown error handling commit data");
 		notificationService.dataCommitted(repo, commit).send();
+		if (repo.settings.publicAccess && repo.settings.jsonFileGeneration) {
+			try {
+				RepositoryJsonWriter.writeCurrent(fetchService, searchService, historyService, repo);
+			} catch (IOException e) {
+				log.error("Error creating cached json file", e);
+			}
+		}
 		return Respond.created(commit.id);
 	}
 

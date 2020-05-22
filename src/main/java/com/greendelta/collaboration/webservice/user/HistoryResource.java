@@ -60,25 +60,6 @@ public class HistoryResource {
 	}
 
 	@GET
-	@Path("{group}/{name}")
-	public Response getCommitHistory(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("lastCommitId") String lastCommitId) {
-		Repository repo = repoService.get(group, name);
-		if (lastCommitId != null && !lastCommitId.isEmpty()) {
-			Commit commit = service.getCommit(repo, lastCommitId);
-			if (commit == null)
-				return Respond.notFound("Commit " + lastCommitId + " not found");
-		}
-		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
-		if (commits.size() == 0)
-			return Respond.noContent();
-		java.util.Collections.reverse(commits);
-		return Respond.ok(putUserName(commits));
-	}
-
-	@GET
 	@Path("{group}/{name}/{type}/{refId}")
 	public Response getCommitHistory(
 			@PathParam("group") String group,
@@ -106,6 +87,25 @@ public class HistoryResource {
 			mapped.add(map);
 		}
 		return Respond.ok(mapped);
+	}
+
+	@GET
+	@Path("{group}/{name}")
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("lastCommitId") String lastCommitId) {
+		Repository repo = repoService.get(group, name);
+		if (lastCommitId != null && !lastCommitId.isEmpty()) {
+			Commit commit = service.getCommit(repo, lastCommitId);
+			if (commit == null)
+				return Respond.notFound("Commit " + lastCommitId + " not found");
+		}
+		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
+		if (commits.size() == 0)
+			return Respond.noContent();
+		java.util.Collections.reverse(commits);
+		return Respond.ok(putUserName(commits));
 	}
 
 	@GET

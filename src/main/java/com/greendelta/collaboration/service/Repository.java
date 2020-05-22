@@ -90,6 +90,10 @@ public class Repository {
 		return toId(group, name);
 	}
 
+	public String toFilename() {
+		return group + '-' + name + ".zip";
+	}
+
 	void setSetting(RepositorySetting setting, Object value) {
 		setting.set(settings, value);
 		try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
@@ -235,6 +239,10 @@ public class Repository {
 		return new File(repoDir, "avatar");
 	}
 
+	public File getCachedJsonFile() {
+		return new File(repoDir, "cached-json.zip");
+	}
+
 	private File getDatasetDir(ModelType type, String refId, boolean create) {
 		File modelDir = getModelDir(type, create);
 		File intermediateDir = getDir(modelDir, refId.substring(0, 2), create);
@@ -290,6 +298,7 @@ public class Repository {
 		public boolean publicAccess;
 		public boolean prohibitCommits;
 		public boolean commentApproval;
+		public boolean jsonFileGeneration;
 		public long maxSize;
 		public String label;
 		public String description;
@@ -306,6 +315,7 @@ public class Repository {
 		PUBLIC_ACCESS("publicAccess", RepositorySetting::parseBoolean),
 		PROHIBIT_COMMITS("prohibitCommits", RepositorySetting::parseBoolean),
 		COMMENT_APPROVAL("commentApproval", RepositorySetting::parseBoolean),
+		JSON_FILE_GENERATION("jsonFileGeneration", RepositorySetting::parseBoolean),
 		MAX_SIZE("maxSize", RepositorySetting::parseLong),
 		LABEL("label", RepositorySetting::parseString),
 		DESCRIPTION("description", RepositorySetting::parseString),

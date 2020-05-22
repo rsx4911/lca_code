@@ -93,6 +93,7 @@ mixin to-size(value, inGb, round, showUnit)
 						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
 	if publicReposEnabled
 		+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='PUBLIC_ACCESS')
+		+checkbox('jsonFileGeneration', 'Generate cached json file on commit')(disabled=!repository.userCanSetSettings||!repository.settings.publicAccess, checked=repository.settings.jsonFileGeneration, data-setting='JSON_FILE_GENERATION')
 	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='PROHIBIT_COMMITS')
 	if commentsEnabled
 		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='COMMENT_APPROVAL')

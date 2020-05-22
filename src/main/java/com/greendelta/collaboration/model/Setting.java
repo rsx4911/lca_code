@@ -1,8 +1,5 @@
 package com.greendelta.collaboration.model;
 
-import java.util.Arrays;
-import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -172,9 +169,7 @@ public class Setting extends AbstractEntity {
 		}
 
 		public boolean isFeature() {
-			List<Key> features = Arrays.asList(MESSAGING_ENABLED, TASKS_ENABLED, COMMENTS_ENABLED,
-					PUBLIC_REPOSITORY_ENABLED);
-			return features.contains(this);
+			return this.name().endsWith("_ENABLED");
 		}
 
 		public boolean isImprint() {

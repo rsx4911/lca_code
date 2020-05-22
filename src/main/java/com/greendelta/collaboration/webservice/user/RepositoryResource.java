@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.webservice.user;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
+import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.IndexService;
@@ -41,6 +44,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -50,6 +54,7 @@ import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
@@ -74,12 +79,14 @@ public class RepositoryResource {
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 	private final LibraryService libraryService;
+	private final FetchService fetchService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, MembershipService membershipService,
 			UserService userService, AccessService accessService, HistoryService historyService,
 			SearchService searchService, BrowseService browseService, IndexService indexService,
-			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService) {
+			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService,
+			FetchService fetchService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -92,6 +99,7 @@ public class RepositoryResource {
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 		this.libraryService = libraryService;
+		this.fetchService = fetchService;
 	}
 
 	@GET
@@ -172,8 +180,7 @@ public class RepositoryResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
-		String filename = repo.toId().replace('/', '-') + ".zip";
-		return Respond.ok(filename, 0, service.pack(repo));
+		return Respond.ok(repo.toFilename(), 0, service.pack(repo));
 	}
 
 	@POST
@@ -270,18 +277,25 @@ public class RepositoryResource {
 			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		List<IndexEntry> entries = searchService.getAll(from);
+		IndexIterator entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
 		List<String> commitIds = Collections.convertToList(commits, commit -> commit.id);
-		for (IndexEntry entry : entries) {
-			if (!commitIds.contains(entry.commitId))
+		while (entries.hasNext()) {
+			IndexEntry next = entries.next();
+			if (!commitIds.contains(next.commitId))
 				continue;
-			IndexEntry clone = entry.clone();
+			IndexEntry clone = next.clone();
 			clone.repositoryId = to.toId();
 			clone.group = to.group;
 			cloned.add(clone);
+			if (cloned.size() == 1000) {
+				searchService.index(cloned);
+				cloned.clear();
+			}
 		}
-		searchService.index(cloned);
+		if (!cloned.isEmpty()) {
+			searchService.index(cloned);
+		}
 		return response;
 	}
 
@@ -317,7 +331,7 @@ public class RepositoryResource {
 		RepositoryMigrator migrator = new RepositoryMigrator(service, indexService);
 		try {
 			MigrateResponse response = migrator.migrate(url, repo, username, password, map.getInteger("token"));
-			if (response == MigrateResponse.TOKEN_REQUIRED) 
+			if (response == MigrateResponse.TOKEN_REQUIRED)
 				return Respond.invalid("token", "Token required");
 		} catch (WebRequestException e) {
 			if (e.isConnectException() || e.getCause() instanceof ClientHandlerException)
@@ -362,7 +376,24 @@ public class RepositoryResource {
 			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
 			searchService.update(documentIds, update);
 		}
+		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting) && repo.settings.publicAccess) {
+			try {
+				handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
+			} catch (IOException e) {
+				return Respond.error("Error creating cached json file");
+			}
+		}
 		return Respond.ok(new HashMap<>());
+	}
+
+	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
+		File file = repo.getCachedJsonFile();
+		if (file.exists()) {
+			file.delete();
+		}
+		if (!create)
+			return;
+		RepositoryJsonWriter.writeCurrent(fetchService, searchService, historyService, repo);
 	}
 
 	@PUT
