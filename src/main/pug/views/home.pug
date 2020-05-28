@@ -8,11 +8,13 @@
 				button.btn.btn-lg.btn-primary(data-action='search') Search
 .pinned-repositories(class=repositories.length>=3?'three-columns':repositories.length===2?'two-columns':null)
 	each repo in repositories
-		.pinned-repository
+		.pinned-repository(data-group=repo.group data-repo=repo.name)
 			.header-box
 				h4=repo.label
-				.dataset-count #{repo.datasets} data sets
+				.dataset-count #{repo.datasets} data sets 
+					button.btn.btn-default.btn-xs(data-action='download'): span.glyphicon.glyphicon-download
 				.repo-description
 					if repo.settings.description
 						h4: small=repo.settings.description
-				button.btn.btn-lg.btn-full-width.btn-success(data-repo=repo.group+'/'+repo.name) Browse 
+				div
+				button.btn.btn-lg.btn-full-width.btn-success(data-action='browse') Browse 

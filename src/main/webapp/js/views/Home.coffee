@@ -3,11 +3,12 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Renderer'
 				'cs!app/Router'
+				'cs!views/repository/Download'
 				'cs!models/Settings'
 				'templates/views/home'
 			]
 
-	(Backbone, Events, Renderer, Router, settings, template) ->
+	(Backbone, Events, Renderer, Router, Download, settings, template) ->
 
 		class Home extends Backbone.View
 
@@ -22,13 +23,25 @@ define([
 
 			browseRepo: (event) ->
 				target = $ Events.target event
+				while !target.hasClass('pinned-repository')
+					target = target.parent()
+				group = target.attr 'data-group'
 				repo = target.attr 'data-repo'
-				Router.navigate repo
+				Router.navigate "#{group}/#{repo}"
+
+			downloadRepo: (event) ->
+				target = $ Events.target event
+				while !target.hasClass('pinned-repository')
+					target = target.parent()
+				group = target.attr 'data-group'
+				repo = target.attr 'data-repo'
+				Download.repository group, repo
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 				'submit #search-form': 'search'
-				'click [data-repo]': 'browseRepo'
+				'click [data-action=browse]': 'browseRepo'
+				'click [data-action=download]': 'downloadRepo'
 
 			render: (renderOptions) ->
 				$.ajax
