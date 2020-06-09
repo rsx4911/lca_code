@@ -51,7 +51,7 @@ public class GladResource {
 			"refId", "processType", "supportedNomenclatures", "aggregationType", "name", "categories", "location",
 			"completeness", "technology", "copyrightHolder", "license", "contact", "description", "dataSetUrl",
 			"format", "validFrom", "validFromYear", "validUntil", "validUntilYear", "copyrightProtected",
-			"dataprovider"));
+			"dataprovider", "reviewers", "reviewType", "longitude", "latitude", "publiclyAccessible"));
 
 	private final RepositoryService repoService;
 	private final BrowseService browseService;
@@ -105,6 +105,7 @@ public class GladResource {
 				String refId = data.get("refId").toString();
 				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/"
 						+ refId + "?commitId=" + dsToCommit.get(refId));
+				data.put("publiclyAccessible", repo.settings.publicAccess);
 				for (String key : new ArrayList<>(data.keySet())) {
 					if (!GLAD_FIELDS.contains(key)) {
 						data.remove(key);
@@ -126,12 +127,16 @@ public class GladResource {
 		ObjectMap data = ObjectMap.fromMap(repo.readData(ModelType.PROCESS, refId, dsToCommit.get(refId)));
 		String reviewer = data.getString("processDocumentation.reviewer.name");
 		d.put("processType", getProcessType(data.getString("processType")));
-		d.put("completeness", data.getString("processDocumentation.completenessDescription"));
 		d.put("validFrom", Dates.getTime(data.get("processDocumentation.validFrom")));
 		d.put("validUntil", Dates.getTime(data.get("processDocumentation.validUntil")));
 		d.put("technology", data.getString("processDocumentation.technologyDescription"));
 		if (!Strings.isNullOrEmpty(reviewer)) {
 			d.put("reviewers", new String[] { reviewer });
+			d.put("reviewType", "UNKNOWN");
+		}
+		if (data.get("location.latitude") != null && data.get("location.longitude") != null); {
+			d.put("latitude", data.getLong("location.latitude"));
+			d.put("longitude", data.getLong("location.longitude"));
 		}
 		d.put("reviewed", !Strings.isNullOrEmpty(reviewer));
 		d.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
