@@ -50,7 +50,7 @@ public class GladResource {
 	private static final List<String> GLAD_FIELDS = new ArrayList<>(Arrays.asList(
 			"refId", "processType", "supportedNomenclatures", "aggregationType", "name", "categories", "location",
 			"completeness", "technology", "copyrightHolder", "license", "contact", "description", "dataSetUrl",
-			"format", "validFrom", "validFromYear", "validUntil", "validUntilYear", "copyrightProtected",
+			"format", "validFrom", "validFromYear", "validUntil", "validUntilYear", "copyrightProtected", "free",
 			"dataprovider", "reviewers", "reviewType", "longitude", "latitude", "publiclyAccessible"));
 
 	private final RepositoryService repoService;
@@ -106,6 +106,7 @@ public class GladResource {
 				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/"
 						+ refId + "?commitId=" + dsToCommit.get(refId));
 				data.put("publiclyAccessible", repo.settings.publicAccess);
+				data.put("free", repo.settings.publicAccess);
 				for (String key : new ArrayList<>(data.keySet())) {
 					if (!GLAD_FIELDS.contains(key)) {
 						data.remove(key);
