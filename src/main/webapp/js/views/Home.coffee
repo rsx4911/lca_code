@@ -49,10 +49,15 @@ define([
 					url: 'ws/public/repository'
 					success: (repositories) =>
 						visible = []
-						hiddenRepositories = (settings.getVal('HOME_HIDDEN_REPOSITORIES') || '').split ';'
+						hiddenRepositories = (settings.getVal('REPOSITORIES_HIDDEN') || '').split ';'
 						for repo in repositories
 							if $.inArray(repo.group+'/'+repo.name, hiddenRepositories) is -1
 								visible.push repo
+						orderedRepositories = (settings.getVal('REPOSITORIES_ORDER') || '').split ';'
+						visible.sort (r1, r2) ->
+							i1 = orderedRepositories.indexOf(r1.group + '/' + r1.name)
+							i2 = orderedRepositories.indexOf(r2.group + '/' + r2.name)
+							return i1 - i2
 						@$el.html template
 							title: settings.getVal('HOME_TITLE')
 							welcomeText: settings.getVal('HOME_TEXT')
