@@ -60,7 +60,8 @@ public class RepositoryService {
 
 	@Inject
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService, GroupService groupService, TaskService taskService) {
+			CommentService commentService, SettingsService settingsService, GroupService groupService,
+			TaskService taskService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
@@ -287,11 +288,11 @@ public class RepositoryService {
 	}
 
 	public List<String> getPublicRepositoryOrder() {
-		return getRepositoryList(Key.HOME_REPOSITORY_ORDER, true);
+		return getRepositoryList(Key.REPOSITORIES_ORDER, true);
 	}
 
 	public List<String> getPublicHiddenRepositories() {
-		return getRepositoryList(Key.HOME_HIDDEN_REPOSITORIES, false);
+		return getRepositoryList(Key.REPOSITORIES_HIDDEN, false);
 	}
 
 	private List<String> getRepositoryList(Key key, boolean addMissing) {

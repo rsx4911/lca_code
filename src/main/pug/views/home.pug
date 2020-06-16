@@ -12,7 +12,7 @@
 			.header-box
 				h4=repo.label
 				.dataset-count #{repo.datasets} data sets 
-					button.btn.btn-default.btn-xs(data-action='download'): span.glyphicon.glyphicon-download
+					button.btn.btn-default.btn-xs(data-action='download' title='Download ' + repo.label + ' as JSON-LD'): span.glyphicon.glyphicon-download
 				.repo-description
 					if repo.settings.description
 						h4: small=repo.settings.description

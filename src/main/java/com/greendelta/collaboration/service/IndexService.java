@@ -21,7 +21,6 @@ import com.greendelta.collaboration.service.search.DataFill;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Collections;
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class IndexService {
@@ -71,8 +70,7 @@ public class IndexService {
 
 		private Runner(Repository repo) {
 			this.repo = repo;
-			collectRefs(ModelType.CATEGORY);
-			for (ModelType type : ModelTypes.SORTED) {
+			for (ModelType type : ModelType.categorized()) {
 				collectRefs(type);
 			}
 			collectRefs(ModelType.IMPACT_CATEGORY);

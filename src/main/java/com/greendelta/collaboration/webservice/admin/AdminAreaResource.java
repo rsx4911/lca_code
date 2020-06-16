@@ -125,11 +125,13 @@ public class AdminAreaResource {
 		info.put("licenseAgreementText", settingsService.get(Key.LICENSE_AGREEMENT_TEXT));
 		info.put("homeTitle", settingsService.get(Key.HOME_TITLE));
 		info.put("homeText", settingsService.get(Key.HOME_TEXT));
-		info.put("homeOrderedRepositories", repoService.getPublicRepositoryOrder());
-		info.put("homeHiddenRepositories", repoService.getPublicHiddenRepositories());
+		info.put("orderedRepositories", repoService.getPublicRepositoryOrder());
+		info.put("hiddenRepositories", repoService.getPublicHiddenRepositories());
+		info.put("orderedModelTypes", settingsService.getArray(Key.MODEL_TYPES_ORDER));
+		info.put("hiddenModelTypes", settingsService.getArray(Key.MODEL_TYPES_HIDDEN));
 		return Respond.ok(info);
 	}
-
+	
 	@PUT
 	@Path("clearIndex")
 	public Response clearIndex() {

@@ -26,17 +26,19 @@ mixin editable-text(action, label, value, defaultValue)
 		a(href='#' data-action=action)
 			span.glyphicon.glyphicon-edit
 
-mixin home-repository-order()
-	.ordered-repositories
-		strong Home public repository order: 
+mixin ordered-list(title, elements)
+	.ordered-list
+		strong #{title}: 
 		ol
-			each repo in homeOrderedRepositories
-				li=repo.path
+			each element in elements
+				li(data-id=element.id data-hidden=element.hidden)
+					span.list-label=element.label
+					|  
 					span.glyphicon.glyphicon-upload
 					|  
 					span.glyphicon.glyphicon-download
 					|  
-					span.glyphicon(class='glyphicon-eye-' + (repo.hidden ? 'close' : 'open') data-action='change-visibility' data-repo=repo.path)
+					span.glyphicon(class='glyphicon-eye-' + (element.hidden ? 'close' : 'open') data-action='change-visibility')
 			
 .content-box.overview
 	div(class=isAdmin?'four-columns':'two-columns')
@@ -64,14 +66,21 @@ if isAdmin
 		div
 			strong Build date: 
 			| {{buildDate}}
-		hr
 		div 
 			strong Open web service requests: 
 			span#open-web-service-requests #{openWebServiceRequests}
 			|  
 			a(href='#' data-action='refresh-open-web-service-requests')
 				span.glyphicon.glyphicon-refresh
-		br
+	.header-box Search/Browse configuration
+	.content-box
+		.col-md-6
+			.model-types-order: +ordered-list('Model type order', orderedModelTypes)
+		.col-md-6
+			.repositories-order: +ordered-list('Public repository order', orderedRepositories)
+		.clear
+	.header-box Messages & Texts
+	.content-box
 		+editable-text('set-maintenance-message', 'Maintenance message', maintenanceMessage, 'Not set') 
 		+editable-text('set-announcement', 'Announcement text', announcement, 'No announcement set') 
 		+editable-text('set-license-agreement-text', 'License agreement text', licenseAgreementText, 'No license agreement set') 
@@ -79,4 +88,3 @@ if isAdmin
 			hr
 			+editable-text('set-home-title', 'Home title', homeTitle, 'Not set') 
 			+editable-text('set-home-text', 'Home welcome text', homeText, 'Not set') 
-			+home-repository-order()

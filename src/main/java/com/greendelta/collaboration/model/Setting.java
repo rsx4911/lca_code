@@ -7,10 +7,14 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.openlca.core.model.ModelType;
+
+import com.greendelta.collaboration.util.Collections;
+
 @Entity
 @Table(name = "settings")
 public class Setting extends AbstractEntity {
-
+	
 	@Id
 	@Column(name = "id")
 	private long id;
@@ -31,6 +35,11 @@ public class Setting extends AbstractEntity {
 	public void setId(long id) {
 		this.id = id;
 	}
+	
+	private static final ModelType[] DEFAULT_MODEL_TYPES_ORDER = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM, ModelType.PROCESS,
+			ModelType.IMPACT_METHOD, ModelType.FLOW, ModelType.SOCIAL_INDICATOR, ModelType.PARAMETER,
+			ModelType.DQ_SYSTEM, ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP, ModelType.CURRENCY,
+			ModelType.ACTOR, ModelType.SOURCE, ModelType.LOCATION, ModelType.CATEGORY };
 
 	public enum Key {
 
@@ -69,8 +78,12 @@ public class Setting extends AbstractEntity {
 		// home settings
 		HOME_TITLE(String.class, ""),
 		HOME_TEXT(String.class, ""),
-		HOME_REPOSITORY_ORDER(String.class, ""),
-		HOME_HIDDEN_REPOSITORIES(String.class, ""),
+
+		// landing page/search settings
+		REPOSITORIES_ORDER(String.class, ""),
+		REPOSITORIES_HIDDEN(String.class, ""),
+		MODEL_TYPES_ORDER(String.class, Collections.join(DEFAULT_MODEL_TYPES_ORDER, ";")),
+		MODEL_TYPES_HIDDEN(String.class, ""),
 		
 		// imprint
 		IMPRINT_COMPANY(String.class),

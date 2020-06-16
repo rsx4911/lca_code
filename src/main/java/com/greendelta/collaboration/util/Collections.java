@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -215,6 +216,10 @@ public class Collections {
 		return sublist;
 	}
 
+	public static <T> String join(T[] array, String delimiter) {
+		return join(Arrays.asList(array), e -> e.toString(), delimiter);
+	}
+	
 	public static String join(Collection<String> col, String delimiter) {
 		return join(col, v -> v, delimiter);
 	}

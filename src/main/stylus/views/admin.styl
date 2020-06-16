@@ -32,11 +32,16 @@
 			padding-left 5px
 			padding-right 5px
 
-	.ordered-repositories
+	.ordered-list
 		display flex
 
 		.glyphicon
 			cursor pointer
+
+		li[data-hidden] .list-label
+			font-style italic
+			text-decoration line-through
+			color rgb(125, 125, 125)
 
 		li:first-child > span.glyphicon.glyphicon-upload
 			display none

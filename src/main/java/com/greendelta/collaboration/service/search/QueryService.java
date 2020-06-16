@@ -22,7 +22,6 @@ import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
-import com.greendelta.search.wrapper.SearchSorting;
 import com.greendelta.search.wrapper.aggregations.SearchAggregation;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
@@ -31,13 +30,15 @@ class QueryService {
 	private final SettingsService settingsService;
 	private final RepositoryService repoService;
 	private final UserService userService;
+	private final ScoreService scoreService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService) {
+	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService, ScoreService scoreService) {
 		this.settingsService = settingsService;
 		this.repoService = repoService;
 		this.userService = userService;
+		this.scoreService = scoreService;
 	}
 
 	SearchResult<IndexEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
@@ -57,13 +58,10 @@ class QueryService {
 		}
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
-		} else {
-			builder.sortBy("typeOrdinal", SearchSorting.DESC);
-			builder.sortBy("commitTimestamp", SearchSorting.DESC);
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
-		Scoring.apply(builder);
+		scoreService.apply(builder);
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchQuery searchQuery = builder.build();
 		SearchResult<Map<String, Object>> result = client.search(searchQuery);
@@ -100,7 +98,7 @@ class QueryService {
 
 	private String[] getModelTypes() {
 		Set<String> types = new HashSet<>();
-		for (ModelType type : ModelType.categorized()) {
+		for (ModelType type : settingsService.getModelTypes()) {
 			types.add(type.name());
 		}
 		return types.toArray(new String[types.size()]);

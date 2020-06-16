@@ -31,7 +31,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.service.GroupService.GroupSettings;
-import com.greendelta.collaboration.util.ModelTypes;
 
 public class Repository {
 
@@ -171,7 +170,7 @@ public class Repository {
 
 	private long determineSize() {
 		long size = 0;
-		for (ModelType type : ModelTypes.SORTED) {
+		for (ModelType type : ModelType.values()) {
 			size += Dirs.size(getModelDir(type, false).toPath());
 		}
 		size += Dirs.size(getBinDir(false).toPath());

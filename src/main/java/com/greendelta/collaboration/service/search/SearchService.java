@@ -24,7 +24,6 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
@@ -277,9 +276,7 @@ public class SearchService {
 
 	private ObjectMap toMap(IndexEntry entry) {
 		setDummyCategoryId(entry);
-		ObjectMap map = ObjectMap.fromObject(entry);
-		map.put("typeOrdinal", ModelTypes.getOrdinal(entry.type, entry.categoryType));
-		return map;
+		return ObjectMap.fromObject(entry);
 	}
 
 	private void setDummyCategoryId(IndexEntry entry) {
