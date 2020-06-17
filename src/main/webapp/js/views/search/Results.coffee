@@ -130,6 +130,8 @@ define([
 				for key in keys
 					if type is 'repositoryId' and key is 'group'
 						continue						
+					if type is 'group' and key is 'repositoryId'
+						continue						
 					copy[key] = []
 					for v in @aggregations[key]
 						if type isnt key
