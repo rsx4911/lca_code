@@ -209,6 +209,7 @@ define([
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits
 					commitId: @commitId
+					description: @repository.get('settings').description
 					getRootLabel: (type) -> return ModelTypes[type]
 					getIcon: Icons.get
 				Renderer.render @, renderOptions
