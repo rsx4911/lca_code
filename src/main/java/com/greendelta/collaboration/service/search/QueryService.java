@@ -1,9 +1,11 @@
 package com.greendelta.collaboration.service.search;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
@@ -16,6 +18,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
@@ -57,7 +60,7 @@ class QueryService {
 			builder.filter("action", allowed);
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
+			builder.query(toWildcardQuery(query.toLowerCase()), SearchFields.get(type, loggedIn));
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
@@ -70,6 +73,26 @@ class QueryService {
 		return prepResult(result);
 	}
 
+	private static String toWildcardQuery(String query) {
+		StringTokenizer splitter = new StringTokenizer(query, "\"", true);
+		boolean escaped = false;
+		List<String> values = new ArrayList<>();
+		while (splitter.hasMoreTokens()) {
+			String token = splitter.nextToken();
+			if ("\"".equals(token)) {
+				escaped = !escaped;
+			} else if (escaped) {
+				values.add("\"" + token + "\"");
+			} else {
+				token = token.replace("@", " ");
+				for (String word : token.trim().split("\\s+")) {
+					values.add(word + "*");
+				}
+			}
+		}
+		return Collections.join(values, " ");
+	}
+	
 	private void putAggregations(SearchQueryBuilder builder, List<Repository> repos, Map<String, Set<String>> filters,
 			ModelType type) {
 		for (SearchAggregation aggregation : Aggregations.getFilters(type)) {
