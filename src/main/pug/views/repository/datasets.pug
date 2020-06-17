@@ -20,7 +20,7 @@ mixin download-dropdown()
 
 mixin category-or-description()
 	if !pathAsArray.length && description
-		span.repository-description #{description}
+		.repository-description #{description}
 	else
 		+category-breadcrumb(baseUrl, pathAsArray, false, false, commitId)
 
@@ -43,7 +43,7 @@ if showCommitSelection || categoryPath
 				input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
 			.clear
 if !isPublic || pathAsArray
-	.header-box
+	.header-box(class=!showCommitSelection&&!categoryPath?'only-box':null)
 		if deleted
 			.pull-left
 				+category-or-description()
