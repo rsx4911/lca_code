@@ -1,6 +1,9 @@
 .search-view
 
-	& > *
+	.header-box .badge:not(:last-child)
+		margin-right 5px
+
+	.search-results
 		padding 0
 
 	.result
@@ -37,9 +40,6 @@
 	
 	.aggregations
 		
-		@media(min-width 1200px)
-			margin-left 25px
-		
 		.aggregation
 			padding 10px 25px
 			
@@ -49,13 +49,8 @@
 			ul ul
 				list-style disc outside none
 				margin-left 1.7em
-				
-.public-mode .search-view
 	
 	@media(min-width 1200px)
 		
-		.aggregations
-			margin-left 0
-			
 		.search-results
 			border-right 1px solid rgb(231, 233, 237)

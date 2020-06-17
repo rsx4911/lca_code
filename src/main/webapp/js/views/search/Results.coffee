@@ -75,6 +75,7 @@ define([
 							aggregations = if without then @aggreagtionsWithout(type, value) else @aggreagtionsWith(type, value)
 							return @getUrlPart 'search/', @query, 1, @pageSize, aggregations, allAggregations
 						result.query = @query
+						result.selectedAggregations = @aggregations
 						@$el.html template result
 						Renderer.render @, renderOptions
 						Toggle.init @$el
