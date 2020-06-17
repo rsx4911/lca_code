@@ -88,8 +88,9 @@ define([
 							Download.repository(target.attr('data-group'), target.attr('data-repo'), target.attr('data-commit-id'), null, target.attr('data-format'))
 						@$('#page-size').on 'change', (event) => Router.navigate @getUrlPart 'search/', @query, 1, $(Events.target(event)).val(), @aggregations, allAggregations
 						if @query
+							phrases = @splitQuery @query
 							for textElement in $('.search-view .content-box .result-text')
-								@highlight @query, $(textElement)
+								@highlight phrases, $(textElement)
 
 			correctUrl: (result) ->
 				copy = {}
@@ -157,17 +158,34 @@ define([
 					count += @getSubCount subEntry
 				return count
 
-			highlight: (word, element) ->
-				word = word.toLowerCase()
-				text = element.html()
-				replaced = ''
-				next = text.toLowerCase().indexOf word
-				while next isnt -1
-					replaced += text.substring(0, next) + '<span class="highlight-result">' + text.substring(next, next + word.length) + '</span>'
-					text = text.substring(next + word.length)
-					next = text.toLowerCase().indexOf word, next
-				replaced += text
-				element.html replaced
+			splitQuery: (query) =>
+				phrases = []
+				inQuotes = false
+				phrase = ''
+				for c in query.replace('@', ' ')
+					if c is '"'
+						inQuotes = !inQuotes
+					else if c is ' ' && !inQuotes
+						phrases.push phrase
+						phrase = ''
+					else
+						phrase += c
+				if phrase
+					phrases.push phrase
+				return phrases
+
+			highlight: (phrases, element) ->
+				for phrase in phrases
+					phrase = phrase.toLowerCase()
+					text = element.html()
+					replaced = ''
+					next = text.toLowerCase().indexOf phrase
+					while next isnt -1
+						replaced += text.substring(0, next) + '<span class="highlight-result">' + text.substring(next, next + phrase.length) + '</span>'
+						text = text.substring(next + phrase.length)
+						next = text.toLowerCase().indexOf phrase, next
+					replaced += text
+					element.html replaced
 
 			getUrlPart: (base, query, page, pageSize, aggregations, allAggregations) ->
 				url = base
