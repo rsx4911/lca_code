@@ -3,6 +3,7 @@ package com.greendelta.collaboration.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.openlca.core.model.ModelType;
 
@@ -35,7 +36,8 @@ public class Aggregations {
 	public static final SearchAggregation[] FLOW_FILTERS = new SearchAggregation[] {
 			FLOW_TYPE };
 
-	public static final SearchAggregation[] getFilters(ModelType modelType) {
+	public static final SearchAggregation[] getFilters(Set<ModelType> modelTypes) {
+		ModelType modelType = modelTypes != null && modelTypes.size() == 1 ? modelTypes.iterator().next() : null;
 		List<SearchAggregation> filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
 		if (modelType == ModelType.PROCESS) {
 			filters.addAll(Arrays.asList(PROCESS_FILTERS));

@@ -497,7 +497,8 @@ define([
 				for param in params
 					param = param.split '='
 					if result[param[0]]
-						result[param[0]] = [result[param[0]]]
+						if !$.isArray(result[param[0]])
+							result[param[0]] = [result[param[0]]]
 						result[param[0]].push param[1]
 					else 
 						result[param[0]] = param[1]

@@ -37,7 +37,8 @@ class QueryService {
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService, ScoreService scoreService) {
+	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService,
+			ScoreService scoreService) {
 		this.settingsService = settingsService;
 		this.repoService = repoService;
 		this.userService = userService;
@@ -49,8 +50,8 @@ class QueryService {
 		if (repos.isEmpty())
 			return buildEmptyResult(page, pageSize);
 		SearchQueryBuilder builder = new SearchQueryBuilder();
-		ModelType type = getFilteredModelType(filters.get(Aggregations.MODEL_TYPE.name));
-		putAggregations(builder, repos, filters, type);
+		Set<ModelType> types = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
+		putAggregations(builder, repos, filters, types);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn) {
 			builder.filter("mostRecent", SearchFilterValue.term(true));
@@ -60,7 +61,7 @@ class QueryService {
 			builder.filter("action", allowed);
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(toWildcardQuery(query.toLowerCase()), SearchFields.get(type, loggedIn));
+			builder.query(toWildcardQuery(query.toLowerCase()), "name");
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
@@ -92,18 +93,20 @@ class QueryService {
 		}
 		return Collections.join(values, " ");
 	}
-	
+
 	private void putAggregations(SearchQueryBuilder builder, List<Repository> repos, Map<String, Set<String>> filters,
-			ModelType type) {
-		for (SearchAggregation aggregation : Aggregations.getFilters(type)) {
+			Set<ModelType> types) {
+		for (SearchAggregation aggregation : Aggregations.getFilters(types)) {
 			Set<String> filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
 				putRepositoryFilter(builder, filterValues, repos);
 			} else if (aggregation.name.equals(Aggregations.MODEL_TYPE.name)) {
-				if (type == null) {
+				if (types == null || types.isEmpty()) {
 					builder.aggregation(Aggregations.MODEL_TYPE, getModelTypes());
 				} else {
-					builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+					for (ModelType type : types) {
+						builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+					}
 				}
 			} else if (filterValues != null && !filterValues.isEmpty()) {
 				for (String filterValue : filterValues) {
@@ -137,12 +140,14 @@ class QueryService {
 		return result;
 	}
 
-	private ModelType getFilteredModelType(Set<String> values) {
-		if (values == null)
+	private Set<ModelType> getFilteredModelTypes(Set<String> values) {
+		if (values == null || values.isEmpty())
 			return null;
-		if (values.size() > 1)
-			return null;
-		return ModelType.valueOf(values.iterator().next());
+		Set<ModelType> types = new HashSet<>();
+		for (String value : values) {
+			types.add(ModelType.valueOf(value));
+		}
+		return types;
 	}
 
 	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> repos) {

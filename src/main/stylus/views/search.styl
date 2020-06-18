@@ -1,7 +1,10 @@
 .search-view
 
-	.header-box .badge:not(:last-child)
-		margin-right 5px
+	.header-box .badge
+		margin-bottom 2px
+
+		&:not(:last-child)
+			margin-right 5px
 
 	.search-results
 		padding 0
@@ -42,6 +45,12 @@
 		
 		.aggregation
 			padding 10px 25px
+
+			label
+				font-weight normal
+
+			.multi-select
+				color rgb(125, 125, 125)
 			
 			.glyphicon-remove
 				color rgb(217, 83, 79)
