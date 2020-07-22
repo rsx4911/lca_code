@@ -1,0 +1,26 @@
+mixin count-info(amount, label, labelPlural, last)
+    | #{amount} #{amount !== 1 ? labelPlural : label}
+    if !last
+        | , 
+
+mixin repository-entry(repo, inGroupView)
+    - var repoId = repo.group + '/' + repo.name
+    .pull-left
+        img.avatar(src='ws/repository/avatar/' + repoId, aria-label='Avatar of ' + repoId)
+    .pull-left.repository-entry-content
+        a.follow(href=repoId)
+            strong=inGroupView ? repo.settings.label||repo.name : repo.label
+        if repo.role
+            span.pull-right.role.badge.badge-warning(title=repo.role.description)=repo.role.name
+        div: i
+            +count-info(repo.commits, 'commit', 'commits', false)
+            +count-info(repo.datasets, 'data set', 'data sets', false)
+            +count-info(repo.members, 'member', 'members', true)
+        .description: i=repo.settings.description
+        .tags
+            if repo.settings.publicAccess
+                span.badge.badge-success.public-access-badge Public
+            if repo.settings.tags
+                each tag in repo.settings.tags
+                    span.badge=tag
+    .clear

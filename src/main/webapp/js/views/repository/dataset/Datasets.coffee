@@ -5,18 +5,20 @@ define([
 				'cs!app/Router'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Format'
 				'cs!utils/Icons'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!utils/Toggle'
 				'cs!views/repository/Download'
 				'cs!models/CurrentUser'
 				'templates/views/repository/datasets'
 				'templates/views/repository/datasets-entries'
 			]
 
-	(Backbone, moment, pace, Router, Events, Filter, Icons, Layers, LocalStorage, ModelTypes, Renderer, Download, currentUser, template, entriesTemplate) ->
+	(Backbone, moment, pace, Router, Events, Filter, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Toggle, Download, currentUser, template, entriesTemplate) ->
 
 		class RepositoryDatasets extends Backbone.View
 
@@ -135,6 +137,7 @@ define([
 							@$('.no-content-message').show()
 							@$('.table-browse').hide()
 						@initialized = true
+					afterRender: () => Toggle.init @$el
 
 			loadCount: (result) ->
 				group = @repository.get 'group'
@@ -203,12 +206,14 @@ define([
 				@$el.html template
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
+					formatDate: Format.dateTime
 					pathAsArray: @pathArray
 					showDeleted: LocalStorage.getValue('datasets-showDeleted')
 					deleted: (categoryInfo.deleted is 'true')
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits
 					commitId: @commitId
+					settings: @repository.get('settings')
 					getRootLabel: (type) -> return ModelTypes[type]
 					getIcon: Icons.get
 				Renderer.render @, renderOptions

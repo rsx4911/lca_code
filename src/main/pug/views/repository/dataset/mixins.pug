@@ -23,6 +23,7 @@ mixin menubar()
 			.clear
 			+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
 				|  on #{formatDate(currentCommit.timestamp)}
+			.clear
 		if compareTo
 			.header-box.comparison-statistics
 				h4 Differences to

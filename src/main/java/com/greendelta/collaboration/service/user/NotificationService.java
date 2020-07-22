@@ -388,7 +388,8 @@ public class NotificationService {
 		if (member.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.ADDED_TEAM_MEMBER, team)));
-		emails.addAll(createEmails(othersSubject, othersMessage, getManagerUsers(Notification.ADDED_TEAM_MEMBER, false)));
+		emails.addAll(
+				createEmails(othersSubject, othersMessage, getManagerUsers(Notification.ADDED_TEAM_MEMBER, false)));
 		return new NotificationJob(emails);
 	}
 
@@ -422,6 +423,20 @@ public class NotificationService {
 		managers.remove(user); // in case new user is a manager
 		Set<EmailJob> emails = createEmails("A user was created", managerMessage, managers);
 		emails.add(createEmail("A user was created for you", userMessage, user));
+		return new NotificationJob(emails);
+	}
+
+	public NotificationJob userRegistered(User user) {
+		String subject = "A new user registered";
+		String message = "A new user with username " + user.username + " registered.";
+		if (settingsService.is(Key.USER_REGISTRATION_APPROVAL_ENABLED)) {
+			subject += " and is awaiting approval";
+			String profileUrl = getBaseUrl() + "/administration/user/profile/" + user.username;
+			message += " To approve the new user account you need to active the user at <a href=\"" + profileUrl + "\">"
+					+ profileUrl + "</a>";
+		}
+		Set<User> managers = getManagerUsers(Notification.USER_REGISTERED, true);
+		Set<EmailJob> emails = createEmails(subject, message, managers);		
 		return new NotificationJob(emails);
 	}
 
@@ -566,17 +581,14 @@ public class NotificationService {
 		Imprint imprint = settingsService.getImprint();
 		if (imprint == null)
 			return content;
-		content += imprint.company + ", " + imprint.street + ", " + imprint.zipCode + " " + imprint.city + ", "
-				+ imprint.country + "<br>";
-		content += "Companies' Register: " + imprint.registration + "<br>";
-		content += "Managing Director: " + imprint.ceo + "</div>";
+		content += imprint.toEmailFooter();
 		return content;
 	}
 
-	private String getBaseUrl(){
+	private String getBaseUrl() {
 		return settingsService.get(Key.SERVER_URL);
 	}
-	
+
 	private Set<EmailJob> createEmails(String subject, String message, Set<User> recipients) {
 		Set<EmailJob> emails = new HashSet<>();
 		for (User recipient : recipients)

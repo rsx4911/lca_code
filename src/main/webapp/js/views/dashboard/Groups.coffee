@@ -3,13 +3,14 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Filter'
 				'cs!utils/Renderer'
+				'cs!utils/Roles'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
 				'templates/views/dashboard/groups'
 				'templates/views/dashboard/groups-list'
 			]
 
-	(Backbone, Events, Filter, Renderer, Router, currentUser, template, listTemplate) ->
+	(Backbone, Events, Filter, Renderer, Roles, Router, currentUser, template, listTemplate) ->
 
 		class DashboardGroups extends Backbone.View
 
@@ -24,16 +25,23 @@ define([
 					container: '#groups'
 					template: listTemplate
 					filterId: 'filter'
-					url: 'ws/group?'
+					url: 'ws/group?module=DASHBOARD&'
+					beforeRender: (result) =>
+						for data in result.data
+							if data.name is currentUser.get('username')
+								data.isUserspace = true
+						setRole = (r) ->
+							role = Roles[r.role]
+							if role
+								r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+							else
+								r.role = undefined
+						setRole r for r in result.data
 
 			render: (renderOptions) ->
 				@$el.html template
 					canCreateGroups: (currentUser.get('settings')?.canCreateGroups or currentUser.isAdmin())
 				Renderer.render @, renderOptions
 				@filter.init()
-
-			_: (callback) ->
-				() =>
-					callback.apply @, arguments
 
 )

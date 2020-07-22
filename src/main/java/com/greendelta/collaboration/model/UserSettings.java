@@ -44,6 +44,15 @@ public class UserSettings {
 	@Column(name = "show_read_receipt")
 	public boolean showReadReceipt;
 
+	@Column(name = "show_task_activities")
+	public boolean showTaskActivities;
+
+	@Column(name = "show_comment_activities")
+	public boolean showCommentActivities;
+
+	@Column(name = "show_commit_activities")
+	public boolean showCommitActivities;
+
 	@Column(name = "admin")
 	public boolean admin;
 
@@ -62,7 +71,7 @@ public class UserSettings {
 	public List<User> blockedUsers = new ArrayList<>();
 
 	@Column(name = "notifications")
-	int notifications;
+	long notifications;
 
 	@JsonAnySetter
 	public void handleUnknown(String name, Object value) {

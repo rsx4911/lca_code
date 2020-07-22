@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.webservice.user;
 
+import java.util.Map;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -16,6 +18,7 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
@@ -45,11 +48,13 @@ public class TaskResource {
 	public Response getAll() {
 		if (!settingsService.is(Key.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
+		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
 		User user = userService.getCurrentUser();
 		ObjectMap result = new ObjectMap();
-		result.put("tasks", Client.map(service.getAllFor(user), Tasks::map));
+		result.put("tasks", Client.map(service.getAllFor(user),
+				task -> Tasks.map(task, repositories.get(task.repositoryPath))));
 		boolean canCreateTasks = false;
-		for (Repository repo : repoService.getAllAccessible()) {
+		for (Repository repo : repositories.values()) {
 			if (!accessService.canManageTaskIn(repo.toId()))
 				continue;
 			canCreateTasks = true;

@@ -16,6 +16,21 @@ mixin to-size(value, inGb, round, showUnit)
 			- value = value + ' MB';
 	| #{value}
 
+mixin repo-textarea(setting, field, label)
+	if repository.userCanSetSettings
+		+textarea(field, label)(rows=3 data-setting=setting)
+			| #{repository.settings[field]}
+	else
+		- var value = repository.settings[field] || '-';
+		+static(field, label, value)
+
+mixin repo-input(setting, field, label)
+	if repository.userCanSetSettings
+		+input(field, label)(value=repository.settings[field] data-setting=setting)
+	else
+		- var value = repository.settings[field] || '-';
+		+static(field, label, value)
+
 .header-box Info
 	.pull-right.responsive-menu.dropdown
 		a(href='#' data-toggle='dropdown' aria-label='Toggle repository menu'): span.glyphicon.glyphicon-cog
@@ -53,6 +68,19 @@ mixin to-size(value, inGb, round, showUnit)
 .content-box
 	+static('name', 'Name', repository.name)
 	+static('group', 'Group', repository.group)
+	+repo-input('LABEL', 'label', 'Label')
+	+repo-input('VERSION', 'version', 'Version')
+	if repository.userCanSetSettings
+		+select('typeOfData', 'Type of data', dataTypes, repository.settings.typeOfData)(data-setting='TYPE_OF_DATA')
+		+input('tags', 'Tags')(value=repository.settings.tags?repository.settings.tags.join(','):'')
+	else
+		- var typeOfData = repository.settings.typeOfData || '-';
+		+static('typeOfData', 'Type of data', typeOfData)
+		+static('tags', 'Tags')
+			.tags
+				if repository.settings.tags
+					each tag in repository.settings.tags
+						span.badge=tag
 	- var maxSize = repository.settings.maxSize; 
 	- var inGb = false;
 	if maxSize
@@ -79,13 +107,25 @@ mixin to-size(value, inGb, round, showUnit)
 					.size-indicator-bar
 						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
 	if publicReposEnabled
-		+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='publicAccess')
-		+checkbox('jsonFileGeneration', 'Generate cached json file on commit')(disabled=!repository.userCanSetSettings||!repository.settings.publicAccess, checked=repository.settings.jsonFileGeneration, data-setting='jsonFileGeneration')
-	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='prohibitCommits')
+		+checkbox('publicAccess', 'This repository can be accessed publicly')(disabled=!repository.userCanSetSettings, checked=repository.settings.publicAccess, data-setting='PUBLIC_ACCESS')
+		+checkbox('jsonFileGeneration', 'Generate cached json file on commit')(disabled=!repository.userCanSetSettings||!repository.settings.publicAccess, checked=repository.settings.jsonFileGeneration, data-setting='JSON_FILE_GENERATION')
+	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='PROHIBIT_COMMITS')
 	if commentsEnabled
-		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='commentApproval')
+		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='COMMENT_APPROVAL')
+
+.header-box Metadata
+.content-box
+	+repo-textarea('DESCRIPTION', 'description', 'Description')
+	+repo-textarea('SOURCE_INFO', 'sourceInfo', 'Source information')
+	+repo-textarea('CONTACT_INFO', 'contactInfo', 'Contact information')
+	+repo-textarea('PROJECT_INFO', 'projectInfo', 'Project information')
+	+repo-textarea('PROJECT_FUNDING', 'projectFunding', 'Project funding')
+	+repo-textarea('APPROPRIATE_USE', 'appropriateUse', 'Appropriate use')
+	+repo-textarea('DQ_ASSESSMENT', 'dqAssessment', 'Data quality assessment')
+	+repo-textarea('CITATION', 'citation', 'Citation')
+
 - var repositoryId = repository.group + '/' + repository.name
-+avatar-box('repository', repositoryId, repository.userCanWrite)
++avatar-box('repository', repositoryId, repository.userCanSetSettings)
 
 - var libraries = Object.keys(repository.libraryRestrictions);
 if repository.userCanSetSettings && libraries.length

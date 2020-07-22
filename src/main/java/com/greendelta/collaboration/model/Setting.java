@@ -7,10 +7,14 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.openlca.core.model.ModelType;
+
+import com.greendelta.collaboration.util.Collections;
+
 @Entity
 @Table(name = "settings")
 public class Setting extends AbstractEntity {
-
+	
 	@Id
 	@Column(name = "id")
 	private long id;
@@ -31,6 +35,11 @@ public class Setting extends AbstractEntity {
 	public void setId(long id) {
 		this.id = id;
 	}
+	
+	private static final ModelType[] DEFAULT_MODEL_TYPES_ORDER = { ModelType.PROJECT, ModelType.PRODUCT_SYSTEM, ModelType.PROCESS,
+			ModelType.IMPACT_METHOD, ModelType.FLOW, ModelType.SOCIAL_INDICATOR, ModelType.PARAMETER,
+			ModelType.DQ_SYSTEM, ModelType.FLOW_PROPERTY, ModelType.UNIT_GROUP, ModelType.CURRENCY,
+			ModelType.ACTOR, ModelType.SOURCE, ModelType.LOCATION, ModelType.CATEGORY };
 
 	public enum Key {
 
@@ -40,6 +49,16 @@ public class Setting extends AbstractEntity {
 		COMMENTS_ENABLED(Boolean.class, true),
 		PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
 		NOTIFICATIONS_ENABLED(Boolean.class, true),
+		USER_REGISTRATION_ENABLED(Boolean.class, true),
+		USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, true),
+		DASHBOARD_ACTIVITIES_ENABLED(Boolean.class, true),
+		REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
+		HOMEPAGE_ENABLED(Boolean.class, true),
+		REPOSITORY_TAGS_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ON_GROUPS_ENABLED(Boolean.class, true),
+		DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, true),
 
 		// basic settings
 		SERVER_NAME(String.class, "LCA Collaboration Server"),
@@ -55,7 +74,17 @@ public class Setting extends AbstractEntity {
 		SEARCH_HOST(String.class, "localhost"),
 		SEARCH_INDEX_NAME(String.class, "collaboration-server"),
 		SEARCH_PORT(Integer.class, 9200),
+		
+		// home settings
+		HOME_TITLE(String.class, ""),
+		HOME_TEXT(String.class, ""),
 
+		// landing page/search settings
+		REPOSITORIES_ORDER(String.class, ""),
+		REPOSITORIES_HIDDEN(String.class, ""),
+		MODEL_TYPES_ORDER(String.class, Collections.join(DEFAULT_MODEL_TYPES_ORDER, ";")),
+		MODEL_TYPES_HIDDEN(String.class, ""),
+		
 		// imprint
 		IMPRINT_COMPANY(String.class),
 		IMPRINT_CEO(String.class),

@@ -57,7 +57,7 @@ public class NotificationsResource {
 		userService.update(currentUser);
 		return Respond.ok();
 	}
-
+	
 	@PUT
 	@Path("disable/{notifications}")
 	public Response disable(@PathParam("notifications") String notifications) {

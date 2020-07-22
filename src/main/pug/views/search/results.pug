@@ -1,20 +1,27 @@
-include ../mixins/forms.pug
 include ../mixins/paging.pug
 include ./result.pug
-include ./aggregation.pug
 
-div(class=typeFiltered?'col-lg-8':'col-lg-9')
-	.header-box #{resultInfo.totalCount} results
+mixin badge(key, value)
+	.badge=getLabel(key, value)
+		|  
+		a(href=getAggregationUrl(key, value, true)): span.glyphicon.glyphicon-remove
+
+.header-box
+	- var keys = Object.keys(selectedAggregations);
+	| #{resultInfo.totalCount} results
+	div 
 		if query
-			|  for '#{query}'
-	.content-box.search-results
+			+badge('query', query)
+		each key in keys
+			each value in selectedAggregations[key]
+				+badge(key, value)
+	if keys.length || query
+		small: a(href=clearUrl) clear all filters
+.content-box
+	.search-results(class=typeFiltered?'col-lg-8':'col-lg-9')
 		each dataset in data
 			+result(dataset)
 		+paging(resultInfo, getPagingUrl)
-div(class=typeFiltered?'col-lg-4':'col-lg-3')
-	.aggregations
-		.header-box Filters
-		.content-box
-			each aggregation in aggregations
-				+aggregation(aggregation)
-.clear
+	.aggregations(class=typeFiltered?'col-lg-4':'col-lg-3')
+	.clear
+

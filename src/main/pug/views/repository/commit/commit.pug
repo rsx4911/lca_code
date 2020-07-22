@@ -1,10 +1,12 @@
-include ../../mixins/user-info.pug
+include ../../mixins/commit-info.pug
 include ../../mixins/forms.pug
+include ../../mixins/user-info.pug
 
 .header-box
 	h4 
 		div=commit.message
-		small=commit.id
+		div: small=commit.id
+		div: small: +commit-info(commit.additions, commit.updates, commit.deletions)
 	+user-info(commit.user, commit.userDisplayName)(class='concealed')
 		|  on #{formatDate(commit.timestamp)}
 	.pull-right: +select('type', 'Model type', [], '', true)

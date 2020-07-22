@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.StreamingOutput;
 
@@ -32,11 +33,13 @@ import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Repository.RepositorySetting;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.util.io.Json2Repository;
@@ -52,16 +55,19 @@ public class RepositoryService {
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settingsService;
+	private final GroupService groupService;
 	private final TaskService taskService;
 
 	@Inject
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService, TaskService taskService) {
+			CommentService commentService, SettingsService settingsService, GroupService groupService,
+			TaskService taskService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settingsService = settingsService;
+		this.groupService = groupService;
 		this.taskService = taskService;
 	}
 
@@ -85,6 +91,7 @@ public class RepositoryService {
 		if (path == null || path.isEmpty())
 			throw new UnauthorizedAccessException(Repository.toId(group, name), "READ");
 		Repository repo = Repository.get(path, group, name);
+		repo.groupSettings = groupService.getSettings(group);
 		if (!accessService.canRead(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "READ");
 		return repo;
@@ -167,12 +174,12 @@ public class RepositoryService {
 		return true;
 	}
 
-	public void setSetting(Repository repo, String setting, String value) {
+	public void setSetting(Repository repo, RepositorySetting setting, Object value) {
 		if (!accessService.canSetSettings(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
 		repo.setSetting(setting, value);
 	}
-	
+
 	private void putJsonContext(String group, String name) {
 		String path = getPath(group, name);
 		if (path == null)
@@ -237,19 +244,20 @@ public class RepositoryService {
 	}
 
 	public long getCount(boolean adminArea) {
-		return getAll(adminArea).size();
+		return getAll(false, adminArea).size();
 	}
 
-	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean adminArea) {
-		List<Repository> accessible = getAll(adminArea);
+	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean onlyPublic,
+			boolean adminArea) {
+		List<Repository> accessible = getAll(onlyPublic, adminArea);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.toId());
 	}
 
 	public List<Repository> getAllAccessible() {
-		return getAll(true);
+		return getAll(false, true);
 	}
 
-	private List<Repository> getAll(boolean adminArea) {
+	private List<Repository> getAll(boolean onlyPublic, boolean adminArea) {
 		String path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
@@ -265,8 +273,11 @@ public class RepositoryService {
 					continue;
 				try {
 					Repository repo = Repository.get(path, group.getName(), name.getName());
+					if (onlyPublic && !repo.settings.publicAccess)
+						continue;
 					if (!accessService.canRead(repo.toId(), !adminArea))
 						continue;
+					repo.groupSettings = groupService.getSettings(group.getName());
 					repos.add(repo);
 				} catch (UnsupportedSchemaException e) {
 					// ignore, just don't add to list
@@ -274,6 +285,34 @@ public class RepositoryService {
 			}
 		}
 		return repos;
+	}
+
+	public List<String> getPublicRepositoryOrder() {
+		return getRepositoryList(Key.REPOSITORIES_ORDER, true);
+	}
+
+	public List<String> getPublicHiddenRepositories() {
+		return getRepositoryList(Key.REPOSITORIES_HIDDEN, false);
+	}
+
+	private List<String> getRepositoryList(Key key, boolean addMissing) {
+		String[] repositoryArray = ((String) settingsService.get(key)).split(";");
+		List<Repository> publicRepos = Collections.filter(getAllAccessible(), repo -> !repo.settings.publicAccess);
+		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId());
+		List<String> repositories = new ArrayList<>();
+		for (String repoId : repositoryArray) {
+			Repository repo = repos.remove(repoId);
+			if (repo == null)
+				continue;
+			repositories.add(repoId);
+		}
+		if (addMissing) {
+			for (Repository repo : repos.values()) {
+				repositories.add(repo.toId());
+			}
+		}
+		settingsService.set(key, Collections.join(repositories, ";"));
+		return repositories;
 	}
 
 	private String getPath(String group, String name) {
@@ -313,4 +352,5 @@ public class RepositoryService {
 	public File getBinFile(Repository repo, ModelType type, String refId, String commitId, String filename) {
 		return repo.getBinFile(type, refId, commitId, filename);
 	}
+
 }

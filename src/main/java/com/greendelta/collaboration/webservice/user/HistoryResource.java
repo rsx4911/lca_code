@@ -21,20 +21,20 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
+import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.collaboration.util.io.JsonIteratorStreamingOutput;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.search.wrapper.SearchFilterValue;
+import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
@@ -42,6 +42,7 @@ import com.greendelta.search.wrapper.SearchSorting;
 import joptsimple.internal.Strings;
 
 @Path("history")
+@Produces(MediaType.APPLICATION_JSON)
 public class HistoryResource {
 
 	private final HistoryService service;
@@ -59,28 +60,7 @@ public class HistoryResource {
 	}
 
 	@GET
-	@Path("{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response getCommitHistory(
-			@PathParam("group") String group,
-			@PathParam("name") String name,
-			@QueryParam("lastCommitId") String lastCommitId) {
-		Repository repo = repoService.get(group, name);
-		if (lastCommitId != null && !lastCommitId.isEmpty()) {
-			Commit commit = service.getCommit(repo, lastCommitId);
-			if (commit == null)
-				return Respond.notFound("Commit " + lastCommitId + " not found");
-		}
-		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
-		if (commits.size() == 0)
-			return Respond.noContent();
-		java.util.Collections.reverse(commits);
-		return Respond.ok(putUserName(commits));
-	}
-
-	@GET
 	@Path("{group}/{name}/{type}/{refId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -110,8 +90,26 @@ public class HistoryResource {
 	}
 
 	@GET
+	@Path("{group}/{name}")
+	public Response getCommitHistory(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			@QueryParam("lastCommitId") String lastCommitId) {
+		Repository repo = repoService.get(group, name);
+		if (lastCommitId != null && !lastCommitId.isEmpty()) {
+			Commit commit = service.getCommit(repo, lastCommitId);
+			if (commit == null)
+				return Respond.notFound("Commit " + lastCommitId + " not found");
+		}
+		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
+		if (commits.size() == 0)
+			return Respond.noContent();
+		java.util.Collections.reverse(commits);
+		return Respond.ok(putUserName(commits));
+	}
+
+	@GET
 	@Path("search/{group}/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -124,22 +122,29 @@ public class HistoryResource {
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
-		return Respond.ok(putAdditionalInfo(result, commits));
+		return Respond.ok(putAdditionalInfo(SearchResults.convert(result, c -> ObjectMap.fromObject(c)), repo, commits));
 	}
 
-	private Map<String, Object> putAdditionalInfo(SearchResult<Commit> result, List<Commit> commits) {
+	private Map<String, Object> putAdditionalInfo(SearchResult<ObjectMap> result, Repository repo, List<Commit> commits) {
 		Map<String, Integer> groupCount = new HashMap<>();
 		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
-		for (Commit commit : result.data) {
+		List<ObjectMap> data = new ArrayList<>();
+		for (ObjectMap commit : result.data) {
 			int count = 0;
 			for (Commit c : commits) {
-				if (!isSameDay(commit.timestamp, c.timestamp))
+				if (!isSameDay(commit.getLong("timestamp"), c.timestamp))
 					continue;
 				count++;
 			}
-			groupCount.put(commit.id, count);
+			groupCount.put(commit.getString("id"), count);
+			String commitId = commit.getString("id");
+			commit.put("additions", searchService.getDatasetCount(repo, commitId, IndexAction.ADD));
+			commit.put("deletions", searchService.getDatasetCount(repo, commitId, IndexAction.DELETE));
+			commit.put("updates", searchService.getDatasetCount(repo, commitId, IndexAction.UPDATE));
+			data.add(commit);
 		}
 		map.put("resultInfo.groupCount", groupCount);
+		map.put("data", data);
 		return map;
 	}
 
@@ -155,7 +160,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("category/{group}/{name}/{refId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommitHistoryForCategory(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -173,7 +177,6 @@ public class HistoryResource {
 
 	@GET
 	@Path("commit/{group}/{name}/{commitId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getCommit(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -182,12 +185,15 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		return Respond.ok(putUserName(commit));
+		Map<String, Object> map = putUserName(commit);
+		map.put("additions", searchService.getDatasetCount(repo, commitId, IndexAction.ADD));
+		map.put("deletions", searchService.getDatasetCount(repo, commitId, IndexAction.DELETE));
+		map.put("updates", searchService.getDatasetCount(repo, commitId, IndexAction.UPDATE));
+		return Respond.ok(map);
 	}
 
 	@GET
 	@Path("references/{group}/{name}/{commitId}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response getReferences(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
@@ -200,27 +206,20 @@ public class HistoryResource {
 		Commit commit = service.getCommit(repo, commitId);
 		if (commit == null)
 			return Respond.notFound();
-		SearchQueryBuilder builder = createReferencesQueryBuilder(repo, commit, type, page, pageSize, filter);
-		if (page > 0) {
-			SearchResult<IndexEntry> result = searchService.search(builder.build());
-			return Respond.ok(SearchResults.convert(result, this::convertToFetchRequestData));
-		}
-		IndexIterator entries = searchService.iterator(builder);
-		return Respond.ok(new JsonIteratorStreamingOutput<IndexEntry>(entries, this::convertToFetchRequestData));
+		SearchQuery query = createReferencesQuery(repo, commit, type, page, pageSize, filter);
+		SearchResult<IndexEntry> result = searchService.search(query);
+		return Respond.ok(SearchResults.convert(result, (entry) -> {
+			ObjectMap map = ObjectMap.fromObject(entry.asFetchRequestData());
+			if (entry instanceof FlowIndexEntry) {
+				map.put("flowType", ((FlowIndexEntry) entry).flowType);
+			} else if (entry instanceof ProcessIndexEntry) {
+				map.put("processType", ((ProcessIndexEntry) entry).processType);
+			}
+			return map;
+		}));
 	}
 
-	private ObjectMap convertToFetchRequestData(IndexEntry entry) {
-		ObjectMap map = ObjectMap.fromObject(entry.asFetchRequestData());
-		if (entry instanceof FlowIndexEntry) {
-			map.put("flowType", ((FlowIndexEntry) entry).flowType);
-		} else if (entry instanceof ProcessIndexEntry) {
-			map.put("processType", ((ProcessIndexEntry) entry).processType);
-		}
-		return map;
-	}
-
-	private SearchQueryBuilder createReferencesQueryBuilder(Repository repo, Commit commit, ModelType type, int page,
-			int pageSize,
+	private SearchQuery createReferencesQuery(Repository repo, Commit commit, ModelType type, int page, int pageSize,
 			String filter) {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
@@ -238,7 +237,7 @@ public class HistoryResource {
 			}
 		}
 		builder.sortBy("typeOrdinal", SearchSorting.DESC);
-		return builder;
+		return builder.build();
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
@@ -247,14 +246,17 @@ public class HistoryResource {
 			mapped.add(putUserName(commit));
 		return mapped;
 	}
-
+	
 	private Map<String, Object> putUserName(Commit commit) {
-		ObjectMap map = ObjectMap.fromObject(commit);
-		User user = userService.getForUsername(commit.user);
+		return putUserName(ObjectMap.fromObject(commit));
+	}
+
+	private Map<String, Object> putUserName(ObjectMap map) {
+		User user = userService.getForUsername(map.getString("user"));
 		if (user != null)
 			map.put("userDisplayName", user.name);
 		else
-			map.put("userDisplayName", commit.user);
+			map.put("userDisplayName", map.getString("user"));
 		return map;
 	}
 

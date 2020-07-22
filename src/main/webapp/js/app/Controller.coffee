@@ -43,10 +43,15 @@ define([
 				# the ids are used in Navigation to identify which menu item is currently active
 				# they need only to be unique within 'type'
 				switch type
-					when 'dashboard' then return [
-						{href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
-						{href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
-					]
+					when 'dashboard' 
+						userMenu = []
+						if settings.is('DASHBOARD_ACTIVITIES_ENABLED')
+							userMenu.push {href: @concatUrl(prefix, 'dashboard/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
+						userMenu.push {href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
+						userMenu.push {href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
+						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_DASHBOARD_ENABLED')
+							userMenu.push {href: @concatUrl(prefix, 'dashboard/tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
+						return userMenu
 					when 'tasks' then return [
 						{href: @concatUrl(prefix, 'tasks'), imageSrc: 'images/tasks.png', label: 'Overview', id: 'overview'}
 					]
@@ -56,22 +61,33 @@ define([
 					when 'user'
 						userMenu = []
 						userMenu.push {href: @concatUrl(prefix, 'user/profile'), imageSrc: 'images/profile.png', label: 'Profile', id: 'profile'}
+						if settings.is('DASHBOARD_ACTIVITIES_ENABLED') or settings.id('REPOSITORY_ACTIVITIES_ENABLED')
+							userMenu.push {href: @concatUrl(prefix, 'user/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						if settings.is('MESSAGING_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
 						if settings.is('NOTIFICATIONS_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
 						return userMenu
-					when 'group' then return [
-						{href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
-						{href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
-					]
+					when 'group'
+						isUserspace = currentUser.isLoggedIn() && currentUser.get('username') is options.urlPrefix
+						groupMenu = []
+						groupMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/group.png', label: 'Group', id: 'group'}
+						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_GROUPS_ENABLED')
+							groupMenu.push {href: @concatUrl(prefix, 'tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
+						unless isUserspace
+							groupMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
+						return groupMenu
 					when 'repository' 
 						repoMenu = []
 						repoMenu.push {href: @concatUrl(prefix, ''), imageSrc: 'images/repository.png', label: 'Repository', id: 'repository'}
+						if settings.is('REPOSITORY_ACTIVITIES_ENABLED')
+							repoMenu.push {href: @concatUrl(prefix, 'activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						repoMenu.push {href: @concatUrl(prefix, 'datasets'), imageSrc: 'images/dataset.png', label: 'Data sets', id: 'datasets'}
 						repoMenu.push {href: @concatUrl(prefix, 'commits'), imageSrc: 'images/commit.png', label: 'Commits', id: 'commits'}
 						if settings.is('COMMENTS_ENABLED')
 							repoMenu.push {href: @concatUrl(prefix, 'comments'), imageSrc: 'images/comments.png', label: 'Comments', id: 'comments'}
+						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_REPOSITORIES_ENABLED')
+							repoMenu.push {href: @concatUrl(prefix, 'tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
 						repoMenu.push {href: @concatUrl(prefix, 'members'), imageSrc: 'images/members.png', label: 'Members', id: 'members'}
 						return repoMenu
 					when 'admin'
@@ -131,14 +147,14 @@ define([
 
 			registerRouteRewrites: () ->
 				if currentUser.isLoggedIn()
-					@router.registerRouteRewrite 'landingPage', 'dashboard/repositories'
+					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
 					if currentUser.isDataManager() and !currentUser.isAdmin() and !currentUser.isUserManager()
 						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
 					else
 						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
-				else
+				else if !settings.is('HOMEPAGE_ENABLED')
 					@router.registerRouteRewrite 'landingPage', 'search'
 
 			registerAdminRoutes: () ->
@@ -208,6 +224,12 @@ define([
 					nav: 
 						type: 'user'
 						active: 'profile'
+				@router.registerUserRoute 'userActivities', -> @showView 
+					view: 'user/Activities'
+					title: 'Activities' 
+					nav: 
+						type: 'user'
+						active: 'activities'
 				@router.registerUserRoute 'userMessaging', -> @showView 
 					view: 'user/Messaging'
 					title: 'Messaging' 
@@ -223,16 +245,21 @@ define([
 				@router.registerUserRoute 'landingPage', -> 
 					if currentUser.isLoggedIn()
 						@showView 
-							view: 'dashboard/Repositories'
-							title: 'Repositories' 
+							view: 'dashboard/Activities'
+							title: 'Activities' 
 							nav: 
 								type: 'dashboard'
-								active: 'repositories'
+								active: 'activities'
 					else
 						@showView 
-							view: 'search/Results'
-							title: 'Search' 
-							fullWidth: true
+							view: 'Home'
+							hideSearchBar: true
+				@router.registerUserRoute 'dashboardActivities', -> @showView 
+					view: 'dashboard/Activities'
+					title: 'Activities' 
+					nav: 
+						type: 'dashboard'
+						active: 'activities'
 				@router.registerUserRoute 'dashboardRepositories', -> @showView 
 					view: 'dashboard/Repositories'
 					title: 'Repositories' 
@@ -245,6 +272,12 @@ define([
 					nav: 
 						type: 'dashboard'
 						active: 'groups'
+				@router.registerUserRoute 'dashboardTags', -> @showView 
+					view: 'tags/Tags'
+					title: 'Tags' 
+					nav: 
+						type: 'dashboard'
+						active: 'tags'
 				@router.registerUserRoute 'tasks', () -> 
 					@showView 
 						view: 'tasks/Overview'
@@ -285,6 +318,14 @@ define([
 						urlPrefix: group
 					viewOptions: 
 						group: new Group({name: group})
+				@router.registerUserRoute 'groupTags', (group) -> @showView 
+					view: 'tags/Tags'
+					title: 'Tags' 
+					nav: 
+						type: 'group'
+						active: 'tags'
+					viewOptions:
+						group: new Group({name: group})
 				@router.registerUserRoute 'groupMembers', (group) -> @showView 
 					view: 'members/Members'
 					title: "#{group}"
@@ -313,6 +354,12 @@ define([
 						doImport: true
 						importFormat: 'json-ld'
 						groupName: groupName
+				@router.registerUserRoute 'repositoryImportExternal', () -> @showView 
+					view: 'repository/Create'
+					title: 'Import repository'
+					viewOptions: 
+						doImport: true
+						importFormat: 'external'
 				@router.registerUserRoute 'repositoryInfo', (group, name) -> 
 					unless currentUser.isLoggedIn()
 						@router.navigate "#{group}/#{name}/datasets",
@@ -321,9 +368,22 @@ define([
 					@showView
 						view: 'repository/Repository'
 						title: "#{group}/#{name}"
+						href: "#{group}/#{name}"
 						nav: 
 							type: 'repository'
 							active: 'repository'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryActivities', (group, name) ->
+					@showView
+						view: 'dashboard/Activities'
+						title: "#{group}/#{name}"
+						subTitle: 'Activities'
+						href: "#{group}/#{name}"
+						nav: 
+							type: 'repository'
+							active: 'activities'
 							urlPrefix: "#{group}/#{name}"
 						viewOptions: 
 							repository: new Repository({group: group, name: name})
@@ -331,6 +391,7 @@ define([
 					view: 'repository/dataset/Datasets'
 					title: "#{group}/#{name}"
 					subTitle: 'Data sets'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'datasets'
@@ -347,6 +408,7 @@ define([
 							title: "#{group}/#{name}"
 							subTitle: 'Data sets'
 							fullWidth: true
+							href: "#{group}/#{name}"
 							nav: 
 								type: 'repository'
 								active: 'datasets'
@@ -361,6 +423,7 @@ define([
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"
 					subTitle: 'Commits'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -371,6 +434,7 @@ define([
 					view: 'repository/commit/Commit'
 					title: "#{group}/#{name}"
 					subTitle: 'Commits'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'commits'
@@ -382,16 +446,26 @@ define([
 					view: 'repository/Comments'
 					title: "#{group}/#{name}"
 					subTitle: 'Comments'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'comments'
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryTags', (group, name) -> @showView 
+					view: 'tags/Tags'
+					title: 'Tags' 
+					nav: 
+						type: 'repository'
+						active: 'tags'
+					viewOptions:
+						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryMembers', (group, name) -> @showView 
 					view: 'members/Members'
 					title: "#{group}/#{name}"
 					subTitle: 'Members'
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'members'
@@ -423,7 +497,8 @@ define([
 				for param in params
 					param = param.split '='
 					if result[param[0]]
-						result[param[0]] = [result[param[0]]]
+						if !$.isArray(result[param[0]])
+							result[param[0]] = [result[param[0]]]
 						result[param[0]].push param[1]
 					else 
 						result[param[0]] = param[1]
@@ -462,6 +537,8 @@ define([
 							Backbone.history.history.back()
 
 			getDocumentTitle: (value) ->
+				unless value
+					return 'LCA Collaboration Server'
 				unread = 0
 				if window.WebSocket and currentUser.isLoggedIn()
 					unread = conversations.getUnreadMessages()
@@ -479,6 +556,9 @@ define([
 				return reversed
 
 			showView: (options) ->
+				$('#global-search-group').show()
+				if options?.hideSearchBar
+					$('#global-search-group').hide()
 				$('#global-search').val options?.viewOptions?.query	
 				@checkGroupOrRepositoryExists options, () =>
 					$('#main .center').empty()
@@ -486,15 +566,15 @@ define([
 						$('#main .full-size').addClass 'full-width'
 					else
 						$('#main .full-size').removeClass 'full-width'
-					title1 = options.title
-					title2 = options.title
+					title1 = options.title or ''
+					title2 = options.title or ''
 					if options.title and options.subTitle and currentUser.isLoggedIn()
 						title1 += ' - ' + options.subTitle
 						title2 += ' | ' + options.subTitle
-					if currentUser.isLoggedIn()
+					if currentUser.isLoggedIn() && !options.href
 						$('#header-title').html title1
 					else
-						$('#header-title').html '<a href="' + title1 + '">' + title1 + '</a>'
+						$('#header-title').html '<a href="' + (options.href||title1) + '">' + title1 + '</a>'
 						$('#header-title a').on 'click', (event) -> Events.followLink event
 					$('#header-title').attr 'title', title1
 					document.title = @getDocumentTitle title2

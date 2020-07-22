@@ -15,6 +15,7 @@ import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -29,17 +30,21 @@ public class BrowseService {
 
 	private final SearchService searchService;
 	private final HistoryService historyService;
+	private final SettingsService settingsService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	public BrowseService(SearchService searchService, HistoryService historyService) {
+	public BrowseService(SearchService searchService, HistoryService historyService, SettingsService settingsService) {
 		this.searchService = searchService;
 		this.historyService = historyService;
+		this.settingsService = settingsService;
 	}
 
 	public List<ObjectMap> getRootContent(BrowseParameter params) {
 		List<ObjectMap> types = new ArrayList<>();
-		for (ModelType type : ModelTypes.SORTED) {
+		for (ModelType type : settingsService.getModelTypes()) {
+			if (type == ModelType.CATEGORY)
+				continue;
 			if (!params.repo.has(type))
 				continue;
 			if (getUncategorized(type, params).isEmpty())
@@ -58,6 +63,15 @@ public class BrowseService {
 		return types;
 	}
 
+	public long getCount(BrowseParameter params) {
+		SearchQueryBuilder builder = builder(params);
+		builder.page(1);
+		builder.pageSize(1);
+		builder.filter("mostRecent", SearchFilterValue.term(true));
+		SearchResult<ObjectMap> result = searchService.searchRaw(builder.build());
+		return result.resultInfo.totalCount;	
+	}
+	
 	public long getCount(ModelType type, String path, BrowseParameter params) {
 		SearchQueryBuilder builder = builder(params);
 		builder.page(1);

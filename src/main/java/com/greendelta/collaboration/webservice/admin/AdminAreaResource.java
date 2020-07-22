@@ -27,8 +27,8 @@ import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.platform.servlet.RequestListener;
 import com.greendelta.collaboration.service.AnnouncementService;
-import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.IndexService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -42,7 +42,8 @@ import joptsimple.internal.Strings;
 @Produces(MediaType.APPLICATION_JSON)
 public class AdminAreaResource {
 
-	// request listener is not counting calls to the server info, to avoid counting
+	// request listener is not counting calls to the server info, to avoid
+	// counting
 	// itself. To avoid hiding this information in the RequestListener task, the
 	// path is specified here (more obvious when changes on the path occur)
 	public static final String SERVER_INFO_PATH = "admin/area/serverInfo";
@@ -122,9 +123,15 @@ public class AdminAreaResource {
 		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
 		info.put("announcement", settingsService.get(Key.ANNOUNCEMENT_MESSAGE));
 		info.put("licenseAgreementText", settingsService.get(Key.LICENSE_AGREEMENT_TEXT));
+		info.put("homeTitle", settingsService.get(Key.HOME_TITLE));
+		info.put("homeText", settingsService.get(Key.HOME_TEXT));
+		info.put("orderedRepositories", repoService.getPublicRepositoryOrder());
+		info.put("hiddenRepositories", repoService.getPublicHiddenRepositories());
+		info.put("orderedModelTypes", settingsService.getArray(Key.MODEL_TYPES_ORDER));
+		info.put("hiddenModelTypes", settingsService.getArray(Key.MODEL_TYPES_HIDDEN));
 		return Respond.ok(info);
 	}
-
+	
 	@PUT
 	@Path("clearIndex")
 	public Response clearIndex() {

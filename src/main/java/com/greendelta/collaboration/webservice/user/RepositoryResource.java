@@ -23,10 +23,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
+import org.openlca.cloud.util.WebRequests.WebRequestException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.FetchService;
@@ -35,14 +37,22 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.IndexService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositorySetting;
+import com.greendelta.collaboration.service.RepositoryMigrator;
+import com.greendelta.collaboration.service.RepositoryMigrator.MigrateResponse;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.webservice.Module;
@@ -50,7 +60,7 @@ import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
 import com.greendelta.search.wrapper.SearchResult;
-import com.sun.jersey.api.client.ClientResponse.Status;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.multipart.FormDataParam;
 
 @Path("repository")
@@ -59,9 +69,12 @@ public class RepositoryResource {
 
 	private final RepositoryService service;
 	private final GroupService groupService;
+	private final UserService userService;
+	private final MembershipService membershipService;
 	private final AccessService accessService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
+	private final BrowseService browseService;
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
@@ -69,15 +82,19 @@ public class RepositoryResource {
 	private final FetchService fetchService;
 
 	@Inject
-	public RepositoryResource(RepositoryService service, GroupService groupService, AccessService accessService,
-			HistoryService historyService, SearchService searchService, IndexService indexService,
+	public RepositoryResource(RepositoryService service, GroupService groupService, MembershipService membershipService,
+			UserService userService, AccessService accessService, HistoryService historyService,
+			SearchService searchService, BrowseService browseService, IndexService indexService,
 			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService,
 			FetchService fetchService) {
 		this.service = service;
 		this.groupService = groupService;
+		this.userService = userService;
+		this.membershipService = membershipService;
 		this.accessService = accessService;
 		this.historyService = historyService;
 		this.searchService = searchService;
+		this.browseService = browseService;
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
@@ -91,18 +108,31 @@ public class RepositoryResource {
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
 			@QueryParam("group") @DefaultValue("") String group,
+			@QueryParam("onlyPublic") @DefaultValue("false") boolean onlyPublic,
 			@QueryParam("module") Module module) {
-		SearchResult<Repository> result = service.getAll(page, pageSize, filter, true);
+		SearchResult<Repository> result = service.getAll(page, pageSize, filter, onlyPublic, true);
 		if (module == null)
 			return Respond.ok(SearchResults.convert(result, Repositories::map));
-		List<Repository> repositories = result.data;
+		User user = userService.getCurrentUser();
 		switch (module) {
+		case DASHBOARD:
+		case GROUP:
+			return Respond.ok(SearchResults.convert(result,
+					repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
 		case REVIEW:
-			repositories = Collections.filter(repositories, (repo) -> !accessService.canManageTaskIn(repo.toId()));
+			return Respond.ok(Client.map(Collections.filter(result.data,
+					repo -> !accessService.canManageTaskIn(repo.toId())), Repositories::map));
 		default:
-			break;
+			return Respond.ok(Client.map(result.data, Repositories::map));
 		}
-		return Respond.ok(Client.map(repositories, Repositories::map));
+	}
+
+	private ObjectMap putRepositoryInfo(ObjectMap map, Repository repo, User user) {
+		map.put("role", membershipService.getRole(user, repo.toId()));
+		map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
+		map.put("commits", historyService.getCommits(repo).size());
+		map.put("members", membershipService.getMemberships(repo.toId()).size());
+		return map;
 	}
 
 	@GET
@@ -158,15 +188,15 @@ public class RepositoryResource {
 	public Response create(
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
-		Response response = _create(group, name);
-		if (response.getStatus() != Status.CREATED.getStatusCode())
+		Response response = checkValid(group, name);
+		if (response != null)
 			return response;
-		Repository repo = service.get(group, name);
+		Repository repo = service.create(group, name);
 		notificationService.repositoryCreated(repo).send();
-		return response;
+		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
 	}
 
-	private Response _create(String group, String name) {
+	private Response checkValid(String group, String name) {
 		if (Strings.isNullOrEmpty(group))
 			return Respond.invalid("group", "Missing input: Group");
 		if (Strings.isNullOrEmpty(name))
@@ -180,8 +210,7 @@ public class RepositoryResource {
 			return Respond.conflict("Repository " + name + " already exists");
 		if (!groupService.exists(group))
 			return Respond.invalid("group", "Specified group does not exist");
-		Repository repo = service.create(group, name);
-		return Respond.created(Repositories.map(repo, groupService.isUserNamespace(group)));
+		return null;
 	}
 
 	@POST
@@ -204,7 +233,7 @@ public class RepositoryResource {
 		indexService.index(repo);
 		repo = service.get(group, name);
 		if (repo.settings.publicAccess) {
-			service.setSetting(repo, "publicAccess", "false");
+			service.setSetting(repo, RepositorySetting.PUBLIC_ACCESS, false);
 		}
 		return Respond.ok(new HashMap<>());
 	}
@@ -238,11 +267,11 @@ public class RepositoryResource {
 			@PathParam("commitId") String commitId,
 			@PathParam("newGroup") String newGroup,
 			@PathParam("newName") String newName) {
-		Response response = _create(newGroup, newName);
-		if (response.getStatus() != Status.CREATED.getStatusCode())
+		Response response = checkValid(newGroup, newName);
+		if (response != null)
 			return response;
 		Repository from = service.get(group, name);
-		Repository to = service.get(newGroup, newName);
+		Repository to = service.create(newGroup, newName);
 		List<Commit> commits = historyService.getCommitsUntil(from, commitId);
 		if (!service.clone(from, to, commits)) {
 			deleteService.delete(to);
@@ -278,6 +307,42 @@ public class RepositoryResource {
 		searchService.update(documentIds, update);
 	}
 
+	@POST
+	@Path("import/external/{group}/{name}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response importExternal(
+			@PathParam("group") String group,
+			@PathParam("name") String name,
+			Map<String, Object> data) {
+		ObjectMap map = ObjectMap.fromMap(data);
+		String url = map.getString("url");
+		if (Strings.isNullOrEmpty(url))
+			return Respond.invalid("url", "Missing input: Url");
+		while (url.endsWith("/")) {
+			url = url.substring(0, url.length() - 1);
+		}
+		String username = map.getString("username");
+		if (Strings.isNullOrEmpty(username))
+			return Respond.invalid("username", "Missing input: Username");
+		String password = map.getString("password");
+		if (Strings.isNullOrEmpty(password))
+			return Respond.invalid("password", "Missing input: Password");
+		Repository repo = service.get(group, name);
+		RepositoryMigrator migrator = new RepositoryMigrator(service, indexService);
+		try {
+			MigrateResponse response = migrator.migrate(url, repo, username, password, map.getInteger("token"));
+			if (response == MigrateResponse.TOKEN_REQUIRED)
+				return Respond.invalid("token", "Token required");
+		} catch (WebRequestException e) {
+			if (e.isConnectException() || e.getCause() instanceof ClientHandlerException)
+				return Respond.invalid("url", "Cannot connect to " + map.getString("url"));
+			return Respond.badRequest(e.getMessage());
+		} catch (Exception e) {
+			return Respond.invalid("url", "Cannot connect to " + map.getString("url"));
+		}
+		return Respond.ok(new HashMap<>());
+	}
+
 	@PUT
 	@Path("avatar/{group}/{name}")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -292,17 +357,28 @@ public class RepositoryResource {
 	}
 
 	@PUT
-	@Path("settings/{group}/{name}/{setting}/{value}")
+	@Path("settings/{group}/{name}/{setting}")
+	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setSetting(
 			@PathParam("group") String group,
 			@PathParam("name") String name,
-			@PathParam("setting") String setting,
-			@PathParam("value") String value) {
+			@PathParam("setting") RepositorySetting setting,
+			Map<String, Object> data) {
+		Object value = data.get("value");
 		Repository repo = service.get(group, name);
 		service.setSetting(repo, setting, value);
-		if ("jsonFileGeneration".equals(setting) && repo.settings.publicAccess) {
+		if (setting == RepositorySetting.TAGS) {
+			Set<String> documentIds = searchService.getDocumentIds(repo);
+			List<String> tags = RepositorySetting.TAGS.parse(value);
+			if (tags != null && tags.isEmpty()) {
+				tags = null;
+			}
+			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
+			searchService.update(documentIds, update);
+		}
+		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting) && repo.settings.publicAccess) {
 			try {
-				handleJsonFileGeneration(repo, Boolean.parseBoolean(value));
+				handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
 			} catch (IOException e) {
 				return Respond.error("Error creating cached json file");
 			}

@@ -41,7 +41,8 @@ public class DefaultServlet extends HttpServlet {
 			throws ServletException, IOException {
 		boolean isMaintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
 		String url = request.getRequestURL().toString();
-		boolean isLoginUrl = url.endsWith("/login");
+		boolean isLoginUrl = url.endsWith("/login") || url.endsWith("/reset-password") || url.endsWith("/sign-up");
+		boolean isJobUrl = url.endsWith("/job");
 		boolean isMaintenanceUrl = url.endsWith("/maintenance");
 		User user = userService.getCurrentUser();
 		if (isMaintenanceMode && !isLoginUrl && !isMaintenanceUrl && !user.isAdmin()) {
@@ -49,15 +50,24 @@ public class DefaultServlet extends HttpServlet {
 			return;
 		}
 		if (isLoginUrl && !user.hasId()) {
+			if (!settingsService.is(Key.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
+				response.sendRedirect("/login");
+				return;
+			}
 			forward("/login.html", request, response);
 			return;
 		}
-		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)){
+		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)) {
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
+		if (isJobUrl) {
+			forward("/job.html", request, response);
+			return;
+		}
 		String route = url.substring(url.lastIndexOf('/'));
-		if (Arrays.asList(ShiroModule.CUSTOM_PUBLIC_RESOURCES).contains(route) || route.equals("/maintenance") || route.equals("/imprint")) {
+		if (Arrays.asList(ShiroModule.CUSTOM_PUBLIC_RESOURCES).contains(route) || route.equals("/maintenance")
+				|| route.equals("/imprint")) {
 			forward(route + ".html", request, response);
 			return;
 		}

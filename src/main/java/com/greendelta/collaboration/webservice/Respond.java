@@ -150,10 +150,18 @@ public class Respond {
 	}
 
 	public static Response invalid(String field, String message) {
+		return badRequest(toData(field, message));
+	}
+
+	public static Response conflict(String field, String message) {
+		return conflict(toData(field, message));
+	}
+
+	private static Map<String, Object> toData(String field, String message) {
 		Map<String, Object> error = new HashMap<>();
 		error.put("field", field);
 		error.put("message", message);
-		return badRequest(error);
+		return error;
 	}
 
 	public static Response error(String message) {

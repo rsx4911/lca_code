@@ -72,10 +72,13 @@ mixin options(options, defaultSelection, groupId)
 		else
 			option(value=value disabled=disabled data-group-id=groupId)!=label
 
-mixin checkbox(id, label, type)
+mixin checkbox(id, label, type, inline)
 	if !type
 		- type = 'success'
-	.abc-checkbox(class='abc-checkbox-' + type)
+	- var clazz = 'abc-checkbox-' + type
+	if inline
+		- clazz += ' checkbox-inline'
+	.abc-checkbox(class=clazz)
 		input(id=id name=id type='checkbox')&attributes(attributes)
 		label(for=id)
 			if label

@@ -21,8 +21,8 @@ define([
 				$.ajax
 					type: 'POST' 
 					url: 'ws/public/logout'
-					success: () -> window.location.href = 'login'
-					error: () -> window.location.href = 'login'
+					success: () -> window.location.href = ''
+					error: () -> window.location.href = ''
 
 			toggleDebug: (event) ->
 				Events.preventDefault event
@@ -54,13 +54,21 @@ define([
 			onSearchKeyUp: (event) ->
 				if Events.keyCode(event) isnt 13
 					return
+				route = Backbone.history.fragment
 				input = $ Events.target event, 'input'
 				query = input.val()
-				input.val ''
-				if query
-					Router.navigate "search/query=#{query}"
-				else
-					Router.navigate 'search'
+				newRoute = 'search'
+				if query || route.indexOf('search/') is 0
+					newRoute += '/'
+					if query
+						newRoute += "query=#{query}"
+				if route.indexOf('search/') is 0
+					for param in route.substring(7).split('&')
+						if param.split('=')[0] isnt 'query'
+							if newRoute isnt 'search/'
+								newRoute += '&'
+							newRoute += param
+				Router.navigate newRoute
 
 			events: 
 				'click a[href]:not([target=_blank]):not(.login):not(.logout):not([data-action])': (event) -> Events.followLink event

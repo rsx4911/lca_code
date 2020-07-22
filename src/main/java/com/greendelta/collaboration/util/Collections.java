@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -138,6 +139,10 @@ public class Collections {
 		return to;
 	}
 
+	public static <T, K> Map<K, T> map(Collection<T> col, Function<T, K> keyGenerator) {
+		return map(col, keyGenerator, v -> v);
+	}
+
 	public static <T, K, V> Map<K, V> map(Collection<T> col, Function<T, K> keyGenerator, Function<T, V> valueMapper) {
 		Map<K, V> map = new HashMap<>();
 		for (T elem : col) {
@@ -209,6 +214,28 @@ public class Collections {
 		}
 		col.removeAll(sublist);
 		return sublist;
+	}
+
+	public static <T> String join(T[] array, String delimiter) {
+		return join(Arrays.asList(array), e -> e.toString(), delimiter);
+	}
+	
+	public static String join(Collection<String> col, String delimiter) {
+		return join(col, v -> v, delimiter);
+	}
+
+	public static <T> String join(Collection<T> col, Function<T, String> toString, String delimiter) {
+		StringBuilder s = new StringBuilder();
+		boolean first = true;
+		for (T val : col) {
+			if (!first) {
+				s.append(delimiter);
+			} else {
+				first = false;
+			}
+			s.append(toString.apply(val));
+		}
+		return s.toString();
 	}
 
 }

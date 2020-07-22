@@ -1,11 +1,27 @@
+mixin toggleable()
+	div
+		span.toggleable
+		|  
+		a.toggle-control(href='#' aria-label='Show more') Show more
+		span.toggleable(style='display:none')
+			block
+		|  
+		a.toggle-control(href='#' style='display:none' aria-label='Show less') Show less
+
+mixin toggleable-text(short, long, showLongInTitle)
+	div
+		span.toggleable(title=showLongInTitle ? value : null)=short
+		|  
+		a.toggle-control(href='#' aria-label='Show more') Show more
+		span.toggleable(style='display:none')=long
+		|  
+		a.toggle-control(href='#' style='display:none' aria-label='Show less') Show less
+
 mixin long-text(value, length)
 	if !length
 		- length = 250;
 	if value && value.length > length
-		div
-			span.toggleable(title=value)=value.substring(0, Math.floor(length - length / 5)) + '... '
-			a.toggle-control(href='#' aria-label='Show more') Show more
-			span.toggleable(style='display:none')=value
-			a.toggle-control(href='#' style='display:none' aria-label='Show less') Show less
+		- const short = value.substring(0, Math.floor(length - length / 5)) + '... '
+		+toggleable-text(short, value, true)
 	else
 		| #{value}

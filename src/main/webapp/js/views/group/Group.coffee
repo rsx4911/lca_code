@@ -6,13 +6,14 @@ define([
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
+				'cs!utils/Roles'
 				'cs!utils/Status'
 				'cs!app/Router'
 				'templates/views/group/group'
 				'templates/views/group/repositories'
 			]
 
-	(Backbone, Avatar, Events, Filter, Forms, Layers, Renderer, Status, Router, template, listTemplate) ->
+	(Backbone, Avatar, Events, Filter, Forms, Layers, Renderer, Roles, Status, Router, template, listTemplate) ->
 
 		class GroupView extends Backbone.View
 
@@ -23,6 +24,8 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
+				'change #label': (event) -> @setSetting event, 'label'
+				'change #description': (event) -> @setSetting event, 'description'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
 				'click [data-action=import-repository]': () -> Router.navigate 'repository/import/' + @group.get('name')
 				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json/' + @group.get('name')
@@ -36,7 +39,15 @@ define([
 					template: listTemplate
 					filterId: 'filter'
 					filterPrefix: "#{name}/"
-					url: "ws/repository?"
+					url: "ws/repository?module=GROUP&"
+					beforeRender: (result) =>
+						setRole = (r) ->
+							role = Roles[r.role]
+							if role
+								r.role = { name: Roles[r.role].name, description: Roles[r.role].descriptionForGroup} 
+							else
+								r.role = undefined
+						setRole r for r in result.data
 					afterRender: (result) =>
 						@$('.group-repository-count').html(result.resultInfo.totalCount)
 
@@ -46,6 +57,16 @@ define([
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'group', @group.get('name')
 				@filter.init()
+
+			setSetting: (event, setting) ->
+				target = $ Events.target event
+				value = target.val()
+				group = @group.toJSON()
+				$.ajax
+					type: 'PUT'
+					url: "ws/group/settings/#{group.name}/#{setting}"
+					contentType: 'application/json'
+					data: JSON.stringify({value: value || ''})
 
 			deleteGroup: (event) ->
 				name = @group.get 'name'

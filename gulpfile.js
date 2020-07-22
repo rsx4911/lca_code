@@ -92,6 +92,7 @@ gulp.task('copyJsModules', function() {
       'node_modules/backbone/backbone.js',
       'node_modules/bootstrap/dist/js/bootstrap.js',
       'node_modules/cropper/dist/cropper.js',
+      'node_modules/d3/dist/d3.js',
       'node_modules/tablesorter/dist/js/jquery.tablesorter.js',
       'node_modules/jquery/dist/jquery.js',
       'node_modules/jstree/dist/jstree.js',
@@ -103,6 +104,7 @@ gulp.task('copyJsModules', function() {
       'node_modules/underscore/underscore.js',
       'external-libs/coffee-script.js',
       'external-libs/cs.js',
+      'external-libs/d3.layout.cloud.js'
     ])
     .pipe(gulp.dest('./src/main/webapp/js/libs'));
 });
@@ -111,7 +113,6 @@ gulp.task('copyCssModules', function() {
   return gulp.src([
       'node_modules/animate.css/animate.css',
       'node_modules/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css',
-      'node_modules/bootstrap/dist/css/bootstrap-theme.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
       'node_modules/cropper/dist/cropper.css',
       'node_modules/font-awesome/css/font-awesome.css',

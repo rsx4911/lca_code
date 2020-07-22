@@ -2,6 +2,8 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ import org.openlca.cloud.util.Directories;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
@@ -77,7 +80,7 @@ public class GroupService {
 
 	public boolean create(String group, boolean userGroup) {
 		User currentUser = userService.getCurrentUser();
-		if (userGroup && !currentUser.isUserManager()) 
+		if (userGroup && !currentUser.isUserManager())
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
 		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups)
 			throw new UnauthorizedAccessException("", "CREATE_GROUP");
@@ -140,9 +143,23 @@ public class GroupService {
 		return getAll(adminArea, false).size();
 	}
 
-	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea, boolean onlyIfCanWrite) {
+	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea,
+			boolean onlyIfCanWrite) {
 		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
+	}
+
+	public long getRepositoryCount(String group) {
+		String path = getRootPath();
+		if (path == null || path.isEmpty())
+			return 0;
+		File root = new File(path);
+		if (!root.exists() || !root.isDirectory())
+			return 0;
+		File groupDir = new File(root, group);
+		if (!accessService.canRead(group, false))
+			return 0;
+		return groupDir.listFiles().length;
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
@@ -150,9 +167,10 @@ public class GroupService {
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
 		File root = new File(path);
-		if (!root.exists() || !root.isDirectory()) 
+		if (!root.exists() || !root.isDirectory())
 			return new ArrayList<>();
 		List<String> groups = new ArrayList<>();
+		User user = userService.getCurrentUser();
 		for (File group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
@@ -160,7 +178,7 @@ public class GroupService {
 				continue;
 			if (onlyIfCanWrite && !accessService.canWrite(group.getName()))
 				continue;
-			if (isUserNamespace(group.getName()))
+			if (isUserNamespace(group.getName()) && (user == null || !group.getName().equals(user.username)))
 				continue;
 			groups.add(group.getName());
 		}
@@ -172,6 +190,57 @@ public class GroupService {
 		if (path == null)
 			return null;
 		return path + File.separator + group;
+	}
+
+	public void setSetting(String group, String key, String value) {
+		if (!accessService.canSetSettings(group))
+			throw new UnauthorizedAccessException(group, "SET_SETTINGS");
+		GroupSettings settings = getSettings(group);
+		switch (key) {
+		case "label":
+			settings.label = value;
+			break;
+		case "description":
+			settings.description = value;
+			break;
+		}
+		File groupDir = new File(getRootPath(), group);
+		try (FileWriter writer = new FileWriter(new File(groupDir, "settings.json"))) {
+			new Gson().toJson(settings, writer);
+		} catch (IOException e) {
+			log.error("Error saving settings", e);
+		}
+	}
+
+	public GroupSettings getSettings(String group) {
+		User user = userService.getForUsername(group);
+		if (user != null) {
+			GroupSettings settings = new GroupSettings();
+			settings.label = user.name;
+			settings.description = "The default group for user " + user.name;
+			return settings;
+		}
+		File groupDir = new File(getRootPath(), group);
+		File settingsFile = new File(groupDir, "settings.json");
+		if (!settingsFile.exists())
+			return new GroupSettings();
+		try (FileReader reader = new FileReader(settingsFile)) {
+			return new Gson().fromJson(reader, GroupSettings.class);
+		} catch (IOException e) {
+			log.error("Error loading settings for repository");
+			return new GroupSettings();
+		}
+	}
+
+	public static class GroupSettings {
+
+		public String label;
+		public String description;
+
+		private GroupSettings() {
+
+		}
+
 	}
 
 }
