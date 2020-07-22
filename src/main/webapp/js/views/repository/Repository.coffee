@@ -27,9 +27,8 @@ define([
 				'change [data-setting][type=checkbox]': 'toggleSetting'
 				'change #maxSize': 'updateMaxSize'
 				'change #unit': 'updateMaxSize'
-				'change #label': (event) -> @setSetting event, 'LABEL'
-				'change #description': (event) -> @setSetting event, 'DESCRIPTION'
 				'change #tags': 'setTags'
+				'change [data-setting]': 'setSetting'
 				'change .library-restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
@@ -46,6 +45,7 @@ define([
 				@$el.html template
 					repository: repository
 					roles: Roles.getAll()
+					dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
 					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
@@ -82,6 +82,7 @@ define([
 			setSetting: (event, setting) ->
 				target = $ Events.target event
 				value = target.val()
+				setting = target.attr 'data-setting'
 				@putSetting setting, value 
 			
 			putSetting: (setting, value) ->

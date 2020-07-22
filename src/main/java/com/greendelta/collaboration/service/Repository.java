@@ -300,8 +300,17 @@ public class Repository {
 		public boolean jsonFileGeneration;
 		public long maxSize;
 		public String label;
-		public String description;
+		public String version;
 		public List<String> tags;
+		public String description;
+		public String sourceInfo;
+		public String contactInfo;
+		public String projectInfo;
+		public String projectFunding;
+		public String appropriateUse;
+		public String dqAssessment;
+		public String citation;
+		public String typeOfData;
 
 		private RepositorySettings() {
 
@@ -317,8 +326,17 @@ public class Repository {
 		JSON_FILE_GENERATION("jsonFileGeneration", RepositorySetting::parseBoolean),
 		MAX_SIZE("maxSize", RepositorySetting::parseLong),
 		LABEL("label", RepositorySetting::parseString),
+		VERSION("version", RepositorySetting::parseString),
+		TAGS("tags", RepositorySetting::parseStringList),
 		DESCRIPTION("description", RepositorySetting::parseString),
-		TAGS("tags", RepositorySetting::parseStringList);
+		SOURCE_INFO("sourceInfo", RepositorySetting::parseString),
+		CONTACT_INFO("contactInfo", RepositorySetting::parseString),
+		PROJECT_INFO("projectInfo", RepositorySetting::parseString),
+		PROJECT_FUNDING("projectFunding", RepositorySetting::parseString),
+		APPROPRIATE_USE("appropriateUse", RepositorySetting::parseString),
+		DQ_ASSESSMENT("dqAssessment", RepositorySetting::parseString),
+		CITATION("citation", RepositorySetting::parseString),
+		TYPE_OF_DATA("typeOfData", RepositorySetting::parseString);
 
 		private final Field field;
 		private final Function<Object, ?> converter;

@@ -20,8 +20,8 @@ public class Repositories {
 		map.put("group", repo.group);
 		map.put("name", repo.name);
 		map.put("label", repo.getLabel());
-		map.put("settings", repo.settings);
-		map.put("groupSettings", repo.groupSettings);
+		map.put("settings", ObjectMap.fromObject(repo.settings));
+		map.put("groupSettings", ObjectMap.fromObject(repo.groupSettings));
 		if (groupIsUserNamespace != null)
 			map.put("groupIsUserNamespace", groupIsUserNamespace);
 		return map;

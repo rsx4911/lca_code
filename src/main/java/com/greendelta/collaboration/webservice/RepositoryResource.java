@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -64,8 +63,12 @@ public class RepositoryResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
-		Map<String, Object> mappedRepo = Repositories.map(repo,
+		ObjectMap mappedRepo = Repositories.map(repo,
 				groupService.isUserNamespace(group, repo.settings.publicAccess));
+		Commit lastCommit = historyService.getLastCommit(repo);
+		if (lastCommit != null) {
+			mappedRepo.put("settings.lastChange", lastCommit.timestamp);
+		}
 		return Respond.ok(mappedRepo);
 	}
 

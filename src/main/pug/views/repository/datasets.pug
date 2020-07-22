@@ -1,5 +1,6 @@
 include ../mixins/category-breadcrumb.pug
 include ../mixins/forms.pug
+include ../mixins/long-text.pug
 
 mixin download-dropdown()
 	.dropdown.btn-group
@@ -18,12 +19,29 @@ mixin download-dropdown()
 			li: a(href='#' data-format='json' data-action='select-data') as JSON-LD (Subselect)...
 			li: a(href='#' data-format='ilcd' data-action='select-data') as ILCD (Subselect)...
 
+mixin static-setting(field, label, formatter)
+	if settings[field]
+		- var value = formatter ? formatter(settings[field]) : settings[field];
+		+static(field, label, value)
+
 mixin category-or-description()
-	if !pathAsArray.length && description
-		.repository-description #{description}
+	if !pathAsArray.length && settings.description
+		.repository-description 
+			p=settings.description
+			if settings.version || settings.typeOfData || settings.sourceInfo || settings.contactInfo || settings.projectInfo || settings.projectFunding || settings.appropriateUse || settings.dqAssessment
+				+toggleable
+					+static-setting('version', 'Version')
+					+static-setting('lastChange', 'Last change', formatDate)
+					+static-setting('typeOfData', 'Type of data')
+					+static-setting('sourceInfo', 'Source information')
+					+static-setting('contactInfo', 'Contact information')
+					+static-setting('projectInfo', 'Project information')
+					+static-setting('projectFunding', 'Project funding')
+					+static-setting('appropriateUse', 'Appropriate use')
+					+static-setting('dqAssessment', 'Data quality assessment')
+					+static-setting('citation', 'Citation')
 	else
 		+category-breadcrumb(baseUrl, pathAsArray, false, false, commitId)
-
 
 - var showCommitSelection = !isPublic && commits && commits.length;
 if showCommitSelection || categoryPath
