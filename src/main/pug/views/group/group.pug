@@ -20,22 +20,24 @@ include ../mixins/avatar-box.pug
 		.header-box Repositories (
 			span.group-repository-count 0
 			| )
-		.input-group.input-group-lg
-			input#filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
-			if group.userCanCreate
-					span.input-group-btn
-						button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' aria-label='Toggle repository menu')
+		if !group.userCanCreate
+			input#filter.input-lg.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
+		else
+			.input-group.input-group-lg
+				input#filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
+				span.input-group-btn
+					button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' aria-label='Toggle repository menu')
+						span.glyphicon.glyphicon-plus
+						|  
+						span.caret
+					ul.dropdown-menu
+						li: a(href='#' data-action='create-repository')
 							span.glyphicon.glyphicon-plus
-							|  
-							span.caret
-						ul.dropdown-menu
-							li: a(href='#' data-action='create-repository')
-								span.glyphicon.glyphicon-plus
-								| Create new repository
-							li: a(href='#' data-action='import-repository')
-								span.glyphicon.glyphicon-import
-								| Import repository
-							li: a(href='#' data-action='import-json')
-								span.glyphicon.glyphicon-import
-								| Import JSON-LD			
+							| Create new repository
+						li: a(href='#' data-action='import-repository')
+							span.glyphicon.glyphicon-import
+							| Import repository
+						li: a(href='#' data-action='import-json')
+							span.glyphicon.glyphicon-import
+							| Import JSON-LD			
 		.list-container#group-repositories
