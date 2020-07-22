@@ -74,7 +74,7 @@ mixin repo-input(setting, field, label)
 		+select('typeOfData', 'Type of data', dataTypes, repository.settings.typeOfData)(data-setting='TYPE_OF_DATA')
 		+input('tags', 'Tags')(value=repository.settings.tags?repository.settings.tags.join(','):'')
 	else
-		- var typeOfData = repository.settings.typeOfdata || '-';
+		- var typeOfData = repository.settings.typeOfData || '-';
 		+static('typeOfData', 'Type of data', typeOfData)
 		+static('tags', 'Tags')
 			.tags
