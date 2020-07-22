@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greendelta</groupId>
 	<artifactId>lca-collaboration</artifactId>
-	<version>1.2.2</version>
+	<version>1.3.0-snapshot</version>
 	<packaging>war</packaging>
 	<name>LCA Collaboration Server</name>
 
@@ -230,6 +230,7 @@
 			<version>2.5.0</version>
 			<scope>test</scope>
 		</dependency>
+	
 		<dependency>
 			<groupId>com.greendelta</groupId>
 			<artifactId>lca-collaboration-installer</artifactId>

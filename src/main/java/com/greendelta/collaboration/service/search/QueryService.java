@@ -1,9 +1,11 @@
 package com.greendelta.collaboration.service.search;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
@@ -16,13 +18,13 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
-import com.greendelta.search.wrapper.SearchSorting;
 import com.greendelta.search.wrapper.aggregations.SearchAggregation;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
@@ -31,13 +33,16 @@ class QueryService {
 	private final SettingsService settingsService;
 	private final RepositoryService repoService;
 	private final UserService userService;
+	private final ScoreService scoreService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService) {
+	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService,
+			ScoreService scoreService) {
 		this.settingsService = settingsService;
 		this.repoService = repoService;
 		this.userService = userService;
+		this.scoreService = scoreService;
 	}
 
 	SearchResult<IndexEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
@@ -45,8 +50,8 @@ class QueryService {
 		if (repos.isEmpty())
 			return buildEmptyResult(page, pageSize);
 		SearchQueryBuilder builder = new SearchQueryBuilder();
-		ModelType type = getFilteredModelType(filters.get(Aggregations.MODEL_TYPE.name));
-		putAggregations(builder, repos, filters, type);
+		Set<ModelType> types = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
+		putAggregations(builder, repos, filters, types);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn) {
 			builder.filter("mostRecent", SearchFilterValue.term(true));
@@ -56,14 +61,11 @@ class QueryService {
 			builder.filter("action", allowed);
 		}
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(query.toLowerCase(), SearchFields.get(type, loggedIn));
-		} else {
-			builder.sortBy("typeOrdinal", SearchSorting.DESC);
-			builder.sortBy("commitTimestamp", SearchSorting.DESC);
+			builder.query(toWildcardQuery(query.toLowerCase()), "name");
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
-		Scoring.apply(builder);
+		scoreService.apply(builder);
 		SearchClient client = settingsService.getSearchConfig().getSearchClient();
 		SearchQuery searchQuery = builder.build();
 		SearchResult<Map<String, Object>> result = client.search(searchQuery);
@@ -72,17 +74,39 @@ class QueryService {
 		return prepResult(result);
 	}
 
+	private static String toWildcardQuery(String query) {
+		StringTokenizer splitter = new StringTokenizer(query, "\"", true);
+		boolean escaped = false;
+		List<String> values = new ArrayList<>();
+		while (splitter.hasMoreTokens()) {
+			String token = splitter.nextToken();
+			if ("\"".equals(token)) {
+				escaped = !escaped;
+			} else if (escaped) {
+				values.add("\"" + token + "\"");
+			} else {
+				token = token.replace("@", " ");
+				for (String word : token.trim().split("\\s+")) {
+					values.add(word + "*");
+				}
+			}
+		}
+		return Collections.join(values, " ");
+	}
+
 	private void putAggregations(SearchQueryBuilder builder, List<Repository> repos, Map<String, Set<String>> filters,
-			ModelType type) {
-		for (SearchAggregation aggregation : Aggregations.getFilters(type)) {
+			Set<ModelType> types) {
+		for (SearchAggregation aggregation : Aggregations.getFilters(types)) {
 			Set<String> filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
 				putRepositoryFilter(builder, filterValues, repos);
 			} else if (aggregation.name.equals(Aggregations.MODEL_TYPE.name)) {
-				if (type == null) {
+				if (types == null || types.isEmpty()) {
 					builder.aggregation(Aggregations.MODEL_TYPE, getModelTypes());
 				} else {
-					builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+					for (ModelType type : types) {
+						builder.aggregation(Aggregations.MODEL_TYPE, type.name());
+					}
 				}
 			} else if (filterValues != null && !filterValues.isEmpty()) {
 				for (String filterValue : filterValues) {
@@ -100,7 +124,7 @@ class QueryService {
 
 	private String[] getModelTypes() {
 		Set<String> types = new HashSet<>();
-		for (ModelType type : ModelType.categorized()) {
+		for (ModelType type : settingsService.getModelTypes()) {
 			types.add(type.name());
 		}
 		return types.toArray(new String[types.size()]);
@@ -116,12 +140,14 @@ class QueryService {
 		return result;
 	}
 
-	private ModelType getFilteredModelType(Set<String> values) {
-		if (values == null)
+	private Set<ModelType> getFilteredModelTypes(Set<String> values) {
+		if (values == null || values.isEmpty())
 			return null;
-		if (values.size() > 1)
-			return null;
-		return ModelType.valueOf(values.iterator().next());
+		Set<ModelType> types = new HashSet<>();
+		for (String value : values) {
+			types.add(ModelType.valueOf(value));
+		}
+		return types;
 	}
 
 	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> repos) {

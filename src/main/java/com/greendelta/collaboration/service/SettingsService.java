@@ -3,6 +3,7 @@ package com.greendelta.collaboration.service;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -12,6 +13,7 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.subject.Subject;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.Strings;
@@ -19,8 +21,10 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.greendelta.collaboration.model.Setting;
 import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.search.wrapper.SearchClient;
@@ -33,10 +37,12 @@ public class SettingsService {
 	private static MailConfig mailConfig;
 	private static SearchConfig searchConfig;
 	private final Dao<Setting> dao;
+	private final Provider<Subject> subjectProvider;
 
 	@Inject
-	public SettingsService(Dao<Setting> dao) {
+	public SettingsService(Dao<Setting> dao, Provider<Subject> subjectProvider) {
 		this.dao = dao;
+		this.subjectProvider = subjectProvider;
 	}
 
 	public void set(Key key, Object value) {
@@ -76,6 +82,37 @@ public class SettingsService {
 		if (setting == null)
 			return defaultValue;
 		return key.parse(setting.value);
+	}
+
+	public String[] getArray(Key key) {
+		String value = get(key, key.getDefaultValue());
+		if (value == null || value.isEmpty())
+			return new String[0];
+		return value.split(";");
+	}
+
+	public ModelType[] getModelTypes() {
+		Setting setting = dao.getFirstForAttribute("name", Key.MODEL_TYPES_ORDER);
+		String value = setting == null ? Key.MODEL_TYPES_ORDER.getDefaultValue() : setting.value;
+		List<String> hidden = new ArrayList<>();
+		Subject subject = subjectProvider.get();
+		boolean isLoggedIn = subject != null && subject.isAuthenticated();
+		if (!isLoggedIn) {
+			hidden = Arrays.asList(getArray(Key.MODEL_TYPES_HIDDEN));
+		}
+		String[] split = value.split(";");
+		List<ModelType> types = new ArrayList<>();
+		for (int i = 0; i < split.length; i++) {
+			if (hidden.contains(split[i]))
+				continue;
+			types.add(ModelType.valueOf(split[i]));
+		}
+		for (ModelType type : ModelType.values()) {
+			if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
+				continue;
+			types.add(type);
+		}
+		return types.toArray(new ModelType[types.size()]);
 	}
 
 	public Imprint getImprint() {
@@ -199,6 +236,12 @@ public class SettingsService {
 
 		}
 
+		public String toEmailFooter() {
+			return company + ", " + street + ", " + zipCode + " " + city + ", " + country + "<br>"
+					+ "Companies' Register: " + registration + "<br>"
+					+ "Managing Director: " + ceo;
+		}
+
 	}
 
 	public class MailConfig {
@@ -240,11 +283,12 @@ public class SettingsService {
 		}
 
 		public boolean isValid() {
-			if (Strings.isNullOrEmpty(defaultFrom) || Strings.isNullOrEmpty(proto) || Strings.isNullOrEmpty(host) || port == null || port == 0)
+			if (Strings.isNullOrEmpty(defaultFrom) || Strings.isNullOrEmpty(proto) || Strings.isNullOrEmpty(host)
+					|| port == null || port == 0)
 				return false;
 			return true;
 		}
-		
+
 	}
 
 	public class SearchConfig {

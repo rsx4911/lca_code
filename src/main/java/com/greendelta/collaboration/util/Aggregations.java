@@ -3,6 +3,7 @@ package com.greendelta.collaboration.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.openlca.core.model.ModelType;
 
@@ -15,6 +16,8 @@ public class Aggregations {
 	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId");
 	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type");
 	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("categoryType");
+	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags");
+	public static final TermsAggregation DATASET_TAGS = new TermsAggregation("datasetTags");
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
 	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");
@@ -27,13 +30,14 @@ public class Aggregations {
 	public static final TermsAggregation FLOW_TYPE = new TermsAggregation("flowType");
 
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] {
-			GROUP, REPOSITORY, MODEL_TYPE};
+			GROUP, REPOSITORY, MODEL_TYPE, REPOSITORY_TAGS, DATASET_TAGS };
 	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] {
 			PROCESS_TYPE, MODELLING_APPROACH, LOCATION, START_YEAR, END_YEAR, CONTACT };
 	public static final SearchAggregation[] FLOW_FILTERS = new SearchAggregation[] {
 			FLOW_TYPE };
 
-	public static final SearchAggregation[] getFilters(ModelType modelType) {
+	public static final SearchAggregation[] getFilters(Set<ModelType> modelTypes) {
+		ModelType modelType = modelTypes != null && modelTypes.size() == 1 ? modelTypes.iterator().next() : null;
 		List<SearchAggregation> filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
 		if (modelType == ModelType.PROCESS) {
 			filters.addAll(Arrays.asList(PROCESS_FILTERS));

@@ -116,9 +116,12 @@ public abstract class TaskExecutionService<T extends Task> {
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
 		task.state = state;
+		task.endDate = Calendar.getInstance().getTime();
 		User currentUser = userService.getCurrentUser();
 		for (TaskAssignment assignment : task.assignments) {
-			assignment.endDate = Calendar.getInstance().getTime();
+			if (assignment.endedBy != null)
+				continue;
+			assignment.endDate = task.endDate;
 			assignment.canceled = true;
 			assignment.endedBy = currentUser;
 		}

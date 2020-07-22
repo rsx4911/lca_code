@@ -69,8 +69,12 @@ img.image-crop
 .pace-inactive
 	display none
 
+.cursor
+	cursor pointer
+
 .paging 
 	padding-top 20px
+	padding-bottom 20px
 	text-align center
 
 	& > *
@@ -87,8 +91,14 @@ img.image-crop
 	height 48px
 	border-radius 24px
 
+	@media (min-width 992px)
+		margin-right 16px
+
 .alert
 	display none
+
+.repository-entry-content
+	width calc(100% - 64px)
 
 .status-bar
 	position fixed
@@ -187,6 +197,9 @@ img.check-all, img.uncheck-all
 	cursor pointer
 	margin-left 5px
 
+.content-container
+	background-color rgb(255, 255, 255)
+
 .content-box, .subcontent-box
 	background-color white
 
@@ -231,9 +244,33 @@ img.check-all, img.uncheck-all
 		width 32px
 		height 32px
 
-	.username
-		padding-left 10px
+	.user-info-content
 		font-size 90%
+
+		.username:last-child
+			display inline-block
+			margin-top 8px
+
+.commit-info
+	font-weight bold
+
+	&.additions
+		color rgb(92, 184, 92)
+
+	&.updates
+		color rgb(240, 173, 78)
+
+	&.deletions
+		color rgb(217, 83, 79)
+
+.list-container
+
+	.list-entry
+		padding 10px 25px
+		border-bottom 1px solid rgb(241, 242, 244)
+
+		&.small-padding
+			padding 10px
 
 img.model-icon
 	width 64px
@@ -303,3 +340,39 @@ table.data-quality
 	& > li > a > .glyphicon
 		margin-left -11px
 		margin-right 11px
+
+.commit-link
+
+	.commit-id-rest
+		display none
+
+.commit-link:hover
+
+	.commit-id-rest
+		display initial
+
+.badge
+	font-size 14px
+
+	&.badge-primary
+		background-color rgb(51, 122, 183)
+
+	&.badge-success
+		background-color rgb(92, 184, 92)
+
+	&.badge-warning
+		background-color rgb(240, 173, 78)
+
+	&.badge-danger
+		background-color rgb(217, 83, 79)
+
+	&.badge-info
+		background-color rgb(91, 192, 222)
+
+.tags
+
+	.badge:not(:last-child)
+		margin-right 5px
+
+.description
+	color rgb(127, 143, 164)

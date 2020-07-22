@@ -1,22 +1,5 @@
 define () ->
 
-	getRenderOptions = (type, collection, element) ->
-		index = collection.indexOf element
-		index++
-		if collection.length is 1
-			renderOptions =
-				container: $ ".#{type}s"
-				append: true
-		else if index is collection.length
-			renderOptions =
-				container: $(".#{type}-view:last-child()")
-				after: true				
-		else 
-			renderOptions =
-				container: $(".#{type}-view:nth-child(#{index})")
-				before: true				
-		return renderOptions
-
 	render: (view, options) ->
 		unless options
 			return
@@ -33,7 +16,3 @@ define () ->
 		unless options.noAnimation
 			view.$el.animateCss 'fadeIn'
 		options.callback?()
-
-	_: (callback) ->
-		() =>
-			callback.apply @, arguments

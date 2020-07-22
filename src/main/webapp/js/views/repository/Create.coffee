@@ -21,46 +21,56 @@ define([
 					url: 'ws/group?onlyIfCanWrite=true&page=0'
 					success: (result) =>
 						options = []
-						options.push currentUser.get 'username'
 						for group in result.data
-							options.push group.name
+							options.push [group.name, group.label]
 						callback options
 
 			createRepository: () ->
 				@repository.set Forms.toJson 'repository-form'
 				@repository.set 'isNew', true
-				unless @repository.get('name')
-					Forms.handleError 'repository-form', {responseJSON: {field: 'name', message: 'Missing input: Name'}}
-					return false
-				commitMessage = ''
-				if @doImport and @importFormat is 'json-ld'
-					commitMessage =  @$('#commitMessage').val()
-					unless commitMessage
-						Forms.handleError 'repository-form', {responseJSON: {field: 'commitMessage', message: 'Missing input: Commit message'}}
-						return false
 				Model.save @repository, 
 					success: () => 
 						group = @repository.get 'group'
 						name = @repository.get 'name'
+						isExternal = @importFormat is 'external'
+						isJsonLd = @importFormat is 'json-ld'
 						if @doImport
 							Layers.showProgressIndicator 'Importing'
-							data = new FormData()
-							data.append('file', $('#data')[0].files[0])
-							url = "ws/repository/import/#{group}/#{name}"
-							if @importFormat is 'json-ld'
+							if isExternal
+								data = JSON.stringify
+									url: @$('#url').val()
+									username: @$('#username').val()
+									password: @$('#password').val()
+									token: @$('#token').val()
+							else
+								data = new FormData()
+								data.append('file', @$('#data')[0].files[0])
+							url = 'ws/repository/import/'
+							if isExternal
+								url += 'external/'
+							url += "#{group}/#{name}"
+							if isJsonLd
 								url += '?format=json-ld'
 								data.append 'commitMessage', commitMessage
 							$.ajax	
 								type: 'POST'
 								url: url
-								cache: false
-								contentType: false
-								processData: false
+								cache: isExternal
+								contentType: if isExternal then 'application/json' else false
+								processData: isExternal
 								data: data
 								success: () -> 
 									Layers.hideProgressIndicator()
 									Router.navigate "#{group}/#{name}"						
-								error: () -> Layers.hideProgressIndicator()
+								error: (response) =>
+									if response.responseJSON and response.responseJSON.field is 'token'
+										@$('#token-input').show()
+									Forms.handleError 'repository-form', response
+									$.ajax
+										type: 'DELETE'
+										url: "ws/repository/#{group}/#{name}"
+										success: () => Layers.hideProgressIndicator()
+										error: () => Layers.hideProgressIndicator()
 						else
 							Router.navigate "#{group}/#{name}"						
 					error: (model, response) -> Forms.handleError 'repository-form', response

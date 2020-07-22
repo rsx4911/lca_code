@@ -24,6 +24,8 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public String fullPath;
 	public String category;
 	public List<String> categoryPaths;
+	public List<String> repositoryTags;
+	public List<String> datasetTags;
 
 	public String toIndexId() {
 		return toIndexId(repositoryId, type, refId, commitId);
@@ -77,6 +79,8 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.categoryPaths = categoryPaths != null ? new ArrayList<>(categoryPaths) : null;
 		e.mostRecent = mostRecent;
 		e.commits = commits != null ? new ArrayList<>(commits) : null;
+		e.repositoryTags = repositoryTags != null ? new ArrayList<>(repositoryTags) : null;
+		e.datasetTags = datasetTags != null ? new ArrayList<>(datasetTags) : null;
 	}
 
 	public static String toIndexId(String repositoryId, ModelType type, String refId, String commitId) {

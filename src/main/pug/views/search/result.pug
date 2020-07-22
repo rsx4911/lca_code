@@ -32,10 +32,18 @@ mixin result-details(dataset)
 			+category-breadcrumb(catUrl, dataset.categories, true)
 		.details-left
 			div Repository: 
-				a(href=dataset.repositoryId)=dataset.repositoryId
+				a(href=dataset.repositoryId)=dataset.repositoryLabel
 			if !isPublic
 				div Commit: 
 					a(href=dataset.repositoryId + '/commit/' + dataset.commitId)=dataset.commitMessage
+			.tags
+				if dataset.repositoryTags && dataset.repositoryTags.length
+					each tag in dataset.repositoryTags
+						span.badge.badge-primary=tag
+				if dataset.datasetTags && dataset.datasetTags.length
+					each tag in dataset.datasetTags
+						span.badge=tag
+					
 		if dataset.location || dataset.validFromYear || dataset.validUntilYear
 			.details-right
 				if dataset.location

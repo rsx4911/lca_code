@@ -1,6 +1,12 @@
 .search-view
 
-	& > *
+	.header-box .badge
+		margin-bottom 2px
+
+		&:not(:last-child)
+			margin-right 5px
+
+	.search-results
 		padding 0
 
 	.result
@@ -29,16 +35,22 @@
 		.actions
 			float right
 
+		.tags .badge
+			font-size inherit
+
 	.highlight-result
 		background-color rgb(255, 255, 0)
 	
 	.aggregations
 		
-		@media(min-width 1200px)
-			margin-left 25px
-		
 		.aggregation
 			padding 10px 25px
+
+			label
+				font-weight normal
+
+			.multi-select
+				color rgb(125, 125, 125)
 			
 			.glyphicon-remove
 				color rgb(217, 83, 79)
@@ -46,13 +58,8 @@
 			ul ul
 				list-style disc outside none
 				margin-left 1.7em
-				
-.public-mode .search-view
 	
 	@media(min-width 1200px)
 		
-		.aggregations
-			margin-left 0
-			
 		.search-results
 			border-right 1px solid rgb(231, 233, 237)

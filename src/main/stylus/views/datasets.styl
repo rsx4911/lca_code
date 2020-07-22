@@ -5,9 +5,25 @@
 	
 	.header-box
 		font-weight bold
-		
+
+		&.only-box
+			padding 10px 25px
+
+		.breadcrumb
+			padding 0
+
+		.repository-description
+			font-weight normal
+
 		#commit
 			max-width 333px
+
+		a.toggle-control 	
+
+			&:hover, &:visited, &:active, &:focus
+		
+				&:not(.btn)
+					color rgb(51, 122, 183)
 					
 	.table-browse
 
@@ -50,9 +66,22 @@
 
 .public-mode
 	
-	.repository-datasets .table-browse 
+	.repository-datasets 
+
+		.header-box
+
+			.breadcrumb
+				padding-top 8px
+				padding-bottom 8px
+
+			.repository-description
+				padding-top 8px
+				padding-bottom 8px
+	
+		.table-browse 
 		
-		& > thead > tr > th, & > tbody > tr > td 
+			& > thead > tr > th, & > tbody > tr > td 
+				
+				&:nth-child(2)
+					width 100%
 			
-			&:nth-child(2)
-				width 100%

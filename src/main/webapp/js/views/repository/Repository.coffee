@@ -27,6 +27,8 @@ define([
 				'change [data-setting][type=checkbox]': 'toggleSetting'
 				'change #maxSize': 'updateMaxSize'
 				'change #unit': 'updateMaxSize'
+				'change #tags': 'setTags'
+				'change [data-setting]': 'setSetting'
 				'change .library-restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
@@ -43,12 +45,21 @@ define([
 				@$el.html template
 					repository: repository
 					roles: Roles.getAll()
+					dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
 					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
+
+			setTags: () ->
+				tags = []
+				for tag in $('#tags').val().split(',')
+					if tag.trim()
+						tags.push tag.trim()
+				$('#tags').val(tags.join(','))
+				@putSetting 'TAGS', tags
 
 			setMaxSize: (size) ->
 				unless size
@@ -63,24 +74,34 @@ define([
 			toggleSetting: (event) ->
 				target = $ Events.target event
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
 				setting = target.attr 'data-setting'
 				value = target.is ':checked'
 				repository.settings[setting] = value
-				if setting is 'publicAccess'
+				@putSetting setting, value
+
+			setSetting: (event, setting) ->
+				target = $ Events.target event
+				value = target.val()
+				setting = target.attr 'data-setting'
+				@putSetting setting, value 
+			
+			putSetting: (setting, value) ->
+				repository = @repository.toJSON()
+				if setting is 'PUBLIC_ACCESS'
 					@$('#jsonFileGeneration').attr 'disabled', !value
-				if setting is 'jsonFileGeneration'
+				if setting is 'JSON_FILE_GENERATION'
 					Layers.showProgressIndicator 'Generating'
 				$.ajax
 					type: 'PUT'
-					url: "ws/repository/settings/#{fullPath}/#{setting}/#{value}"
+					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}"
+					contentType: 'application/json'
+					data: JSON.stringify({value: value})
 					success: () =>
-						if setting is 'jsonFileGeneration'
+						if setting is 'JSON_FILE_GENERATION'
 							Layers.hideProgressIndicator()
 					error: () =>
-						if setting is 'jsonFileGeneration'
+						if setting is 'JSON_FILE_GENERATION'
 							Layers.hideProgressIndicator()
-
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()
@@ -104,9 +125,7 @@ define([
 				size = parseInt size
 				value = size * unit
 				repository.settings.maxSize = value
-				$.ajax
-					type: 'PUT'
-					url: "ws/repository/settings/#{fullPath}/maxSize/#{value}"
+				@putSetting 'MAX_SIZE', value
 
 			updateRestriction: (event) ->
 				target = $ Events.target event

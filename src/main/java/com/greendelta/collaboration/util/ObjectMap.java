@@ -227,6 +227,22 @@ public class ObjectMap extends HashMap<String, Object> {
 		return 0;
 	}
 
+	public String[] getStringArray(String field) {
+		Object value = get(field);
+		if (value == null)
+			return null;
+		if (value instanceof String[])
+			return (String[]) value;
+		if (value instanceof Collection) {
+			List<String> values = new ArrayList<>();
+			for (Object v : (Collection<?>) value) {
+				values.add(v.toString());
+			}
+			return values.toArray(new String[values.size()]);
+		}
+		return null;
+	}
+
 	public String getString(String field) {
 		Object value = get(field);
 		if (value == null)
@@ -257,6 +273,19 @@ public class ObjectMap extends HashMap<String, Object> {
 			if (value instanceof String[])
 				return Double.parseDouble(((String[]) value)[0]);
 			return Double.parseDouble(value.toString());
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
+	public int getInteger(String field) {
+		Object value = get(field);
+		if (value == null)
+			return 0;
+		try {
+			if (value instanceof String[])
+				return Integer.parseInt(((String[]) value)[0]);
+			return Integer.parseInt(value.toString());
 		} catch (NumberFormatException e) {
 			return 0;
 		}

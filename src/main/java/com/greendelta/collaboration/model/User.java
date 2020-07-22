@@ -38,7 +38,7 @@ public class User extends AbstractEntity {
 	public String twoFactorSecret;
 
 	@Embedded
-	public UserSettings settings;
+	public UserSettings settings = new UserSettings();
 
 	@Override
 	public long getId() {
@@ -67,47 +67,47 @@ public class User extends AbstractEntity {
 	public void enable(Notification notification) {
 		if (isEnabled(notification))
 			return;
-		int e = (int) Math.pow(2, notification.ordinal());
+		long e = (long) Math.pow(2, notification.ordinal());
 		settings.notifications += e;
 	}
 
 	public void disable(Notification notification) {
 		if (!isEnabled(notification))
 			return;
-		int e = (int) Math.pow(2, notification.ordinal());
+		long e = (long) Math.pow(2, notification.ordinal());
 		settings.notifications -= e;
 	}
 
 	public boolean isEnabled(Notification notification) {
-		int e = (int) Math.pow(2, notification.ordinal());
+		long e = (long) Math.pow(2, notification.ordinal());
 		return (settings.notifications | e) == settings.notifications;
 	}
-	
+
 	public boolean isAdmin() {
 		if (settings == null)
 			return false;
 		return settings.admin;
 	}
-	
+
 	public boolean isUserManager() {
 		if (settings == null)
 			return false;
 		return settings.admin || settings.userManager;
 	}
-	
+
 	public boolean isDataManager() {
 		if (settings == null)
 			return false;
 		return settings.admin || settings.dataManager;
 	}
-	
+
 	public boolean isDeactivated() {
 		if (settings == null)
 			return false;
 		if (settings.activeUntil == null)
 			return false;
 		if (isAdmin())
-			return false;		
+			return false;
 		Calendar now = Calendar.getInstance();
 		now.set(Calendar.HOUR_OF_DAY, 0);
 		now.set(Calendar.MINUTE, 0);
@@ -117,5 +117,5 @@ public class User extends AbstractEntity {
 		activeUntil.setTime(settings.activeUntil);
 		return now.after(activeUntil);
 	}
-	
+
 }

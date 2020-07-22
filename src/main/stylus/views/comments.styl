@@ -5,8 +5,16 @@
 	color rgb(51, 122, 173)
 
 .comment-entry
-	padding 20px
-	
+
+	&:not(.reply)
+		padding 20px
+
+	&.reply
+		padding 20px 20px 20px 0
+
+		.user-info .user-info-content
+			font-size 100%
+
 	&:not(.released):not(.approved)
 		background-color rgb(245, 245, 245)
 
@@ -15,23 +23,12 @@
 	
 	#new-comment-group
 		margin-top 15px
-		margin-left 42px
-
-	&.reply
-		padding-left 72px 
+		margin-left 48px
 
 	.comment-text
-		padding-left 10px
-
-	.comment-text, .dataset-info
-		margin-left 58px
-
-		&.comment-layer
-			margin-left 42px
+		margin-top 10px
+		font-size 14px
 	
-	.comment-info-container
-		margin-left 58px
-
 	.reply-to[data-active], .edit[data-active]
 		color rgb(68, 157, 68) !important
 		font-weight bold
@@ -41,15 +38,20 @@
 		
 	.replies
 		margin-top 10px
-
-		& > .toggle-control
-			margin-left 68px
 		
 		& > .toggleable > img.loader
 			margin 0 auto
 			width 32px
 			display block
 
+	.dataset-link, .user-extra-info, .comment-text
+		font-weight normal
+
 .comments hr, .comments-view hr, .new-comment-wrapper + hr
 	margin 0
 
+.modal .comment-entry.reply
+	padding-left 64px 
+
+	.user-info .user-info-content
+		font-size 90%

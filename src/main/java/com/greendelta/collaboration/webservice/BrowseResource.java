@@ -36,7 +36,6 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
 @Path("public/browse")
@@ -123,7 +122,7 @@ public class BrowseResource {
 	}
 
 	private List<ObjectMap> getRootCategoryContent(ModelType type, BrowseParameter params) {
-		if (!Arrays.asList(ModelTypes.SORTED).contains(type))
+		if (type == ModelType.CATEGORY || !Arrays.asList(ModelType.categorized()).contains(type))
 			return null;
 		return service.getUncategorized(type, params);
 	}

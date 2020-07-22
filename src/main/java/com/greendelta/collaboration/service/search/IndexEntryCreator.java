@@ -37,13 +37,13 @@ public class IndexEntryCreator {
 	}
 
 	public IndexEntry create(Dataset dataset, IndexAction previousAction) {
-		return create(dataset, previousAction, null, false);		
+		return create(dataset, previousAction, null, false);
 	}
 
 	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
 		return create(dataset, previousAction, data, true);
 	}
-		
+
 	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data, boolean withData) {
 		if (withData && (data == null || data.isEmpty())) {
 			IndexEntry entry = generic(dataset);
@@ -86,6 +86,8 @@ public class IndexEntryCreator {
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
 		entry.commits = new ArrayList<>(Collections.singletonList(commit.id));
+		entry.repositoryTags = repo.settings.tags != null ? new ArrayList<>(repo.settings.tags) : new ArrayList<>();
+		entry.datasetTags = dataset.tags != null ? new ArrayList<>(dataset.tags) : new ArrayList<>();
 		DataFill.categories(entry, dataset.categories);
 		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;

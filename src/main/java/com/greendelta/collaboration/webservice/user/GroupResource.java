@@ -22,14 +22,19 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.GroupService.GroupSettings;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.search.wrapper.SearchResult;
 import com.sun.jersey.multipart.FormDataParam;
@@ -39,15 +44,19 @@ import com.sun.jersey.multipart.FormDataParam;
 public class GroupResource {
 
 	private final GroupService service;
+	private final UserService userService;
 	private final AccessService accessService;
+	private final MembershipService membershipService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
 	@Inject
-	public GroupResource(GroupService service, AccessService accessService, DeleteService deleteService,
-			NotificationService notificationService) {
+	public GroupResource(GroupService service, UserService userService, AccessService accessService,
+			MembershipService membershipService, DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;
+		this.userService = userService;
 		this.accessService = accessService;
+		this.membershipService = membershipService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 	}
@@ -57,17 +66,29 @@ public class GroupResource {
 			@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter,
+			@QueryParam("module") Module module,
 			@QueryParam("onlyIfCanWrite") @DefaultValue("false") boolean onlyIfCanWrite) {
 		SearchResult<String> result = service.getAll(page, pageSize, filter, true, onlyIfCanWrite);
-		return Respond.ok(SearchResults.convert(result, (String group) -> {
-			return ObjectMap.fromMap(Collections.singletonMap("name", group));
+		User user = userService.getCurrentUser();
+		return Respond.ok(SearchResults.convert(result, group -> {
+			ObjectMap map = ObjectMap.fromMap(Collections.singletonMap("name", group));
+			GroupSettings settings = service.getSettings(group);
+			map.put("settings", settings);
+			map.put("label", settings.label != null ? settings.label : group);
+			if (module != Module.DASHBOARD)
+				return map;
+			map.put("role", membershipService.getRole(user, group));
+			map.put("repositories", service.getRepositoryCount(group));
+			map.put("members", membershipService.getMemberships(group).size());
+			return map;
 		}));
 	}
 
 	@GET
 	@Path("{name}")
 	public Response get(@PathParam("name") String name) {
-		if (!service.exists(name) || service.isUserNamespace(name))
+		User user = userService.getCurrentUser();
+		if (!service.exists(name) || (service.isUserNamespace(name) && (user == null || !name.equals(user.username))))
 			return Respond.notFound("Group " + name + " not found");
 		if (!accessService.canRead(name))
 			throw new UnauthorizedAccessException(name, "READ");
@@ -75,7 +96,10 @@ public class GroupResource {
 		group.put("userCanDelete", accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
 		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
-		group.put("userCanEditMembers", accessService.canEditMembersOf(name));
+		group.put("userCanSetSettings", accessService.canSetSettings(name));
+		group.put("settings", service.getSettings(name));
+		boolean isUserspace = user != null && name.equals(user.username);
+		group.put("userCanEditMembers", !isUserspace && accessService.canEditMembersOf(name));
 		return Respond.ok(group);
 	}
 
@@ -120,6 +144,20 @@ public class GroupResource {
 		return getAvatar(name);
 	}
 
+	@PUT
+	@Path("settings/{name}/{setting}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public Response setSetting(
+			@PathParam("name") String name,
+			@PathParam("setting") String setting,
+			Map<String, Object> data) {
+		String value = data.get("value").toString();
+		if (!service.exists(name))
+			return Respond.notFound();
+		service.setSetting(name, setting, value);
+		return Respond.ok(new HashMap<>());
+	}
+	
 	@DELETE
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {

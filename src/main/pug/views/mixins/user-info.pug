@@ -1,8 +1,12 @@
 mixin user-info(id, name, type)
 	- var lcType = type ? type.toLowerCase() : 'user';		
+	- var ucType = type ? type : 'User';
 	span.user-info&attributes(attributes)
-		img.avatar.avatar-small(src='ws/' + lcType + '/avatar/' + id, aria-label='User avatar')
-		span.username=name 
-			if type
-				|  (#{type})
-			block
+		.pull-left
+			img.avatar.avatar-small(src='ws/' + lcType + '/avatar/' + id, aria-label=ucType + ' avatar')
+		.pull-left
+			span.user-info-content
+				span.username=name 
+					if type
+						|  (#{type})
+				block

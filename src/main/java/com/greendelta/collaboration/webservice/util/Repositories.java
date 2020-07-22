@@ -19,7 +19,9 @@ public class Repositories {
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 		map.put("group", repo.group);
 		map.put("name", repo.name);
-		map.put("settings", repo.settings);
+		map.put("label", repo.getLabel());
+		map.put("settings", ObjectMap.fromObject(repo.settings));
+		map.put("groupSettings", ObjectMap.fromObject(repo.groupSettings));
 		if (groupIsUserNamespace != null)
 			map.put("groupIsUserNamespace", groupIsUserNamespace);
 		return map;

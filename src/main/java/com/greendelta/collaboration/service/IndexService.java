@@ -2,6 +2,7 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,6 @@ import com.greendelta.collaboration.service.search.DataFill;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Collections;
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class IndexService {
@@ -56,6 +56,8 @@ public class IndexService {
 		} else {
 			dataset.categoryType = dataset.type;
 		}
+		String[] tags = map.getStringArray("tags");
+		dataset.tags = tags != null ? Arrays.asList(tags) : null;
 		return dataset;
 	}
 
@@ -68,8 +70,7 @@ public class IndexService {
 
 		private Runner(Repository repo) {
 			this.repo = repo;
-			collectRefs(ModelType.CATEGORY);
-			for (ModelType type : ModelTypes.SORTED) {
+			for (ModelType type : ModelType.categorized()) {
 				collectRefs(type);
 			}
 			collectRefs(ModelType.IMPACT_CATEGORY);

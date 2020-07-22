@@ -52,17 +52,20 @@ define([
 				window.isActive = true
 			window.onblur = () -> 
 				window.isActive = false
+			$.expr.filters.offscreen = (el) ->
+				rect = el.getBoundingClientRect()
+				return ((rect.x + rect.width) < 0 || (rect.y + rect.height) < 0 || (rect.x > window.innerWidth || rect.y > window.innerHeight))
 			$.fn.extend
 				animateCss: (animationName) ->
 					animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend'
 					$(@).addClass('animated ' + animationName).one animationEnd, () -> 
 						$(@).removeClass 'animated ' + animationName
 			@initializeErrorHandling()
-			@fetchModels () ->
-				$.ajax
-					type: 'GET'
-					url: 'ws/public/config/userRoutes'
-					success: (userRoutes) ->
+			$.ajax
+				type: 'GET'
+				url: 'ws/public/config/userRoutes'
+				success: (userRoutes) =>
+					@fetchModels () ->
 						Router.initialize userRoutes
 						Controller.initialize Router
 						Backbone.history.start

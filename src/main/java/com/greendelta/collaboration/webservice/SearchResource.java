@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,14 +21,19 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.GroupService.GroupSettings;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
@@ -42,16 +49,20 @@ public class SearchResource {
 	private static final Logger log = LogManager.getLogger(SearchResource.class);
 	private final SearchService service;
 	private final RepositoryService repoService;
+	private final GroupService groupService;
 	private final HistoryService historyService;
 	private final UserService userService;
+	private final SettingsService settingsService;
 
 	@Inject
-	public SearchResource(SearchService service, RepositoryService repoService, HistoryService historyService,
-			UserService userService) {
+	public SearchResource(SearchService service, RepositoryService repoService, GroupService groupService,
+			HistoryService historyService, UserService userService, SettingsService settingsService) {
 		this.service = service;
 		this.repoService = repoService;
+		this.groupService = groupService;
 		this.historyService = historyService;
 		this.userService = userService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -61,7 +72,6 @@ public class SearchResource {
 		String query = Client.removeStringFilter("query", parameters);
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
 		SearchResult<IndexEntry> result = service.search(query, page, pageSize, parameters);
 		for (AggregationResult aResult : result.aggregations) {
@@ -69,15 +79,51 @@ public class SearchResource {
 				aResult.group("/");
 			}
 		}
-		return Respond.ok(SearchResults.convert(result, (r) -> {
+		return Respond.ok(map(result));
+	}
+
+	private Map<String, Object> map(SearchResult<IndexEntry> result) {
+		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
+		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
+		map.put("resultInfo", result.resultInfo);
+		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		List<ObjectMap> data = Client.map(result.data, r -> {
+			ObjectMap rMap = ObjectMap.fromObject(r);
+			Repository repo = repositories.get(r.repositoryId);
+			rMap.put("repositoryLabel", repo.getLabel());
 			if (!loggedIn) {
-				r.commitId = null;
-				r.commitMessage = null;
-				r.commitTimestamp = 0;
-				r.action = null;
+				rMap.nullify("commitId", "commitMessage", "commitTimestamp", "action");
 			}
-			return r;
+			return rMap;
+		});
+		map.put("data", data);
+		List<AggregationResult> aggregations = Collections.filter(result.aggregations, a -> {
+			if (!settingsService.is(Key.REPOSITORY_TAGS_ENABLED) && a.name.equals(Aggregations.REPOSITORY_TAGS.name))
+				return true;
+			if (!settingsService.is(Key.DATASET_TAGS_ENABLED) && a.name.equals(Aggregations.DATASET_TAGS.name))
+				return true;
+			return false;
+		});
+		map.put("aggregations", Client.map(aggregations, a -> {
+			ObjectMap aMap = ObjectMap.fromObject(a);
+			if (a.name.equals(Aggregations.REPOSITORY.name)) {
+				aMap.put("entries", Client.map(a.entries, e -> {
+					ObjectMap eMap = ObjectMap.fromObject(e);
+					Repository repo = repositories.get(e.key);
+					eMap.put("label", Strings.isNullOrEmpty(repo.settings.label) ? repo.name : repo.settings.label);
+					return eMap;
+				}));
+			} else if (a.name.equals(Aggregations.GROUP.name)) {
+				aMap.put("entries", Client.map(a.entries, e -> {
+					ObjectMap eMap = ObjectMap.fromObject(e);
+					GroupSettings groupSettings = groupService.getSettings(e.key);
+					eMap.put("label", Strings.isNullOrEmpty(groupSettings.label) ? e.key : groupSettings.label );
+					return eMap;
+				}));
+			}
+			return aMap;
 		}));
+		return map;
 	}
 
 	@GET

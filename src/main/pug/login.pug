@@ -23,6 +23,13 @@ html(lang='en')
 			#login-container
 				+login-form
 					button.btn.btn-primary.btn-block(type='submit') Login
+					.sign-up-link-container 
+						| Don't have an account yet? 
+						a.default-link(href='sign-up') Sign up
+				+reset-password-form()(style='display:none')
+					button#reset.btn.btn-primary.btn-block(type='submit' disabled) Request password reset
+				+sign-up-form()(style='display:none')
+					button.btn.btn-primary.btn-block(type='submit') Register
 		br
 		br
 		br
@@ -34,28 +41,77 @@ html(lang='en')
 			a(href='imprint') Imprint
 		script(src='js/libs/jquery.js')
 		script.
+			$('.sign-up-link-container').hide()
+			$.ajax({type: 'GET', url: 'ws/public/settings', success: function(settings) {
+				for (var i = 0; i < settings.length; i++) {
+					if (settings[i].name === 'USER_REGISTRATION_ENABLED' && settings[i].value === 'true' || settings[i].value === true) {
+						$('.sign-up-link-container').show()
+					}
+				}
+			}});
+			if (window.location.pathname.endsWith('/reset-password')) {
+				$('#login').hide()
+				$('#reset-password').show()
+				$('#sign-up').hide()
+			}
+			if (window.location.pathname.endsWith('/sign-up')) {
+				$('#login').hide()
+				$('#reset-password').hide()
+				$('#sign-up').show()
+			}
 			$('#year').html(new Date().getFullYear());
+			$('#reset-password #email').on('keyup', function() {
+				$('#reset').attr('disabled', !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($('#email').val()))
+			})
 			$('#login').on('submit', function(event) {
 				$('#login-general-message').hide();
-				var data = {username: $('#username').val(), password: $('#password').val()};
-				if ($('#token').is(':visible')) {
-					data.token = $('#token').val();
+				var data = {username: $('#login #username').val(), password: $('#login #password').val()};
+				if ($('#login #token').is(':visible')) {
+					data.token = $('#login #token').val();
 				}
 				$.ajax({type: 'POST', url: 'ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
 						if (response === 'tokenRequired') {
-							$('#username-group').addClass('hidden');
-							$('#password-group').addClass('hidden');
-							$('#token-group').removeClass('hidden');
+							$('#login #username-group').addClass('hidden');
+							$('#login #password-group').addClass('hidden');
+							$('#login #token-group').removeClass('hidden');
 							$('#login-general-message').hide();
-							$('#token').focus();
+							$('#login #token').focus();
 						} else {
 							window.location.href = '';
 						}
 					}, error: function(response) {
 						$('#login-general-message').show();
 						$('#login-general-message .message').html(response.responseText);
-						$('#token').val('');
+						$('#login #token').val('');
+					}});
+				return false;
+			});
+			$('#reset-password').on('submit', function(event) {
+				$('#reset-password-general-message').hide();
+				var data = {email: $('#reset-password #email').val()};
+				$.ajax({type: 'POST', url: 'ws/public/request-password-reset', contentType: 'application/json', data: JSON.stringify(data), 
+					success: function(response) {
+						$('#reset, #reset-password #email').attr('disabled', true)
+						$('#reset').removeClass('btn-primary').addClass('btn-success').html('Password reset requested')
+					}});
+				return false;
+			});
+			$('#sign-up').on('submit', function(event) {
+				$('#sign-up-general-message').hide();
+				$('#sign-up .has-error').removeClass('has-error')
+				var data = {username: $('#sign-up #username').val(), name: $('#sign-up #name').val(), email: $('#sign-up #email').val(), password: $('#sign-up #password').val(), password2: $('#sign-up #password2').val()};
+				$.ajax({type: 'POST', url: 'ws/public/register', contentType: 'application/json', data: JSON.stringify(data), 
+					success: function(response) {
+						window.location.href = '';
+					}, error: function(response) {
+						const error = JSON.parse(response.responseText)
+						$('#sign-up-general-message').show();
+						$('#sign-up-general-message .message').html(error.message);
+						if (error.field) {
+							$('#sign-up #' + error.field).parent().addClass('has-error');
+						}
+
 					}});
 				return false;
 			});

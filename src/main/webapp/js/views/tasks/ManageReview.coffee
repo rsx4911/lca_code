@@ -143,7 +143,8 @@ define([
 					success: (repositories) =>
 						selectable = ['']
 						for repo in repositories
-							selectable .push "#{repo.group}/#{repo.name}"
+							repoId = "#{repo.group}/#{repo.name}"
+							selectable.push [repoId, repo.label]
 						if @reviewId
 							$.ajax
 								type: 'GET'
