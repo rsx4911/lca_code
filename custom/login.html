@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="en">
+<head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/></head>
+<body class="login">
+
+<div class="official-website-banner">
+  <div class="official-website-banner__message">
+    <img src="./images/amflag.jpg" alt="">An official website of the United States government.
+    <button class="official-website-banner__trigger content-collapsed"">Here&#39;s how you know.</button>
+  </div>
+  <div class="official-website-banner__content" style="display:none;">
+    <div class="content-region content-region__first">
+      <img src="./images/icon-dot-gov.svg" alt="">
+      <p><strong>The .gov means it&#39;s official.</strong><br>Federal government websites always use a .gov or .mil domain. Before sharing sensitive information online, make sure you&#39;re on a .gov or .mil site by inspecting your browser&#39;s address (or &quot;location&quot;) bar.</p>
+    </div>
+    <div class="content-region content-region__second">
+      <img src="./images/icon-https.svg" alt="">
+      <p>This site is also protected by an SSL (Secure Sockets Layer) certificate that&#39;s been signed by the U.S. government. The https:// means all transmitted data is encrypted  &mdash; in other words, any information or browsing history that you provide is transmitted securely.</p>
+    </div>
+  </div>	
+</div>
+<header class="drupal">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-2 site-branding clearfix">
+          <img alt="" class="site-branding__usda-logo" src="images/lca_logo.png">
+          <span class="site-branding__site-name sr-only">Life Cycle Assessment Commons</span>
+      </div>
+
+      <nav class="navbar navbar-default col-md-10" id="navbar">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+            <span>MENU</span>
+          </button>
+        </div>
+
+        <div id="navbar-collapse" class="navbar-collapse collapse" aria-expanded="false" style="height: 1px;">
+          <div class="region region-navigation-collapsible">
+            <nav aria-labelledby="block-bootstrap-lca-main-menu-menu" id="block-bootstrap-lca-main-menu">
+              <h2 class="sr-only" id="block-bootstrap-lca-main-menu-menu">Main navigation</h2>
+              
+              <ul class="menu menu--main nav navbar-nav">
+                <li class="first">
+                  <a href="#" onclick="javascript:window.location.href='https://www.lcacommons.gov'" data-drupal-link-system-path="<front>" class="is-active">Home</a>
+                </li>
+		<li class="expanded dropdown">
+			<a href="/about-us" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/2">About Us <span class="caret"></span></a>
+                	<ul class="dropdown-menu">
+                	<li class="first">
+                        <a href="/about" data-drupal-link-system-path="/node/25" target="_blank">About LCA Commons</a>
+                	</li>
+                	<li class="last">
+                        <a href="/memorandum-understanding-0" data-drupal-link-system-path="/node/24" target="_blank">Memorandum of Understanding</a>
+                	</li>
+                	</ul>
+                </li>
+                <li class="expanded dropdown">
+                  <a href="/data-documentation" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
+                  
+                  <ul class="dropdown-menu">
+                    <li class="first">
+                      <a href="/draft-data-handbook" data-drupal-link-system-path="node/22" target="_blank">Draft Data Handbook</a>
+                    </li>
+                    <li >
+                      <a href="/openlca-collaboration-server" data-drupal-link-system-path="node/23" target="_blank">openLCA Collaboration Server</a>
+                    </li>
+                    <li class="last">
+                      <a href="/data-documentation" data-drupal-link-system-path="node/7" target="_blank">Agency Data Catalogs</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="last">
+                  <a href="/contact" target="_blank" data-drupal-link-system-path="contact">Contact</a>
+                </li>    
+                <li><a class="login default-button" href="#" onClick="javascript:window.location.href='login'"><span>Sign In</span></a></li>
+              </ul>
+              
+            </nav>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<div id="main-login"><div id="login-description"><h3>Welcome to the LCA Collaboration Server!<br/><small>Manage LCA repositories with user specific access management that keeps your LCA data secure and enables collaboration. </small></h3></div><div id="login-container"><h3>Sign in</h3><form id="login"><div id="login-general-message" role="alert" class="alert alert-danger"><span class="message"></span></div><div id="username-group" class="form-group"><label for="username" class="control-label">Username</label><input id="username" name="username" type="text" class="form-control"/></div><div id="password-group" class="form-group"><label for="password" class="control-label">Password</label><input id="password" name="password" type="password" class="form-control"/></div><div id="token-group" class="form-group hidden"><label for="token" class="control-label">Token</label><input id="token" name="token" type="text" class="form-control"/><a href="login" class="default-link">Login with another user</a></div><button type="submit" class="btn btn-primary btn-block">Login</button></form></div></div><br/><br/><br/>
+<footer class="footer">
+            <div class="footer__secondary-section">
+                <div class="container">
+                    <ul>
+                                                    <li><a href="https://www.usda.gov/policies-and-links" target="_blank">Policies and Links</a></li>
+                            <li><a href="https://www.usda.gov/plain-writing" target="_blank">Plain Writing</a></li>
+                            <li><a href="https://www.dm.usda.gov/foia/" target="_blank">FOIA</a></li>
+                            <li><a href="https://www.usda.gov/accessibility-statement" target="_blank">Accessibility Statement</a></li>
+                            <li><a href="https://www.usda.gov/privacy-policy" target="_blank">Privacy Policy</a></li>
+                            <li><a href="https://www.usda.gov/non-discrimination-statement" target="_blank">Non-Discrimination
+                                    Statement</a></li>
+                            <li><a href="https://www.ars.usda.gov/docs/quality-of-information/" target="_blank">Information Quality</a>
+                            </li>
+                            <li><a href="https://www.nal.usda.gov" target="_blank">National Agricultural Library</a></li>
+                            <li><a href="https://www.ars.usda.gov" target="_blank">Agricultural Research Service</a></li>
+                            <li><a href="https://www.usda.gov" target="_blank">USDA.gov</a></li>
+                            <li><a href="https://www.usa.gov" target="_blank">USA.gov</a></li>
+                            <li><a href="https://www.whitehouse.gov" target="_blank">WhiteHouse.gov</a></li>
+                                            </ul>
+                </div>
+            </div>
+        </footer>
+<script data-main="js/main" src="js/libs/require.js"></script>
+<script src="js/jquery.js"></script>
+<script>$('#year').html(new Date().getFullYear());
+$('#login').on('submit', function(event) {
+	$('#login-general-message').hide();
+	var data = {username: $('#username').val(), password: $('#password').val()};
+	if ($('#token').is(':visible')) {
+		data.token = $('#token').val();
+	}
+	$.ajax({type: 'POST', url: 'ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
+		success: function(response) {
+			if (response === 'tokenRequired') {
+				$('#username-group').addClass('hidden');
+				$('#password-group').addClass('hidden');
+				$('#token-group').removeClass('hidden');
+				$('#login-general-message').hide();
+				$('#token').focus();
+			} else {
+				window.location.href = '';
+			}
+		}, error: function(response) {
+			$('#login-general-message').show();
+			$('#login-general-message .message').html(response.responseText);
+			$('#token').val('');
+		}});
+	return false;
+});
+(function ($) {
+  let trigger = $('.official-website-banner__trigger');
+
+  trigger.addClass('content-collapsed');
+
+  trigger.click(function() {
+    $('.official-website-banner__content').slideToggle(250);
+    if (trigger.hasClass('content-collapsed')) {
+      trigger.removeClass('content-collapsed').addClass('content-expanded');
+    }
+    else if (trigger.hasClass('content-expanded')) {
+      trigger.removeClass('content-expanded').addClass('content-collapsed');
+    }
+  });
+})(jQuery);
+</script>
+</body></html>

@@ -9,6 +9,8 @@ var rjs = require('gulp-requirejs');
 var stylus = require('gulp-stylus');
 var uglify = require('gulp-uglify');
 var pug = require('gulp-pug');
+var htmlreplace=require('gulp-html-replace');
+var gulpif=require('gulp-if');
 var child_process = require('child_process');
 var params = require('yargs').argv;
 
@@ -92,6 +94,7 @@ gulp.task('copyJsModules', function() {
       'node_modules/backbone/backbone.js',
       'node_modules/bootstrap/dist/js/bootstrap.js',
       'node_modules/cropper/dist/cropper.js',
+      'node_modules/d3/dist/d3.js',
       'node_modules/tablesorter/dist/js/jquery.tablesorter.js',
       'node_modules/jquery/dist/jquery.js',
       'node_modules/jstree/dist/jstree.js',
@@ -103,6 +106,7 @@ gulp.task('copyJsModules', function() {
       'node_modules/underscore/underscore.js',
       'external-libs/coffee-script.js',
       'external-libs/cs.js',
+      'external-libs/d3.layout.cloud.js'
     ])
     .pipe(gulp.dest('./src/main/webapp/js/libs'));
 });
@@ -111,7 +115,6 @@ gulp.task('copyCssModules', function() {
   return gulp.src([
       'node_modules/animate.css/animate.css',
       'node_modules/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css',
-      'node_modules/bootstrap/dist/css/bootstrap-theme.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
       'node_modules/cropper/dist/cropper.css',
       'node_modules/font-awesome/css/font-awesome.css',
@@ -268,7 +271,6 @@ gulp.task('modifyOtherHtml', function() {
     }))
     .pipe(gulp.dest('./target/require-build'));
 });
-
 gulp.task('modifyCustomHtmlPages', function() {
   // replace styles-login.css with timestamp filename
   return gulp.src(params.customDir + '/*.html')
@@ -282,7 +284,16 @@ gulp.task('modifyCustomHtmlPages', function() {
     }))
     .pipe(gulp.dest('./target/require-build'));
 });
-
+gulp.task('modifyCustomPublicHtml', function() {
+    return  gulp.src('./target/require-build/index_public.html')
+		.pipe(gulpif(params.appserver == 'stage',htmlreplace( {
+			'google':{
+				src: null,
+				tpl: ''
+			 }
+		})))
+		.pipe(gulp.dest('./target/require-build'));
+});
 gulp.task('copyCustomImages', function() {
   return gulp.src(params.customDir + '/images/**/*.*')
     .pipe(gulp.dest('./target/require-build/images'));
@@ -339,6 +350,7 @@ gulp.task('build', gulp.series(
   'modifyIndexHtml',
   'modifyOtherHtml',
   'modifyCustomHtmlPages',
+  'modifyCustomPublicHtml',
   'copyCustomImages',
   'copyJQueryForLogin',
   'jsBuild'

@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/></head><body class="public-mode">
+<div class="navbar-fixed-top ">
+	<a id="logo" class="logo navbar-btn pull-left" href="http://www.usda.gov" target="_blank" title="USDA Home">
+	  <img src="./images/logo1.png" alt="USDA Home" />
+	</a>
+
+	<span class = "logo-label">
+	   <span class = "logo-label-top">National Agricultural Library </span>
+	   <br><span class = "logo-label-bottom" >United States Department of Agriculture </span>
+	</span>
+    
+
+	<a class="collab-right"  href="/" title="Home">LCA Collaboration Server</a>
+
+</div>
+
+<div style="padding: 0;vertical-align: top;clear: both;background: linear-gradient(rgba(0,0,0,0.4),rgba(0,0,0,0.4)),url(./images/header_bg.png);max-height:65px;">
+	<span class="caret"></span>
+
+	<ul class="menu nav navbar-nav ">
+		<li><a href="https://www.lcacommons.gov/" target="_blank" aria-label="Home">Home</a>
+		</li>
+		<li ><a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown" target="_blank" aria-label="Data & Tools" >Data & Tools<span class="caret"></span></a>
+			<ul class="dropdown-menu">
+
+			<li><a href="https://data.nal.usda.gov/life-cycle-assessment" target="_blank" aria-label="Ag Data and Tools Catalog">Ag Data and Tools Catalog</a></li>				
+			<li><a href="https://www.lcacommons.gov/catalog" target="_blank" aria-label="Federal Data and Tools Catalog" >Federal Data and Tools Catalog</a></li>
+			</ul>
+		</li>				
+		<li ><a href="https://www.lcacommons.gov/content/lca-commons-life-cycle-inventory-data-documentation" target="_blank" >Data Documentation</a></li>				
+		<li><a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown" target="_blank">About<span class="caret"></span></a>
+			<ul class="dropdown-menu">
+				<li><a href="https://www.lcacommons.gov/content/about" target="_blank" aria-label="About the Project">About the Project</a></li>
+				<li><a href="https://www.lcacommons.gov/content/data-use-disclaimer-agreement" target="_blank" aria-label="Data Use Disclaimer Agreement">Data Use Disclaimer Agreement</a></li>
+				<li><a href="https://www.lcacommons.gov/content/data-contributors-content-license-agreement" target="_blank" aria-label="Content License Agreement">Data Contributor&#039;s Content License Agreement</a></li>
+			</ul>
+		</li>
+		<li class="leaf "><a href="https://www.lcacommons.gov/contact" target="_blank" aria-label="Contact Us">Contact Us</a>
+		</li>
+		<li class="last leaf "><a href="https://www.lcacommons.gov/discovery/about" target="_blank" aria-label="Help">Help</a>
+		</li>				
+	</ul>
+	<div id="user-menu">
+</div>
+<nav></nav>
+<div id="main" role="heading" aria-level="1">
+	<div class="full-size">
+		<div class="center"></div>
+	</div>
+</div>
+<div id="footer">
+	<a href="http://www.nal.usda.gov">NAL Home</a> | <a href="http://www.usda.gov" target="_blank">USDA.gov</a> | <a href="http://www.ars.usda.gov" target="_blank">Agricultural Research Service</a> | <a href="http://www.usda.gov/wps/portal/usda/usdahome?navid=PLAIN_WRITING">Plain Language</a> | <a href="http://www.ars.usda.gov/Services/docs.htm?docid=1398" target="_blank">FOIA</a> | <a href="http://www.usda.gov/wps/portal/usda/usdahome?navtype=FT&amp;navid=ACCESSIBILITY_STATEM" target="_blank">Accessibility Statement</a> <a href="http://www.ars.usda.gov/Main/docs.htm?docid=8040" target="_blank">Information Quality</a> | <a href="https://www.usda.gov/privacy-policy" target="_blank">Privacy Policy</a> | <a href="http://www.usda.gov/wps/portal/usda/usdahome?navtype=FT&amp;navid=NON_DISCRIMINATION" target="_blank">Non-Discrimination Statement</a> | <a href="http://www.usa.gov" target="_blank">USA.gov</a> | <a href="http://www.whitehouse.gov" target="_blank">White House</a>
+	<div id="build-info" data-admin-only="true">
+		<span id="release-version"></span>, 
+		<span id="commit-version"></span>, 
+		<span id="build-date"></span>
+	</div>
+</div>
+<script data-main="js/main" src="js/libs/require.js"></script></body></html>

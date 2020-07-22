@@ -3,8 +3,6 @@
 /.project
 /.settings/
 /bin/
-/custom/
-/deploy.sh
 /derby.log
 /dropDDL.jdbc
 /node_modules/
@@ -20,4 +18,3 @@
 /src/main/webapp/js/app/DynamicDependencies.coffee
 /src/main/webapp/js/templates/
 /target/
-/update-libs.sh

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greendelta</groupId>
 	<artifactId>lca-collaboration</artifactId>
-	<version>1.2.2</version>
+	<version>1.3.0-snapshot</version>
 	<packaging>war</packaging>
 	<name>LCA Collaboration Server</name>
 
@@ -230,6 +230,7 @@
 			<version>2.5.0</version>
 			<scope>test</scope>
 		</dependency>
+	
 		<dependency>
 			<groupId>com.greendelta</groupId>
 			<artifactId>lca-collaboration-installer</artifactId>
@@ -250,6 +251,32 @@
 		</dependency>
 
 	</dependencies>
+	<profiles>
+		<profile>
+			<id>appserver-stage</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>stage</value>
+				</property>
+			</activation>
+			<properties>
+				<appserver>stage</appserver>
+			</properties>
+		</profile>
+		<profile>
+			<id>appserver-prod</id>
+			<activation>
+				<property>
+					<name>env</name>
+					<value>prod</value>
+				</property>
+			</activation>
+			<properties>
+				<appserver>prod</appserver>
+			</properties>
+		</profile>
+	</profiles>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -296,12 +323,63 @@
 					</extraDependencies>
 				</configuration>
 			</plugin>
-
+			
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.6.0</version>
+				<executions>
+					<execution>
+						<id>npm_install</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>npm</executable>
+							<arguments>
+								<argument>install</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>exec_gulp</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+						<configuration>
+							<executable>node_modules/gulp/bin/gulp.js</executable>
+							<arguments>
+								<argument>build</argument>
+								<argument>--contextPath=${contextPath}</argument>
+								<argument>--appserver=${appserver}</argument>
+								<argument>--customDir=${customDir}</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.3</version>
 				<configuration>
+					<classifier>custom</classifier>
+					<webappDirectory>target/${project.build.finalName}-custom</webappDirectory>
+					<webResources>
+						<resource>
+							<directory>target/require-build</directory>
+						</resource>
+					</webResources>
+				</configuration>
+				<executions>
+				<execution>
+				<id>package</id>
+				<phase>package</phase>
+				<configuration>
+					<classifier>standard</classifier>
 					<packagingExcludes>
 						js/app.build.js,
 						js/app/,
@@ -322,6 +400,9 @@
 						</resource>
 					</webResources>
 				</configuration>
+				<goals><goal>war</goal></goals>
+			</execution>
+			</executions>
 			</plugin>
 
 		</plugins>

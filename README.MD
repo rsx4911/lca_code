@@ -10,6 +10,8 @@ To compile it from source you need to have the following tools installed:
 * [Maven](http://maven.apache.org/)
 * [Node.js](https://nodejs.org/) and [Gulp](http://gulpjs.com/) (for building the HTML5 user interface components)
 
+(As of version 1.7, Gulp4 may cause build failures. Revert to Gulp3.9.1 if this should occur)
+
 When you have these tools installed you can build the application from source via the following steps:
 
 #### Install the openLCA core modules
@@ -26,7 +28,28 @@ cd lca-collaboration
 and get the source code:
 
 ```bash
-git clone https://github.com/GreenDelta/lca-collaboration
+git clone https://github.com/isdapps/lca-repo-application.git
+```
+
+#### Additional dependencies
+Three additional modules are required to build the application:
+
+* [olca-jsonld-2-ilcd](https://github.com/GreenDelta/olca-jsonld-2-ilcd)
+* [search-wrapper](https://github.com/GreenDelta/search-wrapper)
+* [search-wrapper-es](https://github.com/GreenDelta/search-wrapper-es)
+
+Clone these modules into your environment:
+
+```bash
+git clone https://github.com/GreenDelta/olca-jsonld-2-ilcd.git
+git clone https://github.com/GreenDelta/search-wrapper.git
+git clone https://github.com/GreenDelta/search-wrapper-es.git
+```
+
+Then build them using Maven
+
+```bash
+mvn install
 ```
 
 #### Building the HTML pages
