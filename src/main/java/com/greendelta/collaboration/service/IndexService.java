@@ -11,7 +11,6 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
-import org.openlca.jsonld.Dates;
 import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
@@ -21,6 +20,7 @@ import com.greendelta.collaboration.service.search.DataFill;
 import com.greendelta.collaboration.service.search.IndexEntryCreator;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class IndexService {

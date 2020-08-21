@@ -3,6 +3,8 @@ package com.greendelta.collaboration.util;
 import java.util.Calendar;
 import java.util.Date;
 
+import javax.xml.bind.DatatypeConverter;
+
 public class Dates {
 
 	public static Date getLatest(Date... dates) {
@@ -42,4 +44,19 @@ public class Dates {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 	}
+	
+	public static Date fromString(String date) {
+		if (date == null || date.isEmpty())
+			return null;
+		Calendar cal = DatatypeConverter.parseDateTime(date);
+		return cal == null ? null : cal.getTime();
+
+	}
+
+	public static long getTime(String date) {
+		Date d = fromString(date);
+		return d == null ? 0 : d.getTime();
+	}
+
+	
 }
