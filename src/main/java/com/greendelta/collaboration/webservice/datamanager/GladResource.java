@@ -23,7 +23,6 @@ import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
 import org.openlca.core.model.ModelType;
-import org.openlca.jsonld.Dates;
 import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
@@ -36,6 +35,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;

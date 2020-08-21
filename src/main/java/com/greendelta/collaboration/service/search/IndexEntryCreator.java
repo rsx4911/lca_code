@@ -11,7 +11,6 @@ import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
-import org.openlca.jsonld.Dates;
 import org.openlca.jsonld.Enums;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
@@ -20,6 +19,7 @@ import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class IndexEntryCreator {
