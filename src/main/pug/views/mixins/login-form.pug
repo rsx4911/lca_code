@@ -2,7 +2,7 @@ include forms.pug
 
 mixin login-form() 
 	h3 Sign in
-	form#login
+	form#login(method='post')
 		#login-general-message.alert.alert-danger(role='alert'): span.message
 		+input('username', 'Username')
 		+input('password', 'Password', 'password')
