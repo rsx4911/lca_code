@@ -144,19 +144,19 @@
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-core</artifactId>
-			<version>2.0.0</version>
+			<version>1.9.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-cloud</artifactId>
-			<version>2.0.0</version>
+			<version>1.9.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openlca</groupId>
 			<artifactId>olca-jsonld-2-ilcd</artifactId>
-			<version>2.0.0</version>
+			<version>1.9.0</version>
 		</dependency>
 
 		<!-- Others -->
