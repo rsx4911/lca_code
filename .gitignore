@@ -9,10 +9,7 @@
 /dropDDL.jdbc
 /node_modules/
 /schema.sql
-/src/main/webapp/imprint.html
-/src/main/webapp/index.html
-/src/main/webapp/login.html
-/src/main/webapp/maintenance.html
+/src/main/webapp/*.html
 /src/main/webapp/css/fonts/
 /src/main/webapp/css/libs/
 /src/main/webapp/css/main.css
