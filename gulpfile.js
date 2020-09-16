@@ -5,9 +5,8 @@ var clean = require('gulp-clean');
 var cssConcat = require('gulp-concat-css');
 var insert = require('gulp-insert');
 var minifyCss = require('gulp-clean-css');
-var rjs = require('gulp-requirejs');
+var requirejsOptimize = require('gulp-requirejs-optimize');
 var stylus = require('gulp-stylus');
-var uglify = require('gulp-uglify');
 var pug = require('gulp-pug');
 var htmlreplace=require('gulp-html-replace');
 var gulpif=require('gulp-if');
@@ -305,22 +304,18 @@ gulp.task('copyJQueryForLogin', function() {
 });
 
 gulp.task('jsBuild', function() {
-  return rjs({
-    baseUrl: 'src/main/webapp/js',
-    mainConfigFile: 'src/main/webapp/js/main.js',
-    out: 'main' + timestamp + '.js',
-    name: 'main',
-    findNestedDependencies: false,
-    include: ['requireLib'],
-    stubModules: ['cs', 'coffee-script'],
-    insertRequire: ['main']
-  })
-  .pipe(uglify({
-    output: {
-      ascii_only: true
-    }
-  }))
-  .pipe(gulp.dest('./target/require-build/js'));
+  return gulp.src('src/main/webapp/js/main.js')
+    .pipe(requirejsOptimize({
+        baseUrl: 'src/main/webapp/js',
+        mainConfigFile: 'src/main/webapp/js/main.js',
+        out: 'main' + timestamp + '.js',
+        name: 'main',
+        findNestedDependencies: false,
+        include: ['requireLib'],
+        stubModules: ['cs', 'coffee-script'],
+        insertRequire: ['main']
+    }))
+    .pipe(gulp.dest('./target/require-build/js'));
 });
 
 gulp.task('copyFrontendModules', gulp.series(
