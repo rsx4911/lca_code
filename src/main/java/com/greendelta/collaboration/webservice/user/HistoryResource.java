@@ -37,7 +37,6 @@ import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
-import com.greendelta.search.wrapper.SearchSorting;
 
 import joptsimple.internal.Strings;
 
@@ -224,7 +223,7 @@ public class HistoryResource {
 		SearchQueryBuilder builder = new SearchQueryBuilder()
 				.page(page)
 				.pageSize(pageSize)
-				.filter(Aggregations.REPOSITORY.name, SearchFilterValue.term(repo.toId()))
+				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()))
 				.filter("commitId", SearchFilterValue.term(commit.id));
 		if (!Strings.isNullOrEmpty(filter)) {
 			builder.filter("name", SearchFilterValue.wildcard("*" + filter.toLowerCase() + "*"));
@@ -236,7 +235,6 @@ public class HistoryResource {
 				builder.aggregation(Aggregations.MODEL_TYPE, categorized.name());
 			}
 		}
-		builder.sortBy("typeOrdinal", SearchSorting.DESC);
 		return builder.build();
 	}
 
