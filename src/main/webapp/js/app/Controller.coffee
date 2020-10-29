@@ -419,6 +419,7 @@ define([
 								refId: refId
 								commitId: params.commitId
 								commentPath: params.commentPath
+								compareToCommitId: params.compareToCommitId
 				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
 					view: 'repository/commit/Commits'
 					title: "#{group}/#{name}"
@@ -430,18 +431,21 @@ define([
 						urlPrefix: "#{group}/#{name}"
 					viewOptions: 
 						repository: new Repository({group: group, name: name})
-				@router.registerUserRoute 'repositoryCommit', (group, name, commitId) -> @showView 
-					view: 'repository/commit/Commit'
-					title: "#{group}/#{name}"
-					subTitle: 'Commits'
-					href: "#{group}/#{name}"
-					nav: 
-						type: 'repository'
-						active: 'commits'
-						urlPrefix: "#{group}/#{name}"
-					viewOptions: 
-						repository: new Repository({group: group, name: name})
-						commitId: commitId
+				@router.registerUserRoute 'repositoryCommit', (group, name, commitId, query) -> 
+					params = @splitQuery query
+					@showView 
+						view: 'repository/commit/Commit'
+						title: "#{group}/#{name}"
+						subTitle: 'Commits'
+						href: "#{group}/#{name}"
+						nav: 
+							type: 'repository'
+							active: 'commits'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
+							commitId: commitId
+							standalone: params.standalone
 				@router.registerUserRoute 'repositoryComments', (group, name) -> @showView 
 					view: 'repository/Comments'
 					title: "#{group}/#{name}"
@@ -555,7 +559,36 @@ define([
 					return "(#{unread}) #{reversed}"
 				return reversed
 
+			isStandalone: () ->
+				query = Backbone.history.location.search
+				if !query
+					return false
+				query = query.substring 1
+				parameters = query.split '&'
+				for parameter in parameters
+					if parameter.split('=')[0] is 'standalone' and parameter.split('=')[1] is 'true'
+						return true
+				return false
+
+			showStandaloneView: (options) ->
+				$('#main .center').empty()
+				$('body').addClass 'public-mode'
+				$('.profile-link').remove()
+				$('#user-menu').remove()
+				$('#header-title').html options.title
+				$('#header-title').attr 'title', options.title
+				document.title = 'LCA Collaboration Server | ' + options.title
+				$('.logo-container > a').attr 'href', 'index.html'
+				require ["cs!views/#{options.view}"], (View) =>
+					viewOptions = options.viewOptions or {}
+					viewOptions.standalone = true
+					view = new View viewOptions
+					view.render
+						container: '#main .center'
+
 			showView: (options) ->
+				if @isStandalone()
+					return @showStandaloneView options
 				$('#global-search-group').show()
 				if options?.hideSearchBar
 					$('#global-search-group').hide()

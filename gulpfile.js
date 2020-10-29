@@ -8,6 +8,7 @@ var minifyCss = require('gulp-clean-css');
 var requirejsOptimize = require('gulp-requirejs-optimize');
 var stylus = require('gulp-stylus');
 var pug = require('gulp-pug');
+var zip = require('gulp-zip');
 var child_process = require('child_process');
 var params = require('yargs').argv;
 
@@ -81,7 +82,9 @@ gulp.task('clear', function() {
       './src/main/webapp/css/fonts',
       './src/main/webapp/index.html',
       './src/main/webapp/login.html',
-      './src/main/webapp/imprint.html'
+      './src/main/webapp/imprint.html',
+      './src/main/resources/ssr/*',
+      './target/require-build'
     ], { read: false, allowEmpty: true })
     .pipe(clean());
 });
@@ -308,6 +311,51 @@ gulp.task('jsBuild', function() {
     .pipe(gulp.dest('./target/require-build/js'));
 });
 
+gulp.task('copySsrImages', function() {
+  return gulp.src(['src/main/webapp/images/**/*.*'])
+  .pipe(gulp.dest('./src/main/resources/ssr/files/images'));
+});
+
+gulp.task('copySsrCss', function() {
+  return gulp.src(['target/require-build/css/styles' + timestamp + '.css'])
+  .pipe(gulp.dest('./src/main/resources/ssr/files/css'));
+});
+
+gulp.task('copySsrFonts', function() {
+  return gulp.src(['target/require-build/css/fonts/*'])
+  .pipe(gulp.dest('./src/main/resources/ssr/files/css/fonts'));
+});
+
+gulp.task('copySsrJs', function() {
+  return gulp.src([
+    'node_modules/bootstrap/dist/js/bootstrap.js',
+    'node_modules/jquery/dist/jquery.js',
+  ])
+  .pipe(gulp.dest('./src/main/resources/ssr/files/js'));
+});
+
+gulp.task('zipSsrPack', function() {
+  return gulp.src('./src/main/resources/ssr/files/**/*.*')
+  .pipe(zip('resources.zip'))
+  .pipe(gulp.dest('./src/main/resources/ssr'))  
+});
+
+gulp.task('clearSsrFiles', function() {
+  return gulp.src([
+    './src/main/resources/ssr/files',
+  ], { read: false, allowEmpty: true })
+  .pipe(clean());
+});
+
+gulp.task('buildSsrPack', gulp.series(
+    'copySsrImages',
+    'copySsrCss',
+    'copySsrFonts',
+    'copySsrJs',
+    'zipSsrPack',
+    'clearSsrFiles'
+));
+
 gulp.task('copyFrontendModules', gulp.series(
   'copyJsModules',
   'copyCssModules',
@@ -337,6 +385,7 @@ gulp.task('build', gulp.series(
   'modifyCustomHtmlPages',
   'copyCustomImages',
   'copyJQueryForLogin',
-  'jsBuild'
+  'jsBuild',
+  'buildSsrPack'
 ));
 

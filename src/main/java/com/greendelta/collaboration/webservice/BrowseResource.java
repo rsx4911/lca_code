@@ -153,6 +153,8 @@ public class BrowseResource {
 			commitId = historyService.getLastCommit(repo).id;
 		}
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		if (!loggedIn && !commit.id.equals(commitId))
+			return Respond.unauthorized();
 		String dataset = fetchService.getDataset(repo, type, refId, commit.id);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();

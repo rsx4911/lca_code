@@ -22,11 +22,12 @@ mixin target-amount-row()
 				+nav-tab('inventory')
 				if dataset.inventory && dataset.inventory.length
 					+nav-tab(null, false, 'Impacts')
-				if hasLinks
+				if hasLinks && !standalone
 					+nav-tab(null, false, 'Supply chain')
 					+nav-tab(null, false, 'Graph')
 				+nav-tab('parameterRedefs')
-				+maximize-icon
+				if !standalone
+					+maximize-icon
 			.tab-content
 				+nav-tab-pane('overview', true, true)
 					table.table.no-head
@@ -65,10 +66,11 @@ mixin target-amount-row()
 									th Impact category
 									th Result
 							tbody
-				+nav-tab-pane('supply-chain', false, hasLinks)
-					#process-tree-container
-				+nav-tab-pane('graph', false, hasLinks)
-					iframe(src='graph/graph.html' width='100%' height='500px')
+				if !standalone
+					+nav-tab-pane('supply-chain', false, hasLinks)
+						#process-tree-container
+					+nav-tab-pane('graph', false, hasLinks)
+						iframe(src='graph/graph.html' width='100%' height='500px')
 				+nav-tab-pane('parameterRedefs')
 					+product-system-parameter-redef-table()
 	+meta

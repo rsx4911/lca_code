@@ -41,6 +41,8 @@ define () ->
 		followLink: (event) ->
 			link = $ @target event, 'a'
 			route = link.attr 'href'
+			if !route
+				return
 			if route is '#'
 				@preventDefault event
 				return '#'

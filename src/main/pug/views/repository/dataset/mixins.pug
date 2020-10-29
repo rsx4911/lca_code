@@ -5,46 +5,48 @@ include ../../mixins/user-info.pug
 
 mixin menubar()
 	if !isPublic
-		.header-box
-			- var currentCommit = null;
-			+select('commitId', 'Commit', null, null, true)
-				each commit, i in commits
-					if commit.id === commitId
-						- currentCommit = commit;
-					option(value=commit.id, selected=commit.id===commitId, class=commit.modelHasChanged?'highlight':null)=i===0?'Latest':commit.id 
-					optgroup.additional-info(label!='&nbsp; &nbsp;' + formatCommitDescription(commit.message))
-			if dataset.deleted
-				.badge.pull-right.deleted Deleted
-			else
-				.btn-group-vertical.pull-right(role='group')
-					if dataset 
-					+download-dropdown
-					+comparison-dropdown
-			.clear
-			+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
-				|  on #{formatDate(currentCommit.timestamp)}
-			.clear
-		if compareTo
-			.header-box.comparison-statistics
-				h4 Differences to
+		if !standalone
+			.header-box
+				- var currentCommit = null;
+				+select('commitId', 'Commit', null, null, true)
+					each commit, i in commits
+						if commit.id === commitId
+							- currentCommit = commit;
+						option(value=commit.id, selected=commit.id===commitId, class=commit.modelHasChanged?'highlight':null)=i===0?'Latest':commit.id 
+						optgroup.additional-info(label!='&nbsp; &nbsp;' + formatCommitDescription(commit.message))
+				if dataset.deleted
+					.badge.pull-right.deleted Deleted
+				else
+					.btn-group-vertical.pull-right(role='group')
+						+download-dropdown
+						+comparison-dropdown
+				.clear
+				+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
+					|  on #{formatDate(currentCommit.timestamp)}
+				.clear
+	if compareTo
+		.header-box.comparison-statistics
+			h4 Differences 
+				if !standalone
+					| to
 					br
 					small
 						if compareTo.id !== dataset.id
 							| '#{compareTo.name}' 
 						| version '#{compareTo.commitId}'
-				.pull-left(data-compare='added') 
-					+compare-icon('added')
-					| Additions: 
-					span.count 0
-				.pull-left(data-compare='changed')
-					+compare-icon('changed')
-					| Changes: 
-					span.count 0
-				.pull-left(data-compare='removed')
-					+compare-icon('removed')
-					| Deletions: 
-					span.count 0
-				.clear
+			.pull-left(data-compare='added') 
+				+compare-icon('added')
+				| Additions: 
+				span.count 0
+			.pull-left(data-compare='changed')
+				+compare-icon('changed')
+				| Changes: 
+				span.count 0
+			.pull-left(data-compare='removed')
+				+compare-icon('removed')
+				| Deletions: 
+				span.count 0
+			.clear
 
 mixin download-dropdown()
 	- var dsType = dataset ? dataset.type : compareTo ? compareTo.type : null;
@@ -97,7 +99,7 @@ mixin header()
 mixin meta() 
 	.model-right-content.content-box
 		.meta-info
-			if isPublic
+			if isPublic && !standalone
 				+download-dropdown
 			div
 				strong=getLabel('version')

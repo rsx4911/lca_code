@@ -2,8 +2,6 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
@@ -61,28 +59,20 @@ public class Repository {
 	}
 
 	private RepositorySettings loadSettings() {
-		File settingsFile = new File(repoDir, "settings.json");
-		if (!settingsFile.exists())
+		File file = new File(repoDir, "settings.json");
+		RepositorySettings settings = SettingsCache.loadSettings(file, RepositorySettings.class);
+		if (settings == null)
 			return new RepositorySettings();
-		try (FileReader reader = new FileReader(settingsFile)) {
-			return new Gson().fromJson(reader, RepositorySettings.class);
-		} catch (IOException e) {
-			log.error("Error loading settings for repository");
-			return new RepositorySettings();
-		}
+		return settings;
 	}
 
 	private Map<String, Role> loadLibraryRestrictions() {
 		File file = new File(repoDir, "library-restrictions.json");
-		if (!file.exists())
+		Map<String, Role> restrictions = SettingsCache.loadSettings(file, new TypeToken<Map<String, Role>>() {
+		}.getType());
+		if (restrictions == null)
 			return new HashMap<>();
-		try (FileReader reader = new FileReader(file)) {
-			return new Gson().fromJson(reader, new TypeToken<Map<String, Role>>() {
-			}.getType());
-		} catch (IOException e) {
-			log.error("Error loading library restrictions", e);
-			return new HashMap<>();
-		}
+		return restrictions;
 	}
 
 	public String toId() {
@@ -95,11 +85,7 @@ public class Repository {
 
 	void setSetting(RepositorySetting setting, Object value) {
 		setting.set(settings, value);
-		try (FileWriter writer = new FileWriter(new File(repoDir, "settings.json"))) {
-			new Gson().toJson(settings, writer);
-		} catch (IOException e) {
-			log.error("Error saving settings", e);
-		}
+		SettingsCache.saveSettings(new File(repoDir, "settings.json"), settings);
 	}
 
 	void setRestriction(String library, Role role) {
@@ -108,11 +94,7 @@ public class Repository {
 		} else {
 			libraryRestrictions.put(library, role);
 		}
-		try (FileWriter writer = new FileWriter(new File(repoDir, "library-restrictions.json"))) {
-			new Gson().toJson(libraryRestrictions, writer);
-		} catch (IOException e) {
-			log.error("Error saving library restrictions", e);
-		}
+		SettingsCache.saveSettings(new File(repoDir, "library-restrictions.json"), libraryRestrictions);
 	}
 
 	public static String toId(String group, String name) {
@@ -122,11 +104,9 @@ public class Repository {
 	public String getSchemaVersion() {
 		try {
 			File file = new File(repoDir, "context.json");
-			if (!file.exists())
+			JsonElement context = SettingsCache.loadSettings(file, JsonElement.class);
+			if (context == null)
 				return null;
-			byte[] data = com.google.common.io.Files.toByteArray(file);
-			String json = new String(data, "utf-8");
-			JsonElement context = new Gson().fromJson(json, JsonElement.class);
 			return Schema.parseUri(context);
 		} catch (Exception e) {
 			log.error("Could not read context.json", e);
@@ -212,8 +192,7 @@ public class Repository {
 		}
 	}
 
-	File getDatasetFile(ModelType type, String refId, String commitId,
-			boolean create) {
+	File getDatasetFile(ModelType type, String refId, String commitId, boolean create) {
 		File datasetDir = getDatasetDir(type, refId, create);
 		String filename = commitId + ".json.gz";
 		return getFile(datasetDir, filename, create);
@@ -324,10 +303,8 @@ public class Repository {
 		PROHIBIT_COMMITS("prohibitCommits", RepositorySetting::parseBoolean),
 		COMMENT_APPROVAL("commentApproval", RepositorySetting::parseBoolean),
 		JSON_FILE_GENERATION("jsonFileGeneration", RepositorySetting::parseBoolean),
-		MAX_SIZE("maxSize", RepositorySetting::parseLong),
-		LABEL("label", RepositorySetting::parseString),
-		VERSION("version", RepositorySetting::parseString),
-		TAGS("tags", RepositorySetting::parseStringList),
+		MAX_SIZE("maxSize", RepositorySetting::parseLong), LABEL("label", RepositorySetting::parseString),
+		VERSION("version", RepositorySetting::parseString), TAGS("tags", RepositorySetting::parseStringList),
 		DESCRIPTION("description", RepositorySetting::parseString),
 		SOURCE_INFO("sourceInfo", RepositorySetting::parseString),
 		CONTACT_INFO("contactInfo", RepositorySetting::parseString),
@@ -340,7 +317,7 @@ public class Repository {
 
 		private final Field field;
 		private final Function<Object, ?> converter;
-		
+
 		private RepositorySetting(String fieldName, Function<Object, ?> converter) {
 			this.converter = converter;
 			this.field = getField(fieldName);
@@ -408,7 +385,7 @@ public class Repository {
 		public <T> T parse(Object value) {
 			return (T) converter.apply(value);
 		}
-		
+
 	}
 
 }

@@ -28,6 +28,7 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -48,14 +49,16 @@ public class HistoryResource {
 	private final SearchService searchService;
 	private final RepositoryService repoService;
 	private final UserService userService;
+	private final AccessService accessService;
 
 	@Inject
 	public HistoryResource(HistoryService service, SearchService searchService, RepositoryService repoService,
-			UserService userService) {
+			UserService userService, AccessService accessService) {
 		this.service = service;
 		this.searchService = searchService;
 		this.repoService = repoService;
 		this.userService = userService;
+		this.accessService = accessService;
 	}
 
 	@GET
@@ -188,6 +191,7 @@ public class HistoryResource {
 		map.put("additions", searchService.getDatasetCount(repo, commitId, IndexAction.ADD));
 		map.put("deletions", searchService.getDatasetCount(repo, commitId, IndexAction.DELETE));
 		map.put("updates", searchService.getDatasetCount(repo, commitId, IndexAction.UPDATE));
+		map.put("canCreateChangeLog", accessService.canCreateChangeLog(repo.toId()));
 		return Respond.ok(map);
 	}
 

@@ -273,17 +273,16 @@ public class MembershipResource {
 	}
 
 	private String getAuthorizedPath(String group, String repo) {
-		if (userService.exists(group))
-			throw new UnauthorizedAccessException(group, "EDIT_MEMBERS");
 		String path = group;
 		if (!Strings.isNullOrEmpty(repo) && !repo.toLowerCase().equals("null")) {
 			// implicitly checks access
 			Repository repository = repoService.get(group, repo);
 			return repository.toId();
 		}
-		if (!accessService.canRead(group)) {
+		if (userService.exists(group))
+			throw new UnauthorizedAccessException(group, "EDIT_MEMBERS");
+		if (!accessService.canRead(group))
 			throw new UnauthorizedAccessException(group, "READ");
-		}
 		return path;
 	}
 

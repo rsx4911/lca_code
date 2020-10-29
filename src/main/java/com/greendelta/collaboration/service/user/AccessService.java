@@ -168,6 +168,10 @@ public class AccessService {
 		return hasPermissionTo(Permission.MANAGE_TASK, repositoryPath);
 	}
 
+	public boolean canCreateChangeLog(String repositoryPath) {
+		return hasPermissionTo(Permission.CAN_CREATE_CHANGE_LOG, repositoryPath);
+	}
+
 	private boolean hasPermissionTo(Permission permission, String groupOrRepo) {
 		User user = userService.getCurrentUser();
 		return hasPermissionTo(user, permission, groupOrRepo);
