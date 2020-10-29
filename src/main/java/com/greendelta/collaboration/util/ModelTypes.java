@@ -78,16 +78,16 @@ public class ModelTypes {
 		if (value instanceof ProcessType)
 			return (ProcessType) value;
 		if (value instanceof com.greendelta.collaboration.model.glad.ProcessType) {
-			if (value == com.greendelta.collaboration.model.glad.ProcessType.SYSTEM)
+			if (value == com.greendelta.collaboration.model.glad.ProcessType.FULLY_AGGREGATED)
 				return ProcessType.LCI_RESULT;
 			return ProcessType.UNIT_PROCESS;
 		}
 		String sValue = value.toString();
 		if (sValue.isEmpty())
 			return null;
-		if (sValue.toLowerCase().equals("system"))
+		if (sValue.toLowerCase().equals("system") || sValue.toLowerCase().equals("fully_aggregated") || sValue.toLowerCase().equals("lci_result"))
 			return ProcessType.LCI_RESULT;
-		if (sValue.toLowerCase().equals("unit") || sValue.toLowerCase().equals("unknown"))
+		if (sValue.toLowerCase().equals("unit") || sValue.toLowerCase().equals("unit_process") || sValue.toLowerCase().equals("unknown"))
 			return ProcessType.UNIT_PROCESS;
 		return ProcessType.valueOf(sValue.toUpperCase());
 	}

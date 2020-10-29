@@ -4,7 +4,7 @@ import java.util.Map;
 
 public enum ProcessType {
 
-	UNIT, SYSTEM, UNKNOWN;
+	UNIT, FULLY_AGGREGATED, UNKNOWN;
 
 	public static ProcessType from(Map<String, Object> map) {
 		if (map == null)

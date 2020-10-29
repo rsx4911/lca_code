@@ -48,7 +48,8 @@ import joptsimple.internal.Strings;
 public class GladResource {
 
 	private static final List<String> GLAD_FIELDS = new ArrayList<>(Arrays.asList(
-			"refId", "processType", "supportedNomenclatures", "aggregationType", "name", "categories", "location",
+			"refId", "processType", "supportedNomenclatures", "aggregationType", "multifunctionalModeling", "name",
+			"categories", "location",
 			"completeness", "technology", "copyrightHolder", "license", "contact", "description", "dataSetUrl",
 			"format", "validFrom", "validFromYear", "validUntil", "validUntilYear", "copyrightProtected", "free",
 			"dataprovider", "reviewers", "reviewType", "longitude", "latitude", "publiclyAccessible"));
@@ -135,7 +136,7 @@ public class GladResource {
 			d.put("reviewers", new String[] { reviewer });
 			d.put("reviewType", "UNKNOWN");
 		}
-		if (data.get("location.latitude") != null && data.get("location.longitude") != null); {
+		if (data.get("location.latitude") != null && data.get("location.longitude") != null) {
 			d.put("latitude", data.getLong("location.latitude"));
 			d.put("longitude", data.getLong("location.longitude"));
 		}
@@ -143,13 +144,16 @@ public class GladResource {
 		d.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
 		d.put("copyrightHolder", data.getString("processDocumentation.dataSetOwner.name"));
 		d.put("description", data.getString("description"));
+		if (!Strings.isNullOrEmpty(data.getString("modellingApproach"))) {
+			d.put("multifunctionalModeling", data.getString("modellingApproach"));
+		}
 	}
 
 	private ProcessType getProcessType(String type) {
 		if (type == null)
 			return ProcessType.UNKNOWN;
 		if (type.equals(Enums.getLabel(org.openlca.core.model.ProcessType.LCI_RESULT)))
-			return ProcessType.SYSTEM;
+			return ProcessType.FULLY_AGGREGATED;
 		if (type.equals(Enums.getLabel(org.openlca.core.model.ProcessType.UNIT_PROCESS)))
 			return ProcessType.UNIT;
 		return ProcessType.UNKNOWN;
