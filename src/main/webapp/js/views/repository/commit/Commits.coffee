@@ -5,11 +5,12 @@ define([
 				'cs!utils/Filter'
 				'cs!utils/Format'
 				'cs!utils/Renderer'
+				'cs!views/repository/Download'
 				'templates/views/repository/commit/commits'
 				'templates/views/repository/commit/commit-list'
 			]
 
-	(Backbone, moment, Events, Filter, Format, Renderer, template, listTemplate) ->
+	(Backbone, moment, Events, Filter, Format, Renderer, Download, template, listTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
 
@@ -17,10 +18,14 @@ define([
 
 			events: 
 				'click a': (event) -> Events.followLink event
+				'click [data-action=download-changelog]': (event) -> 
+					Events.preventDefault(event)
+					Download.changelog @repository.get('group'), @repository.get('name')
 
 			initialize: (options) ->
-				group = options.repository.get 'group'
-				name = options.repository.get 'name'
+				{@repository, @standalone} = options
+				group = @repository.get 'group'
+				name = @repository.get 'name'
 				@filter = new Filter
 					container: '.repository-commits .content-box'
 					template: listTemplate
@@ -30,11 +35,14 @@ define([
 						unless result
 							return
 						result.repository = {group: group, name: name}
+						result.standalone = @standalone
 						@prepareModel result
 						result.formatDate = Format.date
 
 			render: (renderOptions) ->
 				@$el.html template
+					canCreateChangeLog: @repository.get('userCanCreateChangeLog')
+					standalone: @standalone
 				Renderer.render @, renderOptions
 				@filter.init()
 

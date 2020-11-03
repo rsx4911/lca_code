@@ -21,7 +21,7 @@ define([
 				'click a[href]:not([target=_blank]):not(.standalone)': (event) -> Events.followLink event
 				'click .download-changelog': (event) -> 
 					Events.preventDefault(event)
-					Download.changelog(@repository.get('group'), @repository.get('name'), @commitId)
+					Download.changelog @repository.get('group'), @repository.get('name'), @commitId
 
 			initialize: (options) ->
 				{@repository, @commitId, @standalone} = options

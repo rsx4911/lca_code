@@ -420,17 +420,20 @@ define([
 								commitId: params.commitId
 								commentPath: params.commentPath
 								compareToCommitId: params.compareToCommitId
-				@router.registerUserRoute 'repositoryCommits', (group, name) -> @showView 
-					view: 'repository/commit/Commits'
-					title: "#{group}/#{name}"
-					subTitle: 'Commits'
-					href: "#{group}/#{name}"
-					nav: 
-						type: 'repository'
-						active: 'commits'
-						urlPrefix: "#{group}/#{name}"
-					viewOptions: 
-						repository: new Repository({group: group, name: name})
+				@router.registerUserRoute 'repositoryCommits', (group, name, query) ->
+					params = @splitQuery query
+					@showView
+						view: 'repository/commit/Commits'
+						title: "#{group}/#{name}"
+						subTitle: 'Commits'
+						href: "#{group}/#{name}"
+						nav: 
+							type: 'repository'
+							active: 'commits'
+							urlPrefix: "#{group}/#{name}"
+						viewOptions: 
+							repository: new Repository({group: group, name: name})
+							standalone: params.standalone
 				@router.registerUserRoute 'repositoryCommit', (group, name, commitId, query) -> 
 					params = @splitQuery query
 					@showView 

@@ -44,7 +44,7 @@ define([
 				':group/:name/activities': 'repositoryActivities'
 				':group/:name/datasets(/*categoryPath)(?commitId=:commitId)': 'repositoryDatasets'
 				':group/:name/dataset/:type/:refId(?:query)': 'repositoryDataset'
-				':group/:name/commits': 'repositoryCommits'
+				':group/:name/commits(?:query)': 'repositoryCommits'
 				':group/:name/commit/:commitId(?:query)': 'repositoryCommit'
 				':group/:name/comments': 'repositoryComments'
 				':group/:name/tags': 'repositoryTags'

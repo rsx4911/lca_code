@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -38,31 +39,61 @@ public class ChangeLogService {
 		this.searchService = searchService;
 	}
 
+	public File generate(HttpServletRequest request, Repository repo) {
+		return generate(zos -> {
+			String data = renderCommits(request, repo);
+			packResource(zos, "index.html", data);
+			List<Commit> commits = historyService.getCommits(repo);
+			for (Commit commit : commits) {
+				IndexIterator iterator = searchService.getAll(repo, commit.id);
+				data = renderCommit(request, repo, commit.id);
+				packResource(zos, commit.id + ".html", data);
+				while (iterator.hasNext()) {
+					IndexEntry entry = iterator.next();
+					if (entry.action == IndexAction.UPDATE) {
+						Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commit.id);
+						data = renderDataset(request, repo, entry, previous);
+						packResource(zos, entry.refId + ".html", data);
+					}
+				}
+			}
+		});
+	}
+
 	public File generate(HttpServletRequest request, Repository repo, String commitId) {
-		try {
-			File tmpDir = Files.createTempDirectory("lca-collaboration-changelog").toFile();
-			File file = new File(tmpDir, "temp.zip");
-			ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(file));
-			packResources(zos);
+		return generate(zos -> {
 			IndexIterator iterator = searchService.getAll(repo, commitId);
 			String data = renderCommit(request, repo, commitId);
-			ByteArrayInputStream bias = new ByteArrayInputStream(data.getBytes());
-			packResource(zos, "index.html", bias);
+			packResource(zos, "index.html", data);
 			while (iterator.hasNext()) {
 				IndexEntry entry = iterator.next();
 				if (entry.action == IndexAction.UPDATE) {
 					Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commitId);
 					data = renderDataset(request, repo, entry, previous);
-					bias = new ByteArrayInputStream(data.getBytes());
-					packResource(zos, entry.refId + ".html", bias);
+					packResource(zos, entry.refId + ".html", data);
 				}
 			}
+		});
+	}
+
+	private File generate(Renderer renderer) {
+		try {
+			File tmpDir = Files.createTempDirectory("lca-collaboration-changelog").toFile();
+			File file = new File(tmpDir, "temp.zip");
+			ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(file));
+			packResources(zos);
+			renderer.render(zos);
 			zos.close();
 			return file;
 		} catch (IOException e) {
 			log.error("Error during changelog creation", e);
 			return null;
 		}
+	}
+
+	private String renderCommits(HttpServletRequest request, Repository repo) throws IOException {
+		String route = "/" + repo.toId() + "/commits";
+		return renderSsr(request, route);
 	}
 
 	private String renderCommit(HttpServletRequest request, Repository repo, String commitId) throws IOException {
@@ -101,14 +132,29 @@ public class ChangeLogService {
 		ZipInputStream zis = new ZipInputStream(is);
 		ZipEntry entry = null;
 		while ((entry = zis.getNextEntry()) != null) {
-			packResource(zos, entry.getName(), zis);
+			String name = entry.getName();
+			if (name.contains("styles") && name.endsWith(".css")) {
+				name = name.substring(0, name.lastIndexOf("styles")) + "styles.css";
+			}				
+			packResource(zos, name, zis);
 		}
+	}
+
+	private void packResource(ZipOutputStream zos, String path, String data) throws IOException {
+		ByteArrayInputStream bias = new ByteArrayInputStream(data.getBytes());
+		packResource(zos, path, bias);
 	}
 
 	private void packResource(ZipOutputStream zos, String path, InputStream is) throws IOException {
 		zos.putNextEntry(new ZipEntry(path));
 		ByteStreams.copy(is, zos);
 		zos.closeEntry();
+	}
+
+	private interface Renderer {
+
+		void render(ZipOutputStream zos) throws IOException;
+
 	}
 
 }

@@ -14,6 +14,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.elasticsearch.common.Strings;
+
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.ChangeLogService;
@@ -39,14 +41,29 @@ public class ChangeLogResource {
 	}
 
 	@GET
+	@Path("{group}/{name}")
+	public Response request(@Context HttpServletRequest request, @PathParam("group") String group,
+			@PathParam("name") String name) {
+		return request(request, group, name, null);
+	}
+
+	@GET
 	@Path("{group}/{name}/{commitId}")
 	public Response request(@Context HttpServletRequest request, @PathParam("group") String group,
 			@PathParam("name") String name, @PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		File file = service.generate(request, repo, commitId);
+		File file = null;
+		String filename = null;
+		if (Strings.isNullOrEmpty(commitId)) {
+			file = service.generate(request, repo);
+			filename = "changelog_" + repo.toId() + ".zip";
+		} else {
+			file = service.generate(request, repo, commitId);
+			filename = "changelog_" + repo.toId() + "-" + commitId + ".zip";
+		}
 		if (file == null)
-			Respond.badRequest("Could not render changelog");
-		String token = put(file, "changelog_" + repo.toId() + "-" + commitId + ".zip");
+			return Respond.badRequest("Could not render changelog");
+		String token = put(file, filename);
 		return Respond.ok(token);
 	}
 
