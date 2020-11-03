@@ -22,6 +22,8 @@ public enum Permission {
 
 	MANAGE_TASK,
 
-	SET_SETTINGS;
+	SET_SETTINGS,
+	
+	CAN_CREATE_CHANGE_LOG;
 
 }

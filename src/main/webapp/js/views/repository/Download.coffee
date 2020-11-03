@@ -37,4 +37,15 @@ define([
 					Layers.hideProgressIndicator()
 					$('body').append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
 
+		changelog: (group, repo, commitId) ->
+			$('iframe#download-frame').remove()
+			Layers.showProgressIndicator 'Preparing<br>change log'
+			url = "ws/changelog/#{group}/#{repo}/#{commitId||''}"
+			$.ajax
+				type: 'GET'
+				url: url
+				success: (token) =>
+					Layers.hideProgressIndicator()
+					$('body').append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/changelog/' + token + '"></iframe>'
+
 )

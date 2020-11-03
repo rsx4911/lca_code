@@ -28,7 +28,7 @@ define([
 				if $.isFunction(@url)
 					url = @url()
 				first = true
-				if @page
+				if @page or @page is 0
 					url += if first then '' else '&'
 					url += 'page=' + @page
 					first = false

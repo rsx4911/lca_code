@@ -95,7 +95,7 @@ define([
 
 			getPath: () ->
 				if @group
-					return 'ws/membership/' + @group.get('name') + '/NULL'
+					return 'ws/membership/' + @group.get('name')
 				return 'ws/membership/' + @repository.get('group') + '/' + @repository.get('name')
 
 			beforeRender: (type, result) ->
@@ -137,7 +137,7 @@ define([
 						template: memberTemplate
 						filterId: 'filter'
 						noPaging: true
-						url: () -> "ws/membership/#{name}/null?"
+						url: () -> "ws/membership/#{name}?"
 				else if options.repository
 					@repository = options.repository
 					group = options.repository.get 'group'
@@ -157,7 +157,7 @@ define([
 						template: memberTemplate
 						filterId: 'filter'
 						noPaging: true
-						url: () -> "ws/membership/#{group}/null?"
+						url: () -> "ws/membership/#{group}?"
 
 			render: (renderOptions) ->
 				showRepositoryMembers = false
@@ -182,7 +182,7 @@ define([
 					canEdit: canEdit
 				Renderer.render @, renderOptions
 				@filter1.init()
-				if @filter2
+				if @filter2 && !@repository.get('groupIsUserNamespace')
 					@filter2.init()
 
 )

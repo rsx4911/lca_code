@@ -2,8 +2,6 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -16,7 +14,6 @@ import org.openlca.cloud.util.Directories;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Setting.Key;
@@ -205,11 +202,8 @@ public class GroupService {
 			break;
 		}
 		File groupDir = new File(getRootPath(), group);
-		try (FileWriter writer = new FileWriter(new File(groupDir, "settings.json"))) {
-			new Gson().toJson(settings, writer);
-		} catch (IOException e) {
-			log.error("Error saving settings", e);
-		}
+		File file = new File(groupDir, "settings.json");
+		SettingsCache.saveSettings(file, settings);
 	}
 
 	public GroupSettings getSettings(String group) {
@@ -222,14 +216,10 @@ public class GroupService {
 		}
 		File groupDir = new File(getRootPath(), group);
 		File settingsFile = new File(groupDir, "settings.json");
-		if (!settingsFile.exists())
+		GroupSettings settings = SettingsCache.loadSettings(settingsFile, GroupSettings.class);
+		if (settings == null)
 			return new GroupSettings();
-		try (FileReader reader = new FileReader(settingsFile)) {
-			return new Gson().fromJson(reader, GroupSettings.class);
-		} catch (IOException e) {
-			log.error("Error loading settings for repository");
-			return new GroupSettings();
-		}
+		return settings;
 	}
 
 	public static class GroupSettings {

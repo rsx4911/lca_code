@@ -145,7 +145,7 @@ define([
 				'click .select-method': (event) -> ProductSystem.selectImpactMethod @repository, @dataset
 
 			initialize: (options) ->
-				{@repository, @type, @refId, @commitId, @commentPath} = options
+				{@repository, @type, @refId, @commitId, @commentPath, @compareToCommitId, @standalone} = options
 
 			doInitialize: (varName, method) ->
 				if @[varName]
@@ -185,6 +185,7 @@ define([
 				else if @dataset.type is 'ProductSystem'
 					exchangesField = 'inventory'
 				model =
+					standalone: @standalone
 					dataset: @dataset
 					commits: @commits
 					commitId: @commitId or @commits?[0]?.id
@@ -205,8 +206,21 @@ define([
 				Toggle.init @$el
 				@initDatasetSpecifics()
 				@initTableSorting()
-				unless @compareTo
-					@initComments true
+				if currentUser.isLoggedIn()
+					if @compareToCommitId and !@compareTo
+						@applyComparison @refId, @compareToCommitId
+					if @compareTo
+						@setComparisonStatistics()
+					if !@compareTo and !@compareToCommitId
+						@initComments true
+				if @standalone # used for change log
+					@removeLinks()
+
+			removeLinks: () ->
+				links = @$('a:not([data-toggle=tab]):not(.toggle-control)')
+				links.removeAttr 'href'
+				links.addClass 'no-link'
+				links.on 'click', (event) -> Events.preventDefault event
 
 			initDatasetSpecifics: () ->
 				if @dataset.type is 'Location' # and dataset.geometry
@@ -267,7 +281,6 @@ define([
 					DatasetPrepare.applyTo dataset
 					@compareTo = dataset
 					@doRender null, commitId
-					@setComparisonStatistics()
 
 			setComparisonStatistics: () ->
 				addedCount = @$('.content-box [data-compare=added] .glyphicon-plus-sign').length

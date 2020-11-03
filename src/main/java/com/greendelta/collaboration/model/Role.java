@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.model;
 
+import static com.greendelta.collaboration.model.Permission.CAN_CREATE_CHANGE_LOG;
 import static com.greendelta.collaboration.model.Permission.CREATE;
 import static com.greendelta.collaboration.model.Permission.COMMENT;
 import static com.greendelta.collaboration.model.Permission.DELETE;
@@ -29,7 +30,7 @@ public enum Role {
 
 	EDITOR(5, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK),
 
-	OWNER(6, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, CREATE, EDIT_MEMBERS, SET_SETTINGS, MOVE, DELETE);
+	OWNER(6, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, CREATE, EDIT_MEMBERS, SET_SETTINGS, CAN_CREATE_CHANGE_LOG, MOVE, DELETE);
 
 	private List<Permission> permissions;
 	private int level;

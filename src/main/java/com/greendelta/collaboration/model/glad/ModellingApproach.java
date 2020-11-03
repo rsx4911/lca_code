@@ -4,7 +4,7 @@ import java.util.Map;
 
 public enum ModellingApproach {
 
-	PHYSICAL, ECONOMIC, CAUSAL, NONE, UNKNOWN;
+	PHYSICAL, ECONOMIC, CAUSAL, SYSTEM_EXPANSION, NONE, UNKNOWN, NOT_APPLICABLE;
 
 	public static ModellingApproach from(Map<String, Object> map) {
 		if (map == null)

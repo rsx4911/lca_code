@@ -7,6 +7,7 @@
 /dropDDL.jdbc
 /node_modules/
 /schema.sql
+/src/main/resources/ssr/
 /src/main/webapp/*.html
 /src/main/webapp/css/fonts/
 /src/main/webapp/css/libs/

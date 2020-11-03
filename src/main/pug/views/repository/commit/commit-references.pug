@@ -15,17 +15,19 @@ each dataset in data
 				- fullPath += dataset.name;
 				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + fullPath;
 			.header
-				a(href=url)
+				a(data-type=dataset.added?'added':dataset.deleted?'deleted':'changed' href=standalone?dataset.refId+'.html':url class=standalone?'standalone':null)
 					if dataset.added || dataset.deleted
-						- var action = dataset.added ? 'ADD' : 'DELETE';
+						- var action = dataset.added ? 'add' : 'delete';
 						if dataset.type === 'CATEGORY'
-							img.model-icon-small(src='ws/public/cached/overlay/CATEGORY/' + dataset.categoryType + '/' + action, aria-label='Model icon of ' + dataset.categoryType + ' category ' + action)
+							img.model-icon-small(src='images/model/small/overlay/' + action + '/category/' + dataset.categoryType.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.categoryType + ' category ' + action)
 						else if dataset.type === 'PROCESS' && dataset.processType
-							img.model-icon-small(src='ws/public/cached/overlay/PROCESS/' + dataset.processType + '/' + action, aria-label='Model icon of ' + dataset.processType + ' ' + action)
+							- var processType = dataset.processType === 'LCI_RESULT' ? 'process_system' : 'process_unit';
+							img.model-icon-small(src='images/model/small/overlay/' + action + '/' + processType + '.png', aria-label='Model icon of ' + dataset.processType + ' ' + action)
 						else if dataset.type === 'FLOW' && dataset.flowType
-							img.model-icon-small(src='ws/public/cached/overlay/FLOW/' + dataset.flowType + '/' + action, aria-label='Model icon of ' + dataset.flowType + ' ' + action)
+							- var flowType = dataset.flowType === 'PRODUCT_FLOW' ? 'flow_product' : dataset.flowType === 'WASTE_FLOW' ? 'flow_waste' : 'flow_elementary';
+							img.model-icon-small(src='images/model/small/overlay/' + action + '/' + flowType + '.png', aria-label='Model icon of ' + dataset.flowType + ' ' + action)
 						else
-							img.model-icon-small(src='ws/public/cached/overlay/' + dataset.type + '/' + action, aria-label='Model icon of ' + dataset.type + ' ' + action)
+							img.model-icon-small(src='images/model/small/overlay/' + action + '/' + dataset.type.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.type + ' ' + action)
 					else
 						if dataset.type === 'CATEGORY'
 							img.model-icon-small(src='images/model/small/category/' + dataset.categoryType.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.categoryType + ' category ')
@@ -39,5 +41,5 @@ each dataset in data
 					- var type = dataset.type === 'CATEGORY' ? dataset.categoryType : dataset.type
 					- var catUrl = baseUrl + 's/' + getTypeLabel(type);
 					+category-breadcrumb(catUrl, dataset.categories, true)
-
-+paging(resultInfo)
+if !standalone
+	+paging(resultInfo)
