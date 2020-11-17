@@ -15,7 +15,17 @@ define([
 				value = value.substring 0, 10
 			if format is dateTimeFormat and value.length is 10
 				format = dateFormat
-			return moment(value).format format
+			try
+				return moment(value).format format
+			catch e
+				unless format is dateTimeFormat
+					return 'Invalid date'
+				try
+					if value.length > 10
+						value = value.substring 0, 10
+					return moment(value).format dateFormat
+				catch e2
+					return 'Invalid date'
 
 		formatCommitDescription: (text) ->
 			if text.length < 100
