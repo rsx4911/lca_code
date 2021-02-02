@@ -90,8 +90,10 @@ public class Activities {
 		}
 		Date date = Dates.getLatest(dates.toArray(new Date[dates.size()]));
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(date);
-		cal.add(Calendar.SECOND, 1);
+		if (date != null) {
+			cal.setTime(date);
+			cal.add(Calendar.SECOND, 1);
+		}
 		date = cal.getTime();
 		return date.getTime();
 	}

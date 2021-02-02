@@ -173,11 +173,15 @@ public class UserService {
 	}
 
 	public String enableTwoFactorAuthentication(User user) {
-		GoogleAuthenticator authenticator = new GoogleAuthenticator();
-		GoogleAuthenticatorKey key = authenticator.createCredentials();
-		user.twoFactorSecret = key.getKey();
+		user.twoFactorSecret = createTwoFactorKey();
 		user = update(user);
 		return getTwoFactorUrl(user);
+	}
+
+	private static String createTwoFactorKey() {
+		GoogleAuthenticator authenticator = new GoogleAuthenticator();
+		GoogleAuthenticatorKey key = authenticator.createCredentials();
+		return key.getKey();
 	}
 
 	public String getTwoFactorUrl(User user) {
