@@ -150,7 +150,7 @@ public class BrowseResource {
 		if (commit == null)
 			return Respond.notFound(notFoundMessage(type, refId, commitId));
 		if (commitId == null) {
-			commitId = historyService.getLastCommit(repo).id;
+			commitId = historyService.getLastCommit(repo, type, refId).id;
 		}
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn && !commit.id.equals(commitId))
