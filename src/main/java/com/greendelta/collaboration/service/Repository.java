@@ -303,8 +303,10 @@ public class Repository {
 		PROHIBIT_COMMITS("prohibitCommits", RepositorySetting::parseBoolean),
 		COMMENT_APPROVAL("commentApproval", RepositorySetting::parseBoolean),
 		JSON_FILE_GENERATION("jsonFileGeneration", RepositorySetting::parseBoolean),
-		MAX_SIZE("maxSize", RepositorySetting::parseLong), LABEL("label", RepositorySetting::parseString),
-		VERSION("version", RepositorySetting::parseString), TAGS("tags", RepositorySetting::parseStringList),
+		MAX_SIZE("maxSize", RepositorySetting::parseLong),
+		LABEL("label", RepositorySetting::parseString),
+		VERSION("version", RepositorySetting::parseString),
+		TAGS("tags", RepositorySetting::parseStringList),
 		DESCRIPTION("description", RepositorySetting::parseString),
 		SOURCE_INFO("sourceInfo", RepositorySetting::parseString),
 		CONTACT_INFO("contactInfo", RepositorySetting::parseString),
@@ -344,7 +346,9 @@ public class Repository {
 					field.setAccessible(false);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				String field = this.field != null ? this.field.getName() : "null"; 
+				log.error("Error setting repository settings field " + field, e);
+
 			}
 		}
 
