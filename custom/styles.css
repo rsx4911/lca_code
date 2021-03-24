@@ -697,8 +697,16 @@ hr {
   height: 100%;
 }
 
-body #main {
+body.public-mode #main {
   padding-top: 0px;
   height: auto;
 }
 
+body.has-announcements #main {
+  padding-top: 0px;
+  height: auto;
+}
+
+body.has-announcements nav {
+  margin-top: 0px;
+}
