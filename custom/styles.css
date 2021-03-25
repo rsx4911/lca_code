@@ -578,6 +578,7 @@ button.btn-success:focus {
   padding: 0;
   background-color: #446443;
   padding: 15px;
+  margin-top: 10px;
 }
 
 #user-menu .form-group {
@@ -629,7 +630,8 @@ button.btn-success:focus {
 }
 
 #user-menu .pull-left {
-  float: none !important;
+  
+  /* float: none !important; */
 }
 
 @media (max-width: 991px) {
@@ -702,11 +704,11 @@ body.public-mode #main {
   height: auto;
 }
 
-body.has-announcements #main {
+body.has-announcements #main, body #main {
   padding-top: 0px;
   height: auto;
 }
 
-body.has-announcements nav {
+body.has-announcements nav, body nav {
   margin-top: 0px;
 }
