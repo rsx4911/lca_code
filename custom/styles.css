@@ -574,7 +574,7 @@ button.btn-success:focus {
 }
 
 #user-menu {
-  float: none;
+  /* float: none; */
   padding: 0;
   background-color: #446443;
   padding: 15px;
@@ -630,7 +630,7 @@ button.btn-success:focus {
 }
 
 #user-menu .pull-left {
-  
+
   /* float: none !important; */
 }
 
