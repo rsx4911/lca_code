@@ -620,7 +620,7 @@ button.btn-success:focus {
   #user-menu>div {
     width: 750px;
   }
-  #header-title>div {
+  #header-title {
     width: 750px;
   }
 }
@@ -629,7 +629,7 @@ button.btn-success:focus {
   #user-menu>div {
     width: 970px;
   }
-  #header-title>div {
+  #header-title {
     width: 970px;
   }
 }
@@ -638,7 +638,7 @@ button.btn-success:focus {
   #user-menu>div {
     width: 1170px;
   }
-  #header-title>div {
+  #header-title {
     width: 1170px;
   }
 }
@@ -669,6 +669,7 @@ div#header-title {
   background-color: #446443;
   line-height: 30px;
   margin: auto;
+  padding-left: 15px;
 }
 
 @media (max-width: 991px) {
