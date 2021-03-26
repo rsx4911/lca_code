@@ -576,11 +576,11 @@ button.btn-success:focus {
 #user-menu {
   float: none;
   width: 100%;
-  display: inline-block;
+  /* display: inline-block; */
   padding: 0;
   background-color: #446443;
-  padding: 15px;
-  margin-top: 10px;
+  /* padding: 15px; */
+  /* margin-top: 10px; */
 }
 
 #user-menu .form-group {
@@ -632,8 +632,17 @@ button.btn-success:focus {
 }
 
 #user-menu .pull-left {
+  float: right !important;
+}
 
-  /* float: none !important; */
+#user-menu .pull-right>a{
+  display: none;
+}
+
+#user-menu .pull-right{
+  position: relative;
+  top: -85px;
+  clear: right;
 }
 
 @media (max-width: 991px) {
