@@ -631,8 +631,11 @@ button.btn-success:focus {
   }
 }
 
+/*get search box to be on the right side*/
 #user-menu .pull-left {
   float: right !important;
+  position: relative;
+  top: 10px;
 }
 
 #user-menu .pull-right>a{
@@ -641,8 +644,17 @@ button.btn-success:focus {
 
 #user-menu .pull-right{
   position: relative;
-  top: -85px;
+  top: -70px;
   clear: right;
+}
+
+div#header-title {
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  padding: 12px 0px;
+  background-color: #446443;
+  line-height: 30px;
 }
 
 @media (max-width: 991px) {
