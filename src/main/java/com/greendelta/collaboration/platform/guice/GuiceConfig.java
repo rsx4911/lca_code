@@ -69,7 +69,7 @@ public class GuiceConfig extends GuiceServletContextListener {
 		properties.setProperty("javax.persistence.jdbc.url", "jdbc:derby:" + databasePath);
 		jpaModule.properties(properties);
 		String resourcePackages = "com.greendelta.collaboration.webservice";
-		return new Module[] { new WebappModule(), new ShiroAopModule(), new ShiroModule(servletContext), jpaModule,
+		return new Module[] { new ShiroAopModule(), new ShiroModule(servletContext), new WebappModule(), jpaModule,
 				new JerseyModule(resourcePackages), new EhCacheModule(), new MailModule(), new ElasticSearchModule() };
 	}
 

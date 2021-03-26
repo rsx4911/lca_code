@@ -26,9 +26,9 @@ public class WebappModule extends ServletModule {
 		requestStaticInjection(WebsocketConfigurator.class);
 		filter("/ws/*", "/sockets/*").through(PersistFilter.class);
 		filter("/ws/*").through(WsApiFilter.class);
-		configureNonStaticResources();
 		filter("/*").through(NoCacheFilter.class); // Filter decides
 		filter("/*").through(ShiroFilter.class);
+		configureNonStaticResources();
 		log.info("Successfully configured {}", Logs.simpleClassName(this));
 	}
 

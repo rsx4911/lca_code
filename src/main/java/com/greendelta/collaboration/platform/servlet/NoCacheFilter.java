@@ -31,8 +31,8 @@ public class NoCacheFilter implements Filter {
 	private void process(HttpServletRequest request, HttpServletResponse response) {
 		String path = request.getServletPath();
 		if (path != null)
-			for (String resourceDir : WebappModule.STATIC_RESOURCE_DIRECTORIES) 
-				if (path.startsWith("/" + resourceDir + "/")) 
+			for (String resourceDir : WebappModule.STATIC_RESOURCE_DIRECTORIES)
+				if (path.startsWith("/" + resourceDir + "/"))
 					return;
 		response.setHeader("Expires", "");
 		response.setHeader("Last-Modified", "");
