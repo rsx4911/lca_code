@@ -573,6 +573,12 @@ button.btn-success:focus {
   outline-width: 3px;
 }
 
+#lca_logotitle{
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
 #user-menu {
   float: none;
   width: 100%;
@@ -607,14 +613,14 @@ button.btn-success:focus {
 }
 
 #user-menu>div {
-  padding-left: 15px;
-  padding-right: 15px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: auto;
 }
 
 @media all and (min-width: 768px) {
   #user-menu>div {
+    width: 750px;
+  }
+  #header-title>div {
     width: 750px;
   }
 }
@@ -623,10 +629,16 @@ button.btn-success:focus {
   #user-menu>div {
     width: 970px;
   }
+  #header-title>div {
+    width: 970px;
+  }
 }
 
 @media all and (min-width: 1200px) {
   #user-menu>div {
+    width: 1170px;
+  }
+  #header-title>div {
     width: 1170px;
   }
 }
@@ -646,15 +658,17 @@ button.btn-success:focus {
   position: relative;
   top: -70px;
   clear: right;
+  margin-right: 10px;
 }
 
 div#header-title {
   color: white;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold;
   padding: 12px 0px;
   background-color: #446443;
   line-height: 30px;
+  margin: auto;
 }
 
 @media (max-width: 991px) {
