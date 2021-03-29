@@ -219,7 +219,7 @@ body.public-mode {
 }
 
 .site-branding {
-  margin-top: 25px;
+  margin: 15px 0px;
 }
 
 .site-branding__usda-logo {
@@ -573,12 +573,6 @@ button.btn-success:focus {
   outline-width: 3px;
 }
 
-#lca_logotitle{
-  margin-bottom: 10px;
-  font-size: 20px;
-  font-weight: 700;
-}
-
 #user-menu {
   float: none;
   width: 100%;
@@ -654,6 +648,9 @@ button.btn-success:focus {
 
 div#lca_logotitle {
   padding: 15px;
+  font-size: 20px;
+  font-weight: 700;
+  margin: auto;
 }
 
 /*get search box to be on the right side*/
@@ -672,6 +669,10 @@ div#lca_logotitle {
   top: -70px;
   clear: right;
   margin-right: 10px;
+}
+
+#global-search-group {
+  width: 300px;
 }
 
 div#header-title-container{
