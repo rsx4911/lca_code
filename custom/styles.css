@@ -623,6 +623,9 @@ button.btn-success:focus {
   #header-title {
     width: 750px;
   }
+  #lca_logotitle {
+    width: 750px;
+  }
 }
 
 @media all and (min-width: 992px) {
@@ -630,6 +633,9 @@ button.btn-success:focus {
     width: 970px;
   }
   #header-title {
+    width: 970px;
+  }
+  #lca_logotitle {
     width: 970px;
   }
 }
@@ -641,6 +647,13 @@ button.btn-success:focus {
   #header-title {
     width: 1170px;
   }
+  #lca_logotitle {
+    width: 1170px;
+  }
+}
+
+div#lca_logotitle {
+  padding: 15px;
 }
 
 /*get search box to be on the right side*/
@@ -661,12 +674,16 @@ button.btn-success:focus {
   margin-right: 10px;
 }
 
+div#header-title-container{
+  background-color: #446443;
+  width: 100%;
+}
+
 div#header-title {
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
   padding: 12px 0px;
-  background-color: #446443;
   line-height: 30px;
   margin: auto;
   padding-left: 15px;
