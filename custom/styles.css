@@ -768,3 +768,8 @@ body.has-announcements #main, body #main {
 body.has-announcements nav, body nav {
   margin-top: 0px;
 }
+
+#main .full-size {
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
