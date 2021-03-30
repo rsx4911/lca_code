@@ -769,7 +769,8 @@ body.has-announcements nav, body nav {
   margin-top: 0px;
 }
 
-#main .full-size {
+body.public-mode #main .full-size, #main .full-size {
   margin-top: 25px;
   margin-bottom: 25px;
 }
+
