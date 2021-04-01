@@ -26,12 +26,10 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 	private SettingType type;
 
 	@Column(name = "owner")
-	@Enumerated(EnumType.STRING)
 	private String owner;
 
 	@Column(name = "name")
-	@Enumerated(EnumType.STRING)
-	private T name;
+	private String name;
 
 	@Column(name = "value")
 	private String value;
@@ -42,7 +40,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 
 	private Setting() {
 	}
-	
+
 	@Override
 	public long getId() {
 		return id;
@@ -55,9 +53,10 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 
 	@SuppressWarnings("unchecked")
 	public <V> V getValue() {
-		if (name.getType().equals(byte[].class))
+		T key = getKey();
+		if (key.getType().equals(byte[].class))
 			return (V) data;
-		Class<?> type = name.getType();
+		Class<?> type = key.getType();
 		if (type == Boolean.class && value != null)
 			return (V) new Boolean(Boolean.parseBoolean(value));
 		if (type == Integer.class && value != null)
@@ -65,18 +64,18 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 		if (type == Long.class && value != null)
 			return (V) new Integer(Integer.parseInt(value));
 		if (type == Object.class && data != null)
-			return new Gson().fromJson(new String(data, Charset.forName("utf-8")), name.getSubType());
+			return new Gson().fromJson(new String(data, Charset.forName("utf-8")), key.getSubType());
 		if (type == Object.class)
 			return null;
 		if (type == byte[].class)
 			return (V) data;
 		if (value == null || value.isEmpty())
-			return name.getDefaultValue();
+			return key.getDefaultValue();
 		return (V) value;
 	}
 
 	public void setValue(Object value) {
-		Class<?> type = name.getType();
+		Class<?> type = getKey().getType();
 		if (value == null) {
 			this.value = null;
 			this.data = null;
@@ -126,9 +125,13 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 		}
 	}
 
+	private T getKey() {
+		return type.getSettingKey(name);
+	}
+
 	public static <T extends SettingKey> Setting<T> create(SettingType type, T key, String owner) {
 		Setting<T> setting = new Setting<T>();
-		setting.name = key;
+		setting.name = key.name();
 		setting.type = type;
 		setting.owner = owner;
 		return setting;
