@@ -54,8 +54,8 @@ public class SettingsService {
 		this.subjectProvider = subjectProvider;
 	}
 
-	public <T extends SettingKey> Settings<T> create() {
-		return new Settings<T>();
+	public <T extends SettingKey> Settings<T> create(SettingType type) {
+		return new Settings<T>(type);
 	}
 
 	public boolean is(SettingKey key) {
@@ -124,14 +124,14 @@ public class SettingsService {
 	private <T extends SettingKey> Setting<T> get(SettingType type, T key, String owner) {
 		Map<String, Object> attributes = new HashMap<>();
 		attributes.put("type", type);
-		attributes.put("name", key);
+		attributes.put("name", key.name());
 		attributes.put("owner", owner);
 		return (Setting<T>) dao.getFirstForAttributes(attributes);
 	}
 
 	private <T extends SettingKey> void set(SettingType type, T key, String owner, Object value) {
 		Setting<T> setting = get(type, key, owner);
-		boolean update = setting == null;
+		boolean update = setting != null;
 		if (!update) {
 			setting = Setting.create(type, key, owner);
 		}
@@ -242,7 +242,7 @@ public class SettingsService {
 		private SearchClient searchClient;
 
 		private SearchConfig() {
-			super(SettingType.SERVER_SETTING);
+			super(SettingType.SEARCH_SETTING);
 		}
 
 		@Override
@@ -296,27 +296,23 @@ public class SettingsService {
 		private final String owner;
 		// if no service is given, use local map
 		private final Map<T, Object> local;
-		private final Function<String, Boolean> canAccess;
-
-		private Settings() {
-			this(null, null, null);
-		}
+		private final Function<String, Boolean> canSet;
 
 		private Settings(SettingType type) {
 			this(type, null, null);
 		}
 
-		private Settings(SettingType type, String owner, Function<String, Boolean> canAccess) {
+		private Settings(SettingType type, String owner, Function<String, Boolean> canSet) {
 			this.type = type;
 			this.owner = owner;
 			this.local = type == null ? new HashMap<>() : null;
-			if (type != null && canAccess == null && owner == null) {
-				canAccess = o -> {
+			if (type != null && canSet == null && owner == null) {
+				canSet = o -> {
 					Subject subject = subjectProvider.get();
 					return subject != null && subject.hasRole("admin");
 				};
 			}
-			this.canAccess = canAccess;
+			this.canSet = canSet;
 		}
 
 		public <V> V get(T key) {
@@ -329,7 +325,6 @@ public class SettingsService {
 			if (local != null) {
 				value = (V) local.get(key);
 			} else {
-				checkAccess();
 				Setting<T> setting = SettingsService.this.get(type, key, owner);
 				if (setting == null) {
 					value = key.getDefaultValue();
@@ -350,6 +345,10 @@ public class SettingsService {
 		public void set(T key, Object value) {
 			if (local != null) {
 				local.put(key, value);
+			} else if (type != null && (canSet == null || !canSet.apply(owner))) {
+				if (owner == null)
+					throw new AuthorizationException();
+				throw new UnauthorizedAccessException(owner, "SET_SETTING");
 			} else {
 				SettingsService.this.set(type, key, owner, value);
 			}
@@ -374,7 +373,7 @@ public class SettingsService {
 				if (!preserveKeys) {
 					field = toFieldName(key);
 				}
-				map.put(field, get(key, owner));
+				map.put(field, get(key));
 			}
 			return map;
 		}
@@ -391,16 +390,6 @@ public class SettingsService {
 				}
 			}
 			return name;
-		}
-
-		private void checkAccess() {
-			if (type == null)
-				return;
-			if (canAccess == null || !canAccess.apply(owner)) {
-				if (owner == null)
-					throw new AuthorizationException();
-				throw new UnauthorizedAccessException(owner, "SET_SETTING");
-			}
 		}
 
 	}

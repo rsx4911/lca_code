@@ -54,8 +54,7 @@ public class Repository {
 	}
 
 	public String getSchemaVersion() {
-		// TODO get schema version
-		return null;
+		return Schema.URI;
 	}
 
 	public long getSize() {

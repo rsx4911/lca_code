@@ -155,12 +155,14 @@ public class GroupService {
 	public Settings<GroupSetting> getSettings(String group) {
 		User user = userService.getForUsername(group);
 		if (user != null) {
-			Settings<GroupSetting> settings = settingsService.create();
+			Settings<GroupSetting> settings = settingsService.create(SettingType.GROUP_SETTING);
 			settings.set(GroupSetting.LABEL, user.name);
 			settings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
 			return settings;
 		}
-		return settingsService.get(SettingType.GROUP_SETTING, group, accessService::canRead);
+		if (!accessService.canRead(group))
+			throw new UnauthorizedAccessException(group, "READ");
+		return settingsService.get(SettingType.GROUP_SETTING, group, accessService::canSetSettings);
 	}
 
 }

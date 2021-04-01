@@ -24,8 +24,8 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
-				'change #label': (event) -> @setSetting event, 'label'
-				'change #description': (event) -> @setSetting event, 'description'
+				'change #label': (event) -> @setSetting event, 'LABEL'
+				'change #description': (event) -> @setSetting event, 'DESCRIPTION'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
 				'click [data-action=import-repository]': () -> Router.navigate 'repository/import/' + @group.get('name')
 				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json/' + @group.get('name')

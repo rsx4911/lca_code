@@ -126,13 +126,14 @@ public class AdminAreaResource {
 	@GET
 	@Path("serverInfo")
 	public Response getServerInfo() {
-		Map<String, Object> info = settingsService.serverConfig.toMap(setting -> Arrays.asList(new ServerSetting[] {
+		List<ServerSetting> relevantSettings = Arrays.asList(new ServerSetting[] {
 				ServerSetting.MAINTENANCE_MODE, ServerSetting.MAINTENANCE_MESSAGE, ServerSetting.ANNOUNCEMENT_MESSAGE,
 				ServerSetting.LICENSE_AGREEMENT_TEXT, ServerSetting.HOME_TITLE, ServerSetting.HOME_TEXT,
 				ServerSetting.MODEL_TYPES_ORDER, ServerSetting.MODEL_TYPES_HIDDEN
-		}).contains(setting));
+		});
+		Map<String, Object> info = settingsService.serverConfig.toMap(setting -> relevantSettings.contains(setting));
 		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
-		info.put("RepositoriesOrder", repoService.getPublicRepositoryOrder());
+		info.put("repositoriesOrder", repoService.getPublicRepositoryOrder());
 		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
 		return Respond.ok(info);
 	}

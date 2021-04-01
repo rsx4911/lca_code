@@ -64,7 +64,7 @@ define([
 						if i is index 
 							array.push @serverInfo[field][index + 1]
 							array.push @serverInfo[field][index]
-				@setSetting key, JSON.toString(array.map((element) -> element.id)), () =>
+				@setSetting key, JSON.stringify(array.map((element) -> element.id)), () =>
 					@serverInfo[field] = array
 					sibling = if up then target.prev() else target.next()
 					target.remove()
@@ -95,7 +95,7 @@ define([
 					li.attr 'data-hidden', true
 				else
 					li.removeAttr 'data-hidden'
-				@setSetting key, JSON.toString(array), () =>
+				@setSetting key, JSON.stringify(array), () =>
 					@serverInfo[field] = array
 					target.removeClass 'glyphicon-eye-close glyphicon-eye-open'
 					if hide
@@ -242,12 +242,14 @@ define([
 				if currentUser.isAdmin()
 					data = @serverInfo
 					repositoriesOrder = []
-					for repo in data.repositoriesOrder
-						repositoriesOrder.push {label: repo, id: repo, hidden: $.inArray(repo, @serverInfo.repositoriesHidden) isnt -1}
+					if data.repositoriesOrder
+						for repo in data.repositoriesOrder
+							repositoriesOrder.push {label: repo, id: repo, hidden: $.inArray(repo, @serverInfo.repositoriesHidden) isnt -1}
 					data.repositoriesOrder = repositoriesOrder
 					modelTypesOrder = []
-					for type in data.modelTypesOrder
-						modelTypesOrder.push {label: ModelTypes.plural(type), id: type, hidden: $.inArray(type, @serverInfo.ModelTypesHidden) isnt -1}
+					if data.modelTypesOrder
+						for type in data.modelTypesOrder
+							modelTypesOrder.push {label: ModelTypes.plural(type), id: type, hidden: $.inArray(type, @serverInfo.modelTypesHidden) isnt -1}
 					data.modelTypesOrder = modelTypesOrder
 				data.repositories = counts.repositories
 				data.isAdmin = currentUser.isAdmin()

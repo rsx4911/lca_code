@@ -66,7 +66,7 @@ public enum ServerSetting implements SettingKey {
 	private <T> ServerSetting(Type subType, T defaultValue) {
 		this.type = Object.class;
 		this.subType = subType;
-		this.defaultValue = null;
+		this.defaultValue = defaultValue;
 	}
 
 	private <T> ServerSetting(Class<T> type, T defaultValue) {

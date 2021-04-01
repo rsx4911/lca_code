@@ -59,6 +59,8 @@ define([
 					name = field.attr 'name'
 					type = field.attr 'type'
 					value = getValue json, name
+					if name is 'IMPRINT_SETTING-COMPANY'
+						console.log value
 					if value or value is 0
 						if type is 'checkbox'
 							field.prop('checked', value is true or value is 'true') 

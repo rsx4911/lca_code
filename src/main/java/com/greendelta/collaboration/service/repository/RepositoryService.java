@@ -93,9 +93,9 @@ public class RepositoryService {
 		if (!accessService.canRead(id))
 			throw new UnauthorizedAccessException(id, "READ");
 		Settings<RepositorySetting> settings = settingsService.get(SettingType.REPOSITORY_SETTING, id,
-				accessService::canRead);
+				accessService::canSetSettings);
 		Settings<GroupSetting> groupSettings = settingsService.get(SettingType.GROUP_SETTING, group,
-				accessService::canRead);
+				accessService::canSetSettings);
 		return new Repository(path, group, name, settings, groupSettings);
 	}
 
@@ -311,7 +311,7 @@ public class RepositoryService {
 	}
 
 	private List<String> getRepositoryList(ServerSetting key, boolean addMissing) {
-		List<String> repositoryArray = settingsService.get(key);
+		List<String> repositoryArray = settingsService.get(key, new ArrayList<>());
 		List<Repository> publicRepos = Collections.filter(getAllAccessible(),
 				repo -> !repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
 		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId());
@@ -327,7 +327,9 @@ public class RepositoryService {
 				repositories.add(repo.toId());
 			}
 		}
-		settingsService.set(key, repositories);
+		if (userService.getCurrentUser().isAdmin()) {
+			settingsService.set(key, repositories);
+		}
 		return repositories;
 	}
 

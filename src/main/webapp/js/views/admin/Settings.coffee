@@ -23,25 +23,25 @@ define([
 				'click [data-action=test-glad]': 'testGladConfiguration'
 
 			render: (renderOptions) ->
-				@loadSettings allSettings ->
+				@loadSettings (allSettings) =>
 					@$el.html template()
 					Renderer.render @, renderOptions
 					flattened = {}
 					for type in Object.keys(allSettings)
 						for key in Object.keys(allSettings[type])
-							flattened["#{type}-#{key}"] = allSettings[type][key]
+							flattened["#{type}|#{key}"] = allSettings[type][key]
 					Forms.fill('settings-form', flattened)
 					@updateUI()
 
 			loadSettings: (callback) ->
 				$.ajax
 					type: 'GET'
-					ws: "ws/admin/area/settings"
+					url: 'ws/admin/area/settings'
 					success: callback
 
 			updateSetting: (event) ->
 				target = $ Events.target event
-				typeAndKey = target.attr('id').split('-')
+				typeAndKey = target.attr('id').split('|')
 				value = if target.attr('type') is 'checkbox' then target.is ':checked' else target.val()
 				@setSetting typeAndKey[0], typeAndKey[1], value
 				@updateUI()

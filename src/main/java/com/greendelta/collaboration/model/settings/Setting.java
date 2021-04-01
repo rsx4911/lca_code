@@ -11,6 +11,7 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.greendelta.collaboration.model.AbstractEntity;
 
 @Entity
@@ -63,8 +64,14 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 			return (V) new Integer(Integer.parseInt(value));
 		if (type == Long.class && value != null)
 			return (V) new Integer(Integer.parseInt(value));
-		if (type == Object.class && data != null)
-			return new Gson().fromJson(new String(data, Charset.forName("utf-8")), key.getSubType());
+		if (type == Object.class && data != null) {
+			try {
+				String json = new String(data, Charset.forName("utf-8"));
+				return new Gson().fromJson(json, key.getSubType());
+			} catch (JsonSyntaxException e) {
+				return key.getDefaultValue();
+			}
+		}
 		if (type == Object.class)
 			return null;
 		if (type == byte[].class)
@@ -115,7 +122,11 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 				}
 			}
 		} else if (type == Object.class) {
-			this.data = new Gson().toJson(value).getBytes(Charset.forName("utf-8"));
+			if (value instanceof String) {
+				this.data = value.toString().getBytes(Charset.forName("utf-8"));
+			} else {
+				this.data = new Gson().toJson(value).getBytes(Charset.forName("utf-8"));
+			}
 		} else if (type == byte[].class) {
 			if (value.getClass() != byte[].class)
 				throw new IllegalArgumentException("Invalid value for type byte[]: " + value);
