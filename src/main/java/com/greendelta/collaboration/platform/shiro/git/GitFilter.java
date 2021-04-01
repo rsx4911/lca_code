@@ -18,11 +18,21 @@ import org.eclipse.jgit.http.server.GitSmartHttpTools;
 import org.eclipse.jgit.http.server.glue.ServletBinder;
 import org.eclipse.jgit.transport.resolver.FileResolver;
 
+import com.google.inject.Inject;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.SettingsService;
+
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
 	private final Set<String> stringPatterns = new HashSet<>();
 	private final Set<Pattern> regexPatterns = new HashSet<>();
+	private final SettingsService settingsService;
 	private boolean initialized;
+
+	@Inject
+	public GitFilter(SettingsService settingsService) {
+		this.settingsService = settingsService;
+	}
 
 	@Override
 	public ServletBinder serve(String path) {
@@ -44,7 +54,8 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		setRepositoryResolver(new FileResolver<>(new File("C:/Users/Sebastian/test/git/server"), true));
+		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+		setRepositoryResolver(new FileResolver<>(new File(path), true));
 		super.init(filterConfig);
 		initialized = true;
 	}
