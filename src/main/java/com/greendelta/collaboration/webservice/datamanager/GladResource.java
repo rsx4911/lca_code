@@ -28,15 +28,17 @@ import org.openlca.jsonld.Enums;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.glad.ProcessType;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.SettingsService.ServerConfig;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.GsonTypes;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
@@ -57,15 +59,12 @@ public class GladResource {
 	private final RepositoryService repoService;
 	private final BrowseService browseService;
 	private final SettingsService settingsService;
-	private final HistoryService historyService;
 
 	@Inject
-	public GladResource(RepositoryService repoService, BrowseService browseService,
-			SettingsService settingsService, HistoryService historyService) {
+	public GladResource(RepositoryService repoService, BrowseService browseService, SettingsService settingsService) {
 		this.repoService = repoService;
 		this.browseService = browseService;
 		this.settingsService = settingsService;
-		this.historyService = historyService;
 	}
 
 	@PUT
@@ -75,9 +74,10 @@ public class GladResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			Input input) {
-		String gladUrl = settingsService.get(Key.GLAD_URL);
-		String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
-		String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
+		ServerConfig config = settingsService.serverConfig;
+		String gladUrl = config.get(ServerSetting.GLAD_URL);
+		String gladHeaderField = config.get(ServerSetting.GLAD_API_KEY_HEADER);
+		String gladHeaderValue = config.get(ServerSetting.GLAD_API_KEY);
 		if (gladUrl == null || gladUrl.isEmpty())
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "No GLAD service url specified");
 		Repository repo = repoService.get(group, name);
@@ -86,14 +86,14 @@ public class GladResource {
 		String repoId = repo.toId();
 		Map<String, String> dsToCommit = new HashMap<>();
 		ReferenceCollector<String> collector = new ReferenceCollector<>(browseService, (ref) -> {
-			String commitId = historyService.getLastCommit(repo, ModelType.PROCESS, ref.id).id;
+			String commitId = repo.commits.getLastId(ModelType.PROCESS, ref.id);
 			dsToCommit.put(ref.id, commitId);
 			return IndexEntry.toIndexId(repoId, ref.type, ref.id, commitId);
 		});
 		Set<String> remaining = collector.getReferences(repo, input.references);
 		if (remaining.isEmpty())
 			return Respond.notFound("No data in repository " + group + "/" + name + " found");
-		SearchClient client = settingsService.getSearchConfig().getSearchClient();
+		SearchClient client = settingsService.searchConfig.getSearchClient();
 		Gson gson = new Gson();
 		while (!remaining.isEmpty()) {
 			Set<String> next = com.greendelta.collaboration.util.Collections.pop(remaining, 1000);
@@ -102,12 +102,12 @@ public class GladResource {
 				putProcessData(repo, dsToCommit, data);
 				data.put("format", "JSON_LD");
 				data.put("dataprovider", input.dataprovider);
-				String baseUrl = settingsService.get(Key.SERVER_URL);
+				String baseUrl = config.get(ServerSetting.SERVER_URL);
 				String refId = data.get("refId").toString();
 				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/"
 						+ refId + "?commitId=" + dsToCommit.get(refId));
-				data.put("publiclyAccessible", repo.settings.publicAccess);
-				data.put("free", repo.settings.publicAccess);
+				data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
+				data.put("free", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
 				for (String key : new ArrayList<>(data.keySet())) {
 					if (!GLAD_FIELDS.contains(key)) {
 						data.remove(key);
@@ -126,7 +126,8 @@ public class GladResource {
 
 	private void putProcessData(Repository repo, Map<String, String> dsToCommit, Map<String, Object> d) {
 		String refId = d.get("refId").toString();
-		ObjectMap data = ObjectMap.fromMap(repo.readData(ModelType.PROCESS, refId, dsToCommit.get(refId)));
+		String json = repo.datasets.get(ModelType.PROCESS, refId, dsToCommit.get(refId));
+		ObjectMap data = ObjectMap.fromMap(new Gson().fromJson(json, GsonTypes.OBJECT_MAP));
 		String reviewer = data.getString("processDocumentation.reviewer.name");
 		d.put("processType", getProcessType(data.getString("processType")));
 		d.put("validFrom", Dates.getTime(data.get("processDocumentation.validFrom")));

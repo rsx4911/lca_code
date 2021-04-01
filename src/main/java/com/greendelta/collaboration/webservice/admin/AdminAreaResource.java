@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,17 +23,21 @@ import javax.ws.rs.core.Response;
 import org.elasticsearch.client.Client;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.settings.SearchSetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.SettingKey;
+import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.platform.servlet.RequestListener;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.IndexService;
 import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
+import com.greendelta.collaboration.service.SettingsService.ServerConfig;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
 
@@ -72,11 +77,12 @@ public class AdminAreaResource {
 	@Path("testGladConfig")
 	public Response testGladConfig() {
 		try {
-			String gladUrl = settingsService.get(Key.GLAD_URL);
+			ServerConfig config = settingsService.serverConfig;
+			String gladUrl = config.get(ServerSetting.GLAD_URL);
 			if (gladUrl == null || gladUrl.isEmpty())
 				return Respond.error("No glad url specified");
-			String gladHeaderField = settingsService.get(Key.GLAD_API_KEY_HEADER);
-			String gladHeaderValue = settingsService.get(Key.GLAD_API_KEY);
+			String gladHeaderField = config.get(ServerSetting.GLAD_API_KEY_HEADER);
+			String gladHeaderValue = config.get(ServerSetting.GLAD_API_KEY);
 			String result = get(gladUrl, gladHeaderField, gladHeaderValue);
 			if (result.contains("\"resultInfo\":") && result.contains("\"data\":")
 					&& result.contains("\"aggregations\":"))
@@ -90,15 +96,18 @@ public class AdminAreaResource {
 	@GET
 	@Path("testSearchConfig")
 	public Response testSearchConfig() {
-		SearchConfig config = settingsService.getSearchConfig();
+		SearchConfig config = settingsService.searchConfig;
 		try {
 			Client client = config.getClient();
-			boolean exists = client.admin().indices().prepareExists(config.indexName).execute().actionGet().isExists();
+			String indexName = config.get(SearchSetting.INDEX_NAME);
+			boolean exists = client.admin().indices().prepareExists(indexName).execute().actionGet().isExists();
 			if (!exists)
-				return Respond.error("Index " + config.indexName + " does not exist");
+				return Respond.error("Index " + indexName + " does not exist");
 			return Respond.ok(new HashMap<>());
 		} catch (UnknownHostException e) {
-			return Respond.error("Could not connect to host " + config.host + " on cluster " + config.cluster);
+			String host = config.get(SearchSetting.HOST);
+			String cluster = config.get(SearchSetting.CLUSTER);
+			return Respond.error("Could not connect to host " + host + " on cluster " + cluster);
 		} catch (Exception e) {
 			return Respond.error(e.getMessage());
 		}
@@ -117,21 +126,17 @@ public class AdminAreaResource {
 	@GET
 	@Path("serverInfo")
 	public Response getServerInfo() {
-		Map<String, Object> info = new HashMap<>();
-		info.put("maintenanceModeActive", settingsService.is(Key.MAINTENANCE_MODE));
-		info.put("maintenanceMessage", settingsService.get(Key.MAINTENANCE_MESSAGE));
+		Map<String, Object> info = settingsService.serverConfig.toMap(setting -> Arrays.asList(new ServerSetting[] {
+				ServerSetting.MAINTENANCE_MODE, ServerSetting.MAINTENANCE_MESSAGE, ServerSetting.ANNOUNCEMENT_MESSAGE,
+				ServerSetting.LICENSE_AGREEMENT_TEXT, ServerSetting.HOME_TITLE, ServerSetting.HOME_TEXT,
+				ServerSetting.MODEL_TYPES_ORDER, ServerSetting.MODEL_TYPES_HIDDEN
+		}).contains(setting));
 		info.put("openWebServiceRequests", RequestListener.getInstance().openRequest);
-		info.put("announcement", settingsService.get(Key.ANNOUNCEMENT_MESSAGE));
-		info.put("licenseAgreementText", settingsService.get(Key.LICENSE_AGREEMENT_TEXT));
-		info.put("homeTitle", settingsService.get(Key.HOME_TITLE));
-		info.put("homeText", settingsService.get(Key.HOME_TEXT));
-		info.put("orderedRepositories", repoService.getPublicRepositoryOrder());
-		info.put("hiddenRepositories", repoService.getPublicHiddenRepositories());
-		info.put("orderedModelTypes", settingsService.getArray(Key.MODEL_TYPES_ORDER));
-		info.put("hiddenModelTypes", settingsService.getArray(Key.MODEL_TYPES_HIDDEN));
+		info.put("RepositoriesOrder", repoService.getPublicRepositoryOrder());
+		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
 		return Respond.ok(info);
 	}
-	
+
 	@PUT
 	@Path("clearIndex")
 	public Response clearIndex() {
@@ -173,17 +178,31 @@ public class AdminAreaResource {
 		return Respond.ok(new HashMap<>());
 	}
 
+	@GET
+	@Path("settings")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getSettings() {
+		Map<String, Object> settings = new HashMap<>();
+		for (SettingType type : SettingType.values()) {
+			if (!type.singleton)
+				continue;
+			settings.put(type.name(), settingsService.getMap(type));
+		}
+		return Respond.ok(settings);
+	}
+
 	@PUT
 	@Path("settings")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setSetting(Map<String, String> data) {
-		Key key = Key.valueOf(data.get("key"));
+		SettingType type = SettingType.valueOf(data.get("type"));
+		SettingKey key = type.getSettingKey(data.get("key"));
 		String value = data.get("value");
 		if (value != null && value.trim().isEmpty()) {
 			value = null;
 		}
 		settingsService.set(key, value);
-		if (key == Key.LIBRARY_PATH)
+		if (key == ServerSetting.LIBRARY_PATH)
 			libraryService.resetLibraries();
 		return Respond.ok(new HashMap<>());
 	}

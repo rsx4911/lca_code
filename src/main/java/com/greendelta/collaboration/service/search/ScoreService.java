@@ -6,8 +6,8 @@ import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.score.Comparator;
@@ -59,7 +59,7 @@ class ScoreService {
 
 	private void apply(String field, double factor, SearchQueryBuilder builder) {
 		Score score = new Score(field);
-		ModelType[] types = settingsService.getModelTypes();
+		ModelType[] types = settingsService.serverConfig.getModelTypes();
 		for (int i = 0; i < types.length; i++) {
 			ModelType type = types[i];
 			if (type == ModelType.CATEGORY)

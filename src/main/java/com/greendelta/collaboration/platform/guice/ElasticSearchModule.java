@@ -20,7 +20,7 @@ class ElasticSearchModule extends AbstractModule {
 
 		@Override
 		public void shutdown() {
-			settingsService.getSearchConfig().close();
+			settingsService.searchConfig.close();
 		}
 
 	}

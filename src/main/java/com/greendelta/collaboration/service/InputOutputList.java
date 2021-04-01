@@ -13,6 +13,7 @@ import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
 
 /**

@@ -20,15 +20,14 @@ import javax.ws.rs.core.Response.Status;
 import org.openlca.cloud.model.data.Commit;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
 import com.greendelta.collaboration.model.index.IndexAction;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.task.Task;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.CommentService;
@@ -48,19 +47,17 @@ public class ActivityResource {
 
 	private final UserService userService;
 	private final RepositoryService repoService;
-	private final HistoryService historyService;
 	private final SearchService searchService;
 	private final CommentService commentService;
 	private final TaskService taskService;
 	private final SettingsService settingsService;
 
 	@Inject
-	public ActivityResource(UserService userService, RepositoryService repoService, HistoryService historyService,
-			SearchService searchService, CommentService commentService, TaskService taskService,
+	public ActivityResource(UserService userService, RepositoryService repoService, SearchService searchService,
+			CommentService commentService, TaskService taskService,
 			SettingsService settingsService) {
 		this.userService = userService;
 		this.repoService = repoService;
-		this.historyService = historyService;
 		this.searchService = searchService;
 		this.commentService = commentService;
 		this.taskService = taskService;
@@ -75,9 +72,9 @@ public class ActivityResource {
 			@QueryParam("showCommentActivities") @DefaultValue("true") boolean showCommentActivities,
 			@QueryParam("showTaskActivities") @DefaultValue("true") boolean showTaskActivities,
 			@QueryParam("repositoryPath") String repositoryPath) {
-		if (repositoryPath == null && !settingsService.is(Key.DASHBOARD_ACTIVITIES_ENABLED))
+		if (repositoryPath == null && !settingsService.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Dashboard activities feature not enabled");
-		if (repositoryPath != null && !settingsService.is(Key.REPOSITORY_ACTIVITIES_ENABLED))
+		if (repositoryPath != null && !settingsService.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Repository activities feature not enabled");
 		List<Repository> repositories = getRepositories(repositoryPath);
 		List<ObjectMap> activities = new ArrayList<>();
@@ -85,7 +82,7 @@ public class ActivityResource {
 		Map<String, Repository> repos = new HashMap<>();
 		repositories.forEach(repo -> {
 			if (showCommitActivities) {
-				List<Commit> nextCommits = historyService.getCommits(repo);
+				List<Commit> nextCommits = repo.commits.get();
 				commits.putAll(com.greendelta.collaboration.util.Collections.map(nextCommits, commit -> commit.id));
 				activities.addAll(Client.map(nextCommits, commit -> Activities.map(commit, repo)));
 				for (Commit commit : nextCommits) {
@@ -131,8 +128,8 @@ public class ActivityResource {
 	@PUT
 	@Path("settings")
 	public Response updateSettings(UserSettings settings) {
-		if (!settingsService.is(Key.DASHBOARD_ACTIVITIES_ENABLED)
-				&& !settingsService.is(Key.REPOSITORY_ACTIVITIES_ENABLED))
+		if (!settingsService.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED)
+				&& !settingsService.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Activities feature not enabled");
 		User currentUser = userService.getCurrentUser();
 		Beans.populateProperties(settings, currentUser.settings,

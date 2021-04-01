@@ -21,6 +21,7 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.sun.jersey.api.client.Client;
@@ -30,12 +31,10 @@ import com.sun.jersey.api.client.WebResource;
 public class ChangeLogService {
 
 	private final static Logger log = LogManager.getLogger(ChangeLogService.class);
-	private final HistoryService historyService;
 	private final SearchService searchService;
 
 	@Inject
-	public ChangeLogService(HistoryService historyService, SearchService searchService) {
-		this.historyService = historyService;
+	public ChangeLogService(SearchService searchService) {
 		this.searchService = searchService;
 	}
 
@@ -43,7 +42,7 @@ public class ChangeLogService {
 		return generate(zos -> {
 			String data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
-			List<Commit> commits = historyService.getCommits(repo);
+			List<Commit> commits = repo.commits.get();
 			for (Commit commit : commits) {
 				IndexIterator iterator = searchService.getAll(repo, commit.id);
 				data = renderCommit(request, repo, commit.id);
@@ -51,7 +50,7 @@ public class ChangeLogService {
 				while (iterator.hasNext()) {
 					IndexEntry entry = iterator.next();
 					if (entry.action == IndexAction.UPDATE) {
-						Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commit.id);
+						Commit previous = repo.commits.getLastBefore(entry.type, entry.refId, commit.id);
 						data = renderDataset(request, repo, entry, previous);
 						packResource(zos, entry.refId + ".html", data);
 					}
@@ -68,7 +67,7 @@ public class ChangeLogService {
 			while (iterator.hasNext()) {
 				IndexEntry entry = iterator.next();
 				if (entry.action == IndexAction.UPDATE) {
-					Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commitId);
+					Commit previous = repo.commits.getLastBefore(entry.type, entry.refId, commitId);
 					data = renderDataset(request, repo, entry, previous);
 					packResource(zos, entry.refId + ".html", data);
 				}

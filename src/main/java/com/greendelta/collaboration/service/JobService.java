@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.job.Job;
 import com.greendelta.collaboration.model.job.JobResult;
 import com.greendelta.collaboration.model.job.JobType;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.service.SettingsService.Imprint;
@@ -70,12 +70,12 @@ public class JobService {
 	}
 
 	private String getPasswordResetRequestEmailText(User user, String token) {
-		String baseUrl = settingsService.get(Key.SERVER_URL);
+		String baseUrl = settingsService.get(ServerSetting.SERVER_URL);
 		String resetUrl = baseUrl + "/job?token=" + token + "&type=" + JobType.RESET_PASSWORD;
 		String content = "Dear " + user.name + ",<br><br>";
 		content += "You requested to reset your password. Please click the link below to proceed with the request, a new password will automatically be set and send to you.<br><br>";
 		content += "<a href=\"" + resetUrl + "\">" + resetUrl + "</a><br><br>";
-		Imprint imprint = settingsService.getImprint();
+		Imprint imprint = settingsService.imprint;
 		if (imprint == null)
 			return content;
 		content += imprint.toEmailFooter();
@@ -115,7 +115,7 @@ public class JobService {
 		String content = "Dear " + user.name + ",<br><br>";
 		content += "Your password was successfully reset to " + password
 				+ " - Please update it directly after logging in.<br><br>";
-		Imprint imprint = settingsService.getImprint();
+		Imprint imprint = settingsService.imprint;
 		if (imprint == null)
 			return content;
 		content += imprint.toEmailFooter();

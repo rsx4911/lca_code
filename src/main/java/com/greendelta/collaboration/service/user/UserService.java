@@ -22,10 +22,9 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Dao;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
@@ -99,7 +98,7 @@ public class UserService {
 		User currentUser = getCurrentUser();
 		if (currentUser.username == null || currentUser.username.isEmpty())
 			return 0;
-		String path = settingsService.get(Key.REPOSITORY_PATH);
+		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
 		if (path == null || path.isEmpty())
 			return 0;
 		File userGroup = new File(path, currentUser.username);
@@ -111,7 +110,7 @@ public class UserService {
 	public long getUserGroupSize(User user) {
 		if (user == null || user.username == null || user.username.isEmpty())
 			return 0;
-		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
+		String repositoryPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
 		if (repositoryPath == null)
 			return 0;
 		File userGroup = new File(repositoryPath, user.username);
@@ -120,7 +119,8 @@ public class UserService {
 		long size = 0;
 		for (File file : userGroup.listFiles()) {
 			try {
-				size += Repository.get(repositoryPath, user.username, file.getName()).getSize();
+				// TODO get size
+				size += 0;
 			} catch (UnsupportedSchemaException e) {
 				// ignore
 			}
@@ -186,7 +186,7 @@ public class UserService {
 
 	public String getTwoFactorUrl(User user) {
 		String key = user.twoFactorSecret;
-		String servername = settingsService.get(Key.SERVER_NAME);
+		String servername = settingsService.get(ServerSetting.SERVER_NAME);
 		return getOtpAuthTotpURL(servername, user.username, key);
 	}
 

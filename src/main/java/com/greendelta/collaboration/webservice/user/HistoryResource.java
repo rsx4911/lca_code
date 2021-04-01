@@ -24,9 +24,8 @@ import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -45,16 +44,14 @@ import joptsimple.internal.Strings;
 @Produces(MediaType.APPLICATION_JSON)
 public class HistoryResource {
 
-	private final HistoryService service;
 	private final SearchService searchService;
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final AccessService accessService;
 
 	@Inject
-	public HistoryResource(HistoryService service, SearchService searchService, RepositoryService repoService,
-			UserService userService, AccessService accessService) {
-		this.service = service;
+	public HistoryResource(SearchService searchService, RepositoryService repoService, UserService userService,
+			AccessService accessService) {
 		this.searchService = searchService;
 		this.repoService = repoService;
 		this.userService = userService;
@@ -72,12 +69,12 @@ public class HistoryResource {
 		IndexEntry first = searchService.getFirst(repo, type, refId);
 		if (first == null)
 			return Respond.notFound();
-		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
+		List<Commit> commits = repo.commits.getAfter(first.commitId, true);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		List<Map<String, Object>> mapped = new ArrayList<>();
-		List<Commit> ownCommits = service.getCommits(repo, type, refId);
+		List<Commit> ownCommits = repo.commits.get(type, refId);
 		for (Commit commit : commits) {
 			Map<String, Object> map = putUserName(commit);
 			for (Commit c : ownCommits) {
@@ -99,11 +96,11 @@ public class HistoryResource {
 			@QueryParam("lastCommitId") String lastCommitId) {
 		Repository repo = repoService.get(group, name);
 		if (lastCommitId != null && !lastCommitId.isEmpty()) {
-			Commit commit = service.getCommit(repo, lastCommitId);
+			Commit commit = repo.commits.get(lastCommitId);
 			if (commit == null)
 				return Respond.notFound("Commit " + lastCommitId + " not found");
 		}
-		List<Commit> commits = service.getCommitsAfter(repo, lastCommitId);
+		List<Commit> commits = repo.commits.getAfter(lastCommitId);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
@@ -119,15 +116,17 @@ public class HistoryResource {
 			@QueryParam("page") int page,
 			@QueryParam("pageSize") int pageSize) {
 		Repository repo = repoService.get(group, name);
-		List<Commit> commits = service.getCommits(repo);
+		List<Commit> commits = repo.commits.get();
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		SearchResult<Commit> result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
-		return Respond.ok(putAdditionalInfo(SearchResults.convert(result, c -> ObjectMap.fromObject(c)), repo, commits));
+		return Respond
+				.ok(putAdditionalInfo(SearchResults.convert(result, c -> ObjectMap.fromObject(c)), repo, commits));
 	}
 
-	private Map<String, Object> putAdditionalInfo(SearchResult<ObjectMap> result, Repository repo, List<Commit> commits) {
+	private Map<String, Object> putAdditionalInfo(SearchResult<ObjectMap> result, Repository repo,
+			List<Commit> commits) {
 		Map<String, Integer> groupCount = new HashMap<>();
 		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
 		List<ObjectMap> data = new ArrayList<>();
@@ -170,7 +169,7 @@ public class HistoryResource {
 		IndexEntry first = searchService.getFirst(repo, ModelType.CATEGORY, refId);
 		if (first == null)
 			return Respond.noContent();
-		List<Commit> commits = service.getCommitsAfter(repo, first.commitId, true);
+		List<Commit> commits = repo.commits.getAfter(first.commitId, true);
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
@@ -184,7 +183,7 @@ public class HistoryResource {
 			@PathParam("name") String name,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		Commit commit = service.getCommit(repo, commitId);
+		Commit commit = repo.commits.get(commitId);
 		if (commit == null)
 			return Respond.notFound();
 		Map<String, Object> map = putUserName(commit);
@@ -206,7 +205,7 @@ public class HistoryResource {
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("filter") @DefaultValue("") String filter) {
 		Repository repo = repoService.get(group, name);
-		Commit commit = service.getCommit(repo, commitId);
+		Commit commit = repo.commits.get(commitId);
 		if (commit == null)
 			return Respond.notFound();
 		SearchQuery query = createReferencesQuery(repo, commit, type, page, pageSize, filter);
@@ -248,7 +247,7 @@ public class HistoryResource {
 			mapped.add(putUserName(commit));
 		return mapped;
 	}
-	
+
 	private Map<String, Object> putUserName(Commit commit) {
 		return putUserName(ObjectMap.fromObject(commit));
 	}
@@ -272,7 +271,7 @@ public class HistoryResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		Commit lastCommit = service.getLastCommitBefore(repo, type, refId, commitId);
+		Commit lastCommit = repo.commits.getLastBefore(type, refId, commitId);
 		if (lastCommit == null || lastCommit.id.equals(commitId))
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
 		return Respond.ok(lastCommit.id);

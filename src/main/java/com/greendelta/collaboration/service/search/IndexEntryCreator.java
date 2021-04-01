@@ -12,13 +12,15 @@ import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 import org.openlca.jsonld.Enums;
+import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.ObjectMap;
 
@@ -86,8 +88,12 @@ public class IndexEntryCreator {
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
 		entry.commits = new ArrayList<>(Collections.singletonList(commit.id));
-		entry.repositoryTags = repo.settings.tags != null ? new ArrayList<>(repo.settings.tags) : new ArrayList<>();
-//		entry.datasetTags = dataset.tags != null ? new ArrayList<>(dataset.tags) : new ArrayList<>();
+		String tags = repo.settings.get(RepositorySetting.TAGS);
+		if (Strings.notEmpty(tags)) {
+			entry.repositoryTags = RepositorySetting.TAGS.parse(tags);
+		}
+		// entry.datasetTags = dataset.tags != null ? new
+		// ArrayList<>(dataset.tags) : new ArrayList<>();
 		DataFill.categories(entry, dataset.categories);
 		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;

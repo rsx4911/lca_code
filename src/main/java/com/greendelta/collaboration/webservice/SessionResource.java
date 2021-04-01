@@ -24,9 +24,9 @@ import org.apache.shiro.subject.Subject;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.job.JobResult;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.JobService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -120,10 +120,10 @@ public class SessionResource {
 				return Respond.unauthorized("Invalid token");
 			}
 		}
-		boolean maintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
+		boolean maintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
 		if (maintenanceMode && !user.isAdmin()) {
 			subject.logout();
-			return Respond.forbidden(settingsService.get(Key.MAINTENANCE_MESSAGE));
+			return Respond.forbidden(settingsService.get(ServerSetting.MAINTENANCE_MESSAGE));
 		}
 		log.info("User {} successfully logged in", username);
 		return Respond.ok();
@@ -134,7 +134,7 @@ public class SessionResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response register(Map<String, Object> data) {
-		if (!settingsService.is(Key.USER_REGISTRATION_ENABLED))
+		if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "User registration feature not enabled");
 		ObjectMap form = ObjectMap.fromMap(data);
 		String username = form.getString("username");
@@ -178,7 +178,7 @@ public class SessionResource {
 		user.username = username;
 		user.name = name;
 		user.email = email;
-		boolean adminApproval = settingsService.is(Key.USER_REGISTRATION_APPROVAL_ENABLED);
+		boolean adminApproval = settingsService.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED);
 		if (adminApproval) {
 			Calendar cal = Calendar.getInstance();
 			cal.add(Calendar.DAY_OF_MONTH, -1);

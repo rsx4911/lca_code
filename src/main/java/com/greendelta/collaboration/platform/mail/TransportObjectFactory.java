@@ -9,7 +9,9 @@ import org.apache.logging.log4j.Logger;
 class TransportObjectFactory implements PoolableObjectFactory<TransportHolder> {
 
 	private static final Logger log = LogManager.getLogger(TransportObjectFactory.class);
-	private EmailService emailService;
+	private final int mailsSentPerConnection = 10;
+	private final int connectionLifetimeMs = 60000;
+	private final EmailService emailService;
 
 	TransportObjectFactory(EmailService emailService) {
 		this.emailService = emailService;
@@ -39,9 +41,9 @@ class TransportObjectFactory implements PoolableObjectFactory<TransportHolder> {
 	public boolean validateObject(TransportHolder obj) {
 		if (obj == null)
 			return false;
-		if (obj.getMailsSent() >= this.emailService.getMailsSentPerConnection()) {
+		if (obj.getMailsSent() >= mailsSentPerConnection) {
 			log.debug("Expiring an SMTP connection due to reaching send message count of {} messages: {}",
-					this.emailService.getMailsSentPerConnection(), obj);
+					mailsSentPerConnection, obj);
 			return false;
 		}
 		if (obj.getTransport() == null)
@@ -51,7 +53,7 @@ class TransportObjectFactory implements PoolableObjectFactory<TransportHolder> {
 			return false;
 		}
 		long alive = System.currentTimeMillis() - obj.getOpeningTime();
-		if (alive < this.emailService.getConnectionLifetimeMs())
+		if (alive < connectionLifetimeMs)
 			return true;
 		log.debug("Expiring an SMTP connection due to exceeded lifetime, life was {} ms: {}", alive, obj);
 		return false;

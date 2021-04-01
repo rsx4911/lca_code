@@ -1,8 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -15,14 +13,14 @@ import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
-import org.openlca.util.BinUtils;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Datasets.Binary;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -35,15 +33,12 @@ public class RepositoryResource {
 
 	private final RepositoryService service;
 	private final GroupService groupService;
-	private final HistoryService historyService;
 	private final BrowseService browseService;
 
 	@Inject
-	public RepositoryResource(RepositoryService service, GroupService groupService, HistoryService historyService,
-			BrowseService browseService) {
+	public RepositoryResource(RepositoryService service, GroupService groupService, BrowseService browseService) {
 		this.service = service;
 		this.groupService = groupService;
-		this.historyService = historyService;
 		this.browseService = browseService;
 	}
 
@@ -63,9 +58,9 @@ public class RepositoryResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
-		ObjectMap mappedRepo = Repositories.map(repo,
-				groupService.isUserNamespace(group, repo.settings.publicAccess));
-		Commit lastCommit = historyService.getLastCommit(repo);
+		boolean publicAccess = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
+		ObjectMap mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group, publicAccess));
+		Commit lastCommit = repo.commits.getLast();
 		if (lastCommit != null) {
 			mappedRepo.put("settings.lastChange", lastCommit.timestamp);
 		}
@@ -94,18 +89,19 @@ public class RepositoryResource {
 			@PathParam("refId") String refId,
 			@PathParam("filename") String filename,
 			@QueryParam("commitId") String commitId) throws IOException {
+		// TODO test git implementation
 		Repository repo = service.get(group, name);
 		commitId = getLastCommitId(repo, type, refId, commitId);
 		if (commitId == null)
 			return Respond.notFound(notFoundMessage(type, refId, null));
-		File binFile = service.getBinFile(repo, type, refId, commitId, filename);
-		if (!binFile.exists())
+		Binary binary = repo.datasets.getBinary(type, refId, commitId, filename);
+		if (binary == null)
 			return Respond.notFound(notFoundMessage(type, refId, filename));
-		return Respond.ok(BinUtils.gunzip(Files.readAllBytes(binFile.toPath())));
+		return Respond.ok(binary.data);
 	}
 
 	private String getLastCommitId(Repository repo, ModelType type, String refId, String commitId) {
-		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
+		Commit commit = repo.commits.getLast(type, refId, commitId);
 		if (commit == null)
 			return null;
 		return commit.id;

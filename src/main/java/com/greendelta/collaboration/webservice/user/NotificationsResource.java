@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response.Status;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Notification;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;
@@ -36,7 +36,7 @@ public class NotificationsResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEnabled() {
-		if (!settingsService.is(Key.NOTIFICATIONS_ENABLED))
+		if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Notifications feature not enabled");
 		User currentUser = userService.getCurrentUser();
 		List<Notification> enabled = new ArrayList<>();
@@ -49,7 +49,7 @@ public class NotificationsResource {
 	@PUT
 	@Path("enable/{notifications}")
 	public Response enable(@PathParam("notifications") String notifications) {
-		if (!settingsService.is(Key.NOTIFICATIONS_ENABLED))
+		if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Notifications feature not enabled");
 		User currentUser = userService.getCurrentUser();
 		for (Notification notification : parse(notifications))
@@ -61,7 +61,7 @@ public class NotificationsResource {
 	@PUT
 	@Path("disable/{notifications}")
 	public Response disable(@PathParam("notifications") String notifications) {
-		if (!settingsService.is(Key.NOTIFICATIONS_ENABLED))
+		if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Notifications feature not enabled");
 		User currentUser = userService.getCurrentUser();
 		for (Notification notification : parse(notifications))

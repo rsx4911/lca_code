@@ -2,7 +2,7 @@ package com.greendelta.collaboration.webservice.util;
 
 import java.util.HashMap;
 
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class Repositories {
@@ -20,8 +20,8 @@ public class Repositories {
 		map.put("group", repo.group);
 		map.put("name", repo.name);
 		map.put("label", repo.getLabel());
-		map.put("settings", ObjectMap.fromObject(repo.settings));
-		map.put("groupSettings", ObjectMap.fromObject(repo.groupSettings));
+		map.put("settings", repo.settings.toMap());
+		map.put("groupSettings", repo.groupSettings.toMap());
 		if (groupIsUserNamespace != null)
 			map.put("groupIsUserNamespace", groupIsUserNamespace);
 		return map;

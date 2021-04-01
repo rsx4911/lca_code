@@ -20,8 +20,8 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -301,7 +301,7 @@ public class SearchService {
 	}
 
 	private SearchClient getClient() {
-		return settingsService.getSearchConfig().getSearchClient();
+		return settingsService.searchConfig.getSearchClient();
 	}
 
 	public interface Filter extends Function<IndexEntry, Boolean> {

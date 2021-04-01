@@ -3,9 +3,11 @@ package com.greendelta.collaboration.service;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.function.Function;
 
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
@@ -13,316 +15,267 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.greendelta.collaboration.model.Setting;
-import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.settings.ImprintSetting;
+import com.greendelta.collaboration.model.settings.MailSetting;
+import com.greendelta.collaboration.model.settings.SearchSetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.Setting;
+import com.greendelta.collaboration.model.settings.SettingKey;
+import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.es.EsClient;
 
 public class SettingsService {
 
-	private static final Logger log = LogManager.getLogger(SettingsService.class);
-	private static Imprint imprint;
-	private static MailConfig mailConfig;
-	private static SearchConfig searchConfig;
-	private final Dao<Setting> dao;
+	static final Logger log = LogManager.getLogger(SettingsService.class);
+	public final Imprint imprint = new Imprint();
+	public final MailConfig mailConfig = new MailConfig();
+	public final SearchConfig searchConfig = new SearchConfig();
+	public final ServerConfig serverConfig = new ServerConfig();
+	private final Dao<Setting<?>> dao;
 	private final Provider<Subject> subjectProvider;
 
 	@Inject
-	public SettingsService(Dao<Setting> dao, Provider<Subject> subjectProvider) {
+	public SettingsService(Dao<Setting<?>> dao, Provider<Subject> subjectProvider) {
 		this.dao = dao;
 		this.subjectProvider = subjectProvider;
 	}
 
-	public void set(Key key, Object value) {
-		Setting setting = dao.getFirstForAttribute("name", key);
+	public <T extends SettingKey> Settings<T> create() {
+		return new Settings<T>();
+	}
+
+	public boolean is(SettingKey key) {
+		return is(key, null);
+	}
+
+	public boolean is(SettingKey key, String owner) {
+		SettingType type = SettingType.getFor(key);
+		return get(type, owner).is(key);
+	}
+
+	public <V> V get(SettingKey key) {
+		return get(key, null);
+	}
+
+	public <V> V get(SettingKey key, V defaultValue) {
+		return get(key, null, defaultValue);
+	}
+
+	public <V> V get(SettingKey key, String owner) {
+		return get(key, owner, null);
+	}
+
+	public <V> V get(SettingKey key, String owner, V defaultValue) {
+		SettingType type = SettingType.getFor(key);
+		return get(type, owner).get(key, defaultValue);
+	}
+
+	public <V> void set(SettingKey key, V value) {
+		SettingType type = SettingType.getFor(key);
+		get(type).set(key, value);
+	}
+
+	public Map<String, Object> getMap(SettingType type) {
+		return get(type).toMap(null, true);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T extends SettingKey> Settings<T> get(SettingType type) {
+		switch (type) {
+		case SERVER_SETTING:
+			return (Settings<T>) serverConfig;
+		case MAIL_SETTING:
+			return (Settings<T>) mailConfig;
+		case SEARCH_SETTING:
+			return (Settings<T>) searchConfig;
+		case IMPRINT_SETTING:
+			return (Settings<T>) imprint;
+		default:
+			return get(type, null);
+		}
+	}
+
+	private <T extends SettingKey> Settings<T> get(SettingType type, String owner) {
+		return get(type, owner, null);
+	}
+
+	public <T extends SettingKey> Settings<T> get(SettingType type, String owner,
+			Function<String, Boolean> accessCheck) {
+		if (!type.singleton && owner == null)
+			throw new IllegalArgumentException("Owner can not be null");
+		return new Settings<T>(type, owner, accessCheck);
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T extends SettingKey> Setting<T> get(SettingType type, T key, String owner) {
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("type", type);
+		attributes.put("name", key);
+		attributes.put("owner", owner);
+		return (Setting<T>) dao.getFirstForAttributes(attributes);
+	}
+
+	private <T extends SettingKey> void set(SettingType type, T key, String owner, Object value) {
+		Setting<T> setting = get(type, key, owner);
 		if (setting == null) {
-			setting = new Setting();
-			setting.name = key;
+			setting = Setting.create(type, key, owner);
 			setting.value = key.toString(value);
 			dao.insert(setting);
 		} else {
 			setting.value = key.toString(value);
 			dao.update(setting);
 		}
-		if (key.isImprint() && imprint != null) {
-			update(imprint, key, value);
-		} else if (key.isMailConfig() && mailConfig != null) {
-			update(mailConfig, key, value);
-			mailConfig.session = null;
-		} else if (key.isSearchConfig() && searchConfig != null) {
-			update(searchConfig, key, value);
-			searchConfig.close();
-			searchConfig.client = null;
-			searchConfig.searchClient = null;
+	}
+
+	public class ServerConfig extends Settings<ServerSetting> {
+
+		private ServerConfig() {
+			super(SettingType.SERVER_SETTING);
 		}
-	}
 
-	public boolean is(Key key) {
-		return get(key);
-	}
-
-	public <T> T get(Key key) {
-		return get(key, key.getDefaultValue());
-	}
-
-	private <T> T get(Key key, T defaultValue) {
-		Setting setting = dao.getFirstForAttribute("name", key);
-		if (setting == null)
-			return defaultValue;
-		return key.parse(setting.value);
-	}
-
-	public String[] getArray(Key key) {
-		String value = get(key, key.getDefaultValue());
-		if (value == null || value.isEmpty())
-			return new String[0];
-		return value.split(";");
-	}
-
-	public ModelType[] getModelTypes() {
-		Setting setting = dao.getFirstForAttribute("name", Key.MODEL_TYPES_ORDER);
-		String value = setting == null ? Key.MODEL_TYPES_ORDER.getDefaultValue() : setting.value;
-		List<String> hidden = new ArrayList<>();
-		Subject subject = subjectProvider.get();
-		boolean isLoggedIn = subject != null && subject.isAuthenticated();
-		if (!isLoggedIn) {
-			hidden = Arrays.asList(getArray(Key.MODEL_TYPES_HIDDEN));
-		}
-		String[] split = value.split(";");
-		List<ModelType> types = new ArrayList<>();
-		for (int i = 0; i < split.length; i++) {
-			if (hidden.contains(split[i]))
-				continue;
-			types.add(ModelType.valueOf(split[i]));
-		}
-		for (ModelType type : ModelType.values()) {
-			if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
-				continue;
-			types.add(type);
-		}
-		return types.toArray(new ModelType[types.size()]);
-	}
-
-	public Imprint getImprint() {
-		if (imprint == null) {
-			for (Key key : Key.values()) {
-				if (!key.isImprint())
+		public ModelType[] getModelTypes() {
+			List<String> value = get(ServerSetting.MODEL_TYPES_ORDER);
+			List<String> hidden = new ArrayList<>();
+			Subject subject = subjectProvider.get();
+			boolean isLoggedIn = subject != null && subject.isAuthenticated();
+			if (!isLoggedIn) {
+				hidden = get(ServerSetting.MODEL_TYPES_HIDDEN);
+			}
+			List<ModelType> types = new ArrayList<>();
+			for (int i = 0; i < value.size(); i++) {
+				if (hidden.contains(value.get(i)))
 					continue;
-				Object value = get(key, null);
-				if (value == null || (value instanceof String && value.toString().isEmpty()))
+				types.add(ModelType.valueOf(value.get(i)));
+			}
+			for (ModelType type : ModelType.values()) {
+				if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
 					continue;
-				if (imprint == null) {
-					imprint = new Imprint();
-				}
-				update(imprint, key, value);
+				types.add(type);
 			}
+			return types.toArray(new ModelType[types.size()]);
 		}
-		return imprint;
+
 	}
 
-	public MailConfig getMailConfig() {
-		if (mailConfig == null) {
-			boolean onlyDefaults = true;
-			for (Key key : Key.values()) {
-				if (!key.isMailConfig())
-					continue;
-				Object value = get(key, null);
-				if (value != null) {
-					onlyDefaults = false;
-				}
-				value = get(key, key.getDefaultValue());
-				if (value == null || (value instanceof String && value.toString().isEmpty()))
-					continue;
-				if (mailConfig == null) {
-					mailConfig = new MailConfig();
-				}
-				update(mailConfig, key, value);
-			}
-			if (onlyDefaults) {
-				mailConfig = null;
-			}
-		}
-		return mailConfig;
-	}
-
-	public SearchConfig getSearchConfig() {
-		if (searchConfig == null) {
-			for (Key key : Key.values()) {
-				if (!key.isSearchConfig())
-					continue;
-				Object value = get(key, key.getDefaultValue());
-				if (value == null || value.toString().isEmpty())
-					continue;
-				if (searchConfig == null) {
-					searchConfig = new SearchConfig();
-				}
-				update(searchConfig, key, value);
-			}
-		}
-		return searchConfig;
-	}
-
-	private void update(Object object, Key key, Object value) {
-		String field = getFieldName(key);
-		if (value != null) {
-			value = key.parse(value.toString());
-		}
-		try {
-			object.getClass().getDeclaredField(field).set(object, value);
-		} catch (Exception e) {
-			log.error("Error setting field", e);
-		}
-	}
-
-	private String getFieldName(Key key) {
-		String name = "";
-		boolean nextUpper = false;
-		for (char c : key.name().toLowerCase().substring(key.name().indexOf('_') + 1).toCharArray()) {
-			if (nextUpper) {
-				c = Character.toUpperCase(c);
-				nextUpper = false;
-			}
-			if (c == '_') {
-				nextUpper = true;
-			} else {
-				name += c;
-			}
-		}
-		return name;
-	}
-
-	public List<Setting> getAll() {
-		List<Setting> settings = new ArrayList<>();
-		for (Key key : Key.values()) {
-			Setting setting = dao.getFirstForAttribute("name", key);
-			if (setting == null) {
-				setting = new Setting();
-				setting.name = key;
-				setting.value = key.toString(key.getDefaultValue());
-			}
-			settings.add(setting);
-		}
-		return settings;
-	}
-
-	public class Imprint {
-
-		public String company;
-		public String ceo;
-		public String street;
-		public String zipCode;
-		public String city;
-		public String country;
-		public String phone;
-		public String fax;
-		public String email;
-		public String website;
-		public String registration;
-		public String vat;
+	public class Imprint extends Settings<ImprintSetting> {
 
 		private Imprint() {
-
+			super(SettingType.IMPRINT_SETTING);
 		}
 
 		public String toEmailFooter() {
-			return company + ", " + street + ", " + zipCode + " " + city + ", " + country + "<br>"
-					+ "Companies' Register: " + registration + "<br>"
-					+ "Managing Director: " + ceo;
+			return get(ImprintSetting.COMPANY, "") + ", " + get(ImprintSetting.STREET, "") + ", "
+					+ get(ImprintSetting.ZIP_CODE, "")
+					+ " " + get(ImprintSetting.CITY, "") + ", " + get(ImprintSetting.COUNTRY, "") + "<br>"
+					+ "Companies' Register: " + get(ImprintSetting.REGISTRATION, "") + "<br>"
+					+ "Managing Director: " + get(ImprintSetting.CEO, "");
 		}
 
 	}
 
-	public class MailConfig {
+	public class MailConfig extends Settings<MailSetting> {
 
-		public String user;
-		public String pass;
-		public String proto;
-		public String host;
-		public Integer port;
-		public Boolean ssl;
-		public Boolean tls;
-		public String defaultFrom;
-		public String defaultReplyTo;
 		private Session session;
 
 		private MailConfig() {
+			super(SettingType.MAIL_SETTING);
+		}
 
+		@Override
+		public void set(MailSetting key, Object value) {
+			super.set(key, value);
+			session = null;
 		}
 
 		public Session getSession() {
-			if (session == null) {
-				boolean useAuth = user != null && !user.isEmpty();
-				Properties props = new Properties();
-				props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
-				props.put("mail." + proto + ".host", host);
-				props.put("mail." + proto + ".port", port);
-				try {
-					props.put("mail." + proto + ".from", new InternetAddress(defaultFrom).getAddress());
-				} catch (AddressException e) {
-					log.error("Error setting 'from'", e);
-				}
-				if (ssl != null && ssl)
-					props.put("mail." + proto + ".ssl.enable", "true");
-				if (tls != null && tls)
-					props.put("mail." + proto + ".starttls.enable", "true");
-				session = Session.getInstance(props);
+			if (session != null)
+				return session;
+			String proto = get(MailSetting.PROTO);
+			boolean useAuth = Strings.notEmpty(get(MailSetting.USER));
+			Properties props = new Properties();
+			props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
+			props.put("mail." + proto + ".host", get(MailSetting.HOST));
+			props.put("mail." + proto + ".port", get(MailSetting.PORT));
+			try {
+				props.put("mail." + proto + ".from",
+						new InternetAddress(get(MailSetting.DEFAULT_FROM)).getAddress());
+			} catch (AddressException e) {
+				SettingsService.log.error("Error setting 'from'", e);
 			}
+			if (is(MailSetting.SSL))
+				props.put("mail." + proto + ".ssl.enable", "true");
+			if (is(MailSetting.TLS))
+				props.put("mail." + proto + ".starttls.enable", "true");
+			session = Session.getInstance(props);
 			return session;
 		}
 
 		public boolean isValid() {
-			if (Strings.isNullOrEmpty(defaultFrom) || Strings.isNullOrEmpty(proto) || Strings.isNullOrEmpty(host)
-					|| port == null || port == 0)
+			int port = get(MailSetting.PORT);
+			if (Strings.nullOrEmpty(get(MailSetting.DEFAULT_FROM)) || Strings.nullOrEmpty(get(MailSetting.PROTO))
+					|| Strings.nullOrEmpty(get(MailSetting.HOST)) || port == 0)
 				return false;
 			return true;
 		}
 
 	}
 
-	public class SearchConfig {
+	public class SearchConfig extends Settings<SearchSetting> {
 
-		public String cluster;
-		public String host;
-		public int port;
-		public String indexName;
 		private Client client;
 		private SearchClient searchClient;
 
+		private SearchConfig() {
+			super(SettingType.SERVER_SETTING);
+		}
+
+		@Override
+		public void set(SearchSetting key, Object value) {
+			super.set(key, value);
+			close();
+			client = null;
+			searchClient = null;
+		}
+
 		public Client getClient() throws UnknownHostException {
-			if (client == null) {
-				Builder settingsBuilder = Settings.builder()
-						.put("cluster.name", cluster);
-				Settings settings = settingsBuilder.build();
-				TransportClient client = new PreBuiltTransportClient(settings);
-				try {
-					client.addTransportAddress(new TransportAddress(InetAddress.getByName(host), port + 100));
-				} catch (UnknownHostException e) {
-					throw e;
-				}
-				this.client = client;
+			if (client != null)
+				return client;
+			String cluster = get(SearchSetting.CLUSTER);
+			Builder builder = org.elasticsearch.common.settings.Settings.builder().put("cluster.name", cluster);
+			org.elasticsearch.common.settings.Settings settings = builder.build();
+			TransportClient client = new PreBuiltTransportClient(settings);
+			try {
+				String host = get(SearchSetting.HOST);
+				int port = get(SearchSetting.PORT);
+				client.addTransportAddress(new TransportAddress(InetAddress.getByName(host), port + 100));
+			} catch (UnknownHostException e) {
+				throw e;
 			}
+			this.client = client;
 			return client;
 		}
 
 		public SearchClient getSearchClient() {
-			if (searchClient == null) {
-				try {
-					searchClient = new EsClient(getClient(), indexName, "dataset");
-				} catch (Exception e) {
-					log.error("Error getting search client", e);
-				}
+			if (searchClient != null)
+				return searchClient;
+			try {
+				searchClient = new EsClient(getClient(), get(SearchSetting.INDEX_NAME), "dataset");
+			} catch (Exception e) {
+				SettingsService.log.error("Error getting search client", e);
 			}
 			return searchClient;
 		}
@@ -331,6 +284,121 @@ public class SettingsService {
 			if (client == null)
 				return;
 			client.close();
+		}
+
+	}
+
+	public class Settings<T extends SettingKey> {
+
+		private final SettingType type;
+		private final String owner;
+		// if no service is given, use local map
+		private final Map<T, Object> local;
+		private final Function<String, Boolean> canAccess;
+
+		private Settings() {
+			this(null, null, null);
+		}
+
+		private Settings(SettingType type) {
+			this(type, null, null);
+		}
+
+		private Settings(SettingType type, String owner, Function<String, Boolean> canAccess) {
+			this.type = type;
+			this.owner = owner;
+			this.local = type == null ? new HashMap<>() : null;
+			if (type != null && canAccess == null && owner == null) {
+				canAccess = o -> {
+					Subject subject = subjectProvider.get();
+					return subject != null && subject.hasRole("admin");
+				};
+			}
+			this.canAccess = canAccess;
+		}
+
+		public <V> V get(T key) {
+			return get(key, null);
+		}
+
+		@SuppressWarnings("unchecked")
+		public <V> V get(T key, V defaultValue) {
+			V value = null;
+			if (local != null) {
+				value = (V) local.get(key);
+			} else {
+				checkAccess();
+				Setting<T> setting = SettingsService.this.get(type, key, owner);
+				if (setting == null) {
+					value = key.getDefaultValue();
+				} else {
+					value = key.parse(setting.value);
+				}
+			}
+			if (value == null)
+				return defaultValue;
+			return value;
+		}
+
+		public boolean is(T key) {
+			Boolean value = get(key);
+			return value != null && value;
+		}
+
+		public void set(T key, Object value) {
+			if (local != null) {
+				local.put(key, value);
+			} else {
+				SettingsService.this.set(type, key, owner, value);
+			}
+		}
+
+		public Map<String, Object> toMap() {
+			return toMap(null, false);
+		}
+
+		public Map<String, Object> toMap(Function<T, Boolean> filter) {
+			return toMap(filter, false);
+		}
+
+		@SuppressWarnings("unchecked")
+		private Map<String, Object> toMap(Function<T, Boolean> filter, boolean preserveKeys) {
+			Map<String, Object> map = new HashMap<>();
+			for (T key : (T[]) type.enumClass.getEnumConstants()) {
+				if (filter != null)
+					if (!filter.apply(key))
+						continue;
+				String field = key.name();
+				if (!preserveKeys) {
+					field = toFieldName(key);
+				}
+				map.put(field, get(key, owner));
+			}
+			return map;
+		}
+
+		private String toFieldName(SettingKey key) {
+			String name = "";
+			boolean nextUpper = false;
+			for (char c : key.name().toLowerCase().toCharArray()) {
+				if (c == '_') {
+					nextUpper = true;
+				} else {
+					name += nextUpper ? Character.toUpperCase(c) : c;
+					nextUpper = false;
+				}
+			}
+			return name;
+		}
+
+		private void checkAccess() {
+			if (type == null)
+				return;
+			if (canAccess == null || !canAccess.apply(owner))
+				if (owner == null)
+					throw new AuthorizationException();
+				else
+					throw new UnauthorizedAccessException(owner, "SET_SETTING");
 		}
 
 	}

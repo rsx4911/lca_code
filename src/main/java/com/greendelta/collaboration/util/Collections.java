@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.openlca.util.Strings;
+
 public class Collections {
 
 	public static <K1, K2, V> V get(Map<K1, Map<K2, V>> map, K1 key1, K2 key2) {
@@ -108,7 +110,7 @@ public class Collections {
 			col.add(parsed);
 		}
 	}
-	
+
 	public static <V, T> List<T> convertToList(Collection<V> col, Function<V, T> converter) {
 		return (List<T>) convert(col, new ArrayList<>(), converter);
 	}
@@ -123,7 +125,7 @@ public class Collections {
 		}
 		return to;
 	}
-	
+
 	public static <V, T> List<T> convertToList(Iterator<V> col, Function<V, T> converter) {
 		return (List<T>) convert(col, new ArrayList<>(), converter);
 	}
@@ -219,7 +221,7 @@ public class Collections {
 	public static <T> String join(T[] array, String delimiter) {
 		return join(Arrays.asList(array), e -> e.toString(), delimiter);
 	}
-	
+
 	public static String join(Collection<String> col, String delimiter) {
 		return join(col, v -> v, delimiter);
 	}
@@ -236,6 +238,16 @@ public class Collections {
 			s.append(toString.apply(val));
 		}
 		return s.toString();
+	}
+
+	public static List<String> split(String value, String regex) {
+		if (Strings.nullOrEmpty(value))
+			return new ArrayList<>();
+		List<String> list = new ArrayList<>();
+		for (String v : value.split(regex)) {
+			list.add(v);
+		}
+		return list;
 	}
 
 }

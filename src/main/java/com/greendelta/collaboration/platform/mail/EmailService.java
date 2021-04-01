@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.greendelta.collaboration.model.settings.MailSetting;
 import com.greendelta.collaboration.platform.mail.EmailJob.Attachment;
 import com.greendelta.collaboration.platform.mail.EmailJob.EmbeddedImage;
 import com.greendelta.collaboration.service.SettingsService;
@@ -28,10 +29,7 @@ import com.sun.mail.smtp.SMTPMessage;
 public class EmailService implements Closeable {
 
 	private static final Logger log = LogManager.getLogger(EmailService.class);
-
 	private final int senderThreads = 1;
-	private final int mailsSentPerConnection = 10;
-	private final int connectionLifetimeMs = 60000;
 	private final GenericObjectPool<TransportHolder> pool;
 	private final SettingsService settingsService;
 
@@ -45,22 +43,26 @@ public class EmailService implements Closeable {
 	}
 
 	Transport getTransport() {
-		MailConfig config = settingsService.getMailConfig();
+		MailConfig config = settingsService.mailConfig;
 		if (config == null || !config.isValid())
 			return null;
-		boolean useAuth = !Strings.isNullOrEmpty(config.user);
+		String user = config.get(MailSetting.USER);
+		boolean useAuth = !Strings.isNullOrEmpty(user);
 		Transport transport = null;
 		try {
-			transport = config.getSession().getTransport(config.proto);
-			if (useAuth)
-				transport.connect(config.user, config.pass);
-			else
+			String proto = config.get(MailSetting.PROTO);
+			transport = config.getSession().getTransport(proto);
+			if (useAuth) {
+				transport.connect(user, config.get(MailSetting.PASS));
+			} else {
 				transport.connect();
+			}
 		} catch (Exception e) {
 			log.error("Error when trying to connect to transport", e);
 			try {
-				if (transport != null)
+				if (transport != null) {
 					transport.close();
+				}
 			} catch (Exception ex) {
 				log.error("Closing transport after exception failed: {}", ex.getMessage());
 			}
@@ -80,7 +82,7 @@ public class EmailService implements Closeable {
 	}
 
 	public void send(EmailJob mail) {
-		MailConfig config = settingsService.getMailConfig();
+		MailConfig config = settingsService.mailConfig;
 		if (config == null || !config.isValid()) {
 			log.info("Aborting mail sending, because of missing or invalid email config");
 			return;
@@ -115,20 +117,24 @@ public class EmailService implements Closeable {
 
 	private void send(EmailJob mail, Transport transport) throws Exception {
 		try {
-			MailConfig config = settingsService.getMailConfig();
+			MailConfig config = settingsService.mailConfig;
 			SMTPMessage message = new SMTPMessage(config.getSession());
 			message.setRecipient(RecipientType.TO, mail.recipient);
 			message.setSentDate(Calendar.getInstance().getTime());
 			message.setSubject(mail.subject, "utf-8");
-			message.setFrom(new InternetAddress(config.defaultFrom));
-			for (InternetAddress bcc : mail.bcc)
+			message.setFrom(new InternetAddress(config.get(MailSetting.DEFAULT_FROM)));
+			for (InternetAddress bcc : mail.bcc) {
 				message.addRecipient(RecipientType.BCC, bcc);
-			if (mail.isMixedContent())
+			}
+			if (mail.isMixedContent()) {
 				message.setContent(createMixedContent(mail));
-			else
+			} else {
 				message.setContent(createContent(mail));
-			if (!Strings.isNullOrEmpty(config.defaultReplyTo))
-				message.setReplyTo(new InternetAddress[] { new InternetAddress(config.defaultReplyTo) });
+			}
+			String defaultReplyTo = config.get(MailSetting.DEFAULT_REPLY_TO);
+			if (!Strings.isNullOrEmpty(defaultReplyTo)) {
+				message.setReplyTo(new InternetAddress[] { new InternetAddress(defaultReplyTo) });
+			}
 			message.saveChanges();
 			transport.sendMessage(message, message.getAllRecipients());
 		} catch (Exception e) {
@@ -142,18 +148,21 @@ public class EmailService implements Closeable {
 		if (mail.textContent != null || mail.htmlContent == null) {
 			String textContent = mail.textContent != null ? mail.textContent : "";
 			content.addBodyPart(createPart(textContent, "plain"));
-		} else if (mail.htmlContent != null)
+		} else if (mail.htmlContent != null) {
 			content.addBodyPart(createRelated(mail, mail.htmlContent, "html"));
-		for (Attachment attachment : mail.attachments)
+		}
+		for (Attachment attachment : mail.attachments) {
 			content.addBodyPart(createPart(attachment));
+		}
 		return content;
 	}
 
 	private MimeMultipart createMixedContent(EmailJob mail) throws Exception {
 		MimeMultipart content = new MimeMultipart();
 		content.addBodyPart(createAlternative(mail));
-		for (Attachment attachment : mail.attachments)
+		for (Attachment attachment : mail.attachments) {
 			content.addBodyPart(createPart(attachment));
+		}
 		return content;
 	}
 
@@ -167,8 +176,9 @@ public class EmailService implements Closeable {
 	private MimeBodyPart createRelated(EmailJob mail, String text, String type) throws Exception {
 		MimeMultipart related = new MimeMultipart("related");
 		related.addBodyPart(createPart(text, type));
-		for (EmbeddedImage image : mail.embeddedImages)
+		for (EmbeddedImage image : mail.embeddedImages) {
 			related.addBodyPart(createPart(image));
+		}
 		return wrap(related);
 	}
 
@@ -197,18 +207,6 @@ public class EmailService implements Closeable {
 		part.setContent(image.data, "image/" + image.imageType);
 		part.setDisposition(MimeBodyPart.INLINE);
 		return part;
-	}
-
-	int getSenderThreads() {
-		return senderThreads;
-	}
-
-	int getMailsSentPerConnection() {
-		return mailsSentPerConnection;
-	}
-
-	int getConnectionLifetimeMs() {
-		return connectionLifetimeMs;
 	}
 
 }

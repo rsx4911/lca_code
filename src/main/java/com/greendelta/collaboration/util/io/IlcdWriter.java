@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -18,42 +19,29 @@ import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
 import org.openlca.ilcd.io.DataStore;
 import org.openlca.ilcd.io.ZipStore;
-import org.openlca.util.BinUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.FetchService;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.search.SearchService.DeletedFilter;
-import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
+import com.greendelta.collaboration.service.repository.Datasets.Binary;
+import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.Repository;
 
 public class IlcdWriter implements DatasetWriter {
 
 	private final Logger log = LogManager.getLogger(getClass());
-	private final FetchService fetchService;
-	private final HistoryService historyService;
-	private final SearchService searchService;
 	private final Repository repo;
 	private final JsonStore jsonStore;
 	private final DataStore ilcdStore;
 	private final Json2IlcdStore converter;
 	private final Gson gson = new Gson();
 	private final File tmpFile;
-	private final String commitId;
+	private final Commit commit;
 	private final Set<String> processed = new HashSet<>();
 	private Set<FileReference> collectedRefs;
 
-	public IlcdWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
-			Repository repo, String commitId) throws IOException {
-		this.fetchService = fetchService;
-		this.historyService = historyService;
-		this.searchService = searchService;
+	public IlcdWriter(Repository repo, Commit commit) throws IOException {
 		this.repo = repo;
-		this.commitId = commitId;
+		this.commit = commit;
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, UUID.randomUUID().toString() + ".zip");
 		this.ilcdStore = new ZipStore(tmpFile);
@@ -67,13 +55,17 @@ public class IlcdWriter implements DatasetWriter {
 			return;
 		processed.add(type.name() + refId);
 		this.collectedRefs = new HashSet<>();
-		IndexEntry entry = searchService.get(repo, type, refId, commitId);
-		boolean exists = entry != null && entry.action != IndexAction.DELETE;
-		if (!exists) {
-			Commit lastCommit = historyService.getLastCommitBefore(repo, type, refId, commitId);
-			if (lastCommit == null)
-				return;
-		}
+		Descriptor desciptor = repo.descriptors.get(type, refId, commit);
+		if (desciptor == null)
+			return;
+		// TODO check if this is required still
+		// boolean exists = entry != null && entry.action != IndexAction.DELETE;
+		// if (!exists) {
+		// Commit lastCommit = repo.commits.getLastBefore(type, refId,
+		// commit.id);
+		// if (lastCommit == null)
+		// return;
+		// }
 		log.trace("Exporting {} {} to ilcd", type, refId);
 		JsonObject obj = jsonStore.get(type.getModelClass().getSimpleName(), refId);
 		if (obj == null)
@@ -114,13 +106,13 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public JsonObject get(String type, String refId) {
 			ModelType modelType = getType(type);
-			String data = fetchService.getDataset(repo, modelType, refId, commitId);
+			String data = repo.datasets.get(modelType, refId, commit.id);
 			if (data != null)
 				return gson.fromJson(data, JsonObject.class);
-			Commit lastCommit = historyService.getLastCommitBefore(repo, modelType, refId, commitId);
+			Commit lastCommit = repo.commits.getLastBefore(modelType, refId, commit.id);
 			if (lastCommit == null)
 				return null;
-			data = fetchService.getDataset(repo, modelType, refId, lastCommit.id);
+			data = repo.datasets.get(modelType, refId, lastCommit.id);
 			if (data == null)
 				return null;
 			return gson.fromJson(data, JsonObject.class);
@@ -128,27 +120,22 @@ public class IlcdWriter implements DatasetWriter {
 
 		@Override
 		public byte[] getExternalFile(String sourceRefId, String filename) {
-			Commit lastCommit = historyService.getLastCommit(repo, ModelType.SOURCE, sourceRefId, commitId);
+			Commit lastCommit = repo.commits.getLast(ModelType.SOURCE, sourceRefId, commit.id);
 			if (lastCommit == null)
 				return null;
-			File file = fetchService.getBinFile(repo, ModelType.SOURCE, sourceRefId, lastCommit.id, filename);
-			if (!file.exists())
+			Binary binary = repo.datasets.getBinary(ModelType.SOURCE, sourceRefId, lastCommit.id, filename);
+			if (binary == null)
 				return null;
-			try {
-				return BinUtils.gunzip(Files.readAllBytes(file.toPath()));
-			} catch (IOException e) {
-				log.error("Error reading bin file", e);
-				return null;
-			}
+			return binary.data;
 		}
 
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			IndexIterator entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId, new DeletedFilter());
+			Iterator<Descriptor> entries = repo.descriptors.get(ModelType.PARAMETER, commit);
 			while (entries.hasNext()) {
-				IndexEntry entry = entries.next();
-				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);
+				Descriptor descriptor = entries.next();
+				String data = repo.datasets.get(descriptor.type, descriptor.refId, descriptor.commitId);
 				if (data == null)
 					continue;
 				parameters.add(gson.fromJson(data, JsonObject.class));

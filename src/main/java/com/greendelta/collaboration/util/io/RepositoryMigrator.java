@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.util.io;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,6 +8,10 @@ import org.openlca.cloud.api.CredentialSupplier;
 import org.openlca.cloud.api.RepositoryClient;
 import org.openlca.cloud.api.RepositoryConfig;
 import org.openlca.cloud.util.WebRequests.WebRequestException;
+
+import com.greendelta.collaboration.service.IndexService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 
 public class RepositoryMigrator {
 

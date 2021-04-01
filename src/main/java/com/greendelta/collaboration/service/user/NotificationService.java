@@ -14,17 +14,17 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Notification;
 import com.greendelta.collaboration.model.Permission;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.Imprint;
+import com.greendelta.collaboration.service.repository.Repository;
 
 public class NotificationService {
 
@@ -429,14 +429,14 @@ public class NotificationService {
 	public NotificationJob userRegistered(User user) {
 		String subject = "A new user registered";
 		String message = "A new user with username " + user.username + " registered.";
-		if (settingsService.is(Key.USER_REGISTRATION_APPROVAL_ENABLED)) {
+		if (settingsService.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED)) {
 			subject += " and is awaiting approval";
 			String profileUrl = getBaseUrl() + "/administration/user/profile/" + user.username;
 			message += " To approve the new user account you need to active the user at <a href=\"" + profileUrl + "\">"
 					+ profileUrl + "</a>";
 		}
 		Set<User> managers = getManagerUsers(Notification.USER_REGISTERED, true);
-		Set<EmailJob> emails = createEmails(subject, message, managers);		
+		Set<EmailJob> emails = createEmails(subject, message, managers);
 		return new NotificationJob(emails);
 	}
 
@@ -578,7 +578,7 @@ public class NotificationService {
 		content += "<div style=\"font-size:80%;\">This message was automatically sent to you by the system. If you do not wish to receive this type of notification again, you can configure the notification settings in your <a href=\""
 				+ getBaseUrl() + "/user/notifications\">profile</a>" + "<br>";
 		content += "<hr>";
-		Imprint imprint = settingsService.getImprint();
+		Imprint imprint = settingsService.imprint;
 		if (imprint == null)
 			return content;
 		content += imprint.toEmailFooter();
@@ -586,7 +586,7 @@ public class NotificationService {
 	}
 
 	private String getBaseUrl() {
-		return settingsService.get(Key.SERVER_URL);
+		return settingsService.get(ServerSetting.SERVER_URL);
 	}
 
 	private Set<EmailJob> createEmails(String subject, String message, Set<User> recipients) {
@@ -679,7 +679,7 @@ public class NotificationService {
 		}
 
 		public void send() {
-			if (!settingsService.is(Key.NOTIFICATIONS_ENABLED))
+			if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
 				return;
 			for (EmailJob job : jobs) {
 				emailService.send(job);

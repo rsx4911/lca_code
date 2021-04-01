@@ -11,6 +11,8 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
@@ -143,7 +145,7 @@ public class DeleteService {
 
 	public void deleteLibrary(String name) {
 		for (Repository repo : repoService.getAllAccessible()) {
-			repo.setRestriction(name, null);
+			repoService.setRestriction(repo, name, null);
 		}
 		libraryService.removeLibrary(name);
 	}

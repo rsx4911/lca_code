@@ -13,9 +13,8 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ModelTypes;
@@ -29,23 +28,21 @@ import com.greendelta.search.wrapper.SearchSorting;
 public class BrowseService {
 
 	private final SearchService searchService;
-	private final HistoryService historyService;
 	private final SettingsService settingsService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	public BrowseService(SearchService searchService, HistoryService historyService, SettingsService settingsService) {
+	public BrowseService(SearchService searchService, SettingsService settingsService) {
 		this.searchService = searchService;
-		this.historyService = historyService;
 		this.settingsService = settingsService;
 	}
 
 	public List<ObjectMap> getRootContent(BrowseParameter params) {
 		List<ObjectMap> types = new ArrayList<>();
-		for (ModelType type : settingsService.getModelTypes()) {
+		for (ModelType type : settingsService.serverConfig.getModelTypes()) {
 			if (type == ModelType.CATEGORY)
 				continue;
-			if (!params.repo.has(type))
+			if (!params.repo.descriptors.has(type))
 				continue;
 			if (getUncategorized(type, params).isEmpty())
 				continue;
@@ -193,7 +190,7 @@ public class BrowseService {
 		}
 		if (params.commitId == null)
 			return builder.filter("mostRecent", SearchFilterValue.term(true));
-		Commit commit = historyService.getCommit(params.repo, params.commitId);
+		Commit commit = params.repo.commits.get(params.commitId);
 		if (commit == null)
 			return builder;
 		builder.filter("commits", SearchFilterValue.term(params.commitId));

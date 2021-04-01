@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,17 +31,12 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
-import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.IndexService;
-import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.Repository.RepositorySetting;
-import com.greendelta.collaboration.service.RepositoryMigrator;
-import com.greendelta.collaboration.service.RepositoryMigrator.MigrateResponse;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.search.SearchService;
@@ -55,6 +51,8 @@ import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
+import com.greendelta.collaboration.util.io.RepositoryMigrator;
+import com.greendelta.collaboration.util.io.RepositoryMigrator.MigrateResponse;
 import com.greendelta.collaboration.webservice.Module;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Client;
@@ -72,34 +70,27 @@ public class RepositoryResource {
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final AccessService accessService;
-	private final HistoryService historyService;
 	private final SearchService searchService;
 	private final BrowseService browseService;
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-	private final LibraryService libraryService;
-	private final FetchService fetchService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, MembershipService membershipService,
-			UserService userService, AccessService accessService, HistoryService historyService,
-			SearchService searchService, BrowseService browseService, IndexService indexService,
-			DeleteService deleteService, NotificationService notificationService, LibraryService libraryService,
-			FetchService fetchService) {
+			UserService userService, AccessService accessService, SearchService searchService,
+			BrowseService browseService, IndexService indexService, DeleteService deleteService,
+			NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.accessService = accessService;
-		this.historyService = historyService;
 		this.searchService = searchService;
 		this.browseService = browseService;
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
-		this.libraryService = libraryService;
-		this.fetchService = fetchService;
 	}
 
 	@GET
@@ -130,7 +121,7 @@ public class RepositoryResource {
 	private ObjectMap putRepositoryInfo(ObjectMap map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.toId()));
 		map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
-		map.put("commits", historyService.getCommits(repo).size());
+		map.put("commits", repo.commits.get().size());
 		map.put("members", membershipService.getMemberships(repo.toId()).size());
 		return map;
 	}
@@ -151,7 +142,8 @@ public class RepositoryResource {
 		mappedRepo.put("userCanSetSettings", accessService.canSetSettings(id));
 		mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(id));
 		mappedRepo.put("size", repo.getSize());
-		mappedRepo.put("libraryRestrictions", libraryService.getRestrictions(repo));
+		mappedRepo.put("libraryRestrictions",
+				repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS, new HashMap<String, Role>()));
 		return Respond.ok(mappedRepo);
 	}
 
@@ -233,7 +225,7 @@ public class RepositoryResource {
 		}
 		indexService.index(repo);
 		repo = service.get(group, name);
-		if (repo.settings.publicAccess) {
+		if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 			service.setSetting(repo, RepositorySetting.PUBLIC_ACCESS, false);
 		}
 		return Respond.ok(new HashMap<>());
@@ -273,14 +265,15 @@ public class RepositoryResource {
 			return response;
 		Repository from = service.get(group, name);
 		Repository to = service.create(newGroup, newName);
-		List<Commit> commits = historyService.getCommitsUntil(from, commitId);
-		if (!service.clone(from, to, commits)) {
+		Commit commit = from.commits.get(commitId);
+		if (!service.clone(from, to, commit)) {
 			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
 		IndexIterator entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
-		List<String> commitIds = Collections.convertToList(commits, commit -> commit.id);
+		List<Commit> commits = from.commits.getUntil(commitId);
+		List<String> commitIds = Collections.convertToList(commits, c -> c.id);
 		while (entries.hasNext()) {
 			IndexEntry next = entries.next();
 			if (!commitIds.contains(next.commitId))
@@ -367,17 +360,19 @@ public class RepositoryResource {
 			Map<String, Object> data) {
 		Object value = data.get("value");
 		Repository repo = service.get(group, name);
-		service.setSetting(repo, setting, value);
 		if (setting == RepositorySetting.TAGS) {
 			Set<String> documentIds = searchService.getDocumentIds(repo);
-			List<String> tags = RepositorySetting.TAGS.parse(value);
+			List<String> tags = parseStringList(value);
 			if (tags != null && tags.isEmpty()) {
 				tags = null;
 			}
 			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
 			searchService.update(documentIds, update);
+			value = RepositorySetting.TAGS.toString(value);
 		}
-		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting) && repo.settings.publicAccess) {
+		service.setSetting(repo, setting, value);
+		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)
+				&& repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 			try {
 				handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
 			} catch (IOException e) {
@@ -387,6 +382,17 @@ public class RepositoryResource {
 		return Respond.ok(new HashMap<>());
 	}
 
+	@SuppressWarnings("unchecked")
+	private static List<String> parseStringList(Object value) {
+		if (value == null)
+			return new ArrayList<>();
+		if (value instanceof String[])
+			return Arrays.asList((String[]) value);
+		if (value instanceof List)
+			return (List<String>) value;
+		return new ArrayList<>();
+	}
+
 	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
 		File file = repo.getCachedJsonFile();
 		if (file.exists()) {
@@ -394,7 +400,7 @@ public class RepositoryResource {
 		}
 		if (!create)
 			return;
-		RepositoryJsonWriter.writeCurrent(fetchService, searchService, historyService, repo);
+		RepositoryJsonWriter.writeCurrent(repo);
 	}
 
 	@PUT
@@ -405,7 +411,7 @@ public class RepositoryResource {
 			@PathParam("library") String library,
 			@PathParam("role") Role role) {
 		Repository repo = service.get(group, name);
-		libraryService.setRestriction(repo, library, role);
+		service.setRestriction(repo, library, role);
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -416,7 +422,7 @@ public class RepositoryResource {
 			@PathParam("name") String name,
 			@PathParam("library") String library) {
 		Repository repo = service.get(group, name);
-		libraryService.setRestriction(repo, library, null);
+		service.setRestriction(repo, library, null);
 		return Respond.ok(new HashMap<>());
 	}
 

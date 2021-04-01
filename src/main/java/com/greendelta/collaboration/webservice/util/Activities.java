@@ -11,7 +11,7 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.ObjectMap;
 

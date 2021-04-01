@@ -13,8 +13,8 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.platform.guice.ShiroModule;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
 import com.greendelta.collaboration.service.SettingsService;
@@ -39,7 +39,7 @@ public class DefaultServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		boolean isMaintenanceMode = settingsService.is(Key.MAINTENANCE_MODE);
+		boolean isMaintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
 		String url = request.getRequestURL().toString();
 		boolean isLoginUrl = url.endsWith("/login") || url.endsWith("/reset-password") || url.endsWith("/sign-up");
 		boolean isJobUrl = url.endsWith("/job");
@@ -50,7 +50,7 @@ public class DefaultServlet extends HttpServlet {
 			return;
 		}
 		if (isLoginUrl && !user.hasId()) {
-			if (!settingsService.is(Key.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
+			if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
 				response.sendRedirect("/login");
 				return;
 			}

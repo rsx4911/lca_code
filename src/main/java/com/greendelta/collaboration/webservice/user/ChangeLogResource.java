@@ -19,8 +19,8 @@ import org.elasticsearch.common.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.ChangeLogService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;
 

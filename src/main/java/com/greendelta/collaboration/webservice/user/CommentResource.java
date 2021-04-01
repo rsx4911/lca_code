@@ -30,12 +30,11 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
@@ -57,20 +56,18 @@ public class CommentResource {
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 	private final SearchService searchService;
-	private final HistoryService historyService;
 	private final SettingsService settingsService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
 			AccessService accessService, NotificationService notificationService, SearchService searchService,
-			HistoryService historyService, SettingsService settingsService) {
+			SettingsService settingsService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 		this.searchService = searchService;
-		this.historyService = historyService;
 		this.settingsService = settingsService;
 	}
 
@@ -83,7 +80,7 @@ public class CommentResource {
 			@QueryParam("page") int page,
 			@QueryParam("pageSize") int pageSize,
 			@QueryParam("includeReplies") @DefaultValue("false") boolean includeReplies) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Repository repo = repoService.get(group, name);
 		List<Comment> comments = includeReplies ? service.getAllFor(repo) : service.getAllTopSorted(repo, filter);
@@ -103,26 +100,26 @@ public class CommentResource {
 			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
-		Repository repository = repoService.get(group, name);
-		List<Comment> comments = service.getAllFor(repository, type, refId, commitId);
+		Repository repo = repoService.get(group, name);
+		List<Comment> comments = service.getAllFor(repo, type, refId, commitId);
 		Map<String, Object> result = new HashMap<>();
-		result.put("comments", map(repository, comments, false));
-		result.put("canComment", accessService.canCommentIn(repository.toId()));
-		result.put("canApprove", accessService.canManageCommentsIn(repository.toId()));
+		result.put("comments", map(repo, comments, false));
+		result.put("canComment", accessService.canCommentIn(repo.toId()));
+		result.put("canApprove", accessService.canManageCommentsIn(repo.toId()));
 		return Respond.ok(result);
 	}
 
-	private List<ObjectMap> map(Repository repository, List<Comment> comments, boolean putReplyCount) {
+	private List<ObjectMap> map(Repository repo, List<Comment> comments, boolean putReplyCount) {
 		List<ObjectMap> mapped = new ArrayList<>();
 		if (comments.isEmpty())
 			return mapped;
-		String repoId = repository.toId();
+		String repoId = repo.toId();
 		Set<String> ids = new HashSet<>();
 		for (Comment comment : comments) {
 			DatasetField field = comment.field;
-			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+			Commit commit = repo.commits.getLast(field.modelType, field.refId, field.commitId);
 			ids.add(IndexEntry.toIndexId(repoId, field.modelType, field.refId, commit.id));
 		}
 		List<IndexEntry> entries = searchService.get(ids);
@@ -133,7 +130,7 @@ public class CommentResource {
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
 			DatasetField field = comment.field;
-			Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
+			Commit commit = repo.commits.getLast(field.modelType, field.refId, field.commitId);
 			String key = IndexEntry.toIndexId(repoId, comment.field.modelType, comment.field.refId, commit.id);
 			map.put("dsPath", idToPath.get(key));
 			if (putReplyCount) {
@@ -147,7 +144,7 @@ public class CommentResource {
 	@GET
 	@Path("{id}/replies")
 	public Response getReplies(@PathParam("id") long id) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Comment comment = service.get(id);
 		Repository repo = repoService.get(comment.repositoryPath);
@@ -165,12 +162,12 @@ public class CommentResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId,
 			Map<String, Object> data) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		ObjectMap map = ObjectMap.fromMap(data);
-		Repository repository = repoService.get(group, name);
+		Repository repo = repoService.get(group, name);
 		Comment comment = new Comment();
-		comment.repositoryPath = repository.toId();
+		comment.repositoryPath = repo.toId();
 		comment.user = userService.getCurrentUser();
 		comment.text = map.getString("text");
 		comment.field = new DatasetField();
@@ -188,36 +185,36 @@ public class CommentResource {
 			comment = service.release(comment.getId());
 		}
 		notificationService.fieldCommented(comment).send();
-		return Respond.ok(map(comment, repository));
+		return Respond.ok(map(comment, repo));
 	}
 
 	@PUT
 	@Path("{id}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response edit(@PathParam("id") long id, Map<String, Object> data) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		ObjectMap map = ObjectMap.fromMap(data);
 		Comment comment = service.update(id, map.getString("text"));
 		if (comment == null)
 			return Respond.notFound();
-		Repository repository = repoService.get(comment.repositoryPath);
+		Repository repo = repoService.get(comment.repositoryPath);
 		if (map.getBoolean("released")) {
 			comment = service.release(id);
 		}
-		return Respond.ok(map(comment, repository));
+		return Respond.ok(map(comment, repo));
 	}
-	
+
 	@PUT
 	@Path("{id}/release")
 	public Response release(@PathParam("id") long id) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Comment comment = service.release(id);
 		if (comment == null)
 			return Respond.notFound();
-		Repository repository = repoService.get(comment.repositoryPath);
-		return Respond.ok(map(comment, repository));
+		Repository repo = repoService.get(comment.repositoryPath);
+		return Respond.ok(map(comment, repo));
 	}
 
 	@PUT
@@ -225,30 +222,30 @@ public class CommentResource {
 	public Response changeVisibility(
 			@PathParam("id") long id,
 			@PathParam("role") String roleString) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		Role role = "null".equals(roleString) ? null : Role.valueOf(roleString);
 		Comment comment = service.changeVisibility(id, role);
 		if (comment == null)
 			return Respond.notFound();
-		Repository repository = repoService.get(comment.repositoryPath);
-		return Respond.ok(map(comment, repository));
+		Repository repo = repoService.get(comment.repositoryPath);
+		return Respond.ok(map(comment, repo));
 	}
 
 	@DELETE
 	@Path("{id}")
 	public Response delete(@PathParam("id") long id) {
-		if (!settingsService.is(Key.COMMENTS_ENABLED))
+		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Comment feature not enabled");
 		service.delete(id);
 		return Respond.ok(Collections.emptyMap());
 	}
 
-	private ObjectMap map(Comment comment, Repository repository) {
+	private ObjectMap map(Comment comment, Repository repo) {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
-		Commit commit = historyService.getLastCommit(repository, field.modelType, field.refId, field.commitId);
-		IndexEntry ds = searchService.get(repository, field.modelType, field.refId, commit.id);
+		Commit commit = repo.commits.getLast(field.modelType, field.refId, field.commitId);
+		IndexEntry ds = searchService.get(repo, field.modelType, field.refId, commit.id);
 		map.put("dsPath", ds.fullPath);
 		return map;
 	}

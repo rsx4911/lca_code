@@ -29,10 +29,8 @@ import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.FetchService;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
 import com.greendelta.collaboration.service.user.UserService;
@@ -45,17 +43,12 @@ public class BrowseResource {
 	private static final Logger log = LogManager.getLogger(BrowseResource.class);
 	private final BrowseService service;
 	private final RepositoryService repoService;
-	private final FetchService fetchService;
-	private final HistoryService historyService;
 	private final UserService userService;
 
 	@Inject
-	public BrowseResource(BrowseService service, RepositoryService repoService, FetchService fetchService,
-			HistoryService historyService, UserService userService) {
+	public BrowseResource(BrowseService service, RepositoryService repoService, UserService userService) {
 		this.service = service;
 		this.repoService = repoService;
-		this.fetchService = fetchService;
-		this.historyService = historyService;
 		this.userService = userService;
 	}
 
@@ -146,16 +139,16 @@ public class BrowseResource {
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		Commit commit = historyService.getLastCommit(repo, type, refId, commitId);
+		Commit commit = repo.commits.getLast(type, refId, commitId);
 		if (commit == null)
 			return Respond.notFound(notFoundMessage(type, refId, commitId));
 		if (commitId == null) {
-			commitId = historyService.getLastCommit(repo, type, refId).id;
+			commitId = repo.commits.getLastId(type, refId);
 		}
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn && !commit.id.equals(commitId))
 			return Respond.unauthorized();
-		String dataset = fetchService.getDataset(repo, type, refId, commit.id);
+		String dataset = repo.datasets.get(type, refId, commit.id);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
 			IndexEntry entry = service.getMostRecent(repo, type, refId, commit.id);
@@ -170,7 +163,7 @@ public class BrowseResource {
 		}
 		log.info("Loading {} {} of repository {}/{} (commit id: {})", type, refId, group, name, commitId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
-		BrowseReferenceFiller references = new BrowseReferenceFiller(service, fetchService, repo, commitId);
+		BrowseReferenceFiller references = new BrowseReferenceFiller(service, repo, commitId);
 		references.fillReferencedElements(json);
 		if (loggedIn) {
 			json.add("commitId", new JsonPrimitive(commitId));

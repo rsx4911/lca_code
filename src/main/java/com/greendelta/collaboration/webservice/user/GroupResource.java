@@ -23,9 +23,10 @@ import org.openlca.cloud.error.UnauthorizedAccessException;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.GroupService.GroupSettings;
+import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -72,9 +73,9 @@ public class GroupResource {
 		User user = userService.getCurrentUser();
 		return Respond.ok(SearchResults.convert(result, group -> {
 			ObjectMap map = ObjectMap.fromMap(Collections.singletonMap("name", group));
-			GroupSettings settings = service.getSettings(group);
-			map.put("settings", settings);
-			map.put("label", settings.label != null ? settings.label : group);
+			Settings<GroupSetting> settings = service.getSettings(group);
+			map.put("settings", settings.toMap());
+			map.put("label", settings.get(GroupSetting.LABEL, group));
 			if (module != Module.DASHBOARD)
 				return map;
 			map.put("role", membershipService.getRole(user, group));
@@ -149,12 +150,12 @@ public class GroupResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response setSetting(
 			@PathParam("name") String name,
-			@PathParam("setting") String setting,
+			@PathParam("setting") GroupSetting setting,
 			Map<String, Object> data) {
 		String value = data.get("value").toString();
 		if (!service.exists(name))
 			return Respond.notFound();
-		service.setSetting(name, setting, value);
+		service.getSettings(name).set(setting, value);
 		return Respond.ok(new HashMap<>());
 	}
 	

@@ -20,9 +20,10 @@ import org.openlca.util.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;
@@ -61,7 +62,7 @@ public class LibraryResource {
 
 	private Response check(String group, String name, List<String> refIds) {
 		Repository repo = repoService.get(group, name);
-		Map<String, Role> restrictedTo = service.getRestrictions(repo);
+		Map<String, Role> restrictedTo = repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS);
 		if (restrictedTo.isEmpty())
 			return Respond.noContent();
 		User user = userService.getCurrentUser();

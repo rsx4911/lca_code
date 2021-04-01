@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.Setting.Key;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -41,7 +41,7 @@ public class MaintenanceModeFilter implements Filter {
 			return;
 		}
 		HttpServletRequest request = (HttpServletRequest) servletRequest;
-		boolean maintenanceMode = settingsService.is(com.greendelta.collaboration.model.Setting.Key.MAINTENANCE_MODE);
+		boolean maintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
 		if (maintenanceMode) {
 			String url = request.getRequestURL().toString();
 			boolean isLoginUrl = url.endsWith("/ws/public/login");
@@ -49,7 +49,7 @@ public class MaintenanceModeFilter implements Filter {
 			if (!isLoginUrl && !user.isAdmin()) {
 				HttpServletResponse response = (HttpServletResponse) servletResponse;
 				response.setStatus(406);
-				String message = settingsService.get(Key.MAINTENANCE_MESSAGE);
+				String message = settingsService.get(ServerSetting.MAINTENANCE_MESSAGE);
 				response.getWriter().print(message);
 				return;
 			}

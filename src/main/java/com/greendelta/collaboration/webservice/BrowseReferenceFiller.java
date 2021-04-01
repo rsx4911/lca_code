@@ -17,22 +17,19 @@ import com.google.gson.JsonPrimitive;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
-import com.greendelta.collaboration.service.FetchService;
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.search.BrowseService;
 
 class BrowseReferenceFiller {
 
 	private final BrowseService browseService;
-	private final FetchService fetchService;
 	private final Repository repo;
 	private final String commitId;
 	private final Map<String, IndexEntry> indexCache = new HashMap<>();
 	private final Map<String, JsonObject> dataCache = new HashMap<>();
 
-	BrowseReferenceFiller(BrowseService browseService, FetchService fetchService, Repository repo, String commitId) {
+	BrowseReferenceFiller(BrowseService browseService, Repository repo, String commitId) {
 		this.browseService = browseService;
-		this.fetchService = fetchService;
 		this.repo = repo;
 		this.commitId = commitId;
 	}
@@ -85,7 +82,7 @@ class BrowseReferenceFiller {
 	}
 
 	private void addFlowToReferenceExchange(JsonObject dataset, JsonObject oExchange) {
-		if (oExchange.has("flow") ||  !oExchange.has("internalId"))
+		if (oExchange.has("flow") || !oExchange.has("internalId"))
 			return;
 		if (!dataset.has("referenceProcess") || !dataset.get("referenceProcess").isJsonObject())
 			return;
@@ -102,7 +99,8 @@ class BrowseReferenceFiller {
 			if (!elem.isJsonObject())
 				continue;
 			JsonObject exchange = elem.getAsJsonObject();
-			if (!exchange.has("flow") || !exchange.has("internalId") || exchange.get("internalId").getAsInt() != internalId)
+			if (!exchange.has("flow") || !exchange.has("internalId")
+					|| exchange.get("internalId").getAsInt() != internalId)
 				continue;
 			oExchange.add("flow", exchange.get("flow"));
 			return;
@@ -146,7 +144,7 @@ class BrowseReferenceFiller {
 			break;
 		case SOCIAL_INDICATOR:
 		case NW_SET:
-			String json = fetchService.getDataset(repo, mType, id, indexEntry.commitId);
+			String json = repo.datasets.get(mType, id, indexEntry.commitId);
 			JsonObject dataset = new Gson().fromJson(json, JsonObject.class);
 			fillReferencedElements(dataset);
 			for (Entry<String, JsonElement> entry : dataset.entrySet()) {
@@ -290,7 +288,7 @@ class BrowseReferenceFiller {
 		IndexEntry indexEntry = getIndexEntry(type, refId);
 		if (indexEntry == null)
 			return null;
-		String data = fetchService.getDataset(repo, type, refId, indexEntry.commitId);
+		String data = repo.datasets.get(type, refId, indexEntry.commitId);
 		JsonObject object = new Gson().fromJson(data, JsonObject.class);
 		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
 				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)

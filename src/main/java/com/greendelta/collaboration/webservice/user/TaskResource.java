@@ -10,11 +10,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -46,7 +46,7 @@ public class TaskResource {
 
 	@GET
 	public Response getAll() {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
 		User user = userService.getCurrentUser();

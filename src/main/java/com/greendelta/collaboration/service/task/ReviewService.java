@@ -8,8 +8,8 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.service.Dao;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
 

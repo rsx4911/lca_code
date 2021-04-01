@@ -13,9 +13,9 @@ import org.openlca.core.model.ModelType;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
@@ -66,7 +66,7 @@ class QueryService {
 		builder.page(page);
 		builder.pageSize(pageSize);
 		scoreService.apply(builder);
-		SearchClient client = settingsService.getSearchConfig().getSearchClient();
+		SearchClient client = settingsService.searchConfig.getSearchClient();
 		SearchQuery searchQuery = builder.build();
 		SearchResult<Map<String, Object>> result = client.search(searchQuery);
 		if (loggedIn)
@@ -124,7 +124,7 @@ class QueryService {
 
 	private String[] getModelTypes() {
 		Set<String> types = new HashSet<>();
-		for (ModelType type : settingsService.getModelTypes()) {
+		for (ModelType type : settingsService.serverConfig.getModelTypes()) {
 			types.add(type.name());
 		}
 		return types.toArray(new String[types.size()]);

@@ -11,13 +11,10 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.error.UnauthorizedAccessException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 
 @Singleton
 public class LibraryService {
@@ -25,18 +22,16 @@ public class LibraryService {
 	private static final Logger log = LogManager.getLogger(LibraryService.class);
 	private final Map<String, Set<String>> refIds = new HashMap<>();
 	private final SettingsService settingsService;
-	private final AccessService accessService;
 
 	@Inject
-	public LibraryService(SettingsService settingsService, AccessService accessService) {
+	public LibraryService(SettingsService settingsService) {
 		this.settingsService = settingsService;
-		this.accessService = accessService;
 		resetLibraries();
 	}
 
 	public void resetLibraries() {
 		refIds.clear();
-		String path = settingsService.get(Key.LIBRARY_PATH);
+		String path = settingsService.get(ServerSetting.LIBRARY_PATH);
 		if (path == null || path.isEmpty())
 			return;
 		File dir = new File(path);
@@ -101,21 +96,7 @@ public class LibraryService {
 	}
 
 	private File getFile(String libraryName) {
-		return new File(settingsService.get(Key.LIBRARY_PATH) + File.separator + libraryName + ".txt");
-	}
-
-	public void setRestriction(Repository repo, String library, Role restriction) {
-		if (!accessService.canSetSettings(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
-		repo.setRestriction(library, restriction);
-	}
-
-	public Map<String, Role> getRestrictions(Repository repo) {
-		Map<String, Role> restrictions = new HashMap<>();
-		for (String library : getLibraryNames()) {
-			restrictions.put(library, repo.libraryRestrictions.get(library));
-		}
-		return restrictions;
+		return new File(settingsService.get(ServerSetting.LIBRARY_PATH) + File.separator + libraryName + ".txt");
 	}
 
 }

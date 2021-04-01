@@ -17,16 +17,15 @@ import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.task.ReviewService;
 import com.greendelta.collaboration.service.task.TaskService;
@@ -34,8 +33,8 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
-import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
+import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Reviews;
 
 @Path("task/review")
@@ -47,7 +46,6 @@ public class ReviewResource {
 	private final TaskService taskService;
 	private final UserService userService;
 	private final AccessService accessService;
-	private final HistoryService historyService;
 	private final BrowseService browseService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
@@ -55,13 +53,12 @@ public class ReviewResource {
 
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
-			AccessService accessService, HistoryService historyService, NotificationService notificationService,
-			RepositoryService repoService, BrowseService browseService, SettingsService settingsService) {
+			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
+			BrowseService browseService, SettingsService settingsService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
-		this.historyService = historyService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.browseService = browseService;
@@ -71,7 +68,7 @@ public class ReviewResource {
 	@GET
 	@Path("{id}")
 	public Response get(@PathParam("id") long id) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -81,7 +78,7 @@ public class ReviewResource {
 
 	@POST
 	public Response start(Review review) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Response invalid = checkValidity(review);
 		if (invalid != null)
@@ -95,7 +92,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}")
 	public Response update(Review review) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		if (Strings.isNullOrEmpty(review.name))
 			return Respond.invalid("name", "Missing input: Name");
@@ -114,7 +111,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/references")
 	public Response setReferences(@PathParam("id") long id, List<Reference> references) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -134,7 +131,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/complete")
 	public Response completeReview(@PathParam("id") long id) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -148,7 +145,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/cancel")
 	public Response cancelReview(@PathParam("id") long id) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -164,7 +161,7 @@ public class ReviewResource {
 	public Response assignReviewer(
 			@PathParam("id") long id,
 			@PathParam("username") String username) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -181,7 +178,7 @@ public class ReviewResource {
 	@PUT
 	@Path("{id}/complete/{username}")
 	public Response completeAssignment(@PathParam("id") long id, @PathParam("username") String username) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -197,7 +194,7 @@ public class ReviewResource {
 	public Response cancelAssignment(
 			@PathParam("id") long id,
 			@PathParam("username") String username) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -220,7 +217,7 @@ public class ReviewResource {
 		reference.refId = ref.id;
 		reference.commitId = ref.commitId;
 		if (reference.commitId == null) {
-			reference.commitId = historyService.getLastCommit(repo, ref.type, ref.id).id;
+			reference.commitId = repo.commits.getLastId(ref.type, ref.id);
 		}
 		reference.name = ref.name;
 		return reference;
@@ -232,7 +229,7 @@ public class ReviewResource {
 			@PathParam("id") long id,
 			@PathParam("referenceId") long referenceId,
 			@PathParam("value") boolean value) {
-		if (!settingsService.is(Key.TASKS_ENABLED))
+		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)

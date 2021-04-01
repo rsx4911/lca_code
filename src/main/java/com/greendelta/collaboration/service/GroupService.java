@@ -16,8 +16,11 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.GroupSetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -42,7 +45,7 @@ public class GroupService {
 	}
 
 	private String getRootPath() {
-		return settingsService.get(Key.REPOSITORY_PATH);
+		return settingsService.get(ServerSetting.REPOSITORY_PATH);
 	}
 
 	public boolean exists(String group) {
@@ -95,7 +98,9 @@ public class GroupService {
 		return true;
 	}
 
-	boolean delete(String group) {
+	public boolean delete(String group) {
+		if (!accessService.canDelete(group))
+			throw new UnauthorizedAccessException(group, "DELETE");
 		String path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
@@ -189,48 +194,15 @@ public class GroupService {
 		return path + File.separator + group;
 	}
 
-	public void setSetting(String group, String key, String value) {
-		if (!accessService.canSetSettings(group))
-			throw new UnauthorizedAccessException(group, "SET_SETTINGS");
-		GroupSettings settings = getSettings(group);
-		switch (key) {
-		case "label":
-			settings.label = value;
-			break;
-		case "description":
-			settings.description = value;
-			break;
-		}
-		File groupDir = new File(getRootPath(), group);
-		File file = new File(groupDir, "settings.json");
-		SettingsCache.saveSettings(file, settings);
-	}
-
-	public GroupSettings getSettings(String group) {
+	public Settings<GroupSetting> getSettings(String group) {
 		User user = userService.getForUsername(group);
 		if (user != null) {
-			GroupSettings settings = new GroupSettings();
-			settings.label = user.name;
-			settings.description = "The default group for user " + user.name;
+			Settings<GroupSetting> settings = settingsService.create();
+			settings.set(GroupSetting.LABEL, user.name);
+			settings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
 			return settings;
 		}
-		File groupDir = new File(getRootPath(), group);
-		File settingsFile = new File(groupDir, "settings.json");
-		GroupSettings settings = SettingsCache.loadSettings(settingsFile, GroupSettings.class);
-		if (settings == null)
-			return new GroupSettings();
-		return settings;
-	}
-
-	public static class GroupSettings {
-
-		public String label;
-		public String description;
-
-		private GroupSettings() {
-
-		}
-
+		return settingsService.get(SettingType.GROUP_SETTING, group, accessService::canRead);
 	}
 
 }

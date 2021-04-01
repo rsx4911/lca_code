@@ -13,17 +13,13 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.HistoryService;
-import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.search.SearchService.DeletedFilter;
-import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.io.DatasetWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
@@ -34,16 +30,11 @@ abstract class DownloadResource {
 	private static final Logger log = LogManager.getLogger(DownloadResource.class);
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
 	private final RepositoryService repoService;
-	private final HistoryService historyService;
-	private final SearchService searchService;
 	private final BrowseService browseService;
 	private final UserService userService;
 
-	protected DownloadResource(RepositoryService repoService, HistoryService historyService,
-			SearchService searchService, BrowseService browseService, UserService userService) {
+	protected DownloadResource(RepositoryService repoService, BrowseService browseService, UserService userService) {
 		this.repoService = repoService;
-		this.historyService = historyService;
-		this.searchService = searchService;
 		this.browseService = browseService;
 		this.userService = userService;
 	}
@@ -55,7 +46,7 @@ abstract class DownloadResource {
 			return Respond.notFound("commit " + commitId + " not found");
 		ModelType type = Client.getTypeFromPath(path);
 		String subPath = Client.getCategoryFromPath(path);
-		IndexIterator entries = searchService.getMostRecentUntilForPath(repo, type, subPath, commit.id, new DeletedFilter());
+		Iterator<Descriptor> entries = repo.descriptors.getForPath(type, commit, subPath);
 		return prepare(group, repository, commit.id, entries);
 	}
 
@@ -66,7 +57,7 @@ abstract class DownloadResource {
 			return Respond.notFound("commit " + commitId + " not found");
 		try {
 			log.info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commit.id);
-			DatasetWriter writer = createWriter(repo, commit.id);
+			DatasetWriter writer = createWriter(repo, commit);
 			writer.write(type, refId);
 			File tmpFile = writer.close();
 			String token = put(tmpFile, refId + "_" + commit.id + ".zip");
@@ -76,16 +67,17 @@ abstract class DownloadResource {
 		}
 	}
 
-	protected Response prepare(String group, String repository, String commitId, Iterator<? extends FileReference> requested) {
+	protected Response prepare(String group, String repository, String commitId,
+			Iterator<? extends Descriptor> requested) {
 		try {
 			Repository repo = repoService.get(group, repository);
 			Commit commit = getCommit(repo, commitId);
 			if (commit == null)
 				return Respond.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
-			DatasetWriter writer = createWriter(repo, commit.id);
+			DatasetWriter writer = createWriter(repo, commit);
 			while (requested.hasNext()) {
-				FileReference next = requested.next();
+				Descriptor next = requested.next();
 				writer.write(next.type, next.refId);
 			}
 			File tmpFile = writer.close();
@@ -97,23 +89,24 @@ abstract class DownloadResource {
 	}
 
 	private Commit getCommit(Repository repo, String commitId) {
-		Commit commit = historyService.getCommit(repo, commitId);
+		Commit commit = repo.commits.get(commitId);
 		if (commit != null)
 			return commit;
-		return historyService.getLastCommit(repo);
+		return repo.commits.getLast();
 	}
 
-	protected Iterator<FileReference> collectRefs(String group, String repository, List<Reference> references) {
+	protected Iterator<Descriptor> collectRefs(String group, String repository, List<Reference> references) {
 		Repository repo = repoService.get(group, repository);
-		ReferenceCollector<FileReference> collector = new ReferenceCollector<>(browseService, this::toRef);
+		ReferenceCollector<Descriptor> collector = new ReferenceCollector<>(browseService, this::toRef);
 		return collector.getReferences(repo, references).iterator();
 	}
 
-	private FileReference toRef(Reference ref) {
-		FileReference fRef = new FileReference();
-		fRef.type = ref.type;
-		fRef.refId = ref.id;
-		return fRef;
+	private Descriptor toRef(Reference ref) {
+		Descriptor descriptor = new Descriptor();
+		descriptor.type = ref.type;
+		descriptor.refId = ref.id;
+		descriptor.commitId = ref.commitId;
+		return descriptor;
 	}
 
 	protected String put(File file, String filename) {
@@ -124,7 +117,7 @@ abstract class DownloadResource {
 	}
 
 	private String getUserId(User user) {
-		if (user == null ||user.getId() == 0l || user.username == null)
+		if (user == null || user.getId() == 0l || user.username == null)
 			return "anonymous";
 		return user.username;
 	}
@@ -140,7 +133,7 @@ abstract class DownloadResource {
 		return Respond.ok(info.filename, tmpFile, () -> tmpFile.delete());
 	}
 
-	protected abstract DatasetWriter createWriter(Repository repo, String commitId) throws IOException;
+	protected abstract DatasetWriter createWriter(Repository repo, Commit commit) throws IOException;
 
 	private static class TokenInfo {
 		private final String path;

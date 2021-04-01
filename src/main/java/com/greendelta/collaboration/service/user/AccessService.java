@@ -14,10 +14,11 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Repository;
 
 public class AccessService {
 
@@ -63,7 +64,7 @@ public class AccessService {
 		}
 		List<Membership> memberships = membershipService.getMemberships(repository);
 		for (Membership membership : memberships) {
-			if (membership.role != Role.OWNER) 
+			if (membership.role != Role.OWNER)
 				continue;
 			if (membership.user != null && !membership.user.isDeactivated())
 				return true;
@@ -202,16 +203,15 @@ public class AccessService {
 	}
 
 	private boolean isPublic(String groupOrRepo) {
-		if (!settingsService.is(Key.PUBLIC_REPOSITORY_ENABLED))
+		if (!settingsService.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED))
 			return false;
-		String repositoryPath = settingsService.get(Key.REPOSITORY_PATH);
+		String repositoryPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
 		if (repositoryPath == null)
 			return false;
 		File dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {
-				Repository repo = Repository.get(repositoryPath, dir.getParentFile().getName(), dir.getName());
-				return repo.settings.publicAccess;
+				return settingsService.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
 			} catch (UnsupportedSchemaException e) {
 				return false;
 			}
@@ -220,8 +220,8 @@ public class AccessService {
 			return false;
 		for (File child : dir.listFiles()) {
 			try {
-				Repository repo = Repository.get(repositoryPath, groupOrRepo, child.getName());
-				if (repo.settings.publicAccess)
+				String id = Repository.toId(groupOrRepo, child.getName());
+				if (settingsService.is(RepositorySetting.PUBLIC_ACCESS, id))
 					return true;
 			} catch (RepositoryNotFoundException | UnsupportedSchemaException e) {
 				// ignore
