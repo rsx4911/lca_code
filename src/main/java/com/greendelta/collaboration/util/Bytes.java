@@ -18,7 +18,9 @@ public class Bytes {
 
 	private static final Logger log = LogManager.getLogger(Bytes.class);
 
-	public static byte[] readStream(InputStream file) {
+	public static byte[] read(InputStream file) {
+		if (file == null)
+			return null;
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			ByteStreams.copy(file, bos);

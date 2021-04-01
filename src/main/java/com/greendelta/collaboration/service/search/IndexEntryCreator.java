@@ -12,7 +12,6 @@ import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 import org.openlca.jsonld.Enums;
-import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
@@ -88,10 +87,7 @@ public class IndexEntryCreator {
 		entry.lastChange = dataset.lastChange;
 		entry.version = dataset.version;
 		entry.commits = new ArrayList<>(Collections.singletonList(commit.id));
-		String tags = repo.settings.get(RepositorySetting.TAGS);
-		if (Strings.notEmpty(tags)) {
-			entry.repositoryTags = RepositorySetting.TAGS.parse(tags);
-		}
+		entry.repositoryTags = repo.settings.get(RepositorySetting.TAGS);
 		// entry.datasetTags = dataset.tags != null ? new
 		// ArrayList<>(dataset.tags) : new ArrayList<>();
 		DataFill.categories(entry, dataset.categories);

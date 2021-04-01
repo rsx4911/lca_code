@@ -12,7 +12,7 @@ public enum MailSetting implements SettingKey {
 	DEFAULT_FROM(String.class),
 	DEFAULT_REPLY_TO(String.class);
 
-	public final Class<?> type;
+	private final Class<?> type;
 	private final Object defaultValue;
 
 	private <T> MailSetting(Class<T> type) {

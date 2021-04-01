@@ -6,6 +6,7 @@ import com.greendelta.collaboration.util.GsonTypes;
 
 public enum RepositorySetting implements SettingKey {
 
+	AVATAR(byte[].class),
 	PUBLIC_ACCESS(Boolean.class, false),
 	PROHIBIT_COMMITS(Boolean.class, false),
 	COMMENT_APPROVAL(Boolean.class, false),
@@ -25,9 +26,9 @@ public enum RepositorySetting implements SettingKey {
 	TYPE_OF_DATA(String.class),
 	LIBRARY_RESTRICTIONS(GsonTypes.ROLE_MAP);
 
-	public final Class<?> type;
-	public final Type subType;
-	public final Object defaultValue;
+	private final Class<?> type;
+	private final Type subType;
+	private final Object defaultValue;
 
 	private <T> RepositorySetting(Class<T> type) {
 		this(type, null);

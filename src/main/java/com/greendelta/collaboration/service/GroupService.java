@@ -1,19 +1,12 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.util.Directories;
 
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -29,7 +22,6 @@ import com.greendelta.search.wrapper.SearchResult;
 
 public class GroupService {
 
-	private final static Logger log = LogManager.getLogger(GroupService.class);
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
@@ -105,40 +97,6 @@ public class GroupService {
 		if (path == null || path.isEmpty())
 			return false;
 		return Directories.delete(new File(path));
-	}
-
-	public byte[] getAvatar(String group) {
-		if (!exists(group))
-			return null;
-		String path = getRootPath();
-		if (path == null || path.isEmpty())
-			return null;
-		File avatarFile = new File(path, group + File.separator + "avatar");
-		if (!avatarFile.exists())
-			return null;
-		try {
-			return Files.toByteArray(avatarFile);
-		} catch (IOException e) {
-			log.error("Error reading group avatar file", e);
-			return null;
-		}
-	}
-
-	public void setAvatar(String group, InputStream file) {
-		String path = getRootPath();
-		if (path == null || path.isEmpty())
-			return;
-		if (!accessService.canWrite(group))
-			throw new UnauthorizedAccessException(group, "WRITE");
-		File avatarFile = new File(path, group + File.separator + "avatar");
-		if (file != null)
-			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
-				ByteStreams.copy(file, output);
-			} catch (IOException e) {
-				log.error("Error writing group avatar file", e);
-			}
-		else if (avatarFile.exists())
-			avatarFile.delete();
 	}
 
 	public long getCount(boolean adminArea) {

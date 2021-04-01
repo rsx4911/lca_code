@@ -2,10 +2,11 @@ package com.greendelta.collaboration.model.settings;
 
 public enum GroupSetting implements SettingKey {
 
+	AVATAR(byte[].class),
 	LABEL(String.class),
 	DESCRIPTION(String.class);
 
-	public final Class<?> type;
+	private final Class<?> type;
 
 	private <T> GroupSetting(Class<T> type) {
 		this.type = type;

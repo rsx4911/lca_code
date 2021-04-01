@@ -7,7 +7,7 @@ public enum SearchSetting implements SettingKey {
 	INDEX_NAME(String.class, "collaboration-server"),
 	PORT(Integer.class, 9200);
 
-	public final Class<?> type;
+	private final Class<?> type;
 	private final Object defaultValue;
 
 	private <T> SearchSetting(Class<T> type, T defaultValue) {

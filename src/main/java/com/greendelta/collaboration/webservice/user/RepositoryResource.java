@@ -46,6 +46,7 @@ import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
@@ -153,8 +154,8 @@ public class RepositoryResource {
 	public Response getAvatar(
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
-		byte[] avatar = service.getAvatar(group, name);
-		return Respond.ok(avatar, "avatar-repository.png");
+		Repository repo = service.get(group, name);
+		return Respond.ok(repo.settings.get(RepositorySetting.AVATAR), "avatar-repository.png");
 	}
 
 	@GET
@@ -226,7 +227,7 @@ public class RepositoryResource {
 		indexService.index(repo);
 		repo = service.get(group, name);
 		if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-			service.setSetting(repo, RepositorySetting.PUBLIC_ACCESS, false);
+			repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 		}
 		return Respond.ok(new HashMap<>());
 	}
@@ -345,8 +346,8 @@ public class RepositoryResource {
 			@PathParam("group") String group,
 			@PathParam("name") String name,
 			@FormDataParam("file") InputStream file) {
-		service.get(group, name); // to ensure repo exists and user has access
-		service.setAvatar(group, name, file);
+		Repository repo = service.get(group, name);
+		repo.settings.set(RepositorySetting.AVATAR, Bytes.read(file));
 		return getAvatar(group, name);
 	}
 
@@ -368,9 +369,9 @@ public class RepositoryResource {
 			}
 			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
 			searchService.update(documentIds, update);
-			value = RepositorySetting.TAGS.toString(value);
+			value = tags;
 		}
-		service.setSetting(repo, setting, value);
+		repo.settings.set(setting, value);
 		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)
 				&& repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 			try {

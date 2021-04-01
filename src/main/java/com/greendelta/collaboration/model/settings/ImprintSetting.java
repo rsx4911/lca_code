@@ -15,7 +15,7 @@ public enum ImprintSetting implements SettingKey {
 	REGISTRATION(String.class),
 	VAT(String.class);
 
-	public final Class<?> type;
+	private final Class<?> type;
 
 	private <T> ImprintSetting(Class<T> type) {
 		this.type = type;

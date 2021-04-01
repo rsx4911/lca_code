@@ -73,10 +73,8 @@ public class RepositoryResource {
 	public Response getAvatar(
 			@PathParam("group") String group,
 			@PathParam("name") String name) {
-		@SuppressWarnings("unused") // to check access
 		Repository repo = service.get(group, name);
-		byte[] avatar = service.getAvatar(group, name);
-		return Respond.ok(avatar, "avatar-repository.png");
+		return Respond.ok(repo.settings.get(RepositorySetting.AVATAR), "avatar-repository.png");
 	}
 
 	@GET

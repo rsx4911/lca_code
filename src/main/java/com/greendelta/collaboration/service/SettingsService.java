@@ -131,13 +131,15 @@ public class SettingsService {
 
 	private <T extends SettingKey> void set(SettingType type, T key, String owner, Object value) {
 		Setting<T> setting = get(type, key, owner);
-		if (setting == null) {
+		boolean update = setting == null;
+		if (!update) {
 			setting = Setting.create(type, key, owner);
-			setting.value = key.toString(value);
-			dao.insert(setting);
-		} else {
-			setting.value = key.toString(value);
+		}
+		setting.setValue(value);
+		if (update) {
 			dao.update(setting);
+		} else {
+			dao.insert(setting);
 		}
 	}
 
@@ -332,7 +334,7 @@ public class SettingsService {
 				if (setting == null) {
 					value = key.getDefaultValue();
 				} else {
-					value = key.parse(setting.value);
+					value = setting.getValue();
 				}
 			}
 			if (value == null)
@@ -394,11 +396,11 @@ public class SettingsService {
 		private void checkAccess() {
 			if (type == null)
 				return;
-			if (canAccess == null || !canAccess.apply(owner))
+			if (canAccess == null || !canAccess.apply(owner)) {
 				if (owner == null)
 					throw new AuthorizationException();
-				else
-					throw new UnauthorizedAccessException(owner, "SET_SETTING");
+				throw new UnauthorizedAccessException(owner, "SET_SETTING");
+			}
 		}
 
 	}

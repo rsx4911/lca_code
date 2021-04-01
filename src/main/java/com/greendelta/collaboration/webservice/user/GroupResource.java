@@ -32,6 +32,7 @@ import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Bytes;
 import com.greendelta.collaboration.util.Names;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
@@ -98,7 +99,7 @@ public class GroupResource {
 		group.put("userCanWrite", accessService.canWrite(name));
 		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
 		group.put("userCanSetSettings", accessService.canSetSettings(name));
-		group.put("settings", service.getSettings(name));
+		group.put("settings", service.getSettings(name).toMap());
 		boolean isUserspace = user != null && name.equals(user.username);
 		group.put("userCanEditMembers", !isUserspace && accessService.canEditMembersOf(name));
 		return Respond.ok(group);
@@ -111,7 +112,7 @@ public class GroupResource {
 		boolean exists = service.exists(name);
 		if (!exists)
 			return Respond.notFound(name);
-		return Respond.ok(service.getAvatar(name), "avatar-group.png");
+		return Respond.ok(service.getSettings(name).get(GroupSetting.AVATAR), "avatar-group.png");
 	}
 
 	@POST
@@ -141,7 +142,7 @@ public class GroupResource {
 			@FormDataParam("file") InputStream file) {
 		if (!service.exists(name))
 			return Respond.notFound();
-		service.setAvatar(name, file);
+		service.getSettings(name).set(GroupSetting.AVATAR, Bytes.read(file));
 		return getAvatar(name);
 	}
 
@@ -158,7 +159,7 @@ public class GroupResource {
 		service.getSettings(name).set(setting, value);
 		return Respond.ok(new HashMap<>());
 	}
-	
+
 	@DELETE
 	@Path("{name}")
 	public Response delete(@PathParam("name") String name) {

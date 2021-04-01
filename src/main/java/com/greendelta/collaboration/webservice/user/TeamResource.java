@@ -77,7 +77,7 @@ public class TeamResource {
 		if (file == null)
 			team.avatar = null;
 		else
-			team.avatar = Bytes.readStream(file);
+			team.avatar = Bytes.read(file);
 		team = service.update(team);
 		return getAvatar(teamname);
 	}

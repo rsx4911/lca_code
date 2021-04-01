@@ -158,7 +158,7 @@ public class UserResource {
 		if (file == null)
 			user.avatar = null;
 		else
-			user.avatar = Bytes.readStream(file);
+			user.avatar = Bytes.read(file);
 		user = service.update(user);
 		return getAvatar(username);
 	}

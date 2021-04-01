@@ -3,8 +3,8 @@ package com.greendelta.collaboration.model.settings;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-import com.greendelta.collaboration.util.ModelTypes;
 import com.greendelta.collaboration.util.GsonTypes;
+import com.greendelta.collaboration.util.ModelTypes;
 
 public enum ServerSetting implements SettingKey {
 
@@ -55,9 +55,9 @@ public enum ServerSetting implements SettingKey {
 	// license agreement
 	LICENSE_AGREEMENT_TEXT(String.class);
 
-	public final Class<?> type;
-	public final Type subType;
-	public final Object defaultValue;
+	private final Class<?> type;
+	private final Type subType;
+	private final Object defaultValue;
 
 	private <T> ServerSetting(Class<T> type) {
 		this(type, null);

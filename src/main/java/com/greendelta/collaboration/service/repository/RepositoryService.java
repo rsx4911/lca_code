@@ -1,11 +1,9 @@
 package com.greendelta.collaboration.service.repository;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -25,16 +23,10 @@ import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.util.Directories;
-import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.openlca.jsonld.output.Context;
 import org.zeroturnaround.zip.ZipUtil;
 
 import com.google.common.base.Strings;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
@@ -59,7 +51,6 @@ import com.greendelta.search.wrapper.SearchResult;
 public class RepositoryService {
 
 	private static final Logger log = LogManager.getLogger(Repository.class);
-	private static final String VERSION = "1";
 
 	private final AccessService accessService;
 	private final MembershipService membershipService;
@@ -134,8 +125,6 @@ public class RepositoryService {
 		if (path == null)
 			throw new UnauthorizedAccessException(group, "WRITE");
 		new File(path).mkdirs();
-		putJsonContext(group, name);
-		putVersion(group, name);
 		membershipService.addMembership(currentUser, Repository.toId(group, name), Role.OWNER, true);
 		return get(group, name);
 	}
@@ -184,13 +173,6 @@ public class RepositoryService {
 		return true;
 	}
 
-	public void setSetting(Repository repo, RepositorySetting setting, Object value) {
-		String id = repo.toId();
-		if (!accessService.canSetSettings(id))
-			throw new UnauthorizedAccessException(id, "SET_SETTING");
-		repo.settings.set(setting, value);
-	}
-
 	public void setRestriction(Repository repo, String library, Role restriction) {
 		Map<String, Role> restrictions = repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS, new HashMap<>());
 		if (restriction == null) {
@@ -198,37 +180,7 @@ public class RepositoryService {
 		} else {
 			restrictions.put(library, restriction);
 		}
-		setSetting(repo, RepositorySetting.LIBRARY_RESTRICTIONS, restrictions);
-	}
-
-	private void putJsonContext(String group, String name) {
-		String path = getPath(group, name);
-		if (path == null)
-			return;
-		JsonObject context = Context.write(Schema.URI);
-		try {
-			File file = new File(path, "context.json");
-			file.createNewFile();
-			String json = new Gson().toJson(context);
-			byte[] data = json.getBytes("utf-8");
-			Files.write(data, file);
-		} catch (Exception e) {
-			log.error("Could not create context.json", e);
-		}
-	}
-
-	private void putVersion(String group, String name) {
-		String path = getPath(group, name);
-		if (path == null)
-			return;
-		File versionFile = new File(path, ".version");
-		if (versionFile.exists())
-			return;
-		try {
-			Files.write(VERSION.getBytes(Charset.forName("utf-8")), versionFile);
-		} catch (Exception e) {
-			log.error("Could not create .version file", e);
-		}
+		repo.settings.set(RepositorySetting.LIBRARY_RESTRICTIONS, restrictions);
 	}
 
 	public boolean delete(Repository repo) {
@@ -384,33 +336,6 @@ public class RepositoryService {
 		if (path == null)
 			return null;
 		return path + File.separator + group + File.separator + name;
-	}
-
-	public byte[] getAvatar(String group, String name) {
-		File avatarFile = get(group, name).getAvatarFile();
-		if (!avatarFile.exists())
-			return null;
-		try {
-			return Files.toByteArray(avatarFile);
-		} catch (IOException e) {
-			log.error("Error reading repository avatar file", e);
-			return null;
-		}
-	}
-
-	public void setAvatar(String group, String name, InputStream file) {
-		String repoId = Repository.toId(group, name);
-		if (!accessService.canWrite(repoId))
-			throw new UnauthorizedAccessException(Repository.toId(group, name), "WRITE");
-		File avatarFile = get(group, name).getAvatarFile();
-		if (file != null)
-			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
-				ByteStreams.copy(file, output);
-			} catch (IOException e) {
-				log.error("Error writing repository avatar file", e);
-			}
-		else if (avatarFile.exists())
-			avatarFile.delete();
 	}
 
 }
