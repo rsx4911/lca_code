@@ -136,7 +136,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 		}
 	}
 
-	private T getKey() {
+	public T getKey() {
 		return type.getSettingKey(name);
 	}
 

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
@@ -35,12 +36,13 @@ public class DeleteService {
 	private final SearchService searchService;
 	private final CommentService commentService;
 	private final LibraryService libraryService;
-	
+	private final SettingsService settingsService;
+
 	@Inject
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, SearchService searchService,
-			CommentService commentService, LibraryService libraryService) {
+			CommentService commentService, LibraryService libraryService, SettingsService settingsService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -52,6 +54,7 @@ public class DeleteService {
 		this.searchService = searchService;
 		this.commentService = commentService;
 		this.libraryService = libraryService;
+		this.settingsService = settingsService;
 	}
 
 	public void delete(User user) {
@@ -62,6 +65,7 @@ public class DeleteService {
 			delete(repository);
 		}
 		groupService.delete(user.username);
+		settingsService.get(SettingType.GROUP_SETTING, user.username, accessService::canSetSettings).delete();
 		for (Team team : teamService.getTeamsFor(user)) {
 			teamService.removeMember(user, team);
 		}
@@ -124,6 +128,7 @@ public class DeleteService {
 		searchService.remove(searchService.getDocumentIds(repo));
 		deleteTasksOf(repo);
 		commentService.delete(repo);
+		repo.settings.delete();
 		repoService.delete(repo);
 	}
 
@@ -140,6 +145,7 @@ public class DeleteService {
 			delete(repo);
 		}
 		memberService.removeMemberships(name);
+		settingsService.get(SettingType.GROUP_SETTING, name, accessService::canSetSettings).delete();
 		groupService.delete(name);
 	}
 
@@ -149,5 +155,5 @@ public class DeleteService {
 		}
 		libraryService.removeLibrary(name);
 	}
-	
+
 }

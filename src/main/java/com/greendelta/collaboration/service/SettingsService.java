@@ -35,6 +35,7 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.Setting;
 import com.greendelta.collaboration.model.settings.SettingKey;
 import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.es.EsClient;
 
@@ -113,11 +114,10 @@ public class SettingsService {
 		return get(type, owner, null);
 	}
 
-	public <T extends SettingKey> Settings<T> get(SettingType type, String owner,
-			Function<String, Boolean> accessCheck) {
+	public <T extends SettingKey> Settings<T> get(SettingType type, String owner, Access access) {
 		if (!type.singleton && owner == null)
 			throw new IllegalArgumentException("Owner can not be null");
-		return new Settings<T>(type, owner, accessCheck);
+		return new Settings<T>(type, owner, access);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -141,6 +141,29 @@ public class SettingsService {
 		} else {
 			dao.insert(setting);
 		}
+	}
+
+	private void move(SettingType type, String owner, String newOwner) {
+		List<Setting<?>> settings = find(type, owner);
+		for (Setting<?> setting : settings) {
+			dao.delete(setting);
+			Setting<?> newSetting = Setting.create(type, setting.getKey(), newOwner);
+			dao.insert(newSetting);
+		}
+	}
+
+	private void delete(SettingType type, String owner) {
+		List<Setting<?>> settings = find(type, owner);
+		for (Setting<?> setting : settings) {
+			dao.delete(setting);
+		}
+	}
+
+	private List<Setting<?>> find(SettingType type, String owner) {
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("type", type);
+		attributes.put("owner", owner);
+		return dao.getForAttributes(attributes);
 	}
 
 	public class ServerConfig extends Settings<ServerSetting> {
@@ -296,23 +319,20 @@ public class SettingsService {
 		private final String owner;
 		// if no service is given, use local map
 		private final Map<T, Object> local;
-		private final Function<String, Boolean> canSet;
+		private final Access access;
 
 		private Settings(SettingType type) {
 			this(type, null, null);
 		}
 
-		private Settings(SettingType type, String owner, Function<String, Boolean> canSet) {
+		private Settings(SettingType type, String owner, Access access) {
 			this.type = type;
 			this.owner = owner;
 			this.local = type == null ? new HashMap<>() : null;
-			if (type != null && canSet == null && owner == null) {
-				canSet = o -> {
-					Subject subject = subjectProvider.get();
-					return subject != null && subject.hasRole("admin");
-				};
+			if (type != null && access == null && owner == null) {
+				access = new AdminAccess();
 			}
-			this.canSet = canSet;
+			this.access = access;
 		}
 
 		public <V> V get(T key) {
@@ -345,13 +365,36 @@ public class SettingsService {
 		public void set(T key, Object value) {
 			if (local != null) {
 				local.put(key, value);
-			} else if (type != null && (canSet == null || !canSet.apply(owner))) {
-				if (owner == null)
-					throw new AuthorizationException();
-				throw new UnauthorizedAccessException(owner, "SET_SETTING");
 			} else {
+				checkAccess(owner);
 				SettingsService.this.set(type, key, owner, value);
 			}
+		}
+
+		public void delete() {
+			if (local != null) {
+				local.clear();
+			} else {
+				checkAccess(owner);
+				SettingsService.this.delete(type, owner);
+			}
+		}
+
+		public void move(Repository repo) {
+			if (local == null) {
+				String newOwner = repo.toId();
+				checkAccess(owner);
+				checkAccess(newOwner);
+				SettingsService.this.move(type, owner, newOwner);
+			}
+		}
+
+		private void checkAccess(String owner) {
+			if (type == null || access == null || access.allowed(owner))
+				return;
+			if (owner == null)
+				throw new AuthorizationException();
+			throw new UnauthorizedAccessException(owner, "SET_SETTING");
 		}
 
 		public Map<String, Object> toMap() {
@@ -390,6 +433,22 @@ public class SettingsService {
 				}
 			}
 			return name;
+		}
+
+	}
+
+	public interface Access {
+
+		boolean allowed(String groupOrRepo);
+
+	}
+
+	private class AdminAccess implements Access {
+
+		@Override
+		public boolean allowed(String groupOrRepo) {
+			Subject subject = subjectProvider.get();
+			return subject != null && subject.hasRole("admin");
 		}
 
 	}

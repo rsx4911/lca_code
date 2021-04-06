@@ -124,7 +124,6 @@ public class RepositoryService {
 		String path = getPath(group, name);
 		if (path == null)
 			throw new UnauthorizedAccessException(group, "WRITE");
-		new File(path).mkdirs();
 		membershipService.addMembership(currentUser, Repository.toId(group, name), Role.OWNER, true);
 		return get(group, name);
 	}
@@ -148,6 +147,7 @@ public class RepositoryService {
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
+			repo.settings.move(newRepo);
 			delete(repo);
 		} catch (IOException e) {
 			log.error("Error moving repository contents", e);
