@@ -19,6 +19,8 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.cloud.model.data.Commit;
@@ -124,8 +126,20 @@ public class RepositoryService {
 		String path = getPath(group, name);
 		if (path == null)
 			throw new UnauthorizedAccessException(group, "WRITE");
+		init(path);
 		membershipService.addMembership(currentUser, Repository.toId(group, name), Role.OWNER, true);
 		return get(group, name);
+	}
+
+	private void init(String path) {
+		File dir = new File(path);
+		try {
+			Git.init().setBare(true).setDirectory(dir).call();
+		} catch (GitAPIException e) {
+			log.error("Error initializing git repository", e);
+			dir.delete();
+			throw new Error(e);
+		}
 	}
 
 	public boolean move(Repository repo, String group, String name) {
