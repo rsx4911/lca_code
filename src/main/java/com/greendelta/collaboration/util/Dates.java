@@ -12,7 +12,7 @@ public class Dates {
 			return null;
 		Date latest = null;
 		for (Date date : dates) {
-			if (date != null && latest != null && isBefore(date, latest))
+			if (date == null || (latest != null && isBefore(date, latest)))
 				continue;
 			latest = date;
 		}
@@ -44,7 +44,7 @@ public class Dates {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 	}
-	
+
 	public static Date fromString(String date) {
 		if (date == null || date.isEmpty())
 			return null;
@@ -58,5 +58,4 @@ public class Dates {
 		return d == null ? 0 : d.getTime();
 	}
 
-	
 }
