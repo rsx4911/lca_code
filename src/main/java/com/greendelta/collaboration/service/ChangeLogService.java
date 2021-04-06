@@ -45,35 +45,28 @@ public class ChangeLogService {
 			packResource(zos, "index.html", data);
 			List<Commit> commits = historyService.getCommits(repo);
 			for (Commit commit : commits) {
-				IndexIterator iterator = searchService.getAll(repo, commit.id);
-				data = renderCommit(request, repo, commit.id);
-				packResource(zos, commit.id + ".html", data);
-				while (iterator.hasNext()) {
-					IndexEntry entry = iterator.next();
-					if (entry.action == IndexAction.UPDATE) {
-						Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commit.id);
-						data = renderDataset(request, repo, entry, previous);
-						packResource(zos, entry.refId + ".html", data);
-					}
-				}
+				generateCommit(request, repo, commit.id, zos, false);
 			}
 		});
 	}
 
 	public File generate(HttpServletRequest request, Repository repo, String commitId) {
-		return generate(zos -> {
-			IndexIterator iterator = searchService.getAll(repo, commitId);
-			String data = renderCommit(request, repo, commitId);
-			packResource(zos, "index.html", data);
-			while (iterator.hasNext()) {
-				IndexEntry entry = iterator.next();
-				if (entry.action == IndexAction.UPDATE) {
-					Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commitId);
-					data = renderDataset(request, repo, entry, previous);
-					packResource(zos, entry.refId + ".html", data);
-				}
+		return generate(zos -> generateCommit(request, repo, commitId, zos, false));
+	}
+
+	private void generateCommit(HttpServletRequest request, Repository repo, String commitId, ZipOutputStream zos,
+			boolean isOnly) throws IOException {
+		IndexIterator iterator = searchService.getAll(repo, commitId);
+		String data = renderCommit(request, repo, commitId);
+		packResource(zos, (isOnly ? "index" : commitId) + ".html", data);
+		while (iterator.hasNext()) {
+			IndexEntry entry = iterator.next();
+			if (entry.action == IndexAction.UPDATE) {
+				Commit previous = historyService.getLastCommitBefore(repo, entry.type, entry.refId, commitId);
+				data = renderDataset(request, repo, entry, previous);
+				packResource(zos, commitId + "-" + entry.refId + ".html", data);
 			}
-		});
+		}
 	}
 
 	private File generate(Renderer renderer) {
@@ -135,7 +128,7 @@ public class ChangeLogService {
 			String name = entry.getName();
 			if (name.contains("styles") && name.endsWith(".css")) {
 				name = name.substring(0, name.lastIndexOf("styles")) + "styles.css";
-			}				
+			}
 			packResource(zos, name, zis);
 		}
 	}

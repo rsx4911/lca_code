@@ -43,7 +43,6 @@ define([
 							links.removeAttr 'href'
 							links.addClass 'no-link'
 							links.on 'click', (event) -> Events.preventDefault event
-							modelLinks = @$('a[data-type=changed]').attr 'href', 
 					url: () => @getUrl()
 
 			getUrl: () ->
