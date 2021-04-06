@@ -15,7 +15,7 @@ each dataset in data
 				- fullPath += dataset.name;
 				- url = baseUrl + 's/' + getTypeLabel(dataset.categoryType) + '/' + fullPath;
 			.header
-				a(data-type=dataset.added?'added':dataset.deleted?'deleted':'changed' href=standalone?dataset.refId+'.html':url class=standalone?'standalone':null)
+				a(data-type=dataset.added?'added':dataset.deleted?'deleted':'changed' href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
 					if dataset.added || dataset.deleted
 						- var action = dataset.added ? 'add' : 'delete';
 						if dataset.type === 'CATEGORY'
