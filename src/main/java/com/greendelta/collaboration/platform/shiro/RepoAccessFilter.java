@@ -9,16 +9,22 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.util.WebUtils;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
 import com.greendelta.collaboration.platform.shiro.git.GitFilter;
 import com.greendelta.collaboration.platform.shiro.git.GitRequest;
+import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
 
 /**
  * This filter should only be used for repository urls (/[group]/[repo]/**).
@@ -27,16 +33,19 @@ import com.greendelta.collaboration.service.user.AccessService;
  */
 public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.AuthorizationFilter {
 
+	private static final Logger log = LogManager.getLogger(RepoAccessFilter.class);
 	private final Provider<CloudSession> sessionProvider;
 	private final AccessService accessService;
+	private final RepositoryService repoService;
 	private final Provider<Subject> subjectProvider;
 	private final GitFilter gitFilter;
 
 	@Inject
 	public RepoAccessFilter(Provider<CloudSession> sessionProvider, AccessService accessService,
-			Provider<Subject> subjectProvider, GitFilter gitFilter) {
+			RepositoryService repoService, Provider<Subject> subjectProvider, GitFilter gitFilter) {
 		this.sessionProvider = sessionProvider;
 		this.accessService = accessService;
+		this.repoService = repoService;
 		this.subjectProvider = subjectProvider;
 		this.gitFilter = gitFilter;
 	}
@@ -51,6 +60,18 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 	protected void executeChain(ServletRequest request, ServletResponse response, FilterChain chain) throws Exception {
 		if (isApi(request) || !gitFilter.isGitUrl(request)) {
 			super.executeChain(request, response, chain);
+		} else if (gitFilter.isGitPush(request)) {
+			String repoId = getRepoId(request);
+			Repository repo = repoService.get(repoId);
+			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)
+					&& repo.settings.is(RepositorySetting.JSON_FILE_GENERATION)) {
+				try {
+					// TODO test this
+					RepositoryJsonWriter.writeCurrent(repo);
+				} catch (IOException e) {
+					log.error("Error creating cached json file", e);
+				}
+			}
 		}
 	}
 
@@ -89,13 +110,9 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 			url = url.substring(1);
 		if (!url.contains("/"))
 			return true; // not a repository url -> ignore
-		String group = url.substring(0, url.indexOf("/"));
-		String repo = url.substring(url.indexOf("/") + 1);
-		if (repo.contains("/"))
-			repo = repo.substring(0, repo.indexOf("/"));
 		try {
 			boolean isGitUrl = gitFilter.isGitUrl(req);
-			String repoId = group + "/" + repo;
+			String repoId = getRepoId(request);
 			if (!isGitUrl)
 				return accessService.canRead(repoId);
 			return canGitAccess(new GitRequest(request), response, repoId);
@@ -112,7 +129,8 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 		request.basicHttpLogin(subject);
 		boolean canAccess = false;
 		if (gitFilter.isGitPush(request)) {
-			canAccess = accessService.canWrite(repoId);
+			canAccess = accessService.canWrite(repoId)
+					&& !repoService.get(repoId).settings.is(RepositorySetting.PROHIBIT_COMMITS);
 		} else {
 			canAccess = accessService.canRead(repoId);
 		}
@@ -121,6 +139,17 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 			return false;
 		gitFilter.doFilter(request, response, null);
 		return true;
+	}
+
+	private String getRepoId(ServletRequest request) {
+		String url = ((HttpServletRequest) request).getRequestURI();
+		if (url.startsWith("/"))
+			url = url.substring(1);
+		String group = url.substring(0, url.indexOf("/"));
+		String repo = url.substring(url.indexOf("/") + 1);
+		if (repo.contains("/"))
+			repo = repo.substring(0, repo.indexOf("/"));
+		return group + "/" + repo;
 	}
 
 }
