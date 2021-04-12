@@ -35,7 +35,7 @@ public class IndexService {
 	}
 
 	public void index(Repository repo) {
-		List<Commit> commits = repo.commits.get();
+		List<Commit> commits = repo.commits.find().all();
 		Runner runner = new Runner(repo);
 		for (Commit commit : commits) {
 			runner.run(commit);

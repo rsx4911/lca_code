@@ -217,7 +217,7 @@ public class ReviewResource {
 		reference.refId = ref.id;
 		reference.commitId = ref.commitId;
 		if (reference.commitId == null) {
-			reference.commitId = repo.commits.getLastId(ref.type, ref.id);
+			reference.commitId = repo.commits.find().model(ref.type, ref.id).id();
 		}
 		reference.name = ref.name;
 		return reference;

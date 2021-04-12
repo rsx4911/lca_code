@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.repository;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +30,7 @@ public class Repository {
 	}
 
 	Repository(String root, String group, String name, Settings<RepositorySetting> settings,
-			Settings<GroupSetting> groupSettings) {
+			Settings<GroupSetting> groupSettings) throws IOException {
 		String path = root + File.separator + group + File.separator + name;
 		dir = new File(path);
 		this.group = group;

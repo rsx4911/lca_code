@@ -42,7 +42,7 @@ public class ChangeLogService {
 		return generate(zos -> {
 			String data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
-			List<Commit> commits = repo.commits.get();
+			List<Commit> commits = repo.commits.find().all();
 			for (Commit commit : commits) {
 				IndexIterator iterator = searchService.getAll(repo, commit.id);
 				data = renderCommit(request, repo, commit.id);
@@ -50,7 +50,7 @@ public class ChangeLogService {
 				while (iterator.hasNext()) {
 					IndexEntry entry = iterator.next();
 					if (entry.action == IndexAction.UPDATE) {
-						Commit previous = repo.commits.getLastBefore(entry.type, entry.refId, commit.id);
+						Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commit.id).last();
 						data = renderDataset(request, repo, entry, previous);
 						packResource(zos, entry.refId + ".html", data);
 					}
@@ -67,7 +67,7 @@ public class ChangeLogService {
 			while (iterator.hasNext()) {
 				IndexEntry entry = iterator.next();
 				if (entry.action == IndexAction.UPDATE) {
-					Commit previous = repo.commits.getLastBefore(entry.type, entry.refId, commitId);
+					Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commitId).last();
 					data = renderDataset(request, repo, entry, previous);
 					packResource(zos, entry.refId + ".html", data);
 				}

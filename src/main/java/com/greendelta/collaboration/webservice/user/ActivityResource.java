@@ -82,7 +82,7 @@ public class ActivityResource {
 		Map<String, Repository> repos = new HashMap<>();
 		repositories.forEach(repo -> {
 			if (showCommitActivities) {
-				List<Commit> nextCommits = repo.commits.get();
+				List<Commit> nextCommits = repo.commits.find().all();
 				commits.putAll(com.greendelta.collaboration.util.Collections.map(nextCommits, commit -> commit.id));
 				activities.addAll(Client.map(nextCommits, commit -> Activities.map(commit, repo)));
 				for (Commit commit : nextCommits) {

@@ -20,7 +20,7 @@ public class RepositoryJsonWriter implements Closeable {
 	private final Repository repo;
 
 	public static void writeCurrent(Repository repo) throws IOException {
-		Commit commit = repo.commits.getLast();
+		Commit commit = repo.commits.find().last();
 		if (commit == null)
 			return;
 		RepositoryJsonWriter writer = new RepositoryJsonWriter(repo, repo.getCachedJsonFile());

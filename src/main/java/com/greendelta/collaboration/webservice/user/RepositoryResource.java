@@ -122,7 +122,7 @@ public class RepositoryResource {
 	private ObjectMap putRepositoryInfo(ObjectMap map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.toId()));
 		map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
-		map.put("commits", repo.commits.get().size());
+		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.toId()).size());
 		return map;
 	}
@@ -273,7 +273,7 @@ public class RepositoryResource {
 		}
 		IndexIterator entries = searchService.getAll(from);
 		List<IndexEntry> cloned = new ArrayList<>();
-		List<Commit> commits = from.commits.getUntil(commitId);
+		List<Commit> commits = from.commits.find().until(commitId).all();
 		List<String> commitIds = Collections.convertToList(commits, c -> c.id);
 		while (entries.hasNext()) {
 			IndexEntry next = entries.next();

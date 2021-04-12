@@ -69,12 +69,12 @@ public class HistoryResource {
 		IndexEntry first = searchService.getFirst(repo, type, refId);
 		if (first == null)
 			return Respond.notFound();
-		List<Commit> commits = repo.commits.getAfter(first.commitId, true);
+		List<Commit> commits = repo.commits.find().after(first.commitId).all();
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
 		List<Map<String, Object>> mapped = new ArrayList<>();
-		List<Commit> ownCommits = repo.commits.get(type, refId);
+		List<Commit> ownCommits = repo.commits.find().model(type, refId).all();
 		for (Commit commit : commits) {
 			Map<String, Object> map = putUserName(commit);
 			for (Commit c : ownCommits) {
@@ -100,7 +100,7 @@ public class HistoryResource {
 			if (commit == null)
 				return Respond.notFound("Commit " + lastCommitId + " not found");
 		}
-		List<Commit> commits = repo.commits.getAfter(lastCommitId);
+		List<Commit> commits = repo.commits.find().from(lastCommitId).all();
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
@@ -116,7 +116,7 @@ public class HistoryResource {
 			@QueryParam("page") int page,
 			@QueryParam("pageSize") int pageSize) {
 		Repository repo = repoService.get(group, name);
-		List<Commit> commits = repo.commits.get();
+		List<Commit> commits = repo.commits.find().all();
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
@@ -169,7 +169,7 @@ public class HistoryResource {
 		IndexEntry first = searchService.getFirst(repo, ModelType.CATEGORY, refId);
 		if (first == null)
 			return Respond.noContent();
-		List<Commit> commits = repo.commits.getAfter(first.commitId, true);
+		List<Commit> commits = repo.commits.find().after(first.commitId).all();
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
@@ -271,7 +271,7 @@ public class HistoryResource {
 			@PathParam("refId") String refId,
 			@PathParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		Commit lastCommit = repo.commits.getLastBefore(type, refId, commitId);
+		Commit lastCommit = repo.commits.find().model(type, refId).before(commitId).last();
 		if (lastCommit == null || lastCommit.id.equals(commitId))
 			return Respond.notFound("No previous commit found for " + type.name() + " " + refId);
 		return Respond.ok(lastCommit.id);

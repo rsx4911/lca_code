@@ -1,202 +1,202 @@
 package com.greendelta.collaboration.service.repository;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
+import com.greendelta.collaboration.util.Collections;
+
 public class Commits {
 
-	private final Repository repo;
+	private static final Logger log = LogManager.getLogger(Commits.class);
+	private final FileRepository repo;
 
-	Commits(Repository repo) {
-		this.repo = repo;
+	Commits(Repository repo) throws IOException {
+		this(repo.dir);
 	}
 
-	public String getLastId() {
-		Commit commit = getLast();
-		if (commit == null)
-			return null;
-		return commit.id;
+	Commits(File dir) throws IOException {
+		this.repo = new FileRepository(dir);
 	}
 
-	public String getLastId(ModelType type, String refId) {
-		Commit commit = getLast(type, refId);
-		if (commit == null)
-			return null;
-		return commit.id;
+	public Commit get(String id) {
+		return new Find(repo).until(id).last();
 	}
 
-	public Commit getLast() {
-		return getLast(null);
+	public Find find() {
+		return new Find(repo);
 	}
 
-	public Commit getLast(ModelType type, String refId) {
-		return getLast(new ModelCommitFilter(type, refId));
-	}
+	public static class Find {
 
-	public Commit getLast(ModelType type, String refId, String untilCommitId) {
-		return getLast(new LastCommitFilter(untilCommitId, type, refId, false));
-	}
+		private final FileRepository repo;
+		private String start;
+		private boolean includeStart;
+		private String end;
+		private boolean includeEnd;
+		private ModelType type;
+		private String refId;
 
-	public Commit getLastBefore(ModelType type, String refId, String beforeCommitId) {
-		return getLast(new LastCommitFilter(beforeCommitId, type, refId, true));
-	}
-
-	public Commit get(String commitId) {
-		return getFirst(new SpecificCommitFilter(commitId));
-	}
-
-	public List<Commit> get() {
-		return get((Filter<Commit>) null);
-	}
-
-	public List<Commit> get(ModelType type, String refId) {
-		return get(new ModelCommitFilter(type, refId));
-	}
-
-	public List<Commit> getAfter(String afterCommitId) {
-		return getAfter(afterCommitId, false);
-	}
-
-	public List<Commit> getAfter(String afterCommitId, boolean includeLimit) {
-		return get(new AfterCommitFilter(afterCommitId, includeLimit));
-	}
-
-	public List<Commit> getUntil(String untilCommitId) {
-		return get(new UntilCommitFilter(untilCommitId));
-	}
-
-	private boolean isInCommit(ModelType type, String refId, String commitId) {
-		// TODO
-		return true;
-	}
-
-	private Commit getFirst(Filter<Commit> filter) {
-		List<Commit> commits = get(filter);
-		if (commits.isEmpty())
-			return null;
-		return commits.get(0);
-	}
-
-	private Commit getLast(Filter<Commit> filter) {
-		List<Commit> commits = get(filter);
-		if (commits.isEmpty())
-			return null;
-		return commits.get(commits.size() - 1);
-	}
-
-	private List<Commit> get(Filter<Commit> filter) {
-		// TODO
-		return new ArrayList<>();
-	}
-
-	interface Filter<T> {
-		boolean filter(T element);
-	}
-
-	private class AfterCommitFilter implements Filter<Commit> {
-
-		private String commitId;
-		private boolean reachedId;
-		private boolean includeLimit;
-
-		private AfterCommitFilter(String commitId, boolean includeLimit) {
-			this.commitId = commitId;
-			this.reachedId = commitId == null;
-			this.includeLimit = includeLimit;
+		private Find(FileRepository repo) {
+			this.repo = repo;
 		}
 
-		@Override
-		public boolean filter(Commit element) {
-			if (reachedId)
+		public Find from(String from) {
+			if (start != null)
+				throw new IllegalStateException("can only set from, after or id once");
+			this.includeStart = true;
+			this.start = from;
+			return this;
+		}
+
+		public Find after(String after) {
+			if (start != null)
+				throw new IllegalStateException("can only set from, after or id once");
+			this.start = after;
+			return this;
+		}
+
+		public Find until(String until) {
+			if (end != null)
+				throw new IllegalStateException("can only set until, before or id once");
+			this.includeEnd = true;
+			this.end = until;
+			return this;
+		}
+
+		public Find before(String before) {
+			if (end != null)
+				throw new IllegalStateException("can only set until, before or id once");
+			this.end = before;
+			return this;
+		}
+
+		public Find model(ModelType type, String refId) {
+			if (this.type != null || this.refId != null)
+				throw new IllegalStateException("can only set model once");
+			if (type == null || refId == null || refId.isEmpty())
+				throw new IllegalArgumentException("Type and refId must be set");
+			this.type = type;
+			this.refId = refId;
+			return this;
+		}
+
+		public String id() {
+			List<Commit> all = all(true);
+			if (all == null || all.isEmpty())
+				return null;
+			return all.get(0).id;
+		}
+
+		public Commit last() {
+			List<Commit> all = all(true);
+			if (all == null || all.isEmpty())
+				return null;
+			return all.get(0);
+		}
+
+		public List<Commit> all() {
+			return all(false);
+		}
+
+		private List<Commit> all(boolean singleResult) {
+			List<Commit> commits = new ArrayList<>();
+			try {
+				ObjectId fromId = toObjectId(start);
+				ObjectId untilId = toObjectId(end);
+				for (RevCommit commit : get(fromId, untilId)) {
+					String commitId = commit.getId().name();
+					if (!includeEnd && end != null && commitId.equals(end))
+						continue;
+					if (!containsModel(commit))
+						continue;
+					commits.add(convert(commit));
+					if (singleResult)
+						return commits;
+				}
+				if (includeStart && start != null) {
+					RevCommit commit = repo.parseCommit(fromId);
+					if (containsModel(commit)) {
+						commits.add(convert(commit));
+					}
+				}
+			} catch (IOException | GitAPIException e) {
+				log.error("Error accessing history", e);
+			}
+			Collections.reverse(commits);
+			return commits;
+		}
+
+		@SuppressWarnings("resource")
+		private Iterable<RevCommit> get(ObjectId from, ObjectId until) throws IOException, GitAPIException {
+			LogCommand command = new Git(repo).log();
+			if (until == null) {
+				until = repo.resolve("refs/heads/master");
+			}
+			if (from != null) {
+				command.addRange(from, until);
+			} else {
+				command.add(until);
+			}
+			try {
+				return command.call();
+			} catch (NoHeadException e) {
+				return new ArrayList<>();
+			}
+		}
+
+		private ObjectId toObjectId(String value) {
+			if (value == null)
+				return null;
+			return ObjectId.fromString(value);
+		}
+
+		private boolean containsModel(RevCommit commit) {
+			if (type == null || refId == null || refId.isEmpty())
+				return true;
+			try (TreeWalk tw = new TreeWalk(repo)) {
+				tw.setFilter(PathFilter.create(type.name()));
+				tw.addTree(commit.getTree());
+				tw.setRecursive(true);
+				while (tw.next()) {
+					// TODO for now support both endings
+					if (tw.isPathSuffix((refId + ".json").getBytes(), (refId + ".json").getBytes().length))
+						return true;
+					if (tw.isPathSuffix((refId + ".proto").getBytes(), (refId + ".proto").getBytes().length))
+						return true;
+				}
 				return false;
-			if (element.id.equals(commitId))
-				reachedId = true;
-			if (!includeLimit)
-				return true;
-			return !reachedId;
+			} catch (IOException e) {
+				log.error("Error trying to find " + type.name() + " " + refId + " in commit " + commit.getId().name(),
+						e);
+				return false;
+			}
 		}
 
-	}
-
-	private class ModelCommitFilter implements Filter<Commit> {
-
-		private final ModelType type;
-		private final String refId;
-
-		private ModelCommitFilter(ModelType type, String refId) {
-			this.type = type;
-			this.refId = refId;
-		}
-
-		@Override
-		public boolean filter(Commit element) {
-			return isInCommit(type, refId, element.id);
-		}
-
-	}
-
-	private class UntilCommitFilter implements Filter<Commit> {
-
-		private final String commitId;
-		private boolean reachedId;
-
-		private UntilCommitFilter(String commitId) {
-			this.commitId = commitId;
-		}
-
-		@Override
-		public boolean filter(Commit element) {
-			if (reachedId)
-				return true;
-			if (element.id.equals(commitId))
-				reachedId = true;
-			return false;
-		}
-
-	}
-
-	private class LastCommitFilter implements Filter<Commit> {
-
-		private final String commitId;
-		private final ModelType type;
-		private final String refId;
-		private boolean done;
-		private boolean beforeCommit;
-
-		private LastCommitFilter(String commitId, ModelType type, String refId, boolean beforeCommit) {
-			this.commitId = commitId;
-			this.type = type;
-			this.refId = refId;
-			this.beforeCommit = beforeCommit;
-		}
-
-		@Override
-		public boolean filter(Commit element) {
-			if (done)
-				return true;
-			if (element.id.equals(commitId))
-				done = true;
-			if (beforeCommit && done)
-				return true;
-			return isInCommit(type, refId, element.id);
-		}
-
-	}
-
-	private class SpecificCommitFilter implements Filter<Commit> {
-
-		private final String commitId;
-
-		private SpecificCommitFilter(String commitId) {
-			this.commitId = commitId;
-		}
-
-		@Override
-		public boolean filter(Commit element) {
-			return !element.id.equals(commitId);
+		private Commit convert(RevCommit gitCommit) {
+			if (gitCommit == null)
+				return null;
+			Commit commit = new Commit();
+			commit.id = gitCommit.getId().getName();
+			commit.message = gitCommit.getFullMessage();
+			commit.timestamp = gitCommit.getCommitTime();
+			commit.user = gitCommit.getAuthorIdent().getName();
+			return commit;
 		}
 	}
 

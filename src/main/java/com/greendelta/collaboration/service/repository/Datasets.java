@@ -1,20 +1,27 @@
 package com.greendelta.collaboration.service.repository;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.core.model.ModelType;
 
 public class Datasets {
 
-	private final Repository repo;
+	private final FileRepository repo;
 
-	Datasets(Repository repo) {
-		this.repo = repo;
+	Datasets(Repository repo) throws IOException {
+		this.repo = new FileRepository(repo.dir);
 	}
 
 	public String get(ModelType type, String refId, String commitId) {
-		// TODO read data set from git
-		return null;
+		try {
+			ObjectId id = null; // TODO
+			return new String(repo.getObjectDatabase().newReader().open(id).getBytes(), "utf-8");
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	public Binary getBinary(ModelType type, String refId, String commitId, String name) {

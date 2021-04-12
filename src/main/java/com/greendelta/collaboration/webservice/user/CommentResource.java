@@ -119,7 +119,7 @@ public class CommentResource {
 		Set<String> ids = new HashSet<>();
 		for (Comment comment : comments) {
 			DatasetField field = comment.field;
-			Commit commit = repo.commits.getLast(field.modelType, field.refId, field.commitId);
+			Commit commit = repo.commits.find().model(field.modelType, field.refId).until(field.commitId).last();
 			ids.add(IndexEntry.toIndexId(repoId, field.modelType, field.refId, commit.id));
 		}
 		List<IndexEntry> entries = searchService.get(ids);
@@ -130,7 +130,7 @@ public class CommentResource {
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
 			DatasetField field = comment.field;
-			Commit commit = repo.commits.getLast(field.modelType, field.refId, field.commitId);
+			Commit commit = repo.commits.find().model(field.modelType, field.refId).until(field.commitId).last();
 			String key = IndexEntry.toIndexId(repoId, comment.field.modelType, comment.field.refId, commit.id);
 			map.put("dsPath", idToPath.get(key));
 			if (putReplyCount) {
@@ -244,7 +244,7 @@ public class CommentResource {
 	private ObjectMap map(Comment comment, Repository repo) {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
-		Commit commit = repo.commits.getLast(field.modelType, field.refId, field.commitId);
+		Commit commit = repo.commits.find().model(field.modelType, field.refId).until(field.commitId).last();
 		IndexEntry ds = searchService.get(repo, field.modelType, field.refId, commit.id);
 		map.put("dsPath", ds.fullPath);
 		return map;

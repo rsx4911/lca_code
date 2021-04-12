@@ -92,7 +92,7 @@ abstract class DownloadResource {
 		Commit commit = repo.commits.get(commitId);
 		if (commit != null)
 			return commit;
-		return repo.commits.getLast();
+		return repo.commits.find().last();
 	}
 
 	protected Iterator<Descriptor> collectRefs(String group, String repository, List<Reference> references) {

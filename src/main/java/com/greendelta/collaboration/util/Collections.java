@@ -250,4 +250,25 @@ public class Collections {
 		return list;
 	}
 
+	public static <T> T first(Collection<T> list) {
+		if (list == null || list.isEmpty())
+			return null;
+		return list.iterator().next();
+	}
+
+	public static <T> T last(Collection<T> list) {
+		if (list == null || list.isEmpty())
+			return null;
+		T last = null;
+		Iterator<T> it = list.iterator();
+		while (it.hasNext()) {
+			last = it.next();
+		}
+		return last;
+	}
+
+	public static <T> void reverse(List<T> list) {
+		java.util.Collections.reverse(list);
+	}
+
 }

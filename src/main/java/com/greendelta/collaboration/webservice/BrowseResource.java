@@ -139,11 +139,11 @@ public class BrowseResource {
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
 		Repository repo = repoService.get(group, name);
-		Commit commit = repo.commits.getLast(type, refId, commitId);
+		Commit commit = repo.commits.find().model(type, refId).until(commitId).last();
 		if (commit == null)
 			return Respond.notFound(notFoundMessage(type, refId, commitId));
 		if (commitId == null) {
-			commitId = repo.commits.getLastId(type, refId);
+			commitId = repo.commits.find().model(type, refId).id();
 		}
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn && !commit.id.equals(commitId))

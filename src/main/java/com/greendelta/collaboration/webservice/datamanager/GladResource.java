@@ -86,7 +86,7 @@ public class GladResource {
 		String repoId = repo.toId();
 		Map<String, String> dsToCommit = new HashMap<>();
 		ReferenceCollector<String> collector = new ReferenceCollector<>(browseService, (ref) -> {
-			String commitId = repo.commits.getLastId(ModelType.PROCESS, ref.id);
+			String commitId = repo.commits.find().model(ModelType.PROCESS, ref.id).id();
 			dsToCommit.put(ref.id, commitId);
 			return IndexEntry.toIndexId(repoId, ref.type, ref.id, commitId);
 		});

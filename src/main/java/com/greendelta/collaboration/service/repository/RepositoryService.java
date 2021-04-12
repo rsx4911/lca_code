@@ -98,7 +98,12 @@ public class RepositoryService {
 				accessService::canSetSettings);
 		Settings<GroupSetting> groupSettings = settingsService.get(SettingType.GROUP_SETTING, group,
 				accessService::canSetSettings);
-		return new Repository(path, group, name, settings, groupSettings);
+		try {
+			return new Repository(path, group, name, settings, groupSettings);
+		} catch (IOException e) {
+			log.error("Error getting repository", e);
+			return null;
+		}
 	}
 
 	public boolean exists(String group, String name) {
