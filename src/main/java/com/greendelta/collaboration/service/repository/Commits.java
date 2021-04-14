@@ -7,15 +7,19 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
@@ -35,7 +39,7 @@ public class Commits {
 	}
 
 	public Commit get(String id) {
-		return new Find(repo).until(id).last();
+		return new Find(repo).until(id).latest();
 	}
 
 	public Find find() {
@@ -51,6 +55,7 @@ public class Commits {
 		private boolean includeEnd;
 		private ModelType type;
 		private String refId;
+		private String path;
 
 		private Find(FileRepository repo) {
 			this.repo = repo;
@@ -86,9 +91,16 @@ public class Commits {
 			return this;
 		}
 
+		public Find path(String path) {
+			if (this.type != null || this.refId != null || this.path != null)
+				throw new IllegalStateException("can only set model or path once");
+			this.path = path;
+			return this;
+		}
+
 		public Find model(ModelType type, String refId) {
-			if (this.type != null || this.refId != null)
-				throw new IllegalStateException("can only set model once");
+			if (this.type != null || this.refId != null || this.path != null)
+				throw new IllegalStateException("can only set model or path once");
 			if (type == null || refId == null || refId.isEmpty())
 				throw new IllegalArgumentException("Type and refId must be set");
 			this.type = type;
@@ -96,18 +108,18 @@ public class Commits {
 			return this;
 		}
 
-		public String id() {
+		public String latestId() {
 			List<Commit> all = all(true);
 			if (all == null || all.isEmpty())
 				return null;
-			return all.get(0).id;
+			return all.get(all.size() - 1).id;
 		}
 
-		public Commit last() {
+		public Commit latest() {
 			List<Commit> all = all(true);
 			if (all == null || all.isEmpty())
 				return null;
-			return all.get(0);
+			return all.get(all.size() - 1);
 		}
 
 		public List<Commit> all() {
@@ -116,24 +128,18 @@ public class Commits {
 
 		private List<Commit> all(boolean singleResult) {
 			List<Commit> commits = new ArrayList<>();
-			try {
-				ObjectId fromId = toObjectId(start);
-				ObjectId untilId = toObjectId(end);
-				for (RevCommit commit : get(fromId, untilId)) {
+			try (RevWalk walk = get()) {
+				for (RevCommit commit : walk) {
 					String commitId = commit.getId().name();
 					if (!includeEnd && end != null && commitId.equals(end))
-						continue;
-					if (!containsModel(commit))
 						continue;
 					commits.add(convert(commit));
 					if (singleResult)
 						return commits;
 				}
 				if (includeStart && start != null) {
-					RevCommit commit = repo.parseCommit(fromId);
-					if (containsModel(commit)) {
-						commits.add(convert(commit));
-					}
+					RevCommit commit = repo.parseCommit(toObjectId(start));
+					commits.add(convert(commit));
 				}
 			} catch (IOException | GitAPIException e) {
 				log.error("Error accessing history", e);
@@ -142,50 +148,33 @@ public class Commits {
 			return commits;
 		}
 
-		@SuppressWarnings("resource")
-		private Iterable<RevCommit> get(ObjectId from, ObjectId until) throws IOException, GitAPIException {
-			LogCommand command = new Git(repo).log();
-			if (until == null) {
-				until = repo.resolve("refs/heads/master");
+		private RevWalk get() throws IOException, GitAPIException {
+			ObjectId startId = toObjectId(start);
+			ObjectId endId = toObjectId(end);
+			if (endId == null) {
+				endId = repo.resolve(Constants.HEAD);
 			}
-			if (from != null) {
-				command.addRange(from, until);
-			} else {
-				command.add(until);
+			RevWalk walk = new RevWalk(repo);
+			if (startId != null) {
+				walk.markUninteresting(walk.lookupCommit(startId));
 			}
-			try {
-				return command.call();
-			} catch (NoHeadException e) {
-				return new ArrayList<>();
+			walk.markStart(walk.lookupCommit(endId));
+			TreeFilter filter = null;
+			if (path != null) {
+				filter = PathFilter.create(path);
+			} else if (type != null && refId != null) {
+				filter = new ModelFilter(type, refId);
 			}
+			if (filter != null) {
+				walk.setTreeFilter(AndTreeFilter.create(filter, TreeFilter.ANY_DIFF));
+			}
+			return walk;
 		}
 
 		private ObjectId toObjectId(String value) {
 			if (value == null)
 				return null;
 			return ObjectId.fromString(value);
-		}
-
-		private boolean containsModel(RevCommit commit) {
-			if (type == null || refId == null || refId.isEmpty())
-				return true;
-			try (TreeWalk tw = new TreeWalk(repo)) {
-				tw.setFilter(PathFilter.create(type.name()));
-				tw.addTree(commit.getTree());
-				tw.setRecursive(true);
-				while (tw.next()) {
-					// TODO for now support both endings
-					if (tw.isPathSuffix((refId + ".json").getBytes(), (refId + ".json").getBytes().length))
-						return true;
-					if (tw.isPathSuffix((refId + ".proto").getBytes(), (refId + ".proto").getBytes().length))
-						return true;
-				}
-				return false;
-			} catch (IOException e) {
-				log.error("Error trying to find " + type.name() + " " + refId + " in commit " + commit.getId().name(),
-						e);
-				return false;
-			}
 		}
 
 		private Commit convert(RevCommit gitCommit) {
@@ -198,6 +187,38 @@ public class Commits {
 			commit.user = gitCommit.getAuthorIdent().getName();
 			return commit;
 		}
+
+	}
+
+	private static class ModelFilter extends TreeFilter {
+
+		private final ModelType type;
+		private final String refId;
+
+		private ModelFilter(ModelType type, String refId) {
+			this.type = type;
+			this.refId = refId;
+		}
+
+		@Override
+		public boolean include(TreeWalk tw)
+				throws MissingObjectException, IncorrectObjectTypeException, IOException {
+			if (tw.getFileMode() == FileMode.TREE)
+				return tw.getPathString().startsWith(type.name());
+			String name = tw.getNameString();
+			return name.equals(refId + ".proto") || name.equals(refId + ".json");
+		}
+
+		@Override
+		public boolean shouldBeRecursive() {
+			return true;
+		}
+
+		@Override
+		public TreeFilter clone() {
+			return null;
+		}
+
 	}
 
 }

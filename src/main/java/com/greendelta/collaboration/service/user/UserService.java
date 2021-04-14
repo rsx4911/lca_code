@@ -17,7 +17,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.shiro.codec.Hex;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
-import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -117,14 +116,14 @@ public class UserService {
 		if (!userGroup.exists())
 			return 0;
 		long size = 0;
-		for (File file : userGroup.listFiles()) {
-			try {
-				// TODO get size
-				size += 0;
-			} catch (UnsupportedSchemaException e) {
-				// ignore
-			}
-		}
+		// for (File file : userGroup.listFiles()) {
+		// try {
+		// // TODO get size
+		// size += 0;
+		// } catch (UnsupportedSchemaException e) {
+		// // ignore
+		// }
+		// }
 		return size;
 	}
 

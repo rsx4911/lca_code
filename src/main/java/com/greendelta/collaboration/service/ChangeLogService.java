@@ -50,7 +50,7 @@ public class ChangeLogService {
 				while (iterator.hasNext()) {
 					IndexEntry entry = iterator.next();
 					if (entry.action == IndexAction.UPDATE) {
-						Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commit.id).last();
+						Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commit.id).latest();
 						data = renderDataset(request, repo, entry, previous);
 						packResource(zos, entry.refId + ".html", data);
 					}
@@ -67,7 +67,7 @@ public class ChangeLogService {
 			while (iterator.hasNext()) {
 				IndexEntry entry = iterator.next();
 				if (entry.action == IndexAction.UPDATE) {
-					Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commitId).last();
+					Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commitId).latest();
 					data = renderDataset(request, repo, entry, previous);
 					packResource(zos, entry.refId + ".html", data);
 				}

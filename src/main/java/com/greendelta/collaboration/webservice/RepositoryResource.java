@@ -60,7 +60,7 @@ public class RepositoryResource {
 		Repository repo = service.get(group, name);
 		boolean publicAccess = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
 		ObjectMap mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group, publicAccess));
-		Commit lastCommit = repo.commits.find().last();
+		Commit lastCommit = repo.commits.find().latest();
 		if (lastCommit != null) {
 			mappedRepo.put("settings.lastChange", lastCommit.timestamp);
 		}
@@ -89,7 +89,7 @@ public class RepositoryResource {
 			@QueryParam("commitId") String commitId) throws IOException {
 		// TODO test git implementation
 		Repository repo = service.get(group, name);
-		commitId = repo.commits.find().model(type, refId).until(commitId).id();
+		commitId = repo.commits.find().model(type, refId).until(commitId).latestId();
 		if (commitId == null)
 			return Respond.notFound(notFoundMessage(type, refId, null));
 		Binary binary = repo.datasets.getBinary(type, refId, commitId, filename);

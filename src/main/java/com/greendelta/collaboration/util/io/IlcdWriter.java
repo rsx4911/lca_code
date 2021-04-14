@@ -109,7 +109,7 @@ public class IlcdWriter implements DatasetWriter {
 			String data = repo.datasets.get(modelType, refId, commit.id);
 			if (data != null)
 				return gson.fromJson(data, JsonObject.class);
-			Commit lastCommit = repo.commits.find().model(modelType, refId).before(commit.id).last();
+			Commit lastCommit = repo.commits.find().model(modelType, refId).before(commit.id).latest();
 			if (lastCommit == null)
 				return null;
 			data = repo.datasets.get(modelType, refId, lastCommit.id);
@@ -120,7 +120,7 @@ public class IlcdWriter implements DatasetWriter {
 
 		@Override
 		public byte[] getExternalFile(String sourceRefId, String filename) {
-			Commit lastCommit = repo.commits.find().model(ModelType.SOURCE, sourceRefId).until(commit.id).last();
+			Commit lastCommit = repo.commits.find().model(ModelType.SOURCE, sourceRefId).until(commit.id).latest();
 			if (lastCommit == null)
 				return null;
 			Binary binary = repo.datasets.getBinary(ModelType.SOURCE, sourceRefId, lastCommit.id, filename);

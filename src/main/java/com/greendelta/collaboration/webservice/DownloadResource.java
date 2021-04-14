@@ -41,7 +41,7 @@ abstract class DownloadResource {
 
 	protected Response prepare(String group, String repository, String commitId, String path) {
 		Repository repo = repoService.get(group, repository);
-		Commit commit = getCommit(repo, commitId);
+		Commit commit = repo.commits.find().until(commitId).latest();
 		if (commit == null)
 			return Respond.notFound("commit " + commitId + " not found");
 		ModelType type = Client.getTypeFromPath(path);
@@ -52,7 +52,7 @@ abstract class DownloadResource {
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
 		Repository repo = repoService.get(group, repository);
-		Commit commit = getCommit(repo, commitId);
+		Commit commit = repo.commits.find().until(commitId).latest();
 		if (commit == null)
 			return Respond.notFound("commit " + commitId + " not found");
 		try {
@@ -71,7 +71,7 @@ abstract class DownloadResource {
 			Iterator<? extends Descriptor> requested) {
 		try {
 			Repository repo = repoService.get(group, repository);
-			Commit commit = getCommit(repo, commitId);
+			Commit commit = repo.commits.find().until(commitId).latest();
 			if (commit == null)
 				return Respond.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
@@ -86,13 +86,6 @@ abstract class DownloadResource {
 		} catch (IOException e) {
 			return Respond.error("Error writing data sets to tmp file");
 		}
-	}
-
-	private Commit getCommit(Repository repo, String commitId) {
-		Commit commit = repo.commits.get(commitId);
-		if (commit != null)
-			return commit;
-		return repo.commits.find().last();
 	}
 
 	protected Iterator<Descriptor> collectRefs(String group, String repository, List<Reference> references) {

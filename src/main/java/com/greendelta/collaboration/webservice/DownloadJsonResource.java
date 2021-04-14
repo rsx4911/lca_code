@@ -70,7 +70,7 @@ public class DownloadJsonResource extends DownloadResource {
 			return false; // is not cached
 		if (!Strings.isNullOrEmpty(path))
 			return false; // is not complete repo
-		if (commitId != null && !commitId.equals(repo.commits.find().id()))
+		if (commitId != null && !commitId.equals(repo.commits.find().latestId()))
 			return false; // is not current state (last commit)
 		return true;
 	}
