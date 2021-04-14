@@ -153,16 +153,20 @@ public class GroupService {
 	}
 
 	public Settings<GroupSetting> getSettings(String group) {
-		User user = userService.getForUsername(group);
-		if (user != null) {
-			Settings<GroupSetting> settings = settingsService.create(SettingType.GROUP_SETTING);
-			settings.set(GroupSetting.LABEL, user.name);
-			settings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
-			return settings;
-		}
 		if (!accessService.canRead(group))
 			throw new UnauthorizedAccessException(group, "READ");
-		return settingsService.get(SettingType.GROUP_SETTING, group, accessService::canSetSettings);
+		Settings<GroupSetting> settings = settingsService.get(SettingType.GROUP_SETTING, group,
+				accessService::canSetSettings);
+		User user = userService.getForUsername(group);
+		if (user == null)
+			return settings;
+		if (settings.get(GroupSetting.LABEL) == null) {
+			settings.set(GroupSetting.LABEL, user.name);
+		}
+		if (settings.get(GroupSetting.DESCRIPTION) == null) {
+			settings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
+		}
+		return settings;
 	}
 
 }

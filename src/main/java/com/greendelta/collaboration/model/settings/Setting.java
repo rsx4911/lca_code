@@ -76,7 +76,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 			return null;
 		if (type == byte[].class)
 			return (V) data;
-		if (value == null || value.isEmpty())
+		if (value == null)
 			return key.getDefaultValue();
 		return (V) value;
 	}

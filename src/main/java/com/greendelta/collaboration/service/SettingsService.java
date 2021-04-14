@@ -55,8 +55,8 @@ public class SettingsService {
 		this.subjectProvider = subjectProvider;
 	}
 
-	public <T extends SettingKey> Settings<T> create(SettingType type) {
-		return new Settings<T>(type);
+	public <T extends SettingKey> Settings<T> create() {
+		return new Settings<T>();
 	}
 
 	public boolean is(SettingKey key) {
@@ -321,6 +321,10 @@ public class SettingsService {
 		private final Map<T, Object> local;
 		private final Access access;
 
+		private Settings() {
+			this(null, null, null);
+		}
+
 		private Settings(SettingType type) {
 			this(type, null, null);
 		}
@@ -408,6 +412,10 @@ public class SettingsService {
 		@SuppressWarnings("unchecked")
 		private Map<String, Object> toMap(Function<T, Boolean> filter, boolean preserveKeys) {
 			Map<String, Object> map = new HashMap<>();
+			if (local != null) {
+				local.forEach((k, v) -> map.put(preserveKeys ? k.name() : toFieldName(k), v));
+				return map;
+			}
 			for (T key : (T[]) type.enumClass.getEnumConstants()) {
 				if (filter != null)
 					if (!filter.apply(key))
