@@ -14,11 +14,12 @@ import org.openlca.core.model.ModelType;
 public class CommitsTest {
 
 	private static final String[] commitIds = {
-			"63fda90b2d94a5ee0dae0708055965bb3d40d271",
-			"52181ea4c0458a619ebe4e817fbbd07ff1627793",
-			"bf2be1ecabe8fec2278b2c24f3b26f506d10deb3",
-			"a877b304b3cc28cb2a70845862f35970d76630ef",
-			"01fb4247461f632d4bdc02396894852a80882145"
+			"aba49d04179faa1034eaf6d221a903ef64f3dbaf",
+			"63f8eeaf7e65f7817e604460053fa1dcbfb28d35",
+			"0adbf8bddac2cae5c81801fd836075fc612e37e4",
+			"079cffbd7fc044a18ae3be0a748c29537594b951",
+			"db3ba75f99df098aec28726447ad583fea3bd93b",
+			"0c9395b3c2e28a26265d35a146f64369c82085fe"
 	};
 	private Commits commits;
 
@@ -94,43 +95,43 @@ public class CommitsTest {
 	public void testFindModel() {
 		List<Commit> all = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543").all();
 		Assert.assertEquals(1, all.size());
-		Assert.assertEquals(commitIds[commitIds.length - 2], all.get(0).id);
+		Assert.assertEquals(commitIds[commitIds.length - 3], all.get(0).id);
 	}
 
 	@Test
 	public void testFindLastModel() {
 		Commit commit = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543").last();
 		Assert.assertNotNull(commit);
-		Assert.assertEquals(commitIds[commitIds.length - 2], commit.id);
+		Assert.assertEquals(commitIds[commitIds.length - 3], commit.id);
 	}
 
 	@Test
 	public void testFindLastModelId() {
-		Commit commit = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543").last();
-		Assert.assertNotNull(commit);
-		Assert.assertEquals(commitIds[commitIds.length - 2], commit.id);
+		String commitId = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543").id();
+		Assert.assertNotNull(commitId);
+		Assert.assertEquals(commitIds[commitIds.length - 3], commitId);
 	}
 
 	@Test
 	public void testFindLastModelBefore() {
 		Commit commit = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543")
-				.before(commitIds[commitIds.length - 2]).last();
+				.before(commitIds[commitIds.length - 3]).last();
 		Assert.assertNull(commit);
 		commit = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543")
-				.before(commitIds[commitIds.length - 1]).last();
+				.before(commitIds[commitIds.length - 2]).last();
 		Assert.assertNotNull(commit);
-		Assert.assertEquals(commitIds[commitIds.length - 2], commit.id);
+		Assert.assertEquals(commitIds[commitIds.length - 3], commit.id);
 	}
 
 	@Test
 	public void testFindLastModelUntil() {
 		Commit commit = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543")
-				.until(commitIds[commitIds.length - 3]).last();
+				.until(commitIds[commitIds.length - 4]).last();
 		Assert.assertNull(commit);
 		commit = commits.find().model(ModelType.LOCATION, "af92823f-638d-36d7-8406-451a58f61543")
-				.until(commitIds[commitIds.length - 2]).last();
+				.until(commitIds[commitIds.length - 3]).last();
 		Assert.assertNotNull(commit);
-		Assert.assertEquals(commitIds[commitIds.length - 2], commit.id);
+		Assert.assertEquals(commitIds[commitIds.length - 3], commit.id);
 	}
 
 }
