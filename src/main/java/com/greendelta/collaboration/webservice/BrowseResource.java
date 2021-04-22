@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.KeyGen;
 
@@ -29,6 +29,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
@@ -148,7 +149,8 @@ public class BrowseResource {
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn && !commit.id.equals(commitId))
 			return Respond.unauthorized();
-		String dataset = repo.datasets.get(type, refId, commit.id);
+		CommitReference ref = repo.references.get(type, refId, commit);
+		String dataset = repo.datasets.get(ref);
 		if (Strings.isNullOrEmpty(dataset)) {
 			Map<String, Object> descriptor = new HashMap<>();
 			IndexEntry entry = service.getMostRecent(repo, type, refId, commit.id);

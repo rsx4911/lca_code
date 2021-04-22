@@ -3,15 +3,14 @@ package com.greendelta.collaboration.util.io;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
 
 import com.greendelta.collaboration.service.repository.Datasets.Binary;
-import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 
 public class RepositoryJsonWriter implements Closeable {
@@ -24,9 +23,9 @@ public class RepositoryJsonWriter implements Closeable {
 		if (commit == null)
 			return;
 		RepositoryJsonWriter writer = new RepositoryJsonWriter(repo, repo.getCachedJsonFile());
-		Iterator<Descriptor> iterator = repo.descriptors.get(commit);
-		while (iterator.hasNext()) {
-			writer.put(iterator.next());
+		List<CommitReference> refs = repo.references.getFor(commit);
+		for (CommitReference ref : refs) {
+			writer.put(ref);
 		}
 		writer.close();
 	}
@@ -36,14 +35,14 @@ public class RepositoryJsonWriter implements Closeable {
 		this.repo = repo;
 	}
 
-	public String put(Descriptor descriptor) throws IOException {
-		String data = repo.datasets.get(descriptor.type, descriptor.refId, descriptor.commitId);
+	public String put(CommitReference ref) throws IOException {
+		String data = repo.datasets.get(ref);
 		if (data == null)
 			return null;
-		zipStore.put(ModelPath.get(descriptor.type, descriptor.refId), data.getBytes("utf-8"));
-		List<Binary> binaries = repo.datasets.getBinaries(descriptor.type, descriptor.refId, descriptor.commitId);
+		zipStore.put(ModelPath.get(ref.type, ref.refId), data.getBytes("utf-8"));
+		List<Binary> binaries = repo.datasets.getBinaries(ref);
 		for (Binary binary : binaries) {
-			zipStore.putBin(descriptor.type, descriptor.refId, binary.filename, binary.data);
+			zipStore.putBin(ref.type, ref.refId, binary.filename, binary.data);
 		}
 		return data;
 	}

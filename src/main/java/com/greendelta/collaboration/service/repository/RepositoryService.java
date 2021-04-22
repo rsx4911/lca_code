@@ -23,7 +23,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.cloud.error.UnauthorizedAccessException;
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.cloud.util.Directories;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.zeroturnaround.zip.ZipUtil;

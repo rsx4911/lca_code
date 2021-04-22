@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
 
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.cloud.model.data.Dataset;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;

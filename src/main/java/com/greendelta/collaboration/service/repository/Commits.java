@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.repository;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,19 +7,14 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.TreeFilter;
-import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.util.Collections;
@@ -30,23 +24,28 @@ public class Commits {
 	private static final Logger log = LogManager.getLogger(Commits.class);
 	private final FileRepository repo;
 
-	Commits(Repository repo) throws IOException {
-		this(repo.dir);
-	}
-
-	Commits(File dir) throws IOException {
-		this.repo = new FileRepository(dir);
+	Commits(FileRepository repo) throws IOException {
+		this.repo = repo;
 	}
 
 	public Commit get(String id) {
-		return new Find(repo).until(id).latest();
+		try {
+			RevCommit rev = id != null
+					? repo.parseCommit(ObjectId.fromString(id))
+					: repo.parseCommit(repo.resolve(Constants.HEAD));
+			if (rev == null)
+				return null;
+			return new Commit(rev);
+		} catch (IOException e) {
+			return null;
+		}
 	}
 
 	public Find find() {
 		return new Find(repo);
 	}
 
-	public static class Find {
+	public class Find {
 
 		private final FileRepository repo;
 		private String start;
@@ -62,49 +61,40 @@ public class Commits {
 		}
 
 		public Find from(String from) {
-			if (start != null)
-				throw new IllegalStateException("can only set from, after or id once");
 			this.includeStart = true;
 			this.start = from;
 			return this;
 		}
 
 		public Find after(String after) {
-			if (start != null)
-				throw new IllegalStateException("can only set from, after or id once");
+			this.includeStart = false;
 			this.start = after;
 			return this;
 		}
 
 		public Find until(String until) {
-			if (end != null)
-				throw new IllegalStateException("can only set until, before or id once");
 			this.includeEnd = true;
 			this.end = until;
 			return this;
 		}
 
 		public Find before(String before) {
-			if (end != null)
-				throw new IllegalStateException("can only set until, before or id once");
+			this.includeEnd = false;
 			this.end = before;
 			return this;
 		}
 
 		public Find path(String path) {
-			if (this.type != null || this.refId != null || this.path != null)
-				throw new IllegalStateException("can only set model or path once");
 			this.path = path;
+			this.type = null;
+			this.refId = null;
 			return this;
 		}
 
 		public Find model(ModelType type, String refId) {
-			if (this.type != null || this.refId != null || this.path != null)
-				throw new IllegalStateException("can only set model or path once");
-			if (type == null || refId == null || refId.isEmpty())
-				throw new IllegalArgumentException("Type and refId must be set");
 			this.type = type;
 			this.refId = refId;
+			this.path = null;
 			return this;
 		}
 
@@ -133,13 +123,13 @@ public class Commits {
 					String commitId = commit.getId().name();
 					if (!includeEnd && end != null && commitId.equals(end))
 						continue;
-					commits.add(convert(commit));
+					commits.add(new Commit(commit));
 					if (singleResult)
 						return commits;
 				}
 				if (includeStart && start != null) {
 					RevCommit commit = repo.parseCommit(toObjectId(start));
-					commits.add(convert(commit));
+					commits.add(new Commit(commit));
 				}
 			} catch (IOException | GitAPIException e) {
 				log.error("Error accessing history", e);
@@ -177,46 +167,18 @@ public class Commits {
 			return ObjectId.fromString(value);
 		}
 
-		private Commit convert(RevCommit gitCommit) {
-			if (gitCommit == null)
-				return null;
-			Commit commit = new Commit();
-			commit.id = gitCommit.getId().getName();
-			commit.message = gitCommit.getFullMessage();
-			commit.timestamp = gitCommit.getCommitTime();
-			commit.user = gitCommit.getAuthorIdent().getName();
-			return commit;
-		}
-
 	}
 
-	private static class ModelFilter extends TreeFilter {
+	public class Commit extends org.openlca.cloud.model.data.Commit {
 
-		private final ModelType type;
-		private final String refId;
+		RevCommit rev;
 
-		private ModelFilter(ModelType type, String refId) {
-			this.type = type;
-			this.refId = refId;
-		}
-
-		@Override
-		public boolean include(TreeWalk tw)
-				throws MissingObjectException, IncorrectObjectTypeException, IOException {
-			if (tw.getFileMode() == FileMode.TREE)
-				return tw.getPathString().startsWith(type.name());
-			String name = tw.getNameString();
-			return name.equals(refId + ".proto") || name.equals(refId + ".json");
-		}
-
-		@Override
-		public boolean shouldBeRecursive() {
-			return true;
-		}
-
-		@Override
-		public TreeFilter clone() {
-			return null;
+		private Commit(RevCommit rev) {
+			this.id = rev.getId().getName();
+			this.message = rev.getFullMessage();
+			this.timestamp = rev.getCommitTime();
+			this.user = rev.getAuthorIdent().getName();
+			this.rev = rev;
 		}
 
 	}

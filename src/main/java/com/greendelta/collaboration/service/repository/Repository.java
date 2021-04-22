@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
@@ -13,7 +14,7 @@ import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 
-public class Repository {
+public class Repository implements AutoCloseable {
 
 	private static final Logger log = LogManager.getLogger(Repository.class);
 	public final String group;
@@ -21,9 +22,10 @@ public class Repository {
 	public final Settings<RepositorySetting> settings;
 	public final Datasets datasets;
 	public final Commits commits;
-	public final Descriptors descriptors;
+	public final References references;
 	public final Settings<GroupSetting> groupSettings;
 	final File dir;
+	FileRepository repo;
 
 	public static String toId(String group, String name) {
 		return group + "/" + name;
@@ -41,9 +43,10 @@ public class Repository {
 		checkVersion();
 		this.settings = settings;
 		this.groupSettings = groupSettings;
-		this.datasets = new Datasets(this);
-		this.commits = new Commits(this);
-		this.descriptors = new Descriptors(this);
+		this.repo = new FileRepository(dir);
+		this.datasets = new Datasets(repo);
+		this.commits = new Commits(repo);
+		this.references = new References(repo);
 	}
 
 	public String toId() {
@@ -85,6 +88,13 @@ public class Repository {
 
 	public File getCachedJsonFile() {
 		return new File(dir, "cached-json.zip");
+	}
+	
+	@Override
+	public void close() {
+		if (this.repo == null)
+			return;
+		this.repo.close();
 	}
 
 	public static class InsufficientStorageException extends RuntimeException {

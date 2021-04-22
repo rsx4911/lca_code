@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
+
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 
 public class CommitsTest {
 
@@ -27,7 +29,9 @@ public class CommitsTest {
 	public void before() throws IOException, GitAPIException {
 		String path = "C:/Users/Sebastian/git/lca-collaboration/src/test/resources/com/greendelta/collaboration/service/repository/ref_data";
 		File workDir = new File(path);
-		commits = new Commits(workDir);
+		try (FileRepository repo = new FileRepository(workDir)) {
+			commits = new Commits(repo);
+		}
 	}
 
 	@Test

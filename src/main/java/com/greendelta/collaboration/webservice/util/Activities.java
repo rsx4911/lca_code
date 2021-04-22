@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.task.Task;

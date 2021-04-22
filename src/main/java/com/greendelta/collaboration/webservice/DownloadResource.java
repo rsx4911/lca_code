@@ -2,28 +2,28 @@ package com.greendelta.collaboration.webservice;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.io.DatasetWriter;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
-import com.greendelta.collaboration.webservice.util.Client;
 
 abstract class DownloadResource {
 
@@ -44,10 +44,8 @@ abstract class DownloadResource {
 		Commit commit = repo.commits.find().until(commitId).latest();
 		if (commit == null)
 			return Respond.notFound("commit " + commitId + " not found");
-		ModelType type = Client.getTypeFromPath(path);
-		String subPath = Client.getCategoryFromPath(path);
-		Iterator<Descriptor> entries = repo.descriptors.getForPath(type, commit, subPath);
-		return prepare(group, repository, commit.id, entries);
+		List<CommitReference> refs = repo.references.getForPath(path, commit);
+		return prepare(group, repository, commit.id, refs);
 	}
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
@@ -68,7 +66,7 @@ abstract class DownloadResource {
 	}
 
 	protected Response prepare(String group, String repository, String commitId,
-			Iterator<? extends Descriptor> requested) {
+			Collection<CommitReference> requested) {
 		try {
 			Repository repo = repoService.get(group, repository);
 			Commit commit = repo.commits.find().until(commitId).latest();
@@ -76,8 +74,7 @@ abstract class DownloadResource {
 				return Respond.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
 			DatasetWriter writer = createWriter(repo, commit);
-			while (requested.hasNext()) {
-				Descriptor next = requested.next();
+			for (CommitReference next : requested) {
 				writer.write(next.type, next.refId);
 			}
 			File tmpFile = writer.close();
@@ -88,18 +85,11 @@ abstract class DownloadResource {
 		}
 	}
 
-	protected Iterator<Descriptor> collectRefs(String group, String repository, List<Reference> references) {
+	protected Set<CommitReference> collectRefs(String group, String repository, List<Reference> references) {
 		Repository repo = repoService.get(group, repository);
-		ReferenceCollector<Descriptor> collector = new ReferenceCollector<>(browseService, this::toRef);
-		return collector.getReferences(repo, references).iterator();
-	}
-
-	private Descriptor toRef(Reference ref) {
-		Descriptor descriptor = new Descriptor();
-		descriptor.type = ref.type;
-		descriptor.refId = ref.id;
-		descriptor.commitId = ref.commitId;
-		return descriptor;
+		ReferenceCollector<CommitReference> collector = new ReferenceCollector<>(browseService,
+				r -> repo.references.get(r.type, r.id, repo.commits.get(r.commitId)));
+		return collector.getReferences(repo, references);
 	}
 
 	protected String put(File file, String filename) {

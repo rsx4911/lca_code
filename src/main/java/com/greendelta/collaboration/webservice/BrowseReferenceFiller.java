@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.FlowPropertyFactor;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
@@ -17,6 +18,7 @@ import com.google.gson.JsonPrimitive;
 import com.greendelta.collaboration.model.index.FlowIndexEntry;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.index.ProcessIndexEntry;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.search.BrowseService;
 
@@ -144,7 +146,9 @@ class BrowseReferenceFiller {
 			break;
 		case SOCIAL_INDICATOR:
 		case NW_SET:
-			String json = repo.datasets.get(mType, id, indexEntry.commitId);
+			Commit commit = repo.commits.get(indexEntry.commitId);
+			CommitReference ref = repo.references.get(mType, id, commit);
+			String json = repo.datasets.get(ref);
 			JsonObject dataset = new Gson().fromJson(json, JsonObject.class);
 			fillReferencedElements(dataset);
 			for (Entry<String, JsonElement> entry : dataset.entrySet()) {
@@ -288,7 +292,9 @@ class BrowseReferenceFiller {
 		IndexEntry indexEntry = getIndexEntry(type, refId);
 		if (indexEntry == null)
 			return null;
-		String data = repo.datasets.get(type, refId, indexEntry.commitId);
+		Commit commit = repo.commits.get(indexEntry.commitId);
+		CommitReference ref = repo.references.get(type, refId, commit);
+		String data = repo.datasets.get(ref);
 		JsonObject object = new Gson().fromJson(data, JsonObject.class);
 		if (type == ModelType.PROCESS || type == ModelType.IMPACT_CATEGORY || type == ModelType.PRODUCT_SYSTEM
 				|| type == ModelType.PROJECT || type == ModelType.IMPACT_METHOD || type == ModelType.NW_SET)

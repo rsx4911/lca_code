@@ -5,14 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.cloud.model.data.FileReference;
 import org.openlca.convert.jsonld.ilcd.Json2IlcdStore;
 import org.openlca.convert.jsonld.ilcd.JsonStore;
@@ -23,7 +22,7 @@ import org.openlca.ilcd.io.ZipStore;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.greendelta.collaboration.service.repository.Datasets.Binary;
-import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 
 public class IlcdWriter implements DatasetWriter {
@@ -55,8 +54,7 @@ public class IlcdWriter implements DatasetWriter {
 			return;
 		processed.add(type.name() + refId);
 		this.collectedRefs = new HashSet<>();
-		Descriptor desciptor = repo.descriptors.get(type, refId, commit);
-		if (desciptor == null)
+		if (repo.references.get(type, refId, commit) == null)
 			return;
 		// TODO check if this is required still
 		// boolean exists = entry != null && entry.action != IndexAction.DELETE;
@@ -106,13 +104,14 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public JsonObject get(String type, String refId) {
 			ModelType modelType = getType(type);
-			String data = repo.datasets.get(modelType, refId, commit.id);
+			CommitReference ref = repo.references.get(modelType, refId, commit);
+			String data = repo.datasets.get(ref);
 			if (data != null)
 				return gson.fromJson(data, JsonObject.class);
 			Commit lastCommit = repo.commits.find().model(modelType, refId).before(commit.id).latest();
 			if (lastCommit == null)
 				return null;
-			data = repo.datasets.get(modelType, refId, lastCommit.id);
+			data = repo.datasets.get(ref);
 			if (data == null)
 				return null;
 			return gson.fromJson(data, JsonObject.class);
@@ -123,7 +122,8 @@ public class IlcdWriter implements DatasetWriter {
 			Commit lastCommit = repo.commits.find().model(ModelType.SOURCE, sourceRefId).until(commit.id).latest();
 			if (lastCommit == null)
 				return null;
-			Binary binary = repo.datasets.getBinary(ModelType.SOURCE, sourceRefId, lastCommit.id, filename);
+			CommitReference ref = repo.references.get(ModelType.SOURCE, sourceRefId, lastCommit);
+			Binary binary = repo.datasets.getBinary(ref, filename);
 			if (binary == null)
 				return null;
 			return binary.data;
@@ -132,10 +132,9 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			Iterator<Descriptor> entries = repo.descriptors.get(ModelType.PARAMETER, commit);
-			while (entries.hasNext()) {
-				Descriptor descriptor = entries.next();
-				String data = repo.datasets.get(descriptor.type, descriptor.refId, descriptor.commitId);
+			List<CommitReference> refs = repo.references.getForType(ModelType.PARAMETER, commit);
+			for (CommitReference ref:  refs) {
+				String data = repo.datasets.get(ref);
 				if (data == null)
 					continue;
 				parameters.add(gson.fromJson(data, JsonObject.class));

@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.elasticsearch.common.Strings;
-import org.openlca.cloud.model.data.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
@@ -42,7 +42,8 @@ public class BrowseService {
 		for (ModelType type : settingsService.serverConfig.getModelTypes()) {
 			if (type == ModelType.CATEGORY)
 				continue;
-			if (!params.repo.descriptors.has(type))
+			Commit commit = params.repo.commits.get(params.commitId);
+			if (!params.repo.references.has(type, commit))
 				continue;
 			if (getUncategorized(type, params).isEmpty())
 				continue;

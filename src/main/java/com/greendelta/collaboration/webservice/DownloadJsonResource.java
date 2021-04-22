@@ -14,11 +14,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.elasticsearch.common.Strings;
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
@@ -105,8 +105,8 @@ public class DownloadJsonResource extends DownloadResource {
 			@PathParam("group") String group,
 			@PathParam("repository") String repository,
 			@QueryParam("commitId") String commitId,
-			List<Descriptor> requested) {
-		return super.prepare(group, repository, commitId, requested.iterator());
+			List<CommitReference> requested) {
+		return super.prepare(group, repository, commitId, requested);
 	}
 
 	@Override

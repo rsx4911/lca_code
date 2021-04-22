@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Dates;
 import org.openlca.jsonld.Enums;
@@ -34,11 +35,12 @@ import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.ServerConfig;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.GsonTypes;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.ReferenceCollector;
 import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
@@ -127,7 +129,9 @@ public class GladResource {
 
 	private void putProcessData(Repository repo, Map<String, String> dsToCommit, Map<String, Object> d) {
 		String refId = d.get("refId").toString();
-		String json = repo.datasets.get(ModelType.PROCESS, refId, dsToCommit.get(refId));
+		Commit commit = repo.commits.get(dsToCommit.get(refId));
+		CommitReference ref = repo.references.get(ModelType.PROCESS, refId, commit);
+		String json = repo.datasets.get(ref);
 		ObjectMap data = ObjectMap.fromMap(new Gson().fromJson(json, GsonTypes.OBJECT_MAP));
 		String reviewer = data.getString("processDocumentation.reviewer.name");
 		d.put("processType", getProcessType(data.getString("processType")));

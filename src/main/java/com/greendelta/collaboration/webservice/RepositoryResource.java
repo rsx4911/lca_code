@@ -11,7 +11,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.base.Strings;
@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.repository.Datasets.Binary;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
@@ -89,10 +90,11 @@ public class RepositoryResource {
 			@QueryParam("commitId") String commitId) throws IOException {
 		// TODO test git implementation
 		Repository repo = service.get(group, name);
-		commitId = repo.commits.find().model(type, refId).until(commitId).latestId();
-		if (commitId == null)
+		Commit commit = repo.commits.find().model(type, refId).until(commitId).latest();
+		if (commit == null)
 			return Respond.notFound(notFoundMessage(type, refId, null));
-		Binary binary = repo.datasets.getBinary(type, refId, commitId, filename);
+		CommitReference ref = repo.references.get(type, refId, commit);
+		Binary binary = repo.datasets.getBinary(ref, filename);
 		if (binary == null)
 			return Respond.notFound(notFoundMessage(type, refId, filename));
 		return Respond.ok(binary.data);

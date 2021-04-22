@@ -13,11 +13,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.openlca.cloud.model.data.Commit;
+import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.service.repository.Descriptors.Descriptor;
+import com.greendelta.collaboration.service.repository.References.CommitReference;
 import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.BrowseService;
@@ -82,8 +82,8 @@ public class DownloadIlcdResource extends DownloadResource {
 	public Response prepareRequested(
 			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			List<Descriptor> requested) {
-		return super.prepare(group, repository, null, requested.iterator());
+			List<CommitReference> requested) {
+		return super.prepare(group, repository, null, requested);
 	}
 
 	@Override
