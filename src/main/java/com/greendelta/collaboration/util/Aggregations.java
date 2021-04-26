@@ -21,6 +21,7 @@ public class Aggregations {
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
 	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");
+	public static final TermsAggregation MOST_RECENT = new TermsAggregation("mostRecent");
 	public static final TermsAggregation START_YEAR = new TermsAggregation("validFromYear");
 	public static final TermsAggregation END_YEAR = new TermsAggregation("validUntilYear");
 	public static final TermsAggregation LOCATION = new TermsAggregation("location");
@@ -30,7 +31,7 @@ public class Aggregations {
 	public static final TermsAggregation FLOW_TYPE = new TermsAggregation("flowType");
 
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] {
-			GROUP, REPOSITORY, MODEL_TYPE, REPOSITORY_TAGS, DATASET_TAGS };
+			GROUP, REPOSITORY, MOST_RECENT, MODEL_TYPE, REPOSITORY_TAGS, DATASET_TAGS };
 	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] {
 			PROCESS_TYPE, MODELLING_APPROACH, LOCATION, START_YEAR, END_YEAR, CONTACT };
 	public static final SearchAggregation[] FLOW_FILTERS = new SearchAggregation[] {

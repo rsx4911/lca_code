@@ -54,7 +54,9 @@ class QueryService {
 		putAggregations(builder, repos, filters, types);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		if (!loggedIn) {
-			builder.filter("mostRecent", SearchFilterValue.term(true));
+			if (filters.get("mostRecent") == null || !filters.get("mostRecent").contains("true")) {
+				builder.filter("mostRecent", SearchFilterValue.term(true));
+			}
 			Set<SearchFilterValue> allowed = new HashSet<>();
 			allowed.add(SearchFilterValue.term(IndexAction.ADD.name()));
 			allowed.add(SearchFilterValue.term(IndexAction.UPDATE.name()));

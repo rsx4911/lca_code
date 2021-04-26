@@ -55,8 +55,8 @@ public class IndexService {
 		} else {
 			dataset.categoryType = dataset.type;
 		}
-//		String[] tags = map.getStringArray("tags");
-//		dataset.tags = tags != null ? Arrays.asList(tags) : null;
+		String[] tags = map.getStringArray("tags");
+		dataset.tags = tags != null && tags.length > 0 ? String.join(",", tags) : null;
 		return dataset;
 	}
 
