@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
@@ -87,7 +88,7 @@ public class IndexEntryCreator {
 		entry.version = dataset.version;
 		entry.commits = new ArrayList<>(Collections.singletonList(commit.id));
 		entry.repositoryTags = repo.settings.tags != null ? new ArrayList<>(repo.settings.tags) : new ArrayList<>();
-//		entry.datasetTags = dataset.tags != null ? new ArrayList<>(dataset.tags) : new ArrayList<>();
+		entry.datasetTags = dataset.tags != null ? Arrays.asList(dataset.tags.split(",")) : new ArrayList<>();
 		DataFill.categories(entry, dataset.categories);
 		if (entry.categories != null && !entry.categories.isEmpty()) {
 			entry.fullPath = entry.category + '/' + dataset.name;

@@ -21,7 +21,7 @@ define([
 					{@group, @repository} = options
 
 			render: (renderOptions) ->
-				url = 'ws/public/search?page=1&pageSize=1'
+				url = 'ws/public/search?page=1&pageSize=1&mostRecent=true'
 				if @group
 					url += "&group=#{@group.get('name')}"
 				else if @repository

@@ -91,6 +91,11 @@ define([
 				return label
 			if type is 'type'
 				return ModelTypes[value]					
+			if type is 'mostRecent'
+				if value is 'true'
+					return 'Yes'
+				if value is 'false'
+					return 'No'
 			if type is 'modellingApproach'
 				if value is 'PHYSICAL'
 					return 'Phsycial allocation'
@@ -123,6 +128,8 @@ define([
 				return 'Group/Repository'
 			if type is 'repositoryTags'
 				return 'Repository tag'
+			if type is 'mostRecent'
+				return 'Most recent'
 			if type is 'datasetTags'
 				return 'Data set tag'
 			if type is 'type'

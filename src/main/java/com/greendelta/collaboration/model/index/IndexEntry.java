@@ -46,6 +46,7 @@ public class IndexEntry extends Dataset implements Cloneable {
 		d.categories = categories != null ? new ArrayList<>(categories) : null;
 		d.categoryRefId = categoryRefId;
 		d.categoryType = categoryType;
+		d.tags = datasetTags != null && datasetTags.size() > 0 ? String.join("/", datasetTags) : null;
 	}
 
 	public FetchRequestData asFetchRequestData() {

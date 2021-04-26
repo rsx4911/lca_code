@@ -12,9 +12,13 @@ define([
 			unless value 
 				return ''
 			if value.length is 16 and value[10] is '+'
-				value = value.substring 0, 10
+				value = value.substring 0, 10				
 			if format is dateTimeFormat and value.length is 10
 				format = dateFormat
+			if value.length is 16 and value[10] is '-' 
+				if format is dateTimeFormat
+					return moment(value, 'YYYY-MM-DD-HH:mm').format format
+				value = value.substring 0, 10
 			return moment(value).format format
 
 		formatCommitDescription: (text) ->
