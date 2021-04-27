@@ -18,17 +18,17 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
+import com.greendelta.collaboration.service.search.IndexEntry;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;

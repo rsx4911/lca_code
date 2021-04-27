@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service.repository;
+package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +21,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.cloud.error.UnauthorizedAccessException;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
 import org.openlca.cloud.util.Directories;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.zeroturnaround.zip.ZipUtil;
@@ -37,7 +37,6 @@ import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
-import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;

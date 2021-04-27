@@ -21,6 +21,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.elasticsearch.client.Client;
+import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.settings.SearchSetting;
@@ -31,29 +32,25 @@ import com.greendelta.collaboration.platform.mail.EmailJob;
 import com.greendelta.collaboration.platform.mail.EmailService;
 import com.greendelta.collaboration.platform.servlet.RequestListener;
 import com.greendelta.collaboration.service.AnnouncementService;
-import com.greendelta.collaboration.service.IndexService;
 import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.SettingsService.ServerConfig;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.webservice.Respond;
-
-import joptsimple.internal.Strings;
 
 @Path("admin/area")
 @Produces(MediaType.APPLICATION_JSON)
 public class AdminAreaResource {
 
 	// request listener is not counting calls to the server info, to avoid
-	// counting
-	// itself. To avoid hiding this information in the RequestListener task, the
-	// path is specified here (more obvious when changes on the path occur)
+	// counting itself. To avoid hiding this information in the RequestListener
+	// task, the path is specified here (avoid error if changes on the path
+	// occur)
 	public static final String SERVER_INFO_PATH = "admin/area/serverInfo";
 	private final RepositoryService repoService;
-	private final IndexService indexService;
 	private final SearchService searchService;
 	private final SettingsService settingsService;
 	private final EmailService emailService;
@@ -61,11 +58,10 @@ public class AdminAreaResource {
 	private final AnnouncementService announcementService;
 
 	@Inject
-	public AdminAreaResource(RepositoryService repoService, IndexService indexService, SearchService searchService,
+	public AdminAreaResource(RepositoryService repoService, SearchService searchService,
 			SettingsService settingsService, EmailService emailService, LibraryService libraryService,
 			AnnouncementService announcementService) {
 		this.repoService = repoService;
-		this.indexService = indexService;
 		this.searchService = searchService;
 		this.settingsService = settingsService;
 		this.emailService = emailService;
@@ -151,7 +147,7 @@ public class AdminAreaResource {
 		searchService.clearIndex();
 		List<Repository> repos = repoService.getAllAccessible();
 		for (Repository repo : repos) {
-			indexService.index(repo);
+			searchService.index(repo);
 		}
 		return Respond.ok(new HashMap<>());
 	}
@@ -160,8 +156,8 @@ public class AdminAreaResource {
 	@Path("reindex/{group}/{repository}")
 	public Response reindex(@PathParam("group") String group, @PathParam("repository") String repository) {
 		Repository repo = repoService.get(group, repository);
-		searchService.remove(searchService.getDocumentIds(repo));
-		indexService.index(repo);
+		searchService.remove(repo);
+		searchService.index(repo);
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -215,7 +211,7 @@ public class AdminAreaResource {
 		con.setRequestProperty("Content-Type", "application/json");
 		con.setRequestProperty("Accept", "application/json");
 		con.setRequestMethod("GET");
-		if (!Strings.isNullOrEmpty(headerField) && !Strings.isNullOrEmpty(headerValue)) {
+		if (!Strings.nullOrEmpty(headerField) && !Strings.nullOrEmpty(headerValue)) {
 			con.addRequestProperty(headerField, headerValue);
 		}
 		int status = con.getResponseCode();

@@ -9,18 +9,18 @@ import org.openlca.cloud.api.RepositoryClient;
 import org.openlca.cloud.api.RepositoryConfig;
 import org.openlca.cloud.util.WebRequests.WebRequestException;
 
-import com.greendelta.collaboration.service.IndexService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.search.SearchService;
 
 public class RepositoryMigrator {
 
 	private final RepositoryService service;
-	private final IndexService indexService;
+	private final SearchService searchService;
 
-	public RepositoryMigrator(RepositoryService service, IndexService indexService) {
+	public RepositoryMigrator(RepositoryService service, SearchService searchService) {
 		this.service = service;
-		this.indexService = indexService;
+		this.searchService = searchService;
 	}
 
 	public MigrateResponse migrate(String url, Repository repo, String username, String password, Integer token)
@@ -42,7 +42,7 @@ public class RepositoryMigrator {
 			if (stream == null)
 				return MigrateResponse.NO_CONTENT;
 			service.unpack(repo, stream);
-			indexService.index(repo);
+			searchService.index(repo);
 			return MigrateResponse.SUCCESS;
 		} catch (TokenRequiredException e) {
 			return MigrateResponse.TOKEN_REQUIRED;
@@ -52,19 +52,19 @@ public class RepositoryMigrator {
 	}
 
 	public static enum MigrateResponse {
-		
+
 		SUCCESS,
-		
+
 		NO_CONTENT,
-		
+
 		TOKEN_REQUIRED;
-		
+
 	}
-	
+
 	private class TokenRequiredException extends IllegalStateException {
 
 		private static final long serialVersionUID = 7824693893433376344L;
-		
+
 	}
-	
+
 }

@@ -14,14 +14,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.elasticsearch.common.Strings;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.ChangeLogService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.io.ChangeLogWriter;
 import com.greendelta.collaboration.webservice.Respond;
 
 @Path("changelog")
@@ -29,13 +30,11 @@ import com.greendelta.collaboration.webservice.Respond;
 public class ChangeLogResource {
 
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
-	private final ChangeLogService service;
 	private final RepositoryService repoService;
 	private final UserService userService;
 
 	@Inject
-	public ChangeLogResource(ChangeLogService service, RepositoryService repoService, UserService userService) {
-		this.service = service;
+	public ChangeLogResource(RepositoryService repoService, UserService userService) {
 		this.repoService = repoService;
 		this.userService = userService;
 	}
@@ -54,11 +53,15 @@ public class ChangeLogResource {
 		Repository repo = repoService.get(group, name);
 		File file = null;
 		String filename = null;
-		if (Strings.isNullOrEmpty(commitId)) {
-			file = service.generate(request, repo);
+		ChangeLogWriter writer = new ChangeLogWriter();
+		if (Strings.nullOrEmpty(commitId)) {
+			file = writer.generate(request, repo);
 			filename = "changelog_" + repo.toId() + ".zip";
 		} else {
-			file = service.generate(request, repo, commitId);
+			Commit commit = repo.commits.get(commitId);
+			if (commit == null)
+				return Respond.notFound("Could not find commit with id " + commitId);
+			file = writer.generate(request, repo, commit);
 			filename = "changelog_" + repo.toId() + "-" + commitId + ".zip";
 		}
 		if (file == null)

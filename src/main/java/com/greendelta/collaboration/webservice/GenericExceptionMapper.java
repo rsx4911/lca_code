@@ -18,7 +18,7 @@ import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.repository.Repository.InsufficientStorageException;
+import com.greendelta.collaboration.service.Repository.InsufficientStorageException;
 import com.greendelta.collaboration.service.user.UserService;
 
 @Provider

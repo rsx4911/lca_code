@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service;
+package com.greendelta.collaboration.util.io;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -15,62 +15,51 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.DiffReference;
+import org.openlca.cloud.api.git.DiffType;
 
 import com.google.common.io.ByteStreams;
-import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
+import com.greendelta.collaboration.service.Repository;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-public class ChangeLogService {
+public class ChangeLogWriter {
 
-	private final static Logger log = LogManager.getLogger(ChangeLogService.class);
-	private final SearchService searchService;
-
-	@Inject
-	public ChangeLogService(SearchService searchService) {
-		this.searchService = searchService;
-	}
+	private final static Logger log = LogManager.getLogger(ChangeLogWriter.class);
 
 	public File generate(HttpServletRequest request, Repository repo) {
 		return generate(zos -> {
 			String data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
 			List<Commit> commits = repo.commits.find().all();
+			Commit previous = null;
 			for (Commit commit : commits) {
-				IndexIterator iterator = searchService.getAll(repo, commit.id);
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				while (iterator.hasNext()) {
-					IndexEntry entry = iterator.next();
-					if (entry.action == IndexAction.UPDATE) {
-						Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commit.id).latest();
-						data = renderDataset(request, repo, entry, previous);
-						packResource(zos, entry.refId + ".html", data);
-					}
+				List<DiffReference> diffs = repo.references.diff().between(previous, commit).all();
+				for (DiffReference diff : diffs) {
+					if (diff.type != DiffType.MODIFIED)
+						continue;
+					data = renderDiff(request, repo, diff);
+					packResource(zos, diff.ref().refId + ".html", data);
 				}
+				previous = commit;
 			}
 		});
 	}
 
-	public File generate(HttpServletRequest request, Repository repo, String commitId) {
+	public File generate(HttpServletRequest request, Repository repo, Commit commit) {
 		return generate(zos -> {
-			IndexIterator iterator = searchService.getAll(repo, commitId);
-			String data = renderCommit(request, repo, commitId);
+			List<DiffReference> diffs = repo.references.diff().withPrevious(commit).all();
+			String data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
-			while (iterator.hasNext()) {
-				IndexEntry entry = iterator.next();
-				if (entry.action == IndexAction.UPDATE) {
-					Commit previous = repo.commits.find().model(entry.type, entry.refId).before(commitId).latest();
-					data = renderDataset(request, repo, entry, previous);
-					packResource(zos, entry.refId + ".html", data);
-				}
+			for (DiffReference diff : diffs) {
+				if (diff.type != DiffType.MODIFIED)
+					continue;
+				data = renderDiff(request, repo, diff);
+				packResource(zos, diff.ref().refId + ".html", data);
 			}
 		});
 	}
@@ -100,10 +89,10 @@ public class ChangeLogService {
 		return renderSsr(request, route);
 	}
 
-	private String renderDataset(HttpServletRequest request, Repository repo, IndexEntry entry, Commit previousCommit)
+	private String renderDiff(HttpServletRequest request, Repository repo, DiffReference diff)
 			throws IOException {
-		String route = "/" + repo.toId() + "/dataset/" + entry.type.name() + "/" + entry.refId + "?commitId="
-				+ entry.commitId + "&compareToCommitId=" + previousCommit.id;
+		String route = "/" + repo.toId() + "/dataset/" + diff.right.type.name() + "/" + diff.right.refId + "?commitId="
+				+ diff.right.commitId + "&compareToCommitId=" + diff.left.commitId;
 		return renderSsr(request, route);
 	}
 
@@ -134,7 +123,7 @@ public class ChangeLogService {
 			String name = entry.getName();
 			if (name.contains("styles") && name.endsWith(".css")) {
 				name = name.substring(0, name.lastIndexOf("styles")) + "styles.css";
-			}				
+			}
 			packResource(zos, name, zis);
 		}
 	}

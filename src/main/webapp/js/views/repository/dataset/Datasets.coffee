@@ -22,11 +22,6 @@ define([
 
 		class RepositoryDatasets extends Backbone.View
 
-			toggleDeleted: (event) ->
-				target = $ Events.target event
-				LocalStorage.toggleValue 'datasets-showDeleted'
-				@filter.applyFilter()
-
 			changeCommit: (event) ->
 				target = $ Events.target event
 				commitId = target.val()
@@ -89,7 +84,6 @@ define([
 				'click a:not([href="#"])': (event) -> Events.followLink event
 				'click a[data-format]:not([data-action=select-data])': 'downloadData'
 				'click a[data-action=select-data]': 'selectData'
-				'change #show-deleted': 'toggleDeleted'
 				'change #commit': 'changeCommit'
 
 			initialize: (options) ->
@@ -110,7 +104,6 @@ define([
 						url = "ws/public/browse/#{group}/#{name}?"
 						if @categoryPath
 							url += 'categoryPath=' + @getCategoryPath() + '&'
-						url = "#{url}showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
 						if @commitId
 							url += '&commitId=' + @commitId
 						return url + '&'
@@ -150,7 +143,6 @@ define([
 						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{encodeURIComponent(path)}"
 						if @commitId
 							url += '&commitId=' + @commitId
-						url += "&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
 						pace.ignore () =>
 							$.ajax
 								type: 'GET'
@@ -161,55 +153,31 @@ define([
 			render: (renderOptions) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				@getCategoryInfo (categoryInfo) =>
-					if currentUser.isLoggedIn()
-						historyUrl = "ws/history/"
-						if categoryInfo.id
-							historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
-						else
-							historyUrl += "#{group}/#{name}"
-						$.ajax
-							type: 'GET'
-							url: historyUrl
-							success: (commits) => @doRender renderOptions, categoryInfo, commits
-					else
-						@doRender renderOptions, categoryInfo, []
+				if currentUser.isLoggedIn()
+					historyUrl = "ws/history/#{group}/#{name}"
+					if @categoryPath && @categoryPath.indexOf('/') is -1
+						historyUrl += "?path=#{@getCategoryPath()}"
+					$.ajax
+						type: 'GET'
+						url: historyUrl
+						success: (commits) => @doRender renderOptions, commits
+				else
+					@doRender renderOptions, []
 
-			getCategoryInfo: (callback) ->
-				if !@categoryPath or @categoryPath.indexOf('/') is -1
-					callback {}
-					return
-				group = @repository.get 'group'
-				name = @repository.get 'name'
-				url = "ws/public/browse/categoryInfo/#{group}/#{name}"
-				if @categoryPath
-					url += '?categoryPath=' + @getCategoryPath()
-				if @commitId
-					url += if @categoryPath then '&' else '?'
-					url += 'commitId=' + @commitId
-				$.ajax
-					type: 'GET'
-					url: url
-					success: callback
-
-			doRender: (renderOptions, categoryInfo, commits) ->
+			doRender: (renderOptions, commits) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				@pathArray = []
+				# TODO check category paths
 				if @categoryPath and @categoryPath.indexOf('/') isnt -1
 					@pathArray.push @categoryPath.substring 0, @categoryPath.indexOf('/')
 				else if @categoryPath
 					@pathArray.push @categoryPath
-				if categoryInfo?.category
-					for category in categoryInfo.category
-						@pathArray.push category
 				@$el.html template
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
 					formatDate: Format.dateTime
 					pathAsArray: @pathArray
-					showDeleted: LocalStorage.getValue('datasets-showDeleted')
-					deleted: (categoryInfo.deleted is 'true')
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits
 					commitId: @commitId

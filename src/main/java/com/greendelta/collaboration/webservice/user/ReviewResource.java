@@ -2,7 +2,7 @@ package com.greendelta.collaboration.webservice.user;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -15,6 +15,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.openlca.cloud.api.git.Reference;
+
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
@@ -23,18 +25,16 @@ import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.task.ReviewService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.webservice.ReferenceCollector;
-import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.collaboration.webservice.util.FrontendReference;
 import com.greendelta.collaboration.webservice.util.Reviews;
 
 @Path("task/review")
@@ -46,7 +46,6 @@ public class ReviewResource {
 	private final TaskService taskService;
 	private final UserService userService;
 	private final AccessService accessService;
-	private final BrowseService browseService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
 	private final SettingsService settingsService;
@@ -54,14 +53,13 @@ public class ReviewResource {
 	@Inject
 	public ReviewResource(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
-			BrowseService browseService, SettingsService settingsService) {
+			SettingsService settingsService) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
-		this.browseService = browseService;
 		this.settingsService = settingsService;
 	}
 
@@ -110,7 +108,7 @@ public class ReviewResource {
 
 	@PUT
 	@Path("{id}/references")
-	public Response setReferences(@PathParam("id") long id, List<Reference> references) {
+	public Response setReferences(@PathParam("id") long id, List<FrontendReference> references) {
 		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
 			return Respond.status(Status.SERVICE_UNAVAILABLE, "Task feature not enabled");
 		Review review = service.get(id);
@@ -121,10 +119,8 @@ public class ReviewResource {
 		Repository repo = repoService.get(review.repositoryPath);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + review.repositoryPath + " found");
-		ReferenceCollector<ReviewReference> collector = new ReferenceCollector<>(
-				browseService, (ref) -> convert(repo, ref));
-		Set<ReviewReference> reviewReferences = collector.getReferences(repo, references);
-		service.setReferences(id, reviewReferences);
+		List<Reference> refs = FrontendReference.collect(repo, references);
+		service.setReferences(id, refs.stream().map(ref -> convert(repo, ref)).collect(Collectors.toSet()));
 		return createResponse();
 	}
 
@@ -214,12 +210,10 @@ public class ReviewResource {
 	private ReviewReference convert(Repository repo, Reference ref) {
 		ReviewReference reference = new ReviewReference();
 		reference.type = ref.type;
-		reference.refId = ref.id;
+		reference.refId = ref.refId;
 		reference.commitId = ref.commitId;
-		if (reference.commitId == null) {
-			reference.commitId = repo.commits.find().model(ref.type, ref.id).latestId();
-		}
-		reference.name = ref.name;
+		// TODO set name
+		// reference.name = ref.name;
 		return reference;
 	}
 

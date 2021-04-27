@@ -27,12 +27,8 @@ each entry in entries
 			if commitId
 				- url += '?commitId=' + commitId			
 			td(data-path=entry.type): a(href=url): strong 
-				if entry.deleted
-					del=getRootLabel(entry.type) 
-					+count-span(entry)
-				else
-					|  #{getRootLabel(entry.type)} 
-					+count-span(entry)
+				|  #{getRootLabel(entry.type)} 
+				+count-span(entry)
 			if !isPublic
 				td=formatLastUpdate(entry.commitTimestamp)
 				+commit-link-cell(entry)

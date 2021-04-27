@@ -15,9 +15,8 @@ public class Aggregations {
 	public static final TermsAggregation GROUP = new TermsAggregation("group");
 	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId");
 	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type");
-	public static final TermsAggregation CATEGORY_TYPE = new TermsAggregation("categoryType");
 	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags");
-	public static final TermsAggregation DATASET_TAGS = new TermsAggregation("datasetTags");
+	public static final TermsAggregation DATASET_TAGS = new TermsAggregation("tags");
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
 	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");

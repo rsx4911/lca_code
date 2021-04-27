@@ -11,17 +11,13 @@ import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
-import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
@@ -32,16 +28,13 @@ class QueryService {
 
 	private final SettingsService settingsService;
 	private final RepositoryService repoService;
-	private final UserService userService;
 	private final ScoreService scoreService;
 	private final IndexEntryParser parser = new IndexEntryParser();
 
 	@Inject
-	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService,
-			ScoreService scoreService) {
+	QueryService(SettingsService settingsService, RepositoryService repoService, ScoreService scoreService) {
 		this.settingsService = settingsService;
 		this.repoService = repoService;
-		this.userService = userService;
 		this.scoreService = scoreService;
 	}
 
@@ -52,14 +45,6 @@ class QueryService {
 		SearchQueryBuilder builder = new SearchQueryBuilder();
 		Set<ModelType> types = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
 		putAggregations(builder, repos, filters, types);
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
-		if (!loggedIn) {
-			builder.filter("mostRecent", SearchFilterValue.term(true));
-			Set<SearchFilterValue> allowed = new HashSet<>();
-			allowed.add(SearchFilterValue.term(IndexAction.ADD.name()));
-			allowed.add(SearchFilterValue.term(IndexAction.UPDATE.name()));
-			builder.filter("action", allowed);
-		}
 		if (!Strings.isNullOrEmpty(query)) {
 			builder.query(toWildcardQuery(query.toLowerCase()), "name");
 		}
@@ -69,9 +54,7 @@ class QueryService {
 		SearchClient client = settingsService.searchConfig.getSearchClient();
 		SearchQuery searchQuery = builder.build();
 		SearchResult<Map<String, Object>> result = client.search(searchQuery);
-		if (loggedIn)
-			return SearchResults.convert(result, parser::parse);
-		return prepResult(result);
+		return SearchResults.convert(result, parser::parse);
 	}
 
 	private static String toWildcardQuery(String query) {
@@ -116,10 +99,6 @@ class QueryService {
 				builder.aggregation(aggregation);
 			}
 		}
-	}
-
-	private SearchResult<IndexEntry> prepResult(SearchResult<Map<String, Object>> result) {
-		return SearchResults.convert(result, parser::parse);
 	}
 
 	private String[] getModelTypes() {

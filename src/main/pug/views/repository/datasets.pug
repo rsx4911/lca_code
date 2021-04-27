@@ -53,7 +53,6 @@ if showCommitSelection || categoryPath
 						option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId)=index===0?'Latest':commit.id 
 						optgroup.additional-info(label!='&nbsp; &nbsp;' + commit.message)
 			.pull-right
-				span.pull-left: +checkbox('show-deleted', 'Show deleted')(checked=showDeleted)
 				+download-dropdown()
 		.clear
 		if categoryPath
@@ -62,11 +61,7 @@ if showCommitSelection || categoryPath
 			.clear
 if !isPublic || pathAsArray
 	.header-box(class=!showCommitSelection&&!categoryPath?'only-box':null)
-		if deleted
-			.pull-left
-				+category-or-description()
-			.badge.pull-right.deleted Deleted
-		else if !showCommitSelection
+		if !showCommitSelection
 			.pull-left
 				+category-or-description()
 			.pull-right

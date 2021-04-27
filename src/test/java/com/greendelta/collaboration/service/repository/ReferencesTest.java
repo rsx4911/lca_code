@@ -9,10 +9,9 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlca.cloud.api.git.Reference;
+import org.openlca.cloud.api.git.References;
 import org.openlca.core.model.ModelType;
-
-import com.greendelta.collaboration.service.repository.Commits.Commit;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
 
 public class ReferencesTest {
 
@@ -24,7 +23,6 @@ public class ReferencesTest {
 			"db3ba75f99df098aec28726447ad583fea3bd93b",
 			"0c9395b3c2e28a26265d35a146f64369c82085fe"
 	};
-	private Commits commits;
 	private References references;
 
 	@Before
@@ -32,15 +30,14 @@ public class ReferencesTest {
 		String path = "C:/Users/Sebastian/git/lca-collaboration/src/test/resources/com/greendelta/collaboration/service/repository/ref_data";
 		File workDir = new File(path);
 		try (FileRepository repo = new FileRepository(workDir)) {
-			commits = new Commits(repo);
 			references = new References(repo);
 		}
 	}
 
 	@Test
 	public void testGet() {
-		Commit commit = commits.get(commitIds[0]);
-		CommitReference ref = references.get(ModelType.UNIT_GROUP, "da299c4d-1741-4da8-9fbd-5ccfb5e1d688", commit);
+		Reference ref = references.get(ModelType.UNIT_GROUP, "da299c4d-1741-4da8-9fbd-5ccfb5e1d688",
+				commitIds[0]);
 		Assert.assertNotNull(ref);
 		Assert.assertEquals(ModelType.UNIT_GROUP, ref.type);
 		Assert.assertEquals("da299c4d-1741-4da8-9fbd-5ccfb5e1d688", ref.refId);
@@ -48,22 +45,20 @@ public class ReferencesTest {
 	}
 
 	@Test
-	public void testGetFor1() {
-		Commit commit = commits.get(commitIds[0]);
-		List<CommitReference> refs = references.getFor(commit);
+	public void testFindAll1() {
+		List<Reference> refs = references.find().commit(commitIds[0]).changed();
 		Assert.assertEquals(27, refs.size());
-		CommitReference ref = refs.get(0);
+		Reference ref = refs.get(0);
 		Assert.assertEquals(ModelType.UNIT_GROUP, ref.type);
 		Assert.assertEquals("da299c4d-1741-4da8-9fbd-5ccfb5e1d688", ref.refId);
 		Assert.assertEquals(commitIds[0], ref.commitId);
 	}
 
 	@Test
-	public void testGetFor2() {
-		Commit commit = commits.get(commitIds[1]);
-		List<CommitReference> refs = references.getFor(commit);
+	public void testFindAll2() {
+		List<Reference> refs = references.find().commit(commitIds[1]).all();
 		Assert.assertEquals(60, refs.size());
-		CommitReference ref = refs.get(0);
+		Reference ref = refs.get(0);
 		Assert.assertEquals(ModelType.FLOW_PROPERTY, ref.type);
 		Assert.assertEquals("fdfecf14-ff8a-4e17-b2b2-f938c4b5cc27", ref.refId);
 		Assert.assertEquals(commitIds[1], ref.commitId);
@@ -74,22 +69,21 @@ public class ReferencesTest {
 	}
 
 	@Test
-	public void testGetForType() {
-		Commit commit = commits.get(commitIds[1]);
-		List<CommitReference> refs = references.getForType(ModelType.FLOW_PROPERTY, commit);
+	public void testFindTypeChanged() {
+		List<Reference> refs = references.find().type(ModelType.FLOW_PROPERTY).commit(commitIds[1]).changed();
 		Assert.assertEquals(33, refs.size());
-		CommitReference ref = refs.get(0);
+		Reference ref = refs.get(0);
 		Assert.assertEquals(ModelType.FLOW_PROPERTY, ref.type);
 		Assert.assertEquals("fdfecf14-ff8a-4e17-b2b2-f938c4b5cc27", ref.refId);
 		Assert.assertEquals(commitIds[1], ref.commitId);
 	}
 
 	@Test
-	public void testGetForPath() {
-		Commit commit = commits.get(commitIds[1]);
-		List<CommitReference> refs = references.getForPath("FLOW_PROPERTY/Economic flow properties", commit);
+	public void testFindPathChanged() {
+		List<Reference> refs = references.find().path("FLOW_PROPERTY/Economic flow properties")
+				.commit(commitIds[1]).changed();
 		Assert.assertEquals(1, refs.size());
-		CommitReference ref = refs.get(0);
+		Reference ref = refs.get(0);
 		Assert.assertEquals(ModelType.FLOW_PROPERTY, ref.type);
 		Assert.assertEquals("fdfecf14-ff8a-4e17-b2b2-f938c4b5cc27", ref.refId);
 		Assert.assertEquals(commitIds[1], ref.commitId);

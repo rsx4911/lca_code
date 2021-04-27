@@ -11,14 +11,14 @@ import java.util.Stack;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 
 public class JsonWriter implements DatasetWriter {
 
@@ -28,7 +28,7 @@ public class JsonWriter implements DatasetWriter {
 	private final RepositoryJsonWriter writer;
 	private final File tmpFile;
 	private final Set<String> processed = new HashSet<>();
-	private final Stack<CommitReference> refStack = new Stack<>();
+	private final Stack<Reference> refStack = new Stack<>();
 
 	public JsonWriter(Repository repo, Commit commit) throws IOException {
 		this.repo = repo;
@@ -40,18 +40,18 @@ public class JsonWriter implements DatasetWriter {
 
 	@Override
 	public void write(ModelType type, String refId) throws IOException {
-		CommitReference ref = repo.references.get(type, refId, commit);
+		Reference ref = repo.references.get(type, refId, commit.id);
 		if (ref == null)
 			return;
 		refStack.add(ref);
-		List<CommitReference> refs = repo.references.getForType(ModelType.PARAMETER, commit);
+		List<Reference> refs = repo.references.find().type(ModelType.PARAMETER).commit(commit.id).all();
 		refStack.addAll(refs);
 		while (!refStack.isEmpty()) {
 			write(refStack.pop());
 		}
 	}
 
-	private void write(CommitReference ref) throws IOException {
+	private void write(Reference ref) throws IOException {
 		if (processed.contains(ref.refId))
 			return;
 		processed.add(ref.refId);
@@ -93,7 +93,7 @@ public class JsonWriter implements DatasetWriter {
 		if (type == null)
 			return;
 		String refId = object.get("@id").getAsString();
-		CommitReference ref = repo.references.get(type, refId, commit);
+		Reference ref = repo.references.get(type, refId, commit.id);
 		if (ref == null) {
 			log.trace("No data set found: " + type.name() + " " + refId);
 			return;

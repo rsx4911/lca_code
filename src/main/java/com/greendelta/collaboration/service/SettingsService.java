@@ -35,7 +35,6 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.Setting;
 import com.greendelta.collaboration.model.settings.SettingKey;
 import com.greendelta.collaboration.model.settings.SettingType;
-import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.es.EsClient;
 

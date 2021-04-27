@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service.repository;
+package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,6 +6,9 @@ import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.cloud.api.git.Commits;
+import org.openlca.cloud.api.git.Datasets;
+import org.openlca.cloud.api.git.References;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;

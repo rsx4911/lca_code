@@ -12,7 +12,7 @@ import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.model.task.TaskType;
 import com.greendelta.collaboration.service.Dao;
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 
 public class TaskService {
 

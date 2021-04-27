@@ -17,18 +17,18 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.DiffReference;
+import org.openlca.cloud.api.git.DiffType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.UserSettings;
-import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.task.Task;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -47,18 +47,15 @@ public class ActivityResource {
 
 	private final UserService userService;
 	private final RepositoryService repoService;
-	private final SearchService searchService;
 	private final CommentService commentService;
 	private final TaskService taskService;
 	private final SettingsService settingsService;
 
 	@Inject
-	public ActivityResource(UserService userService, RepositoryService repoService, SearchService searchService,
-			CommentService commentService, TaskService taskService,
-			SettingsService settingsService) {
+	public ActivityResource(UserService userService, RepositoryService repoService, CommentService commentService,
+			TaskService taskService, SettingsService settingsService) {
 		this.userService = userService;
 		this.repoService = repoService;
-		this.searchService = searchService;
 		this.commentService = commentService;
 		this.taskService = taskService;
 		this.settingsService = settingsService;
@@ -120,9 +117,10 @@ public class ActivityResource {
 	private void putAdditionalInfo(ObjectMap entry, Repository repo, Commit commit) {
 		User user = userService.getForUsername(commit.user);
 		entry.put("userDisplayName", user != null ? user.name : commit.user);
-		entry.put("additions", searchService.getDatasetCount(repo, commit.id, IndexAction.ADD));
-		entry.put("deletions", searchService.getDatasetCount(repo, commit.id, IndexAction.DELETE));
-		entry.put("updates", searchService.getDatasetCount(repo, commit.id, IndexAction.UPDATE));
+		List<DiffReference> diffs = repo.references.diff().withPrevious(commit).all();
+		entry.put("additions", DiffReference.filter(diffs, DiffType.ADDED).size());
+		entry.put("deletions", DiffReference.filter(diffs, DiffType.DELETED).size());
+		entry.put("updates", DiffReference.filter(diffs, DiffType.MODIFIED).size());
 	}
 
 	@PUT

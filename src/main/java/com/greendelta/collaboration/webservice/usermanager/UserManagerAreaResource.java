@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.repository.RepositoryService;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.webservice.Respond;

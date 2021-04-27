@@ -12,9 +12,6 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
@@ -33,7 +30,6 @@ public class DeleteService {
 	private final TaskService taskService;
 	private final MessagingService messagingService;
 	private final AccessService accessService;
-	private final SearchService searchService;
 	private final CommentService commentService;
 	private final LibraryService libraryService;
 	private final SettingsService settingsService;
@@ -41,8 +37,8 @@ public class DeleteService {
 	@Inject
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
-			MessagingService messagingService, AccessService accessService, SearchService searchService,
-			CommentService commentService, LibraryService libraryService, SettingsService settingsService) {
+			MessagingService messagingService, AccessService accessService, CommentService commentService,
+			LibraryService libraryService, SettingsService settingsService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -51,7 +47,6 @@ public class DeleteService {
 		this.taskService = taskService;
 		this.messagingService = messagingService;
 		this.accessService = accessService;
-		this.searchService = searchService;
 		this.commentService = commentService;
 		this.libraryService = libraryService;
 		this.settingsService = settingsService;
@@ -125,7 +120,6 @@ public class DeleteService {
 		if (!accessService.canDelete(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
 		memberService.removeMemberships(repo.toId());
-		searchService.remove(searchService.getDocumentIds(repo));
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();

@@ -1,29 +1,23 @@
 package com.greendelta.collaboration.service.search;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.elasticsearch.common.Strings;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
-import org.openlca.cloud.model.data.FileReference;
-import org.openlca.core.model.ModelType;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Reference;
+import org.openlca.cloud.api.git.DiffReference;
+import org.openlca.cloud.api.git.DiffType;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.repository.Repository;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.GsonTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
@@ -31,11 +25,9 @@ import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
-import com.greendelta.search.wrapper.SearchSorting;
 
 public class SearchService {
 
-	private final static Logger log = LogManager.getLogger(SearchService.class);
 	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final IndexEntryParser parser = new IndexEntryParser();
@@ -54,246 +46,62 @@ public class SearchService {
 		return SearchResults.convert(getClient().search(query), parser::parse);
 	}
 
-	public IndexIterator iterator(SearchQueryBuilder builder) {
-		return new IndexIterator(builder);
-	}
-
-	SearchResult<ObjectMap> searchRaw(SearchQuery query) {
-		return SearchResults.convert(getClient().search(query), parser::convert);
-	}
-
-	public IndexIterator getAll(Repository repo) {
-		return new IndexIterator(builder(repo));
-	}
-
-	public IndexIterator getAll(Repository repo, String commitId) {
-		SearchQueryBuilder builder = builder(repo);
-		if (commitId != null) {
-			builder.filter("commitId", SearchFilterValue.term(commitId));
-		}
-		return new IndexIterator(builder);
-	}
-
-	public Set<String> getDocumentIds(Repository repo) {
-		SearchQueryBuilder builder = builder(repo);
-		return getClient().searchIds(builder.build());
-	}
-
-	public long getDatasetCount(Repository repo, String commitId, IndexAction action) {
-		SearchQueryBuilder builder = new SearchQueryBuilder().page(1).pageSize(1)
-				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()))
-				.filter("commitId", SearchFilterValue.term(commitId));
-		if (action != null) {
-			builder.filter("action", SearchFilterValue.term(action.name()));
-		}
-		return getClient().search(builder.build()).resultInfo.totalCount;
-	}
-
-	public IndexEntry getMostRecentUntil(Repository repo, ModelType type, String refId, String commitId) {
-		if (refId == null)
-			return null;
-		SearchQueryBuilder builder = builder(repo);
-		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
-		builder.filter("refId", SearchFilterValue.term(refId));
-		if (commitId != null) {
-			builder.filter("commits", SearchFilterValue.term(commitId));
-		}
-		SearchResult<Map<String, Object>> results = getClient().search(builder.build());
-		if (results.data.isEmpty())
-			return null;
-		return parser.parse(results.data.get(0));
-	}
-
-	public IndexIterator getMostRecentUntil(Repository repo, String commitId, Filter... filters) {
-		return getMostRecentUntilForPath(repo, null, null, commitId, filters);
-	}
-
-	public IndexIterator getMostRecentUntilForPath(Repository repo, ModelType type, String path, String commitId,
-			Filter... filters) {
-		SearchQueryBuilder builder = builder(repo);
-		if (commitId != null) {
-			builder.filter("commits", SearchFilterValue.term(commitId));
-		}
-		if (type != null) {
-			builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
-		}
-		if (path != null) {
-			builder.filter("fullPath", SearchFilterValue.wildcard(path + "/*"));
-		}
-		return new IndexIterator(builder, append(filters, new DuplicateFilter()));
-	}
-
-	public IndexIterator getMostRecentAfter(Repository repo, Commit commit, Filter... filters) {
-		SearchQueryBuilder builder = builder(repo);
-		builder.filter("mostRecent", SearchFilterValue.term(true));
-		if (commit != null) {
-			builder.filter("commitTimestamp", SearchFilterValue.from(commit.timestamp + 1));
-		}
-		return new IndexIterator(builder, filters);
-	}
-
-	private Filter[] append(Filter[] filters, Filter... toAppend) {
-		if (filters == null)
-			return toAppend;
-		if (toAppend == null)
-			return filters;
-		Filter[] extended = new Filter[filters.length + toAppend.length];
-		for (int i = 0; i < filters.length; i++) {
-			extended[i] = filters[i];
-		}
-		for (int i = 0; i < toAppend.length; i++) {
-			extended[filters.length + i] = toAppend[i];
-		}
-		return extended;
-	}
-
-	public IndexEntry getFirst(Repository repo, ModelType type, String refId) {
-		SearchQueryBuilder builder = builder(repo);
-		builder.filter("refId", SearchFilterValue.term(refId));
-		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
-		builder.filter("action", SearchFilterValue.term(IndexAction.ADD.name()));
-		builder.sortBy("commitTimestamp", SearchSorting.ASC);
-		SearchResult<Map<String, Object>> result = getClient().search(builder.build());
-		if (result.data.isEmpty())
-			return null;
-		return parser.parse(result.data.get(0));
-	}
-
-	public IndexEntry get(Repository repo, ModelType type, String refId, String commitId) {
-		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), type, refId, commitId));
-		if (value == null)
-			return null;
-		return parser.parse(value);
-	}
-
-	public IndexAction getMostRecentAction(Repository repo, ModelType type, String refId) {
-		IndexEntry mostRecent = getMostRecent(repo, type, refId);
-		if (mostRecent == null)
-			return null;
-		return mostRecent.action;
-	}
-
-	ObjectMap getRaw(Repository repo, ModelType type, String refId, String commitId) {
-		log.trace("Getting index entry for repository {}, type {} refId {} and commitId {}", repo.toId(), type.name(),
-				refId, commitId);
-		Map<String, Object> value = getClient().get(IndexEntry.toIndexId(repo.toId(), type, refId, commitId));
-		if (value == null)
-			return null;
-		return parser.convert(value);
-	}
-
-	SearchQueryBuilder builder(Repository repo) {
+	private SearchQueryBuilder builder(Repository repo) {
 		return new SearchQueryBuilder().page(0)
-				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()))
-				.sortBy("commitTimestamp", SearchSorting.DESC);
+				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()));
 	}
 
-	private IndexEntry getMostRecent(Repository repo, ModelType type, String refId) {
-		SearchQueryBuilder builder = builder(repo);
-		builder.filter("mostRecent", SearchFilterValue.term(true));
-		builder.filter(Aggregations.MODEL_TYPE.field, SearchFilterValue.term(type.name()));
-		builder.filter("refId", SearchFilterValue.term(refId));
-		List<IndexEntry> data = search(builder.build()).data;
-		if (data.isEmpty())
-			return null;
-		return data.get(0);
+	public void index(Repository repo) {
+		index(repo, repo.references.find().all());
 	}
 
-	private List<IndexEntry> getMostRecent(Repository repo) {
-		SearchQueryBuilder builder = builder(repo);
-		builder.filter("mostRecent", SearchFilterValue.term(true));
-		return search(builder.build()).data;
-	}
-
-	public IndexEntry get(String id) {
-		return parser.parse(getClient().get(id));
-	}
-
-	public boolean has(String id) {
-		return getClient().has(id);
-	}
-
-	public List<IndexEntry> get(Set<String> ids) {
-		return parser.parse(getClient().get(ids));
-	}
-
-	public void index(Repository repo, String commitId, Collection<IndexEntry> entries) {
-		if (entries.isEmpty())
+	public void updateAsync(Repository repo) {
+		Commit head = repo.commits.find().latest();
+		if (head == null)
 			return;
-		Set<String> refIds = Collections.convertToSet(entries, (entry) -> entry.toId());
-		log.debug("Indexing {} entries in repository {}", entries.size(), repo.toId());
-		// TODO updating without loading all index entries
-		List<IndexEntry> mostRecent = getMostRecent(repo);
-		if (!mostRecent.isEmpty()) {
-			for (IndexEntry entry : mostRecent) {
-				if (refIds.contains(entry.toId())) {
-					entry.mostRecent = false;
-				} else if (!Strings.isNullOrEmpty(commitId)) {
-					entry.commits.add(commitId);
-				}
-			}
-			index(mostRecent);
+		List<DiffReference> diffs = repo.references.diff().withPrevious(head).all();
+		new Thread(() -> {
+			List<Reference> toAddOrUpdate = DiffReference
+					.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+					.stream().map(d -> d.right)
+					.collect(Collectors.toList());
+			Set<String> toDelete = DiffReference
+					.filter(diffs, DiffType.DELETED)
+					.stream().map(d -> IndexEntry.toIndexId(repo.toId(), d.left.type, d.left.refId))
+					.collect(Collectors.toSet());
+			index(repo, toAddOrUpdate);
+			getClient().remove(toDelete);
+		}).start();
+	}
+
+	private void index(Repository repo, List<Reference> refs) {
+		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo);
+		Gson gson = new Gson();
+		for (Reference ref : refs) {
+			// TODO check performance
+			String json = repo.datasets.get(ref);
+			Map<String, Object> data = gson.fromJson(json, GsonTypes.OBJECT_MAP);
+			if (data.isEmpty())
+				continue;
+			IndexEntry entry = indexEntryCreator.create(ref, data);
+			Map<String, Object> content = ObjectMap.fromObject(entry);
+			getClient().index(entry.toIndexId(), content);
 		}
-		for (IndexEntry entry : entries) {
-			entry.mostRecent = true;
-		}
-		index(entries);
 	}
 
-	public void index(Collection<IndexEntry> entries) {
-		Map<String, Map<String, Object>> contentsById = buildIndexMap(entries);
-		getClient().index(contentsById);
-	}
-
-	public void update(String id, Map<String, Object> content) {
-		getClient().update(id, content);
-	}
-
-	public void update(String id, String script, Map<String, Object> parameters) {
-		getClient().update(id, script, parameters);
-	}
-
-	public void update(Set<String> ids, Map<String, Object> content) {
+	public void update(Repository repo, Map<String, Object> content) {
+		Set<String> ids = getDocumentIds(repo);
 		getClient().update(ids, content);
 	}
 
-	public void update(Set<String> ids, String script, Map<String, Object> parameters) {
-		getClient().update(ids, script, parameters);
-	}
-
-	public void update(Map<String, Map<String, Object>> contentsById) {
-		getClient().update(contentsById);
-	}
-
-	private Map<String, Map<String, Object>> buildIndexMap(Collection<IndexEntry> entries) {
-		Map<String, Map<String, Object>> contentsById = new HashMap<>();
-		for (IndexEntry entry : entries) {
-			Map<String, Object> content = toMap(entry);
-			contentsById.put(entry.toIndexId(), content);
-		}
-		return contentsById;
-	}
-
-	private ObjectMap toMap(IndexEntry entry) {
-		setDummyCategoryId(entry);
-		return ObjectMap.fromObject(entry);
-	}
-
-	private void setDummyCategoryId(IndexEntry entry) {
-		if (!Strings.isNullOrEmpty(entry.categoryRefId))
-			return;
-		if (entry.type == ModelType.CATEGORY) {
-			entry.categoryRefId = entry.categoryType.name();
-		} else {
-			entry.categoryRefId = entry.type.name();
-		}
-	}
-
-	public void remove(Set<String> ids) {
-		if (ids.isEmpty())
-			return;
-		log.debug("Removing {} index entries", ids.size());
+	public void remove(Repository repo) {
+		Set<String> ids = getDocumentIds(repo);
 		getClient().remove(ids);
+	}
+
+	private Set<String> getDocumentIds(Repository repo) {
+		SearchQueryBuilder builder = builder(repo);
+		return getClient().searchIds(builder.build());
 	}
 
 	public void clearIndex() {
@@ -304,64 +112,23 @@ public class SearchService {
 		return settingsService.searchConfig.getSearchClient();
 	}
 
-	public interface Filter extends Function<IndexEntry, Boolean> {
-
-	}
-
-	public static class RequestedFilter implements Filter {
-
-		private final List<FileReference> requested;
-
-		public RequestedFilter(List<FileReference> requested) {
-			this.requested = requested;
-		}
-
-		@Override
-		public Boolean apply(IndexEntry t) {
-			return !requested.contains(t.asFileReference());
-		}
-
-	}
-
-	public static class DeletedFilter implements Filter {
-
-		@Override
-		public Boolean apply(IndexEntry entry) {
-			return entry.action == IndexAction.DELETE;
-		}
-
-	}
-
-	private class DuplicateFilter implements Filter {
-
-		private final Set<String> processed = new HashSet<>();
-
-		@Override
-		public Boolean apply(IndexEntry entry) {
-			String id = entry.toId();
-			if (processed.contains(id))
-				return true;
-			processed.add(id);
-			return false;
-		}
-
-	}
-
 	public class IndexIterator implements Iterator<IndexEntry> {
 
 		private static final int PAGE_SIZE = 1000;
 		private final SearchQueryBuilder queryBuilder;
-		private final Filter[] filters;
 		private SearchResult<ObjectMap> current;
 		private int position = 0;
 		private IndexEntry next = null;
 
-		private IndexIterator(SearchQueryBuilder queryBuilder, Filter... filters) {
+		private IndexIterator(SearchQueryBuilder queryBuilder) {
 			queryBuilder.pageSize(PAGE_SIZE);
 			queryBuilder.page(1);
 			current = searchRaw(queryBuilder.build());
 			this.queryBuilder = queryBuilder;
-			this.filters = filters != null ? filters : new Filter[0];
+		}
+
+		private SearchResult<ObjectMap> searchRaw(SearchQuery query) {
+			return SearchResults.convert(getClient().search(query), parser::convert);
 		}
 
 		public boolean hasNext() {
@@ -370,18 +137,7 @@ public class SearchService {
 			if (current.resultInfo.currentPage >= current.resultInfo.pageCount && position >= current.resultInfo.count)
 				return false;
 			next = parser.parse(current.data.get(position));
-			if (doFilter(next)) {
-				updatePosition();
-				return hasNext();
-			}
 			return true;
-		}
-
-		private boolean doFilter(IndexEntry entry) {
-			for (Function<IndexEntry, Boolean> filter : filters)
-				if (filter.apply(entry))
-					return true;
-			return false;
 		}
 
 		public IndexEntry next() {
@@ -407,9 +163,7 @@ public class SearchService {
 		}
 
 		public int size() {
-			if (filters == null || filters.length == 0)
-				return (int) current.resultInfo.totalCount;
-			throw new IllegalStateException("Can not determine size, filters may apply");
+			return (int) current.resultInfo.totalCount;
 		}
 
 	}

@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -23,24 +22,19 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.util.WebRequests.WebRequestException;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.IndexService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -72,24 +66,19 @@ public class RepositoryResource {
 	private final MembershipService membershipService;
 	private final AccessService accessService;
 	private final SearchService searchService;
-	private final BrowseService browseService;
-	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
 	@Inject
 	public RepositoryResource(RepositoryService service, GroupService groupService, MembershipService membershipService,
 			UserService userService, AccessService accessService, SearchService searchService,
-			BrowseService browseService, IndexService indexService, DeleteService deleteService,
-			NotificationService notificationService) {
+			DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.accessService = accessService;
 		this.searchService = searchService;
-		this.browseService = browseService;
-		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 	}
@@ -121,7 +110,7 @@ public class RepositoryResource {
 
 	private ObjectMap putRepositoryInfo(ObjectMap map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.toId()));
-		map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
+		map.put("datasets", repo.references.find().count());
 		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.toId()).size());
 		return map;
@@ -224,7 +213,7 @@ public class RepositoryResource {
 		} else {
 			service.unpack(repo, input);
 		}
-		indexService.index(repo);
+		searchService.index(repo);
 		repo = service.get(group, name);
 		if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 			repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
@@ -271,35 +260,15 @@ public class RepositoryResource {
 			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		IndexIterator entries = searchService.getAll(from);
-		List<IndexEntry> cloned = new ArrayList<>();
-		List<Commit> commits = from.commits.find().until(commitId).all();
-		List<String> commitIds = Collections.convertToList(commits, c -> c.id);
-		while (entries.hasNext()) {
-			IndexEntry next = entries.next();
-			if (!commitIds.contains(next.commitId))
-				continue;
-			IndexEntry clone = next.clone();
-			clone.repositoryId = to.toId();
-			clone.group = to.group;
-			cloned.add(clone);
-			if (cloned.size() == 1000) {
-				searchService.index(cloned);
-				cloned.clear();
-			}
-		}
-		if (!cloned.isEmpty()) {
-			searchService.index(cloned);
-		}
+		searchService.index(to);
 		return response;
 	}
 
 	private void updateRepoId(Repository oldRepo, Repository newRepo) {
-		Set<String> documentIds = searchService.getDocumentIds(oldRepo);
 		Map<String, Object> update = new HashMap<>();
 		update.put("repositoryId", newRepo.toId());
 		update.put("group", newRepo.group);
-		searchService.update(documentIds, update);
+		searchService.update(oldRepo, update);
 	}
 
 	@POST
@@ -323,7 +292,7 @@ public class RepositoryResource {
 		if (Strings.isNullOrEmpty(password))
 			return Respond.invalid("password", "Missing input: Password");
 		Repository repo = service.get(group, name);
-		RepositoryMigrator migrator = new RepositoryMigrator(service, indexService);
+		RepositoryMigrator migrator = new RepositoryMigrator(service, searchService);
 		try {
 			MigrateResponse response = migrator.migrate(url, repo, username, password, map.getInteger("token"));
 			if (response == MigrateResponse.TOKEN_REQUIRED)
@@ -362,13 +331,11 @@ public class RepositoryResource {
 		Object value = data.get("value");
 		Repository repo = service.get(group, name);
 		if (setting == RepositorySetting.TAGS) {
-			Set<String> documentIds = searchService.getDocumentIds(repo);
 			List<String> tags = parseStringList(value);
 			if (tags != null && tags.isEmpty()) {
 				tags = null;
 			}
-			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
-			searchService.update(documentIds, update);
+			searchService.update(repo, java.util.Collections.singletonMap("tags", tags));
 			value = tags;
 		}
 		repo.settings.set(setting, value);
@@ -401,7 +368,7 @@ public class RepositoryResource {
 		}
 		if (!create)
 			return;
-		RepositoryJsonWriter.writeCurrent(repo);
+		RepositoryJsonWriter.writeCurrentAsync(repo);
 	}
 
 	@PUT

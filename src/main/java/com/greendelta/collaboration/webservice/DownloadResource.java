@@ -6,46 +6,41 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.io.DatasetWriter;
-import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
+import com.greendelta.collaboration.webservice.util.FrontendReference;
 
 abstract class DownloadResource {
 
 	private static final Logger log = LogManager.getLogger(DownloadResource.class);
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
 	private final RepositoryService repoService;
-	private final BrowseService browseService;
 	private final UserService userService;
 
-	protected DownloadResource(RepositoryService repoService, BrowseService browseService, UserService userService) {
+	protected DownloadResource(RepositoryService repoService, UserService userService) {
 		this.repoService = repoService;
-		this.browseService = browseService;
 		this.userService = userService;
 	}
 
 	protected Response prepare(String group, String repository, String commitId, String path) {
 		Repository repo = repoService.get(group, repository);
-		Commit commit = repo.commits.find().until(commitId).latest();
-		if (commit == null)
+		List<Reference> refs = repo.references.find().path(path).commit(commitId).all();
+		if (refs == null)
 			return Respond.notFound("commit " + commitId + " not found");
-		List<CommitReference> refs = repo.references.getForPath(path, commit);
-		return prepare(group, repository, commit.id, refs);
+		return prepare(group, repository, commitId, refs);
 	}
 
 	protected Response prepare(String group, String repository, ModelType type, String refId, String commitId) {
@@ -66,7 +61,7 @@ abstract class DownloadResource {
 	}
 
 	protected Response prepare(String group, String repository, String commitId,
-			Collection<CommitReference> requested) {
+			Collection<Reference> requested) {
 		try {
 			Repository repo = repoService.get(group, repository);
 			Commit commit = repo.commits.find().until(commitId).latest();
@@ -74,7 +69,7 @@ abstract class DownloadResource {
 				return Respond.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
 			DatasetWriter writer = createWriter(repo, commit);
-			for (CommitReference next : requested) {
+			for (Reference next : requested) {
 				writer.write(next.type, next.refId);
 			}
 			File tmpFile = writer.close();
@@ -85,11 +80,9 @@ abstract class DownloadResource {
 		}
 	}
 
-	protected Set<CommitReference> collectRefs(String group, String repository, List<Reference> references) {
+	protected List<Reference> collectRefs(String group, String repository, List<FrontendReference> references) {
 		Repository repo = repoService.get(group, repository);
-		ReferenceCollector<CommitReference> collector = new ReferenceCollector<>(browseService,
-				r -> repo.references.get(r.type, r.id, repo.commits.get(r.commitId)));
-		return collector.getReferences(repo, references);
+		return FrontendReference.collect(repo, references);
 	}
 
 	protected String put(File file, String filename) {

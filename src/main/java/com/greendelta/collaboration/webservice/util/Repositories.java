@@ -2,7 +2,7 @@ package com.greendelta.collaboration.webservice.util;
 
 import java.util.HashMap;
 
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class Repositories {

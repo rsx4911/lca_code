@@ -13,19 +13,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.elasticsearch.common.Strings;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.BrowseService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.io.DatasetWriter;
 import com.greendelta.collaboration.util.io.JsonWriter;
-import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
+import com.greendelta.collaboration.webservice.util.FrontendReference;
 
 @Path("public/download/json")
 public class DownloadJsonResource extends DownloadResource {
@@ -33,8 +32,8 @@ public class DownloadJsonResource extends DownloadResource {
 	private final RepositoryService repoService;
 
 	@Inject
-	public DownloadJsonResource(RepositoryService repoService, BrowseService browseService, UserService userService) {
-		super(repoService, browseService, userService);
+	public DownloadJsonResource(RepositoryService repoService, UserService userService) {
+		super(repoService, userService);
 		this.repoService = repoService;
 	}
 
@@ -68,7 +67,7 @@ public class DownloadJsonResource extends DownloadResource {
 		Repository repo = repoService.get(group, repository);
 		if (!repo.getCachedJsonFile().exists())
 			return false; // is not cached
-		if (!Strings.isNullOrEmpty(path))
+		if (!Strings.nullOrEmpty(path))
 			return false; // is not complete repo
 		if (commitId != null && !commitId.equals(repo.commits.find().latestId()))
 			return false; // is not current state (last commit)
@@ -94,7 +93,7 @@ public class DownloadJsonResource extends DownloadResource {
 			@PathParam("group") String group,
 			@PathParam("repository") String repository,
 			@QueryParam("commitId") String commitId,
-			List<Reference> references) {
+			List<FrontendReference> references) {
 		return super.prepare(group, repository, commitId, collectRefs(group, repository, references));
 	}
 
@@ -105,7 +104,7 @@ public class DownloadJsonResource extends DownloadResource {
 			@PathParam("group") String group,
 			@PathParam("repository") String repository,
 			@QueryParam("commitId") String commitId,
-			List<CommitReference> requested) {
+			List<Reference> requested) {
 		return super.prepare(group, repository, commitId, requested);
 	}
 

@@ -1,12 +1,11 @@
 package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Map;
 
-import com.greendelta.collaboration.service.repository.Commits.Commit;
-import org.openlca.cloud.model.data.Dataset;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
@@ -14,110 +13,68 @@ import org.openlca.core.model.ProcessType;
 import org.openlca.jsonld.Enums;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
-import com.greendelta.collaboration.model.index.FlowIndexEntry;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
-import com.greendelta.collaboration.model.index.ProcessIndexEntry;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.ObjectMap;
 
+//TODO check
 public class IndexEntryCreator {
 
 	private final Repository repo;
-	private final Commit commit;
 
-	public IndexEntryCreator(Repository repo, Commit commit) {
+	public IndexEntryCreator(Repository repo) {
 		this.repo = repo;
-		this.commit = commit;
 	}
 
-	public IndexEntry create(Dataset dataset) {
-		return create(dataset, null, null, true);
+	public IndexEntry create(Reference ref, Map<String, Object> data) {
+		if (ref.type == ModelType.PROCESS)
+			return process(ref, data);
+		if (ref.type == ModelType.FLOW)
+			return flow(ref, data);
+		return generic(ref, data);
 	}
 
-	public IndexEntry create(Dataset dataset, IndexAction previousAction) {
-		return create(dataset, previousAction, null, false);
-	}
-
-	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data) {
-		return create(dataset, previousAction, data, true);
-	}
-
-	public IndexEntry create(Dataset dataset, IndexAction previousAction, Map<String, Object> data, boolean withData) {
-		if (withData && (data == null || data.isEmpty())) {
-			IndexEntry entry = generic(dataset);
-			entry.action = IndexAction.DELETE;
-			return entry;
-		}
-		IndexEntry entry = null;
-		if (dataset.type == ModelType.PROCESS) {
-			entry = process(dataset, data);
-		} else if (dataset.type == ModelType.FLOW) {
-			entry = flow(dataset, data);
-		} else {
-			entry = generic(dataset);
-		}
-		if (previousAction == IndexAction.DELETE || previousAction == null) {
-			entry.action = IndexAction.ADD;
-		} else {
-			entry.action = IndexAction.UPDATE;
-		}
-		return entry;
-	}
-
-	private IndexEntry generic(Dataset dataset) {
+	private IndexEntry generic(Reference ref, Map<String, Object> data) {
 		IndexEntry entry = new IndexEntry();
-		fillGeneric(entry, dataset);
+		fillGeneric(entry, ref, data);
 		return entry;
 	}
 
-	private void fillGeneric(IndexEntry entry, Dataset dataset) {
+	private void fillGeneric(IndexEntry entry, Reference ref, Map<String, Object> d) {
+		ObjectMap data = ObjectMap.fromMap(d);
 		entry.repositoryId = repo.toId();
 		entry.group = repo.group;
-		entry.type = dataset.type;
-		entry.refId = dataset.refId;
-		entry.name = dataset.name;
-		entry.categoryRefId = dataset.categoryRefId;
-		entry.categoryType = dataset.categoryType;
-		entry.commitId = commit.id;
-		entry.commitMessage = commit.message;
-		entry.commitTimestamp = commit.timestamp;
-		entry.lastChange = dataset.lastChange;
-		entry.version = dataset.version;
-		entry.commits = new ArrayList<>(Collections.singletonList(commit.id));
+		entry.type = ref.type;
+		entry.refId = ref.refId;
+		entry.name = data.getString("name");
 		entry.repositoryTags = repo.settings.get(RepositorySetting.TAGS);
-		// entry.datasetTags = dataset.tags != null ? new
-		// ArrayList<>(dataset.tags) : new ArrayList<>();
-		DataFill.categories(entry, dataset.categories);
-		if (entry.categories != null && !entry.categories.isEmpty()) {
-			entry.fullPath = entry.category + '/' + dataset.name;
-		} else {
-			entry.fullPath = dataset.name;
-		}
+		String tags = data.getString("tags");
+		entry.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
+		entry.category = ref.category;
+		entry.completeData();
 	}
 
-	private FlowIndexEntry flow(Dataset dataset, Map<String, Object> data) {
-		FlowIndexEntry entry = new FlowIndexEntry();
-		fillGeneric(entry, dataset);
+	private IndexEntry flow(Reference ref, Map<String, Object> data) {
+		IndexEntry entry = new IndexEntry();
+		fillGeneric(entry, ref, data);
 		fillFlow(entry, data);
 		return entry;
 	}
 
-	static void fillFlow(FlowIndexEntry entry, Map<String, Object> map) {
+	static void fillFlow(IndexEntry entry, Map<String, Object> map) {
 		ObjectMap data = ObjectMap.fromMap(map);
 		entry.flowType = Enums.getValue(data.getString("flowType"), FlowType.class);
 	}
 
-	private ProcessIndexEntry process(Dataset dataset, Map<String, Object> data) {
-		ProcessIndexEntry entry = new ProcessIndexEntry();
-		fillGeneric(entry, dataset);
+	private IndexEntry process(Reference ref, Map<String, Object> data) {
+		IndexEntry entry = new IndexEntry();
+		fillGeneric(entry, ref, data);
 		fillProcess(entry, data);
 		return entry;
 	}
 
-	static void fillProcess(ProcessIndexEntry entry, Map<String, Object> map) {
+	static void fillProcess(IndexEntry entry, Map<String, Object> map) {
 		ObjectMap data = ObjectMap.fromMap(map);
 		entry.processType = getProcessType(data.getString("processType"));
 		long validFrom = Dates.getTime(data.get("processDocumentation.validFrom"));

@@ -5,29 +5,34 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openlca.cloud.api.git.Binary;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
 
-import com.greendelta.collaboration.service.repository.Datasets.Binary;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 
 public class RepositoryJsonWriter implements Closeable {
 
+	private final static Logger log = LogManager.getLogger(RepositoryJsonWriter.class);
 	private final ZipStore zipStore;
 	private final Repository repo;
 
-	public static void writeCurrent(Repository repo) throws IOException {
-		Commit commit = repo.commits.find().latest();
-		if (commit == null)
-			return;
-		RepositoryJsonWriter writer = new RepositoryJsonWriter(repo, repo.getCachedJsonFile());
-		List<CommitReference> refs = repo.references.getFor(commit);
-		for (CommitReference ref : refs) {
-			writer.put(ref);
-		}
-		writer.close();
+	public static void writeCurrentAsync(Repository repo) {
+		List<Reference> refs = repo.references.find().all();
+		new Thread(() -> {
+			try {
+				RepositoryJsonWriter writer = new RepositoryJsonWriter(repo, repo.getCachedJsonFile());
+				for (Reference ref : refs) {
+					writer.put(ref);
+				}
+				writer.close();
+			} catch (IOException e) {
+				log.error("Error writing json-ld archive", e);
+			}
+		}).start();
 	}
 
 	public RepositoryJsonWriter(Repository repo, File file) throws IOException {
@@ -35,7 +40,7 @@ public class RepositoryJsonWriter implements Closeable {
 		this.repo = repo;
 	}
 
-	public String put(CommitReference ref) throws IOException {
+	public String put(Reference ref) throws IOException {
 		String data = repo.datasets.get(ref);
 		if (data == null)
 			return null;

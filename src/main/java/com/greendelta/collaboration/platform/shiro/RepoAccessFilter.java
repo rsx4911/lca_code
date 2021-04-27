@@ -9,8 +9,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.util.WebUtils;
 import org.openlca.cloud.error.RepositoryNotFoundException;
@@ -21,8 +19,9 @@ import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.platform.guice.util.CloudSession;
 import com.greendelta.collaboration.platform.shiro.git.GitFilter;
 import com.greendelta.collaboration.platform.shiro.git.GitRequest;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
 
@@ -33,19 +32,21 @@ import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
  */
 public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.AuthorizationFilter {
 
-	private static final Logger log = LogManager.getLogger(RepoAccessFilter.class);
 	private final Provider<CloudSession> sessionProvider;
 	private final AccessService accessService;
 	private final RepositoryService repoService;
+	private final SearchService searchService;
 	private final Provider<Subject> subjectProvider;
 	private final GitFilter gitFilter;
 
 	@Inject
 	public RepoAccessFilter(Provider<CloudSession> sessionProvider, AccessService accessService,
-			RepositoryService repoService, Provider<Subject> subjectProvider, GitFilter gitFilter) {
+			RepositoryService repoService, SearchService searchService, Provider<Subject> subjectProvider,
+			GitFilter gitFilter) {
 		this.sessionProvider = sessionProvider;
 		this.accessService = accessService;
 		this.repoService = repoService;
+		this.searchService = searchService;
 		this.subjectProvider = subjectProvider;
 		this.gitFilter = gitFilter;
 	}
@@ -63,14 +64,10 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 		} else if (gitFilter.isGitPush(request)) {
 			String repoId = getRepoId(request);
 			Repository repo = repoService.get(repoId);
+			searchService.updateAsync(repo); // TODO test this
 			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)
 					&& repo.settings.is(RepositorySetting.JSON_FILE_GENERATION)) {
-				try {
-					// TODO test this
-					RepositoryJsonWriter.writeCurrent(repo);
-				} catch (IOException e) {
-					log.error("Error creating cached json file", e);
-				}
+				RepositoryJsonWriter.writeCurrentAsync(repo); // TODO test this
 			}
 		}
 	}

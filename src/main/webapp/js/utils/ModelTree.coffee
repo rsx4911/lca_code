@@ -34,6 +34,7 @@ define([
 												refId: e.refId
 												type: 'CATEGORY'
 												categoryType: e.categoryType
+												commitId: e.commitId
 										else
 											data.push 
 												id: e.refId
@@ -45,15 +46,16 @@ define([
 									else
 										data.push
 											id: e.type
+											commitId: e.commitId
 											text: ModelTypes[e.type]
 											children: true
 											icon: "images/model/small/category/#{e.type.toLowerCase()}.png"
 								callback data
 
 		# returns elements in three different types:
-		# 1) ModelType elements, e.g. {type: 'FLOW'}
-		# 2) Category elements, e.g. {id: $path, type: 'CATEGORY'}
-		# 3) Model elements, e.g. {id: '4321-...', type: 'FLOW'}
+		# 1) ModelType elements, e.g. {fullPath: 'FLOW'}
+		# 2) Category elements, e.g. {fullPath: $categoryType/$path}
+		# 3) Model elements, e.g. {refId: '4321-...', type: 'FLOW'}
 		# if a parent is already in the elements to be returned, child elements will not be added
 		# because the tree is lazy loaded, the calling code must add missing (not selected in UI) elements anyway
 		getSelection: (container, firstOnly) ->
@@ -62,17 +64,17 @@ define([
 			types = []
 			paths = []
 			for e in selected
-				if !e.original.type 
+				if !e.original.type # is model type 
 					types.push e.original.id
-					elements.push {type: e.original.id, categoryType: e.original.id, id: null}
+					elements.push {fullPath: e.original.id, commitId: e.commitId}
 			for e in selected
-				if e.original.type is 'CATEGORY'
+				if e.original.type is 'CATEGORY' # is category
 					if $.inArray(e.original.categoryType, types) isnt -1
 						continue
 					paths.push e.original.id
-					elements.push {type: 'CATEGORY', categoryType: e.original.categoryType, id: e.original.id}
+					elements.push {fullPath: "#{e.original.categoryType}/#{e.original.id}", commitId: e.commitId}
 			for e in selected
-				if e.original.type && e.original.type isnt 'CATEGORY'
+				if e.original.type && e.original.type isnt 'CATEGORY' # is model
 					if $.inArray(e.original.type, types) isnt -1
 						continue
 					skip = false
@@ -82,7 +84,7 @@ define([
 							break
 					if skip
 						continue
-					elements.push {type: e.original.type, categoryType: e.original.type, id: e.original.id, name: e.original.text, commitId: e.commitId}
+					elements.push {type: e.original.type, refId : e.original.id, commitId: e.commitId}
 			if firstOnly
 				if elements.length
 					return elements[0]

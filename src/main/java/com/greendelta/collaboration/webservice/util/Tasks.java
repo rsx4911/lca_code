@@ -1,7 +1,7 @@
 package com.greendelta.collaboration.webservice.util;
 
 import com.greendelta.collaboration.model.task.Task;
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.ObjectMap;
 
 public class Tasks {

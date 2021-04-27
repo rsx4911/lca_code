@@ -8,10 +8,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.PUT;
@@ -22,50 +21,43 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.logging.log4j.LogManager;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
-import org.openlca.core.model.ModelType;
+import org.openlca.cloud.api.git.Reference;
+import org.openlca.core.model.AllocationMethod;
 import org.openlca.jsonld.Dates;
 import org.openlca.jsonld.Enums;
+import org.openlca.util.Strings;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.glad.ProcessType;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.ServerConfig;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.util.GsonTypes;
 import com.greendelta.collaboration.util.ObjectMap;
-import com.greendelta.collaboration.webservice.ReferenceCollector;
-import com.greendelta.collaboration.webservice.ReferenceCollector.Reference;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.search.wrapper.SearchClient;
-
-import joptsimple.internal.Strings;
+import com.greendelta.collaboration.webservice.util.FrontendReference;
 
 @Path("datamanager/glad")
 public class GladResource {
 
 	private static final List<String> GLAD_FIELDS = new ArrayList<>(Arrays.asList(
 			"refId", "processType", "supportedNomenclatures", "aggregationType", "multifunctionalModeling", "name",
-			"categories", "location",
-			"completeness", "technology", "copyrightHolder", "license", "contact", "description", "dataSetUrl",
-			"format", "validFrom", "validFromYear", "validUntil", "validUntilYear", "copyrightProtected", "free",
-			"dataprovider", "reviewers", "reviewType", "longitude", "latitude", "publiclyAccessible"));
+			"categories", "location", "completeness", "technology", "copyrightHolder", "license", "contact",
+			"description", "dataSetUrl", "format", "validFrom", "validFromYear", "validUntil", "validUntilYear",
+			"copyrightProtected", "free", "dataprovider", "reviewers", "reviewType", "longitude", "latitude",
+			"publiclyAccessible"));
 
 	private final RepositoryService repoService;
-	private final BrowseService browseService;
 	private final SettingsService settingsService;
 
 	@Inject
-	public GladResource(RepositoryService repoService, BrowseService browseService, SettingsService settingsService) {
+	public GladResource(RepositoryService repoService, SettingsService settingsService) {
 		this.repoService = repoService;
-		this.browseService = browseService;
 		this.settingsService = settingsService;
 	}
 
@@ -85,74 +77,65 @@ public class GladResource {
 		Repository repo = repoService.get(group, name);
 		if (repo == null)
 			return Respond.notFound("No repository with id " + group + "/" + name + " found");
-		String repoId = repo.toId();
-		Map<String, String> dsToCommit = new HashMap<>();
-		// TODO refactor
-		ReferenceCollector<String> collector = new ReferenceCollector<>(browseService, (ref) -> {
-			String commitId = repo.commits.find().model(ModelType.PROCESS, ref.id).latestId();
-			dsToCommit.put(ref.id, commitId);
-			return IndexEntry.toIndexId(repoId, ref.type, ref.id, commitId);
-		});
-		Set<String> remaining = collector.getReferences(repo, input.references);
-		if (remaining.isEmpty())
+		List<Reference> refs = FrontendReference.collect(repo, input.references);
+		if (refs.isEmpty())
 			return Respond.notFound("No data in repository " + group + "/" + name + " found");
-		SearchClient client = settingsService.searchConfig.getSearchClient();
 		Gson gson = new Gson();
-		while (!remaining.isEmpty()) {
-			Set<String> next = com.greendelta.collaboration.util.Collections.pop(remaining, 1000);
-			List<Map<String, Object>> allData = client.get(next);
-			for (Map<String, Object> data : allData) {
-				putProcessData(repo, dsToCommit, data);
-				data.put("format", "JSON_LD");
-				data.put("dataprovider", input.dataprovider);
-				String baseUrl = config.get(ServerSetting.SERVER_URL);
-				String refId = data.get("refId").toString();
-				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repoId + "/PROCESS/"
-						+ refId + "?commitId=" + dsToCommit.get(refId));
-				data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
-				data.put("free", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
-				for (String key : new ArrayList<>(data.keySet())) {
-					if (!GLAD_FIELDS.contains(key)) {
-						data.remove(key);
-					}
+		for (Reference ref : refs) {
+			Map<String, Object> data = loadProcessData(repo, ref);
+			data.put("format", "JSON_LD");
+			data.put("dataprovider", input.dataprovider);
+			String baseUrl = config.get(ServerSetting.SERVER_URL);
+			data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repo.toId() + "/PROCESS/"
+					+ ref.refId + "?commitId=" + ref.commitId);
+			data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
+			data.put("free", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
+			for (String key : new ArrayList<>(data.keySet())) {
+				if (!GLAD_FIELDS.contains(key)) {
+					data.remove(key);
 				}
-				try {
-					send(gladUrl, gladHeaderField, gladHeaderValue, refId, gson.toJson(data));
-				} catch (Exception e) {
-					LogManager.getLogger(GladResource.class).error("Error pushing to GLAD", e);
-					return Respond.error(e.getMessage());
-				}
+			}
+			try {
+				send(gladUrl, gladHeaderField, gladHeaderValue, ref.refId, gson.toJson(data));
+			} catch (Exception e) {
+				LogManager.getLogger(GladResource.class).error("Error pushing to GLAD", e);
+				return Respond.error(e.getMessage());
 			}
 		}
 		return Respond.ok();
+
 	}
 
-	private void putProcessData(Repository repo, Map<String, String> dsToCommit, Map<String, Object> d) {
-		String refId = d.get("refId").toString();
-		Commit commit = repo.commits.get(dsToCommit.get(refId));
-		CommitReference ref = repo.references.get(ModelType.PROCESS, refId, commit);
+	private Map<String, Object> loadProcessData(Repository repo, Reference ref) {
 		String json = repo.datasets.get(ref);
 		ObjectMap data = ObjectMap.fromMap(new Gson().fromJson(json, GsonTypes.OBJECT_MAP));
+		data.put("catgeories", ref.category.split("/"));
+		data.put("contact", data.getString("processDocumentation.dataSetOwner.name"));
 		String reviewer = data.getString("processDocumentation.reviewer.name");
-		d.put("processType", getProcessType(data.getString("processType")));
-		d.put("validFrom", Dates.getTime(data.get("processDocumentation.validFrom")));
-		d.put("validUntil", Dates.getTime(data.get("processDocumentation.validUntil")));
-		d.put("technology", data.getString("processDocumentation.technologyDescription"));
-		if (!Strings.isNullOrEmpty(reviewer)) {
-			d.put("reviewers", new String[] { reviewer });
-			d.put("reviewType", "UNKNOWN");
+		data.put("processType", getProcessType(data.getString("processType")));
+		long validFrom = Dates.getTime(data.get("processDocumentation.validFrom"));
+		data.put("validFrom", validFrom);
+		data.put("validFromYear", getYear(validFrom));
+		long validUntil = Dates.getTime(data.get("processDocumentation.validUntil"));
+		data.put("validUntil", validUntil);
+		data.put("validUntilYear", getYear(validUntil));
+		data.put("technology", data.getString("processDocumentation.technologyDescription"));
+		if (!Strings.nullOrEmpty(reviewer)) {
+			data.put("reviewers", new String[] { reviewer });
+			data.put("reviewType", "UNKNOWN");
 		}
-		if (data.get("location.latitude") != null && data.get("location.longitude") != null) {
-			d.put("latitude", data.getLong("location.latitude"));
-			d.put("longitude", data.getLong("location.longitude"));
+		if (data.get("location.latitude") != null && data.get("location.latitude") != null) {
+			data.put("latitude", data.getLong("location.latitude"));
+			data.put("longitude", data.getLong("location.longitude"));
 		}
-		d.put("reviewed", !Strings.isNullOrEmpty(reviewer));
-		d.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
-		d.put("copyrightHolder", data.getString("processDocumentation.dataSetOwner.name"));
-		d.put("description", data.getString("description"));
-		if (!Strings.isNullOrEmpty(data.getString("modellingApproach"))) {
-			d.put("multifunctionalModeling", data.getString("modellingApproach"));
+		data.put("location", data.getString("location.name"));
+		data.put("reviewed", !Strings.nullOrEmpty(reviewer));
+		data.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
+		data.put("copyrightHolder", data.getString("processDocumentation.dataSetOwner.name"));
+		if (!Strings.nullOrEmpty(data.getString("defaultAllocationMethod"))) {
+			data.put("multifunctionalModeling", getModellingApproach(data.getString("defaultAllocationMethod")));
 		}
+		return data;
 	}
 
 	private ProcessType getProcessType(String type) {
@@ -165,6 +148,28 @@ public class GladResource {
 		return ProcessType.UNKNOWN;
 	}
 
+	private static Integer getYear(long time) {
+		if (time == 0l)
+			return null;
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeInMillis(time);
+		return cal.get(Calendar.YEAR);
+	}
+
+	private static ModellingApproach getModellingApproach(String value) {
+		if (value == null)
+			return ModellingApproach.UNKNOWN;
+		if (value.equals(Enums.getLabel(AllocationMethod.PHYSICAL)))
+			return ModellingApproach.PHYSICAL;
+		if (value.equals(Enums.getLabel(AllocationMethod.ECONOMIC)))
+			return ModellingApproach.ECONOMIC;
+		if (value.equals(Enums.getLabel(AllocationMethod.CAUSAL)))
+			return ModellingApproach.CAUSAL;
+		if (value.equals(Enums.getLabel(AllocationMethod.NONE)))
+			return ModellingApproach.NONE;
+		return ModellingApproach.UNKNOWN;
+	}
+
 	private void send(String gladBaseUrl, String headerField, String headerValue, String refId, String data)
 			throws Exception {
 		URL object = new URL(gladBaseUrl + "/search/index/" + refId);
@@ -174,7 +179,7 @@ public class GladResource {
 		con.setRequestProperty("Content-Type", "application/json");
 		con.setRequestProperty("Accept", "application/json");
 		con.setRequestMethod("PUT");
-		if (!Strings.isNullOrEmpty(headerField) && !Strings.isNullOrEmpty(headerValue)) {
+		if (!Strings.nullOrEmpty(headerField) && !Strings.nullOrEmpty(headerValue)) {
 			con.addRequestProperty(headerField, headerValue);
 		}
 		OutputStreamWriter wr = new OutputStreamWriter(con.getOutputStream());
@@ -199,7 +204,7 @@ public class GladResource {
 	private static class Input {
 
 		public String dataprovider;
-		public List<Reference> references;
+		public List<FrontendReference> references;
 
 	}
 

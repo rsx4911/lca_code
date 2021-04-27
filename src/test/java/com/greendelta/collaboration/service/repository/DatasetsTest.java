@@ -8,10 +8,10 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlca.cloud.api.git.Reference;
+import org.openlca.cloud.api.git.Datasets;
+import org.openlca.cloud.api.git.References;
 import org.openlca.core.model.ModelType;
-
-import com.greendelta.collaboration.service.repository.Commits.Commit;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
 
 public class DatasetsTest {
 	private static final String[] commitIds = {
@@ -22,7 +22,6 @@ public class DatasetsTest {
 			"db3ba75f99df098aec28726447ad583fea3bd93b",
 			"0c9395b3c2e28a26265d35a146f64369c82085fe"
 	};
-	private Commits commits;
 	private References references;
 	private Datasets datasets;
 
@@ -31,7 +30,6 @@ public class DatasetsTest {
 		String path = "C:/Users/Sebastian/git/lca-collaboration/src/test/resources/com/greendelta/collaboration/service/repository/ref_data";
 		File workDir = new File(path);
 		try (FileRepository repo = new FileRepository(workDir)) {
-			commits = new Commits(repo);
 			references = new References(repo);
 			datasets = new Datasets(repo);
 		}
@@ -39,8 +37,8 @@ public class DatasetsTest {
 
 	@Test
 	public void testGet() {
-		Commit commit = commits.get(commitIds[5]);
-		CommitReference ref = references.get(ModelType.FLOW, "00c3eaf0-7c2f-3f63-a756-37ffbd4f2b21", commit);
+		Reference ref = references.get(ModelType.FLOW, "00c3eaf0-7c2f-3f63-a756-37ffbd4f2b21", commitIds[5]);
+		Assert.assertNotNull(ref);
 		String data = datasets.get(ref);
 		Assert.assertNotNull(data);
 	}

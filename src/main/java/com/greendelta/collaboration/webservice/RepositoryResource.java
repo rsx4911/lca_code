@@ -11,19 +11,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Binary;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.repository.Datasets.Binary;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.BrowseService;
-import com.greendelta.collaboration.service.search.BrowseService.BrowseParameter;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.util.Client;
 import com.greendelta.collaboration.webservice.util.Repositories;
@@ -34,13 +32,11 @@ public class RepositoryResource {
 
 	private final RepositoryService service;
 	private final GroupService groupService;
-	private final BrowseService browseService;
 
 	@Inject
-	public RepositoryResource(RepositoryService service, GroupService groupService, BrowseService browseService) {
+	public RepositoryResource(RepositoryService service, GroupService groupService) {
 		this.service = service;
 		this.groupService = groupService;
-		this.browseService = browseService;
 	}
 
 	@GET
@@ -48,7 +44,7 @@ public class RepositoryResource {
 		List<Repository> repositories = service.getAllAccessible();
 		return Respond.ok(Client.map(repositories, repo -> {
 			ObjectMap map = Repositories.map(repo);
-			map.put("datasets", browseService.getCount(new BrowseParameter(repo)));
+			map.put("datasets", repo.references.find().all().size());
 			return map;
 		}));
 	}
@@ -90,10 +86,9 @@ public class RepositoryResource {
 			@QueryParam("commitId") String commitId) throws IOException {
 		// TODO test git implementation
 		Repository repo = service.get(group, name);
-		Commit commit = repo.commits.find().model(type, refId).until(commitId).latest();
-		if (commit == null)
-			return Respond.notFound(notFoundMessage(type, refId, null));
-		CommitReference ref = repo.references.get(type, refId, commit);
+		Reference ref = repo.references.get(type, refId, commitId);
+		if (ref == null)
+			return Respond.notFound(notFoundMessage(type, refId, filename));
 		Binary binary = repo.datasets.getBinary(ref, filename);
 		if (binary == null)
 			return Respond.notFound(notFoundMessage(type, refId, filename));

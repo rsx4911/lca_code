@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -23,19 +21,17 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.greendelta.collaboration.service.repository.Commits.Commit;
+import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.repository.Repository;
-import com.greendelta.collaboration.service.repository.RepositoryService;
-import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -55,19 +51,16 @@ public class CommentResource {
 	private final UserService userService;
 	private final AccessService accessService;
 	private final NotificationService notificationService;
-	private final SearchService searchService;
 	private final SettingsService settingsService;
 
 	@Inject
 	public CommentResource(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, NotificationService notificationService, SearchService searchService,
-			SettingsService settingsService) {
+			AccessService accessService, NotificationService notificationService, SettingsService settingsService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
-		this.searchService = searchService;
 		this.settingsService = settingsService;
 	}
 
@@ -115,25 +108,11 @@ public class CommentResource {
 		List<ObjectMap> mapped = new ArrayList<>();
 		if (comments.isEmpty())
 			return mapped;
-		String repoId = repo.toId();
-		// TODO commits: refactor
-		Set<String> ids = new HashSet<>();
-		for (Comment comment : comments) {
-			DatasetField field = comment.field;
-			Commit commit = repo.commits.find().model(field.modelType, field.refId).until(field.commitId).latest();
-			ids.add(IndexEntry.toIndexId(repoId, field.modelType, field.refId, commit.id));
-		}
-		List<IndexEntry> entries = searchService.get(ids);
-		Map<String, String> idToPath = new HashMap<>();
-		for (IndexEntry entry : entries) {
-			idToPath.put(entry.toIndexId(), entry.fullPath);
-		}
 		for (Comment comment : comments) {
 			ObjectMap map = Comments.map(comment);
 			DatasetField field = comment.field;
-			Commit commit = repo.commits.find().model(field.modelType, field.refId).until(field.commitId).latest();
-			String key = IndexEntry.toIndexId(repoId, comment.field.modelType, comment.field.refId, commit.id);
-			map.put("dsPath", idToPath.get(key));
+			Reference ref = repo.references.get(field.modelType, field.refId, field.commitId);
+			map.put("dsPath", ref.category);
 			if (putReplyCount) {
 				map.put("replyCount", service.getRepliesTo(comment.getId()).size());
 			}
@@ -245,10 +224,8 @@ public class CommentResource {
 	private ObjectMap map(Comment comment, Repository repo) {
 		ObjectMap map = Comments.map(comment);
 		DatasetField field = comment.field;
-		// TODO commits: necessary?
-		Commit commit = repo.commits.find().model(field.modelType, field.refId).until(field.commitId).latest();
-		IndexEntry ds = searchService.get(repo, field.modelType, field.refId, commit.id);
-		map.put("dsPath", ds.fullPath);
+		Reference ref = repo.references.get(field.modelType, field.refId, field.commitId);
+		map.put("dsPath", ref.category);
 		return map;
 	}
 

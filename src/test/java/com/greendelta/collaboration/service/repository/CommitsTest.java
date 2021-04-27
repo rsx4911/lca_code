@@ -9,9 +9,9 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Commits;
 import org.openlca.core.model.ModelType;
-
-import com.greendelta.collaboration.service.repository.Commits.Commit;
 
 public class CommitsTest {
 

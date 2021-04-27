@@ -11,8 +11,10 @@ import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.greendelta.collaboration.service.repository.Commits.Commit;
-import org.openlca.cloud.model.data.FileReference;
+import org.openlca.cloud.api.git.Binary;
+import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Reference;
+import org.openlca.cloud.model.FileReference;
 import org.openlca.convert.jsonld.ilcd.Json2IlcdStore;
 import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
@@ -21,9 +23,7 @@ import org.openlca.ilcd.io.ZipStore;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.greendelta.collaboration.service.repository.Datasets.Binary;
-import com.greendelta.collaboration.service.repository.References.CommitReference;
-import com.greendelta.collaboration.service.repository.Repository;
+import com.greendelta.collaboration.service.Repository;
 
 public class IlcdWriter implements DatasetWriter {
 
@@ -54,7 +54,7 @@ public class IlcdWriter implements DatasetWriter {
 			return;
 		processed.add(type.name() + refId);
 		this.collectedRefs = new HashSet<>();
-		if (repo.references.get(type, refId, commit) == null)
+		if (repo.references.get(type, refId, commit.id) == null)
 			return;
 		// TODO check if this is required still
 		// boolean exists = entry != null && entry.action != IndexAction.DELETE;
@@ -104,25 +104,18 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public JsonObject get(String type, String refId) {
 			ModelType modelType = getType(type);
-			CommitReference ref = repo.references.get(modelType, refId, commit);
+			Reference ref = repo.references.get(modelType, refId, commit.id);
+			if (ref == null)
+				return null;
 			String data = repo.datasets.get(ref);
-			if (data != null)
-				return gson.fromJson(data, JsonObject.class);
-			Commit lastCommit = repo.commits.find().model(modelType, refId).before(commit.id).latest();
-			if (lastCommit == null)
-				return null;
-			data = repo.datasets.get(ref);
-			if (data == null)
-				return null;
 			return gson.fromJson(data, JsonObject.class);
 		}
 
 		@Override
 		public byte[] getExternalFile(String sourceRefId, String filename) {
-			Commit lastCommit = repo.commits.find().model(ModelType.SOURCE, sourceRefId).until(commit.id).latest();
-			if (lastCommit == null)
+			Reference ref = repo.references.get(ModelType.SOURCE, sourceRefId, commit.id);
+			if (ref == null)
 				return null;
-			CommitReference ref = repo.references.get(ModelType.SOURCE, sourceRefId, lastCommit);
 			Binary binary = repo.datasets.getBinary(ref, filename);
 			if (binary == null)
 				return null;
@@ -132,8 +125,8 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			List<CommitReference> refs = repo.references.getForType(ModelType.PARAMETER, commit);
-			for (CommitReference ref:  refs) {
+			List<Reference> refs = repo.references.find().type(ModelType.PARAMETER).commit(commit.id).all();
+			for (Reference ref : refs) {
 				String data = repo.datasets.get(ref);
 				if (data == null)
 					continue;
