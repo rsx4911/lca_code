@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.api.git.Reference;
 import org.openlca.cloud.api.git.References.Entry;
+import org.openlca.cloud.api.git.References.Entry.EntryType;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.base.Strings;
@@ -63,17 +64,19 @@ public class BrowseResource {
 		boolean loggedIn = user.hasId();
 		for (Entry entry : entries) {
 			ObjectMap map = ObjectMap.fromObject(entry);
+			String entryPath = entry.name;
+			if (!Strings.isNullOrEmpty(categoryPath)) {
+				entryPath = categoryPath + "/" + entryPath;
+			}
 			if (loggedIn) {
-				// TODO test performance
-				String entryCommitId = repo.commits.find().path(entry.ref.fullPath).latestId();
+				String entryCommitId = repo.commits.find().path(entryPath).latestId();
 				Commit commit = commits.computeIfAbsent(entryCommitId, repo.commits::get);
 				map.put("commitId", commit.id);
 				map.put("commitMessage", commit.message);
 				map.put("commitTimestamp", commit.timestamp);
 			}
-			if (entry.isCategory()) {
-				// TODO test performance
-				map.put("count", repo.references.find().commit(commitId).path(path + "/" + entry.name).count());
+			if (entry.typeOfEntry != EntryType.DATASET) {
+				map.put("count", repo.references.find().commit(commitId).path(entryPath).count());
 			}
 			mapped.add(map);
 		}
