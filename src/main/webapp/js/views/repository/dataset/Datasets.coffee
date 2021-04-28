@@ -105,22 +105,20 @@ define([
 						if @categoryPath
 							url += 'categoryPath=' + @getCategoryPath() + '&'
 						if @commitId
-							url += '&commitId=' + @commitId
-						return url + '&'
+							url += 'commitId=' + @commitId + '&'
+						return url
 					beforeRender: (result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
-						result.previousPath = ''
-						if @pathArray and @pathArray.length
-							for path, index in @pathArray
-								if index < (@pathArray.length - 1)
-									if index > 0
-										result.previousPath += '/'
-									result.previousPath += path
 						result.commitId = @commitId
 						result.isPublic = !currentUser.isLoggedIn()
 						result.getRootLabel = (t) -> return ModelTypes[t]
+						result.getModelType = (t) -> 				
+							for key in Object.keys(ModelTypes)
+								if ModelTypes[key] is t
+									return key
+							return null
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						result.getIcon = Icons.get
 						if result.entries?.length or @categoryPath
@@ -131,24 +129,6 @@ define([
 							@$('.table-browse').hide()
 						@initialized = true
 					afterRender: () => Toggle.init @$el
-
-			loadCount: (result) ->
-				group = @repository.get 'group'
-				name = @repository.get 'name'				
-				for entry in result.entries
-					if entry.type is 'CATEGORY' or !entry.refId
-						path = if entry.type is 'CATEGORY' then entry.categoryType else entry.type
-						if entry.fullPath
-							path += "/#{entry.fullPath}"
-						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{encodeURIComponent(path)}"
-						if @commitId
-							url += '&commitId=' + @commitId
-						pace.ignore () =>
-							$.ajax
-								type: 'GET'
-								url: url
-								success: (result) ->
-									$("td[data-path='#{result.path}'] .dataset-count").html "(#{result.count})"
 
 			render: (renderOptions) ->
 				group = @repository.get 'group'

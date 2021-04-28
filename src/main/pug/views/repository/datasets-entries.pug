@@ -9,8 +9,8 @@ mixin commit-link-cell(entry)
 
 if categoryPath
 	- var previousUrl = baseUrl + '/datasets';
-	if previousPath
-		- previousUrl += '/' + previousPath;
+	if categoryPath.indexOf('/') !== -1
+		- previousUrl += '/' + categoryPath.substring(0, categoryPath.lastIndexOf('/'));
 	if commitId
 		- previousUrl += '?commitId=' + commitId	
 	tr 
@@ -20,33 +20,23 @@ if categoryPath
 			td
 			td
 each entry in entries
+	- var name = entry.typeOfEntry === 'MODEL_TYPE' ? getRootLabel(entry.type) : entry.name;
+	- var iconUrl = entry.typeOfEntry === 'DATASET' ? getIcon(entry) : 'category/' + entry.type.toLowerCase() + '.png';
+	- var url = '';
+	if entry.typeOfEntry === 'MODEL_TYPE'
+		- url = '/datasets/' + name; 
+	else if entry.typeOfEntry === 'CATEGORY'
+		- url = '/datasets/' + categoryPath + '/' + entry.name; 
+	else
+		- url = '/dataset/' + entry.type + '/' + entry.refId; 
+	if commitId
+		- url += '?commitId=' + commitId;
 	tr
-		if !categoryPath
-			td: img.model-icon-small(src='images/model/small/category/' + entry.type.toLowerCase() + '.png', aria-label='Model icon of ' + entry.type)
-			- var url = baseUrl + '/datasets/' + getRootLabel(entry.type);
-			if commitId
-				- url += '?commitId=' + commitId			
-			td(data-path=entry.type): a(href=url): strong 
-				|  #{getRootLabel(entry.type)} 
-				+count-span(entry)
-			if !isPublic
-				td=formatLastUpdate(entry.commitTimestamp)
-				+commit-link-cell(entry)
-		else
-			td: img.model-icon-small(src='images/model/small/' + getIcon(entry), aria-label='Model icon of ' + entry.type)
-			td(data-path=entry.type==='CATEGORY'?entry.categoryType+(entry.fullPath?'/'+entry.fullPath:''):null)
-				- var url = entry.type === 'CATEGORY' ? '/datasets/' + categoryPath + '/' + entry.name : '/dataset/' + entry.type + '/' + entry.refId;
-				if commitId
-					- url += '?commitId=' + commitId
-				a(href=baseUrl + url): strong
-					if entry.action === 'DELETE'
-						del=entry.name 
-							if entry.type === 'CATEGORY'
-								+count-span(entry)
-					else
-						| #{entry.name} 
-						if entry.type === 'CATEGORY'
-							+count-span(entry)
-			if !isPublic
-				td=formatLastUpdate(entry.commitTimestamp)
-				+commit-link-cell(entry)
+		td: img.model-icon-small(src='images/model/small/' + iconUrl, aria-label='Model icon of ' + entry.type)
+		td: a(href=baseUrl + url): strong
+			|  #{name}
+			if entry.typeOfEntry !== 'DATASET'
+				+count-span(entry) 
+		if !isPublic
+			td=formatLastUpdate(entry.commitTimestamp)
+			+commit-link-cell(entry)
