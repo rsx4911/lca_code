@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.user;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,8 +12,9 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
@@ -107,7 +107,7 @@ public class CommentService {
 	}
 
 	public void move(Repository from, Repository to) {
-		List<Comment> comments = getAllFor(from, null, null, null);
+		List<Comment> comments = getAllFor(from);
 		for (Comment comment : comments) {
 			comment.repositoryPath = to.toId();
 		}
@@ -115,14 +115,11 @@ public class CommentService {
 	}
 
 	public void copy(Repository from, Repository to) {
-		List<Comment> comments = getAllFor(from, null, null, null);
+		List<Comment> comments = getAllFor(from);
 		Map<Long, Comment> oldToNew = new HashMap<>();
-		List<Comment> standalone = new ArrayList<>();
-		List<Comment> replies = new ArrayList<>();
 		for (Comment comment : comments) {
 			if (comment.replyTo != null)
 				continue;
-			standalone.add(comment);
 			Comment clone = clone(comment, null, to);
 			clone = dao.insert(clone);
 			oldToNew.put(comment.getId(), clone);
@@ -130,13 +127,10 @@ public class CommentService {
 		for (Comment comment : comments) {
 			if (comment.replyTo == null)
 				continue;
-			replies.add(comment);
 			Comment replyTo = oldToNew.get(comment.replyTo.getId());
 			Comment clone = clone(comment, replyTo, to);
 			dao.insert(clone);
 		}
-		dao.delete(replies);
-		dao.delete(standalone);
 	}
 
 	private Comment clone(Comment comment, Comment replyTo, Repository repo) {
@@ -197,10 +191,10 @@ public class CommentService {
 			comment.approved = true;
 		} else {
 			String[] split = comment.repositoryPath.split("/");
-			String repoPath = settingsService.get(Key.REPOSITORY_PATH);
+			String repoPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
 			if (repoPath != null) {
-				Repository repo = Repository.get(repoPath, split[0], split[1]);
-				if (!repo.settings.commentApproval) {
+				String id = Repository.toId(split[0], split[1]);
+				if (!settingsService.is(RepositorySetting.COMMENT_APPROVAL, id)) {
 					comment.approved = true;
 				}
 			}
