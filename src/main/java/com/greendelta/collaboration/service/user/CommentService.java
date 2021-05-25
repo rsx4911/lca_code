@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.user;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,12 +117,9 @@ public class CommentService {
 	public void copy(Repository from, Repository to) {
 		List<Comment> comments = getAllFor(from, null, null, null);
 		Map<Long, Comment> oldToNew = new HashMap<>();
-		List<Comment> standalone = new ArrayList<>();
-		List<Comment> replies = new ArrayList<>();
 		for (Comment comment : comments) {
 			if (comment.replyTo != null)
 				continue;
-			standalone.add(comment);
 			Comment clone = clone(comment, null, to);
 			clone = dao.insert(clone);
 			oldToNew.put(comment.getId(), clone);
@@ -131,13 +127,10 @@ public class CommentService {
 		for (Comment comment : comments) {
 			if (comment.replyTo == null)
 				continue;
-			replies.add(comment);
 			Comment replyTo = oldToNew.get(comment.replyTo.getId());
 			Comment clone = clone(comment, replyTo, to);
 			dao.insert(clone);
 		}
-		dao.delete(replies);
-		dao.delete(standalone);
 	}
 
 	private Comment clone(Comment comment, Comment replyTo, Repository repo) {
