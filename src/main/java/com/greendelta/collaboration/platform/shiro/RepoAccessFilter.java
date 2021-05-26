@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.util.WebUtils;
+import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.error.RepositoryNotFoundException;
 
 import com.google.inject.Inject;
@@ -23,6 +24,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.util.io.RepositoryJsonWriter;
 
 /**
@@ -36,17 +38,19 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 	private final AccessService accessService;
 	private final RepositoryService repoService;
 	private final SearchService searchService;
+	private final NotificationService notificationService;
 	private final Provider<Subject> subjectProvider;
 	private final GitFilter gitFilter;
 
 	@Inject
 	public RepoAccessFilter(Provider<CloudSession> sessionProvider, AccessService accessService,
-			RepositoryService repoService, SearchService searchService, Provider<Subject> subjectProvider,
+			RepositoryService repoService, SearchService searchService, NotificationService notificationService, Provider<Subject> subjectProvider,
 			GitFilter gitFilter) {
 		this.sessionProvider = sessionProvider;
 		this.accessService = accessService;
 		this.repoService = repoService;
 		this.searchService = searchService;
+		this.notificationService = notificationService;
 		this.subjectProvider = subjectProvider;
 		this.gitFilter = gitFilter;
 	}
@@ -69,6 +73,8 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 					&& repo.settings.is(RepositorySetting.JSON_FILE_GENERATION)) {
 				RepositoryJsonWriter.writeCurrentAsync(repo); // TODO test this
 			}
+			Commit commit = repo.commits.find().latest();
+			notificationService.dataCommitted(repo, commit);
 		}
 	}
 
