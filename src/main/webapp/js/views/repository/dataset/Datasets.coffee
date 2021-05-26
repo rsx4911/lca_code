@@ -135,7 +135,7 @@ define([
 				name = @repository.get 'name'
 				if currentUser.isLoggedIn()
 					historyUrl = "ws/history/#{group}/#{name}"
-					if @categoryPath && @categoryPath.indexOf('/') is -1
+					if @categoryPath
 						historyUrl += "?path=#{@getCategoryPath()}"
 					$.ajax
 						type: 'GET'

@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.api.git.Reference;
 import org.openlca.cloud.api.git.References.Entry;
-import org.openlca.cloud.api.git.References.Entry.EntryType;
+import org.openlca.cloud.api.git.References.EntryType;
 import org.openlca.core.model.ModelType;
 
 import com.google.common.base.Strings;
@@ -110,6 +110,7 @@ public class BrowseResource {
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		BrowseReferenceFiller references = new BrowseReferenceFiller(repo, commitId);
 		references.fillReferencedElements(json);
+		json.addProperty("category", ref.category);
 		if (loggedIn) {
 			json.add("commitId", new JsonPrimitive(commitId));
 		}

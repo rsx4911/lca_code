@@ -339,8 +339,8 @@ mixin ref-block(path, defaultLabel)
 		+ref(value, value2, defaultLabel)
 
 mixin category-field(category, category2, inTable)
-	- var value = inTable ? category : getValue(category, 'name');
-	- var value2 = inTable ? category2 : getValue(category2, 'name');
+	- var value = inTable ? category : (category || '').split('/')
+	- var value2 = inTable ? category2 : (category2 || '').split('/')
 	- var depth = inTable ? 2 : null;
 	- var categoryCompare = ((value && value2) || !inTable) && compareTo ? compare(value, value2) : null;
 	span(data-compare=categoryCompare)

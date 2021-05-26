@@ -160,7 +160,7 @@ define([
 					@commitId = null
 					Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId, 
 						trigger: false
-						replace: true
+						replace: true					
 				@loadDataset @refId, @commitId, (dataset) =>
 					@dataset = dataset
 					if currentUser.isLoggedIn()

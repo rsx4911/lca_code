@@ -59,19 +59,7 @@ public class HistoryResource {
 		if (commits.size() == 0)
 			return Respond.noContent();
 		java.util.Collections.reverse(commits);
-		List<Map<String, Object>> mapped = new ArrayList<>();
-		List<Commit> ownCommits = repo.commits.find().model(type, refId).all();
-		for (Commit commit : commits) {
-			Map<String, Object> map = putUserName(commit);
-			for (Commit c : ownCommits) {
-				if (!commit.id.equals(c.id))
-					continue;
-				map.put("modelHasChanged", true);
-				break;
-			}
-			mapped.add(map);
-		}
-		return Respond.ok(mapped);
+		return Respond.ok(putUserName(commits));
 	}
 
 	@GET

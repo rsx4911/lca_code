@@ -50,7 +50,7 @@ if showCommitSelection || categoryPath
 			.pull-left
 				+select('commit', 'Commit', null, null, true)
 					each commit, index in commits
-						option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId)=index===0?'Latest':commit.id 
+						option(value=commit.id selected=(!commitId&&index===0)||commit.id===commitId class=commit.modelHasChanged?'highlight':null)=index===0?'Latest':commit.id 
 						optgroup.additional-info(label!='&nbsp; &nbsp;' + commit.message)
 			.pull-right
 				+download-dropdown()
