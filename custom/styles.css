@@ -187,12 +187,14 @@ body.public-mode {
   }
 }
 
+/*
 @media screen and (min-width: 992px) {
-  /* line 36, ../scss/components/_footer.scss */
+  /* line 36, ../scss/components/_footer.scss
   .footer__secondary-section ul {
     column-count: 4;
   }
 }
+*/
 
 /* line 42, ../scss/components/_footer.scss */
 
