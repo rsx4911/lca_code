@@ -346,15 +346,13 @@ mixin category-field(category, category2, inTable)
 	span(data-compare=categoryCompare)
 		+compare-icon(categoryCompare)
 		if value
-			- var type = category.categoryType || dataset.type;
-			- var typeLabel = getTypeLabel(getTypeAsEnum(type));
+			- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
 			+category-breadcrumb(url, value, true, depth)(data-path=!inTable?'category':null, class='original-value')
 			if value2
 				br
 		if value2 && (!value || categoryCompare)
-			- var type2 = category2.categoryType || compareTo.type;
-			- var typeLabel = getTypeLabel(getTypeAsEnum(type2));
+			- var typeLabel = getTypeLabel(getTypeAsEnum(compareTo.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
 			+category-breadcrumb(url, value2, true, depth)(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
 
