@@ -290,6 +290,10 @@ public class RepositoryService {
 	public List<Repository> getAllAccessible() {
 		return getAll(false, true);
 	}
+	
+	public List<Repository> getPublic() {
+		return getAll(true, false);
+	}
 
 	private List<Repository> getAll(boolean onlyPublic, boolean adminArea) {
 		String path = getRootPath();

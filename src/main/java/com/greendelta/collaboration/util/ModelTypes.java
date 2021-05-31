@@ -10,11 +10,12 @@ import org.openlca.core.model.ProcessType;
 
 public class ModelTypes {
 
-	public static final List<String> DEFAULT_MODEL_TYPES_ORDER = Arrays.asList(new String[] {
+	public static final List<String> DEFAULT_ORDER = Arrays.asList(new String[] {
 			ModelType.PROJECT.name(),
 			ModelType.PRODUCT_SYSTEM.name(),
 			ModelType.PROCESS.name(),
 			ModelType.IMPACT_METHOD.name(),
+			ModelType.IMPACT_CATEGORY.name(),
 			ModelType.FLOW.name(),
 			ModelType.SOCIAL_INDICATOR.name(),
 			ModelType.PARAMETER.name(),

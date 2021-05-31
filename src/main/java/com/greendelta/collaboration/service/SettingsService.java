@@ -186,7 +186,8 @@ public class SettingsService {
 				types.add(ModelType.valueOf(value.get(i)));
 			}
 			for (ModelType type : ModelType.values()) {
-				if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
+				if (type != ModelType.IMPACT_CATEGORY && !type.isCategorized() || types.contains(type)
+						|| hidden.contains(type.name()))
 					continue;
 				types.add(type);
 			}

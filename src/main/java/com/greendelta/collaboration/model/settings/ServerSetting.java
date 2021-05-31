@@ -41,7 +41,7 @@ public enum ServerSetting implements SettingKey {
 	// landing page/search settings
 	REPOSITORIES_ORDER(GsonTypes.STRING_LIST, new ArrayList<>()),
 	REPOSITORIES_HIDDEN(GsonTypes.STRING_LIST, new ArrayList<>()),
-	MODEL_TYPES_ORDER(GsonTypes.STRING_LIST, ModelTypes.DEFAULT_MODEL_TYPES_ORDER),
+	MODEL_TYPES_ORDER(GsonTypes.STRING_LIST, ModelTypes.DEFAULT_ORDER),
 	MODEL_TYPES_HIDDEN(GsonTypes.STRING_LIST, new ArrayList<>()),
 
 	// maintenance
