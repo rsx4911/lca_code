@@ -1,4 +1,5 @@
 include ../mixins/long-text.pug
+include ../mixins/paging.pug
 
 mixin count-span(entry)
 	if entry.count !== -1
@@ -19,7 +20,7 @@ if categoryPath
 		if !isPublic
 			td
 			td
-each entry in entries
+each entry in data
 	- var name = entry.typeOfEntry === 'MODEL_TYPE' ? getRootLabel(entry.type) : entry.name;
 	- var iconUrl = entry.typeOfEntry === 'DATASET' ? getIcon(entry) : 'category/' + entry.type.toLowerCase() + '.png';
 	- var url = '';
@@ -40,3 +41,6 @@ each entry in entries
 		if !isPublic
 			td=formatLastUpdate(entry.commitTimestamp)
 			+commit-link-cell(entry)
+tr
+	td(colspan=isPublic?2:4)
+		+paging(resultInfo)

@@ -5,7 +5,7 @@ define () ->
 		uncategorizedLabel = 'Uncategorized factors'
 		map[uncategorizedLabel] = {'': []}
 		for f in impactFactors
-			cat = f.flow.category or []
+			cat = if f.flow.category then f.flow.category.split('/') or []
 			if cat.length < 2
 				map[uncategorizedLabel][''].push f
 			else

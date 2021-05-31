@@ -98,8 +98,8 @@ define([
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
-					noPaging: true
 					filterId: 'filter'
+					pageSize: 100
 					url: () =>
 						url = "ws/public/browse/#{group}/#{name}?"
 						if @categoryPath
@@ -121,7 +121,7 @@ define([
 							return null
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						result.getIcon = Icons.get
-						if result.entries?.length or @categoryPath
+						if result.data?.length or @categoryPath
 							@$('.no-content-message').hide()
 							@$('.table-browse').show()
 						else

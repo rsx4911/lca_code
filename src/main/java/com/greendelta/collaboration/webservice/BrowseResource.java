@@ -1,10 +1,12 @@
 package com.greendelta.collaboration.webservice;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -16,6 +18,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.git.Commit;
+import org.openlca.cloud.api.git.Datasets.Descriptor;
 import org.openlca.cloud.api.git.Reference;
 import org.openlca.cloud.api.git.References.Entry;
 import org.openlca.cloud.api.git.References.EntryType;
@@ -31,6 +34,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 
 @Path("public/browse")
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,34 +57,63 @@ public class BrowseResource {
 			@PathParam("name") String name,
 			@QueryParam("categoryPath") String categoryPath,
 			@QueryParam("filter") String filter,
+			@QueryParam("page") @DefaultValue("0") int page,
+			@QueryParam("pageSize") @DefaultValue("10") int pageSize,
 			@QueryParam("commitId") String commitId) {
 		String path = categoryPath != null ? categoryPath : "";
 		log.debug("Getting content for path /{} of repository {}/{}", path, group, name);
 		Repository repo = repoService.get(group, name);
 		List<Entry> entries = repo.references.walk(commitId, categoryPath);
-		List<Map<String, Object>> mapped = new ArrayList<>();
-		Map<String, Commit> commits = new HashMap<>();
+		// TODO this is really slow for most categories
+		List<ObjectMap> mapped = putInfo(entries, repo, commitId, categoryPath);
+		Collections.sort(mapped,
+				(m1, m2) -> m1.getString("name").toLowerCase().compareTo(m2.getString("name").toLowerCase()));
+		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, mapped, m -> m.getString("name")));
+	}
+
+	private List<ObjectMap> putInfo(List<Entry> entries, Repository repo, String commitId,
+			String categoryPath) {
 		User user = userService.getCurrentUser();
 		boolean loggedIn = user.hasId();
-		for (Entry entry : entries) {
+		Map<String, Commit> commits = new HashMap<>();
+		List<ObjectMap> mapped = new ArrayList<>();
+		entries.forEach(entry -> {
 			ObjectMap map = ObjectMap.fromObject(entry);
-			String entryPath = entry.name;
-			if (!Strings.isNullOrEmpty(categoryPath)) {
-				entryPath = categoryPath + "/" + entryPath;
-			}
+			String entryPath = Strings.isNullOrEmpty(categoryPath)
+					? entry.name
+					: categoryPath + "/" + entry.name;
 			if (loggedIn) {
-				String entryCommitId = repo.commits.find().path(entryPath).latestId();
-				Commit commit = commits.computeIfAbsent(entryCommitId, repo.commits::get);
-				map.put("commitId", commit.id);
-				map.put("commitMessage", commit.message);
-				map.put("commitTimestamp", commit.timestamp);
+				putCommitInfo(map, entry, repo, commits, entryPath);
 			}
 			if (entry.typeOfEntry != EntryType.DATASET) {
 				map.put("count", repo.references.find().commit(commitId).path(entryPath).count());
+			} else {
+				putDatasetInfo(map, entry, repo, commitId);
 			}
 			mapped.add(map);
+		});
+		return mapped;
+	}
+
+	private void putCommitInfo(Map<String, Object> map, Entry entry, Repository repo, Map<String, Commit> commits,
+			String entryPath) {
+		String entryCommitId = repo.commits.find().path(entryPath).latestId();
+		Commit commit = commits.computeIfAbsent(entryCommitId, repo.commits::get);
+		map.put("commitId", commit.id);
+		map.put("commitMessage", commit.message);
+		map.put("commitTimestamp", commit.timestamp);
+	}
+
+	private void putDatasetInfo(Map<String, Object> map, Entry entry, Repository repo, String commitId) {
+		Reference ref = repo.references.get(entry.type, entry.refId, commitId);
+		Descriptor descriptor = repo.datasets.getDescriptor(ref);
+		map.put("name", descriptor.name);
+		if (descriptor.flowType != null) {
+			map.put("flowType", descriptor.flowType);
 		}
-		return Respond.ok(java.util.Collections.singletonMap("entries", mapped));
+		if (descriptor.processType != null) {
+			map.put("processType", descriptor.processType);
+		}
 	}
 
 	@GET
@@ -95,7 +128,7 @@ public class BrowseResource {
 		Repository repo = repoService.get(group, name);
 		Commit commit = repo.commits.find().model(type, refId).until(commitId).latest();
 		if (commit == null)
-			return Respond.notFound(notFoundMessage(type, refId, commitId));
+			return Respond.notFound(type + " " + refId + " not found for commit " + commitId);
 		if (commitId == null) {
 			commitId = repo.commits.find().model(type, refId).latestId();
 		}
@@ -105,23 +138,14 @@ public class BrowseResource {
 		Reference ref = repo.references.get(type, refId, commit.id);
 		String dataset = repo.datasets.get(ref);
 		if (Strings.isNullOrEmpty(dataset))
-			return Respond.notFound(notFoundMessage(type, refId, commitId));
+			return Respond.notFound(type + " " + refId + " not found for commit " + commitId);
 		log.info("Loading {} {} of repository {}/{} (commit id: {})", type, refId, group, name, commitId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
-		BrowseReferenceFiller references = new BrowseReferenceFiller(repo, commitId);
-		references.fillReferencedElements(json);
 		json.addProperty("category", ref.category);
 		if (loggedIn) {
 			json.add("commitId", new JsonPrimitive(commitId));
 		}
 		return Respond.ok(new Gson().toJson(json));
-	}
-
-	private String notFoundMessage(ModelType type, String refId, String commitId) {
-		String base = type.name() + " " + refId + " not found";
-		if (commitId == null)
-			return base;
-		return base + " for commit id " + commitId;
 	}
 
 }
