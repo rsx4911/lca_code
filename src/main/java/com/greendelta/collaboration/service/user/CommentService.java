@@ -12,9 +12,8 @@ import com.google.inject.Inject;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
@@ -191,10 +190,10 @@ public class CommentService {
 			comment.approved = true;
 		} else {
 			String[] split = comment.repositoryPath.split("/");
-			String repoPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
+			String repoPath = settingsService.get(Key.REPOSITORY_PATH);
 			if (repoPath != null) {
-				String id = Repository.toId(split[0], split[1]);
-				if (!settingsService.is(RepositorySetting.COMMENT_APPROVAL, id)) {
+				Repository repo = Repository.get(repoPath, split[0], split[1]);
+				if (!repo.settings.commentApproval) {
 					comment.approved = true;
 				}
 			}
