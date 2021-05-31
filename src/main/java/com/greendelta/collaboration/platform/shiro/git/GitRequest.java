@@ -12,7 +12,7 @@ import org.apache.shiro.subject.Subject;
 public class GitRequest extends HttpServletRequestWrapper {
 
 	private String remoteUser;
-	
+
 	public GitRequest(ServletRequest request) {
 		super((HttpServletRequest) request);
 	}
@@ -37,7 +37,7 @@ public class GitRequest extends HttpServletRequestWrapper {
 	public String getRemoteUser() {
 		return remoteUser;
 	}
-	
+
 	public void basicHttpLogin(Subject subject) {
 		if (subject.isAuthenticated())
 			return;
@@ -52,12 +52,6 @@ public class GitRequest extends HttpServletRequestWrapper {
 			return;
 		subject.login(new UsernamePasswordToken(principal[0], principal[1]));
 		this.remoteUser = principal[0];
-	}
-
-	public void basicHttpLogout(Subject subject) {
-		if (!subject.isAuthenticated())
-			return;
-		subject.logout();
 	}
 
 }

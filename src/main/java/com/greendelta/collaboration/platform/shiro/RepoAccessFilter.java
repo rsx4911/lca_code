@@ -44,7 +44,8 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 
 	@Inject
 	public RepoAccessFilter(Provider<CloudSession> sessionProvider, AccessService accessService,
-			RepositoryService repoService, SearchService searchService, NotificationService notificationService, Provider<Subject> subjectProvider,
+			RepositoryService repoService, SearchService searchService, NotificationService notificationService,
+			Provider<Subject> subjectProvider,
 			GitFilter gitFilter) {
 		this.sessionProvider = sessionProvider;
 		this.accessService = accessService;
@@ -63,6 +64,7 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 
 	@Override
 	protected void executeChain(ServletRequest request, ServletResponse response, FilterChain chain) throws Exception {
+		Subject subject = subjectProvider.get();
 		if (isApi(request) || !gitFilter.isGitUrl(request)) {
 			super.executeChain(request, response, chain);
 		} else if (gitFilter.isGitPush(request)) {
@@ -76,6 +78,7 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 			Commit commit = repo.commits.find().latest();
 			notificationService.dataCommitted(repo, commit);
 		}
+		subject.logout();
 	}
 
 	@Override
@@ -137,7 +140,6 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 		} else {
 			canAccess = accessService.canRead(repoId);
 		}
-		request.basicHttpLogout(subject);
 		if (!canAccess)
 			return false;
 		gitFilter.doFilter(request, response, null);
