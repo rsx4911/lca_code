@@ -107,7 +107,7 @@ public class IlcdWriter implements DatasetWriter {
 			Reference ref = repo.references.get(modelType, refId, commit.id);
 			if (ref == null)
 				return null;
-			String data = repo.datasets.get(ref);
+			String data = repo.datasets.get(ref.objectId);
 			return gson.fromJson(data, JsonObject.class);
 		}
 
@@ -127,7 +127,7 @@ public class IlcdWriter implements DatasetWriter {
 			List<JsonObject> parameters = new ArrayList<>();
 			List<Reference> refs = repo.references.find().type(ModelType.PARAMETER).commit(commit.id).all();
 			for (Reference ref : refs) {
-				String data = repo.datasets.get(ref);
+				String data = repo.datasets.get(ref.objectId);
 				if (data == null)
 					continue;
 				parameters.add(gson.fromJson(data, JsonObject.class));

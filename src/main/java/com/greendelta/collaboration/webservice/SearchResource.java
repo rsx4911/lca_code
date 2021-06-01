@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.webservice;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +19,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.api.git.Commit;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.settings.GroupSetting;
@@ -34,14 +34,11 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.util.Client;
-import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
-import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
-
-import joptsimple.internal.Strings;
 
 @Path("public/search")
 public class SearchResource {
@@ -137,41 +134,8 @@ public class SearchResource {
 			@QueryParam("filter") String filter,
 			@QueryParam("page") @DefaultValue("1") int page,
 			@QueryParam("pageSize") @DefaultValue("10") int pageSize) {
-		SearchQueryBuilder builder = new SearchQueryBuilder();
-		Repository repo = repoService.get(repositoryId);
-		builder.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()));
-		putDefaultFilter(builder, page, pageSize, filter);
-		putFlowFilter(builder, repo, flowRefId, commitId, direction);
-		SearchResult<IndexEntry> result = service.search(builder.build());
-		return Respond.ok(result);
-	}
-
-	private void putFlowFilter(SearchQueryBuilder builder, Repository repo, String refId, String commitId,
-			String direction) {
-		SearchFilterValue value = SearchFilterValue.term(refId);
-		if ("in".equals(direction)) {
-			builder.filter("inputs", value);
-		} else if ("out".equals(direction)) {
-			builder.filter("outputs", value);
-		} else {
-			builder.filter(new String[] { "inputs", "outputs" }, value);
-		}
-		if (commitId == null) {
-			builder.filter("mostRecent", SearchFilterValue.term(true));
-			return;
-		}
-		Commit commit = repo.commits.get(commitId);
-		if (commit == null)
-			return;
-		builder.filter("commits", SearchFilterValue.term(commitId));
-	}
-
-	private void putDefaultFilter(SearchQueryBuilder builder, int page, int pageSize, String filter) {
-		if (!Strings.isNullOrEmpty(filter)) {
-			builder.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
-		}
-		builder.page(page);
-		builder.pageSize(pageSize);
+		// TODO
+		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, new ArrayList<>()));
 	}
 
 }

@@ -1,7 +1,5 @@
 package com.greendelta.collaboration.webservice;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +16,6 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.git.Commit;
-import org.openlca.cloud.api.git.Datasets.Descriptor;
 import org.openlca.cloud.api.git.Reference;
 import org.openlca.cloud.api.git.References.Entry;
 import org.openlca.cloud.api.git.References.EntryType;
@@ -35,8 +32,11 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.collaboration.webservice.util.MetaData;
+import com.greendelta.search.wrapper.SearchResult;
 
 @Path("public/browse")
 @Produces(MediaType.APPLICATION_JSON)
@@ -68,67 +68,48 @@ public class BrowseResource {
 		log.debug("Getting content for path /{} of repository {}/{}", path, group, name);
 		Repository repo = repoService.get(group, name);
 		List<Entry> entries = repo.references.walk(commitId, categoryPath);
-		List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
 		if (path.isEmpty()) {
 			List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN);
-			entries = com.greendelta.collaboration.util.Collections.filter(entries,
-					e -> typesHidden.contains(e.type.name()));
+			entries = Collections.filter(entries, e -> typesHidden.contains(e.type.name()));
 		}
-		List<ObjectMap> mapped = putInfo(entries, repo, commitId, categoryPath);
-		Collections.sort(mapped, (m1, m2) -> {
-			if (!path.isEmpty())
-				return m1.getString("name").toLowerCase().compareTo(m2.getString("name").toLowerCase());
-			String t1 = m1.getString("type");
-			String t2 = m2.getString("type");
-			return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
-		});
-		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, mapped, m -> m.getString("name")));
+		List<ObjectMap> mapped = Collections.convertToList(entries, e -> MetaData.toDatasetInfo(e, repo));
+		if (!path.isEmpty()) {
+			MetaData.sortByName(mapped);
+		} else {
+			List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
+			MetaData.sortByType(mapped, typesOrder);
+		}
+		SearchResult<ObjectMap> paged = SearchResults.pagedAndFiltered(page, pageSize, filter, mapped,
+				m -> m.getString("name"));
+		putOtherInfo(paged.data, repo, commitId, categoryPath);
+		return Respond.ok(paged);
 	}
 
-	private List<ObjectMap> putInfo(List<Entry> entries, Repository repo, String commitId,
-			String categoryPath) {
+	private void putOtherInfo(List<ObjectMap> entries, Repository repo, String commitId, String categoryPath) {
 		User user = userService.getCurrentUser();
 		boolean loggedIn = user.id != 0;
 		Map<String, Commit> commits = new HashMap<>();
-		List<ObjectMap> mapped = new ArrayList<>();
 		entries.forEach(entry -> {
-			ObjectMap map = ObjectMap.fromObject(entry);
 			String entryPath = Strings.nullOrEmpty(categoryPath)
-					? entry.name
-					: categoryPath + "/" + entry.name;
+					? entry.getString("name")
+					: categoryPath + "/" + entry.getString("name");
 			if (loggedIn) {
-				putCommitInfo(map, entry, repo, commits);
+				putCommitInfo(entry, repo, commits);
 			}
-			if (entry.typeOfEntry != EntryType.DATASET) {
-				map.put("count", repo.references.find().commit(commitId).path(entryPath).count());
-			} else {
-				putDatasetInfo(map, entry, repo, commitId);
+			if (!entry.getString("typeOfEntry").equals(EntryType.DATASET.name())) {
+				entry.put("count", repo.references.find().commit(commitId).path(entryPath).count());
 			}
-			mapped.add(map);
 		});
-		return mapped;
 	}
 
-	private void putCommitInfo(Map<String, Object> map, Entry entry, Repository repo, Map<String, Commit> commits) {
-		Commit commit = commits.computeIfAbsent(entry.commitId, repo.commits::get);
-		map.put("commitId", commit.id);
-		map.put("commitMessage", commit.message);
-		map.put("commitTimestamp", commit.timestamp);
-	}
-
-	private void putDatasetInfo(Map<String, Object> map, Entry entry, Repository repo, String commitId) {
-		Descriptor descriptor = repo.datasets.getDescriptor(entry);
-		if (Strings.nullOrEmpty(descriptor.location)) {
-			map.put("name", descriptor.name);
-		} else {
-			map.put("name", descriptor.name + " - " + descriptor.location);
-		}
-		if (descriptor.flowType != null) {
-			map.put("flowType", descriptor.flowType);
-		}
-		if (descriptor.processType != null) {
-			map.put("processType", descriptor.processType);
-		}
+	private void putCommitInfo(ObjectMap entry, Repository repo, Map<String, Commit> commits) {
+		String commitId = entry.getString("commitId");
+		String fullPath = entry.getString("fullPath");
+		commitId = repo.commits.find().path(fullPath).until(commitId).latestId();
+		Commit commit = commits.computeIfAbsent(commitId, repo.commits::get);
+		entry.put("commitId", commit.id);
+		entry.put("commitMessage", commit.message);
+		entry.put("commitTimestamp", commit.timestamp);
 	}
 
 	@GET
@@ -144,21 +125,22 @@ public class BrowseResource {
 		Commit commit = repo.commits.find().model(type, refId).until(commitId).latest();
 		if (commit == null)
 			return Respond.notFound(type + " " + refId + " not found for commit " + commitId);
+		String modelCommitId = repo.commits.find().model(type, refId).latestId();
 		if (commitId == null) {
-			commitId = repo.commits.find().model(type, refId).latestId();
+			commitId = modelCommitId;
 		}
 		boolean loggedIn = userService.getCurrentUser().id != 0;
 		if (!loggedIn && !commit.id.equals(commitId))
 			return Respond.unauthorized();
 		Reference ref = repo.references.get(type, refId, commit.id);
-		String dataset = repo.datasets.get(ref);
+		String dataset = repo.datasets.get(ref.objectId);
 		if (Strings.nullOrEmpty(dataset))
 			return Respond.notFound(type + " " + refId + " not found for commit " + commitId);
 		log.info("Loading {} {} of repository {}/{} (commit id: {})", type, refId, group, name, commitId);
 		JsonObject json = new Gson().fromJson(dataset, JsonObject.class);
 		json.addProperty("category", ref.category);
 		if (loggedIn) {
-			json.add("commitId", new JsonPrimitive(commitId));
+			json.add("commitId", new JsonPrimitive(modelCommitId));
 		}
 		return Respond.ok(new Gson().toJson(json));
 	}

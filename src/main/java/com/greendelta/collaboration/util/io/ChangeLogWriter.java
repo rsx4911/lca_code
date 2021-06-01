@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.api.git.DiffReference;
 import org.openlca.cloud.api.git.DiffType;
+import org.openlca.cloud.api.git.References.Diff;
 
 import com.google.common.io.ByteStreams;
 import com.greendelta.collaboration.service.Repository;
@@ -38,8 +39,13 @@ public class ChangeLogWriter {
 			for (Commit commit : commits) {
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				List<DiffReference> diffs = repo.references.diff().between(previous, commit).all();
-				for (DiffReference diff : diffs) {
+				Diff d = repo.references.diff();
+				if (previous == null) {
+					d = d.withPrevious(commit.id);
+				} else {
+					d = d.between(previous.id, commit.id);
+				}
+				for (DiffReference diff : d.all()) {
 					if (diff.type != DiffType.MODIFIED)
 						continue;
 					data = renderDiff(request, repo, diff);
@@ -52,7 +58,7 @@ public class ChangeLogWriter {
 
 	public File generate(HttpServletRequest request, Repository repo, Commit commit) {
 		return generate(zos -> {
-			List<DiffReference> diffs = repo.references.diff().withPrevious(commit).all();
+			List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
 			String data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (DiffReference diff : diffs) {

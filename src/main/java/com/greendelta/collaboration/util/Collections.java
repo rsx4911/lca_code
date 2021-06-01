@@ -3,6 +3,7 @@ package com.greendelta.collaboration.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,6 +15,14 @@ import java.util.function.Function;
 import org.openlca.util.Strings;
 
 public class Collections {
+
+	public static <T extends Comparable<T>> void sort(List<T> list) {
+		java.util.Collections.sort(list);
+	}
+
+	public static <T> void sort(List<T> list, Comparator<T> comparator) {
+		java.util.Collections.sort(list, comparator);
+	}
 
 	public static <K1, K2, V> V get(Map<K1, Map<K2, V>> map, K1 key1, K2 key2) {
 		Map<K2, V> inner = map.get(key1);

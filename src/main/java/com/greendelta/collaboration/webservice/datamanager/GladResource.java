@@ -107,7 +107,7 @@ public class GladResource {
 	}
 
 	private Map<String, Object> loadProcessData(Repository repo, Reference ref) {
-		String json = repo.datasets.get(ref);
+		String json = repo.datasets.get(ref.objectId);
 		ObjectMap data = ObjectMap.fromMap(new Gson().fromJson(json, GsonTypes.OBJECT_MAP));
 		data.put("catgeories", ref.category.split("/"));
 		data.put("contact", data.getString("processDocumentation.dataSetOwner.name"));

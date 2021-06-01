@@ -117,7 +117,7 @@ public class ActivityResource {
 	private void putAdditionalInfo(ObjectMap entry, Repository repo, Commit commit) {
 		User user = userService.getForUsername(commit.user);
 		entry.put("userDisplayName", user != null ? user.name : commit.user);
-		List<DiffReference> diffs = repo.references.diff().withPrevious(commit).all();
+		List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
 		entry.put("additions", DiffReference.filter(diffs, DiffType.ADDED).size());
 		entry.put("deletions", DiffReference.filter(diffs, DiffType.DELETED).size());
 		entry.put("updates", DiffReference.filter(diffs, DiffType.MODIFIED).size());

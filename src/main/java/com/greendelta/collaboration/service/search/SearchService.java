@@ -59,7 +59,7 @@ public class SearchService {
 		Commit head = repo.commits.find().latest();
 		if (head == null)
 			return;
-		List<DiffReference> diffs = repo.references.diff().withPrevious(head).all();
+		List<DiffReference> diffs = repo.references.diff().withPrevious(head.id).all();
 		new Thread(() -> {
 			List<Reference> toAddOrUpdate = DiffReference
 					.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
@@ -79,7 +79,7 @@ public class SearchService {
 		Gson gson = new Gson();
 		for (Reference ref : refs) {
 			// TODO check performance
-			String json = repo.datasets.get(ref);
+			String json = repo.datasets.get(ref.objectId);
 			Map<String, Object> data = gson.fromJson(json, GsonTypes.OBJECT_MAP);
 			if (data.isEmpty())
 				continue;

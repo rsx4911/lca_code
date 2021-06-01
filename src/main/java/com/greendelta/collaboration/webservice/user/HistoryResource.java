@@ -16,20 +16,23 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.openlca.cloud.api.git.Commit;
-import org.openlca.cloud.api.git.Reference;
 import org.openlca.cloud.api.git.DiffReference;
 import org.openlca.cloud.api.git.DiffType;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
+import com.greendelta.collaboration.webservice.util.MetaData;
 import com.greendelta.search.wrapper.SearchResult;
 
 @Path("history")
@@ -39,12 +42,15 @@ public class HistoryResource {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final AccessService accessService;
+	private final SettingsService settingsService;
 
 	@Inject
-	public HistoryResource(RepositoryService repoService, UserService userService, AccessService accessService) {
+	public HistoryResource(RepositoryService repoService, UserService userService, AccessService accessService,
+			SettingsService settingsService) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -104,8 +110,7 @@ public class HistoryResource {
 			List<Commit> commits) {
 		Map<String, Integer> groupCount = new HashMap<>();
 		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
-		List<ObjectMap> data = new ArrayList<>();
-		// TODO test this
+		List<ObjectMap> data = new ArrayList<>();		// TODO test this
 		for (ObjectMap commitData : result.data) {
 			int count = 0;
 			for (Commit c : commits) {
@@ -116,7 +121,7 @@ public class HistoryResource {
 			String commitId = commitData.getString("id");
 			groupCount.put(commitId, count);
 			Commit commit = repo.commits.get(commitId);
-			List<DiffReference> diffs = repo.references.diff().withPrevious(commit).all();
+			List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
 			commitData.put("additions", DiffReference.filter(diffs, DiffType.ADDED).size());
 			commitData.put("deletions", DiffReference.filter(diffs, DiffType.DELETED).size());
 			commitData.put("updates", DiffReference.filter(diffs, DiffType.MODIFIED).size());
@@ -148,7 +153,7 @@ public class HistoryResource {
 		if (commit == null)
 			return Respond.notFound();
 		Map<String, Object> map = putUserName(commit);
-		List<DiffReference> diffs = repo.references.diff().withPrevious(commit).all();
+		List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
 		map.put("additions", DiffReference.filter(diffs, DiffType.ADDED).size());
 		map.put("deletions", DiffReference.filter(diffs, DiffType.DELETED).size());
 		map.put("updates", DiffReference.filter(diffs, DiffType.MODIFIED).size());
@@ -170,10 +175,11 @@ public class HistoryResource {
 		Commit commit = repo.commits.get(commitId);
 		if (commit == null)
 			return Respond.notFound();
-		List<Reference> refs = repo.references.find().type(type).all();
-		// TODO convert to frontend commit reference and add flow type &&
-		// process type
-		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, refs));
+		List<DiffReference> refs = repo.references.diff().type(type).withPrevious(commit.id).all();
+		List<ObjectMap> mapped = Collections.convertToList(refs, r -> MetaData.toDatasetInfo(r, repo));
+		List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
+		MetaData.sortByTypeAndName(mapped, typesOrder);
+		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, mapped));
 	}
 
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
