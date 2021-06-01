@@ -30,6 +30,7 @@ define([
 					container: '.repository-commits .content-box'
 					template: listTemplate
 					filterId: 'filter'
+					delayedFilter: true
 					url: "ws/history/search/#{group}/#{name}?"
 					beforeRender: (result) =>
 						unless result
