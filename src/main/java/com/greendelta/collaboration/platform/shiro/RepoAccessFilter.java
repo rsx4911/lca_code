@@ -78,7 +78,9 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 			Commit commit = repo.commits.find().latest();
 			notificationService.dataCommitted(repo, commit);
 		}
-		subject.logout();
+		if (gitFilter.isGitUrl(request)) {
+			subject.logout();
+		}
 	}
 
 	@Override
