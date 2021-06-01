@@ -38,9 +38,9 @@ public class ReviewService extends TaskExecutionService<Review> {
 		fromDb.references = references;
 		long lastId = dao.getLastId(ReviewReference.class);
 		for (ReviewReference reference : fromDb.references) {
-			if (reference.hasId())
+			if (reference.id == 0)
 				continue;
-			reference.setId(++lastId);
+			reference.id = ++lastId;
 		}
 		dao.update(fromDb);
 	}
@@ -48,7 +48,7 @@ public class ReviewService extends TaskExecutionService<Review> {
 	public void markAsReviewed(long reviewId, long referenceId, boolean value) {
 		Review fromDb = get(reviewId);
 		for (ReviewReference reference : fromDb.references) {
-			if (reference.getId() != referenceId)
+			if (reference.id != referenceId)
 				continue;
 			if (value && reference.reviewer != null)
 				// already marked

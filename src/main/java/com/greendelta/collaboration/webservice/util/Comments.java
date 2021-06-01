@@ -13,7 +13,7 @@ public class Comments {
 		ObjectMap map = ObjectMap.fromObject(comment);
 		map.put("user", Users.mapForOthers(comment.user));
 		if (comment.replyTo != null) {
-			map.put("replyTo", comment.replyTo.getId());
+			map.put("replyTo", comment.replyTo.id);
 		}
 		return map;
 	}

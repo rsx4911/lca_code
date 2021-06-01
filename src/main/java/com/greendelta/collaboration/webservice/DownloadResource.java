@@ -93,7 +93,7 @@ abstract class DownloadResource {
 	}
 
 	private String getUserId(User user) {
-		if (user == null || user.getId() == 0l || user.username == null)
+		if (user == null || user.id == 0l || user.username == null)
 			return "anonymous";
 		return user.username;
 	}

@@ -4,7 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -12,10 +11,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "memberships")
 public class Membership extends AbstractEntity {
-
-	@Id
-	@Column(name = "id")
-	private long id;
 
 	@OneToOne
 	@JoinColumn(name = "f_user")
@@ -35,15 +30,5 @@ public class Membership extends AbstractEntity {
 	@Column(name = "role")
 	@Enumerated(EnumType.STRING)
 	public Role role;
-
-	@Override
-	public long getId() {
-		return id;
-	}
-
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
 
 }

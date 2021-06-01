@@ -49,7 +49,7 @@ public class DefaultServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath() + "/maintenance");
 			return;
 		}
-		if (isLoginUrl && !user.hasId()) {
+		if (isLoginUrl && user.id == 0) {
 			if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
 				response.sendRedirect("/login");
 				return;
@@ -57,7 +57,7 @@ public class DefaultServlet extends HttpServlet {
 			forward("/login.html", request, response);
 			return;
 		}
-		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)) {
+		if ((isLoginUrl && user.id != 0) || (isMaintenanceUrl && !isMaintenanceMode)) {
 			response.sendRedirect(request.getContextPath() + "/");
 			return;
 		}
@@ -73,12 +73,12 @@ public class DefaultServlet extends HttpServlet {
 		}
 		String redirectUrl = sessionProvider.get().redirectUrl;
 		sessionProvider.get().redirectUrl = null;
-		if (user.hasId() && !Strings.isNullOrEmpty(redirectUrl)) {
+		if (user.id != 0 && !Strings.isNullOrEmpty(redirectUrl)) {
 			response.sendRedirect(redirectUrl);
 			return;
 		}
 		String publicIndex = request.getServletContext().getRealPath("index_public.html");
-		if (!user.hasId() && publicIndex != null && new File(publicIndex).exists()) {
+		if (user.id == 0 && publicIndex != null && new File(publicIndex).exists()) {
 			forward("/index_public.html", request, response);
 		} else {
 			forward("/index.html", request, response);

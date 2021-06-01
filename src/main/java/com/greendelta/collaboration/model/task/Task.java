@@ -10,7 +10,6 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
-import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
@@ -32,10 +31,6 @@ import com.greendelta.collaboration.model.User;
 @JsonSubTypes({ @Type(name = "REVIEW", value = Review.class) })
 @MappedSuperclass
 public abstract class Task extends AbstractEntity {
-
-	@Id
-	@Column(name = "id")
-	private long id;
 
 	@Column(name = "name")
 	public String name;
@@ -65,16 +60,6 @@ public abstract class Task extends AbstractEntity {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "f_task")
 	public List<TaskAssignment> assignments = new ArrayList<>();
-
-	@Override
-	public long getId() {
-		return id;
-	}
-
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
 
 	public abstract TaskType getType();
 

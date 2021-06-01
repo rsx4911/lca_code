@@ -7,7 +7,6 @@ import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -17,10 +16,6 @@ import javax.persistence.TemporalType;
 @Entity
 @Table(name = "comments")
 public class Comment extends AbstractEntity {
-
-	@Id
-	@Column(name = "id")
-	private long id;
 
 	@Column(name = "repository_path")
 	public String repositoryPath;
@@ -52,15 +47,5 @@ public class Comment extends AbstractEntity {
 
 	@Column(name = "approved")
 	public boolean approved;
-
-	@Override
-	public long getId() {
-		return id;
-	}
-
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
 
 }

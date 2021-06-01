@@ -191,14 +191,14 @@ public class Dao<T extends AbstractEntity> {
 		T value = getFirst(query, Collections.emptyMap());
 		if (value == null)
 			return 1;
-		return value.getId() + 1;
+		return value.id + 1;
 	}
 
 	@Transactional(rollbackOn = Exception.class)
 	public T insert(T entity) {
 		if (entity == null)
 			return null;
-		entity.setId(getLastId() + 1);
+		entity.id = getLastId() + 1;
 		EntityManager em = createManager();
 		em.persist(entity);
 		return entity;
@@ -210,7 +210,7 @@ public class Dao<T extends AbstractEntity> {
 			return null;
 		EntityManager em = createManager();
 		for (T entity : entities) {
-			entity.setId(getLastId() + 1);
+			entity.id = getLastId() + 1;
 			em.persist(entity);
 		}
 		return entities;

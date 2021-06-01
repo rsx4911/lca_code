@@ -73,7 +73,7 @@ public class CommentService {
 	public void clearUser(User user) {
 		String jpql = "SELECT c FROM Comment c WHERE c.user.id = :userId";
 		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("userId", user.getId());
+		attributes.put("userId", user.id);
 		List<Comment> comments = dao.getAll(jpql, attributes);
 		for (Comment comment : comments) {
 			comment.user = null;
@@ -122,12 +122,12 @@ public class CommentService {
 				continue;
 			Comment clone = clone(comment, null, to);
 			clone = dao.insert(clone);
-			oldToNew.put(comment.getId(), clone);
+			oldToNew.put(comment.id, clone);
 		}
 		for (Comment comment : comments) {
 			if (comment.replyTo == null)
 				continue;
-			Comment replyTo = oldToNew.get(comment.replyTo.getId());
+			Comment replyTo = oldToNew.get(comment.replyTo.id);
 			Comment clone = clone(comment, replyTo, to);
 			dao.insert(clone);
 		}
@@ -155,12 +155,12 @@ public class CommentService {
 		List<Comment> comments = getAllFor(repo);
 		for (Comment comment : comments) {
 			if (comment.replyTo != null) {
-				delete(comment.getId());
+				delete(comment.id);
 			}
 		}
 		for (Comment comment : comments) {
 			if (comment.replyTo == null) {
-				delete(comment.getId());
+				delete(comment.id);
 			}
 		}
 	}

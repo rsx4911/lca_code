@@ -88,7 +88,7 @@ public class BrowseResource {
 	private List<ObjectMap> putInfo(List<Entry> entries, Repository repo, String commitId,
 			String categoryPath) {
 		User user = userService.getCurrentUser();
-		boolean loggedIn = user.hasId();
+		boolean loggedIn = user.id != 0;
 		Map<String, Commit> commits = new HashMap<>();
 		List<ObjectMap> mapped = new ArrayList<>();
 		entries.forEach(entry -> {
@@ -147,7 +147,7 @@ public class BrowseResource {
 		if (commitId == null) {
 			commitId = repo.commits.find().model(type, refId).latestId();
 		}
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		boolean loggedIn = userService.getCurrentUser().id != 0;
 		if (!loggedIn && !commit.id.equals(commitId))
 			return Respond.unauthorized();
 		Reference ref = repo.references.get(type, refId, commit.id);

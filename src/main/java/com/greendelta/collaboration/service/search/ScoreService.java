@@ -28,7 +28,7 @@ class ScoreService {
 
 	void apply(SearchQueryBuilder builder) {
 		User currentUser = userService.getCurrentUser();
-		if (!currentUser.hasId()) {
+		if (currentUser.id == 0) {
 			applyRepositoryOrder(builder);
 		}
 		applyTypeOrder(builder);

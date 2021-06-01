@@ -37,7 +37,7 @@ public class Activities {
 		ObjectMap map = new ObjectMap();
 		map.put("type", ActivityType.COMMENT);
 		map.put("timestamp", comment.date.getTime());
-		map.put("id", comment.getId());
+		map.put("id", comment.id);
 		map.put("repositoryPath", comment.repositoryPath);
 		map.put("label", repo.getLabel());
 		map.put("message", comment.text);
@@ -70,7 +70,7 @@ public class Activities {
 		// previously tasks were missing to set the end date, take the latest
 		// date and add a second
 		map.put("timestamp", date != null ? date.getTime() : getLatestDate(task));
-		map.put("id", task.getId());
+		map.put("id", task.id);
 		map.put("repositoryPath", task.repositoryPath);
 		map.put("label", repo.getLabel());
 		map.put("message", task.name);
@@ -113,7 +113,7 @@ public class Activities {
 		ObjectMap map = new ObjectMap();
 		map.put("type", type);
 		map.put("timestamp", date.getTime());
-		map.put("id", task.getId());
+		map.put("id", task.id);
 		map.put("repositoryPath", task.repositoryPath);
 		map.put("label", repo.getLabel());
 		map.put("message", task.name);

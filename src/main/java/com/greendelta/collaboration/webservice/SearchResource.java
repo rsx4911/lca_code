@@ -84,7 +84,7 @@ public class SearchResource {
 		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 		map.put("resultInfo", result.resultInfo);
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
+		boolean loggedIn = userService.getCurrentUser().id != 0;
 		List<ObjectMap> data = Client.map(result.data, r -> {
 			ObjectMap rMap = ObjectMap.fromObject(r);
 			Repository repo = repositories.get(r.repositoryId);

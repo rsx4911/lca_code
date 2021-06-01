@@ -36,7 +36,7 @@ public abstract class TaskExecutionService<T extends Task> {
 		Repository repo = repoService.get(task.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
-		if (!task.assignments.isEmpty() || task.hasId())
+		if (!task.assignments.isEmpty() || task.id == 0)
 			throw new ServerException(Status.CONFLICT, "Review object already exists");
 		User user = userService.getCurrentUser();
 		task.initiator = user;
@@ -46,7 +46,7 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public void merge(T task) {
-		T fromDb = get(task.getId());
+		T fromDb = get(task.id);
 		Repository repo = repoService.get(fromDb.repositoryPath);
 		if (!accessService.canManageTaskIn(repo.toId()))
 			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
@@ -152,9 +152,9 @@ public abstract class TaskExecutionService<T extends Task> {
 	private void setTaskAssignmentIds(T task) {
 		long lastId = dao.getLastId(TaskAssignment.class);
 		for (TaskAssignment assignment : task.assignments) {
-			if (assignment.hasId())
+			if (assignment.id == 0)
 				continue;
-			assignment.setId(++lastId);
+			assignment.id = ++lastId;
 		}
 	}
 

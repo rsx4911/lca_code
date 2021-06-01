@@ -57,9 +57,9 @@ public class MessagingService {
 
 	private String getKey(User user, Message message) {
 		if (message.team != null)
-			return "team-" + message.team.getId();
+			return "team-" + message.team.id;
 		User with = message.from.equals(user) ? message.to : message.from;
-		return "user-" + with.getId();
+		return "user-" + with.id;
 	}
 
 	public List<Message> getMessages(User user, User with, int limit, Date before) {

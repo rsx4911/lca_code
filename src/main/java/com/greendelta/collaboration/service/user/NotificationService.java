@@ -468,7 +468,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String repoId = repo.toId();
 		String repoUrl = getBaseUrl() + "/" + repoId;
-		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.getId();
+		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.id;
 		String subject = "A task was started";
 		String message = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> was started in <a href=\""
 				+ repoUrl + "\">" + repoId + "</a> by the user " + currentUser.name;
@@ -482,7 +482,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String repoId = repo.toId();
 		String repoUrl = getBaseUrl() + "/" + repoId;
-		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.getId();
+		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.id;
 		String subject = "A task was completed";
 		String message = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
 				+ repoUrl + "\">" + repoId + "</a> was completed by the user " + currentUser.name;
@@ -496,7 +496,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String repoId = repo.toId();
 		String repoUrl = getBaseUrl() + "/" + repoId;
-		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.getId();
+		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.id;
 		String subject = "A task was canceled";
 		String message = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
 				+ repoUrl + "\">" + repoId + "</a> was canceled by the user " + currentUser.name;
@@ -510,7 +510,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String repoId = repo.toId();
 		String repoUrl = getBaseUrl() + "/" + repoId;
-		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.getId();
+		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.id;
 		String personalSubject = "A task was assigned to you";
 		String otherSubject = "A task was assigned to a user";
 		String personalMessage = "The task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
@@ -531,7 +531,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String repoId = repo.toId();
 		String repoUrl = getBaseUrl() + "/" + repoId;
-		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.getId();
+		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.id;
 		String subject = "A task assignment was completed by a user";
 		String message = "The assignment to task <a href=\"" + taskUrl + "\">" + task.name + "</a> in <a href=\""
 				+ repoUrl + "\">" + repoId + "</a> was completed by the user " + currentUser.name;
@@ -546,7 +546,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String repoId = repo.toId();
 		String repoUrl = getBaseUrl() + "/" + repoId;
-		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.getId();
+		String taskUrl = getBaseUrl() + "/tasks/" + getUrlPart(task) + task.id;
 		String personalSubject = "A task assignment was revoked from you";
 		String otherSubject = "A task assignment was revoked from a user";
 		String personalMessage = "The assignment to task <a href=\"" + taskUrl + "\">" + task.name

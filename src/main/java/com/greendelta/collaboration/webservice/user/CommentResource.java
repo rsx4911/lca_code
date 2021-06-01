@@ -114,7 +114,7 @@ public class CommentResource {
 			Reference ref = repo.references.get(field.modelType, field.refId, field.commitId);
 			map.put("dsPath", ref.category);
 			if (putReplyCount) {
-				map.put("replyCount", service.getRepliesTo(comment.getId()).size());
+				map.put("replyCount", service.getRepliesTo(comment.id).size());
 			}
 			mapped.add(map);
 		}
@@ -162,7 +162,7 @@ public class CommentResource {
 		comment.replyTo = service.get(map.getLong("replyTo"));
 		comment = service.insert(comment);
 		if (map.getBoolean("released")) {
-			comment = service.release(comment.getId());
+			comment = service.release(comment.id);
 		}
 		notificationService.fieldCommented(comment).send();
 		return Respond.ok(map(comment, repo));

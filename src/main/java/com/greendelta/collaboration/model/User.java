@@ -5,16 +5,11 @@ import java.util.Calendar;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "users")
 public class User extends AbstractEntity {
-
-	@Id
-	@Column(name = "id")
-	private long id;
 
 	@Column(name = "username")
 	public String username;
@@ -39,16 +34,6 @@ public class User extends AbstractEntity {
 
 	@Embedded
 	public UserSettings settings = new UserSettings();
-
-	@Override
-	public long getId() {
-		return id;
-	}
-
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
 
 	@Override
 	public boolean equals(Object obj) {

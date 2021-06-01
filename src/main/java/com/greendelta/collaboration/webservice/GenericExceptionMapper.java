@@ -47,10 +47,10 @@ public class GenericExceptionMapper implements ExceptionMapper<Throwable> {
 
 	private String getUserInfo() {
 		User user = userService.getCurrentUser();
-		if (user == null || user.getId() == 0l)
+		if (user == null || user.id == 0l)
 			return "anonymous";
 		String info = "{";
-		info += "id: " + user.getId() + ", ";
+		info += "id: " + user.id + ", ";
 		info += "name: " + user.username;
 		info += "}";
 		return info;
