@@ -109,8 +109,7 @@ public class HistoryResource {
 	private Map<String, Object> putAdditionalInfo(SearchResult<ObjectMap> result, Repository repo,
 			List<Commit> commits) {
 		Map<String, Integer> groupCount = new HashMap<>();
-		ObjectMap map = ObjectMap.fromObject(SearchResults.convert(result, this::putUserName));
-		List<ObjectMap> data = new ArrayList<>();		// TODO test this
+		result = SearchResults.convert(result, this::putUserName);
 		for (ObjectMap commitData : result.data) {
 			int count = 0;
 			for (Commit c : commits) {
@@ -125,10 +124,9 @@ public class HistoryResource {
 			commitData.put("additions", DiffReference.filter(diffs, DiffType.ADDED).size());
 			commitData.put("deletions", DiffReference.filter(diffs, DiffType.DELETED).size());
 			commitData.put("updates", DiffReference.filter(diffs, DiffType.MODIFIED).size());
-			data.add(commitData);
 		}
+		ObjectMap map = ObjectMap.fromObject(result);
 		map.put("resultInfo.groupCount", groupCount);
-		map.put("data", data);
 		return map;
 	}
 
@@ -152,7 +150,7 @@ public class HistoryResource {
 		Commit commit = repo.commits.get(commitId);
 		if (commit == null)
 			return Respond.notFound();
-		Map<String, Object> map = putUserName(commit);
+		ObjectMap map = putUserName(commit);
 		List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
 		map.put("additions", DiffReference.filter(diffs, DiffType.ADDED).size());
 		map.put("deletions", DiffReference.filter(diffs, DiffType.DELETED).size());
@@ -182,19 +180,19 @@ public class HistoryResource {
 		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, mapped));
 	}
 
-	private List<Map<String, Object>> putUserName(List<Commit> commits) {
-		List<Map<String, Object>> mapped = new ArrayList<>();
+	private List<ObjectMap> putUserName(List<Commit> commits) {
+		List<ObjectMap> mapped = new ArrayList<>();
 		for (Commit commit : commits) {
 			mapped.add(putUserName(commit));
 		}
 		return mapped;
 	}
 
-	private Map<String, Object> putUserName(Commit commit) {
+	private ObjectMap putUserName(Commit commit) {
 		return putUserName(ObjectMap.fromObject(commit));
 	}
 
-	private Map<String, Object> putUserName(ObjectMap map) {
+	private ObjectMap putUserName(ObjectMap map) {
 		User user = userService.getForUsername(map.getString("user"));
 		map.put("userDisplayName", user != null ? user.name : map.getString("user"));
 		return map;
