@@ -78,6 +78,8 @@ class IndexEntryParser {
 			e.tags = new ArrayList<>();
 		}
 		e.type = type;
+		e.commitId = entry.get("commitId");
+		e.commitMessage = entry.get("commitMessage");
 		return e;
 	}
 

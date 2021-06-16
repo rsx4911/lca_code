@@ -1,0 +1,82 @@
+{
+	"properties": {
+		"group": {
+			"type": "keyword"
+		},
+		"repositoryId": {
+			"type": "keyword"
+		},
+		"refId": {
+			"type": "keyword"
+		},
+		"type": {
+			"type": "keyword"
+		},
+		"typeOrdinal": {
+			"type": "integer"
+		},
+		"name": {
+			"type": "text"
+		},
+		"categoryRefId": {
+			"type": "keyword"
+		},
+		"categoryType": {
+			"type": "keyword"
+		},
+		"commitId": {
+			"type": "keyword"
+		},
+		"commitMessage": {
+			"type": "text"
+		},
+		"commitTimestamp": {
+			"type": "long"
+		},
+		"commits": {
+			"type": "keyword"
+		},
+		"fullPath": {
+			"type": "keyword"
+		},
+		"category": {
+			"type": "text"
+		},
+		"categories": {
+			"type": "keyword"
+		},
+		"categoryPaths": {
+			"type": "keyword"
+		},
+		"lastUpdate": {
+			"type": "text"
+		},
+		"mostRecent": {
+			"type": "boolean"
+		},
+		"action": {
+			"type": "keyword"
+		},
+		"processType": {
+			"type": "keyword"
+		},
+		"flowType": {
+			"type": "keyword"
+		},
+		"validFromYear": {
+			"type": "keyword"
+		},
+		"validUntilYear": {
+			"type": "keyword"
+		},
+		"location": {
+			"type": "keyword"
+		},
+		"modellingApproach": {
+			"type": "keyword"
+		},
+		"contact": {
+			"type": "keyword"
+		}
+	}
+}

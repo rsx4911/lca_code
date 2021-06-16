@@ -29,7 +29,7 @@ define([
 					flattened = {}
 					for type in Object.keys(allSettings)
 						for key in Object.keys(allSettings[type])
-							flattened["#{type}|#{key}"] = allSettings[type][key]
+							flattened["#{type}__#{key}"] = allSettings[type][key]
 					Forms.fill('settings-form', flattened)
 					@updateUI()
 
@@ -41,14 +41,14 @@ define([
 
 			updateSetting: (event) ->
 				target = $ Events.target event
-				typeAndKey = target.attr('id').split('|')
+				typeAndKey = target.attr('id').split('__')
 				value = if target.attr('type') is 'checkbox' then target.is ':checked' else target.val()
 				@setSetting typeAndKey[0], typeAndKey[1], value
 				@updateUI()
 
 			updateUI: () ->
-				@$('#USER_REGISTRATION_APPROVAL_ENABLED').prop 'disabled', !@$('#USER_REGISTRATION_ENABLED').is(':checked')			
-				@$('#DATASET_TAGS_ON_DASHBOARD_ENABLED, #DATASET_TAGS_ON_GROUPS_ENABLED, #DATASET_TAGS_ON_REPOSITORIES_ENABLED').prop 'disabled', !@$('#DATASET_TAGS_ENABLED').is(':checked')			
+				@$('#SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED').prop 'disabled', !@$('#SERVER_SETTING__USER_REGISTRATION_ENABLED').is(':checked')			
+				@$('#SERVER_SETTING__DATASET_TAGS_ON_DASHBOARD_ENABLED, #SERVER_SETTING__DATASET_TAGS_ON_GROUPS_ENABLED, #SERVER_SETTING__DATASET_TAGS_ON_REPOSITORIES_ENABLED').prop 'disabled', !@$('#SERVER_SETTING__DATASET_TAGS_ENABLED').is(':checked')			
 
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'
@@ -73,21 +73,22 @@ define([
 							Status.error text
 
 			testSearchConfiguration: (event) ->
-				@setSetting 'SERVER_SETTING', 'SEARCH_CLUSTER', @$('#SEARCH_CLUSTER').val(), () =>
-					@setSetting 'SERVER_SETTING', 'SEARCH_HOST', @$('#SEARCH_HOST').val(), () =>
-						@setSetting 'SERVER_SETTING', 'SEARCH_INDEX_NAME', @$('#SEARCH_INDEX_NAME').val(), () =>
-							$.ajax
-								type: 'GET'
-								url: 'ws/admin/area/testSearchConfig'
-								success: () -> Status.success 'Search is configured correctly'
-								error: (error) -> 
-									text = error?.responseText
-									unless text
-										text = 'Could not reach elastic search'
-									Status.error text
+				@setSetting 'SEARCH_SETTING', 'SCHEMA', @$('#SEARCH_SETTING__SCHEMA').val(), () =>
+					@setSetting 'SEARCH_SETTING', 'HOST', @$('#SEARCH_SETTING__HOST').val(), () =>
+						@setSetting 'SEARCH_SETTING', 'PORT', @$('#SEARCH_SETTING__PORT').val(), () =>
+							@setSetting 'SEARCH_SETTING', 'INDEX_NAME', @$('#SEARCH_SETTING__INDEX_NAME').val(), () =>
+								$.ajax
+									type: 'GET'
+									url: 'ws/admin/area/testSearchConfig'
+									success: () -> Status.success 'Search is configured correctly'
+									error: (error) -> 
+										text = error?.responseText
+										unless text
+											text = 'Could not reach elastic search'
+										Status.error text
 
 			testGladConfiguration: (event) ->
-				@setSetting 'SERVER_SETTING', 'GLAD_URL', @$('#GLAD_URL').val(), () ->
+				@setSetting 'SERVER_SETTING', 'GLAD_URL', @$('#SERVER_SETTING__GLAD_URL').val(), () ->
 					$.ajax
 						type: 'GET'
 						url: 'ws/admin/area/testGladConfig'

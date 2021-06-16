@@ -32,14 +32,6 @@ class ScoreService {
 			applyRepositoryOrder(builder);
 		}
 		applyTypeOrder(builder);
-		applyMostRecent(builder);
-	}
-
-	private void applyMostRecent(SearchQueryBuilder builder) {
-		Score score = new Score("mostRecent");
-		score.addCase(1.01, Comparator.EQUALS, true);
-		score.addElse(1);
-		builder.score(score);
 	}
 
 	private void applyRepositoryOrder(SearchQueryBuilder builder) {
@@ -54,7 +46,6 @@ class ScoreService {
 
 	private void applyTypeOrder(SearchQueryBuilder builder) {
 		apply("type", 2, builder);
-		apply("categoryType", 1, builder);
 	}
 
 	private void apply(String field, double factor, SearchQueryBuilder builder) {

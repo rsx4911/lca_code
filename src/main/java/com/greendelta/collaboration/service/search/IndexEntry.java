@@ -15,6 +15,8 @@ public class IndexEntry extends Dataset implements Cloneable {
 	public String group;
 	public List<String> categoryPaths;
 	public List<String> repositoryTags;
+	public String commitId;
+	public String commitMessage;
 	public ModellingApproach modellingApproach = ModellingApproach.UNKNOWN;
 
 	public String toIndexId() {
@@ -28,6 +30,8 @@ public class IndexEntry extends Dataset implements Cloneable {
 		e.type = type;
 		e.name = name;
 		e.category = category;
+		e.commitId = commitId;
+		e.commitMessage = commitMessage;
 		e.categoryPaths = categoryPaths != null ? new ArrayList<>(categoryPaths) : null;
 		e.tags = tags != null ? new ArrayList<>(tags) : null;
 		e.repositoryTags = repositoryTags != null ? new ArrayList<>(repositoryTags) : null;

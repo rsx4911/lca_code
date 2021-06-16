@@ -33,9 +33,9 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.collaboration.webservice.util.MetaData;
 import com.greendelta.search.wrapper.SearchResult;
 
 @Path("public/browse")
@@ -72,7 +72,7 @@ public class BrowseResource {
 			List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN);
 			entries = Collections.filter(entries, e -> typesHidden.contains(e.type.name()));
 		}
-		List<ObjectMap> mapped = Collections.convertToList(entries, e -> MetaData.toDatasetInfo(e, repo));
+		List<ObjectMap> mapped = Collections.convertToList(entries, e -> MetaData.forBrowse(e, repo));
 		if (!path.isEmpty()) {
 			MetaData.sortByName(mapped);
 		} else {

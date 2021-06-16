@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.service;
 
-import java.net.InetAddress;
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,15 +13,13 @@ import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.authz.AuthorizationException;
 import org.apache.shiro.subject.Subject;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings.Builder;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
@@ -36,7 +34,7 @@ import com.greendelta.collaboration.model.settings.Setting;
 import com.greendelta.collaboration.model.settings.SettingKey;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.search.wrapper.SearchClient;
-import com.greendelta.search.wrapper.es.EsClient;
+import com.greendelta.search.wrapper.es.rest.EsClient;
 
 public class SettingsService {
 
@@ -261,7 +259,7 @@ public class SettingsService {
 
 	public class SearchConfig extends Settings<SearchSetting> {
 
-		private Client client;
+		private RestHighLevelClient client;
 		private SearchClient searchClient;
 
 		private SearchConfig() {
@@ -276,21 +274,15 @@ public class SettingsService {
 			searchClient = null;
 		}
 
-		public Client getClient() throws UnknownHostException {
+		public RestHighLevelClient getClient() throws UnknownHostException {
 			if (client != null)
 				return client;
-			String cluster = get(SearchSetting.CLUSTER);
-			Builder builder = org.elasticsearch.common.settings.Settings.builder().put("cluster.name", cluster);
-			org.elasticsearch.common.settings.Settings settings = builder.build();
-			TransportClient client = new PreBuiltTransportClient(settings);
-			try {
-				String host = get(SearchSetting.HOST);
-				int port = get(SearchSetting.PORT);
-				client.addTransportAddress(new TransportAddress(InetAddress.getByName(host), port + 100));
-			} catch (UnknownHostException e) {
-				throw e;
-			}
-			this.client = client;
+			String host = get(SearchSetting.HOST);
+			int port = get(SearchSetting.PORT);
+			String schema = get(SearchSetting.SCHEMA);
+			client = new RestHighLevelClient(RestClient.builder(
+					new HttpHost(host, port, schema),
+					new HttpHost(host, port + 1, schema)));
 			return client;
 		}
 
@@ -298,7 +290,7 @@ public class SettingsService {
 			if (searchClient != null)
 				return searchClient;
 			try {
-				searchClient = new EsClient(getClient(), get(SearchSetting.INDEX_NAME), "dataset");
+				searchClient = new EsClient(getClient(), get(SearchSetting.INDEX_NAME));
 			} catch (Exception e) {
 				SettingsService.log.error("Error getting search client", e);
 			}
@@ -308,7 +300,11 @@ public class SettingsService {
 		public void close() {
 			if (client == null)
 				return;
-			client.close();
+			try {
+				client.close();
+			} catch (IOException e) {
+				SettingsService.log.error("Error closing search client", e);
+			}
 		}
 
 	}

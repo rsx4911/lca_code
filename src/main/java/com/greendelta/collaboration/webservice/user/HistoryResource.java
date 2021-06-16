@@ -29,10 +29,10 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Collections;
+import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.collaboration.webservice.Respond;
-import com.greendelta.collaboration.webservice.util.MetaData;
 import com.greendelta.search.wrapper.SearchResult;
 
 @Path("history")
@@ -174,7 +174,7 @@ public class HistoryResource {
 		if (commit == null)
 			return Respond.notFound();
 		List<DiffReference> refs = repo.references.diff().type(type).withPrevious(commit.id).all();
-		List<ObjectMap> mapped = Collections.convertToList(refs, r -> MetaData.toDatasetInfo(r, repo));
+		List<ObjectMap> mapped = Collections.convertToList(refs, r -> MetaData.forBrowse(r, repo));
 		List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
 		MetaData.sortByTypeAndName(mapped, typesOrder);
 		return Respond.ok(SearchResults.pagedAndFiltered(page, pageSize, filter, mapped));

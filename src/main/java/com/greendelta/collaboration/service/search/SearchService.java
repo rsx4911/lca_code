@@ -1,5 +1,8 @@
 package com.greendelta.collaboration.service.search;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -7,11 +10,14 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.api.git.Commit;
-import org.openlca.cloud.api.git.Reference;
 import org.openlca.cloud.api.git.DiffReference;
 import org.openlca.cloud.api.git.DiffType;
+import org.openlca.cloud.api.git.Reference;
 
+import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.Repository;
@@ -28,6 +34,7 @@ import com.greendelta.search.wrapper.SearchResult;
 
 public class SearchService {
 
+	private static final Logger log = LogManager.getLogger(SearchService.class);
 	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final IndexEntryParser parser = new IndexEntryParser();
@@ -78,7 +85,6 @@ public class SearchService {
 		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo);
 		Gson gson = new Gson();
 		for (Reference ref : refs) {
-			// TODO check performance
 			String json = repo.datasets.get(ref.objectId);
 			Map<String, Object> data = gson.fromJson(json, GsonTypes.OBJECT_MAP);
 			if (data.isEmpty())
@@ -96,6 +102,8 @@ public class SearchService {
 
 	public void remove(Repository repo) {
 		Set<String> ids = getDocumentIds(repo);
+		if (ids.isEmpty())
+			return;
 		getClient().remove(ids);
 	}
 
@@ -105,7 +113,25 @@ public class SearchService {
 	}
 
 	public void clearIndex() {
-		getClient().clear();
+		getClient().delete();
+		createIndex();
+	}
+
+	public void createIndex() {
+		try {
+			Map<String, String> settings = new HashMap<>();
+			settings.put("config", readJson("es-config.json"));
+			settings.put("mapping", readJson("es-mapping.json"));
+			getClient().create(settings);
+		} catch (IOException e) {
+			log.error("Error creating search index", e);
+		}
+	}
+
+	private String readJson(String resource) throws IOException {
+		URL url = getClass().getResource(resource);
+		byte[] data = Resources.toByteArray(url);
+		return new String(data, "utf-8");
 	}
 
 	private SearchClient getClient() {

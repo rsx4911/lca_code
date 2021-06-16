@@ -2,7 +2,7 @@ package com.greendelta.collaboration.model.settings;
 
 public enum SearchSetting implements SettingKey {
 
-	CLUSTER(String.class, "elasticsearch"),
+	SCHEMA(String.class, "http"),
 	HOST(String.class, "localhost"),
 	INDEX_NAME(String.class, "collaboration-server"),
 	PORT(Integer.class, 9200);

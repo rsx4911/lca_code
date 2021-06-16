@@ -3,7 +3,7 @@ include ../mixins/forms.pug
 mixin aggregation-entry(aggregationName, entry, singleton, depth, parentLabel, previousCount) 
 	li
 		- var label = getLabel(aggregationName, entry.key, entry.label);
-		if parentLabel && label.indexOf(parentLabel) === 0
+		if parentLabel && label.indexOf(parentLabel + '/') === 0
 			- label = label.substring(parentLabel.length + 1);
 		- var selected = isSelectedAggregationValue(aggregationName, entry.key)
 		if !singleton && !selected

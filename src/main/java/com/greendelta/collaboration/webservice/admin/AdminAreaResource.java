@@ -20,7 +20,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.openlca.util.Strings;
 
 import com.google.inject.Inject;
@@ -94,16 +96,15 @@ public class AdminAreaResource {
 	public Response testSearchConfig() {
 		SearchConfig config = settingsService.searchConfig;
 		try {
-			Client client = config.getClient();
+			RestHighLevelClient client = config.getClient();
 			String indexName = config.get(SearchSetting.INDEX_NAME);
-			boolean exists = client.admin().indices().prepareExists(indexName).execute().actionGet().isExists();
+			boolean exists = client.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
 			if (!exists)
 				return Respond.error("Index " + indexName + " does not exist");
 			return Respond.ok(new HashMap<>());
 		} catch (UnknownHostException e) {
 			String host = config.get(SearchSetting.HOST);
-			String cluster = config.get(SearchSetting.CLUSTER);
-			return Respond.error("Could not connect to host " + host + " on cluster " + cluster);
+			return Respond.error("Could not connect to host " + host);
 		} catch (Exception e) {
 			return Respond.error(e.getMessage());
 		}
