@@ -51,7 +51,7 @@ define([
 							url += "#{group}/#{name}"
 							if isJsonLd
 								url += '?format=json-ld'
-								data.append 'commitMessage', commitMessage
+								data.append 'commitMessage', @$('#commitMessage').val()
 							$.ajax	
 								type: 'POST'
 								url: url
