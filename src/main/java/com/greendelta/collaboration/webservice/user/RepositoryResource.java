@@ -213,8 +213,7 @@ public class RepositoryResource {
 		} else {
 			service.unpack(repo, input);
 		}
-		searchService.index(repo);
-		repo = service.get(group, name);
+		new Thread(() -> searchService.index(repo)).run();
 		if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 			repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 		}
@@ -237,7 +236,7 @@ public class RepositoryResource {
 		if (!service.move(repo, newGroup, newName))
 			return Respond.error("Repository could not be moved");
 		Repository newRepo = service.get(newGroup, newName);
-		updateRepoId(repo, newRepo);
+		new Thread(() -> searchService.update(repo, newRepo)).run();
 		notificationService.repositoryMoved(repo, newRepo).send();
 		return Respond.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 	}
@@ -260,15 +259,8 @@ public class RepositoryResource {
 			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		searchService.index(to);
+		new Thread(() -> searchService.index(to)).run();
 		return response;
-	}
-
-	private void updateRepoId(Repository oldRepo, Repository newRepo) {
-		Map<String, Object> update = new HashMap<>();
-		update.put("repositoryId", newRepo.toId());
-		update.put("group", newRepo.group);
-		searchService.update(oldRepo, update);
 	}
 
 	@POST
@@ -335,7 +327,7 @@ public class RepositoryResource {
 			if (tags != null && tags.isEmpty()) {
 				tags = null;
 			}
-			searchService.update(repo, java.util.Collections.singletonMap("tags", tags));
+			new Thread(() -> searchService.update(repo)).run();
 			value = tags;
 		}
 		repo.settings.set(setting, value);
@@ -401,6 +393,7 @@ public class RepositoryResource {
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		NotificationJob notification = notificationService.repositoryDeleted(repo);
+		new Thread(() -> searchService.remove(repo)).run();
 		deleteService.delete(repo);
 		notification.send();
 		return Respond.ok(new HashMap<>());

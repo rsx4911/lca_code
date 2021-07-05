@@ -12,21 +12,21 @@ import com.greendelta.search.wrapper.aggregations.TermsAggregation;
 
 public class Aggregations {
 
-	public static final TermsAggregation GROUP = new TermsAggregation("group");
-	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId");
-	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type");
-	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags");
-	public static final TermsAggregation DATASET_TAGS = new TermsAggregation("tags");
+	public static final TermsAggregation GROUP = new TermsAggregation("group", "versions.repos.group");
+	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId", "versions.repos.id");
+	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type", "type");
+	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags", "versions.repos.tags");
+	public static final TermsAggregation DATASET_TAGS = new TermsAggregation("tags", "versions.tags");
 	// process specific aggregations
-	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType");
-	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach");
-	public static final TermsAggregation START_YEAR = new TermsAggregation("validFromYear");
-	public static final TermsAggregation END_YEAR = new TermsAggregation("validUntilYear");
-	public static final TermsAggregation LOCATION = new TermsAggregation("location");
-	public static final TermsAggregation CONTACT = new TermsAggregation("contact");
-	public static final TermsAggregation CATEGORY = new TermsAggregation("categoryPaths");
+	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType", "versions.processType");
+	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach", "versions.modellingApproach");
+	public static final TermsAggregation START_YEAR = new TermsAggregation("validFromYear", "versions.validFromYear");
+	public static final TermsAggregation END_YEAR = new TermsAggregation("validUntilYear", "versions.validUntilYear");
+	public static final TermsAggregation LOCATION = new TermsAggregation("location", "versions.location");
+	public static final TermsAggregation CONTACT = new TermsAggregation("contact", "versions.contact");
+	public static final TermsAggregation CATEGORY = new TermsAggregation("categoryPaths", "versions.categoryPaths");
 	// flow specific aggregations
-	public static final TermsAggregation FLOW_TYPE = new TermsAggregation("flowType");
+	public static final TermsAggregation FLOW_TYPE = new TermsAggregation("flowType", "versions.flowType");
 
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] {
 			GROUP, REPOSITORY, MODEL_TYPE, REPOSITORY_TAGS, DATASET_TAGS };

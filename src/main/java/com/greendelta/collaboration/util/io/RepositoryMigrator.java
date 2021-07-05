@@ -42,7 +42,7 @@ public class RepositoryMigrator {
 			if (stream == null)
 				return MigrateResponse.NO_CONTENT;
 			service.unpack(repo, stream);
-			searchService.index(repo);
+			new Thread(() -> searchService.index(repo)).run();
 			return MigrateResponse.SUCCESS;
 		} catch (TokenRequiredException e) {
 			return MigrateResponse.TOKEN_REQUIRED;

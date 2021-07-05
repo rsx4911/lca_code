@@ -2,13 +2,11 @@ package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,14 +20,9 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.GsonTypes;
 import com.greendelta.collaboration.util.ObjectMap;
-import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
-import com.greendelta.search.wrapper.SearchFilterValue;
-import com.greendelta.search.wrapper.SearchQuery;
-import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 
 public class SearchService {
@@ -37,7 +30,8 @@ public class SearchService {
 	private static final Logger log = LogManager.getLogger(SearchService.class);
 	private final SettingsService settingsService;
 	private final QueryService queryService;
-	private final IndexEntryParser parser = new IndexEntryParser();
+	private final DsEntryParser parser = new DsEntryParser();
+	private final Gson gson = new Gson();
 
 	@Inject
 	public SearchService(SettingsService settingsService, QueryService queryService) {
@@ -45,71 +39,71 @@ public class SearchService {
 		this.queryService = queryService;
 	}
 
-	public SearchResult<IndexEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
+	public SearchResult<DsEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
 		return queryService.query(query, page, pageSize, filters);
 	}
 
-	public SearchResult<IndexEntry> search(SearchQuery query) {
-		return SearchResults.convert(getClient().search(query), parser::parse);
-	}
-
-	private SearchQueryBuilder builder(Repository repo) {
-		return new SearchQueryBuilder().page(0)
-				.filter(Aggregations.REPOSITORY.field, SearchFilterValue.term(repo.toId()));
-	}
-
 	public void index(Repository repo) {
-		index(repo, repo.references.find().all());
+		repo.commits.find().all().forEach(commit -> index(repo, commit));
 	}
 
-	public void updateAsync(Repository repo) {
-		Commit head = repo.commits.find().latest();
-		if (head == null)
-			return;
-		List<DiffReference> diffs = repo.references.diff().withPrevious(head.id).all();
+	public void index(Repository repo, Commit commit) {
+		DsEntryManager manager = new DsEntryManager(repo, commit);
 		new Thread(() -> {
-			List<Reference> toAddOrUpdate = DiffReference
-					.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
-					.stream().map(d -> d.right)
-					.collect(Collectors.toList());
-			Set<String> toDelete = DiffReference
-					.filter(diffs, DiffType.DELETED)
-					.stream().map(d -> IndexEntry.toIndexId(repo.toId(), d.left.type, d.left.refId))
-					.collect(Collectors.toSet());
-			index(repo, toAddOrUpdate);
-			getClient().remove(toDelete);
+			List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
+			DiffReference.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+					.forEach(diff -> index(repo, manager, diff.right));
+			DiffReference.filter(diffs, DiffType.DELETED)
+					.forEach(diff -> remove(manager, diff.left));
 		}).start();
 	}
 
-	private void index(Repository repo, List<Reference> refs) {
-		IndexEntryCreator indexEntryCreator = new IndexEntryCreator(repo);
-		Gson gson = new Gson();
-		for (Reference ref : refs) {
-			String json = repo.datasets.get(ref.objectId);
-			Map<String, Object> data = gson.fromJson(json, GsonTypes.OBJECT_MAP);
-			if (data.isEmpty())
-				continue;
-			IndexEntry entry = indexEntryCreator.create(ref, data);
-			Map<String, Object> content = ObjectMap.fromObject(entry);
-			getClient().index(entry.toIndexId(), content);
+	private void index(Repository repo, DsEntryManager manager, Reference ref) {
+		String json = repo.datasets.get(ref.objectId);
+		Map<String, Object> data = gson.fromJson(json, GsonTypes.OBJECT_MAP);
+		if (data.isEmpty())
+			return;
+		DsEntry entry = find(ref);
+		entry = manager.createOrUpdate(entry, ref, data);
+		getClient().index(entry.toIndexId(), ObjectMap.fromObject(entry));
+	}
+
+	private void remove(DsEntryManager manager, Reference ref) {
+		DsEntry entry = find(ref);
+		if (entry == null)
+			return;
+		manager.remove(entry, ref);
+		if (entry.versions.isEmpty()) {
+			getClient().remove(entry.toIndexId());
+		} else {
+			getClient().update(entry.toIndexId(), ObjectMap.fromObject(entry));
 		}
 	}
 
-	public void update(Repository repo, Map<String, Object> content) {
-		Set<String> ids = getDocumentIds(repo);
-		getClient().update(ids, content);
+	private DsEntry find(Reference ref) {
+		Map<String, Object> entry = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
+		return parser.parse(entry);
+	}
+
+	public void update(Repository repo) {
+		update(repo, repo);
+	}
+
+	public void update(Repository oldRepo, Repository newRepo) {
+		// TODO more efficient
+		remove(oldRepo);
+		index(newRepo);
 	}
 
 	public void remove(Repository repo) {
-		Set<String> ids = getDocumentIds(repo);
-		if (ids.isEmpty())
-			return;
-		getClient().remove(ids);
-	}
-
-	private Set<String> getDocumentIds(Repository repo) {
-		SearchQueryBuilder builder = builder(repo);
-		return getClient().searchIds(builder.build());
+		List<Commit> commits = repo.commits.find().all();
+		Collections.reverse(commits);
+		commits.forEach(commit -> {
+			DsEntryManager manager = new DsEntryManager(repo, commit);
+			List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
+			DiffReference.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+					.forEach(diff -> remove(manager, diff.right));
+		});
 	}
 
 	public void clearIndex() {
@@ -117,7 +111,7 @@ public class SearchService {
 		createIndex();
 	}
 
-	public void createIndex() {
+	private void createIndex() {
 		try {
 			Map<String, String> settings = new HashMap<>();
 			settings.put("config", readJson("es-config.json"));
@@ -136,62 +130,6 @@ public class SearchService {
 
 	private SearchClient getClient() {
 		return settingsService.searchConfig.getSearchClient();
-	}
-
-	public class IndexIterator implements Iterator<IndexEntry> {
-
-		private static final int PAGE_SIZE = 1000;
-		private final SearchQueryBuilder queryBuilder;
-		private SearchResult<ObjectMap> current;
-		private int position = 0;
-		private IndexEntry next = null;
-
-		private IndexIterator(SearchQueryBuilder queryBuilder) {
-			queryBuilder.pageSize(PAGE_SIZE);
-			queryBuilder.page(1);
-			current = searchRaw(queryBuilder.build());
-			this.queryBuilder = queryBuilder;
-		}
-
-		private SearchResult<ObjectMap> searchRaw(SearchQuery query) {
-			return SearchResults.convert(getClient().search(query), parser::convert);
-		}
-
-		public boolean hasNext() {
-			if (next != null)
-				return true;
-			if (current.resultInfo.currentPage >= current.resultInfo.pageCount && position >= current.resultInfo.count)
-				return false;
-			next = parser.parse(current.data.get(position));
-			return true;
-		}
-
-		public IndexEntry next() {
-			if (!hasNext())
-				throw new NoSuchElementException();
-			IndexEntry next = this.next;
-			updatePosition();
-			return next;
-		}
-
-		private void updatePosition() {
-			position++;
-			next = null;
-			if (current.resultInfo.currentPage == current.resultInfo.pageCount || position < current.resultInfo.count)
-				return;
-			position = 0;
-			queryBuilder.page(current.resultInfo.currentPage + 1);
-			current = searchRaw(queryBuilder.build());
-		}
-
-		public boolean isEmpty() {
-			return current.resultInfo.totalCount == 0;
-		}
-
-		public int size() {
-			return (int) current.resultInfo.totalCount;
-		}
-
 	}
 
 }

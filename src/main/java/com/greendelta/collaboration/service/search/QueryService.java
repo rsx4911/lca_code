@@ -29,7 +29,7 @@ class QueryService {
 	private final SettingsService settingsService;
 	private final RepositoryService repoService;
 	private final ScoreService scoreService;
-	private final IndexEntryParser parser = new IndexEntryParser();
+	private final DsEntryParser parser = new DsEntryParser();
 
 	@Inject
 	QueryService(SettingsService settingsService, RepositoryService repoService, ScoreService scoreService) {
@@ -38,7 +38,7 @@ class QueryService {
 		this.scoreService = scoreService;
 	}
 
-	SearchResult<IndexEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
+	SearchResult<DsEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
 		List<Repository> repos = repoService.getAllAccessible();
 		if (repos.isEmpty())
 			return buildEmptyResult(page, pageSize);
@@ -80,6 +80,8 @@ class QueryService {
 	private void putAggregations(SearchQueryBuilder builder, List<Repository> repos, Map<String, Set<String>> filters,
 			Set<ModelType> types) {
 		for (SearchAggregation aggregation : Aggregations.getFilters(types)) {
+			if (aggregation.name.contains(".") && !aggregation.name.equals(Aggregations.REPOSITORY.name))
+				continue;
 			Set<String> filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
 				putRepositoryFilter(builder, filterValues, repos);
@@ -109,8 +111,8 @@ class QueryService {
 		return types.toArray(new String[types.size()]);
 	}
 
-	private SearchResult<IndexEntry> buildEmptyResult(int page, int pageSize) {
-		SearchResult<IndexEntry> result = new SearchResult<>();
+	private SearchResult<DsEntry> buildEmptyResult(int page, int pageSize) {
+		SearchResult<DsEntry> result = new SearchResult<>();
 		result.resultInfo.currentPage = page;
 		result.resultInfo.pageSize = pageSize;
 		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {

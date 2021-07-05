@@ -9,6 +9,7 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.score.Comparator;
 import com.greendelta.search.wrapper.score.Score;
@@ -35,7 +36,7 @@ class ScoreService {
 	}
 
 	private void applyRepositoryOrder(SearchQueryBuilder builder) {
-		Score score = new Score("repositoryId");
+		Score score = new Score(Aggregations.REPOSITORY.field);
 		List<String> repoOrder = repoService.getPublicRepositoryOrder();
 		for (int i = 0; i < repoOrder.size(); i++) {
 			score.addCase(repoOrder.size() - i + 1, Comparator.EQUALS, "\"" + repoOrder.get(i) + "\"");
@@ -45,7 +46,7 @@ class ScoreService {
 	}
 
 	private void applyTypeOrder(SearchQueryBuilder builder) {
-		apply("type", 2, builder);
+		apply(Aggregations.MODEL_TYPE.field, 2, builder);
 	}
 
 	private void apply(String field, double factor, SearchQueryBuilder builder) {

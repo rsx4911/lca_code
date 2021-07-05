@@ -260,7 +260,6 @@ public class SettingsService {
 	public class SearchConfig extends Settings<SearchSetting> {
 
 		private RestHighLevelClient client;
-		private SearchClient searchClient;
 
 		private SearchConfig() {
 			super(SettingType.SEARCH_SETTING);
@@ -271,7 +270,6 @@ public class SettingsService {
 			super.set(key, value);
 			close();
 			client = null;
-			searchClient = null;
 		}
 
 		public RestHighLevelClient getClient() throws UnknownHostException {
@@ -287,14 +285,12 @@ public class SettingsService {
 		}
 
 		public SearchClient getSearchClient() {
-			if (searchClient != null)
-				return searchClient;
 			try {
-				searchClient = new EsClient(getClient(), get(SearchSetting.INDEX_NAME));
+				return new EsClient(getClient(), get(SearchSetting.INDEX_NAME));
 			} catch (Exception e) {
 				SettingsService.log.error("Error getting search client", e);
+				return null;
 			}
-			return searchClient;
 		}
 
 		public void close() {

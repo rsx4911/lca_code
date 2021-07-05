@@ -28,7 +28,9 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.search.IndexEntry;
+import com.greendelta.collaboration.service.search.DsRepo;
+import com.greendelta.collaboration.service.search.DsEntry;
+import com.greendelta.collaboration.service.search.DsVersion;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
@@ -68,7 +70,7 @@ public class SearchResource {
 		int page = Client.removeIntFilter("page", parameters, 1);
 		int pageSize = Client.removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
-		SearchResult<IndexEntry> result = service.search(query, page, pageSize, parameters);
+		SearchResult<DsEntry> result = service.search(query, page, pageSize, parameters);
 		for (AggregationResult aResult : result.aggregations) {
 			if (aResult.name.equals(Aggregations.CATEGORY.name)) {
 				aResult.group("/");
@@ -77,19 +79,31 @@ public class SearchResource {
 		return Respond.ok(map(result));
 	}
 
-	private Map<String, Object> map(SearchResult<IndexEntry> result) {
+	private Map<String, Object> map(SearchResult<DsEntry> result) {
 		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
 		map.put("resultInfo", result.resultInfo);
 		boolean loggedIn = userService.getCurrentUser().id != 0;
-		List<ObjectMap> data = Client.map(result.data, r -> {
-			ObjectMap rMap = ObjectMap.fromObject(r);
-			Repository repo = repositories.get(r.repositoryId);
-			rMap.put("repositoryLabel", repo.getLabel());
-			if (!loggedIn) {
-				rMap.nullify("commitId", "commitMessage", "commitTimestamp", "action");
+		List<ObjectMap> data = Client.map(result.data, dsEntry -> {
+			ObjectMap e = ObjectMap.fromObject(dsEntry);
+			List<ObjectMap> versions = new ArrayList<>();
+			for (DsVersion dsVersion : dsEntry.versions) {
+				ObjectMap v = ObjectMap.fromObject(dsVersion);
+				List<ObjectMap> repos = new ArrayList<>();
+				for (DsRepo dsRepo : dsVersion.repos) {
+					ObjectMap r = ObjectMap.fromObject(dsRepo);
+					Repository repo = repositories.get(dsRepo.id);
+					r.put("repositoryLabel", repo.getLabel());
+					if (!loggedIn) {
+						r.nullify("commitId", "commitMessage");
+					}
+					repos.add(r);
+				}
+				v.put("repos", repos);
+				versions.add(v);
 			}
-			return rMap;
+			e.put("versions", versions);
+			return e;
 		});
 		map.put("data", data);
 		List<AggregationResult> aggregations = Collections.filter(result.aggregations, a -> {
