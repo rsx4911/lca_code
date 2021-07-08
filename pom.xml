@@ -109,7 +109,7 @@
 		<dependency>
 			<groupId>com.greendelta.search</groupId>
 			<artifactId>search-wrapper-es</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 		</dependency>
 
 		<!-- Jersey -->
@@ -243,7 +243,7 @@
 		<dependency>
 			<groupId>com.greendelta</groupId>
 			<artifactId>lca-collaboration-installer</artifactId>
-			<version>1.2.0</version>
+			<version>1.3.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
