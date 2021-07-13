@@ -18,18 +18,18 @@ class DsEntryParser {
 		ObjectMap entry = ObjectMap.fromMap(map);
 		DsEntry e = new DsEntry();
 		e.refId = entry.get("refId");
-		ModelType type = ModelType.valueOf(entry.get("type"));
-		e.type = type;
+		e.type = ModelTypes.from(entry);
 		for (Map<String, Object> vMap : entry.getAll("versions", Map.class)) {
 			ObjectMap version = ObjectMap.fromMap(vMap);
 			DsVersion v = new DsVersion();
-			if (type == ModelType.PROCESS) {
-				v = parseProcessSpecific(entry);
-			} else if (type == ModelType.FLOW) {
-				v = parseFlowSpecific(entry);
+			if (e.type == ModelType.PROCESS) {
+				v = parseProcessSpecific(version);
+			} else if (e.type == ModelType.FLOW) {
+				v = parseFlowSpecific(version);
 			}
 			v.objectId = version.get("objectId");
 			v.category = version.get("category");
+			v.categoryPaths = version.getAll("category", String.class);
 			v.name = version.get("name");
 			v.tags = version.get("tags");
 			if (v.tags == null) {
@@ -54,20 +54,20 @@ class DsEntryParser {
 	}
 
 	private DsVersion parseProcessSpecific(ObjectMap version) {
-		DsVersion e = new DsVersion();
-		e.processType = ModelTypes.processType(version);
-		e.validFromYear = version.get("validFromYear");
-		e.validUntilYear = version.get("validUntilYear");
-		e.location = version.get("location");
-		e.modellingApproach = ModellingApproach.from(version);
-		e.contact = version.get("contact");
-		return e;
+		DsVersion v = new DsVersion();
+		v.processType = ModelTypes.processType(version);
+		v.validFromYear = version.get("validFromYear");
+		v.validUntilYear = version.get("validUntilYear");
+		v.location = version.get("location");
+		v.modellingApproach = ModellingApproach.from(version);
+		v.contact = version.get("contact");
+		return v;
 	}
 
 	private DsVersion parseFlowSpecific(ObjectMap version) {
-		DsVersion e = new DsVersion();
-		e.flowType = ModelTypes.flowType(version);
-		return e;
+		DsVersion v = new DsVersion();
+		v.flowType = ModelTypes.flowType(version);
+		return v;
 	}
 
 }

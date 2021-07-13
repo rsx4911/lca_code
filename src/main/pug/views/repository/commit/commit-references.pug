@@ -25,6 +25,6 @@ each dataset in data
 						span=dataset.name
 				if dataset.category && dataset.category.length
 					- var catUrl = baseUrl + 's/' + getTypeLabel(dataset.type);
-					+category-breadcrumb(catUrl, dataset.category.split('/'), true)
+					+category-breadcrumb(dataset.category.split('/'), catUrl, true)
 if !standalone
 	+paging(resultInfo)

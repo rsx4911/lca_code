@@ -41,7 +41,7 @@ mixin category-or-description()
 					+static-setting('dqAssessment', 'Data quality assessment')
 					+static-setting('citation', 'Citation')
 	else
-		+category-breadcrumb(baseUrl, pathAsArray, false, false, commitId)
+		+category-breadcrumb(pathAsArray, baseUrl, false, false, commitId)
 
 - var showCommitSelection = !isPublic && commits && commits.length;
 if showCommitSelection || categoryPath

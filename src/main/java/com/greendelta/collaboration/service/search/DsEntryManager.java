@@ -8,6 +8,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.cloud.api.git.Commit;
 import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
@@ -37,7 +38,7 @@ class DsEntryManager {
 		}
 		DsRepo r = getRepo(v);
 		if (r == null) {
-			r = createCommit(ref, data);
+			r = createRepo(ref, data);
 			v.repos.add(r);
 		} else {
 			r.commitId = commit.id;
@@ -73,7 +74,7 @@ class DsEntryManager {
 		v.name = data.getString("name");
 		String tags = data.getString("tags");
 		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
-		v.category = ref.category;
+		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
 
@@ -98,7 +99,7 @@ class DsEntryManager {
 		return v;
 	}
 
-	private DsRepo createCommit(Reference ref, Map<String, Object> data) {
+	private DsRepo createRepo(Reference ref, Map<String, Object> data) {
 		DsRepo r = new DsRepo();
 		r.id = repo.toId();
 		r.group = repo.group;

@@ -27,7 +27,7 @@ class ScoreService {
 		this.userService = userService;
 	}
 
-	void apply(SearchQueryBuilder builder) {
+	void applyTo(SearchQueryBuilder builder) {
 		User currentUser = userService.getCurrentUser();
 		if (currentUser.id == 0) {
 			applyRepositoryOrder(builder);
@@ -46,17 +46,10 @@ class ScoreService {
 	}
 
 	private void applyTypeOrder(SearchQueryBuilder builder) {
-		apply(Aggregations.MODEL_TYPE.field, 2, builder);
-	}
-
-	private void apply(String field, double factor, SearchQueryBuilder builder) {
-		Score score = new Score(field);
+		Score score = new Score(Aggregations.MODEL_TYPE.field);
 		ModelType[] types = settingsService.serverConfig.getModelTypes();
 		for (int i = 0; i < types.length; i++) {
-			ModelType type = types[i];
-			if (type == ModelType.CATEGORY)
-				continue;
-			score.addCase(0.5 * factor * (types.length - i + 1), Comparator.EQUALS, "\"" + type.name() + "\"");
+			score.addCase(types.length - i + 1, Comparator.EQUALS, "\"" + types[i].name() + "\"");
 		}
 		score.addElse(1);
 		builder.score(score);

@@ -93,7 +93,7 @@ public class SearchResource {
 				for (DsRepo dsRepo : dsVersion.repos) {
 					ObjectMap r = ObjectMap.fromObject(dsRepo);
 					Repository repo = repositories.get(dsRepo.id);
-					r.put("repositoryLabel", repo.getLabel());
+					r.put("label", repo.getLabel());
 					if (!loggedIn) {
 						r.nullify("commitId", "commitMessage");
 					}

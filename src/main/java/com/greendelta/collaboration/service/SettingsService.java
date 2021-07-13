@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.mail.Session;
 import javax.mail.internet.AddressException;
@@ -34,7 +35,7 @@ import com.greendelta.collaboration.model.settings.Setting;
 import com.greendelta.collaboration.model.settings.SettingKey;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.search.wrapper.SearchClient;
-import com.greendelta.search.wrapper.es.rest.EsClient;
+import com.greendelta.search.wrapper.es.EsRestClient;
 
 public class SettingsService {
 
@@ -170,7 +171,7 @@ public class SettingsService {
 		}
 
 		public ModelType[] getModelTypes() {
-			List<String> value = get(ServerSetting.MODEL_TYPES_ORDER);
+			List<String> value = getFilteredModelTypes();
 			List<String> hidden = new ArrayList<>();
 			Subject subject = subjectProvider.get();
 			boolean isLoggedIn = subject != null && subject.isAuthenticated();
@@ -179,17 +180,32 @@ public class SettingsService {
 			}
 			List<ModelType> types = new ArrayList<>();
 			for (int i = 0; i < value.size(); i++) {
-				if (hidden.contains(value.get(i)))
+				String type = value.get(i);
+				if (hidden.contains(type))
 					continue;
 				types.add(ModelType.valueOf(value.get(i)));
 			}
 			for (ModelType type : ModelType.values()) {
-				if (type != ModelType.IMPACT_CATEGORY && !type.isCategorized() || types.contains(type)
-						|| hidden.contains(type.name()))
+				if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
 					continue;
 				types.add(type);
 			}
 			return types.toArray(new ModelType[types.size()]);
+		}
+
+		private List<String> getFilteredModelTypes() {
+			List<String> value = super.get(ServerSetting.MODEL_TYPES_ORDER, null);
+			List<String> defaults = ServerSetting.MODEL_TYPES_ORDER.getDefaultValue();
+			return value.stream().filter(v -> defaults.contains(v)).collect(Collectors.toList());
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <V> V get(ServerSetting key, V defaultValue) {
+			V value = super.get(key, defaultValue);
+			if (key != ServerSetting.MODEL_TYPES_ORDER)
+				return value;
+			return (V) getFilteredModelTypes();
 		}
 
 	}
@@ -286,7 +302,7 @@ public class SettingsService {
 
 		public SearchClient getSearchClient() {
 			try {
-				return new EsClient(getClient(), get(SearchSetting.INDEX_NAME));
+				return new EsRestClient(getClient(), get(SearchSetting.INDEX_NAME));
 			} catch (Exception e) {
 				SettingsService.log.error("Error getting search client", e);
 				return null;

@@ -348,13 +348,13 @@ mixin category-field(category, category2, inTable)
 		if value
 			- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
-			+category-breadcrumb(url, value, true, depth)(data-path=!inTable?'category':null, class='original-value')
+			+category-breadcrumb(value, url, true, depth)(data-path=!inTable?'category':null, class='original-value')
 			if value2
 				br
 		if value2 && (!value || categoryCompare)
 			- var typeLabel = getTypeLabel(getTypeAsEnum(compareTo.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
-			+category-breadcrumb(url, value2, true, depth)(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
+			+category-breadcrumb(value2, url, true, depth)(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
 
 mixin uncertainty-cell(ref1, ref2, formatter)
 	- var u1 = ref1 ? ref1.uncertainty : null; 

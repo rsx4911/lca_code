@@ -32,20 +32,13 @@ public class DsVersion {
 	public Integer validUntilYear;
 
 	void completeData() {
-		if (Strings.nullOrEmpty(category)) {
-			this.categoryPaths = new ArrayList<>();
+		if (Strings.nullOrEmpty(category))
 			return;
-		}
-		List<String> categories = category != null ? Arrays.asList(category.split("/")) : new ArrayList<>();
-		this.categoryPaths = new ArrayList<>();
+		categoryPaths = new ArrayList<>();
 		String path = null;
-		for (String category : categories) {
-			if (path == null) {
-				path = category;
-			} else {
-				path += "/" + category;
-			}
-			this.categoryPaths.add(path);
+		for (String category : Arrays.asList(category.split("/"))) {
+			path = path == null ? category : path + "/" + category;
+			categoryPaths.add(path);
 		}
 	}
 }

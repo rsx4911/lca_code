@@ -25,9 +25,12 @@ public class ModelTypes {
 			ModelType.CURRENCY.name(),
 			ModelType.ACTOR.name(),
 			ModelType.SOURCE.name(),
-			ModelType.LOCATION.name(),
-			ModelType.CATEGORY.name()
+			ModelType.LOCATION.name()
 	});
+
+	public static ModelType from(Map<String, Object> map) {
+		return from(map, "type");
+	}
 
 	public static ModelType from(Map<String, Object> map, String field) {
 		if (map == null)

@@ -18,6 +18,7 @@ import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchClient;
+import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
@@ -39,18 +40,18 @@ class QueryService {
 	}
 
 	SearchResult<DsEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
-		List<Repository> repos = repoService.getAllAccessible();
-		if (repos.isEmpty())
+		List<Repository> accessibleRepos = repoService.getAllAccessible();
+		if (accessibleRepos.isEmpty())
 			return buildEmptyResult(page, pageSize);
 		SearchQueryBuilder builder = new SearchQueryBuilder();
-		Set<ModelType> types = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
-		putAggregations(builder, repos, filters, types);
+		Set<ModelType> filteredTypes = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
+		putAggregations(builder, accessibleRepos, filteredTypes, filters);
 		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(toWildcardQuery(query.toLowerCase()), "name");
+			builder.query(toWildcardQuery(query.toLowerCase()), "versions.name");
 		}
 		builder.page(page);
 		builder.pageSize(pageSize);
-		scoreService.apply(builder);
+		scoreService.applyTo(builder);
 		SearchClient client = settingsService.searchConfig.getSearchClient();
 		SearchQuery searchQuery = builder.build();
 		SearchResult<Map<String, Object>> result = client.search(searchQuery);
@@ -77,22 +78,26 @@ class QueryService {
 		return Collections.join(values, " ");
 	}
 
-	private void putAggregations(SearchQueryBuilder builder, List<Repository> repos, Map<String, Set<String>> filters,
-			Set<ModelType> types) {
-		for (SearchAggregation aggregation : Aggregations.getFilters(types)) {
+	private Set<ModelType> getFilteredModelTypes(Set<String> values) {
+		if (values == null || values.isEmpty())
+			return new HashSet<>();
+		Set<ModelType> types = new HashSet<>();
+		for (String value : values) {
+			types.add(ModelType.valueOf(value));
+		}
+		return types;
+	}
+
+	private void putAggregations(SearchQueryBuilder builder, List<Repository> accessibleRepos,
+			Set<ModelType> filteredTypes, Map<String, Set<String>> filters) {
+		for (SearchAggregation aggregation : Aggregations.getFilters(filteredTypes)) {
 			if (aggregation.name.contains(".") && !aggregation.name.equals(Aggregations.REPOSITORY.name))
 				continue;
 			Set<String> filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
-				putRepositoryFilter(builder, filterValues, repos);
+				putRepositoryFilter(builder, filterValues, accessibleRepos);
 			} else if (aggregation.name.equals(Aggregations.MODEL_TYPE.name)) {
-				if (types == null || types.isEmpty()) {
-					builder.aggregation(Aggregations.MODEL_TYPE, getModelTypes());
-				} else {
-					for (ModelType type : types) {
-						builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-					}
-				}
+				putTypeFilter(builder, filteredTypes);
 			} else if (filterValues != null && !filterValues.isEmpty()) {
 				for (String filterValue : filterValues) {
 					builder.aggregation(aggregation, filterValue);
@@ -103,12 +108,23 @@ class QueryService {
 		}
 	}
 
-	private String[] getModelTypes() {
-		Set<String> types = new HashSet<>();
-		for (ModelType type : settingsService.serverConfig.getModelTypes()) {
-			types.add(type.name());
+	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> accessibleRepos) {
+		for (Repository repo : accessibleRepos) {
+			if (values != null && !values.contains(repo.toId()))
+				continue;
+			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
 		}
-		return types.toArray(new String[types.size()]);
+	}
+
+	private void putTypeFilter(SearchQueryBuilder builder, Set<ModelType> filteredTypes) {
+		Set<SearchFilterValue> typeValues = new HashSet<>();
+		ModelType[] allTypes = settingsService.serverConfig.getModelTypes();
+		for (ModelType type : allTypes) {
+			if (filteredTypes.isEmpty() || filteredTypes.contains(type)) {
+				typeValues.add(SearchFilterValue.term(type.name()));
+			}
+		}
+		builder.aggregation(Aggregations.MODEL_TYPE);
 	}
 
 	private SearchResult<DsEntry> buildEmptyResult(int page, int pageSize) {
@@ -119,24 +135,6 @@ class QueryService {
 			result.aggregations.add(new AggregationResultBuilder().type(aggr.type).name(aggr.name).build());
 		}
 		return result;
-	}
-
-	private Set<ModelType> getFilteredModelTypes(Set<String> values) {
-		if (values == null || values.isEmpty())
-			return null;
-		Set<ModelType> types = new HashSet<>();
-		for (String value : values) {
-			types.add(ModelType.valueOf(value));
-		}
-		return types;
-	}
-
-	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> repos) {
-		for (Repository repo : repos) {
-			if (values != null && !values.contains(repo.toId()))
-				continue;
-			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
-		}
 	}
 
 }
