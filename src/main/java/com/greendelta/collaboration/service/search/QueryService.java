@@ -109,22 +109,32 @@ class QueryService {
 	}
 
 	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> accessibleRepos) {
+		List<String> repos = new ArrayList<>();
 		for (Repository repo : accessibleRepos) {
 			if (values != null && !values.contains(repo.toId()))
 				continue;
-			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
+			repos.add(repo.toId());
+		}
+		if (repos.isEmpty()) {
+			builder.aggregation(Aggregations.REPOSITORY);
+		} else {
+			builder.aggregation(Aggregations.REPOSITORY, SearchFilterValue.term(repos));
 		}
 	}
 
 	private void putTypeFilter(SearchQueryBuilder builder, Set<ModelType> filteredTypes) {
-		Set<SearchFilterValue> typeValues = new HashSet<>();
+		List<String> types = new ArrayList<>();
 		ModelType[] allTypes = settingsService.serverConfig.getModelTypes();
 		for (ModelType type : allTypes) {
-			if (filteredTypes.isEmpty() || filteredTypes.contains(type)) {
-				typeValues.add(SearchFilterValue.term(type.name()));
-			}
+			if (!filteredTypes.isEmpty() && !filteredTypes.contains(type))
+				continue;
+			types.add(type.name());
 		}
-		builder.aggregation(Aggregations.MODEL_TYPE);
+		if (types.isEmpty()) {
+			builder.aggregation(Aggregations.MODEL_TYPE);
+		} else {
+			builder.aggregation(Aggregations.MODEL_TYPE, SearchFilterValue.term(types));
+		}
 	}
 
 	private SearchResult<DsEntry> buildEmptyResult(int page, int pageSize) {
