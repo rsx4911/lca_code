@@ -8,7 +8,7 @@ mixin result(dataset)
 	.result
 		img.model-icon-small(src='images/model/small/' + getIcon(dataset, version.flowType || version.processType), aria-label='Model icon of ' + dataset.type)
 		.result-content
-			+title(dataset, version, repo)
+			h4: +link(dataset, repo, version.name)
 			if dataset.type === 'FLOW' && version.flowType === 'ELEMENTARY_FLOW' && version.category && version.category.indexOf('/') !== -1
 				- var categories = version.category.split('/')
 				.category=categories[categories.length - 2] + ' / ' + categories[categories.length - 1]
@@ -20,9 +20,9 @@ mixin result(dataset)
 			+tags(version, repo)
 		+actions(dataset, version, repo)
 
-mixin title(dataset, version, repo)
+mixin link(dataset, repo, title, defaultLink)
 	- var url = repo.id + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId=' + repo.commitId;
-	h4: a(href=url)=version.name
+	a(href=url class=defaultLink?'default-link':null)=title
 
 mixin repositories(dataset, versionIndex)
 	- var version = dataset.versions[versionIndex];
@@ -30,14 +30,14 @@ mixin repositories(dataset, versionIndex)
 	.result-repositories found in #{version.repos.length === 1 ? 'repository' : 'repositories'} 
 		span.comma-list
 			each repo in version.repos
-				a.default-link(href=repo.id)=repo.id
+				+link(dataset, repo, repo.id, true)
 	if versions > 1
 		div #{versions - 1} other #{versions > 2 ? 'versions' : 'version'} found in  
 			span.comma-list
 				each v, index in dataset.versions
 					if index !== versionIndex
 						each repo in v.repos
-							a.default-link(href=repo.id)=repo.id
+							+link(dataset, repo, repo.id, true)
 
 	
 
