@@ -279,5 +279,19 @@ public class Collections {
 	public static <T> void reverse(List<T> list) {
 		java.util.Collections.reverse(list);
 	}
+	
+	public static <T> boolean areEqual(List<T> listA, List<T> listB) {
+		int sizeA = listA != null ? listA.size() : 0;
+		int sizeB = listB != null ? listB.size() : 0;
+		if (sizeA != sizeB)
+			return false;
+		for (T value : listA)
+			if (!listB.contains(value))
+				return false;
+		for (T value : listB)
+			if (!listA.contains(value))
+				return false;
+		return true;
+	}
 
 }

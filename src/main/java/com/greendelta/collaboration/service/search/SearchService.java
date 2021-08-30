@@ -18,6 +18,7 @@ import org.openlca.cloud.api.git.Reference;
 import com.google.common.io.Resources;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.GsonTypes;
@@ -25,6 +26,7 @@ import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
 
+@Singleton
 public class SearchService {
 
 	private static final Logger log = LogManager.getLogger(SearchService.class);
@@ -49,13 +51,11 @@ public class SearchService {
 
 	public void index(Repository repo, Commit commit) {
 		DsEntryManager manager = new DsEntryManager(repo, commit);
-		new Thread(() -> {
-			List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
-			DiffReference.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
-					.forEach(diff -> index(repo, manager, diff.right));
-			DiffReference.filter(diffs, DiffType.DELETED)
-					.forEach(diff -> remove(manager, diff.left));
-		}).start();
+		List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
+		DiffReference.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+				.forEach(diff -> index(repo, manager, diff.right));
+		DiffReference.filter(diffs, DiffType.DELETED)
+				.forEach(diff -> remove(manager, diff.left));
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {

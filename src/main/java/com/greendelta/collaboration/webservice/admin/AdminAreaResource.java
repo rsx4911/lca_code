@@ -147,11 +147,9 @@ public class AdminAreaResource {
 	public Response reindex() {
 		searchService.clearIndex();
 		List<Repository> repos = repoService.getAllAccessible();
-		new Thread(() -> {
-			for (Repository repo : repos) {
-				searchService.index(repo);
-			}
-		}).run();
+		for (Repository repo : repos) {
+			searchService.index(repo);
+		}
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -159,8 +157,7 @@ public class AdminAreaResource {
 	@Path("reindex/{group}/{repository}")
 	public Response reindex(@PathParam("group") String group, @PathParam("repository") String repository) {
 		Repository repo = repoService.get(group, repository);
-		// searchService.remove(repo);
-		new Thread(() -> searchService.index(repo)).run();
+		searchService.update(repo);
 		return Respond.ok(new HashMap<>());
 	}
 

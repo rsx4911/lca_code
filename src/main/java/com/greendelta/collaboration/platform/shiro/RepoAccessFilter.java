@@ -71,12 +71,12 @@ public class RepoAccessFilter extends org.apache.shiro.web.filter.authz.Authoriz
 			String repoId = getRepoId(request);
 			Repository repo = repoService.get(repoId);
 			Commit commit = repo.commits.find().latest();
-			new Thread(() -> searchService.index(repo, commit)).run(); // TODO test this
 			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)
 					&& repo.settings.is(RepositorySetting.JSON_FILE_GENERATION)) {
 				RepositoryJsonWriter.writeCurrentAsync(repo); // TODO test this
 			}
 			notificationService.dataCommitted(repo, commit);
+			new Thread(() -> searchService.index(repo, commit)).run(); // TODO test this
 		}
 		if (gitFilter.isGitUrl(request)) {
 			subject.logout();

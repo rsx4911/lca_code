@@ -213,10 +213,10 @@ public class RepositoryResource {
 		} else {
 			service.unpack(repo, input);
 		}
-		new Thread(() -> searchService.index(repo)).run();
 		if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 			repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 		}
+		searchService.index(repo);
 		return Respond.ok(new HashMap<>());
 	}
 
@@ -236,7 +236,7 @@ public class RepositoryResource {
 		if (!service.move(repo, newGroup, newName))
 			return Respond.error("Repository could not be moved");
 		Repository newRepo = service.get(newGroup, newName);
-		new Thread(() -> searchService.update(repo, newRepo)).run();
+		searchService.update(repo, newRepo);
 		notificationService.repositoryMoved(repo, newRepo).send();
 		return Respond.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 	}
@@ -259,7 +259,7 @@ public class RepositoryResource {
 			deleteService.delete(to);
 			return Respond.error("Unexpected error during cloning");
 		}
-		new Thread(() -> searchService.index(to)).run();
+		searchService.index(to);
 		return response;
 	}
 
@@ -322,13 +322,14 @@ public class RepositoryResource {
 			Map<String, Object> data) {
 		Object value = data.get("value");
 		Repository repo = service.get(group, name);
+		boolean updateSearch = false;
 		if (setting == RepositorySetting.TAGS) {
 			List<String> tags = parseStringList(value);
 			if (tags != null && tags.isEmpty()) {
 				tags = null;
 			}
-			new Thread(() -> searchService.update(repo)).run();
 			value = tags;
+			updateSearch = !Collections.areEqual(tags, repo.settings.get(RepositorySetting.TAGS));
 		}
 		repo.settings.set(setting, value);
 		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)
@@ -338,6 +339,9 @@ public class RepositoryResource {
 			} catch (IOException e) {
 				return Respond.error("Error creating cached json file");
 			}
+		}
+		if (updateSearch) {
+			searchService.update(repo);
 		}
 		return Respond.ok(new HashMap<>());
 	}
@@ -393,7 +397,7 @@ public class RepositoryResource {
 			@PathParam("name") String name) {
 		Repository repo = service.get(group, name);
 		NotificationJob notification = notificationService.repositoryDeleted(repo);
-		new Thread(() -> searchService.remove(repo)).run();
+		searchService.remove(repo);
 		deleteService.delete(repo);
 		notification.send();
 		return Respond.ok(new HashMap<>());
