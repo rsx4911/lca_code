@@ -41,6 +41,25 @@ html(lang='en')
 			a(href='imprint') Imprint
 		script(src='js/libs/jquery.js')
 		script.
+			var show = function(subpage) {
+				$('#login').hide()
+				$('#reset-password').hide()
+				$('#sign-up').hide()
+				$('#' + subpage).show()
+				var baseTag =  document.getElementsByTagName('base')[0]
+				if (baseTag) {
+					window.
+				}
+			}
+			var registerOnClickHandler = function(subpage) {
+				$('a[href=' + subpage + ']').on('click', function(e) {
+					e.preventDefault()
+					show(subpage)
+				})
+			}
+			registerOnClickHandler('login')
+			registerOnClickHandler('reset-password')
+			registerOnClickHandler('sign-up')
 			$('.sign-up-link-container').hide()
 			$.ajax({type: 'GET', url: 'ws/public/settings', success: function(settings) {
 				for (var i = 0; i < settings.length; i++) {
@@ -49,15 +68,9 @@ html(lang='en')
 					}
 				}
 			}});
-			if (window.location.pathname.endsWith('/reset-password')) {
-				$('#login').hide()
-				$('#reset-password').show()
-				$('#sign-up').hide()
-			}
-			if (window.location.pathname.endsWith('/sign-up')) {
-				$('#login').hide()
-				$('#reset-password').hide()
-				$('#sign-up').show()
+			var type = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1)
+			if (type === 'reset-password' || type === 'sign-up') {
+				show(type)
 			}
 			$('#year').html(new Date().getFullYear());
 			$('#reset-password #email').on('keyup', function() {
