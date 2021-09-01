@@ -95,7 +95,6 @@ class BrowseReferenceFiller {
 		String processId = oProcess.get("@id").getAsString();
 		int internalId = oExchange.get("internalId").getAsInt();
 		JsonObject process = getDataset(ModelType.PROCESS, processId);
-System.out.println("processid="+processId+" internalId "+internalId);
 		if (!process.has("exchanges") || !process.get("exchanges").isJsonArray())
 			return;
 		JsonArray exchanges = process.get("exchanges").getAsJsonArray();

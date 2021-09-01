@@ -273,6 +273,7 @@ gulp.task('modifyOtherHtml', function() {
     }))
     .pipe(gulp.dest('./target/require-build'));
 });
+
 gulp.task('modifyCustomHtmlPages', function() {
   // replace styles-login.css with timestamp filename
   return gulp.src(params.customDir + '/*.html')
@@ -286,6 +287,7 @@ gulp.task('modifyCustomHtmlPages', function() {
     }))
     .pipe(gulp.dest('./target/require-build'));
 });
+
 gulp.task('modifyCustomPublicHtml', function() {
     return  gulp.src('./target/require-build/index_public.html')
 		.pipe(gulpif(params.appserver == 'stage',htmlreplace( {
