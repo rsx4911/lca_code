@@ -4,5 +4,6 @@ each user in data
 	div
 		a.follow(href='administration/user/profile/' + user.username)=user.name
 		|  
-		span.badge.pull-right(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated?'Deactivated':'Active'
+		span.badge.pull-right(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated?'Inactive':'Active'
+		.clear
 +paging(resultInfo, null, pageSizeId)
