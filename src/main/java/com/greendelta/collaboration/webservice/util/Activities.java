@@ -43,10 +43,11 @@ public class Activities {
 		map.put("message", comment.text);
 		if (comment.user != null) {
 			map.put("user", comment.user.username);
+			map.put("userDisplayName", comment.user.name);
 		} else {
-			map.put("user", "Anonymous");
+			map.put("user", "anonymous");
+			map.put("userDisplayName", "Anonymous");
 		}
-		map.put("userDisplayName", comment.user.name);
 		map.put("field", ObjectMap.fromObject(comment.field));
 		map.put("reply", comment.replyTo != null);
 		return map;
