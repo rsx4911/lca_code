@@ -1,5 +1,8 @@
 include ../mixins/paging.pug
 
 each user in data
-	div: a.follow(href='administration/user/profile/' + user.username)=user.name
+	div
+		a.follow(href='administration/user/profile/' + user.username)=user.name
+		|  
+		span.badge.pull-right(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated?'Deactivated':'Active'
 +paging(resultInfo, null, pageSizeId)
