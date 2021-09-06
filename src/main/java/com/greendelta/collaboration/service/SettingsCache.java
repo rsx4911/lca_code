@@ -29,7 +29,7 @@ class SettingsCache {
 			cache.put(file.getAbsolutePath(), settings);
 			return settings;
 		} catch (Exception e) {
-			log.error("Error loading settings " + file.getAbsolutePath());
+			log.error("Error loading settings " + file.getAbsolutePath(), e);
 			return null;
 		}
 	}
@@ -43,7 +43,7 @@ class SettingsCache {
 			cache.put(file.getAbsolutePath(), settings);
 			return settings;
 		} catch (Exception e) {
-			log.error("Error loading settings " + file.getAbsolutePath());
+			log.error("Error loading settings " + file.getAbsolutePath(), e);
 			return null;
 		}
 	}
