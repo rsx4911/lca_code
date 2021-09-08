@@ -268,6 +268,9 @@ public class SettingsService {
 				props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
 				props.put("mail." + proto + ".host", host);
 				props.put("mail." + proto + ".port", port);
+				if (proto.equals("smtps")) {
+					props.put("mail.smtps.ssl.protocols", "TLSv1.2");
+				}
 				try {
 					props.put("mail." + proto + ".from", new InternetAddress(defaultFrom).getAddress());
 				} catch (AddressException e) {
