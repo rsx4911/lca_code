@@ -60,8 +60,12 @@ public class UserResource {
 			@QueryParam("module") Module module,
 			@QueryParam("repositoryPath") String repositoryPath) {
 		SearchResult<User> result = service.getVisible(page, pageSize, filter);
+		User currentUser = service.getCurrentUser();
 		if (module == null)
-			return Respond.ok(SearchResults.convert(result, Users::mapForOthers));
+			return Respond.ok(SearchResults.convert(result,
+					currentUser.isUserManager()
+							? Users::mapForAdmin
+							: Users::mapForOthers));
 		List<User> users = result.data;
 		switch (module) {
 		case MESSAGING:
@@ -75,7 +79,7 @@ public class UserResource {
 		default:
 			break;
 		}
-		
+
 		return Respond.ok(Client.map(users, Users::mapForOthers));
 	}
 
