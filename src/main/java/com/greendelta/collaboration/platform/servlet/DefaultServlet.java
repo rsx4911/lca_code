@@ -49,7 +49,11 @@ public class DefaultServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath() + "/maintenance");
 			return;
 		}
-		if (isLoginUrl && !user.hasId()) {
+		if (isJobUrl) {
+			forward("/job.html", request, response);
+			return;
+		}
+		if (!user.hasId() && (isLoginUrl || !settingsService.is(Key.PUBLIC_REPOSITORY_ENABLED))) {
 			if (!settingsService.is(Key.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
 				response.sendRedirect("/login");
 				return;
@@ -59,10 +63,6 @@ public class DefaultServlet extends HttpServlet {
 		}
 		if ((isLoginUrl && user.hasId()) || (isMaintenanceUrl && !isMaintenanceMode)) {
 			response.sendRedirect(request.getContextPath() + "/");
-			return;
-		}
-		if (isJobUrl) {
-			forward("/job.html", request, response);
 			return;
 		}
 		String route = url.substring(url.lastIndexOf('/'));
