@@ -262,7 +262,7 @@ gulp.task('modifyIndexHtml', function() {
 
 gulp.task('modifyOtherHtml', function() {
   // replace styles-login.css with timestamp filename
-  return gulp.src(['./src/main/webapp/login.html', './src/main/webapp/imprint.html', './src/main/webapp/maintenance.html'])
+  return gulp.src(['./src/main/webapp/login.html', './src/main/webapp/imprint.html', './src/main/webapp/maintenance.html', './src/main/webapp/job.html'])
     .pipe(insert.transform(function(contents) {
       var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
       content = content.replace('js/libs/jquery', 'js/jquery');
