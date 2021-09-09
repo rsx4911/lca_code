@@ -271,23 +271,31 @@ public class SettingsService {
 				if (proto.equals("smtps")) {
 					props.put("mail.smtps.ssl.protocols", "TLSv1.2");
 				}
-				try {
-					props.put("mail." + proto + ".from", new InternetAddress(defaultFrom).getAddress());
-				} catch (AddressException e) {
-					log.error("Error setting 'from'", e);
+				String from = user != null ? user : defaultFrom;
+				if (from != null) {
+					try {
+						props.put("mail." + proto + ".from", new InternetAddress(from).getAddress());
+					} catch (AddressException e) {
+						log.error("Error setting 'from'", e);
+					}
 				}
-				if (ssl != null && ssl)
+				if (ssl != null && ssl) {
 					props.put("mail." + proto + ".ssl.enable", "true");
-				if (tls != null && tls)
+				}
+				if (tls != null && tls) {
 					props.put("mail." + proto + ".starttls.enable", "true");
+				}
 				session = Session.getInstance(props);
 			}
 			return session;
 		}
 
 		public boolean isValid() {
-			if (Strings.isNullOrEmpty(defaultFrom) || Strings.isNullOrEmpty(proto) || Strings.isNullOrEmpty(host)
-					|| port == null || port == 0)
+			if (Strings.isNullOrEmpty(proto) || Strings.isNullOrEmpty(host) || port == null || port == 0)
+				return false;
+			if (Strings.isNullOrEmpty(defaultFrom) && Strings.isNullOrEmpty(user))
+				return false;
+			if (!Strings.isNullOrEmpty(user) && Strings.isNullOrEmpty(pass))
 				return false;
 			return true;
 		}
