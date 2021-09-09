@@ -18,6 +18,7 @@ define([
 
 			events: 
 				'change input': 'updateSetting'
+				'change select': 'updateSetting'
 				'click [data-action=test-mail]': 'testMailConfiguration'
 				'click [data-action=test-search]': 'testSearchConfiguration'
 				'click [data-action=test-glad]': 'testGladConfiguration'

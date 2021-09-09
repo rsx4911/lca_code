@@ -57,8 +57,8 @@ include ../mixins/forms.pug
 					+checkbox('MAIL_TLS', 'TLS')
 		.clear
 		.two-columns
-			+input('MAIL_USER', 'Username')
-			+input('MAIL_PASS', 'Password', 'password')
+			+input('MAIL_USER', 'Username')(autocomplete='new-password')
+			+input('MAIL_PASS', 'Password', 'password')(autocomplete='new-password')
 		.clear
 		.two-columns
 			+input('MAIL_DEFAULT_FROM', 'Default from')
