@@ -271,6 +271,7 @@
 			</activation>
 			<properties>
 				<appserver>stage</appserver>
+				<contextPath>/lca-collaboration</contextPath>
 			</properties>
 		</profile>
 		<profile>
@@ -283,6 +284,7 @@
 			</activation>
 			<properties>
 				<appserver>prod</appserver>
+				<contextPath>/lca-collaboration</contextPath>
 			</properties>
 		</profile>
 	</profiles>
