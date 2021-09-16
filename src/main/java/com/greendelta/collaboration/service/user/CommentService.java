@@ -107,7 +107,7 @@ public class CommentService {
 	}
 
 	public void move(Repository from, Repository to) {
-		List<Comment> comments = getAllFor(from, null, null, null);
+		List<Comment> comments = getAllFor(from);
 		for (Comment comment : comments) {
 			comment.repositoryPath = to.toId();
 		}
@@ -115,7 +115,7 @@ public class CommentService {
 	}
 
 	public void copy(Repository from, Repository to) {
-		List<Comment> comments = getAllFor(from, null, null, null);
+		List<Comment> comments = getAllFor(from);
 		Map<Long, Comment> oldToNew = new HashMap<>();
 		for (Comment comment : comments) {
 			if (comment.replyTo != null)

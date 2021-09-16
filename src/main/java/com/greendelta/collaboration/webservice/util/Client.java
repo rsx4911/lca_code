@@ -38,6 +38,11 @@ public class Client {
 		return Integer.parseInt(value);
 	}
 
+	public static boolean removeBoolFilter(String name, Map<String, Set<String>> filters, boolean defaultValue) {
+		String value = removeFilter(name, filters, Boolean.toString(defaultValue));
+		return Boolean.parseBoolean(value);
+	}
+
 	private static String removeFilter(String name, Map<String, Set<String>> filters, String defaultValue) {
 		Set<String> value = filters.remove(name);
 		if (value == null)

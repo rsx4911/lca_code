@@ -249,11 +249,18 @@ public class SettingsService {
 			props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
 			props.put("mail." + proto + ".host", get(MailSetting.HOST));
 			props.put("mail." + proto + ".port", get(MailSetting.PORT));
-			try {
-				props.put("mail." + proto + ".from",
-						new InternetAddress(get(MailSetting.DEFAULT_FROM)).getAddress());
-			} catch (AddressException e) {
-				SettingsService.log.error("Error setting 'from'", e);
+			if (proto.equals("smtps")) {
+				props.put("mail.smtps.ssl.protocols", "TLSv1.2");
+			}
+			String user = get(MailSetting.USER);
+			String from = user != null ? user : get(MailSetting.DEFAULT_FROM);
+			if (from != null) {
+				try {
+					props.put("mail." + proto + ".from",
+							new InternetAddress(from).getAddress());
+				} catch (AddressException e) {
+					SettingsService.log.error("Error setting 'from'", e);
+				}
 			}
 			if (is(MailSetting.SSL))
 				props.put("mail." + proto + ".ssl.enable", "true");

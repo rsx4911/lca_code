@@ -27,4 +27,13 @@ public class Users {
 		return map;
 	}
 
+	public static ObjectMap mapForAdmin(User user) {
+		if (user == null)
+			return null;
+		ObjectMap map = ObjectMap.fromObject(user);
+		map.removeAllBut("name", "username");
+		map.put("deactivated", user.isDeactivated());
+		return map;
+	}
+
 }

@@ -49,8 +49,13 @@ public class DefaultServlet extends HttpServlet {
 			response.sendRedirect(request.getContextPath() + "/maintenance");
 			return;
 		}
-		if (isLoginUrl && user.id == 0) {
-			if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up")) {
+		if (isJobUrl) {
+			forward("/job.html", request, response);
+			return;
+		}
+		if (user.id == 0 && (isLoginUrl || !settingsService.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED))) {
+			if ((!settingsService.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED) && !isLoginUrl)
+					|| (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED) && url.endsWith("/sign-up"))) {
 				response.sendRedirect("/login");
 				return;
 			}
@@ -59,10 +64,6 @@ public class DefaultServlet extends HttpServlet {
 		}
 		if ((isLoginUrl && user.id != 0) || (isMaintenanceUrl && !isMaintenanceMode)) {
 			response.sendRedirect(request.getContextPath() + "/");
-			return;
-		}
-		if (isJobUrl) {
-			forward("/job.html", request, response);
 			return;
 		}
 		String route = url.substring(url.lastIndexOf('/'));

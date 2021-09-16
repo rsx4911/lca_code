@@ -17,16 +17,16 @@ mixin aggregation-entry(aggregationName, entry, singleton, depth, parentLabel, p
 			| #{label} (#{entry.count}) 
 			if selected
 				a(href=getAggregationUrl(aggregationName, entry.key, true)): span.glyphicon.glyphicon-remove
+		- previousCount += 1;
 		if entry.subEntries
 			ul
-				- previousCount = previousCount != -1 ? previousCount + 1 : -1;
 				each subEntry, index in entry.subEntries
-					if previousCount === -1 || (index + previousCount < 10)
+					if showAll || index + previousCount < 10
 						- var subAggregationName = entry.subAggregationName || aggregationName;
 						- var subSingleton = entry.subEntries.length === 1 && singleton;
 						- var subDepth = depth ? depth + 1 : 1;
 						+aggregation-entry(subAggregationName, subEntry, subSingleton, subDepth, entry.key, previousCount)
-					- previousCount = previousCount != -1 ? previousCount + getSubCount(subEntry) : -1;
+					- previousCount += getSubCount(subEntry);
 
 .aggregation
 	- var singleton = aggregation.entries.length === 1;

@@ -41,8 +41,13 @@ public class Activities {
 		map.put("repositoryPath", comment.repositoryPath);
 		map.put("label", repo.getLabel());
 		map.put("message", comment.text);
-		map.put("user", comment.user.username);
-		map.put("userDisplayName", comment.user.name);
+		if (comment.user != null) {
+			map.put("user", comment.user.username);
+			map.put("userDisplayName", comment.user.name);
+		} else {
+			map.put("user", "anonymous");
+			map.put("userDisplayName", "Anonymous");
+		}
 		map.put("field", ObjectMap.fromObject(comment.field));
 		map.put("reply", comment.replyTo != null);
 		return map;

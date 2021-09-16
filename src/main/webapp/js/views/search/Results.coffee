@@ -20,19 +20,20 @@ define([
 			events: 
 				'click a:not([href="#"])': (event) -> Events.followLink event
 
-			aggregationOrder: 
+			aggregationOrder:
 				group: 1
 				type: 2
-				flowType: 3
-				processType: 4
-				modellingApproach: 5
-				location: 6
-				categoryPaths: 7
-				validFromYear: 8
-				validUntilYear: 9
-				contact: 10
-				repositoryTags: 11
-				datasetTags: 12
+				mostRecent: 3
+				flowType: 4
+				processType: 5
+				modellingApproach: 6
+				location: 7
+				categoryPaths: 8
+				validFromYear: 9
+				validUntilYear: 10
+				contact: 11
+				repositoryTags: 12
+				datasetTags: 13
 
 			initialize: (options) ->
 				@aggregations = {}

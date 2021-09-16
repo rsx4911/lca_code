@@ -6,7 +6,7 @@ include ../mixins/avatar-box.pug
 		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactive'
 		if !user.lastAdmin
 			button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
-	span.badge.pull-right.user-status(class=user.deactivated?'deactivated':'active')=user.deactivated ? 'Deactivated': 'Active'
+	span.badge.pull-right.user-status(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated ? 'Inactive': 'Active'
 		if user.settings && user.settings.activeUntil
 			if user.deactivated
 				- var activeUntil = new Date(user.settings.activeUntil);
