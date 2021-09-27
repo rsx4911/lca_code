@@ -2,7 +2,6 @@ package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.cloud.api.git.Commit;
@@ -25,7 +24,7 @@ class DsEntryManager {
 		this.commit = commit;
 	}
 
-	DsEntry createOrUpdate(DsEntry e, Reference ref, Map<String, Object> data) {
+	DsEntry createOrUpdate(DsEntry e, Reference ref) {
 		if (e == null) {
 			e = new DsEntry();
 			e.type = ref.type;
@@ -33,12 +32,12 @@ class DsEntryManager {
 		}
 		DsVersion v = getVersion(e, ref);
 		if (v == null) {
-			v = createVersion(ref, data);
+			v = createVersion(ref);
 			e.versions.add(v);
 		}
 		DsRepo r = getRepo(v);
 		if (r == null) {
-			r = createRepo(ref, data);
+			r = createRepo(ref);
 			v.repos.add(r);
 		} else {
 			r.commitId = commit.id;
@@ -54,42 +53,40 @@ class DsEntryManager {
 		return null;
 	}
 
-	private DsVersion createVersion(Reference ref, Map<String, Object> data) {
+	private DsVersion createVersion(Reference ref) {
+		ObjectMap metaData = MetaData.forSearch(ref, repo);
 		if (ref.type == ModelType.PROCESS)
-			return processVersion(ref, data);
+			return processVersion(ref, metaData);
 		if (ref.type == ModelType.FLOW)
-			return flowVersion(ref, data);
-		return genericVersion(ref, data);
+			return flowVersion(ref, metaData);
+		return genericVersion(ref, metaData);
 	}
 
-	private DsVersion genericVersion(Reference ref, Map<String, Object> data) {
+	private DsVersion genericVersion(Reference ref, ObjectMap metaData) {
 		DsVersion v = new DsVersion();
-		fillGenericVersion(v, ref, data);
+		fillGenericVersion(v, ref, metaData);
 		return v;
 	}
 
-	private void fillGenericVersion(DsVersion v, Reference ref, Map<String, Object> d) {
-		ObjectMap data = ObjectMap.fromMap(d);
+	private void fillGenericVersion(DsVersion v, Reference ref, ObjectMap metaData) {
 		v.objectId = ref.objectId.name();
-		v.name = data.getString("name");
-		String tags = data.getString("tags");
+		v.name = metaData.getString("name");
+		String tags = metaData.getString("tags");
 		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
 		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
 
-	private DsVersion flowVersion(Reference ref, Map<String, Object> data) {
+	private DsVersion flowVersion(Reference ref, ObjectMap metaData) {
 		DsVersion v = new DsVersion();
-		fillGenericVersion(v, ref, data);
-		ObjectMap metaData = MetaData.forSearch(ref, repo);
+		fillGenericVersion(v, ref, metaData);
 		v.flowType = metaData.get("flowType");
 		return v;
 	}
 
-	private DsVersion processVersion(Reference ref, Map<String, Object> data) {
+	private DsVersion processVersion(Reference ref, ObjectMap metaData) {
 		DsVersion v = new DsVersion();
-		fillGenericVersion(v, ref, data);
-		ObjectMap metaData = MetaData.forSearch(ref, repo);
+		fillGenericVersion(v, ref, metaData);
 		v.location = metaData.get("location");
 		v.processType = metaData.get("processType");
 		v.contact = metaData.get("contact");
@@ -99,16 +96,16 @@ class DsEntryManager {
 		return v;
 	}
 
-	private DsRepo createRepo(Reference ref, Map<String, Object> data) {
+	private DsRepo createRepo(Reference ref) {
 		DsRepo r = new DsRepo();
 		r.id = repo.toId();
 		r.group = repo.group;
-		r.tags = repo.settings.get(RepositorySetting.TAGS);
+		r.tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
 		r.commitId = commit.id;
 		r.commitMessage = commit.message;
 		return r;
 	}
-	
+
 	void remove(DsEntry e, Reference ref) {
 		if (e == null)
 			return;
@@ -125,10 +122,10 @@ class DsEntryManager {
 	}
 
 	private DsRepo getRepo(DsVersion v) {
-		for (DsRepo r : v.repos) 
+		for (DsRepo r : v.repos)
 			if (r.id.equals(repo.toId()))
 				return r;
 		return null;
 	}
-	
+
 }

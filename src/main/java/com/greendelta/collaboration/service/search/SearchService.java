@@ -16,12 +16,10 @@ import org.openlca.cloud.api.git.DiffType;
 import org.openlca.cloud.api.git.Reference;
 
 import com.google.common.io.Resources;
-import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.util.GsonTypes;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
@@ -33,7 +31,6 @@ public class SearchService {
 	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
-	private final Gson gson = new Gson();
 
 	@Inject
 	public SearchService(SettingsService settingsService, QueryService queryService) {
@@ -59,12 +56,8 @@ public class SearchService {
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {
-		String json = repo.datasets.get(ref.objectId);
-		Map<String, Object> data = gson.fromJson(json, GsonTypes.OBJECT_MAP);
-		if (data.isEmpty())
-			return;
 		DsEntry entry = find(ref);
-		entry = manager.createOrUpdate(entry, ref, data);
+		entry = manager.createOrUpdate(entry, ref);
 		getClient().index(entry.toIndexId(), ObjectMap.fromObject(entry));
 	}
 
