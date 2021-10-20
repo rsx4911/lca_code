@@ -114,7 +114,7 @@ public class AccessService {
 		User user = userService.getCurrentUser();
 		Map<String, Role> userRoles = new HashMap<>();
 		for (Comment comment : comments) {
-			if (user.isDataManager() || comment.user.equals(user)) {
+			if (user.isDataManager() || user.equals(comment.user)) {
 				canRead.add(comment);
 				continue;
 			}
