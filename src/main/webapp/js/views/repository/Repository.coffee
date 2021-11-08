@@ -28,7 +28,7 @@ define([
 				'change #maxSize': 'updateMaxSize'
 				'change #unit': 'updateMaxSize'
 				'change #tags': 'setTags'
-				'change [data-setting]': 'setSetting'
+				'change [data-setting]:not([type=checkbox])': 'setSetting'
 				'change .library-restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
