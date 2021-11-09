@@ -13,20 +13,25 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.cloud.model.data.Commit;
 import org.openlca.cloud.model.data.FileReference;
+import org.openlca.convert.jsonld.ilcd.Config;
 import org.openlca.convert.jsonld.ilcd.Json2IlcdStore;
 import org.openlca.convert.jsonld.ilcd.JsonStore;
 import org.openlca.core.model.ModelType;
+import org.openlca.ilcd.commons.DataSetType;
 import org.openlca.ilcd.io.DataStore;
 import org.openlca.ilcd.io.ZipStore;
 import org.openlca.util.BinUtils;
+import org.openlca.util.Strings;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.search.SearchService.DeletedFilter;
 import com.greendelta.collaboration.service.search.SearchService.IndexIterator;
@@ -37,6 +42,7 @@ public class IlcdWriter implements DatasetWriter {
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
+	private final SettingsService settingsService;
 	private final Repository repo;
 	private final JsonStore jsonStore;
 	private final DataStore ilcdStore;
@@ -48,17 +54,19 @@ public class IlcdWriter implements DatasetWriter {
 	private Set<FileReference> collectedRefs;
 
 	public IlcdWriter(FetchService fetchService, HistoryService historyService, SearchService searchService,
-			Repository repo, String commitId) throws IOException {
+			SettingsService settingsService, Repository repo, String commitId) throws IOException {
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.searchService = searchService;
+		this.settingsService = settingsService;
 		this.repo = repo;
 		this.commitId = commitId;
 		File tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, UUID.randomUUID().toString() + ".zip");
 		this.ilcdStore = new ZipStore(tmpFile);
 		this.jsonStore = new JsonStoreImpl();
-		this.converter = new Json2IlcdStore(this.jsonStore, ilcdStore, this::collectRefs);
+		this.converter = new Json2IlcdStore(ilcdStore,
+				new Config(jsonStore, this::collectRefs, this::createPublicationLink));
 	}
 
 	@Override
@@ -95,6 +103,40 @@ public class IlcdWriter implements DatasetWriter {
 		ref.type = getType(type);
 		ref.refId = refId;
 		collectedRefs.add(ref);
+	}
+
+	private String createPublicationLink(DataSetType type, String refId) {
+		String baseUrl = settingsService.get(Key.SERVER_URL);
+		if (Strings.nullOrEmpty(baseUrl)) {
+			baseUrl = "http://openlca.org/ilcd/resource";
+		}
+		if(!baseUrl.endsWith("/")) {
+			baseUrl += "/";
+		}
+		baseUrl += repo.toId();
+		baseUrl += "/dataset/";
+		baseUrl += getUriPart(type);
+		baseUrl += "/" + refId;
+		if (commitId != null) {
+			baseUrl += "?commitId=" + commitId;
+		}
+		return baseUrl;
+	}
+
+	private String getUriPart(DataSetType type) {
+		switch (type) {
+		case CONTACT:
+			return "ACTOR";
+		case FLOW:
+		case FLOW_PROPERTY:
+		case LCIA_METHOD:
+		case PROCESS:
+		case SOURCE:
+		case UNIT_GROUP:
+			return type.name();
+		default: // not supported
+			return "UNKNOWN";
+		}
 	}
 
 	private ModelType getType(String type) {
@@ -145,7 +187,8 @@ public class IlcdWriter implements DatasetWriter {
 		@Override
 		public List<JsonObject> getGlobalParameters() {
 			List<JsonObject> parameters = new ArrayList<>();
-			IndexIterator entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId, new DeletedFilter());
+			IndexIterator entries = searchService.getMostRecentUntilForPath(repo, ModelType.PARAMETER, null, commitId,
+					new DeletedFilter());
 			while (entries.hasNext()) {
 				IndexEntry entry = entries.next();
 				String data = fetchService.getDataset(repo, entry.type, entry.refId, entry.commitId);
