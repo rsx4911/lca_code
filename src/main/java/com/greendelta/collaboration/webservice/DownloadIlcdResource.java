@@ -21,6 +21,7 @@ import com.greendelta.collaboration.service.FetchService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.BrowseService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -34,14 +35,17 @@ public class DownloadIlcdResource extends DownloadResource {
 	private final FetchService fetchService;
 	private final HistoryService historyService;
 	private final SearchService searchService;
+	private final SettingsService settingsService;
 
 	@Inject
 	public DownloadIlcdResource(RepositoryService repoService, HistoryService historyService, FetchService fetchService,
-			SearchService searchService, BrowseService browseService, UserService userService) {
+			SearchService searchService, SettingsService settingsService, BrowseService browseService,
+			UserService userService) {
 		super(repoService, historyService, searchService, browseService, userService);
 		this.fetchService = fetchService;
 		this.historyService = historyService;
 		this.searchService = searchService;
+		this.settingsService = settingsService;
 	}
 
 	@GET
@@ -56,9 +60,9 @@ public class DownloadIlcdResource extends DownloadResource {
 	@Path("prepare/{group}/{repository}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareByPath(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			@QueryParam("commitId") String commitId, 
+			@QueryParam("commitId") String commitId,
 			@QueryParam("path") String path) {
 		return super.prepare(group, repository, commitId, path);
 	}
@@ -67,9 +71,9 @@ public class DownloadIlcdResource extends DownloadResource {
 	@Path("prepare/{group}/{repository}/{type}/{refId}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareDataset(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			@PathParam("type") ModelType type, 
+			@PathParam("type") ModelType type,
 			@PathParam("refId") String refId,
 			@QueryParam("commitId") String commitId) {
 		return super.prepare(group, repository, type, refId, commitId);
@@ -79,9 +83,9 @@ public class DownloadIlcdResource extends DownloadResource {
 	@Path("prepare/{group}/{repository}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareSelection(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
-			@QueryParam("commitId") String commitId, 
+			@QueryParam("commitId") String commitId,
 			List<Reference> references) {
 		return super.prepare(group, repository, commitId, collectRefs(group, repository, references));
 	}
@@ -90,7 +94,7 @@ public class DownloadIlcdResource extends DownloadResource {
 	@Path("prepare/{group}/{repository}")
 	@Produces(MediaType.TEXT_PLAIN)
 	public Response prepareRequested(
-			@PathParam("group") String group, 
+			@PathParam("group") String group,
 			@PathParam("repository") String repository,
 			List<FileReference> requested) {
 		return super.prepare(group, repository, null, requested.iterator());
@@ -98,7 +102,7 @@ public class DownloadIlcdResource extends DownloadResource {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, String commitId) throws IOException {
-		return new IlcdWriter(fetchService, historyService, searchService, repo, commitId);
+		return new IlcdWriter(fetchService, historyService, searchService, settingsService, repo, commitId);
 	}
 
 }
