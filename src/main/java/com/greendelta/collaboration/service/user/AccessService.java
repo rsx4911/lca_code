@@ -4,29 +4,29 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.openlca.cloud.error.RepositoryNotFoundException;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.inject.Inject;
+import com.greendelta.collaboration.error.RepositoryNotFoundException;
 import com.greendelta.collaboration.model.Comment;
-import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
-import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 
+@Service
 public class AccessService {
 
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final SettingsService settingsService;
 
-	@Inject
+	@Autowired
 	public AccessService(UserService userService, MembershipService membershipService,
 			SettingsService settingsService) {
 		this.userService = userService;
@@ -41,7 +41,7 @@ public class AccessService {
 	public boolean canRead(String groupOrRepo, boolean ignoreDataManager) {
 		if (isPublic(groupOrRepo))
 			return true;
-		User user = userService.getCurrentUser();
+		var user = userService.getCurrentUser();
 		if (!ignoreDataManager && user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
@@ -57,20 +57,20 @@ public class AccessService {
 	private boolean repositoryIsActive(String repository) {
 		if (!repository.contains("/"))
 			return true; // groups are always active
-		String group = repository.split("/")[0];
+		var group = repository.split("/")[0];
 		if (userService.exists(group)) {
-			User user = userService.getForUsername(group);
+			var user = userService.getForUsername(group);
 			return !user.isDeactivated();
 		}
-		List<Membership> memberships = membershipService.getMemberships(repository);
-		for (Membership membership : memberships) {
+		var memberships = membershipService.getMemberships(repository);
+		for (var membership : memberships) {
 			if (membership.role != Role.OWNER)
 				continue;
 			if (membership.user != null && !membership.user.isDeactivated())
 				return true;
 			if (membership.team == null)
 				continue;
-			for (User user : membership.team.users)
+			for (var user : membership.team.users)
 				if (!user.isDeactivated())
 					return true;
 		}
@@ -100,21 +100,22 @@ public class AccessService {
 	}
 
 	public boolean canCreateRepositoryIn(String group) {
-		User user = userService.getCurrentUser();
+		var user = userService.getCurrentUser();
 		if (isOwnNamespace(user, group)) {
 			if (!user.settings.canCreateRepositories)
 				return false;
-			int noOfRepos = user.settings.noOfRepositories;
-			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories();
+			var noOfRepos = user.settings.noOfRepositories;
+			String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories(user, path);
 		}
 		return hasPermissionTo(Permission.CREATE, group);
 	}
 
 	public List<Comment> filterCanRead(List<Comment> comments) {
-		List<Comment> canRead = new ArrayList<>();
-		User user = userService.getCurrentUser();
-		Map<String, Role> userRoles = new HashMap<>();
-		for (Comment comment : comments) {
+		var canRead = new ArrayList<Comment>();
+		var user = userService.getCurrentUser();
+		var userRoles = new HashMap<String, Role>();
+		for (var comment : comments) {
 			if (user.isDataManager() || comment.user.equals(user)) {
 				canRead.add(comment);
 				continue;
@@ -129,7 +130,7 @@ public class AccessService {
 				canRead.add(comment);
 				continue;
 			}
-			Role role = userRoles.get(comment.repositoryPath);
+			var role = userRoles.get(comment.repositoryPath);
 			if (role == null) {
 				role = membershipService.getRole(user, comment.repositoryPath);
 				userRoles.put(comment.repositoryPath, role);
@@ -142,14 +143,14 @@ public class AccessService {
 	}
 
 	public boolean canManage(Comment comment) {
-		User user = userService.getCurrentUser();
+		var user = userService.getCurrentUser();
 		if (comment.user.equals(user))
 			return true;
 		return canManageCommentsIn(comment.repositoryPath);
 	}
 
 	public boolean canManageCommentsIn(String repositoryPath) {
-		User user = userService.getCurrentUser();
+		var user = userService.getCurrentUser();
 		if (user.isDataManager())
 			return true;
 		if (!canRead(repositoryPath))
@@ -174,7 +175,7 @@ public class AccessService {
 	}
 
 	private boolean hasPermissionTo(Permission permission, String groupOrRepo) {
-		User user = userService.getCurrentUser();
+		var user = userService.getCurrentUser();
 		return hasPermissionTo(user, permission, groupOrRepo);
 	}
 
@@ -187,14 +188,14 @@ public class AccessService {
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
-		Role role = membershipService.getRole(user, groupOrRepo);
+		var role = membershipService.getRole(user, groupOrRepo);
 		return role.getPermissions().contains(permission);
 	}
 
 	public boolean isOwnNamespace(User user, String groupOrRepo) {
 		if (isGroup(groupOrRepo))
 			return groupOrRepo.equalsIgnoreCase(user.username);
-		String group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
+		var group = groupOrRepo.substring(0, groupOrRepo.indexOf("/"));
 		return group.equalsIgnoreCase(user.username);
 	}
 
@@ -208,7 +209,7 @@ public class AccessService {
 		String repositoryPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
 		if (repositoryPath == null)
 			return false;
-		File dir = new File(repositoryPath, groupOrRepo);
+		var dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {
 				return settingsService.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
@@ -218,10 +219,10 @@ public class AccessService {
 		}
 		if (!dir.isDirectory() || dir.listFiles() == null)
 			return false;
-		for (File child : dir.listFiles()) {
+		for (var child : dir.listFiles()) {
 			try {
-				String id = Repository.toId(groupOrRepo, child.getName());
-				if (settingsService.is(RepositorySetting.PUBLIC_ACCESS, id))
+				var path = new RepositoryPath(groupOrRepo, child.getName()).toString();
+				if (settingsService.is(RepositorySetting.PUBLIC_ACCESS, path))
 					return true;
 			} catch (RepositoryNotFoundException | UnsupportedSchemaException e) {
 				// ignore

@@ -4,12 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openlca.cloud.error.UnauthorizedAccessException;
-import org.openlca.cloud.util.Directories;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.inject.Inject;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
@@ -17,9 +16,11 @@ import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
+@Service
 public class GroupService {
 
 	private final AccessService accessService;
@@ -27,7 +28,7 @@ public class GroupService {
 	private final UserService userService;
 	private final SettingsService settingsService;
 
-	@Inject
+	@Autowired
 	public GroupService(AccessService accessService, MembershipService membershipService, UserService userService,
 			SettingsService settingsService) {
 		this.accessService = accessService;
@@ -45,16 +46,16 @@ public class GroupService {
 	}
 
 	public boolean exists(String group, boolean skipAccessCheck) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return false;
-		File root = new File(path);
+		var root = new File(path);
 		if (root.list() == null)
 			return false;
-		for (String child : root.list())
+		for (var child : root.list())
 			if (child.equalsIgnoreCase(group))
 				if (!skipAccessCheck && !accessService.canRead(group))
-					throw new UnauthorizedAccessException(group, "READ");
+					throw new ForbiddenAccessException(group, "READ");
 				else
 					return true;
 		return false;
@@ -71,17 +72,17 @@ public class GroupService {
 	}
 
 	public boolean create(String group, boolean userGroup) {
-		User currentUser = userService.getCurrentUser();
+		var currentUser = userService.getCurrentUser();
 		if (userGroup && !currentUser.isUserManager())
-			throw new UnauthorizedAccessException("", "CREATE_GROUP");
+			throw new ForbiddenAccessException("", "CREATE_GROUP");
 		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups)
-			throw new UnauthorizedAccessException("", "CREATE_GROUP");
+			throw new ForbiddenAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
-		String path = getPath(group);
+		var path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
-		boolean created = new File(path).mkdir();
+		var created = new File(path).mkdir();
 		if (!created)
 			return false;
 		if (userGroup)
@@ -92,11 +93,11 @@ public class GroupService {
 
 	public boolean delete(String group) {
 		if (!accessService.canDelete(group))
-			throw new UnauthorizedAccessException(group, "DELETE");
-		String path = getPath(group);
+			throw new ForbiddenAccessException(group, "DELETE");
+		var path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
-		return Directories.delete(new File(path));
+		return Dirs.delete(new File(path));
 	}
 
 	public long getCount(boolean adminArea) {
@@ -105,33 +106,33 @@ public class GroupService {
 
 	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea,
 			boolean onlyIfCanWrite) {
-		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
+		var accessible = getAll(adminArea, onlyIfCanWrite);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
 	}
 
 	public long getRepositoryCount(String group) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return 0;
-		File root = new File(path);
+		var root = new File(path);
 		if (!root.exists() || !root.isDirectory())
 			return 0;
-		File groupDir = new File(root, group);
-		if (!accessService.canRead(group, false))
+		var groupDir = new File(root, group);
+		if (!accessService.canRead(group))
 			return 0;
 		return groupDir.listFiles().length;
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
-		File root = new File(path);
+		var root = new File(path);
 		if (!root.exists() || !root.isDirectory())
 			return new ArrayList<>();
-		List<String> groups = new ArrayList<>();
-		User user = userService.getCurrentUser();
-		for (File group : root.listFiles()) {
+		var groups = new ArrayList<String>();
+		var user = userService.getCurrentUser();
+		for (var group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
 			if (!accessService.canRead(group.getName(), !adminArea))
@@ -146,7 +147,7 @@ public class GroupService {
 	}
 
 	private String getPath(String group) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null)
 			return null;
 		return path + File.separator + group;
@@ -154,10 +155,10 @@ public class GroupService {
 
 	public Settings<GroupSetting> getSettings(String group) {
 		if (!accessService.canRead(group))
-			throw new UnauthorizedAccessException(group, "READ");
+			throw new ForbiddenAccessException(group, "READ");
 		Settings<GroupSetting> settings = settingsService.get(SettingType.GROUP_SETTING, group,
 				accessService::canSetSettings);
-		User user = userService.getForUsername(group);
+		var user = userService.getForUsername(group);
 		if (user == null)
 			return settings;
 		if (settings.get(GroupSetting.LABEL) == null) {

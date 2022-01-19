@@ -5,31 +5,30 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
+import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "teams")
+@Table
 public class Team extends AbstractEntity {
 
-	@Column(name = "teamname")
+	@Column
 	public String teamname;
 
-	@Column(name = "name")
+	@Column
 	public String name;
 
-	@Column(name = "avatar")
+	@Column
 	public byte[] avatar;
 
 	/**
 	 * Don't add/remove users directly, use teamService.addMember/removeMember
 	 * so memberships are also added/removed
 	 */
-	@OneToMany
-	@JoinTable(name = "team_users", joinColumns = { @JoinColumn(name = "f_team") }, inverseJoinColumns = {
-			@JoinColumn(name = "f_user") })
+	@OneToMany(fetch = FetchType.EAGER)
+	@JoinTable
 	public final List<User> users = new ArrayList<>();
 
 }

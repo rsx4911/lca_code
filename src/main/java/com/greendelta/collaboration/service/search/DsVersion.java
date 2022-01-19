@@ -10,6 +10,7 @@ import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 
+
 public class DsVersion {
 
 	public String objectId;
@@ -36,7 +37,7 @@ public class DsVersion {
 			return;
 		categoryPaths = new ArrayList<>();
 		String path = null;
-		for (String category : Arrays.asList(category.split("/"))) {
+		for (var category : Arrays.asList(category.split("/"))) {
 			path = path == null ? category : path + "/" + category;
 			categoryPaths.add(path);
 		}

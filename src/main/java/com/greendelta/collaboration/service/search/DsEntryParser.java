@@ -15,13 +15,13 @@ class DsEntryParser {
 	DsEntry parse(Map<String, Object> map) {
 		if (map == null)
 			return null;
-		ObjectMap entry = ObjectMap.fromMap(map);
-		DsEntry e = new DsEntry();
+		var entry = ObjectMap.fromMap(map);
+		var e = new DsEntry();
 		e.refId = entry.get("refId");
 		e.type = ModelTypes.from(entry);
-		for (Map<String, Object> vMap : entry.getAll("versions", Map.class)) {
-			ObjectMap version = ObjectMap.fromMap(vMap);
-			DsVersion v = new DsVersion();
+		for (var vMap : entry.getAll("versions", Map.class)) {
+			var version = ObjectMap.fromMap(vMap);
+			var v = new DsVersion();
 			if (e.type == ModelType.PROCESS) {
 				v = parseProcessSpecific(version);
 			} else if (e.type == ModelType.FLOW) {
@@ -35,10 +35,10 @@ class DsEntryParser {
 			if (v.tags == null) {
 				v.tags = new ArrayList<>();
 			}
-			for (Map<String, Object> cMap : version.getAll("repos", Map.class)) {
-				ObjectMap commit = ObjectMap.fromMap(cMap);
-				DsRepo r = new DsRepo();
-				r.id = commit.get("id");
+			for (var cMap : version.getAll("repos", Map.class)) {
+				var commit = ObjectMap.fromMap(cMap);
+				var r = new DsRepo();
+				r.path = commit.get("id");
 				r.group = commit.get("group");
 				if (r.tags == null) {
 					r.tags = new ArrayList<>();
@@ -54,7 +54,7 @@ class DsEntryParser {
 	}
 
 	private DsVersion parseProcessSpecific(ObjectMap version) {
-		DsVersion v = new DsVersion();
+		var v = new DsVersion();
 		v.processType = ModelTypes.processType(version);
 		v.validFromYear = version.get("validFromYear");
 		v.validUntilYear = version.get("validUntilYear");
@@ -65,7 +65,7 @@ class DsEntryParser {
 	}
 
 	private DsVersion parseFlowSpecific(ObjectMap version) {
-		DsVersion v = new DsVersion();
+		var v = new DsVersion();
 		v.flowType = ModelTypes.flowType(version);
 		return v;
 	}

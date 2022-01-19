@@ -9,25 +9,25 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "memberships")
+@Table
 public class Membership extends AbstractEntity {
 
 	@OneToOne
-	@JoinColumn(name = "f_user")
+	@JoinColumn
 	public User user;
 
 	// this looks a bit intricately but makes access members, roles and
 	// permissions for user more convenient (in opposite to have teams and users
 	// as possible members directly)
 	@OneToOne
-	@JoinColumn(name = "f_team")
+	@JoinColumn
 	public Team team;
 
 	// can be a group or repository
-	@Column(name = "member_of")
+	@Column
 	public String memberOf;
 
-	@Column(name = "role")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public Role role;
 

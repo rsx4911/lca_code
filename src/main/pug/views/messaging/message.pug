@@ -7,5 +7,5 @@
 	small.date(title=formatDateOrTime(message.date))=formatTimeOrDate(message.date)
 		if isOwnMessage
 			|  
-			span.glyphicon.glyphicon-ok.read-indicator(class=!message.team&&message.read?'is-read':null)
+			span.glyphicon.glyphicon-ok.read-indicator(class=!message.team&&message.readDate?'is-read':null)
 .clear

@@ -1,0 +1,65 @@
+package com.greendelta.collaboration.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.model.Membership;
+import com.greendelta.collaboration.model.Message;
+import com.greendelta.collaboration.model.Team;
+import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.job.Job;
+import com.greendelta.collaboration.model.settings.Setting;
+import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.model.task.Task;
+import com.greendelta.collaboration.service.Dao;
+
+@Configuration
+public class DaoConfig {
+
+	@Bean
+	public Dao<Job> jobDao() {
+		return new Dao<>(Job.class);
+	}
+
+	@Bean
+	public Dao<Setting> settingDao() {
+		return new Dao<>(Setting.class);
+	}
+
+	@Bean
+	public Dao<Review> reviewDao() {
+		return new Dao<>(Review.class);
+	}
+
+	@Bean
+	public Dao<Task> taskDao() {
+		return new Dao<>(Task.class);
+	}
+
+	@Bean
+	public Dao<Comment> commentDao() {
+		return new Dao<>(Comment.class);
+	}
+
+	@Bean
+	public Dao<Membership> membershipDao() {
+		return new Dao<>(Membership.class);
+	}
+
+	@Bean
+	public Dao<Message> messageDao() {
+		return new Dao<>(Message.class);
+	}
+
+	@Bean
+	public Dao<Team> teamDao() {
+		return new Dao<>(Team.class);
+	}
+
+	@Bean
+	public Dao<User> userDao() {
+		return new Dao<>(User.class);
+	}
+
+}

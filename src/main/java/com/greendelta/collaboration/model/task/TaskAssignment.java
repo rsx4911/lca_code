@@ -2,6 +2,9 @@ package com.greendelta.collaboration.model.task;
 
 import java.util.Date;
 
+import com.greendelta.collaboration.model.AbstractEntity;
+import com.greendelta.collaboration.model.User;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -10,33 +13,30 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.greendelta.collaboration.model.AbstractEntity;
-import com.greendelta.collaboration.model.User;
-
 @Entity
-@Table(name = "task_assignments")
+@Table
 public class TaskAssignment extends AbstractEntity {
 
-	@Column(name = "start_date")
+	@Column
 	@Temporal(TemporalType.TIMESTAMP)
 	public Date startDate;
 
-	@Column(name = "end_date")
+	@Column
 	@Temporal(TemporalType.TIMESTAMP)
 	public Date endDate;
 
 	@OneToOne
-	@JoinColumn(name = "f_assigned_to")
+	@JoinColumn
 	public User assignedTo;
 
-	@Column(name = "iteration")
+	@Column
 	public long iteration;
 
-	@Column(name = "canceled")
+	@Column
 	public boolean canceled;
 
 	@OneToOne
-	@JoinColumn(name = "f_ended_by")
+	@JoinColumn
 	public User endedBy;
 
 }

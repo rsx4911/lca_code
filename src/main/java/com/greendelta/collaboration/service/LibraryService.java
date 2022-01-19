@@ -8,22 +8,23 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 
-@Singleton
+@Service
 public class LibraryService {
 
 	private static final Logger log = LogManager.getLogger(LibraryService.class);
 	private final Map<String, Set<String>> refIds = new HashMap<>();
 	private final SettingsService settingsService;
 
-	@Inject
+	@Autowired
 	public LibraryService(SettingsService settingsService) {
 		this.settingsService = settingsService;
 		resetLibraries();
@@ -34,38 +35,30 @@ public class LibraryService {
 		String path = settingsService.get(ServerSetting.LIBRARY_PATH);
 		if (path == null || path.isEmpty())
 			return;
-		File dir = new File(path);
+		var dir = new File(path);
 		if (!dir.exists() || !dir.isDirectory())
 			return;
-		for (File file : dir.listFiles()) {
-			String filename = file.getName();
-			String libraryName = filename.substring(0, filename.lastIndexOf('.'));
+		for (var file : dir.listFiles()) {
+			var filename = file.getName();
+			var libraryName = filename.substring(0, filename.lastIndexOf('.'));
 			initRefIds(libraryName);
 		}
 	}
 
 	private void initRefIds(String libraryName) {
-		File file = getFile(libraryName);
+		var file = getFile(libraryName);
 		if (!file.exists())
 			return;
 		try {
-			Set<String> ids = new HashSet<>(Files.readAllLines(file.toPath()));
+			var ids = new HashSet<>(Files.readAllLines(file.toPath()));
 			refIds.put(libraryName, ids);
 		} catch (IOException e) {
-			String m = "Error loading ref ids of library " + libraryName;
-			log.error(m, e);
+			log.error("Error loading ref ids of library " + libraryName, e);
 		}
 	}
 
 	public Set<String> getLibraryNames(String refId) {
-		Set<String> names = new HashSet<>();
-		for (String libraryName : refIds.keySet()) {
-			Set<String> ids = refIds.get(libraryName);
-			if (!ids.contains(refId))
-				continue;
-			names.add(libraryName);
-		}
-		return names;
+		return refIds.keySet().stream().filter(lib -> refIds.get(lib).contains(refId)).collect(Collectors.toSet());
 	}
 
 	public Set<String> getLibraryNames() {
@@ -75,7 +68,7 @@ public class LibraryService {
 	public void putLibrary(String name, Collection<String> refIds) {
 		removeLibrary(name);
 		this.refIds.put(name, new HashSet<>(refIds));
-		File file = getFile(name);
+		var file = getFile(name);
 		try {
 			Files.write(file.toPath(), refIds);
 		} catch (IOException e) {
@@ -85,7 +78,7 @@ public class LibraryService {
 
 	public void removeLibrary(String name) {
 		refIds.remove(name);
-		File file = getFile(name);
+		var file = getFile(name);
 		if (!file.exists())
 			return;
 		file.delete();

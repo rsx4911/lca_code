@@ -1,9 +1,9 @@
 package com.greendelta.collaboration.model.settings;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 
-import com.greendelta.collaboration.util.GsonTypes;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.greendelta.collaboration.util.JacksonTypes;
 import com.greendelta.collaboration.util.ModelTypes;
 
 public enum ServerSetting implements SettingKey {
@@ -39,10 +39,10 @@ public enum ServerSetting implements SettingKey {
 	HOME_TEXT(String.class, ""),
 
 	// landing page/search settings
-	REPOSITORIES_ORDER(GsonTypes.STRING_LIST, new ArrayList<>()),
-	REPOSITORIES_HIDDEN(GsonTypes.STRING_LIST, new ArrayList<>()),
-	MODEL_TYPES_ORDER(GsonTypes.STRING_LIST, ModelTypes.DEFAULT_ORDER),
-	MODEL_TYPES_HIDDEN(GsonTypes.STRING_LIST, new ArrayList<>()),
+	REPOSITORIES_ORDER(JacksonTypes.STRING_LIST, new ArrayList<>()),
+	REPOSITORIES_HIDDEN(JacksonTypes.STRING_LIST, new ArrayList<>()),
+	MODEL_TYPES_ORDER(JacksonTypes.STRING_LIST, ModelTypes.DEFAULT_ORDER),
+	MODEL_TYPES_HIDDEN(JacksonTypes.STRING_LIST, new ArrayList<>()),
 
 	// maintenance
 	MAINTENANCE_MODE(Boolean.class, false),
@@ -56,14 +56,14 @@ public enum ServerSetting implements SettingKey {
 	LICENSE_AGREEMENT_TEXT(String.class);
 
 	private final Class<?> type;
-	private final Type subType;
+	private final TypeReference<?> subType;
 	private final Object defaultValue;
 
-	private <T> ServerSetting(Class<T> type) {
+	private ServerSetting(Class<?> type) {
 		this(type, null);
 	}
 
-	private <T> ServerSetting(Type subType, T defaultValue) {
+	private ServerSetting(TypeReference<?> subType, Object defaultValue) {
 		this.type = Object.class;
 		this.subType = subType;
 		this.defaultValue = defaultValue;
@@ -86,9 +86,10 @@ public enum ServerSetting implements SettingKey {
 		return type;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Type getSubType() {
-		return subType;
+	public <V> TypeReference<V> getSubType() {
+		return (TypeReference<V>) subType;
 	}
 
 	public boolean isPublic() {

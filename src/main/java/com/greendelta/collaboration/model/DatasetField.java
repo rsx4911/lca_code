@@ -1,26 +1,26 @@
 package com.greendelta.collaboration.model;
 
+import org.openlca.core.model.ModelType;
+
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
-import org.openlca.core.model.ModelType;
-
 @Embeddable
 public class DatasetField {
 
-	@Column(name = "ds_type")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public ModelType modelType;
 
-	@Column(name = "ds_ref_id")
+	@Column
 	public String refId;
 
-	@Column(name = "ds_commit_id")
+	@Column
 	public String commitId;
 
-	@Column(name = "ds_path", length = 4000)
+	@Column(length = 4000)
 	public String path;
 
 }

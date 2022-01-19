@@ -58,10 +58,8 @@ html(lang='en')
 			registerOnClickHandler('sign-up')
 			$('.sign-up-link-container').hide()
 			$.ajax({type: 'GET', url: 'ws/public/settings', success: function(settings) {
-				for (var i = 0; i < settings.length; i++) {
-					if (settings[i].name === 'USER_REGISTRATION_ENABLED' && settings[i].value === 'true' || settings[i].value === true) {
-						$('.sign-up-link-container').show()
-					}
+				if (settings['USER_REGISTRATION_ENABLED']) {
+					$('.sign-up-link-container').show()
 				}
 			}});
 			var type = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1)
@@ -91,7 +89,7 @@ html(lang='en')
 						}
 					}, error: function(response) {
 						$('#login-general-message').show();
-						$('#login-general-message .message').html(response.responseText);
+						$('#login-general-message .message').html(response.responseJSON.message);
 						$('#login #token').val('');
 					}});
 				return false;
@@ -114,9 +112,14 @@ html(lang='en')
 					success: function(response) {
 						window.location.href = '';
 					}, error: function(response) {
-						const error = JSON.parse(response.responseText)
+						var error = response.responseJSON.message
+						try {
+							error = JSON.parse(error).message
+						} catch (e) {
+							console.log(e)
+						}
 						$('#sign-up-general-message').show();
-						$('#sign-up-general-message .message').html(error.message);
+						$('#sign-up-general-message .message').html(error);
 						if (error.field) {
 							$('#sign-up #' + error.field).parent().addClass('has-error');
 						}

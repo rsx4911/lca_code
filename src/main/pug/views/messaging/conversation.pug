@@ -14,7 +14,7 @@ a.no-deco(href='#' data-action='show-message' data-type=recipient.type data-id=r
 				.clear
 			.message
 				if message
-					if message.read && message.to.username === recipient.username
+					if message.readDate && message.to.username === recipient.username
 						span.glyphicon.glyphicon-ok.read-indicator.is-read
 						|  
 					| #{message.text}

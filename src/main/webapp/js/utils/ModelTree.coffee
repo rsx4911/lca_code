@@ -22,18 +22,18 @@ define([
 							success: (result) ->
 								data = []
 								if path
-									result.entries.sort (a, b) -> return if a.name < b.name then -1 else if a.name > b.name then 1 else 0
-								for e in result.entries
+									result.data.sort (a, b) -> return if a.name < b.name then -1 else if a.name > b.name then 1 else 0
+								for e in result.data
 									if path
-										if e.type is 'CATEGORY'
+										if e.typeOfEntry is 'CATEGORY'
 											data.push 
-												id: "#{e.categoryType}/#{e.fullPath}"
+												id: "#{e.type}/#{e.fullPath}"
 												text: e.name
 												children: true
-												icon: "images/model/small/category/#{e.categoryType.toLowerCase()}.png"
+												icon: "images/model/small/category/#{e.type.toLowerCase()}.png"
 												refId: e.refId
 												type: 'CATEGORY'
-												categoryType: e.categoryType
+												categoryType: e.type
 												commitId: e.commitId
 										else
 											data.push 
@@ -68,13 +68,13 @@ define([
 					types.push e.original.id
 					elements.push {fullPath: e.original.id, commitId: e.commitId}
 			for e in selected
-				if e.original.type is 'CATEGORY' # is category
-					if $.inArray(e.original.categoryType, types) isnt -1
+				if e.original.typeOfEntry is 'CATEGORY' # is category
+					if $.inArray(e.original.type, types) isnt -1
 						continue
 					paths.push e.original.id
-					elements.push {fullPath: "#{e.original.categoryType}/#{e.original.id}", commitId: e.commitId}
+					elements.push {fullPath: "#{e.original.type}/#{e.original.id}", commitId: e.commitId}
 			for e in selected
-				if e.original.type && e.original.type isnt 'CATEGORY' # is model
+				if e.original.type && e.original.typeOfEntry isnt 'CATEGORY' # is model
 					if $.inArray(e.original.type, types) isnt -1
 						continue
 					skip = false

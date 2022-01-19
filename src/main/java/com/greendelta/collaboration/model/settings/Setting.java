@@ -9,29 +9,29 @@ import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.model.AbstractEntity;
 
 @Entity
-@Table(name = "settings")
-public class Setting<T extends SettingKey> extends AbstractEntity {
+@Table
+public class Setting extends AbstractEntity {
 
-	@Column(name = "type")
+	@Column
 	@Enumerated(EnumType.STRING)
 	private SettingType type;
 
-	@Column(name = "owner")
+	@Column
 	private String owner;
 
-	@Column(name = "name")
+	@Column
 	private String name;
 
-	@Column(name = "value")
+	@Column
 	private String value;
 
 	@Lob
-	@Column(name = "data")
+	@Column
 	private byte[] data;
 
 	private Setting() {
@@ -39,21 +39,21 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 
 	@SuppressWarnings("unchecked")
 	public <V> V getValue() {
-		T key = getKey();
+		var key = getKey();
 		if (key.getType().equals(byte[].class))
 			return (V) data;
-		Class<?> type = key.getType();
+		var type = key.getType();
 		if (type == Boolean.class && value != null)
-			return (V) new Boolean(Boolean.parseBoolean(value));
+			return (V) Boolean.valueOf(Boolean.parseBoolean(value));
 		if (type == Integer.class && value != null)
-			return (V) new Integer(Integer.parseInt(value));
+			return (V) Integer.valueOf(Integer.parseInt(value));
 		if (type == Long.class && value != null)
-			return (V) new Integer(Integer.parseInt(value));
+			return (V) Integer.valueOf(Integer.parseInt(value));
 		if (type == Object.class && data != null) {
 			try {
 				String json = new String(data, Charset.forName("utf-8"));
-				return new Gson().fromJson(json, key.getSubType());
-			} catch (JsonSyntaxException e) {
+				return new ObjectMapper().readValue(json, key.getSubType());
+			} catch (JsonProcessingException e) {
 				return key.getDefaultValue();
 			}
 		}
@@ -67,7 +67,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 	}
 
 	public void setValue(Object value) {
-		Class<?> type = getKey().getType();
+		var type = getKey().getType();
 		if (value == null) {
 			this.value = null;
 			this.data = null;
@@ -77,7 +77,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 			if (value.getClass() == Boolean.class) {
 				this.value = Boolean.toString((boolean) value);
 			} else {
-				String s = value.toString().toLowerCase();
+				var s = value.toString().toLowerCase();
 				if (!s.equals("true") && !s.equals("false"))
 					throw new IllegalArgumentException("Invalid value for type boolean: " + value);
 				this.value = s;
@@ -86,7 +86,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 			if (value.getClass() == Integer.class) {
 				this.value = Integer.toString((int) value);
 			} else {
-				String s = value.toString();
+				var s = value.toString();
 				try {
 					Integer.parseInt(s);
 					this.value = s;
@@ -98,7 +98,7 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 			if (value.getClass() == Long.class) {
 				this.value = Long.toString((int) value);
 			} else {
-				String s = value.toString();
+				var s = value.toString();
 				try {
 					Long.parseLong(s);
 					this.value = s;
@@ -110,7 +110,11 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 			if (value instanceof String) {
 				this.data = value.toString().getBytes(Charset.forName("utf-8"));
 			} else {
-				this.data = new Gson().toJson(value).getBytes(Charset.forName("utf-8"));
+				try {
+					this.data = new ObjectMapper().writeValueAsBytes(value);
+				} catch (JsonProcessingException e) {
+					throw new IllegalArgumentException("Invalid value for type Object: " + value);
+				}
 			}
 		} else if (type == byte[].class) {
 			if (value.getClass() != byte[].class)
@@ -121,12 +125,12 @@ public class Setting<T extends SettingKey> extends AbstractEntity {
 		}
 	}
 
-	public T getKey() {
+	public SettingKey getKey() {
 		return type.getSettingKey(name);
 	}
 
-	public static <T extends SettingKey> Setting<T> create(SettingType type, T key, String owner) {
-		Setting<T> setting = new Setting<T>();
+	public static Setting create(SettingType type, SettingKey key, String owner) {
+		var setting = new Setting();
 		setting.name = key.name();
 		setting.type = type;
 		setting.owner = owner;

@@ -14,38 +14,38 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 @Entity
-@Table(name = "comments")
+@Table
 public class Comment extends AbstractEntity {
 
-	@Column(name = "repository_path")
+	@Column
 	public String repositoryPath;
 
 	@Embedded
 	public DatasetField field;
 
 	@OneToOne
-	@JoinColumn(name = "f_user")
+	@JoinColumn
 	public User user;
 
-	@Column(name = "date")
+	@Column
 	@Temporal(TemporalType.TIMESTAMP)
 	public Date date;
 
-	@Column(name = "text", length = 4000)
+	@Column(length = 4000)
 	public String text;
 
 	@OneToOne
-	@JoinColumn(name = "f_reply_to")
+	@JoinColumn
 	public Comment replyTo;
 
-	@Column(name = "restricted_to_role")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public Role restrictedToRole;
 
-	@Column(name = "released")
+	@Column
 	public boolean released;
 
-	@Column(name = "approved")
+	@Column
 	public boolean approved;
 
 }

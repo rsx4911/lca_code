@@ -6,27 +6,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.mail.Session;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.subject.Subject;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.openlca.cloud.error.UnauthorizedAccessException;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestHighLevelClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.settings.ImprintSetting;
 import com.greendelta.collaboration.model.settings.MailSetting;
 import com.greendelta.collaboration.model.settings.SearchSetting;
@@ -34,9 +33,11 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.Setting;
 import com.greendelta.collaboration.model.settings.SettingKey;
 import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.search.wrapper.SearchClient;
-import com.greendelta.search.wrapper.es.EsRestClient;
+import com.greendelta.search.wrapper.os.OsRestClient;
 
+@Service
 public class SettingsService {
 
 	static final Logger log = LogManager.getLogger(SettingsService.class);
@@ -44,17 +45,13 @@ public class SettingsService {
 	public final MailConfig mailConfig = new MailConfig();
 	public final SearchConfig searchConfig = new SearchConfig();
 	public final ServerConfig serverConfig = new ServerConfig();
-	private final Dao<Setting<?>> dao;
-	private final Provider<Subject> subjectProvider;
+	private final Dao<Setting> dao;
+	private final UserService userService;
 
-	@Inject
-	public SettingsService(Dao<Setting<?>> dao, Provider<Subject> subjectProvider) {
+	@Autowired
+	public SettingsService(Dao<Setting> dao, UserService userService) {
 		this.dao = dao;
-		this.subjectProvider = subjectProvider;
-	}
-
-	public <T extends SettingKey> Settings<T> create() {
-		return new Settings<T>();
+		this.userService = userService;
 	}
 
 	public boolean is(SettingKey key) {
@@ -62,7 +59,7 @@ public class SettingsService {
 	}
 
 	public boolean is(SettingKey key, String owner) {
-		SettingType type = SettingType.getFor(key);
+		var type = SettingType.getFor(key);
 		return get(type, owner).is(key);
 	}
 
@@ -79,12 +76,12 @@ public class SettingsService {
 	}
 
 	public <V> V get(SettingKey key, String owner, V defaultValue) {
-		SettingType type = SettingType.getFor(key);
+		var type = SettingType.getFor(key);
 		return get(type, owner).get(key, defaultValue);
 	}
 
 	public <V> void set(SettingKey key, V value) {
-		SettingType type = SettingType.getFor(key);
+		var type = SettingType.getFor(key);
 		get(type).set(key, value);
 	}
 
@@ -94,18 +91,13 @@ public class SettingsService {
 
 	@SuppressWarnings("unchecked")
 	private <T extends SettingKey> Settings<T> get(SettingType type) {
-		switch (type) {
-		case SERVER_SETTING:
-			return (Settings<T>) serverConfig;
-		case MAIL_SETTING:
-			return (Settings<T>) mailConfig;
-		case SEARCH_SETTING:
-			return (Settings<T>) searchConfig;
-		case IMPRINT_SETTING:
-			return (Settings<T>) imprint;
-		default:
-			return get(type, null);
-		}
+		return (Settings<T>) switch (type) {
+		case SERVER_SETTING -> serverConfig;
+		case MAIL_SETTING -> mailConfig;
+		case SEARCH_SETTING -> searchConfig;
+		case IMPRINT_SETTING -> imprint;
+		default -> get(type, null);
+		};
 	}
 
 	private <T extends SettingKey> Settings<T> get(SettingType type, String owner) {
@@ -118,18 +110,17 @@ public class SettingsService {
 		return new Settings<T>(type, owner, access);
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T extends SettingKey> Setting<T> get(SettingType type, T key, String owner) {
-		Map<String, Object> attributes = new HashMap<>();
+	private <T extends SettingKey> Setting get(SettingType type, T key, String owner) {
+		var attributes = new HashMap<String, Object>();
 		attributes.put("type", type);
 		attributes.put("name", key.name());
 		attributes.put("owner", owner);
-		return (Setting<T>) dao.getFirstForAttributes(attributes);
+		return (Setting) dao.getFirstForAttributes(attributes);
 	}
 
 	private <T extends SettingKey> void set(SettingType type, T key, String owner, Object value) {
-		Setting<T> setting = get(type, key, owner);
-		boolean update = setting != null;
+		var setting = get(type, key, owner);
+		var update = setting != null;
 		if (!update) {
 			setting = Setting.create(type, key, owner);
 		}
@@ -142,26 +133,21 @@ public class SettingsService {
 	}
 
 	private void move(SettingType type, String owner, String newOwner) {
-		List<Setting<?>> settings = find(type, owner);
-		for (Setting<?> setting : settings) {
+		find(type, owner).forEach(setting -> {
 			dao.delete(setting);
-			Setting<?> newSetting = Setting.create(type, setting.getKey(), newOwner);
+			Setting newSetting = Setting.create(type, setting.getKey(), newOwner);
 			dao.insert(newSetting);
-		}
+		});
 	}
 
 	private void delete(SettingType type, String owner) {
-		List<Setting<?>> settings = find(type, owner);
-		for (Setting<?> setting : settings) {
+		find(type, owner).forEach(setting -> {
 			dao.delete(setting);
-		}
+		});
 	}
 
-	private List<Setting<?>> find(SettingType type, String owner) {
-		Map<String, Object> attributes = new HashMap<>();
-		attributes.put("type", type);
-		attributes.put("owner", owner);
-		return dao.getForAttributes(attributes);
+	private List<Setting> find(SettingType type, String owner) {
+		return dao.getForAttributes(Map.of("type", type, "owner", owner));
 	}
 
 	public class ServerConfig extends Settings<ServerSetting> {
@@ -171,21 +157,21 @@ public class SettingsService {
 		}
 
 		public ModelType[] getModelTypes() {
-			List<String> value = getFilteredModelTypes();
-			List<String> hidden = new ArrayList<>();
-			Subject subject = subjectProvider.get();
-			boolean isLoggedIn = subject != null && subject.isAuthenticated();
+			var value = getFilteredModelTypes();
+			var hidden = new ArrayList<String>();
+			var subject = SecurityContextHolder.getContext().getAuthentication();
+			var isLoggedIn = subject != null && subject.isAuthenticated();
 			if (!isLoggedIn) {
 				hidden = get(ServerSetting.MODEL_TYPES_HIDDEN);
 			}
-			List<ModelType> types = new ArrayList<>();
-			for (int i = 0; i < value.size(); i++) {
-				String type = value.get(i);
+			var types = new ArrayList<ModelType>();
+			for (var i = 0; i < value.size(); i++) {
+				var type = value.get(i);
 				if (hidden.contains(type))
 					continue;
 				types.add(ModelType.valueOf(value.get(i)));
 			}
-			for (ModelType type : ModelType.values()) {
+			for (var type : ModelType.values()) {
 				if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
 					continue;
 				types.add(type);
@@ -202,7 +188,7 @@ public class SettingsService {
 		@Override
 		@SuppressWarnings("unchecked")
 		public <V> V get(ServerSetting key, V defaultValue) {
-			V value = super.get(key, defaultValue);
+			var value = super.get(key, defaultValue);
 			if (key != ServerSetting.MODEL_TYPES_ORDER)
 				return value;
 			return (V) getFilteredModelTypes();
@@ -218,17 +204,17 @@ public class SettingsService {
 
 		public String toEmailFooter() {
 			return get(ImprintSetting.COMPANY, "") + ", " + get(ImprintSetting.STREET, "") + ", "
-					+ get(ImprintSetting.ZIP_CODE, "")
-					+ " " + get(ImprintSetting.CITY, "") + ", " + get(ImprintSetting.COUNTRY, "") + "<br>"
-					+ "Companies' Register: " + get(ImprintSetting.REGISTRATION, "") + "<br>"
-					+ "Managing Director: " + get(ImprintSetting.CEO, "");
+					+ get(ImprintSetting.ZIP_CODE, "") + " " + get(ImprintSetting.CITY, "") + ", "
+					+ get(ImprintSetting.COUNTRY, "") + "<br>" + "Companies' Register: "
+					+ get(ImprintSetting.REGISTRATION, "") + "<br>" + "Managing Director: "
+					+ get(ImprintSetting.CEO, "");
 		}
 
 	}
 
 	public class MailConfig extends Settings<MailSetting> {
 
-		private Session session;
+		private JavaMailSender mailSender;
 
 		private MailConfig() {
 			super(SettingType.MAIL_SETTING);
@@ -237,27 +223,29 @@ public class SettingsService {
 		@Override
 		public void set(MailSetting key, Object value) {
 			super.set(key, value);
-			session = null;
 		}
 
-		public Session getSession() {
-			if (session != null)
-				return session;
-			String proto = get(MailSetting.PROTO);
-			boolean useAuth = Strings.notEmpty(get(MailSetting.USER));
-			Properties props = new Properties();
-			props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
-			props.put("mail." + proto + ".host", get(MailSetting.HOST));
-			props.put("mail." + proto + ".port", get(MailSetting.PORT));
-			if (proto.equals("smtps")) {
-				props.put("mail.smtps.ssl.protocols", "TLSv1.2");
-			}
+		public JavaMailSender getMailSender() {
+			if (mailSender != null)
+				return mailSender;
+			var mailSender = new JavaMailSenderImpl();
+			mailSender.setHost(get(MailSetting.HOST));
+			mailSender.setPort(get(MailSetting.PORT));
 			String user = get(MailSetting.USER);
+			mailSender.setUsername(user);
+			mailSender.setPassword(get(MailSetting.PASS));
+			var props = mailSender.getJavaMailProperties();
+			var proto = get(MailSetting.PROTO);
+			var useAuth = Strings.notEmpty(get(MailSetting.USER));
+			props.put("mail.transport.protocol", proto);
+			props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
+			// if (proto.equals("smtps")) {
+			// props.put("mail.smtps.ssl.protocols", "TLSv1.2");
+			// }
 			String from = user != null ? user : get(MailSetting.DEFAULT_FROM);
 			if (from != null) {
 				try {
-					props.put("mail." + proto + ".from",
-							new InternetAddress(from).getAddress());
+					props.put("mail." + proto + ".from", new InternetAddress(from).getAddress());
 				} catch (AddressException e) {
 					SettingsService.log.error("Error setting 'from'", e);
 				}
@@ -266,8 +254,7 @@ public class SettingsService {
 				props.put("mail." + proto + ".ssl.enable", "true");
 			if (is(MailSetting.TLS))
 				props.put("mail." + proto + ".starttls.enable", "true");
-			session = Session.getInstance(props);
-			return session;
+			return mailSender;
 		}
 
 		public boolean isValid() {
@@ -301,15 +288,14 @@ public class SettingsService {
 			String host = get(SearchSetting.HOST);
 			int port = get(SearchSetting.PORT);
 			String schema = get(SearchSetting.SCHEMA);
-			client = new RestHighLevelClient(RestClient.builder(
-					new HttpHost(host, port, schema),
-					new HttpHost(host, port + 1, schema)));
+			client = new RestHighLevelClient(
+					RestClient.builder(new HttpHost(host, port, schema), new HttpHost(host, port + 1, schema)));
 			return client;
 		}
 
 		public SearchClient getSearchClient() {
 			try {
-				return new EsRestClient(getClient(), get(SearchSetting.INDEX_NAME));
+				return new OsRestClient(getClient(), get(SearchSetting.INDEX_NAME));
 			} catch (Exception e) {
 				SettingsService.log.error("Error getting search client", e);
 				return null;
@@ -336,10 +322,6 @@ public class SettingsService {
 		private final Map<T, Object> local;
 		private final Access access;
 
-		private Settings() {
-			this(null, null, null);
-		}
-
 		private Settings(SettingType type) {
 			this(type, null, null);
 		}
@@ -364,7 +346,7 @@ public class SettingsService {
 			if (local != null) {
 				value = (V) local.get(key);
 			} else {
-				Setting<T> setting = SettingsService.this.get(type, key, owner);
+				Setting setting = SettingsService.this.get(type, key, owner);
 				if (setting == null) {
 					value = key.getDefaultValue();
 				} else {
@@ -401,7 +383,7 @@ public class SettingsService {
 
 		public void move(Repository repo) {
 			if (local == null) {
-				String newOwner = repo.toId();
+				var newOwner = repo.path();
 				checkAccess(owner);
 				checkAccess(newOwner);
 				SettingsService.this.move(type, owner, newOwner);
@@ -411,9 +393,7 @@ public class SettingsService {
 		private void checkAccess(String owner) {
 			if (type == null || access == null || access.allowed(owner))
 				return;
-			if (owner == null)
-				throw new AuthorizationException();
-			throw new UnauthorizedAccessException(owner, "SET_SETTING");
+			throw new ForbiddenAccessException(owner, "SET_SETTING");
 		}
 
 		public Map<String, Object> toMap() {
@@ -424,18 +404,22 @@ public class SettingsService {
 			return toMap(filter, false);
 		}
 
+		public Map<String, Object> toPreservedMap(Function<T, Boolean> filter) {
+			return toMap(filter, true);
+		}
+
 		@SuppressWarnings("unchecked")
 		private Map<String, Object> toMap(Function<T, Boolean> filter, boolean preserveKeys) {
-			Map<String, Object> map = new HashMap<>();
+			var map = new HashMap<String, Object>();
 			if (local != null) {
 				local.forEach((k, v) -> map.put(preserveKeys ? k.name() : toFieldName(k), v));
 				return map;
 			}
-			for (T key : (T[]) type.enumClass.getEnumConstants()) {
+			for (var key : (T[]) type.enumClass.getEnumConstants()) {
 				if (filter != null)
 					if (!filter.apply(key))
 						continue;
-				String field = key.name();
+				var field = key.name();
 				if (!preserveKeys) {
 					field = toFieldName(key);
 				}
@@ -445,9 +429,9 @@ public class SettingsService {
 		}
 
 		private String toFieldName(SettingKey key) {
-			String name = "";
-			boolean nextUpper = false;
-			for (char c : key.name().toLowerCase().toCharArray()) {
+			var name = "";
+			var nextUpper = false;
+			for (var c : key.name().toLowerCase().toCharArray()) {
 				if (c == '_') {
 					nextUpper = true;
 				} else {
@@ -470,8 +454,8 @@ public class SettingsService {
 
 		@Override
 		public boolean allowed(String groupOrRepo) {
-			Subject subject = subjectProvider.get();
-			return subject != null && subject.hasRole("admin");
+			var user = userService.getCurrentUser();
+			return user != null && user.isAdmin();
 		}
 
 	}

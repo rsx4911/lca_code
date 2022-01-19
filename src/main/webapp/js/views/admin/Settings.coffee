@@ -85,7 +85,7 @@ define([
 									error: (error) -> 
 										text = error?.responseText
 										unless text
-											text = 'Could not reach elastic search'
+											text = 'Could not reach opensearch'
 										Status.error text
 
 			testGladConfiguration: (event) ->

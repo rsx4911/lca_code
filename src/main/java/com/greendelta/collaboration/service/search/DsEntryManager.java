@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.eclipse.jgit.lib.ObjectId;
-import org.openlca.cloud.api.git.Commit;
-import org.openlca.cloud.api.git.Reference;
 import org.openlca.core.model.ModelType;
+import org.openlca.git.model.Commit;
+import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -30,12 +30,12 @@ class DsEntryManager {
 			e.type = ref.type;
 			e.refId = ref.refId;
 		}
-		DsVersion v = getVersion(e, ref);
+		var v = getVersion(e, ref);
 		if (v == null) {
 			v = createVersion(ref);
 			e.versions.add(v);
 		}
-		DsRepo r = getRepo(v);
+		var r = getRepo(v);
 		if (r == null) {
 			r = createRepo(ref);
 			v.repos.add(r);
@@ -47,14 +47,14 @@ class DsEntryManager {
 	}
 
 	private DsVersion getVersion(DsEntry e, Reference ref) {
-		for (DsVersion v : e.versions)
+		for (var v : e.versions)
 			if (ObjectId.fromString(v.objectId).equals(ref.objectId))
 				return v;
 		return null;
 	}
 
 	private DsVersion createVersion(Reference ref) {
-		ObjectMap metaData = MetaData.forSearch(ref, repo);
+		var metaData = MetaData.forSearch(ref, repo);
 		if (ref.type == ModelType.PROCESS)
 			return processVersion(ref, metaData);
 		if (ref.type == ModelType.FLOW)
@@ -63,7 +63,7 @@ class DsEntryManager {
 	}
 
 	private DsVersion genericVersion(Reference ref, ObjectMap metaData) {
-		DsVersion v = new DsVersion();
+		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
 		return v;
 	}
@@ -71,21 +71,21 @@ class DsEntryManager {
 	private void fillGenericVersion(DsVersion v, Reference ref, ObjectMap metaData) {
 		v.objectId = ref.objectId.name();
 		v.name = metaData.getString("name");
-		String tags = metaData.getString("tags");
+		var tags = metaData.getString("tags");
 		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
 		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
 
 	private DsVersion flowVersion(Reference ref, ObjectMap metaData) {
-		DsVersion v = new DsVersion();
+		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
 		v.flowType = metaData.get("flowType");
 		return v;
 	}
 
 	private DsVersion processVersion(Reference ref, ObjectMap metaData) {
-		DsVersion v = new DsVersion();
+		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
 		v.location = metaData.get("location");
 		v.processType = metaData.get("processType");
@@ -97,8 +97,8 @@ class DsEntryManager {
 	}
 
 	private DsRepo createRepo(Reference ref) {
-		DsRepo r = new DsRepo();
-		r.id = repo.toId();
+		var r = new DsRepo();
+		r.path = repo.path();
 		r.group = repo.group;
 		r.tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
 		r.commitId = commit.id;
@@ -109,10 +109,10 @@ class DsEntryManager {
 	void remove(DsEntry e, Reference ref) {
 		if (e == null)
 			return;
-		DsVersion v = getVersion(e, ref);
+		var v = getVersion(e, ref);
 		if (v == null)
 			return;
-		DsRepo r = getRepo(v);
+		var r = getRepo(v);
 		if (r == null)
 			return;
 		v.repos.remove(r);
@@ -122,8 +122,8 @@ class DsEntryManager {
 	}
 
 	private DsRepo getRepo(DsVersion v) {
-		for (DsRepo r : v.repos)
-			if (r.id.equals(repo.toId()))
+		for (var r : v.repos)
+			if (r.path.equals(repo.path()))
 				return r;
 		return null;
 	}

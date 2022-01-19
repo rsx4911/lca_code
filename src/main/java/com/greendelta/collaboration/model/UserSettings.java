@@ -1,12 +1,13 @@
 package com.greendelta.collaboration.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
+import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
@@ -15,62 +16,64 @@ import javax.persistence.TemporalType;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 @Embeddable
-public class UserSettings {
+public class UserSettings implements Serializable {
 
-	@Column(name = "can_create_groups")
+	private static final long serialVersionUID = 7222742243498126396L;
+
+	@Column
 	public boolean canCreateGroups;
 
-	@Column(name = "can_create_repositories")
+	@Column
 	public boolean canCreateRepositories;
 
-	@Column(name = "no_of_repositories")
+	@Column
 	public int noOfRepositories;
 
 	// If not 0, the maximum size of all user group repositories in bytes
-	@Column(name = "max_size")
+	@Column
 	public long maxSize;
 
 	// If true all users can initiate conversations, otherwise admins only
-	@Column(name = "messaging_enabled")
+	@Column
 	public boolean messagingEnabled;
 
 	// If true only team members (and admins) can initiate conversations
-	@Column(name = "messaging_restricted")
+	@Column
 	public boolean messagingRestricted;
 
-	@Column(name = "show_online_status")
+	@Column
 	public boolean showOnlineStatus;
 
-	@Column(name = "show_read_receipt")
+	@Column
 	public boolean showReadReceipt;
 
-	@Column(name = "show_task_activities")
+	@Column
 	public boolean showTaskActivities;
 
-	@Column(name = "show_comment_activities")
+	@Column
 	public boolean showCommentActivities;
 
-	@Column(name = "show_commit_activities")
+	@Column
 	public boolean showCommitActivities;
 
-	@Column(name = "admin")
+	@Column
 	public boolean admin;
 
-	@Column(name = "user_manager")
+	@Column
 	public boolean userManager;
 
-	@Column(name = "data_manager")
+	@Column
 	public boolean dataManager;
 
-	@Column(name = "active_until")
+	@Column
 	@Temporal(TemporalType.DATE)
 	public Date activeUntil;
 	
-	@OneToMany
-	@JoinTable(name = "blocked_users", joinColumns = { @JoinColumn(name = "f_user") }, inverseJoinColumns = { @JoinColumn(name = "f_blocked") })
+	@OneToMany(fetch = FetchType.EAGER)
+	@JoinTable
 	public List<User> blockedUsers = new ArrayList<>();
 
-	@Column(name = "notifications")
+	@Column
 	long notifications;
 
 	@JsonAnySetter

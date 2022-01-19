@@ -21,7 +21,7 @@ mixin result(dataset)
 		+actions(dataset, version, repo)
 
 mixin link(dataset, repo, title, defaultLink)
-	- var url = repo.id + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId=' + repo.commitId;
+	- var url = repo.path + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId=' + repo.commitId;
 	a(href=url class=defaultLink?'default-link':null)=title
 
 mixin repositories(dataset, versionIndex)
@@ -30,14 +30,14 @@ mixin repositories(dataset, versionIndex)
 	.result-repositories found in #{version.repos.length === 1 ? 'repository' : 'repositories'} 
 		span.comma-list
 			each repo in version.repos
-				+link(dataset, repo, repo.id, true)
+				+link(dataset, repo, repo.path, true)
 	if versions > 1
 		div #{versions - 1} other #{versions > 2 ? 'versions' : 'version'} found in  
 			span.comma-list
 				each v, index in dataset.versions
 					if index !== versionIndex
 						each repo in v.repos
-							+link(dataset, repo, repo.id, true)
+							+link(dataset, repo, repo.path, true)
 
 	
 
@@ -74,7 +74,7 @@ mixin actions(dataset, version, repo)
 			span.glyphicon.glyphicon-download
 			span.text Download
 			span.caret
-		- var repoName = repo.id.split('/')[1]
+		- var repoName = repo.path.split('/')[1]
 		ul.dropdown-menu
 			li: a(href='#', data-format='json', data-datatype='dataset', data-group=repo.group, data-repo=repoName, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=repo.commitId) Dataset as JSON-LD
 			li: a(href='#', data-format='ilcd', data-datatype='dataset', data-group=repo.group, data-repo=repoName, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=repo.commitId) Dataset as ILCD

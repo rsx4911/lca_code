@@ -1,49 +1,46 @@
 package com.greendelta.collaboration.service.user;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.shiro.codec.Hex;
-import org.apache.shiro.crypto.hash.Sha256Hash;
-import org.apache.shiro.subject.Subject;
+import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
-import com.google.common.base.Strings;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Dao;
-import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
-import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
-public class UserService {
+@Service
+public class UserService implements UserDetailsService {
 
-	private final static Logger log = LogManager.getLogger(UserService.class);
-	private final static Random random = new SecureRandom();
-	private final Provider<Subject> subjectProvider;
 	private final Dao<User> dao;
-	private final SettingsService settingsService;
+	private final PasswordEncoder passwordEncoder;
 
-	@Inject
-	public UserService(Provider<Subject> subjectProvider, Dao<User> dao, SettingsService settingsService) {
-		this.subjectProvider = subjectProvider;
+	@Autowired
+	public UserService(Dao<User> dao, PasswordEncoder passwordEncoder) {
 		this.dao = dao;
-		this.settingsService = settingsService;
+		this.passwordEncoder = passwordEncoder;
+	}
+
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		var user = getForUsername(username);
+		if (user == null)
+			throw new UsernameNotFoundException("Couldn't find user " + username);
+		return user;
 	}
 
 	public User getForUsername(String username) {
@@ -63,7 +60,7 @@ public class UserService {
 	}
 
 	public List<User> getUserManagers() {
-		Set<User> managers = new HashSet<>();
+		var managers = new HashSet<User>();
 		managers.addAll(dao.getForAttribute("settings.admin", true));
 		managers.addAll(dao.getForAttribute("settings.userManager", true));
 		return new ArrayList<>(managers);
@@ -72,86 +69,59 @@ public class UserService {
 	public boolean isLastAdmin(User user) {
 		if (!user.isAdmin())
 			return false;
-		List<User> admins = getAdmins();
+		var admins = getAdmins();
 		return admins.size() == 1;
 	}
 
 	public User getCurrentUser() {
-		Subject subject = subjectProvider.get();
-		if (!subject.isAuthenticated())
+		if (isAnonymous())
 			return new User();
-		String name = subject.getPrincipal().toString();
-		return getForUsername(name);
-	}
-
-	public boolean isAnonymous() {
-		Subject subject = subjectProvider.get();
-		return !subject.isAuthenticated();
+		var auth = SecurityContextHolder.getContext().getAuthentication();
+		return getForUsername(auth.getName());
 	}
 
 	public long getCount() {
 		return dao.getCount();
 	}
 
-	public int getNoOfRepositories() {
-		User currentUser = getCurrentUser();
-		if (currentUser.username == null || currentUser.username.isEmpty())
+	public int getNoOfRepositories(User user, String repositoryPath) {
+		if (user.username == null || user.username.isEmpty())
 			return 0;
-		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
-		if (path == null || path.isEmpty())
+		if (repositoryPath == null || repositoryPath.isEmpty())
 			return 0;
-		File userGroup = new File(path, currentUser.username);
+		var userGroup = new File(repositoryPath, user.username);
 		if (!userGroup.exists())
 			return 0;
 		return userGroup.listFiles().length;
 	}
 
-	public long getUserGroupSize(User user) {
-		if (user == null || user.username == null || user.username.isEmpty())
-			return 0;
-		String repositoryPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
-		if (repositoryPath == null)
-			return 0;
-		File userGroup = new File(repositoryPath, user.username);
-		if (!userGroup.exists())
-			return 0;
-		long size = 0;
-		// for (File file : userGroup.listFiles()) {
-		// try {
-		// // TODO get size
-		// size += 0;
-		// } catch (UnsupportedSchemaException e) {
-		// // ignore
-		// }
-		// }
-		return size;
-	}
-
 	public SearchResult<User> getVisible(int page, int pageSize, String filter) {
-		User user = getCurrentUser();
+		var user = getCurrentUser();
 		if (user == null)
 			return SearchResults.from(new ArrayList<>());
-		Map<String, Object> parameters = new HashMap<>();
+		var parameters = new HashMap<String, Object>();
 		if (!user.isUserManager())
 			parameters.put("user", user);
-		if (!Strings.isNullOrEmpty(filter))
+		if (!Strings.nullOrEmpty(filter))
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		String query = createQuery(user, filter);
-		List<User> data = Collections.filterDuplicates(dao.getAll(query, parameters));
-		java.util.Collections.sort(data, (u1, u2) -> u1.name.toLowerCase().compareTo(u2.name.toLowerCase()));
+		var query = createQuery(user, filter);
+		var data = dao.getAll(query, parameters).stream()
+				.distinct()
+				.sorted((u1, u2) -> u1.name.toLowerCase().compareTo(u2.name.toLowerCase()))
+				.toList();
 		return SearchResults.paged(page, pageSize, data);
 	}
 
 	private String createQuery(User user, String filter) {
-		StringBuilder jpql = new StringBuilder();
+		var jpql = new StringBuilder();
 		if (user.isUserManager()) {
 			jpql.append("SELECT u FROM User u");
-			if (!Strings.isNullOrEmpty(filter)) {
+			if (!Strings.nullOrEmpty(filter)) {
 				jpql.append(" WHERE LOWER(u.name) LIKE :name");
 			}
 		} else {
 			jpql.append("SELECT u FROM Team t JOIN t.users u WHERE :user MEMBER OF t.users AND u != :user");
-			if (!Strings.isNullOrEmpty(filter)) {
+			if (!Strings.nullOrEmpty(filter)) {
 				jpql.append(" AND LOWER(u.name) LIKE :name");
 			}
 		}
@@ -159,38 +129,28 @@ public class UserService {
 	}
 
 	public void setPassword(User user, String password) {
-		try {
-			byte[] salt = new byte[8];
-			random.nextBytes(salt);
-			byte[] pass = password.getBytes("UTF-8");
-			String hash = new Sha256Hash(pass, salt, 50).toHex();
-			user.hash = hash;
-			user.salt = Hex.encodeToString(salt);
-		} catch (UnsupportedEncodingException e) {
-			log.error("Unexpected encoding exception", e);
-		}
+		user.password = passwordEncoder.encode(password);
 	}
 
-	public String enableTwoFactorAuthentication(User user) {
+	public String enableTwoFactorAuthentication(User user, String servername) {
 		user.twoFactorSecret = createTwoFactorKey();
 		user = update(user);
-		return getTwoFactorUrl(user);
+		return getTwoFactorUrl(user, servername);
 	}
 
 	private static String createTwoFactorKey() {
-		GoogleAuthenticator authenticator = new GoogleAuthenticator();
-		GoogleAuthenticatorKey key = authenticator.createCredentials();
+		var authenticator = new GoogleAuthenticator();
+		var key = authenticator.createCredentials();
 		return key.getKey();
 	}
 
-	public String getTwoFactorUrl(User user) {
-		String key = user.twoFactorSecret;
-		String servername = settingsService.get(ServerSetting.SERVER_NAME);
+	public String getTwoFactorUrl(User user, String servername) {
+		var key = user.twoFactorSecret;
 		return getOtpAuthTotpURL(servername, user.username, key);
 	}
 
 	private String getOtpAuthTotpURL(String issuer, String username, String key) {
-		URIBuilder uri = new URIBuilder();
+		var uri = new URIBuilder();
 		uri.setScheme("otpauth");
 		uri.setHost("totp");
 		uri.setPath("/" + formatLabel(issuer, username));
@@ -223,15 +183,9 @@ public class UserService {
 		return dao.update(user);
 	}
 
-	public boolean logout() {
-		Subject subject = subjectProvider.get();
-		if (!subject.isAuthenticated())
-			return false;
-		String principal = subject.getPrincipal().toString();
-		log.info("User {} attempts to logout", principal);
-		subject.logout();
-		log.info("User {} successfully logged out", principal);
-		return true;
+	public boolean isAnonymous() {
+		var auth = SecurityContextHolder.getContext().getAuthentication();
+		return auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken;
 	}
 
 }

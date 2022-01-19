@@ -3,24 +3,25 @@ package com.greendelta.collaboration.service.user;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.base.Strings;
-import com.google.inject.Inject;
+import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
+@Service
 public class TeamService {
 
 	private final Dao<Team> dao;
 	private final MembershipService membershipService;
 	private final UserService userService;
 
-	@Inject
+	@Autowired
 	public TeamService(Dao<Team> dao, MembershipService membershipService, UserService userService) {
 		this.dao = dao;
 		this.membershipService = membershipService;
@@ -48,7 +49,7 @@ public class TeamService {
 	}
 
 	public boolean addMember(User user, Team team) {
-		boolean added = team.users.add(user);
+		var added = team.users.add(user);
 		if (!added)
 			return false;
 		team = dao.update(team);
@@ -57,7 +58,7 @@ public class TeamService {
 	}
 
 	public boolean removeMember(User user, Team team) {
-		boolean removed = team.users.remove(user);
+		var removed = team.users.remove(user);
 		if (!removed)
 			return false;
 		team = dao.update(team);
@@ -66,39 +67,43 @@ public class TeamService {
 	}
 
 	public List<Team> getTeamsFor(User user) {
-		String jpql = "SELECT team FROM Team team JOIN team.users user WHERE user = :user";
+		var jpql = "SELECT team FROM Team team JOIN team.users user WHERE user = :user";
 		return dao.getAll(jpql, java.util.Collections.singletonMap("user", user));
 	}
 
 	public long getCount() {
 		return dao.getCount();
 	}
-	
+
 	public SearchResult<Team> getVisible(int page, int pageSize, String filter) {
-		User user = userService.getCurrentUser();
+		var user = userService.getCurrentUser();
 		if (user == null)
 			return SearchResults.from(new ArrayList<>());
-		Map<String, Object> parameters = new HashMap<>();
-		if (!user.isUserManager())
+		var parameters = new HashMap<String, Object>();
+		if (!user.isUserManager()) {
 			parameters.put("user", user);
-		if (!Strings.isNullOrEmpty(filter))
+		}
+		if (!Strings.nullOrEmpty(filter)) {
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		String query = createQuery(user, filter);
-		List<Team> data = Collections.filterDuplicates(dao.getAll(query, parameters));
-		java.util.Collections.sort(data, (t1, t2) -> t1.name.toLowerCase().compareTo(t2.name.toLowerCase()));
+		}
+		var query = createQuery(user, filter);
+		var data = dao.getAll(query, parameters).stream()
+				.distinct()
+				.sorted((t1, t2) -> t1.name.toLowerCase().compareTo(t2.name.toLowerCase()))
+				.toList();
 		return SearchResults.paged(page, pageSize, data);
 	}
 
 	private String createQuery(User user, String filter) {
-		StringBuilder jpql = new StringBuilder();
+		var jpql = new StringBuilder();
 		if (user.isUserManager()) {
 			jpql.append("SELECT t FROM Team t");
-			if (!Strings.isNullOrEmpty(filter)) {
+			if (!Strings.nullOrEmpty(filter)) {
 				jpql.append(" WHERE LOWER(t.name) LIKE :name");
 			}
 		} else {
 			jpql.append("SELECT t FROM Team t WHERE :user MEMBER OF t.users");
-			if (!Strings.isNullOrEmpty(filter))
+			if (!Strings.nullOrEmpty(filter))
 				jpql.append(" AND LOWER(t.name) LIKE :name");
 		}
 		return jpql.toString();

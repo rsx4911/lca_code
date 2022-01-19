@@ -1,11 +1,8 @@
 package com.greendelta.collaboration.service.search;
 
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import org.openlca.core.model.ModelType;
-
-import com.google.inject.Inject;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -14,13 +11,14 @@ import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.score.Comparator;
 import com.greendelta.search.wrapper.score.Score;
 
+@Service
 class ScoreService {
 
 	private final RepositoryService repoService;
 	private final SettingsService settingsService;
 	private final UserService userService;
 
-	@Inject
+	@Autowired
 	ScoreService(RepositoryService repoService, SettingsService settingsService, UserService userService) {
 		this.repoService = repoService;
 		this.settingsService = settingsService;
@@ -28,7 +26,7 @@ class ScoreService {
 	}
 
 	void applyTo(SearchQueryBuilder builder) {
-		User currentUser = userService.getCurrentUser();
+		var currentUser = userService.getCurrentUser();
 		if (currentUser.id == 0) {
 			applyRepositoryOrder(builder);
 		}
@@ -36,9 +34,9 @@ class ScoreService {
 	}
 
 	private void applyRepositoryOrder(SearchQueryBuilder builder) {
-		Score score = new Score(Aggregations.REPOSITORY.field);
-		List<String> repoOrder = repoService.getPublicRepositoryOrder();
-		for (int i = 0; i < repoOrder.size(); i++) {
+		var score = new Score(Aggregations.REPOSITORY.field);
+		var repoOrder = repoService.getPublicRepositoryOrder();
+		for (var i = 0; i < repoOrder.size(); i++) {
 			score.addCase(repoOrder.size() - i + 1, Comparator.EQUALS, "\"" + repoOrder.get(i) + "\"");
 		}
 		score.addElse(1);
@@ -46,9 +44,9 @@ class ScoreService {
 	}
 
 	private void applyTypeOrder(SearchQueryBuilder builder) {
-		Score score = new Score(Aggregations.MODEL_TYPE.field);
-		ModelType[] types = settingsService.serverConfig.getModelTypes();
-		for (int i = 0; i < types.length; i++) {
+		var score = new Score(Aggregations.MODEL_TYPE.field);
+		var types = settingsService.serverConfig.getModelTypes();
+		for (var i = 0; i < types.length; i++) {
 			score.addCase(types.length - i + 1, Comparator.EQUALS, "\"" + types[i].name() + "\"");
 		}
 		score.addElse(1);

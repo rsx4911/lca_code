@@ -91,6 +91,9 @@ define([
 				@clear form
 				if response.responseJSON
 					error = response.responseJSON
+					try error = JSON.parse error.message catch e then error = { message: error.message }
+					unless error.message
+						error.message = 'Unknown error'
 					@markWithMessage form, error.field, error.message
 				else
 					message = response.responseText

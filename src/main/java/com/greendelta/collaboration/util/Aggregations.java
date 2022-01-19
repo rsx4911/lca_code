@@ -2,7 +2,6 @@ package com.greendelta.collaboration.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
@@ -15,11 +14,13 @@ public class Aggregations {
 	public static final TermsAggregation GROUP = new TermsAggregation("group", "versions.repos.group");
 	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId", "versions.repos.id");
 	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type", "type");
-	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags", "versions.repos.tags");
+	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags",
+			"versions.repos.tags");
 	public static final TermsAggregation DATASET_TAGS = new TermsAggregation("tags", "versions.tags");
 	// process specific aggregations
 	public static final TermsAggregation PROCESS_TYPE = new TermsAggregation("processType", "versions.processType");
-	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach", "versions.modellingApproach");
+	public static final TermsAggregation MODELLING_APPROACH = new TermsAggregation("modellingApproach",
+			"versions.modellingApproach");
 	public static final TermsAggregation START_YEAR = new TermsAggregation("validFromYear", "versions.validFromYear");
 	public static final TermsAggregation END_YEAR = new TermsAggregation("validUntilYear", "versions.validUntilYear");
 	public static final TermsAggregation LOCATION = new TermsAggregation("location", "versions.location");
@@ -36,8 +37,8 @@ public class Aggregations {
 			FLOW_TYPE };
 
 	public static final SearchAggregation[] getFilters(Set<ModelType> modelTypes) {
-		ModelType modelType = modelTypes != null && modelTypes.size() == 1 ? modelTypes.iterator().next() : null;
-		List<SearchAggregation> filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
+		var modelType = modelTypes != null && modelTypes.size() == 1 ? modelTypes.iterator().next() : null;
+		var filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
 		if (modelType == ModelType.PROCESS) {
 			filters.addAll(Arrays.asList(PROCESS_FILTERS));
 		} else if (modelType == ModelType.FLOW) {

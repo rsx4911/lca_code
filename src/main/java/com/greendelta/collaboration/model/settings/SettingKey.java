@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.model.settings;
 
-import java.lang.reflect.Type;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 public interface SettingKey {
 
@@ -8,7 +8,7 @@ public interface SettingKey {
 
 	Class<?> getType();
 
-	default Type getSubType() {
+	default <V> TypeReference<V> getSubType() {
 		return null;
 	}
 

@@ -1,8 +1,7 @@
 package com.greendelta.collaboration.model.settings;
 
-import java.lang.reflect.Type;
-
-import com.greendelta.collaboration.util.GsonTypes;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.greendelta.collaboration.util.JacksonTypes;
 
 public enum RepositorySetting implements SettingKey {
 
@@ -14,7 +13,7 @@ public enum RepositorySetting implements SettingKey {
 	MAX_SIZE(Long.class, 0l),
 	LABEL(String.class),
 	VERSION(String.class),
-	TAGS(GsonTypes.STRING_LIST),
+	TAGS(JacksonTypes.STRING_LIST),
 	DESCRIPTION(String.class),
 	SOURCE_INFO(String.class),
 	CONTACT_INFO(String.class),
@@ -24,17 +23,17 @@ public enum RepositorySetting implements SettingKey {
 	DQ_ASSESSMENT(String.class),
 	CITATION(String.class),
 	TYPE_OF_DATA(String.class),
-	LIBRARY_RESTRICTIONS(GsonTypes.ROLE_MAP);
+	LIBRARY_RESTRICTIONS(JacksonTypes.ROLE_MAP);
 
 	private final Class<?> type;
-	private final Type subType;
+	private final TypeReference<?> subType;
 	private final Object defaultValue;
 
 	private <T> RepositorySetting(Class<T> type) {
 		this(type, null);
 	}
 
-	private <T> RepositorySetting(Type subType) {
+	private <T> RepositorySetting(TypeReference<?> subType) {
 		this.type = Object.class;
 		this.subType = subType;
 		this.defaultValue = null;
@@ -57,9 +56,10 @@ public enum RepositorySetting implements SettingKey {
 		return type;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Type getSubType() {
-		return subType;
+	public <V> TypeReference<V> getSubType() {
+		return (TypeReference<V>) subType;
 	}
 
 }

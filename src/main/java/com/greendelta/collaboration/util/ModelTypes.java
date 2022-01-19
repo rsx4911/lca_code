@@ -8,6 +8,7 @@ import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 
+
 public class ModelTypes {
 
 	public static final List<String> DEFAULT_ORDER = Arrays.asList(new String[] {
@@ -35,11 +36,11 @@ public class ModelTypes {
 	public static ModelType from(Map<String, Object> map, String field) {
 		if (map == null)
 			return null;
-		Object value = map.get(field);
+		var value = map.get(field);
 		if (value == null)
 			return null;
-		if (value instanceof ModelType)
-			return (ModelType) value;
+		if (value instanceof ModelType type)
+			return type;
 		return parse(value.toString());
 	}
 
@@ -55,12 +56,12 @@ public class ModelTypes {
 	public static FlowType flowType(Map<String, Object> map) {
 		if (map == null)
 			return null;
-		Object value = map.get("flowType");
+		var value = map.get("flowType");
 		if (value == null)
 			return null;
-		if (value instanceof FlowType)
-			return (FlowType) value;
-		String sValue = value.toString();
+		if (value instanceof FlowType type)
+			return type;
+		var sValue = value.toString();
 		if (sValue.isEmpty())
 			return null;
 		return FlowType.valueOf(sValue.toUpperCase());
@@ -69,17 +70,17 @@ public class ModelTypes {
 	public static ProcessType processType(Map<String, Object> map) {
 		if (map == null)
 			return null;
-		Object value = map.get("processType");
+		var value = map.get("processType");
 		if (value == null)
 			return null;
-		if (value instanceof ProcessType)
-			return (ProcessType) value;
+		if (value instanceof ProcessType type)
+			return type;
 		if (value instanceof com.greendelta.collaboration.model.glad.ProcessType) {
 			if (value == com.greendelta.collaboration.model.glad.ProcessType.FULLY_AGGREGATED)
 				return ProcessType.LCI_RESULT;
 			return ProcessType.UNIT_PROCESS;
 		}
-		String sValue = value.toString();
+		var sValue = value.toString();
 		if (sValue.isEmpty())
 			return null;
 		if (sValue.toLowerCase().equals("system") || sValue.toLowerCase().equals("fully_aggregated")

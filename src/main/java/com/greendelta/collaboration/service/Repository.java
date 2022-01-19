@@ -6,16 +6,20 @@ import java.io.IOException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
-import org.openlca.cloud.api.git.Commits;
-import org.openlca.cloud.api.git.Datasets;
-import org.openlca.cloud.api.git.References;
-import org.openlca.cloud.error.RepositoryNotFoundException;
+import org.openlca.git.find.Commits;
+import org.openlca.git.find.Datasets;
+import org.openlca.git.find.Diffs;
+import org.openlca.git.find.Entries;
+import org.openlca.git.find.References;
 import org.openlca.jsonld.Schema;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.openlca.util.Strings;
 
+import com.greendelta.collaboration.error.RepositoryNotFoundException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
+import com.greendelta.collaboration.util.Routes;
 
 public class Repository implements AutoCloseable {
 
@@ -23,37 +27,60 @@ public class Repository implements AutoCloseable {
 	public final String group;
 	public final String name;
 	public final Settings<RepositorySetting> settings;
-	public final Datasets datasets;
-	public final Commits commits;
-	public final References references;
 	public final Settings<GroupSetting> groupSettings;
+	private final RepositoryPath path;
 	final File dir;
-	FileRepository repo;
-
-	public static String toId(String group, String name) {
-		return group + "/" + name;
-	}
+	// is only initialized when helpers are initialized, released on close()
+	private FileRepository gitRepo;
 
 	Repository(String root, String group, String name, Settings<RepositorySetting> settings,
-			Settings<GroupSetting> groupSettings) throws IOException {
-		String path = root + File.separator + group + File.separator + name;
-		dir = new File(path);
+			Settings<GroupSetting> groupSettings) {
+		var fsPath = root + File.separator + group + File.separator + name;
+		dir = new File(fsPath);
 		this.group = group;
 		this.name = name;
-		String id = toId();
+		this.path = new RepositoryPath(group, name);
 		if (!dir.exists())
-			throw new RepositoryNotFoundException(id);
+			throw new RepositoryNotFoundException(path.toString());
 		checkVersion();
 		this.settings = settings;
 		this.groupSettings = groupSettings;
-		this.repo = new FileRepository(dir);
-		this.datasets = new Datasets(repo);
-		this.commits = new Commits(repo);
-		this.references = new References(repo);
 	}
 
-	public String toId() {
-		return toId(group, name);
+	private FileRepository gitRepo() {
+		if (gitRepo == null) {
+			try {
+				gitRepo = new FileRepository(dir);
+			} catch (IOException e) {
+				log.error("Error accessing file repository", e);
+				return null;
+			}
+		}
+		return gitRepo;
+	}
+
+	public Commits commits() {
+		return new Commits(gitRepo());
+	}
+
+	public Datasets datasets() {
+		return new Datasets(gitRepo());
+	}
+
+	public References references() {
+		return new References(gitRepo());
+	}
+
+	public Diffs diffs() {
+		return new Diffs(gitRepo());
+	}
+
+	public Entries entries() {
+		return new Entries(gitRepo());
+	}
+
+	public String path() {
+		return path.toString();
 	}
 
 	public String toFilename() {
@@ -76,7 +103,7 @@ public class Repository implements AutoCloseable {
 
 	private void checkVersion() {
 		try {
-			String version = getSchemaVersion();
+			var version = getSchemaVersion();
 			if (!Schema.isSupportedSchema(version))
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {
@@ -92,12 +119,13 @@ public class Repository implements AutoCloseable {
 	public File getCachedJsonFile() {
 		return new File(dir, "cached-json.zip");
 	}
-	
+
 	@Override
 	public void close() {
-		if (this.repo == null)
-			return;
-		this.repo.close();
+		if (gitRepo != null) {
+			gitRepo.close();
+		}
+		gitRepo = null;
 	}
 
 	public static class InsufficientStorageException extends RuntimeException {
@@ -106,6 +134,59 @@ public class Repository implements AutoCloseable {
 
 		InsufficientStorageException(String message) {
 			super(message);
+		}
+
+	}
+
+	public static class RepositoryPath {
+
+		public final String group;
+		public final String repo;
+
+		public RepositoryPath(String string) {
+			var split = split(string);
+			this.group = split[0];
+			this.repo = split[1];
+		}
+
+		private String[] split(String string) {
+			if (Strings.nullOrEmpty(string))
+				return new String[] { null, null };
+			if (string.startsWith("/")) {
+				string = string.substring(1);
+			}
+			if (string.endsWith("/")) {
+				string = string.substring(0, string.length() - 1);
+			}
+			if (!string.contains("/"))
+				return new String[] { string, null };
+			return string.split("/");
+		}
+
+		public RepositoryPath(String group, String repo) {
+			this.group = group;
+			this.repo = repo;
+		}
+
+		public boolean isGroupOrRepo() {
+			return isGroup() || isRepo();
+		}
+
+		public boolean isGroup() {
+			return !Strings.nullOrEmpty(group) && !Routes.isReserved(group);
+		}
+
+		public boolean isRepo() {
+			if (Strings.nullOrEmpty(group) || Routes.isReserved(group))
+				return false;
+			return !Strings.nullOrEmpty(repo) && !Routes.isReserved(repo);
+		}
+
+		@Override
+		public String toString() {
+			if (Strings.nullOrEmpty(repo))
+				return group;
+			return group + "/" + repo;
 		}
 
 	}

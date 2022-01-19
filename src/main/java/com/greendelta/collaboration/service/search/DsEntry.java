@@ -3,11 +3,12 @@ package com.greendelta.collaboration.service.search;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.openlca.cloud.model.FileReference;
 import org.openlca.core.model.ModelType;
 
-public class DsEntry extends FileReference {
+public class DsEntry {
 
+	public ModelType type;
+	public String refId;
 	public Set<DsVersion> versions = new HashSet<>();
 
 	public String toIndexId() {

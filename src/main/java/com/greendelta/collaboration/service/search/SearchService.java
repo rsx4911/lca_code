@@ -1,30 +1,27 @@
 package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.api.git.Commit;
-import org.openlca.cloud.api.git.DiffReference;
-import org.openlca.cloud.api.git.DiffType;
-import org.openlca.cloud.api.git.Reference;
+import org.openlca.git.model.Commit;
+import org.openlca.git.model.Diff;
+import org.openlca.git.model.DiffType;
+import org.openlca.git.model.Reference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.common.io.Resources;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
 
-@Singleton
+//@Singleton
+@Service
 public class SearchService {
 
 	private static final Logger log = LogManager.getLogger(SearchService.class);
@@ -32,7 +29,7 @@ public class SearchService {
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
 
-	@Inject
+	@Autowired
 	public SearchService(SettingsService settingsService, QueryService queryService) {
 		this.settingsService = settingsService;
 		this.queryService = queryService;
@@ -43,26 +40,26 @@ public class SearchService {
 	}
 
 	public void index(Repository repo) {
-		repo.commits.find().all().forEach(commit -> index(repo, commit));
+		repo.commits().find().all().forEach(commit -> index(repo, commit));
 	}
 
 	public void index(Repository repo, Commit commit) {
-		DsEntryManager manager = new DsEntryManager(repo, commit);
-		List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
-		DiffReference.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+		var manager = new DsEntryManager(repo, commit);
+		var diffs = repo.diffs().find().withPrevious(commit.id).all();
+		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 				.forEach(diff -> index(repo, manager, diff.right));
-		DiffReference.filter(diffs, DiffType.DELETED)
+		Diff.filter(diffs, DiffType.DELETED)
 				.forEach(diff -> remove(manager, diff.left));
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {
-		DsEntry entry = find(ref);
+		var entry = find(ref);
 		entry = manager.createOrUpdate(entry, ref);
 		getClient().index(entry.toIndexId(), ObjectMap.fromObject(entry));
 	}
 
 	private void remove(DsEntryManager manager, Reference ref) {
-		DsEntry entry = find(ref);
+		var entry = find(ref);
 		if (entry == null)
 			return;
 		manager.remove(entry, ref);
@@ -74,7 +71,7 @@ public class SearchService {
 	}
 
 	private DsEntry find(Reference ref) {
-		Map<String, Object> entry = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
+		var entry = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
 		return parser.parse(entry);
 	}
 
@@ -89,12 +86,12 @@ public class SearchService {
 	}
 
 	public void remove(Repository repo) {
-		List<Commit> commits = repo.commits.find().all();
+		var commits = repo.commits().find().all();
 		Collections.reverse(commits);
 		commits.forEach(commit -> {
-			DsEntryManager manager = new DsEntryManager(repo, commit);
-			List<DiffReference> diffs = repo.references.diff().withPrevious(commit.id).all();
-			DiffReference.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+			var manager = new DsEntryManager(repo, commit);
+			var diffs = repo.diffs().find().withPrevious(commit.id).all();
+			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 					.forEach(diff -> remove(manager, diff.right));
 		});
 	}
@@ -106,19 +103,19 @@ public class SearchService {
 
 	private void createIndex() {
 		try {
-			Map<String, String> settings = new HashMap<>();
-			settings.put("config", readJson("es-config.json"));
-			settings.put("mapping", readJson("es-mapping.json"));
-			getClient().create(settings);
+			getClient().create(Map.of(
+					"config", readJson("os-config.json"),
+					"mapping",readJson("os-mapping.json")));
 		} catch (IOException e) {
 			log.error("Error creating search index", e);
 		}
 	}
 
 	private String readJson(String resource) throws IOException {
-		URL url = getClass().getResource(resource);
-		byte[] data = Resources.toByteArray(url);
-		return new String(data, "utf-8");
+		var stream = getClass().getResourceAsStream(resource);
+		if (stream == null)
+			return "{}";
+		return new String(stream.readAllBytes(), "utf-8");
 	}
 
 	private SearchClient getClient() {
