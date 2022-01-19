@@ -40,7 +40,7 @@ public enum Notification {
 	public boolean isOneOf(Notification... notifications) {
 		if (notifications == null)
 			return false;
-		for (Notification notification : notifications)
+		for (var notification : notifications)
 			if (notification == this)
 				return true;
 		return false;

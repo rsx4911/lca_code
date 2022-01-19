@@ -10,37 +10,33 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
+import javax.persistence.PersistenceContext;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.TypeLiteral;
-import com.google.inject.persist.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.greendelta.collaboration.model.AbstractEntity;
 
 public class Dao<T extends AbstractEntity> {
 
-	private final Provider<EntityManager> entityManagerProvider;
+	@PersistenceContext
+	private EntityManager entityManager;
 	private final Class<T> entityType;
 
-	@Inject
-	@SuppressWarnings("unchecked")
-	public Dao(TypeLiteral<T> type, Provider<EntityManager> entityManagerProvider) {
-		this.entityType = (Class<T>) type.getRawType();
-		this.entityManagerProvider = entityManagerProvider;
+	public Dao(Class<T> entityType) {
+		this.entityType = entityType;
 	}
 
 	public T get(long id) {
 		if (id < 1)
 			return null;
-		EntityManager entityManager = createManager();
+		var entityManager = createManager();
 		return entityManager.find(entityType, id);
 	}
 
 	public List<T> getAll() {
-		EntityManager em = createManager();
-		String jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
-		TypedQuery<T> query = em.createQuery(jpql, entityType);
+		var em = createManager();
+		var jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
+		var query = em.createQuery(jpql, entityType);
 		return query.getResultList();
 	}
 
@@ -49,10 +45,10 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public List<T> getAll(String jpql, Map<String, ? extends Object> parameters, int start, int limit) {
-		EntityManager em = createManager();
-		TypedQuery<T> query = em.createQuery(jpql, entityType);
+		var em = createManager();
+		var query = em.createQuery(jpql, entityType);
 		if (parameters != null) {
-			for (String parameter : parameters.keySet()) {
+			for (var parameter : parameters.keySet()) {
 				query.setParameter(parameter, parameters.get(parameter));
 			}
 		}
@@ -66,10 +62,10 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public <RT> List<RT> getAttributes(String jpql, Map<String, ? extends Object> parameters, Class<RT> resultClass) {
-		EntityManager em = createManager();
-		TypedQuery<RT> query = em.createQuery(jpql, resultClass);
+		var em = createManager();
+		var query = em.createQuery(jpql, resultClass);
 		if (parameters != null) {
-			for (String parameter : parameters.keySet()) {
+			for (var parameter : parameters.keySet()) {
 				query.setParameter(parameter, parameters.get(parameter));
 			}
 		}
@@ -89,17 +85,17 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public List<T> getForAttributes(Map<String, Object> parameters, boolean ignoreCase) {
-		String jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
+		var jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
 		if (parameters == null || parameters.isEmpty())
 			return getAll(jpql, parameters);
 		jpql += " WHERE ";
 		int count = 0;
-		Map<String, Object> params = new HashMap<>();
-		for (Entry<String, Object> parameter : parameters.entrySet()) {
+		var params = new HashMap<String, Object>();
+		for (var parameter : parameters.entrySet()) {
 			if (count != 0) {
 				jpql += " AND ";
 			}
-			Object value = parameter.getValue();
+			var value = parameter.getValue();
 			count++;
 			if (value == null) {
 				jpql += "o." + parameter.getKey() + " IS NULL";
@@ -121,7 +117,7 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public T getFirst(String jpql, Map<String, Object> parameters) {
-		List<T> list = getAll(jpql, parameters);
+		var list = getAll(jpql, parameters);
 		if (list.isEmpty())
 			return null;
 		return list.get(0);
@@ -140,7 +136,7 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public T getFirstForAttributes(Map<String, Object> parameters, boolean ignoreCase) {
-		List<T> list = getForAttributes(parameters, ignoreCase);
+		var list = getForAttributes(parameters, ignoreCase);
 		if (list.isEmpty())
 			return null;
 		return list.get(0);
@@ -151,9 +147,9 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public long getCount(String jpql, Map<String, Object> parameters) {
-		EntityManager em = createManager();
-		TypedQuery<Long> query = em.createQuery(jpql, Long.class);
-		for (String parameter : parameters.keySet()) {
+		var em = createManager();
+		var query = em.createQuery(jpql, Long.class);
+		for (var parameter : parameters.keySet()) {
 			query.setParameter(parameter, parameters.get(parameter));
 		}
 		Long count = query.getSingleResult();
@@ -165,11 +161,11 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public long getCountForAttributes(Map<String, Object> parameters) {
-		String jpql = "SELECT count(o) FROM " + entityType.getSimpleName() + " o";
+		var jpql = "SELECT count(o) FROM " + entityType.getSimpleName() + " o";
 		if (parameters.size() > 0) {
 			jpql += " WHERE ";
 			int count = 0;
-			Map<String, Object> internal = new HashMap<>();
+			var internal = new HashMap<String, Object>();
 			for (Entry<String, Object> parameter : parameters.entrySet()) {
 				if (count != 0) {
 					jpql += " AND ";
@@ -187,74 +183,74 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public long getLastId(Class<? extends AbstractEntity> entityType) {
-		String query = "SELECT o FROM " + entityType.getSimpleName() + " o ORDER BY o.id DESC";
-		T value = getFirst(query, Collections.emptyMap());
+		var query = "SELECT o FROM " + entityType.getSimpleName() + " o ORDER BY o.id DESC";
+		var value = getFirst(query, Collections.emptyMap());
 		if (value == null)
 			return 1;
-		return value.getId() + 1;
+		return value.id + 1;
 	}
 
-	@Transactional(rollbackOn = Exception.class)
+	@Transactional
 	public T insert(T entity) {
 		if (entity == null)
 			return null;
-		entity.setId(getLastId() + 1);
-		EntityManager em = createManager();
+		entity.id = getLastId() + 1;
+		var em = createManager();
 		em.persist(entity);
 		return entity;
 	}
 
-	@Transactional(rollbackOn = Exception.class)
+	@Transactional
 	public Collection<T> insert(Collection<T> entities) {
 		if (entities == null)
 			return null;
-		EntityManager em = createManager();
-		for (T entity : entities) {
-			entity.setId(getLastId() + 1);
+		var em = createManager();
+		for (var entity : entities) {
+			entity.id = getLastId() + 1;
 			em.persist(entity);
 		}
 		return entities;
 	}
 
-	@Transactional(rollbackOn = Exception.class)
+	@Transactional
 	public T update(T entity) {
 		if (entity == null)
 			return null;
-		EntityManager em = createManager();
+		var em = createManager();
 		return em.merge(entity);
 	}
 
-	@Transactional(rollbackOn = Exception.class)
+	@Transactional
 	public Collection<T> update(Collection<T> entities) {
 		if (entities == null)
 			return null;
-		EntityManager em = createManager();
+		var em = createManager();
 		for (T entity : entities) {
 			em.merge(entity);
 		}
 		return entities;
 	}
 
-	@Transactional(rollbackOn = Exception.class)
+	@Transactional
 	public void delete(T entity) {
 		if (entity == null)
 			return;
-		EntityManager em = createManager();
+		var em = createManager();
 		em.remove(em.merge(entity));
 	}
 
-	@Transactional(rollbackOn = Exception.class)
+	@Transactional
 	public void delete(Collection<T> entities) {
 		if (entities == null)
 			return;
-		EntityManager em = createManager();
+		var em = createManager();
 		for (T entity : entities) {
 			em.remove(em.merge(entity));
 		}
 	}
 
 	public void delete(long id) {
-		T entity = get(id);
+		var entity = get(id);
 		if (entity == null)
 			return;
 		delete(entity);
@@ -263,7 +259,7 @@ public class Dao<T extends AbstractEntity> {
 	public T refresh(T entity) {
 		if (entity == null)
 			return null;
-		EntityManager entityManager = createManager();
+		var entityManager = createManager();
 		entityManager.refresh(entity);
 		return entity;
 	}
@@ -271,21 +267,21 @@ public class Dao<T extends AbstractEntity> {
 	public Collection<T> query(String jpql, Map<String, Object> values) {
 		if (jpql == null)
 			return Collections.emptyList();
-		EntityManager entityManager = createManager();
-		TypedQuery<T> query = entityManager.createQuery(jpql, entityType);
+		var entityManager = createManager();
+		var query = entityManager.createQuery(jpql, entityType);
 		if (values != null) {
-			for (String name : values.keySet()) {
+			for (var name : values.keySet()) {
 				query.setParameter(name, values.get(name));
 			}
 		}
-		Collection<T> result = query.getResultList();
+		var result = query.getResultList();
 		if (result == null)
 			return Collections.emptyList();
 		return result;
 	}
 
 	private EntityManager createManager() {
-		return entityManagerProvider.get();
+		return entityManager;
 	}
 
 }

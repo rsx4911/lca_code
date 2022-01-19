@@ -128,13 +128,14 @@ mixin repo-input(setting, field, label)
 +avatar-box('repository', repositoryId, repository.userCanSetSettings)
 
 - var libraries = Object.keys(repository.libraryRestrictions);
-if repository.userCanSetSettings && libraries.length
+if repository.userCanSetSettings
 	.header-box Library restrictions
 	.content-box.library-restrictions
 		p If a restriction is set, only users with the specified role will be able to commit changes to data sets that are part of that library.
-		each library in libraries
-			- var selectId = library.replace(' ', '@');
-			+select(selectId, library)
-				option --- No restriction ---
-				each role in roles
-					option(value=role.id selected=repository.libraryRestrictions[library]===role.id)=role.name
+		if libraries.length
+			each library in libraries
+				- var selectId = library.replace(' ', '@');
+				+select(selectId, library)
+					option --- No restriction ---
+					each role in roles
+						option(value=role.id selected=repository.libraryRestrictions[library]===role.id)=role.name

@@ -160,16 +160,9 @@ define([
 					@commitId = null
 					Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId, 
 						trigger: false
-						replace: true
+						replace: true					
 				@loadDataset @refId, @commitId, (dataset) =>
 					@dataset = dataset
-					if currentUser.isLoggedIn()
-						# might have not found for requested commit id, so next best commit is returned, need to update the @commitId value and backbone history url
-						if @commitId isnt dataset.commitId
-							Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId + "?commitId=#{dataset.commitId}", 
-								trigger: false
-								replace: true
-						@commitId = dataset.commitId
 					@loadCommitHistory (commits) =>
 						@commits = commits
 						DatasetPrepare.applyTo @dataset

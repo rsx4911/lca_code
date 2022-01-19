@@ -11,11 +11,11 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "reviews")
+@Table
 public class Review extends Task {
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-	@JoinColumn(name = "f_review")
+	@JoinColumn
 	public Set<ReviewReference> references = new HashSet<>();
 
 	@Override

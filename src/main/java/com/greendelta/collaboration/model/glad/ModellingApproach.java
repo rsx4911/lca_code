@@ -9,12 +9,12 @@ public enum ModellingApproach {
 	public static ModellingApproach from(Map<String, Object> map) {
 		if (map == null)
 			return null;
-		Object value = map.get("modellingApproach");
+		var value = map.get("modellingApproach");
 		if (value == null)
 			return null;
-		if (value instanceof ModellingApproach)
-			return (ModellingApproach) value;
-		String sValue = value.toString();
+		if (value instanceof ModellingApproach approach)
+			return approach;
+		var sValue = value.toString();
 		if (sValue.isEmpty())
 			return null;
 		return valueOf(sValue.toUpperCase());

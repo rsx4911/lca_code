@@ -1,54 +1,45 @@
 package com.greendelta.collaboration.model;
 
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+
 @Entity
-@Table(name = "users")
-public class User extends AbstractEntity {
+@Table
+public class User extends AbstractEntity implements UserDetails {
 
-	@Id
-	@Column(name = "id")
-	private long id;
+	private static final long serialVersionUID = -4989312202559805583L;
 
-	@Column(name = "username")
+	@Column
 	public String username;
 
-	@Column(name = "name")
+	@Column
 	public String name;
 
-	@Column(name = "email")
+	@Column
 	public String email;
 
-	@Column(name = "hash", length = 64)
-	public String hash;
+	@Column
+	public String password;
 
-	@Column(name = "salt", length = 16)
-	public String salt;
-
-	@Column(name = "avatar")
+	@Column
 	public byte[] avatar;
 
-	@Column(name = "two_factor_secret")
+	@Column
 	public String twoFactorSecret;
 
 	@Embedded
 	public UserSettings settings = new UserSettings();
-
-	@Override
-	public long getId() {
-		return id;
-	}
-
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -67,19 +58,19 @@ public class User extends AbstractEntity {
 	public void enable(Notification notification) {
 		if (isEnabled(notification))
 			return;
-		long e = (long) Math.pow(2, notification.ordinal());
+		var e = (long) Math.pow(2, notification.ordinal());
 		settings.notifications += e;
 	}
 
 	public void disable(Notification notification) {
 		if (!isEnabled(notification))
 			return;
-		long e = (long) Math.pow(2, notification.ordinal());
+		var e = (long) Math.pow(2, notification.ordinal());
 		settings.notifications -= e;
 	}
 
 	public boolean isEnabled(Notification notification) {
-		long e = (long) Math.pow(2, notification.ordinal());
+		var e = (long) Math.pow(2, notification.ordinal());
 		return (settings.notifications | e) == settings.notifications;
 	}
 
@@ -108,14 +99,55 @@ public class User extends AbstractEntity {
 			return false;
 		if (isAdmin())
 			return false;
-		Calendar now = Calendar.getInstance();
+		var now = Calendar.getInstance();
 		now.set(Calendar.HOUR_OF_DAY, 0);
 		now.set(Calendar.MINUTE, 0);
 		now.set(Calendar.SECOND, 0);
 		now.set(Calendar.MILLISECOND, 0);
-		Calendar activeUntil = Calendar.getInstance();
+		var activeUntil = Calendar.getInstance();
 		activeUntil.setTime(settings.activeUntil);
 		return now.after(activeUntil);
+	}
+
+	@Override
+	public List<GrantedAuthority> getAuthorities() {
+		if (isAdmin())
+			return Arrays.asList(Authority.ADMIN, Authority.DATA_MANAGER, Authority.USER_MANAGER);
+		if (isDataManager())
+			return Collections.singletonList(Authority.DATA_MANAGER);
+		if (isUserManager())
+			return Collections.singletonList(Authority.USER_MANAGER);
+		return Collections.emptyList();
+	}
+
+	@Override
+	public String getPassword() {
+		return password;
+	}
+
+	@Override
+	public String getUsername() {
+		return username;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
 	}
 
 }

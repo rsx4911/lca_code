@@ -14,6 +14,7 @@ define([
 
 		initializeErrorHandling: () ->
 			$(document).ajaxError (event, response, options, error) ->
+				console.log(response)
 				switch response.status
 					when 401
 						unless currentUser.get('inLoginProcess')
@@ -27,7 +28,7 @@ define([
 					when 406
 						localStorage?.setItem?('errorMessage', 'Sorry, the repository schema version is not compatible with the current collaboration server version.')
 					else
-						localStorage?.setItem?('errorMessage', response.responseText)
+						localStorage?.setItem?('errorMessage', response.responseJSON.message)
 				if response.status isnt 400 and response.status isnt 401 and response.status isnt 409
 					Router.navigate "error/#{response.status}",
 						replace: true
@@ -39,10 +40,10 @@ define([
 					type: 'POST'
 					url: 'ws/public/error'
 					contentType: 'application/json'
-					data: JSON.stringify({ stacktrace: error.stack, path: Backbone.history.fragment })
+					data: JSON.stringify({ stacktrace: error.responseJSON.trace, path: Backbone.history.fragment })
 					complete: () -> 
 						if localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
-							localStorage?.setItem?('errorMessage', error.stack)
+							localStorage?.setItem?('errorMessage', error.responseJSON.trace)
 							Router.navigate "error",
 								replace: true
 						window.inErrorHandling = false

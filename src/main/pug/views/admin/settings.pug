@@ -6,87 +6,87 @@ include ../mixins/forms.pug
 		button.btn.btn-primary.pull-right(data-action='test-glad') Check GLAD url
 	.content-box
 		.two-columns
-			+input('SERVER_NAME', 'Server name')
-			+input('SERVER_URL', 'Server base url (e.g. used in email links)')
+			+input('SERVER_SETTING__SERVER_NAME', 'Server name')
+			+input('SERVER_SETTING__SERVER_URL', 'Server base url (e.g. used in email links)')
 		.clear
 		.two-columns
-			+input('REPOSITORY_PATH', 'Repositories root directory')
-			+input('LIBRARY_PATH', 'Root directory for library id files')
+			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
+			+input('SERVER_SETTING__LIBRARY_PATH', 'Root directory for library id files')
 		.clear
 		.three-columns
-			+input('GLAD_URL', 'Glad service base url')
-			+input('GLAD_API_KEY_HEADER', 'Glad service api-key header field')
-			+input('GLAD_API_KEY', 'Glad service api-key header value')
+			+input('SERVER_SETTING__GLAD_URL', 'Glad service base url')
+			+input('SERVER_SETTING__GLAD_API_KEY_HEADER', 'Glad service api-key header field')
+			+input('SERVER_SETTING__GLAD_API_KEY', 'Glad service api-key header value')
 		.clear
 		.four-columns
-			+input('SEARCH_CLUSTER', 'Elasticsearch cluster')
-			+input('SEARCH_HOST', 'Elasticsearch url')
-			+input('SEARCH_PORT', 'Elasticsearch port')
-			+input('SEARCH_INDEX_NAME', 'Elasticsearch index')
+			+input('SEARCH_SETTING__SCHEMA', 'Opensearch schema')
+			+input('SEARCH_SETTING__HOST', 'Opensearch url')
+			+input('SEARCH_SETTING__PORT', 'Opensearch port')
+			+input('SEARCH_SETTING__INDEX_NAME', 'Opensearch index')
 		.clear
 	.header-box Enabled features
 	.content-box
-		+checkbox('COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
-		+checkbox('TASKS_ENABLED', 'Tasks: Editors can create review tasks')
-		+checkbox('MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
-		+checkbox('PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
-		+checkbox('NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
-		+checkbox('USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselves')
+		+checkbox('SERVER_SETTING__COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
+		+checkbox('SERVER_SETTING__TASKS_ENABLED', 'Tasks: Editors can create review tasks')
+		+checkbox('SERVER_SETTING__MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
+		+checkbox('SERVER_SETTING__PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
+		+checkbox('SERVER_SETTING__NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
+		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselfes')
 		.indented-setting
-			+checkbox('USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
-		+checkbox('DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
-		+checkbox('REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
-		+checkbox('HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page for anonymous users')
-		+checkbox('REPOSITORY_TAGS_ENABLED', 'Repository tags: Enables owners of a repository to tag the repository which add additional filtering in the search')
-		+checkbox('DATASET_TAGS_ENABLED', 'Data set tags: Enables a search filter for tags on data sets')
+			+checkbox('SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
+		+checkbox('SERVER_SETTING__DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
+		+checkbox('SERVER_SETTING__REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
+		+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page for anonymous users')
+		+checkbox('SERVER_SETTING__REPOSITORY_TAGS_ENABLED', 'Repository tags: Enables owners of a repository to tag the repository which add additional filtering in the search')
+		+checkbox('SERVER_SETTING__DATASET_TAGS_ENABLED', 'Data set tags: Enables a search filter for tags on data sets')
 		.indented-setting
-			+checkbox('DATASET_TAGS_ON_DASHBOARD_ENABLED', 'Data set tags (Dashboard): Adds a data set tag cloud menu entry to the dashboard')
-			+checkbox('DATASET_TAGS_ON_GROUPS_ENABLED', 'Data set tags (Group): Adds a data set tag cloud menu entry to each groups menu')
-			+checkbox('DATASET_TAGS_ON_REPOSITORIES_ENABLED', 'Data set tags (Repository): Adds a data set tag cloud menu entry to each repositories menu')
+			+checkbox('SERVER_SETTING__DATASET_TAGS_ON_DASHBOARD_ENABLED', 'Data set tags (Dashboard): Adds a data set tag cloud menu entry to the dashboard')
+			+checkbox('SERVER_SETTING__DATASET_TAGS_ON_GROUPS_ENABLED', 'Data set tags (Group): Adds a data set tag cloud menu entry to each groups menu')
+			+checkbox('SERVER_SETTING__DATASET_TAGS_ON_REPOSITORIES_ENABLED', 'Data set tags (Repository): Adds a data set tag cloud menu entry to each repositories menu')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear
 	.content-box
 		.two-columns
-			+input('MAIL_HOST', 'Host')
+			+input('MAIL_SETTING__HOST', 'Host')
 			.three-columns
-				+select('MAIL_PROTO', 'Protocol', ['smtp', 'smtps'])
-				+input('MAIL_PORT', 'Port', 'integer')
+				+select('MAIL_SETTING__PROTO', 'Protocol', ['smtp', 'smtps'])
+				+input('MAIL_SETTING__PORT', 'Port', 'integer')
 				div
-					+checkbox('MAIL_SSL', 'SSL')
-					+checkbox('MAIL_TLS', 'TLS')
+					+checkbox('MAIL_SETTING__SSL', 'SSL')
+					+checkbox('MAIL_SETTING__TLS', 'TLS')
 		.clear
 		.two-columns
-			+input('MAIL_USER', 'Username')(autocomplete='new-password')
-			+input('MAIL_PASS', 'Password', 'password')(autocomplete='new-password')
+			+input('MAIL_SETTING__USER', 'Username')(autocomplete='new-password')
+			+input('MAIL_SETTING__PASS', 'Password', 'password')(autocomplete='new-password')
 		.clear
 		.two-columns
-			+input('MAIL_DEFAULT_FROM', 'Default from')
-			+input('MAIL_DEFAULT_REPLY_TO', 'Default reply to')
+			+input('MAIL_SETTING__DEFAULT_FROM', 'Default from')
+			+input('MAIL_SETTING__DEFAULT_REPLY_TO', 'Default reply to')
 		.clear
 	.header-box Imprint
 	.content-box
 		.two-columns
-			+input('IMPRINT_COMPANY', 'Company')
-			+input('IMPRINT_CEO', 'Ceo')
+			+input('IMPRINT_SETTING__COMPANY', 'Company')
+			+input('IMPRINT_SETTING__CEO', 'Ceo')
 		.clear
 		.two-columns
-			+input('IMPRINT_STREET', 'Street')
-			+input('IMPRINT_ZIP_CODE', 'Zip code')
+			+input('IMPRINT_SETTING__STREET', 'Street')
+			+input('IMPRINT_SETTING__ZIP_CODE', 'Zip code')
 		.clear
 		.two-columns
-			+input('IMPRINT_CITY', 'City')
-			+input('IMPRINT_COUNTRY', 'Country')
+			+input('IMPRINT_SETTING__CITY', 'City')
+			+input('IMPRINT_SETTING__COUNTRY', 'Country')
 		.clear
 		.two-columns
-			+input('IMPRINT_PHONE', 'Phone')
-			+input('IMPRINT_FAX', 'Fax')
+			+input('IMPRINT_SETTING__PHONE', 'Phone')
+			+input('IMPRINT_SETTING__FAX', 'Fax')
 		.clear
 		.two-columns
-			+input('IMPRINT_EMAIL', 'Email')
-			+input('IMPRINT_WEBSITE', 'Website')
+			+input('IMPRINT_SETTING__EMAIL', 'Email')
+			+input('IMPRINT_SETTING__WEBSITE', 'Website')
 		.clear
 		.two-columns
-			+input('IMPRINT_REGISTRATION', 'Registration')
-			+input('IMPRINT_VAT', 'Vat')
+			+input('IMPRINT_SETTING__REGISTRATION', 'Registration')
+			+input('IMPRINT_SETTING__VAT', 'Vat')
 		.clear

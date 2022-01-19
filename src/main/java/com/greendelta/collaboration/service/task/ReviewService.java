@@ -2,17 +2,18 @@ package com.greendelta.collaboration.service.task;
 
 import java.util.Set;
 
-import org.openlca.cloud.error.UnauthorizedAccessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.inject.Inject;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.service.Dao;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
 
+@Service
 public class ReviewService extends TaskExecutionService<Review> {
 
 	private final Dao<Review> dao;
@@ -20,7 +21,7 @@ public class ReviewService extends TaskExecutionService<Review> {
 	private final RepositoryService repoService;
 	private final UserService userService;
 
-	@Inject
+	@Autowired
 	public ReviewService(Dao<Review> dao, UserService userService, RepositoryService repoService,
 			AccessService accessService) {
 		super(dao, userService, repoService, accessService);
@@ -31,24 +32,25 @@ public class ReviewService extends TaskExecutionService<Review> {
 	}
 
 	public void setReferences(long reviewId, Set<ReviewReference> references) {
-		Review fromDb = get(reviewId);
-		Repository repo = repoService.get(fromDb.repositoryPath);
-		if (!accessService.canManageTaskIn(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
+		var fromDb = get(reviewId);
+		try (var repo = repoService.get(fromDb.repositoryPath)) {
+			if (!accessService.canManageTaskIn(repo.path()))
+				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+		}
 		fromDb.references = references;
-		long lastId = dao.getLastId(ReviewReference.class);
-		for (ReviewReference reference : fromDb.references) {
-			if (reference.hasId())
+		var lastId = dao.getLastId(ReviewReference.class);
+		for (var reference : fromDb.references) {
+			if (reference.id == 0)
 				continue;
-			reference.setId(++lastId);
+			reference.id = ++lastId;
 		}
 		dao.update(fromDb);
 	}
 
 	public void markAsReviewed(long reviewId, long referenceId, boolean value) {
-		Review fromDb = get(reviewId);
+		var fromDb = get(reviewId);
 		for (ReviewReference reference : fromDb.references) {
-			if (reference.getId() != referenceId)
+			if (reference.id != referenceId)
 				continue;
 			if (value && reference.reviewer != null)
 				// already marked

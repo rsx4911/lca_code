@@ -38,12 +38,12 @@ define([
 				'click [data-action=set-license-agreement-text]': (event) -> @set event, 'License agreement text', 'licenseAgreementText', 'LICENSE_AGREEMENT_TEXT'
 				'click [data-action=set-home-title]': (event) -> @set event, 'Home title', 'homeTitle', 'HOME_TITLE'
 				'click [data-action=set-home-text]': (event) -> @set event, 'Home text', 'homeText', 'HOME_TEXT'
-				'click .repositories-order .glyphicon-upload': (event) -> @changeOrder event, 'REPOSITORIES_ORDER', 'orderedRepositories', true
-				'click .repositories-order .glyphicon-download': (event) -> @changeOrder event, 'REPOSITORIES_ORDER', 'orderedRepositories', false
-				'click .model-types-order .glyphicon-upload': (event) -> @changeOrder event, 'MODEL_TYPES_ORDER', 'orderedModelTypes', true
-				'click .model-types-order .glyphicon-download': (event) -> @changeOrder event, 'MODEL_TYPES_ORDER', 'orderedModelTypes', false
-				'click .repositories-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'REPOSITORIES_HIDDEN', 'hiddenRepositories'
-				'click .model-types-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'MODEL_TYPES_HIDDEN', 'hiddenModelTypes'
+				'click .repositories-order .glyphicon-upload': (event) -> @changeOrder event, 'REPOSITORIES_ORDER', 'repositoriesOrder', true
+				'click .repositories-order .glyphicon-download': (event) -> @changeOrder event, 'REPOSITORIES_ORDER', 'repositoriesOrder', false
+				'click .model-types-order .glyphicon-upload': (event) -> @changeOrder event, 'MODEL_TYPES_ORDER', 'modelTypesOrder', true
+				'click .model-types-order .glyphicon-download': (event) -> @changeOrder event, 'MODEL_TYPES_ORDER', 'modelTypesOrder', false
+				'click .repositories-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'REPOSITORIES_HIDDEN', 'repositoriesHidden'
+				'click .model-types-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'MODEL_TYPES_HIDDEN', 'modelTypesHidden'
 				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
 
@@ -64,7 +64,7 @@ define([
 						if i is index 
 							array.push @serverInfo[field][index + 1]
 							array.push @serverInfo[field][index]
-				@setSetting key, @join(array, ';', (element) -> element.id), () =>
+				@setSetting key, JSON.stringify(array.map((element) -> element.id)), () =>
 					@serverInfo[field] = array
 					sibling = if up then target.prev() else target.next()
 					target.remove()
@@ -95,7 +95,7 @@ define([
 					li.attr 'data-hidden', true
 				else
 					li.removeAttr 'data-hidden'
-				@setSetting key, array.join(';'), () =>
+				@setSetting key, JSON.stringify(array), () =>
 					@serverInfo[field] = array
 					target.removeClass 'glyphicon-eye-close glyphicon-eye-open'
 					if hide
@@ -104,7 +104,7 @@ define([
 						target.addClass 'glyphicon-eye-open'
 
 			toggleMaintenanceMode: () ->
-				wasActive = @serverInfo.maintenanceModeActive
+				wasActive = @serverInfo.maintenanceMode
 				@setSetting 'MAINTENANCE_MODE', !wasActive, () ->
 					Backbone.history.loadUrl()
 					if wasActive
@@ -128,8 +128,7 @@ define([
 
 			setAnnouncement: (event) ->
 				Events.preventDefault event
-				announcement = @serverInfo.announcement
-				Layers.promptInput 'Announcement', 'textarea', announcement, (value) =>
+				Layers.promptInput 'Announcement', 'textarea', @serverInfo.announcementMessage, (value) =>
 					$.ajax
 						type: 'PUT'
 						url: 'ws/admin/area/announce'
@@ -146,7 +145,7 @@ define([
 					type: 'PUT'
 					url: 'ws/admin/area/settings'
 					contentType: 'application/json'
-					data: JSON.stringify({key: key, value: value})
+					data: JSON.stringify({type: 'SERVER_SETTING', key: key, value: value})
 					success: callback
 
 			clearIndex: () ->
@@ -242,14 +241,16 @@ define([
 				data = {}
 				if currentUser.isAdmin()
 					data = @serverInfo
-					orderedRepositories = []
-					for repo in data.orderedRepositories
-						orderedRepositories.push {label: repo, id: repo, hidden: $.inArray(repo, @serverInfo.hiddenRepositories) isnt -1}
-					data.orderedRepositories = orderedRepositories
-					orderedModelTypes = []
-					for type in data.orderedModelTypes
-						orderedModelTypes.push {label: ModelTypes.plural(type), id: type, hidden: $.inArray(type, @serverInfo.hiddenModelTypes) isnt -1}
-					data.orderedModelTypes = orderedModelTypes
+					repositoriesOrder = []
+					if data.repositoriesOrder
+						for repo in data.repositoriesOrder
+							repositoriesOrder.push {label: repo, id: repo, hidden: $.inArray(repo, @serverInfo.repositoriesHidden) isnt -1}
+					data.repositoriesOrder = repositoriesOrder
+					modelTypesOrder = []
+					if data.modelTypesOrder
+						for type in data.modelTypesOrder
+							modelTypesOrder.push {label: ModelTypes.plural(type), id: type, hidden: $.inArray(type, @serverInfo.modelTypesHidden) isnt -1}
+					data.modelTypesOrder = modelTypesOrder
 				data.repositories = counts.repositories
 				data.isAdmin = currentUser.isAdmin()
 				data.users = counts.users

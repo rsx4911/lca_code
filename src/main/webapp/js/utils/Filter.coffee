@@ -18,8 +18,21 @@ define([
 				@filter = @filterPrefix || ''
 
 			init: (callback) ->
+				timer = { time: new Date().getTime() }
 				@load (result) =>
-					$('#' + @filterId).on 'keyup', (event) => @applyFilter event
+					$('#' + @filterId).on 'blur', (event) => 
+						if $('#' + @filterId).val() isnt @filter
+							@applyFilter event
+					$('#' + @filterId).on 'keydown', (event) =>
+						if $('#' + @filterId).val() isnt @filter and Events.keyCode(event) is 13
+							@applyFilter event
+						else 
+							timer.time = new Date().getTime()
+							setTimeout(() =>
+								time = new Date().getTime() - timer.time
+								if time >= 333 and $('#' + @filterId).val() isnt @filter
+									@applyFilter event
+							, 334)
 					@append result
 					callback?(result)
 

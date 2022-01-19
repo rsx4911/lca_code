@@ -88,6 +88,7 @@ define([
 			putSetting: (setting, value) ->
 				repository = @repository.toJSON()
 				if setting is 'PUBLIC_ACCESS'
+					value = if value is 'on' then true else if value is 'off' then false else value
 					@$('#jsonFileGeneration').attr 'disabled', !value
 				if setting is 'JSON_FILE_GENERATION'
 					Layers.showProgressIndicator 'Generating'
@@ -143,7 +144,9 @@ define([
 				fullPath = "#{repository.group}/#{repository.name}"
 				Layers.askDeleteQuestion "repository #{fullPath}", fullPath, () =>
 					Layers.showProgressIndicator 'Deleting'
-					@repository.destroy
+					$.ajax
+						type: 'DELETE'
+						url: "ws/repository/#{fullPath}"
 						success: () =>
 							Layers.hideProgressIndicator()
 							Router.navigate 'dashboard/repositories'

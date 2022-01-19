@@ -2,47 +2,32 @@ package com.greendelta.collaboration.model.job;
 
 import java.util.Date;
 
+import com.greendelta.collaboration.model.AbstractEntity;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import com.greendelta.collaboration.model.AbstractEntity;
-
 @Entity
-@Table(name = "jobs")
+@Table
 public class Job extends AbstractEntity {
 
-	@Id
-	@Column(name = "id")
-	private long id;
-	
-	@Column(name = "type")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public JobType type;
-	
-	@Column(name = "token")
+
+	@Column
 	public String token;
 
-	@Column(name = "data")
+	@Column
 	public String data;
-	
-	@Column(name = "valid_until")
+
+	@Column
 	@Temporal(TemporalType.DATE)
 	public Date validUntil;
 
-	@Override
-	public long getId() {
-		return id;
-	}
-	
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
-	
 }

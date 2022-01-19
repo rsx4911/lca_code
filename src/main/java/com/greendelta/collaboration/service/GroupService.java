@@ -1,38 +1,34 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.error.UnauthorizedAccessException;
-import org.openlca.cloud.util.Directories;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import com.google.inject.Inject;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
-import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.GroupSetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
+@Service
 public class GroupService {
 
-	private final static Logger log = LogManager.getLogger(GroupService.class);
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final SettingsService settingsService;
 
-	@Inject
+	@Autowired
 	public GroupService(AccessService accessService, MembershipService membershipService, UserService userService,
 			SettingsService settingsService) {
 		this.accessService = accessService;
@@ -42,7 +38,7 @@ public class GroupService {
 	}
 
 	private String getRootPath() {
-		return settingsService.get(Key.REPOSITORY_PATH);
+		return settingsService.get(ServerSetting.REPOSITORY_PATH);
 	}
 
 	public boolean exists(String group) {
@@ -50,16 +46,16 @@ public class GroupService {
 	}
 
 	public boolean exists(String group, boolean skipAccessCheck) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return false;
-		File root = new File(path);
+		var root = new File(path);
 		if (root.list() == null)
 			return false;
-		for (String child : root.list())
+		for (var child : root.list())
 			if (child.equalsIgnoreCase(group))
 				if (!skipAccessCheck && !accessService.canRead(group))
-					throw new UnauthorizedAccessException(group, "READ");
+					throw new ForbiddenAccessException(group, "READ");
 				else
 					return true;
 		return false;
@@ -76,17 +72,17 @@ public class GroupService {
 	}
 
 	public boolean create(String group, boolean userGroup) {
-		User currentUser = userService.getCurrentUser();
+		var currentUser = userService.getCurrentUser();
 		if (userGroup && !currentUser.isUserManager())
-			throw new UnauthorizedAccessException("", "CREATE_GROUP");
+			throw new ForbiddenAccessException("", "CREATE_GROUP");
 		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups)
-			throw new UnauthorizedAccessException("", "CREATE_GROUP");
+			throw new ForbiddenAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
-		String path = getPath(group);
+		var path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
-		boolean created = new File(path).mkdir();
+		var created = new File(path).mkdir();
 		if (!created)
 			return false;
 		if (userGroup)
@@ -95,45 +91,13 @@ public class GroupService {
 		return true;
 	}
 
-	boolean delete(String group) {
-		String path = getPath(group);
+	public boolean delete(String group) {
+		if (!accessService.canDelete(group))
+			throw new ForbiddenAccessException(group, "DELETE");
+		var path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
-		return Directories.delete(new File(path));
-	}
-
-	public byte[] getAvatar(String group) {
-		if (!exists(group))
-			return null;
-		String path = getRootPath();
-		if (path == null || path.isEmpty())
-			return null;
-		File avatarFile = new File(path, group + File.separator + "avatar");
-		if (!avatarFile.exists())
-			return null;
-		try {
-			return Files.toByteArray(avatarFile);
-		} catch (IOException e) {
-			log.error("Error reading group avatar file", e);
-			return null;
-		}
-	}
-
-	public void setAvatar(String group, InputStream file) {
-		String path = getRootPath();
-		if (path == null || path.isEmpty())
-			return;
-		if (!accessService.canWrite(group))
-			throw new UnauthorizedAccessException(group, "WRITE");
-		File avatarFile = new File(path, group + File.separator + "avatar");
-		if (file != null)
-			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
-				ByteStreams.copy(file, output);
-			} catch (IOException e) {
-				log.error("Error writing group avatar file", e);
-			}
-		else if (avatarFile.exists())
-			avatarFile.delete();
+		return Dirs.delete(new File(path));
 	}
 
 	public long getCount(boolean adminArea) {
@@ -142,33 +106,33 @@ public class GroupService {
 
 	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea,
 			boolean onlyIfCanWrite) {
-		List<String> accessible = getAll(adminArea, onlyIfCanWrite);
+		var accessible = getAll(adminArea, onlyIfCanWrite);
 		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
 	}
 
 	public long getRepositoryCount(String group) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return 0;
-		File root = new File(path);
+		var root = new File(path);
 		if (!root.exists() || !root.isDirectory())
 			return 0;
-		File groupDir = new File(root, group);
-		if (!accessService.canRead(group, false))
+		var groupDir = new File(root, group);
+		if (!accessService.canRead(group))
 			return 0;
 		return groupDir.listFiles().length;
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
-		File root = new File(path);
+		var root = new File(path);
 		if (!root.exists() || !root.isDirectory())
 			return new ArrayList<>();
-		List<String> groups = new ArrayList<>();
-		User user = userService.getCurrentUser();
-		for (File group : root.listFiles()) {
+		var groups = new ArrayList<String>();
+		var user = userService.getCurrentUser();
+		for (var group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
 			if (!accessService.canRead(group.getName(), !adminArea))
@@ -183,54 +147,27 @@ public class GroupService {
 	}
 
 	private String getPath(String group) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null)
 			return null;
 		return path + File.separator + group;
 	}
 
-	public void setSetting(String group, String key, String value) {
-		if (!accessService.canSetSettings(group))
-			throw new UnauthorizedAccessException(group, "SET_SETTINGS");
-		GroupSettings settings = getSettings(group);
-		switch (key) {
-		case "label":
-			settings.label = value;
-			break;
-		case "description":
-			settings.description = value;
-			break;
-		}
-		File groupDir = new File(getRootPath(), group);
-		File file = new File(groupDir, "settings.json");
-		SettingsCache.saveSettings(file, settings);
-	}
-
-	public GroupSettings getSettings(String group) {
-		User user = userService.getForUsername(group);
-		if (user != null) {
-			GroupSettings settings = new GroupSettings();
-			settings.label = user.name;
-			settings.description = "The default group for user " + user.name;
+	public Settings<GroupSetting> getSettings(String group) {
+		if (!accessService.canRead(group))
+			throw new ForbiddenAccessException(group, "READ");
+		Settings<GroupSetting> settings = settingsService.get(SettingType.GROUP_SETTING, group,
+				accessService::canSetSettings);
+		var user = userService.getForUsername(group);
+		if (user == null)
 			return settings;
+		if (settings.get(GroupSetting.LABEL) == null) {
+			settings.set(GroupSetting.LABEL, user.name);
 		}
-		File groupDir = new File(getRootPath(), group);
-		File settingsFile = new File(groupDir, "settings.json");
-		GroupSettings settings = SettingsCache.loadSettings(settingsFile, GroupSettings.class);
-		if (settings == null)
-			return new GroupSettings();
+		if (settings.get(GroupSetting.DESCRIPTION) == null) {
+			settings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
+		}
 		return settings;
-	}
-
-	public static class GroupSettings {
-
-		public String label;
-		public String description;
-
-		private GroupSettings() {
-
-		}
-
 	}
 
 }
