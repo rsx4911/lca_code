@@ -4,6 +4,11 @@ node_modules/
 .mvn
 !**/src/main/**/target/
 !**/src/test/**/target/
+/src/main/resources/ssr
+/src/main/webapp/js/templates
+/src/main/webapp/js/app/DynamicDependencies.coffee
+/src/main/webapp/*.html
+/src/main/webapp/css/main.css
 
 ### STS ###
 .apt_generated
