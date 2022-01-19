@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var puppeteer = require('puppeteer');
 var url = require('url');
 var http = require('http');
@@ -18,14 +19,19 @@ var parseParameters = function(req) {
 };
 
 var getContent = async function(browser, params) {
-    var page = await browser.newPage();
-    await page.setCookie({
-        domain: 'localhost',
-        name: 'JSESSIONID',
-        value: params.sessionid
-    });
-    await page.goto(params.scheme + '://localhost' + params.route, { waitUntil: 'networkidle0' });
-    return await page.content();
+    try {
+        var page = await browser.newPage();
+        await page.setCookie({
+            domain: 'localhost',
+            name: 'JSESSIONID',
+            value: params.sessionid
+        });
+        await page.goto('http://localhost:8080' + params.route, { waitUntil: 'networkidle0' });
+        return await page.content();
+    } catch (e) {
+        console.trace(e);
+        return '';
+    }
 }
 
 var replaceBaseHref = function(html) {
@@ -34,6 +40,12 @@ var replaceBaseHref = function(html) {
     var before = html.substring(0, start + 11);
     var after = html.substring(end);
     return before + '"."' + after;
+}
+
+var replaceStyles = function(html) {
+    var start = html.indexOf('<link rel="stylesheet" type="text/css" href="css/styles');
+    var end = html.indexOf('.css">', start);
+    return html.substring(0, start + 55) + html.substring(end); 
 }
 
 var removeScriptTags = function(html) {
@@ -57,19 +69,26 @@ var addLibraryTags = function(html) {
 }
 
 http.createServer(async function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    if (req.url.indexOf('standalone=true') === -1) {
-        res.end('');
-        return;
+    try {
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        if (req.url.indexOf('standalone=true') === -1) {
+            res.end('');
+            return;
+        }
+        var params = parseParameters(req);
+        if (!params.sessionid)
+            return;
+        var browser = await puppeteer.launch({
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        var html = await getContent(browser, params);
+        html = replaceBaseHref(html);
+        html = replaceStyles(html);
+        html = removeScriptTags(html);
+        html = addLibraryTags(html);
+        await browser.close();
+        res.end(html);
+    } catch (e) {
+        console.trace(e);
     }
-    var params = parseParameters(req);
-    if (!params.sessionid)
-        return;
-    var browser = await puppeteer.launch();
-    var html = await getContent(browser, params);
-    html = replaceBaseHref(html);
-    html = removeScriptTags(html);
-    html = addLibraryTags(html);
-    await browser.close();
-    res.end(html);
 }).listen(3000);
