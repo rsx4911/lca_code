@@ -1,0 +1,23 @@
+define(function(require,exports,module){ function pug_attr(t,e,n,r){if(!1===e||null==e||!e&&("class"===t||"style"===t))return"";if(!0===e)return" "+(r?t:t+'="'+t+'"');var f=typeof e;return"object"!==f&&"function"!==f||"function"!=typeof e.toJSON||(e=e.toJSON()),"string"==typeof e||(e=JSON.stringify(e),n||-1===e.indexOf('"'))?(n&&(e=pug_escape(e))," "+t+'="'+e+'"'):" "+t+"='"+e.replace(/'/g,"&#39;")+"'"}
+function pug_classes(s,r){return Array.isArray(s)?pug_classes_array(s,r):s&&"object"==typeof s?pug_classes_object(s):s||""}
+function pug_classes_array(r,a){for(var s,e="",u="",c=Array.isArray(a),g=0;g<r.length;g++)(s=pug_classes(r[g]))&&(c&&a[g]&&(s=pug_escape(s)),e=e+u+s,u=" ");return e}
+function pug_classes_object(r){var a="",n="";for(var o in r)o&&r[o]&&pug_has_own_property.call(r,o)&&(a=a+n+o,n=" ");return a}
+function pug_escape(e){var a=""+e,t=pug_match_html.exec(a);if(!t)return e;var r,c,n,s="";for(r=t.index,c=0;r<a.length;r++){switch(a.charCodeAt(r)){case 34:n="&quot;";break;case 38:n="&amp;";break;case 60:n="&lt;";break;case 62:n="&gt;";break;default:continue}c!==r&&(s+=a.substring(c,r)),c=r+1,s+=n}return c!==r?s+a.substring(c,r):s}
+var pug_has_own_property=Object.prototype.hasOwnProperty;
+var pug_match_html=/["&<>]/;
+function pug_style(r){if(!r)return"";if("object"==typeof r){var t="";for(var e in r)pug_has_own_property.call(r,e)&&(t=t+e+":"+r[e]+";");return t}return r+""}function template(locals) {var pug_html = "", pug_mixins = {}, pug_interp;;var locals_for_with = (locals || {});(function (formatTimeOrDate, isBlocked, message, online, recipient, selected, unreadMessages) {pug_html = pug_html + "\u003Ca" + (" class=\"no-deco\""+" href=\"#\" data-action=\"show-message\""+pug_attr("data-type", recipient.type, true, false)+pug_attr("data-id", recipient.id, true, false)) + "\u003E\u003Cdiv" + (pug_attr("class", pug_classes(["list-entry",selected?'active':null], [false,true]), false, false)) + "\u003E\u003Cspan class=\"unread-messages badge\"\u003E" + (pug_escape(null == (pug_interp = unreadMessages?unreadMessages:'') ? "" : pug_interp)) + "\u003C\u002Fspan\u003E\u003Cspan" + (" class=\"online-indicator badge\""+pug_attr("style", pug_style(online?null:'display:none'), true, false)) + "\u003E&nbsp;\u003C\u002Fspan\u003E\u003Cimg" + (" class=\"avatar pull-left\""+pug_attr("src", 'ws/' + recipient.type + '/avatar/' + recipient.id, true, false)+pug_attr("aria-label", 'Avatar of user ' + recipient.name, true, false)) + "\u002F\u003E";
+if (isBlocked) {
+pug_html = pug_html + "\u003Cimg class=\"avatar blocked\" src=\"images\u002Fblocked.png\" aria-label=\"Blocked avatar\"\u002F\u003E";
+}
+pug_html = pug_html + "\u003Cdiv class=\"message-container\"\u003E\u003Cdiv\u003E\u003Cdiv class=\"username pull-left\"\u003E" + (pug_escape(null == (pug_interp = recipient.name) ? "" : pug_interp)) + "\u003C\u002Fdiv\u003E\u003Cdiv class=\"date pull-right\"\u003E";
+if (message) {
+pug_html = pug_html + (pug_escape(null == (pug_interp = formatTimeOrDate(message.date)) ? "" : pug_interp));
+}
+pug_html = pug_html + "\u003C\u002Fdiv\u003E\u003Cdiv class=\"clear\"\u003E\u003C\u002Fdiv\u003E\u003C\u002Fdiv\u003E\u003Cdiv class=\"message\"\u003E";
+if (message) {
+if (message.readDate && message.to.username === recipient.username) {
+pug_html = pug_html + "\u003Cspan class=\"glyphicon glyphicon-ok read-indicator is-read\"\u003E\u003C\u002Fspan\u003E ";
+}
+pug_html = pug_html + (pug_escape(null == (pug_interp = message.text) ? "" : pug_interp));
+}
+pug_html = pug_html + "\u003C\u002Fdiv\u003E\u003C\u002Fdiv\u003E\u003Cdiv class=\"clear\"\u003E\u003C\u002Fdiv\u003E\u003C\u002Fdiv\u003E\u003C\u002Fa\u003E";}.call(this,"formatTimeOrDate" in locals_for_with?locals_for_with.formatTimeOrDate:typeof formatTimeOrDate!=="undefined"?formatTimeOrDate:undefined,"isBlocked" in locals_for_with?locals_for_with.isBlocked:typeof isBlocked!=="undefined"?isBlocked:undefined,"message" in locals_for_with?locals_for_with.message:typeof message!=="undefined"?message:undefined,"online" in locals_for_with?locals_for_with.online:typeof online!=="undefined"?online:undefined,"recipient" in locals_for_with?locals_for_with.recipient:typeof recipient!=="undefined"?recipient:undefined,"selected" in locals_for_with?locals_for_with.selected:typeof selected!=="undefined"?selected:undefined,"unreadMessages" in locals_for_with?locals_for_with.unreadMessages:typeof unreadMessages!=="undefined"?unreadMessages:undefined));;return pug_html;} return template; });

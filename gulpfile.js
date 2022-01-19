@@ -231,21 +231,20 @@ gulp.task('setBuildInfo', function() {
 });
 
 gulp.task('setCustomPublicResources', function() {
-  return gulp.src('./src/main/java/com/greendelta/collaboration/platform/guice/ShiroModule.java')
+  return gulp.src('./src/main/java/com/greendelta/collaboration/config/filter/SinglePageFilter.java')
     .pipe(insert.transform(function(contents) {
-      var member = 'public static final String[] CUSTOM_PUBLIC_RESOURCES = {'
+      var member = 'public static final List<String> CUSTOM_PUBLIC_RESOURCES = Arrays.asList('
       var resources = member;
-      var customFiles = getCustomHtmlFiles(true);
+      var customFiles = getCustomHtmlFiles(true)
       for (var i = 0; i < customFiles.length; i++) {
-        resources += i === 0 ? ' ' : ', ';
+        resources += i === 0 ? '' : ', ';
         resources += '"/' + customFiles[i].substring(0, customFiles[i].lastIndexOf('.html')) + '"';
-        resources += i === customFiles.length - 1 ? ' ' : '';
       }
-      resources += '};'
+      resources += ');'
       var result = contents.substring(0, contents.indexOf(member));
       return result + resources + contents.substring(contents.indexOf('\n', contents.indexOf(member)));
     }))
-    .pipe(gulp.dest('./src/main/java/com/greendelta/collaboration/platform/guice'));
+    .pipe(gulp.dest('./src/main/java/com/greendelta/collaboration/config/filter'));
 });
 
 gulp.task('modifyIndexHtml', function() {

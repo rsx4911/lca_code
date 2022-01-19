@@ -4,7 +4,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -16,39 +15,25 @@ import com.greendelta.collaboration.model.AbstractEntity;
 import com.greendelta.collaboration.model.User;
 
 @Entity
-@Table(name = "review_references")
+@Table
 public class ReviewReference extends AbstractEntity {
 
-	@Id
-	@Column(name = "id")
-	private long id;
-
-	@Column(name = "ds_type")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public ModelType type;
 
-	@Column(name = "ds_ref_id")
+	@Column
 	public String refId;
 
-	@Column(name = "ds_commit_id")
+	@Column
 	public String commitId;
 
-	@Column(name = "ds_name")
+	@Column
 	public String name;
 
 	@OneToOne
-	@JoinColumn(name = "f_reviewer")
+	@JoinColumn
 	public User reviewer;
-
-	@Override
-	public long getId() {
-		return id;
-	}
-
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -56,7 +41,7 @@ public class ReviewReference extends AbstractEntity {
 			return true;
 		if (!(obj instanceof ReviewReference))
 			return false;
-		ReviewReference ref = (ReviewReference) obj;
+		var ref = (ReviewReference) obj;
 		if (!Strings.nullOrEqual(ref.refId, refId))
 			return false;
 		return ref.type == type;

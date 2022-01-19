@@ -61,7 +61,7 @@ define([
 					when 'user'
 						userMenu = []
 						userMenu.push {href: @concatUrl(prefix, 'user/profile'), imageSrc: 'images/profile.png', label: 'Profile', id: 'profile'}
-						if settings.is('DASHBOARD_ACTIVITIES_ENABLED') or settings.id('REPOSITORY_ACTIVITIES_ENABLED')
+						if settings.is('DASHBOARD_ACTIVITIES_ENABLED') or settings.is('REPOSITORY_ACTIVITIES_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						if settings.is('MESSAGING_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}

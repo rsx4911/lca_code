@@ -236,7 +236,7 @@ define([
 								@closeActive()
 								options.callback selection
 							else
-								refId = ModelTree.getSelection('#model-tree', true).id
+								refId = ModelTree.getSelection('#model-tree', true).refId
 								commitId = null
 								if options.selectVersion
 									commitId = $('#model-selection #commitId').val()

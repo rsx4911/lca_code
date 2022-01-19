@@ -17,7 +17,7 @@ public class SearchResults {
 	}
 
 	public static <T> SearchResult<T> from(List<T> data, long count, int page, int pageSize, long total) {
-		SearchResult<T> result = new SearchResult<>();
+		var result = new SearchResult<T>();
 		result.data.addAll(data);
 		result.resultInfo.count = count;
 		result.resultInfo.currentPage = page == 0 ? 1 : page;
@@ -35,26 +35,17 @@ public class SearchResults {
 		return convert(from(data), converter);
 	}
 
-	public static <T, V> SearchResult<V> convert(SearchResult<T> result, Function<T, V> converter) {
-		List<V> data = new ArrayList<>();
-		for (T element : result.data) {
-			data.add(converter.apply(element));
-		}
-		SearchResult<V> converted = from(data, result.resultInfo.currentPage, result.resultInfo.pageSize,
-				result.resultInfo.totalCount);
-		converted.aggregations.addAll(result.aggregations);
+	public static <T, V> SearchResult<V> convert(SearchResult<T> r, Function<T, V> converter) {
+		var data = r.data.stream().map(converter).toList();
+		var converted = from(data, r.resultInfo.currentPage, r.resultInfo.pageSize, r.resultInfo.totalCount);
+		converted.aggregations.addAll(r.aggregations);
 		return converted;
 	}
 
-	public static <T, V> SearchResult<V> lconvert(List<T> data, Function<List<T>, List<V>> converter) {
-		return lconvert(from(data), converter);
-	}
-
-	public static <T, V> SearchResult<V> lconvert(SearchResult<T> result, Function<List<T>, List<V>> converter) {
-		List<V> data = converter.apply(result.data);
-		SearchResult<V> converted = from(data, result.resultInfo.currentPage, result.resultInfo.pageSize,
-				result.resultInfo.totalCount);
-		converted.aggregations.addAll(result.aggregations);
+	public static <T, V> SearchResult<V> listConvert(SearchResult<T> r, Function<List<T>, List<V>> converter) {
+		var data = converter.apply(r.data);
+		var converted = from(data, r.resultInfo.currentPage, r.resultInfo.pageSize, r.resultInfo.totalCount);
+		converted.aggregations.addAll(r.aggregations);
 		return converted;
 	}
 
@@ -70,21 +61,16 @@ public class SearchResults {
 
 	public static <T> SearchResult<T> pagedAndFiltered(int page, int pageSize, String filter, List<T> toFilter,
 			Function<T, String> toString) {
-		List<T> filtered = new ArrayList<>();
-		if (filter == null || filter.isEmpty()) {
-			filtered = new ArrayList<>(toFilter);
-		} else {
-			for (T element : toFilter) {
-				if (!toString.apply(element).toLowerCase().contains(filter.toLowerCase()))
-					continue;
-				filtered.add(element);
-			}
-		}
-		List<T> paged = new ArrayList<>();
+		var filtered = filter == null || filter.isEmpty()
+				? new ArrayList<>(toFilter)
+				: toFilter.stream()
+						.filter(e -> toString.apply(e).toLowerCase().contains(filter.toLowerCase()))
+						.toList();
+		var paged = new ArrayList<T>();
 		if (page == 0 || pageSize == 0) {
 			paged = new ArrayList<>(filtered);
 		} else {
-			for (int i = 0; i < filtered.size(); i++) {
+			for (var i = 0; i < filtered.size(); i++) {
 				if (i < ((page - 1) * pageSize))
 					continue;
 				if (i >= (page * pageSize))

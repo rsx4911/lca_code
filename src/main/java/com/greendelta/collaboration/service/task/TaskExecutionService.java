@@ -2,11 +2,10 @@ package com.greendelta.collaboration.service.task;
 
 import java.util.Calendar;
 
-import javax.ws.rs.core.Response.Status;
+import org.springframework.http.HttpStatus;
 
-import org.openlca.cloud.error.ServerException;
-import org.openlca.cloud.error.UnauthorizedAccessException;
-
+import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -33,12 +32,11 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public void start(T task) {
-		Repository repo = repoService.get(task.repositoryPath);
-		if (!accessService.canManageTaskIn(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
-		if (!task.assignments.isEmpty() || task.hasId())
-			throw new ServerException(Status.CONFLICT, "Review object already exists");
-		User user = userService.getCurrentUser();
+		try (var repo = repoService.get(task.repositoryPath)) {
+			if (!accessService.canManageTaskIn(repo.path()))
+				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+		}
+		var user = userService.getCurrentUser();
 		task.initiator = user;
 		task.startDate = Calendar.getInstance().getTime();
 		task.state = TaskState.CREATED;
@@ -46,32 +44,35 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public void merge(T task) {
-		T fromDb = get(task.getId());
-		Repository repo = repoService.get(fromDb.repositoryPath);
-		if (!accessService.canManageTaskIn(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
+		var fromDb = get(task.id);
+		try (var repo = repoService.get(fromDb.repositoryPath)) {
+			if (!accessService.canManageTaskIn(repo.path()))
+				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+		}
 		fromDb.name = task.name;
 		fromDb.comment = task.comment;
 		update(fromDb);
 	}
 
-	public TaskAssignment startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
-		User user = userService.getForUsername(username);
-		Repository repo = repoService.get(task.repositoryPath);
-		if (!accessCheck.canBeAssigned(user, repo))
-			throw new UnauthorizedAccessException(repo.toId(), task.getClass().getSimpleName().toUpperCase());
-		if (!accessService.canManageTaskIn(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
-		TaskAssignment assignment = new TaskAssignment();
+	public TaskAssignment startAssignment(T task, String username, TaskAssignmentCheck accessCheck)
+			throws WebRequestException {
+		var user = userService.getForUsername(username);
+		try (var repo = repoService.get(task.repositoryPath)) {
+			if (!accessCheck.canBeAssigned(user, repo))
+				throw new ForbiddenAccessException(repo.path(), task.getClass().getSimpleName().toUpperCase());
+			if (!accessService.canManageTaskIn(repo.path()))
+				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+		}
+		var assignment = new TaskAssignment();
 		assignment.assignedTo = user;
 		assignment.startDate = Calendar.getInstance().getTime();
 		assignment.iteration = 1;
-		for (TaskAssignment a : task.assignments) {
+		for (var a : task.assignments) {
 			if (!a.assignedTo.equals(user))
 				continue;
 			if (a.endDate == null)
-				throw new ServerException(Status.CONFLICT, "User " + user.username
-						+ " already has an active assignment");
+				throw new WebRequestException(HttpStatus.CONFLICT,
+						"User " + user.username + " already has an active assignment");
 			assignment.iteration++;
 		}
 		task.assignments.add(assignment);
@@ -81,16 +82,15 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public TaskAssignment endAssignment(T task, String username, boolean canceled) {
-		if (task.state != TaskState.PROCESSING)
-			throw new ServerException(Status.CONFLICT, "Task is not in process state");
-		User user = userService.getForUsername(username);
-		User currentUser = userService.getCurrentUser();
-		Repository repo = repoService.get(task.repositoryPath);
-		if (!user.equals(currentUser) && !accessService.canManageTaskIn(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
+		var user = userService.getForUsername(username);
+		var currentUser = userService.getCurrentUser();
+		try (var repo = repoService.get(task.repositoryPath)) {
+			if (!user.equals(currentUser) && !accessService.canManageTaskIn(repo.path()))
+				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+		}
 		TaskAssignment assignment = null;
-		boolean isLastOpen = true;
-		for (TaskAssignment a : task.assignments) {
+		var isLastOpen = true;
+		for (var a : task.assignments) {
 			if (a.endDate != null)
 				continue;
 			if (!a.assignedTo.equals(user)) {
@@ -100,7 +100,7 @@ public abstract class TaskExecutionService<T extends Task> {
 			assignment = a;
 		}
 		if (assignment == null)
-			throw new ServerException(Status.NOT_FOUND, "User " + user.username + " has no active assignment");
+			return null;
 		assignment.endDate = Calendar.getInstance().getTime();
 		assignment.canceled = canceled;
 		assignment.endedBy = userService.getCurrentUser();
@@ -112,28 +112,29 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	public void end(T task, TaskState state) {
-		Repository repo = repoService.get(task.repositoryPath);
-		if (!accessService.canManageTaskIn(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MANAGE_TASK");
+		try (var repo = repoService.get(task.repositoryPath)) {
+			if (!accessService.canManageTaskIn(repo.path()))
+				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+		}
 		task.state = state;
 		task.endDate = Calendar.getInstance().getTime();
-		User currentUser = userService.getCurrentUser();
-		for (TaskAssignment assignment : task.assignments) {
-			if (assignment.endedBy != null)
-				continue;
-			assignment.endDate = task.endDate;
-			assignment.canceled = true;
-			assignment.endedBy = currentUser;
-		}
+		var currentUser = userService.getCurrentUser();
+		task.assignments.stream()
+				.filter(a -> a.endedBy == null)
+				.forEach(a -> {
+					a.endDate = task.endDate;
+					a.canceled = true;
+					a.endedBy = currentUser;
+				});
 		update(task);
 	}
 
 	public T get(long id) {
-		T task = dao.get(id);
-		User currentUser = userService.getCurrentUser();
+		var task = dao.get(id);
+		var currentUser = userService.getCurrentUser();
 		if (currentUser.equals(task.initiator))
 			return task;
-		for (TaskAssignment assignment : task.assignments)
+		for (var assignment : task.assignments)
 			if (assignment.assignedTo.equals(currentUser))
 				return task;
 		return null;
@@ -150,11 +151,11 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	private void setTaskAssignmentIds(T task) {
-		long lastId = dao.getLastId(TaskAssignment.class);
-		for (TaskAssignment assignment : task.assignments) {
-			if (assignment.hasId())
+		var lastId = dao.getLastId(TaskAssignment.class);
+		for (var assignment : task.assignments) {
+			if (assignment.id == 0)
 				continue;
-			assignment.setId(++lastId);
+			assignment.id = ++lastId;
 		}
 	}
 

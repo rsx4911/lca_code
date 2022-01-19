@@ -6,82 +6,64 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
 
-import org.elasticsearch.common.Strings;
 import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.google.inject.Inject;
-import com.greendelta.collaboration.model.index.IndexAction;
-import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
-import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
-import com.greendelta.search.wrapper.aggregations.SearchAggregation;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuilder;
 
+@Service
 class QueryService {
 
 	private final SettingsService settingsService;
 	private final RepositoryService repoService;
-	private final UserService userService;
 	private final ScoreService scoreService;
-	private final IndexEntryParser parser = new IndexEntryParser();
+	private final DsEntryParser parser = new DsEntryParser();
 
-	@Inject
-	QueryService(SettingsService settingsService, RepositoryService repoService, UserService userService,
-			ScoreService scoreService) {
+	@Autowired
+	QueryService(SettingsService settingsService, RepositoryService repoService, ScoreService scoreService) {
 		this.settingsService = settingsService;
 		this.repoService = repoService;
-		this.userService = userService;
 		this.scoreService = scoreService;
 	}
 
-	SearchResult<IndexEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
-		List<Repository> repos = repoService.getAllAccessible();
-		if (repos.isEmpty())
-			return buildEmptyResult(page, pageSize);
-		SearchQueryBuilder builder = new SearchQueryBuilder();
-		Set<ModelType> types = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
-		putAggregations(builder, repos, filters, types);
-		boolean loggedIn = userService.getCurrentUser().getId() != 0;
-		if (!loggedIn) {
-			if (filters.get("mostRecent") == null || !filters.get("mostRecent").contains("true")) {
-				builder.filter("mostRecent", SearchFilterValue.term(true));
+	SearchResult<DsEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
+		try (var accessibleRepos = repoService.getAllAccessible()) {
+			if (accessibleRepos.isEmpty())
+				return buildEmptyResult(page, pageSize);
+			var builder = new SearchQueryBuilder();
+			var filteredTypes = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
+			putAggregations(builder, accessibleRepos, filteredTypes, filters);
+			if (!Strings.nullOrEmpty(query)) {
+				builder.query(toWildcardQuery(query.toLowerCase()), "versions.name");
 			}
-			Set<SearchFilterValue> allowed = new HashSet<>();
-			allowed.add(SearchFilterValue.term(IndexAction.ADD.name()));
-			allowed.add(SearchFilterValue.term(IndexAction.UPDATE.name()));
-			builder.filter("action", allowed);
-		}
-		if (!Strings.isNullOrEmpty(query)) {
-			builder.query(toWildcardQuery(query.toLowerCase()), "name");
-		}
-		builder.page(page);
-		builder.pageSize(pageSize);
-		scoreService.apply(builder);
-		SearchClient client = settingsService.getSearchConfig().getSearchClient();
-		SearchQuery searchQuery = builder.build();
-		SearchResult<Map<String, Object>> result = client.search(searchQuery);
-		if (loggedIn)
+			builder.page(page);
+			builder.pageSize(pageSize);
+			scoreService.applyTo(builder);
+			var client = settingsService.searchConfig.getSearchClient();
+			var searchQuery = builder.build();
+			var result = client.search(searchQuery);
 			return SearchResults.convert(result, parser::parse);
-		return prepResult(result);
+		}
 	}
 
 	private static String toWildcardQuery(String query) {
-		StringTokenizer splitter = new StringTokenizer(query, "\"", true);
-		boolean escaped = false;
-		List<String> values = new ArrayList<>();
+		var splitter = new StringTokenizer(query, "\"", true);
+		var escaped = false;
+		var values = new ArrayList<String>();
 		while (splitter.hasMoreTokens()) {
-			String token = splitter.nextToken();
+			var token = splitter.nextToken();
 			if ("\"".equals(token)) {
 				escaped = !escaped;
 			} else if (escaped) {
@@ -93,23 +75,25 @@ class QueryService {
 				}
 			}
 		}
-		return Collections.join(values, " ");
+		return values.stream().collect(Collectors.joining(" "));
 	}
 
-	private void putAggregations(SearchQueryBuilder builder, List<Repository> repos, Map<String, Set<String>> filters,
-			Set<ModelType> types) {
-		for (SearchAggregation aggregation : Aggregations.getFilters(types)) {
-			Set<String> filterValues = filters.get(aggregation.name);
+	private Set<ModelType> getFilteredModelTypes(Set<String> values) {
+		if (values == null || values.isEmpty())
+			return new HashSet<>();
+		return values.stream().map(v -> ModelType.valueOf(v)).collect(Collectors.toSet());
+	}
+
+	private void putAggregations(SearchQueryBuilder builder, List<Repository> accessibleRepos,
+			Set<ModelType> filteredTypes, Map<String, Set<String>> filters) {
+		for (var aggregation : Aggregations.getFilters(filteredTypes)) {
+			if (aggregation.name.contains(".") && !aggregation.name.equals(Aggregations.REPOSITORY.name))
+				continue;
+			var filterValues = filters.get(aggregation.name);
 			if (aggregation.name.equals(Aggregations.REPOSITORY.name)) {
-				putRepositoryFilter(builder, filterValues, repos);
+				putRepositoryFilter(builder, filterValues, accessibleRepos);
 			} else if (aggregation.name.equals(Aggregations.MODEL_TYPE.name)) {
-				if (types == null || types.isEmpty()) {
-					builder.aggregation(Aggregations.MODEL_TYPE, getModelTypes());
-				} else {
-					for (ModelType type : types) {
-						builder.aggregation(Aggregations.MODEL_TYPE, type.name());
-					}
-				}
+				putTypeFilter(builder, filteredTypes);
 			} else if (filterValues != null && !filterValues.isEmpty()) {
 				for (String filterValue : filterValues) {
 					builder.aggregation(aggregation, filterValue);
@@ -120,44 +104,43 @@ class QueryService {
 		}
 	}
 
-	private SearchResult<IndexEntry> prepResult(SearchResult<Map<String, Object>> result) {
-		return SearchResults.convert(result, parser::parse);
+	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> accessibleRepos) {
+		var repos = new ArrayList<String>();
+		for (var repo : accessibleRepos) {
+			if (values != null && !values.contains(repo.path()))
+				continue;
+			repos.add(repo.path());
+		}
+		if (repos.isEmpty()) {
+			builder.aggregation(Aggregations.REPOSITORY);
+		} else {
+			builder.aggregation(Aggregations.REPOSITORY, SearchFilterValue.term(repos));
+		}
 	}
 
-	private String[] getModelTypes() {
-		Set<String> types = new HashSet<>();
-		for (ModelType type : settingsService.getModelTypes()) {
+	private void putTypeFilter(SearchQueryBuilder builder, Set<ModelType> filteredTypes) {
+		var types = new ArrayList<String>();
+		var allTypes = settingsService.serverConfig.getModelTypes();
+		for (var type : allTypes) {
+			if (!filteredTypes.isEmpty() && !filteredTypes.contains(type))
+				continue;
 			types.add(type.name());
 		}
-		return types.toArray(new String[types.size()]);
+		if (types.isEmpty()) {
+			builder.aggregation(Aggregations.MODEL_TYPE);
+		} else {
+			builder.aggregation(Aggregations.MODEL_TYPE, SearchFilterValue.term(types));
+		}
 	}
 
-	private SearchResult<IndexEntry> buildEmptyResult(int page, int pageSize) {
-		SearchResult<IndexEntry> result = new SearchResult<>();
+	private SearchResult<DsEntry> buildEmptyResult(int page, int pageSize) {
+		var result = new SearchResult<DsEntry>();
 		result.resultInfo.currentPage = page;
 		result.resultInfo.pageSize = pageSize;
-		for (SearchAggregation aggr : Aggregations.PROCESS_FILTERS) {
+		for (var aggr : Aggregations.PROCESS_FILTERS) {
 			result.aggregations.add(new AggregationResultBuilder().type(aggr.type).name(aggr.name).build());
 		}
 		return result;
-	}
-
-	private Set<ModelType> getFilteredModelTypes(Set<String> values) {
-		if (values == null || values.isEmpty())
-			return null;
-		Set<ModelType> types = new HashSet<>();
-		for (String value : values) {
-			types.add(ModelType.valueOf(value));
-		}
-		return types;
-	}
-
-	private void putRepositoryFilter(SearchQueryBuilder builder, Set<String> values, List<Repository> repos) {
-		for (Repository repo : repos) {
-			if (values != null && !values.contains(repo.toId()))
-				continue;
-			builder.aggregation(Aggregations.REPOSITORY, repo.toId());
-		}
 	}
 
 }

@@ -1,19 +1,17 @@
 package com.greendelta.collaboration.model;
 
-import javax.persistence.MappedSuperclass;
-
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+
+import javax.persistence.Column;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class AbstractEntity {
 
-	public abstract long getId();
-
-	public abstract void setId(long id);
-
-	public boolean hasId() {
-		return getId() > 0;
-	}
+	@Id
+	@Column
+	public long id;
 
 	@Override
 	public boolean equals(Object obj) {
@@ -23,23 +21,21 @@ public abstract class AbstractEntity {
 			return true;
 		if (!(this.getClass().isInstance(obj)))
 			return false;
-		AbstractEntity other = (AbstractEntity) obj;
-		return this.getId() != 0 && this.getId() == other.getId();
+		var other = (AbstractEntity) obj;
+		return this.id != 0 && this.id == other.id;
 	}
 
 	@Override
 	public int hashCode() {
-		if (getId() != 0) {
-			// from Long class's hash method, to avoid new Long(id)
-			return (int) (getId() ^ (getId() >>> 32));
-		} else {
+		if (id == 0)
 			return super.hashCode();
-		}
+		// from Long class's hash method, to avoid new Long(id)
+		return (int) (id ^ (id >>> 32));
 	}
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + getId() + ")";
+		return getClass().getSimpleName() + "(" + id + ")";
 	}
 
 	@JsonAnySetter

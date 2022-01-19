@@ -68,6 +68,8 @@ define([
 						result.getIcon = Icons.get
 						result.getPagingUrl = (page) => return Util.getUrlPart 'search/', @query, page, @pageSize, @aggregations, result.aggregations
 						result.clearUrl = Util.getUrlPart 'search/', null, 1, 10
+						result.getHighlightedVersionIndex = (dataset) => return dataset.versions.length - 1
+						result.getHighlightedRepoIndex = (version) => return version.repos.length - 1
 						result.getAggregationUrl = (type, value, without = false) =>
 							query = @query
 							if type is 'query' and without

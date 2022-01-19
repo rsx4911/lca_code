@@ -1,17 +1,14 @@
 package com.greendelta.collaboration.service;
 
-import java.util.ArrayList;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import org.openlca.cloud.error.UnauthorizedAccessException;
-
-import com.google.inject.Inject;
-import com.greendelta.collaboration.model.Message;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.task.Task;
+import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
-import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
@@ -20,6 +17,7 @@ import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 
+@Service
 public class DeleteService {
 
 	private final UserService userService;
@@ -30,15 +28,15 @@ public class DeleteService {
 	private final TaskService taskService;
 	private final MessagingService messagingService;
 	private final AccessService accessService;
-	private final SearchService searchService;
 	private final CommentService commentService;
 	private final LibraryService libraryService;
-	
-	@Inject
+	private final SettingsService settingsService;
+
+	@Autowired
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
-			MessagingService messagingService, AccessService accessService, SearchService searchService,
-			CommentService commentService, LibraryService libraryService) {
+			MessagingService messagingService, AccessService accessService, CommentService commentService,
+			LibraryService libraryService, SettingsService settingsService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -47,44 +45,40 @@ public class DeleteService {
 		this.taskService = taskService;
 		this.messagingService = messagingService;
 		this.accessService = accessService;
-		this.searchService = searchService;
 		this.commentService = commentService;
 		this.libraryService = libraryService;
+		this.settingsService = settingsService;
 	}
 
 	public void delete(User user) {
-		User currentUser = userService.getCurrentUser();
+		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw new UnauthorizedAccessException("User " + user.getId(), "DELETE");
-		for (Repository repository : repoService.getAll(0, 0, user.username + "/", false, false).data) {
-			delete(repository);
+			throw new ForbiddenAccessException("User " + user.id, "DELETE");
+		try (var result = repoService.getAll(0, 0, user.username + "/", false, false)) {
+			result.data.forEach(repo -> delete(repo));
 		}
 		groupService.delete(user.username);
-		for (Team team : teamService.getTeamsFor(user)) {
+		settingsService.get(SettingType.GROUP_SETTING, user.username, accessService::canSetSettings).delete();
+		teamService.getTeamsFor(user).forEach(team -> {
 			teamService.removeMember(user, team);
-		}
+		});
 		memberService.removeMemberships(user);
 		deleteTasksAndAssignmentsOf(user);
-		for (Message message : messagingService.getMessages(user)) {
+		messagingService.getMessages(user).forEach(message -> {
 			messagingService.delete(message);
-		}
+		});
 		commentService.clearUser(user);
 		userService.delete(user);
 	}
 
 	private void deleteTasksAndAssignmentsOf(User user) {
-		for (Task task : taskService.getAllFor(user)) {
+		taskService.getAllFor(user).forEach(task -> {
 			if (user.equals(task.initiator)) {
 				taskService.delete(task);
 			} else {
-				for (TaskAssignment assignment : new ArrayList<>(task.assignments)) {
-					if (assignment.assignedTo.equals(user)) {
-						task.assignments.remove(assignment);
-					} else if (assignment.endedBy.equals(user)) {
-						task.assignments.remove(assignment);
-					}
-
-				}
+				task.assignments.stream()
+						.filter(a -> a.assignedTo.equals(user) || a.endedBy.equals(user))
+						.forEach(a -> task.assignments.remove(a));
 				if (task.assignments.isEmpty()) {
 					task.state = TaskState.CREATED;
 				} else {
@@ -101,51 +95,54 @@ public class DeleteService {
 				}
 				taskService.update(task);
 			}
-		}
+		});
 	}
 
 	public void delete(Team team) {
-		User currentUser = userService.getCurrentUser();
+		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw new UnauthorizedAccessException("Team " + team.getId(), "DELETE");
+			throw new ForbiddenAccessException("Team " + team.id, "DELETE");
 		memberService.removeMemberships(team);
 		teamService.delete(team);
-		for (Message message : messagingService.getMessages(team)) {
+		messagingService.getMessages(team).forEach(message -> {
 			messagingService.delete(message);
-		}
+		});
 	}
 
 	public void delete(Repository repo) {
-		if (!accessService.canDelete(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
-		memberService.removeMemberships(repo.toId());
-		searchService.remove(searchService.getDocumentIds(repo));
+		if (!accessService.canDelete(repo.path()))
+			throw new ForbiddenAccessException(repo.path(), "DELETE");
+		memberService.removeMemberships(repo.path());
 		deleteTasksOf(repo);
 		commentService.delete(repo);
+		repo.settings.delete();
 		repoService.delete(repo);
 	}
 
 	private void deleteTasksOf(Repository repo) {
-		for (Task task : taskService.getAllFor(repo)) {
+		taskService.getAllFor(repo).forEach(task -> {
 			taskService.delete(task);
-		}
+		});
 	}
 
 	public void deleteGroup(String name) {
 		if (!accessService.canDelete(name))
-			throw new UnauthorizedAccessException(name, "DELETE");
-		for (Repository repo : repoService.getAll(0, 0, name + "/", false, false).data) {
-			delete(repo);
+			throw new ForbiddenAccessException(name, "DELETE");
+		try (var result = repoService.getAll(0, 0, name + "/", false, false)) {
+			for (Repository repo : result.data) {
+				delete(repo);
+			}
 		}
 		memberService.removeMemberships(name);
+		settingsService.get(SettingType.GROUP_SETTING, name, accessService::canSetSettings).delete();
 		groupService.delete(name);
 	}
 
 	public void deleteLibrary(String name) {
-		for (Repository repo : repoService.getAllAccessible()) {
-			repo.setRestriction(name, null);
+		try (var accessible = repoService.getAllAccessible()) {
+			accessible.forEach(repo -> repoService.setRestriction(repo, name, null));
+			libraryService.removeLibrary(name);
 		}
-		libraryService.removeLibrary(name);
 	}
-	
+
 }

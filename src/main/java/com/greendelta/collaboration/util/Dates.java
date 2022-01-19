@@ -24,13 +24,13 @@ public class Dates {
 	}
 
 	private static boolean isBefore(Date toCompare, Date toCompareTo, boolean considerTime) {
-		Calendar calendar1 = toCalendar(toCompare, considerTime);
-		Calendar calendar2 = toCalendar(toCompareTo, considerTime);
+		var calendar1 = toCalendar(toCompare, considerTime);
+		var calendar2 = toCalendar(toCompareTo, considerTime);
 		return calendar1.before(calendar2);
 	}
 
 	public static Calendar toCalendar(Date date, boolean considerTime) {
-		Calendar calendar = Calendar.getInstance();
+		var calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		if (!considerTime) {
 			removeTimeInformation(calendar);
@@ -48,13 +48,13 @@ public class Dates {
 	public static Date fromString(String date) {
 		if (date == null || date.isEmpty())
 			return null;
-		Calendar cal = DatatypeConverter.parseDateTime(date);
+		var cal = DatatypeConverter.parseDateTime(date);
 		return cal == null ? null : cal.getTime();
 
 	}
 
 	public static long getTime(String date) {
-		Date d = fromString(date);
+		var d = fromString(date);
 		return d == null ? 0 : d.getTime();
 	}
 

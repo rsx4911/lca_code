@@ -13,13 +13,13 @@ public class Password {
 
 	static {
 		DIGITS = new ArrayList<>();
-		for (int i = 48; i <= 57; i++)
+		for (var i = 48; i <= 57; i++)
 			DIGITS.add((char) i);
 		LOWERCASE = new ArrayList<>();
-		for (int i = 97; i <= 122; i++)
+		for (var i = 97; i <= 122; i++)
 			LOWERCASE.add((char) i);
 		UPPERCASE = new ArrayList<>();
-		for (int i = 65; i <= 90; i++)
+		for (var i = 65; i <= 90; i++)
 			UPPERCASE.add((char) i);
 		SPECIAL = Arrays.asList(new Character[] { '!', '@' });
 	}
@@ -33,16 +33,17 @@ public class Password {
 	}
 
 	private static String _generate() {
-		List<Character> chars = new ArrayList<>();
+		var chars = new ArrayList<Character>();
 		chars.addAll(DIGITS);
 		chars.addAll(LOWERCASE);
 		chars.addAll(UPPERCASE);
 		chars.addAll(SPECIAL);
-		String password = "";
-		for (int i = 0; i < 16; i++) {
-			int next = (int) (Math.random() * chars.size());
-			if (next == chars.size())
+		var password = "";
+		for (var i = 0; i < 16; i++) {
+			var next = (int) (Math.random() * chars.size());
+			if (next == chars.size()) {
 				next--;
+			}
 			password += chars.get(next);
 		}
 		return password;
@@ -59,10 +60,12 @@ public class Password {
 	}
 
 	private static boolean checkOccurrences(String password, List<Character> list, int minimum) {
-		int occurrences = 0;
-		for (Character c : list)
-			if (password.indexOf(c) != -1)
+		var occurrences = 0;
+		for (var c : list) {
+			if (password.indexOf(c) != -1) {
 				occurrences++;
+			}
+		}
 		return occurrences >= minimum;
 	}
 

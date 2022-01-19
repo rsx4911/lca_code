@@ -22,11 +22,6 @@ define([
 
 		class RepositoryDatasets extends Backbone.View
 
-			toggleDeleted: (event) ->
-				target = $ Events.target event
-				LocalStorage.toggleValue 'datasets-showDeleted'
-				@filter.applyFilter()
-
 			changeCommit: (event) ->
 				target = $ Events.target event
 				commitId = target.val()
@@ -89,7 +84,6 @@ define([
 				'click a:not([href="#"])': (event) -> Events.followLink event
 				'click a[data-format]:not([data-action=select-data])': 'downloadData'
 				'click a[data-action=select-data]': 'selectData'
-				'change #show-deleted': 'toggleDeleted'
 				'change #commit': 'changeCommit'
 
 			initialize: (options) ->
@@ -104,33 +98,30 @@ define([
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
-					noPaging: true
 					filterId: 'filter'
+					pageSize: 100
 					url: () =>
 						url = "ws/public/browse/#{group}/#{name}?"
 						if @categoryPath
 							url += 'categoryPath=' + @getCategoryPath() + '&'
-						url = "#{url}showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
 						if @commitId
-							url += '&commitId=' + @commitId
-						return url + '&'
+							url += 'commitId=' + @commitId + '&'
+						return url
 					beforeRender: (result) =>
 						result.repository = @repository.toJSON()
 						result.baseUrl = "#{group}/#{name}"
 						result.categoryPath = @categoryPath
-						result.previousPath = ''
-						if @pathArray and @pathArray.length
-							for path, index in @pathArray
-								if index < (@pathArray.length - 1)
-									if index > 0
-										result.previousPath += '/'
-									result.previousPath += path
 						result.commitId = @commitId
 						result.isPublic = !currentUser.isLoggedIn()
 						result.getRootLabel = (t) -> return ModelTypes[t]
+						result.getModelType = (t) -> 				
+							for key in Object.keys(ModelTypes)
+								if ModelTypes[key] is t
+									return key
+							return null
 						result.formatLastUpdate = (value) -> return moment(value).fromNow()
 						result.getIcon = Icons.get
-						if result.entries?.length or @categoryPath
+						if result.data?.length or @categoryPath
 							@$('.no-content-message').hide()
 							@$('.table-browse').show()
 						else
@@ -139,77 +130,34 @@ define([
 						@initialized = true
 					afterRender: () => Toggle.init @$el
 
-			loadCount: (result) ->
-				group = @repository.get 'group'
-				name = @repository.get 'name'				
-				for entry in result.entries
-					if entry.type is 'CATEGORY' or !entry.refId
-						path = if entry.type is 'CATEGORY' then entry.categoryType else entry.type
-						if entry.fullPath
-							path += "/#{entry.fullPath}"
-						url = "ws/public/browse/count/#{group}/#{name}?categoryPath=#{encodeURIComponent(path)}"
-						if @commitId
-							url += '&commitId=' + @commitId
-						url += "&showDeleted=" + LocalStorage.getValue('datasets-showDeleted')
-						pace.ignore () =>
-							$.ajax
-								type: 'GET'
-								url: url
-								success: (result) ->
-									$("td[data-path='#{result.path}'] .dataset-count").html "(#{result.count})"
-
 			render: (renderOptions) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				@getCategoryInfo (categoryInfo) =>
-					if currentUser.isLoggedIn()
-						historyUrl = "ws/history/"
-						if categoryInfo.id
-							historyUrl += "category/#{group}/#{name}/#{categoryInfo.id}"
-						else
-							historyUrl += "#{group}/#{name}"
-						$.ajax
-							type: 'GET'
-							url: historyUrl
-							success: (commits) => @doRender renderOptions, categoryInfo, commits
-					else
-						@doRender renderOptions, categoryInfo, []
+				if currentUser.isLoggedIn()
+					historyUrl = "ws/history/#{group}/#{name}"
+					if @categoryPath
+						historyUrl += "?path=#{@getCategoryPath()}"
+					$.ajax
+						type: 'GET'
+						url: historyUrl
+						success: (commits) => @doRender renderOptions, commits
+				else
+					@doRender renderOptions, []
 
-			getCategoryInfo: (callback) ->
-				if !@categoryPath or @categoryPath.indexOf('/') is -1
-					callback {}
-					return
-				group = @repository.get 'group'
-				name = @repository.get 'name'
-				url = "ws/public/browse/categoryInfo/#{group}/#{name}"
-				if @categoryPath
-					url += '?categoryPath=' + @getCategoryPath()
-				if @commitId
-					url += if @categoryPath then '&' else '?'
-					url += 'commitId=' + @commitId
-				$.ajax
-					type: 'GET'
-					url: url
-					success: callback
-
-			doRender: (renderOptions, categoryInfo, commits) ->
+			doRender: (renderOptions, commits) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				@pathArray = []
+				# TODO check category paths
 				if @categoryPath and @categoryPath.indexOf('/') isnt -1
 					@pathArray.push @categoryPath.substring 0, @categoryPath.indexOf('/')
 				else if @categoryPath
 					@pathArray.push @categoryPath
-				if categoryInfo?.category
-					for category in categoryInfo.category
-						@pathArray.push category
 				@$el.html template
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
 					formatDate: Format.dateTime
 					pathAsArray: @pathArray
-					showDeleted: LocalStorage.getValue('datasets-showDeleted')
-					deleted: (categoryInfo.deleted is 'true')
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits
 					commitId: @commitId

@@ -1,62 +1,62 @@
 package com.greendelta.collaboration.service.task;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
-import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.model.task.TaskType;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
 
+@Service
 public class TaskService {
 
 	private Dao<Task> dao;
 
-	@Inject
+	@Autowired
 	public TaskService(Dao<Task> dao) {
 		this.dao = dao;
 	}
 
 	public List<Task> getAllFor(User user) {
-		List<Task> tasks = new ArrayList<>();
-		for (TaskType type : TaskType.values()) {
-			String jpql = "SELECT DISTINCT task FROM " + type.subclass.getSimpleName() + " task "
+		var tasks = new ArrayList<Task>();
+		if (user == null)
+			return tasks;
+		for (var type : TaskType.values()) {
+			var jpql = "SELECT DISTINCT task FROM " + type.subclass.getSimpleName() + " task "
 					+ "LEFT JOIN task.assignments assignment "
 					+ "WHERE assignment.assignedTo = :user "
 					+ "OR task.initiator = :user";
-			Map<String, Object> parameters = new HashMap<>();
-			parameters.put("user", user);
-			tasks.addAll(dao.getAll(jpql, parameters));
+			tasks.addAll(dao.getAll(jpql, Map.of("user", user)));
 		}
 		return tasks;
 	}
 
 	public List<Task> getAllFor(Repository repo) {
-		List<Task> tasks = new ArrayList<>();
-		for (TaskType type : TaskType.values()) {
-			String jpql = "SELECT DISTINCT task FROM " + type.subclass.getSimpleName() + " task "
+		var tasks = new ArrayList<Task>();
+		if (repo == null)
+			return tasks;
+		for (var type : TaskType.values()) {
+			var jpql = "SELECT DISTINCT task FROM " + type.subclass.getSimpleName() + " task "
 					+ "WHERE task.repositoryPath = :repoId";
-			Map<String, Object> parameters = new HashMap<>();
-			parameters.put("repoId", repo.toId());
-			tasks.addAll(dao.getAll(jpql, parameters));
+			tasks.addAll(dao.getAll(jpql, Map.of("repoId", repo.path())));
 		}
 		return tasks;
 	}
 
 	public List<Task> getAllActiveFor(User user) {
-		List<Task> all = getAllFor(user);
-		List<Task> active = new ArrayList<>();
-		for (Task task : all) {
+		var active = new ArrayList<Task>();
+		getAllFor(user).forEach(task -> {
 			if ((task.state == TaskState.CREATED || task.state == TaskState.VERIFYING) && task.initiator.equals(user)) {
 				active.add(task);
 			} else if (task.state == TaskState.PROCESSING) {
-				for (TaskAssignment assignment : task.assignments) {
+				for (var assignment : task.assignments) {
 					if (!assignment.assignedTo.equals(user))
 						continue;
 					if (assignment.endDate != null)
@@ -65,16 +65,15 @@ public class TaskService {
 					break;
 				}
 			}
-		}
+		});
 		return active;
 	}
 
 	public void move(Repository from, Repository to) {
-		List<Task> tasks = getAllFor(from);
-		for (Task task : tasks) {
-			task.repositoryPath = to.toId();
+		getAllFor(from).forEach(task -> {
+			task.repositoryPath = to.path();
 			update(task);
-		}
+		});
 	}
 
 	public Task update(Task task) {

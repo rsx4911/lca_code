@@ -1,0 +1,185 @@
+package com.greendelta.collaboration.controller;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriUtils;
+
+import com.greendelta.collaboration.model.settings.GroupSetting;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.search.DsEntry;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Aggregations;
+import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.SearchResults;
+import com.greendelta.search.wrapper.SearchQuery;
+import com.greendelta.search.wrapper.SearchResult;
+
+@RestController
+@RequestMapping("ws/public/search")
+public class SearchController {
+
+	private static final Logger log = LogManager.getLogger(SearchController.class);
+	private final SearchService service;
+	private final RepositoryService repoService;
+	private final GroupService groupService;
+	private final UserService userService;
+	private final SettingsService settingsService;
+
+	@Autowired
+	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
+			UserService userService, SettingsService settingsService) {
+		this.service = service;
+		this.repoService = repoService;
+		this.groupService = groupService;
+		this.userService = userService;
+		this.settingsService = settingsService;
+	}
+
+	@GetMapping
+	public Map<String, Object> search(@Autowired HttpServletRequest request) {
+		var parameters = getQueryParameters(request);
+		var query = removeStringFilter("query", parameters);
+		var page = removeIntFilter("page", parameters, 1);
+		var pageSize = removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
+		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
+		var result = service.search(query, page, pageSize, parameters);
+		result.aggregations.stream()
+				.filter(r -> r.name.equals(Aggregations.CATEGORY.name))
+				.forEach(r -> r.group("/"));
+		return map(result);
+	}
+
+	private ObjectMap map(SearchResult<DsEntry> result) {
+		try (var accessible = repoService.getAllAccessible()) {
+			var repositories = accessible.stream()
+					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
+			var loggedIn = userService.getCurrentUser().id != 0;
+			var map = ObjectMap.fromMap(new HashMap<>());
+			map.put("resultInfo", result.resultInfo);
+			var data = result.data.stream().map(dsEntry -> {
+				var e = ObjectMap.fromObject(dsEntry);
+				var versions = new ArrayList<ObjectMap>();
+				dsEntry.versions.forEach(dsVersion -> {
+					var v = ObjectMap.fromObject(dsVersion);
+					var repos = new ArrayList<ObjectMap>();
+					dsVersion.repos.forEach(dsRepo -> {
+						var r = ObjectMap.fromObject(dsRepo);
+						var repo = repositories.get(dsRepo.path);
+						r.put("label", repo.getLabel());
+						if (!loggedIn) {
+							r.nullify("commitId", "commitMessage");
+						}
+						repos.add(r);
+					});
+					v.put("repos", repos);
+					versions.add(v);
+				});
+				e.put("versions", versions);
+				return e;
+			}).toList();
+			map.put("data", data);
+			var aggregations = result.aggregations.stream().filter(a -> {
+				if (!settingsService.is(ServerSetting.REPOSITORY_TAGS_ENABLED)
+						&& a.name.equals(Aggregations.REPOSITORY_TAGS.name))
+					return false;
+				if (!settingsService.is(ServerSetting.DATASET_TAGS_ENABLED)
+						&& a.name.equals(Aggregations.DATASET_TAGS.name))
+					return false;
+				return true;
+			}).toList();
+			map.put("aggregations", aggregations.stream().map(a -> {
+				var aMap = ObjectMap.fromObject(a);
+				if (a.name.equals(Aggregations.REPOSITORY.name)) {
+					aMap.put("entries", a.entries.stream().map(e -> {
+						ObjectMap eMap = ObjectMap.fromObject(e);
+						Repository repo = repositories.get(e.key);
+						eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
+						return eMap;
+					}).toList());
+				} else if (a.name.equals(Aggregations.GROUP.name)) {
+					aMap.put("entries", a.entries.stream().map(e -> {
+						ObjectMap eMap = ObjectMap.fromObject(e);
+						String label = groupService.getSettings(e.key).get(GroupSetting.LABEL, e.key);
+						eMap.put("label", label);
+						return eMap;
+					}).toList());
+				}
+				return aMap;
+			}).toList());
+			return map;
+		}
+	}
+
+	@GetMapping("flowLinks/{flowRefId}")
+	public SearchResult<Object> searchFlowLinks(
+			@PathVariable("flowRefId") String flowRefId,
+			@RequestParam(name = "commitId", required = false) String commitId,
+			@RequestParam(name = "repositoryId", required = false) String repositoryId,
+			@RequestParam(name = "direction", required = false) String direction,
+			@RequestParam(name = "filter", required = false) String filter,
+			@RequestParam(name = "page", defaultValue = "1") int page,
+			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+		// TODO
+		return SearchResults.pagedAndFiltered(page, pageSize, filter, new ArrayList<>());
+	}
+
+	private String removeStringFilter(String name, Map<String, Set<String>> filters) {
+		return removeFilter(name, filters, "");
+	}
+
+	private int removeIntFilter(String name, Map<String, Set<String>> filters, int defaultValue) {
+		var value = removeFilter(name, filters, Integer.toString(defaultValue));
+		return Integer.parseInt(value);
+	}
+
+	private static String removeFilter(String name, Map<String, Set<String>> filters, String defaultValue) {
+		var value = filters.remove(name);
+		if (value == null)
+			return defaultValue;
+		if (value.size() == 0)
+			return defaultValue;
+		var first = value.iterator().next();
+		if (Strings.nullOrEmpty(first))
+			return defaultValue;
+		return first;
+	}
+
+	private Map<String, Set<String>> getQueryParameters(HttpServletRequest request) {
+		var filters = new HashMap<String, Set<String>>();
+		for (var key : request.getParameterMap().keySet()) {
+			var filterBy = filters.get(key);
+			if (filterBy == null)
+				filters.put(UriUtils.decode(key, "UTF-8"), filterBy = new HashSet<>());
+			var values = request.getParameterMap().get(key);
+			if (values == null)
+				continue;
+			for (String value : values) {
+				filterBy.add(UriUtils.decode(value, "UTF-8"));
+			}
+		}
+		return filters;
+	}
+
+}

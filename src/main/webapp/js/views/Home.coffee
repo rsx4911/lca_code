@@ -49,11 +49,11 @@ define([
 					url: 'ws/public/repository'
 					success: (repositories) =>
 						visible = []
-						hiddenRepositories = (settings.getVal('REPOSITORIES_HIDDEN') || '').split ';'
+						hiddenRepositories = (settings.getVal('REPOSITORIES_HIDDEN') || [])
 						for repo in repositories
 							if $.inArray(repo.group+'/'+repo.name, hiddenRepositories) is -1
 								visible.push repo
-						orderedRepositories = (settings.getVal('REPOSITORIES_ORDER') || '').split ';'
+						orderedRepositories = (settings.getVal('REPOSITORIES_ORDER') || [])
 						visible.sort (r1, r2) ->
 							i1 = orderedRepositories.indexOf(r1.group + '/' + r1.name)
 							i2 = orderedRepositories.indexOf(r2.group + '/' + r2.name)

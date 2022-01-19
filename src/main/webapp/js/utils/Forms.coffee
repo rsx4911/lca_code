@@ -59,6 +59,8 @@ define([
 					name = field.attr 'name'
 					type = field.attr 'type'
 					value = getValue json, name
+					if name is 'IMPRINT_SETTING-COMPANY'
+						console.log value
 					if value or value is 0
 						if type is 'checkbox'
 							field.prop('checked', value is true or value is 'true') 
@@ -89,6 +91,9 @@ define([
 				@clear form
 				if response.responseJSON
 					error = response.responseJSON
+					try error = JSON.parse error.message catch e then error = { message: error.message }
+					unless error.message
+						error.message = 'Unknown error'
 					@markWithMessage form, error.field, error.message
 				else
 					message = response.responseText

@@ -1,107 +1,118 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.core.StreamingOutput;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.cloud.error.RepositoryNotFoundException;
-import org.openlca.cloud.error.UnauthorizedAccessException;
-import org.openlca.cloud.model.data.Commit;
-import org.openlca.cloud.util.Directories;
-import org.openlca.core.model.ModelType;
-import org.openlca.jsonld.Schema;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.git.model.Commit;
 import org.openlca.jsonld.Schema.UnsupportedSchemaException;
-import org.openlca.jsonld.output.Context;
+import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.zeroturnaround.zip.ZipUtil;
 
-import com.google.common.base.Strings;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.inject.Inject;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.error.RepositoryNotFoundException;
+import com.greendelta.collaboration.io.Json2Repository;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
-import com.greendelta.collaboration.model.Setting.Key;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.service.Repository.RepositorySetting;
+import com.greendelta.collaboration.model.settings.GroupSetting;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
+import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Collections;
 import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.collaboration.util.io.Json2Repository;
-import com.greendelta.search.wrapper.SearchResult;
 
+@Service
 public class RepositoryService {
 
-	private static final Logger log = LogManager.getLogger(Repository.class);
-	private static final String VERSION = "1";
+	private static final Logger log = LogManager.getLogger(RepositoryService.class);
 
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settingsService;
-	private final GroupService groupService;
 	private final TaskService taskService;
 
-	@Inject
+	@Autowired
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService, GroupService groupService,
-			TaskService taskService) {
+			CommentService commentService, SettingsService settingsService, TaskService taskService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settingsService = settingsService;
-		this.groupService = groupService;
 		this.taskService = taskService;
 	}
 
 	public Repository get(String id) {
-		if (Strings.isNullOrEmpty(id))
+		if (Strings.nullOrEmpty(id))
 			throw new RepositoryNotFoundException("");
 		if (!id.contains("/"))
 			throw new RepositoryNotFoundException(id);
-		String[] path = id.split("/");
+		var path = id.split("/");
 		if (path.length != 2)
 			throw new RepositoryNotFoundException(id);
 		return get(path[0], path[1]);
 	}
 
 	private String getRootPath() {
-		return settingsService.get(Key.REPOSITORY_PATH);
+		return settingsService.get(ServerSetting.REPOSITORY_PATH);
+	}
+
+	public Repository get(RepositoryPath path) {
+		if (!path.isRepo())
+			throw new RepositoryNotFoundException("");
+		return get(path.group, path.repo);
 	}
 
 	public Repository get(String group, String name) {
-		String path = getRootPath();
+		var path = getRootPath();
+		var id = new RepositoryPath(group, name).toString();
 		if (path == null || path.isEmpty())
-			throw new UnauthorizedAccessException(Repository.toId(group, name), "READ");
-		Repository repo = Repository.get(path, group, name);
-		repo.groupSettings = groupService.getSettings(group);
-		if (!accessService.canRead(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "READ");
-		return repo;
+			throw new ForbiddenAccessException(id, "READ");
+		if (!accessService.canRead(id))
+			throw new ForbiddenAccessException(id, "READ");
+		Settings<RepositorySetting> settings = settingsService.get(SettingType.REPOSITORY_SETTING, id,
+				accessService::canSetSettings);
+		Settings<GroupSetting> groupSettings = settingsService.get(SettingType.GROUP_SETTING, group,
+				accessService::canSetSettings);
+		return new Repository(path, group, name, settings, groupSettings);
 	}
 
 	public boolean exists(String group, String name) {
-		File root = new File(getRootPath());
+		var root = new File(getRootPath());
 		if (root.listFiles() == null)
 			return false;
-		for (File g : root.listFiles()) {
+		for (var g : root.listFiles()) {
 			if (!g.getName().equalsIgnoreCase(group))
 				continue;
 			if (g.listFiles() == null)
@@ -116,31 +127,39 @@ public class RepositoryService {
 	}
 
 	public Repository create(String group, String name) {
-		User currentUser = userService.getCurrentUser();
+		var currentUser = userService.getCurrentUser();
 		if (!accessService.canCreateRepositoryIn(group))
-			throw new UnauthorizedAccessException(group, "WRITE");
-		String path = getPath(group, name);
+			throw new ForbiddenAccessException(group, "WRITE");
+		var path = getPath(group, name);
 		if (path == null)
-			throw new UnauthorizedAccessException(group, "WRITE");
-		new File(path).mkdirs();
-		putJsonContext(group, name);
-		putVersion(group, name);
-		membershipService.addMembership(currentUser, Repository.toId(group, name), Role.OWNER, true);
+			throw new ForbiddenAccessException(group, "WRITE");
+		init(path);
+		membershipService.addMembership(currentUser, new RepositoryPath(group, name).toString(), Role.OWNER, true);
 		return get(group, name);
 	}
 
+	private void init(String path) {
+		File dir = new File(path);
+		try {
+			Git.init().setBare(true).setDirectory(dir).call();
+		} catch (GitAPIException e) {
+			log.error("Error initializing git repository", e);
+			dir.delete();
+			throw new Error(e);
+		}
+	}
+
 	public boolean move(Repository repo, String group, String name) {
-		if (!accessService.canMove(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "MOVE");
+		if (!accessService.canMove(repo.path()))
+			throw new ForbiddenAccessException(repo.path(), "MOVE");
 		if (!accessService.canCreateRepositoryIn(group))
-			throw new UnauthorizedAccessException(group, "WRITE");
-		if (!accessService.canDelete(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "DELETE");
+			throw new ForbiddenAccessException(group, "WRITE");
+		if (!accessService.canDelete(repo.path()))
+			throw new ForbiddenAccessException(repo.path(), "DELETE");
 		if (exists(group, name))
 			return false;
-		Repository newRepo = create(group, name);
-		try {
-			boolean moved = Dirs.moveContents(repo.repoDir, newRepo.repoDir, true);
+		try (var newRepo = create(group, name)) {
+			var moved = Dirs.move(repo.dir, newRepo.dir);
 			if (!moved) {
 				delete(newRepo);
 				return false;
@@ -148,136 +167,187 @@ public class RepositoryService {
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
+			repo.settings.move(newRepo);
 			delete(repo);
-		} catch (IOException e) {
-			log.error("Error moving repository contents", e);
-			return false;
+			return true;
 		}
-		return true;
 	}
 
 	private void moveMemberships(Repository fromRepo, Repository toRepo) {
-		List<Membership> memberships = membershipService.getMemberships(fromRepo.toId());
-		for (Membership membership : memberships)
-			if (membership.team != null)
-				membershipService.addMemberships(membership.team, toRepo.toId(), membership.role);
-			else
-				membershipService.addMembership(membership.user, toRepo.toId(), membership.role);
+		var memberships = membershipService.getMemberships(fromRepo.path());
+		for (Membership membership : memberships) {
+			if (membership.team != null) {
+				membershipService.addMemberships(membership.team, toRepo.path(), membership.role);
+			} else {
+				membershipService.addMembership(membership.user, toRepo.path(), membership.role);
+			}
+		}
 	}
 
-	public boolean clone(Repository from, Repository to, List<Commit> commits) {
+	public boolean clone(Repository from, Repository to, Commit resetTo) {
 		if (!accessService.canWrite(to.group))
-			throw new UnauthorizedAccessException(to.group, "WRITE");
-		if (!Repositories.clone(from, to, commits))
-			return false;
+			throw new ForbiddenAccessException(to.group, "WRITE");
+		try {
+			Dirs.copy(from.dir, to.dir);
+			if (resetTo != null) {
+				try (var gitRepo = new FileRepository(to.dir)) {
+					var command = new ResetCommand(gitRepo);
+					command.setMode(ResetType.SOFT);
+					command.setRef(resetTo.id);
+					command.call();
+				}
+			}
+		} catch (Exception e) {
+			log.error("Error cloning git repository", e);
+			Dirs.delete(to.dir);
+			throw new Error(e);
+		}
 		commentService.copy(from, to);
 		return true;
 	}
 
-	public void setSetting(Repository repo, RepositorySetting setting, Object value) {
-		if (!accessService.canSetSettings(repo.toId()))
-			throw new UnauthorizedAccessException(repo.toId(), "SET_SETTING");
-		repo.setSetting(setting, value);
-	}
-
-	private void putJsonContext(String group, String name) {
-		String path = getPath(group, name);
-		if (path == null)
-			return;
-		JsonObject context = Context.write(Schema.URI);
-		try {
-			File file = new File(path, "context.json");
-			file.createNewFile();
-			String json = new Gson().toJson(context);
-			byte[] data = json.getBytes("utf-8");
-			Files.write(data, file);
-		} catch (Exception e) {
-			log.error("Could not create context.json", e);
+	public void setRestriction(Repository repo, String library, Role restriction) {
+		Map<String, Role> restrictions = repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS, new HashMap<>());
+		if (restriction == null) {
+			restrictions.remove(library);
+		} else {
+			restrictions.put(library, restriction);
 		}
+		repo.settings.set(RepositorySetting.LIBRARY_RESTRICTIONS, restrictions);
 	}
 
-	private void putVersion(String group, String name) {
-		String path = getPath(group, name);
-		if (path == null)
-			return;
-		File versionFile = new File(path, ".version");
-		if (versionFile.exists())
-			return;
-		try {
-			Files.write(VERSION.getBytes(Charset.forName("utf-8")), versionFile);
-		} catch (Exception e) {
-			log.error("Could not create .version file", e);
-		}
-	}
-
-	boolean delete(Repository repo) {
-		String path = getPath(repo.group, repo.name);
+	public boolean delete(Repository repo) {
+		if (!accessService.canDelete(repo.path()))
+			throw new ForbiddenAccessException(repo.path(), "DELETE");
+		var path = getPath(repo.group, repo.name);
 		if (path == null)
 			return false;
-		return Directories.delete(new File(path));
+		repo.close();
+		return Dirs.delete(new File(path));
 	}
 
-	public StreamingOutput pack(Repository repo) {
-		return new RepositoryOutput(repo.repoDir.toPath());
+	public StreamingResponseBody pack(Repository repo) {
+		return new StreamingResponseBody() {
+			@Override
+			public void writeTo(OutputStream output) throws IOException {
+				var out = new ZipOutputStream(output);
+				write(repo.dir.toPath(), repo.dir, out);
+				out.close();
+			}
+
+			private void write(Path repoPath, File file, ZipOutputStream out) throws IOException {
+				if (file.isDirectory()) {
+					for (var child : file.listFiles()) {
+						write(repoPath, child, out);
+					}
+					return;
+				}
+				if (!file.isFile())
+					return;
+				var path = file.toPath();
+				var entry = repoPath.relativize(path).toString().replace('\\', '/');
+				out.putNextEntry(new ZipEntry(entry));
+				java.nio.file.Files.copy(path, out);
+				out.closeEntry();
+			}
+
+		};
 	}
 
 	public void unpack(Repository repo, InputStream input) {
 		try {
-			org.openlca.util.Dirs.delete(repo.repoDir.toPath());
-			create(repo.group, repo.name);
-			new RepositoryInput(repo.repoDir.toPath()).read(input);
+			org.openlca.util.Dirs.delete(repo.dir.toPath());
+			create(repo.group, repo.name).close();
+			;
+			var repoPath = repo.dir.toPath();
+			var in = new ZipInputStream(input);
+			ZipEntry entry = null;
+			while ((entry = in.getNextEntry()) != null) {
+				var filename = entry.getName();
+				var path = repoPath.resolve(filename);
+				var file = path.toFile();
+				if (entry.isDirectory()) {
+					file.mkdirs();
+					continue;
+				}
+				if (!file.exists()) {
+					file.getParentFile().mkdirs();
+					file.createNewFile();
+				}
+				java.nio.file.Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+			}
+			in.close();
 		} catch (IOException e) {
 			log.error("Error unpacking repository", e);
 		}
 	}
 
 	public void importJsonLd(Repository repo, InputStream input, String commitMessage) {
-		org.openlca.util.Dirs.delete(repo.repoDir.toPath());
-		create(repo.group, repo.name);
-		User user = userService.getCurrentUser();
-		ZipUtil.unpack(input, repo.repoDir);
+		org.openlca.util.Dirs.delete(repo.dir.toPath());
+		create(repo.group, repo.name).close();
+		var user = userService.getCurrentUser();
+		ZipUtil.unpack(input, repo.dir);
 		try {
-			Json2Repository.convert(repo.repoDir, user, commitMessage);
+			Json2Repository.convert(repo.dir, user, commitMessage);
 		} catch (IOException e) {
 			log.error("Error converting json to repository", e);
 		}
 	}
 
+	public int getNoOfRepositories(User user) {
+		if (user.username == null || user.username.isEmpty())
+			return 0;
+		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+		if (path == null || path.isEmpty())
+			return 0;
+		var userGroup = new File(path, user.username);
+		if (!userGroup.exists())
+			return 0;
+		return userGroup.listFiles().length;
+	}
+
 	public long getCount(boolean adminArea) {
-		return getAll(false, adminArea).size();
+		try (var repos = getAll(false, adminArea)) {
+			return repos.size();
+		}
 	}
 
-	public SearchResult<Repository> getAll(int page, int pageSize, String filter, boolean onlyPublic,
+	public RepositorySearchResult getAll(int page, int pageSize, String filter, boolean onlyPublic,
 			boolean adminArea) {
-		List<Repository> accessible = getAll(onlyPublic, adminArea);
-		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.toId());
+		var accessible = getAll(onlyPublic, adminArea);
+		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.path());
+		return new RepositorySearchResult(result);
 	}
 
-	public List<Repository> getAllAccessible() {
+	public RepositoryList getAllAccessible() {
 		return getAll(false, true);
 	}
 
-	private List<Repository> getAll(boolean onlyPublic, boolean adminArea) {
-		String path = getRootPath();
+	public RepositoryList getPublic() {
+		return getAll(true, false);
+	}
+
+	private RepositoryList getAll(boolean onlyPublic, boolean adminArea) {
+		var path = getRootPath();
 		if (path == null || path.isEmpty())
-			return new ArrayList<>();
-		File root = new File(path);
+			return new RepositoryList();
+		var root = new File(path);
 		if (!root.exists() || !root.isDirectory())
-			return new ArrayList<>();
-		List<Repository> repos = new ArrayList<>();
-		for (File group : root.listFiles()) {
+			return new RepositoryList();
+		var repos = new RepositoryList();
+		for (var group : root.listFiles()) {
 			if (group.listFiles() == null)
 				continue;
-			for (File name : group.listFiles()) {
+			for (var name : group.listFiles()) {
 				if (!name.isDirectory())
 					continue;
 				try {
-					Repository repo = Repository.get(path, group.getName(), name.getName());
-					if (onlyPublic && !repo.settings.publicAccess)
+					var repoPath = new RepositoryPath(group.getName(), name.getName());
+					if (!accessService.canRead(repoPath.toString(), !adminArea))
 						continue;
-					if (!accessService.canRead(repo.toId(), !adminArea))
+					var repo = get(group.getName(), name.getName());
+					if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS))
 						continue;
-					repo.groupSettings = groupService.getSettings(group.getName());
 					repos.add(repo);
 				} catch (UnsupportedSchemaException e) {
 					// ignore, just don't add to list
@@ -288,69 +358,40 @@ public class RepositoryService {
 	}
 
 	public List<String> getPublicRepositoryOrder() {
-		return getRepositoryList(Key.REPOSITORIES_ORDER, true);
+		return getRepositoryList(ServerSetting.REPOSITORIES_ORDER, true);
 	}
 
 	public List<String> getPublicHiddenRepositories() {
-		return getRepositoryList(Key.REPOSITORIES_HIDDEN, false);
+		return getRepositoryList(ServerSetting.REPOSITORIES_HIDDEN, false);
 	}
 
-	private List<String> getRepositoryList(Key key, boolean addMissing) {
-		String[] repositoryArray = ((String) settingsService.get(key)).split(";");
-		List<Repository> publicRepos = Collections.filter(getAllAccessible(), repo -> !repo.settings.publicAccess);
-		Map<String, Repository> repos = Collections.map(publicRepos, repo -> repo.toId());
-		List<String> repositories = new ArrayList<>();
-		for (String repoId : repositoryArray) {
-			Repository repo = repos.remove(repoId);
-			if (repo == null)
-				continue;
-			repositories.add(repoId);
-		}
-		if (addMissing) {
-			for (Repository repo : repos.values()) {
-				repositories.add(repo.toId());
+	private List<String> getRepositoryList(ServerSetting key, boolean addMissing) {
+		List<String> repositoryArray = settingsService.get(key, new ArrayList<>());
+		try (var repos = getPublic()) {
+			var repoMap = repos.stream()
+					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
+			var repoIds = new ArrayList<String>();
+			for (var repoId : repositoryArray) {
+				var repo = repoMap.remove(repoId);
+				if (repo == null)
+					continue;
+				repoIds.add(repoId);
 			}
+			if (addMissing) {
+				repoMap.values().forEach(repo -> repoIds.add(repo.path()));
+			}
+			if (userService.getCurrentUser().isAdmin()) {
+				settingsService.set(key, repoIds);
+			}
+			return repoIds;
 		}
-		settingsService.set(key, Collections.join(repositories, ";"));
-		return repositories;
 	}
 
 	private String getPath(String group, String name) {
-		String path = getRootPath();
+		var path = getRootPath();
 		if (path == null)
 			return null;
 		return path + File.separator + group + File.separator + name;
-	}
-
-	public byte[] getAvatar(String group, String name) {
-		File avatarFile = get(group, name).getAvatarFile();
-		if (!avatarFile.exists())
-			return null;
-		try {
-			return Files.toByteArray(avatarFile);
-		} catch (IOException e) {
-			log.error("Error reading repository avatar file", e);
-			return null;
-		}
-	}
-
-	public void setAvatar(String group, String name, InputStream file) {
-		String repoId = Repository.toId(group, name);
-		if (!accessService.canWrite(repoId))
-			throw new UnauthorizedAccessException(Repository.toId(group, name), "WRITE");
-		File avatarFile = get(group, name).getAvatarFile();
-		if (file != null)
-			try (FileOutputStream output = new FileOutputStream(avatarFile)) {
-				ByteStreams.copy(file, output);
-			} catch (IOException e) {
-				log.error("Error writing repository avatar file", e);
-			}
-		else if (avatarFile.exists())
-			avatarFile.delete();
-	}
-
-	public File getBinFile(Repository repo, ModelType type, String refId, String commitId, String filename) {
-		return repo.getBinFile(type, refId, commitId, filename);
 	}
 
 }
