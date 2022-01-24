@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
+import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -21,6 +22,7 @@ public class Team extends AbstractEntity {
 	public String name;
 
 	@Column
+	@Lob
 	public byte[] avatar;
 
 	/**
