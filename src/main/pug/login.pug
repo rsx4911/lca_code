@@ -112,14 +112,9 @@ html(lang='en')
 					success: function(response) {
 						window.location.href = '';
 					}, error: function(response) {
-						var error = response.responseJSON.message
-						try {
-							error = JSON.parse(error).message
-						} catch (e) {
-							console.log(e)
-						}
+						var error = response.responseJSON
 						$('#sign-up-general-message').show();
-						$('#sign-up-general-message .message').html(error);
+						$('#sign-up-general-message .message').html(error.message);
 						if (error.field) {
 							$('#sign-up #' + error.field).parent().addClass('has-error');
 						}
