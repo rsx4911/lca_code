@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -166,7 +167,7 @@ public class HistoryController {
 				throw Response.notFound();
 			var refs = repo.diffs().find().type(type).withPrevious(commit.id).all();
 			var mapped = refs.stream().map(r -> MetaData.forBrowse(r.right, r.type, repo));
-			List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
+			List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
 			return SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());
 		}

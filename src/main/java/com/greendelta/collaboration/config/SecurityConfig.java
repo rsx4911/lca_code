@@ -49,6 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.csrf().disable()
 				.exceptionHandling().authenticationEntryPoint(this::handleUnauthorized).and()
 				.authorizeRequests()
+				.antMatchers("/job").permitAll()
 				.antMatchers("/ws/public/**").permitAll()
 				.antMatchers("/ws/admin/**").hasAuthority(Authority.ADMIN.getAuthority())
 				.antMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())

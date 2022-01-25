@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,14 +55,14 @@ public class BrowseController {
 		try (var repo = repoService.get(group, name)) {
 			var entries = repo.entries().find().commit(commitId).path(categoryPath).all();
 			if (path.isEmpty()) {
-				List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN);
+				List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 				entries = entries.stream().filter(e -> !typesHidden.contains(e.type.name())).toList();
 			}
 			var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
 			if (!path.isEmpty()) {
 				mapped = MetaData.sortByName(mapped);
 			} else {
-				List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
+				List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 				mapped = MetaData.sortByType(mapped, typesOrder);
 			}
 			var paged = SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList(),
