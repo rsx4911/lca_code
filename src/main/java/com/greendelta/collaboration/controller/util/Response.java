@@ -146,9 +146,7 @@ public class Response {
 	}
 
 	private static ResponseStatusException status(HttpStatus status, String message) {
-		var e = new ResponseStatusException(status, message);
-		e.setStackTrace(new StackTraceElement[0]);
-		return e;
+		return new ResponseStatusException(status, message);
 	}
 
 }
