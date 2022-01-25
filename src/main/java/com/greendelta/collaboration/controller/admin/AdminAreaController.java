@@ -9,9 +9,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
-import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +28,6 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.EmailService;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
-import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
@@ -47,18 +46,15 @@ public class AdminAreaController {
 	private final SearchService searchService;
 	private final SettingsService settingsService;
 	private final EmailService emailService;
-	private final LibraryService libraryService;
 	private final AnnouncementService announcementService;
 
 	@Autowired
 	public AdminAreaController(RepositoryService repoService, SearchService searchService,
-			SettingsService settingsService, EmailService emailService, LibraryService libraryService,
-			AnnouncementService announcementService) {
+			SettingsService settingsService, EmailService emailService, AnnouncementService announcementService) {
 		this.repoService = repoService;
 		this.searchService = searchService;
 		this.settingsService = settingsService;
 		this.emailService = emailService;
-		this.libraryService = libraryService;
 		this.announcementService = announcementService;
 	}
 
@@ -170,9 +166,6 @@ public class AdminAreaController {
 			value = null;
 		}
 		settingsService.set(key, value);
-		if (key == ServerSetting.LIBRARY_PATH) {
-			libraryService.resetLibraries();
-		}
 	}
 
 	private String get(String gladBaseUrl, String headerField, String headerValue) throws Exception {

@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.model.Library;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
@@ -40,6 +41,11 @@ public class DaoConfig {
 	@Bean
 	public Dao<Comment> commentDao() {
 		return new Dao<>(Comment.class);
+	}
+
+	@Bean
+	public Dao<Library> libraryDao() {
+		return new Dao<>(Library.class);
 	}
 
 	@Bean
