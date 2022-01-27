@@ -131,19 +131,15 @@ public class IlcdWriter implements DatasetWriter {
 			var ref = repo.references().get(modelType, refId, commit.id);
 			if (ref == null)
 				return null;
-			return repo.datasets().get(ref.objectId);
+			return repo.datasets().get(ref);
 		}
 
 		@Override
-		public byte[] getExternalFile(String sourceRefId, String filename) {
-			var ref = repo.references().get(ModelType.SOURCE, sourceRefId,
-					commit.id);
+		public byte[] getExternalFile(String sourceRefId, String filepath) {
+			var ref = repo.references().get(ModelType.SOURCE, sourceRefId, commit.id);
 			if (ref == null)
 				return null;
-			var binary = repo.datasets().getBinary(ref, filename);
-			if (binary == null)
-				return null;
-			return binary.data;
+			return repo.datasets().getBinary(ref, filepath);
 		}
 
 		@Override
@@ -151,7 +147,7 @@ public class IlcdWriter implements DatasetWriter {
 			return repo.references().find()
 					.type(ModelType.PARAMETER).commit(commit.id)
 					.all().stream()
-					.map(ref -> repo.datasets().get(ref.objectId))
+					.map(ref -> repo.datasets().get(ref))
 					.filter(data -> data != null)
 					.toList();
 		}

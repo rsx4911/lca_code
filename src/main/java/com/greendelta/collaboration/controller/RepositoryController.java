@@ -69,22 +69,22 @@ public class RepositoryController {
 		}
 	}
 
-	@GetMapping("file/{group}/{name}/{type}/{refId}/{filename}")
+	@GetMapping("file/{group}/{name}/{type}/{refId}/{path}")
 	public byte[] getFile(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("type") ModelType type,
 			@PathVariable("refId") String refId,
-			@PathVariable("filename") String filename,
+			@PathVariable("path") String path,
 			@RequestParam(name = "commitId", required = false) String commitId) throws IOException {
 		try (var repo = service.get(group, name)) {
 			var ref = repo.references().get(type, refId, commitId);
 			if (ref == null)
-				throw Response.notFound(notFoundMessage(type, refId, commitId, filename));
-			var binary = repo.datasets().getBinary(ref, filename);
+				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
+			var binary = repo.datasets().getBinary(ref, path);
 			if (binary == null)
-				throw Response.notFound(notFoundMessage(type, refId, commitId, filename));
-			return binary.data;
+				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
+			return binary;
 		}
 	}
 

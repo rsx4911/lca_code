@@ -39,12 +39,12 @@ public class RepositoryJsonWriter implements Closeable {
 	}
 
 	public String put(Reference ref) throws IOException {
-		var data = repo.datasets().get(ref.objectId);
+		var data = repo.datasets().get(ref);
 		if (data == null)
 			return null;
 		zipStore.put(ModelPath.get(ref.type, ref.refId), data.getBytes("utf-8"));
-		repo.datasets().getBinaries(ref).forEach(binary -> {
-			zipStore.putBin(ref.type, ref.refId, binary.filename, binary.data);
+		repo.references().getBinaries(ref).forEach(binary -> {
+			zipStore.putBin(ref.type, ref.refId, binary, repo.datasets().getBinary(ref, binary));
 		});
 		return data;
 	}

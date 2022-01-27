@@ -100,7 +100,7 @@ public class GladController {
 	}
 
 	private Map<String, Object> loadProcessData(Repository repo, Reference ref) {
-		var json = repo.datasets().get(ref.objectId);
+		var json = repo.datasets().get(ref);
 		var data = ObjectMap.fromJson(json);
 		data.put("catgeories", ref.category.split("/"));
 		data.put("contact", data.getString("processDocumentation.dataSetOwner.name"));

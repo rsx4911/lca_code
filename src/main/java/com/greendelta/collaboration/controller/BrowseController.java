@@ -118,7 +118,7 @@ public class BrowseController {
 			if (!loggedIn && !commit.id.equals(commitId))
 				throw Response.unauthorized();
 			var ref = repo.references().get(type, refId, commit.id);
-			var dataset = repo.datasets().get(ref.objectId);
+			var dataset = repo.datasets().get(ref);
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 			var map = ObjectMap.fromJson(dataset);
