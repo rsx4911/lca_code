@@ -320,7 +320,8 @@ define([
 						group: new Group({name: group})
 				@router.registerUserRoute 'groupTags', (group) -> @showView 
 					view: 'tags/Tags'
-					title: 'Tags' 
+					title: group
+					subTitle: 'Tags' 
 					nav: 
 						type: 'group'
 						active: 'tags'
@@ -462,7 +463,9 @@ define([
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryTags', (group, name) -> @showView 
 					view: 'tags/Tags'
-					title: 'Tags' 
+					title: "#{group}/#{name}"
+					subTitle: 'Tags' 
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'tags'
@@ -607,7 +610,7 @@ define([
 					if options.title and options.subTitle and currentUser.isLoggedIn()
 						title1 += ' - ' + options.subTitle
 						title2 += ' | ' + options.subTitle
-					if currentUser.isLoggedIn() && !options.href
+					if !options.href
 						$('#header-title').html title1
 					else
 						$('#header-title').html '<a href="' + (options.href||title1) + '">' + title1 + '</a>'
