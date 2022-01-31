@@ -60,13 +60,24 @@ public class FetchService {
 		return repo.getBinFile(type, refId, commitId, filename);
 	}
 
-	public StreamingOutput prepareDataForDownload(Repository repo, List<FileReference> requested, Commit commit) {
+	public StreamingOutput prepareDataForDownload(Repository repo, Commit commit) {
 		String commitId = commit != null ? commit.id : null;
-		IndexIterator entries = searchService.getMostRecentUntil(repo, commitId, new RequestedFilter(requested));
+		IndexIterator entries = searchService.getMostRecentUntil(repo, commitId);
+		int total = count(entries);
+		entries = searchService.getMostRecentUntil(repo, commitId);
 		if (commitId == null) {
 			commitId = historyService.getLastCommit(repo).id;
 		}
-		return prepareData(repo, entries, requested.size(), commitId);
+		return prepareData(repo, entries, total, commitId);
+	}
+	
+	public int count(IndexIterator iterator) {
+		int c = 0;
+		while (iterator.hasNext()) {
+			iterator.next();
+			c++;
+		}
+		return c;
 	}
 
 	public StreamingOutput prepareDataForFetch(Repository repo, List<FileReference> requested, Commit commit) {
