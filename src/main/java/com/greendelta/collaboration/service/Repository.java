@@ -60,23 +60,23 @@ public class Repository implements AutoCloseable {
 	}
 
 	public Commits commits() {
-		return new Commits(gitRepo());
+		return Commits.of(gitRepo());
 	}
 
 	public Datasets datasets() {
-		return new Datasets(gitRepo());
+		return Datasets.of(gitRepo());
 	}
 
 	public References references() {
-		return new References(gitRepo());
+		return References.of(gitRepo());
 	}
 
 	public Diffs diffs() {
-		return new Diffs(gitRepo());
+		return Diffs.of(gitRepo());
 	}
 
 	public Entries entries() {
-		return new Entries(gitRepo());
+		return Entries.of(gitRepo());
 	}
 
 	public String path() {
