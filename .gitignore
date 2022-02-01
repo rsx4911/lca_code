@@ -19,3 +19,5 @@
 /src/main/webapp/js/templates/
 /target/
 /update-libs.sh
+/.apt_generated/
+/.apt_generated_tests/
