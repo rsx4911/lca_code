@@ -1,8 +1,7 @@
-include mixins/forms.pug
-
-mixin menu-items()
-	a.search-link-icon(href='search')
-		span.glyphicon.glyphicon-search  
+mixin menu-items(searchIcon)
+	if searchIcon
+		a.search-link-icon(href='search')
+			span.glyphicon.glyphicon-search  
 	a(href='')
 		span.glyphicon.glyphicon-home(data-toggle='tooltip' data-placement='bottom' title='Dashboard' aria-label='Dashboard')
 	if isDataManager || isUserManager
@@ -25,16 +24,14 @@ mixin menu-items()
 		a.toggle-debug(href='#')
 			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' aria-label='Debugging ' + debugMode?'on':'off' title='Debugging ' + debugMode?'on':'off')
 
-.pull-left.has-feedback
-	+input('global-search')(placeholder='Search' aria-label='Search')
-		span.glyphicon.glyphicon-search.form-control-feedback
 if isPublic
-	a.login(href='login')
-		span.glyphicon.glyphicon-log-in(data-toggle='tooltip' data-placement='bottom' title='Login' aria-label='Login')
+	.pull-right.responsive-menu.dropdown
+		a.login(href='login')
+			span.glyphicon.glyphicon-log-in(data-toggle='tooltip' data-placement='bottom' title='Login' aria-label='Login')
 else
 	.pull-right.responsive-menu.dropdown
 		a(href='#' data-toggle='dropdown' aria-label='Settings'): span.glyphicon.glyphicon-cog
 		.dropdown-menu
-			+menu-items()
+			+menu-items(true)
 		.default-menu
-			+menu-items()
+			+menu-items(false)

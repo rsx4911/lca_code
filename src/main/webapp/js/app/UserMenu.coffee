@@ -4,14 +4,13 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/Renderer'
-				'cs!app/Router'
 				'cs!models/Conversations'
 				'cs!models/CurrentUser'
 				'cs!models/Settings'
 				'templates/views/user-menu'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Router, conversations, currentUser, settings, template) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, conversations, currentUser, settings, template) ->
 
 		class UserMenu extends Backbone.View
 
@@ -51,34 +50,15 @@ define([
 				icon.tooltip('fixTitle').tooltip 'show'
 				Backbone.history.loadUrl()
 
-			onSearchKeyUp: (event) ->
-				if Events.keyCode(event) isnt 13
-					return
-				route = Backbone.history.fragment
-				input = $ Events.target event, 'input'
-				query = input.val()
-				newRoute = 'search'
-				if query || route.indexOf('search/') is 0
-					newRoute += '/'
-					if query
-						newRoute += "query=#{query}"
-				if route.indexOf('search/') is 0
-					for param in route.substring(7).split('&')
-						if param.split('=')[0] isnt 'query'
-							if newRoute isnt 'search/'
-								newRoute += '&'
-							newRoute += param
-				Router.navigate newRoute
-
 			events: 
 				'click a[href]:not([target=_blank]):not(.login):not(.logout):not([data-action])': (event) -> Events.followLink event
 				'click a.logout': (event) -> @logout event
 				'click a.toggle-debug': (event) -> @toggleDebug event
 				'click a.toggle-review': (event) -> @toggleReview event
 				'click a[data-action=upgrade]': (event) -> @openUpgradeDialog event
-				'keyup #global-search': (event) -> @onSearchKeyUp event
 
-			initialize: () ->
+			initialize: (options) ->
+				@separateSearch = options.separateSearch
 				conversations.off null, null, 'usermenu' 
 				conversations.on 'newMessage', (conversation, message, isNew) => 
 					if isNew and message.to.username is currentUser.get('username')
@@ -121,6 +101,8 @@ define([
 					activeTasks: currentUser.get('noOfTasks')
 					isPublic: !currentUser.isLoggedIn()
 					settings: settings.toMap()
+				if (@separateSearch)
+					@$el.css 'display', 'inline'
 				Renderer.render @, renderOptions
 				@$('[data-toggle=tooltip]').tooltip()
 

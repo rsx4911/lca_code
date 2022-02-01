@@ -364,6 +364,7 @@ public class SearchService {
 			this.filters = filters != null ? filters : new Filter[0];
 		}
 
+		@Override
 		public boolean hasNext() {
 			if (next != null)
 				return true;
@@ -384,6 +385,7 @@ public class SearchService {
 			return false;
 		}
 
+		@Override
 		public IndexEntry next() {
 			if (!hasNext())
 				throw new NoSuchElementException();

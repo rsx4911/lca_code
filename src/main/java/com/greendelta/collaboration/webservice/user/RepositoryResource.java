@@ -374,7 +374,7 @@ public class RepositoryResource {
 			if (tags != null && tags.isEmpty()) {
 				tags = null;
 			}
-			Map<String, Object> update = java.util.Collections.singletonMap("tags", tags);
+			Map<String, Object> update = java.util.Collections.singletonMap("repositoryTags", tags);
 			searchService.update(documentIds, update);
 		}
 		if (RepositorySetting.JSON_FILE_GENERATION.equals(setting) && repo.settings.publicAccess) {

@@ -139,7 +139,7 @@ public class FetchResource {
 			return Respond.ok(service.prepareDataForFetch(repo, requested, commit));
 		if (commit == null)
 			return Respond.noContent();
-		return Respond.ok(service.prepareDataForDownload(repo, requested, commit));
+		return Respond.ok(service.prepareDataForDownload(repo, commit));
 	}
 
 }
