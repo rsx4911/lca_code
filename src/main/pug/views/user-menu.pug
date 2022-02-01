@@ -25,8 +25,9 @@ mixin menu-items(searchIcon)
 			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' aria-label='Debugging ' + debugMode?'on':'off' title='Debugging ' + debugMode?'on':'off')
 
 if isPublic
-	a.login(href='login')
-		span.glyphicon.glyphicon-log-in(data-toggle='tooltip' data-placement='bottom' title='Login' aria-label='Login')
+	.pull-right.responsive-menu.dropdown
+		a.login(href='login')
+			span.glyphicon.glyphicon-log-in(data-toggle='tooltip' data-placement='bottom' title='Login' aria-label='Login')
 else
 	.pull-right.responsive-menu.dropdown
 		a(href='#' data-toggle='dropdown' aria-label='Settings'): span.glyphicon.glyphicon-cog
