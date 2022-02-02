@@ -19,7 +19,7 @@ import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 @RestController
 @RequestMapping("ws/public/repository")
@@ -35,7 +35,7 @@ public class RepositoryController {
 	}
 
 	@GetMapping
-	public List<ObjectMap> getPublic() {
+	public List<Map<String, Object>> getPublic() {
 		try (var repositories = service.getPublic()) {
 			return repositories.stream().map(repo -> {
 				var map = Repositories.map(repo);
@@ -54,7 +54,7 @@ public class RepositoryController {
 			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group, publicAccess));
 			var lastCommit = repo.commits().head();
 			if (lastCommit != null) {
-				mappedRepo.put("settings.lastChange", lastCommit.timestamp);
+				Maps.put(mappedRepo, "settings.lastChange", lastCommit.timestamp);
 			}
 			return mappedRepo;
 		}

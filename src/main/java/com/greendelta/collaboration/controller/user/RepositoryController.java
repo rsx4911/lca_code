@@ -44,7 +44,7 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
 import com.greendelta.collaboration.util.SearchResults;
 
@@ -105,7 +105,7 @@ public class RepositoryController {
 		}
 	}
 
-	private ObjectMap putRepositoryInfo(ObjectMap map, Repository repo, User user) {
+	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.path()));
 		map.put("datasets", repo.references().find().count());
 		map.put("commits", repo.commits().find().all().size());
@@ -262,18 +262,17 @@ public class RepositoryController {
 	public void importExternal(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
-			@RequestBody Map<String, Object> data) {
-		var map = ObjectMap.fromMap(data);
-		var url = map.getString("url");
+			@RequestBody Map<String, Object> map) {
+		var url = Maps.getString(map, "url");
 		if (Strings.nullOrEmpty(url))
 			throw Response.badRequest("url", "Missing input: Url");
 		while (url.endsWith("/")) {
 			url = url.substring(0, url.length() - 1);
 		}
-		var username = map.getString("username");
+		var username = Maps.getString(map, "username");
 		if (Strings.nullOrEmpty(username))
 			throw Response.badRequest("username", "Missing input: Username");
-		var password = map.getString("password");
+		var password = Maps.getString(map, "password");
 		if (Strings.nullOrEmpty(password))
 			throw Response.badRequest("password", "Missing input: Password");
 		try (var repo = service.get(group, name)) {
@@ -290,7 +289,7 @@ public class RepositoryController {
 		} catch (WebRequestException e) {
 			throw Response.status(e);
 		} catch (Exception e) {
-			throw Response.badRequest("url", "Cannot connect to " + map.getString("url"));
+			throw Response.badRequest("url", "Cannot connect to " + Maps.getString(map, "url"));
 		}
 	}
 

@@ -1,9 +1,9 @@
 package com.greendelta.collaboration.controller.util;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 public class Repositories {
 
@@ -11,12 +11,12 @@ public class Repositories {
 		// only static access
 	}
 
-	public static ObjectMap map(Repository repo) {
+	public static Map<String, Object> map(Repository repo) {
 		return map(repo, null);
 	}
 
-	public static ObjectMap map(Repository repo, Boolean groupIsUserNamespace) {
-		var map = ObjectMap.fromMap(new HashMap<>());
+	public static Map<String, Object> map(Repository repo, Boolean groupIsUserNamespace) {
+		var map = Maps.create();
 		map.put("group", repo.group);
 		map.put("name", repo.name);
 		map.put("label", repo.getLabel());

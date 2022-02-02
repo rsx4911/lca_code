@@ -2,6 +2,7 @@ package com.greendelta.collaboration.controller.user;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.openlca.git.model.Commit;
@@ -27,7 +28,7 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -52,7 +53,7 @@ public class ActivityController {
 	}
 
 	@GetMapping
-	public SearchResult<ObjectMap> getAll(
+	public SearchResult<Map<String, Object>> getAll(
 			@RequestParam(name = "page", defaultValue = "0") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "showCommitActivities", defaultValue = "true") boolean showCommitActivities,
@@ -64,7 +65,7 @@ public class ActivityController {
 		if (repositoryPath != null && !settingsService.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
 			throw Response.unavailable("Repository activities feature not enabled");
 		try (var repositories = getRepositories(repositoryPath)) {
-			var activities = new ArrayList<ObjectMap>();
+			var activities = new ArrayList<Map<String, Object>>();
 			var commits = new HashMap<String, Commit>();
 			var repos = new HashMap<String, Repository>();
 			repositories.forEach(repo -> {
@@ -90,12 +91,12 @@ public class ActivityController {
 					});
 				});
 			}
-			activities.sort((a1, a2) -> Long.compare(a2.getLong("timestamp"), a1.getLong("timestamp")));
+			activities.sort((a1, a2) -> Long.compare(Maps.getLong(a2, "timestamp"), Maps.getLong(a1, "timestamp")));
 			var result = SearchResults.paged(page, pageSize, activities);
 			result.data.stream()
 					.filter(entry -> entry.get("type") == ActivityType.COMMIT)
 					.forEach(entry -> {
-						String id = entry.getString("id");
+						String id = Maps.getString(entry, "id");
 						putAdditionalInfo(entry, repos.get(id), commits.get(id));
 					});
 			return result;
@@ -110,7 +111,7 @@ public class ActivityController {
 		return list;
 	}
 
-	private void putAdditionalInfo(ObjectMap entry, Repository repo, Commit commit) {
+	private void putAdditionalInfo(Map<String, Object> entry, Repository repo, Commit commit) {
 		var user = userService.getForUsername(commit.user);
 		entry.put("userDisplayName", user != null ? user.name : commit.user);
 		var diffs = repo.diffs().find().withPrevious(commit.id).all();

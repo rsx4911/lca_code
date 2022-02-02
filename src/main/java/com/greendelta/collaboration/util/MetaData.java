@@ -3,6 +3,7 @@ package com.greendelta.collaboration.util;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.eclipse.jgit.lib.ObjectId;
@@ -22,16 +23,16 @@ import com.greendelta.collaboration.service.Repository;
 
 public class MetaData {
 
-	public static ObjectMap forBrowse(Entry e, Repository repo) {
+	public static Map<String, Object> forBrowse(Entry e, Repository repo) {
 		return toDatasetInfo(e, repo, Mode.BROWSE);
 	}
 
-	public static ObjectMap forSearch(Entry e, Repository repo) {
+	public static Map<String, Object> forSearch(Entry e, Repository repo) {
 		return toDatasetInfo(e, repo, Mode.SEARCH);
 	}
 
-	private static ObjectMap toDatasetInfo(Entry e, Repository repo, Mode mode) {
-		var entry = ObjectMap.fromObject(e);
+	private static Map<String, Object> toDatasetInfo(Entry e, Repository repo, Mode mode) {
+		var entry = Maps.of(e);
 		entry.remove("objectId");
 		if (e.typeOfEntry != EntryType.DATASET)
 			return entry;
@@ -39,32 +40,32 @@ public class MetaData {
 		return entry;
 	}
 
-	public static ObjectMap forBrowse(Reference r, Repository repo) {
+	public static Map<String, Object> forBrowse(Reference r, Repository repo) {
 		return toDatasetInfo(r, repo, Mode.BROWSE);
 	}
 
-	public static ObjectMap forSearch(Reference r, Repository repo) {
+	public static Map<String, Object> forSearch(Reference r, Repository repo) {
 		return toDatasetInfo(r, repo, Mode.SEARCH);
 	}
 
-	private static ObjectMap toDatasetInfo(Reference r, Repository repo, Mode mode) {
-		var ref = ObjectMap.fromObject(r);
+	private static Map<String, Object> toDatasetInfo(Reference r, Repository repo, Mode mode) {
+		var ref = Maps.of(r);
 		ref.remove("objectId");
 		putDatasetInfo(r.type, ref, r.objectId, repo, mode);
 		return ref;
 	}
 
-	public static ObjectMap forBrowse(Reference ref, DiffType diffType, Repository repo) {
+	public static Map<String, Object> forBrowse(Reference ref, DiffType diffType, Repository repo) {
 		return putDatasetInfo(ref, diffType, repo, Mode.BROWSE);
 	}
 
-	private static ObjectMap putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {
+	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {
 		var map = toDatasetInfo(ref, repo, mode);
 		map.put("diffType", diffType);
 		return map;
 	}
 
-	private static void putDatasetInfo(ModelType type, ObjectMap entry, ObjectId oId, Repository repo, Mode mode) {
+	private static void putDatasetInfo(ModelType type, Map<String, Object> entry, ObjectId oId, Repository repo, Mode mode) {
 		var defs = new ArrayList<FieldDefinition>();
 		defs.add(new FieldDefinition("name"));
 		if (type == ModelType.FLOW || type == ModelType.PROCESS) {
@@ -98,27 +99,27 @@ public class MetaData {
 		entry.put("modellingApproach", info.get("defaultAllocationMethod"));
 	}
 
-	public static Stream<ObjectMap> sortByName(Stream<ObjectMap> data) {
+	public static Stream<Map<String, Object>> sortByName(Stream<Map<String, Object>> data) {
 		return data.sorted((m1, m2) -> {
-			return m1.getString("name").toLowerCase().compareTo(m2.getString("name").toLowerCase());
+			return Maps.getString(m1, "name").toLowerCase().compareTo(Maps.getString(m2, "name").toLowerCase());
 		});
 	}
 
-	public static Stream<ObjectMap> sortByType(Stream<ObjectMap> data, List<String> typesOrder) {
+	public static Stream<Map<String, Object>> sortByType(Stream<Map<String, Object>> data, List<String> typesOrder) {
 		return data.sorted((m1, m2) -> {
-			var t1 = m1.getString("type");
-			var t2 = m2.getString("type");
+			var t1 = Maps.getString(m1, "type");
+			var t2 = Maps.getString(m2, "type");
 			return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
 		});
 	}
 
-	public static Stream<ObjectMap> sortByTypeAndName(Stream<ObjectMap> data, List<String> typesOrder) {
+	public static Stream<Map<String, Object>> sortByTypeAndName(Stream<Map<String, Object>> data, List<String> typesOrder) {
 		return data.sorted((m1, m2) -> {
-			var t1 = m1.getString("type");
-			var t2 = m2.getString("type");
+			var t1 = Maps.getString(m1, "type");
+			var t2 = Maps.getString(m2, "type");
 			if (!t1.equals(t2))
 				return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
-			return m1.getString("name").toLowerCase().compareTo(m2.getString("name").toLowerCase());
+			return Maps.getString(m1, "name").toLowerCase().compareTo(Maps.getString(m2, "name").toLowerCase());
 		});
 	}
 

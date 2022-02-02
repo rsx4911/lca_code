@@ -31,7 +31,7 @@ import com.greendelta.collaboration.service.search.DsEntry;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchResult;
@@ -71,25 +71,25 @@ public class SearchController {
 		return map(result);
 	}
 
-	private ObjectMap map(SearchResult<DsEntry> result) {
+	private Map<String, Object> map(SearchResult<DsEntry> result) {
 		try (var accessible = repoService.getAllAccessible()) {
 			var repositories = accessible.stream()
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
 			var loggedIn = userService.getCurrentUser().id != 0;
-			var map = ObjectMap.fromMap(new HashMap<>());
+			var map = Maps.create();
 			map.put("resultInfo", result.resultInfo);
 			var data = result.data.stream().map(dsEntry -> {
-				var e = ObjectMap.fromObject(dsEntry);
-				var versions = new ArrayList<ObjectMap>();
+				var e = Maps.of(dsEntry);
+				var versions = new ArrayList<Map<String, Object>>();
 				dsEntry.versions.forEach(dsVersion -> {
-					var v = ObjectMap.fromObject(dsVersion);
-					var repos = new ArrayList<ObjectMap>();
+					var v = Maps.of(dsVersion);
+					var repos = new ArrayList<Map<String, Object>>();
 					dsVersion.repos.forEach(dsRepo -> {
-						var r = ObjectMap.fromObject(dsRepo);
+						var r = Maps.of(dsRepo);
 						var repo = repositories.get(dsRepo.path);
 						r.put("label", repo.getLabel());
 						if (!loggedIn) {
-							r.nullify("commitId", "commitMessage");
+							Maps.nullify(r, "commitId", "commitMessage");
 						}
 						repos.add(r);
 					});
@@ -110,17 +110,17 @@ public class SearchController {
 				return true;
 			}).toList();
 			map.put("aggregations", aggregations.stream().map(a -> {
-				var aMap = ObjectMap.fromObject(a);
+				var aMap = Maps.of(a);
 				if (a.name.equals(Aggregations.REPOSITORY.name)) {
 					aMap.put("entries", a.entries.stream().map(e -> {
-						ObjectMap eMap = ObjectMap.fromObject(e);
+						Map<String, Object> eMap = Maps.of(e);
 						Repository repo = repositories.get(e.key);
 						eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
 						return eMap;
 					}).toList());
 				} else if (a.name.equals(Aggregations.GROUP.name)) {
 					aMap.put("entries", a.entries.stream().map(e -> {
-						ObjectMap eMap = ObjectMap.fromObject(e);
+						Map<String, Object> eMap = Maps.of(e);
 						String label = groupService.getSettings(e.key).get(GroupSetting.LABEL, e.key);
 						eMap.put("label", label);
 						return eMap;

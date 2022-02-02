@@ -1,7 +1,9 @@
 package com.greendelta.collaboration.controller.util;
 
+import java.util.Map;
+
 import com.greendelta.collaboration.model.Team;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 public class Teams {
 
@@ -9,16 +11,16 @@ public class Teams {
 		// only static access
 	}
 
-	public static ObjectMap mapForManager(Team team) {
-		var map = ObjectMap.fromObject(team);
-		map.removeAllBut("id", "teamname", "name");
+	public static Map<String, Object> mapForManager(Team team) {
+		var map = Maps.of(team);
+		Maps.removeAllBut(map, "id", "teamname", "name");
 		map.put("users", team.users.stream().map(Users::mapForOthers).toList());
 		return map;
 	}
 
-	public static ObjectMap mapForOthers(Team team) {
-		var map = ObjectMap.fromObject(team);
-		map.removeAllBut("teamname", "name");
+	public static Map<String, Object> mapForOthers(Team team) {
+		var map = Maps.of(team);
+		Maps.removeAllBut(map, "teamname", "name");
 		map.put("users", team.users.stream().map(Users::mapForOthers).toList());
 		return map;
 	}

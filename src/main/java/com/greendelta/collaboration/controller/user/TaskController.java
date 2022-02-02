@@ -16,7 +16,7 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 @RestController
 @RequestMapping("ws/task/general")
@@ -46,7 +46,7 @@ public class TaskController {
 			var repositories = accessible.stream()
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
 			var user = userService.getCurrentUser();
-			var result = new ObjectMap();
+			var result = Maps.create();
 			result.put("tasks", service.getAllFor(user).stream()
 					.map(task -> Tasks.map(task, repositories.get(task.repositoryPath)))
 					.toList());

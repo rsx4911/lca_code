@@ -31,7 +31,7 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
@@ -70,9 +70,9 @@ public class CommentController {
 			var comments = includeReplies ? service.getAllFor(repo) : service.getAllTopSorted(repo, filter);
 			var result = SearchResults.paged(page, pageSize, comments);
 			var mapped = SearchResults.listConvert(result, list -> map(repo, list, true));
-			var map = ObjectMap.fromObject(mapped);
+			var map = Maps.of(mapped);
 			var canApprove = accessService.canManageCommentsIn(repo.path());
-			map.put("resultInfo.canApprove", canApprove);
+			Maps.put(map, "resultInfo.canApprove", canApprove);
 			return map;
 		}
 	}
@@ -96,8 +96,8 @@ public class CommentController {
 		}
 	}
 
-	private List<ObjectMap> map(Repository repo, List<Comment> comments, boolean putReplyCount) {
-		var mapped = new ArrayList<ObjectMap>();
+	private List<Map<String, Object>> map(Repository repo, List<Comment> comments, boolean putReplyCount) {
+		var mapped = new ArrayList<Map<String, Object>>();
 		if (comments.isEmpty())
 			return mapped;
 		comments.forEach(comment -> {
@@ -114,7 +114,7 @@ public class CommentController {
 	}
 
 	@GetMapping("{id}/replies")
-	public List<ObjectMap> getReplies(@PathVariable("id") long id) {
+	public List<Map<String, Object>> getReplies(@PathVariable("id") long id) {
 		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
 		var comment = service.get(id);
@@ -131,28 +131,27 @@ public class CommentController {
 			@PathVariable("type") ModelType type,
 			@PathVariable("refId") String refId,
 			@PathVariable("commitId") String commitId,
-			@RequestBody Map<String, Object> data) {
+			@RequestBody Map<String, Object> map) {
 		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
-		var map = ObjectMap.fromMap(data);
 		try (var repo = repoService.get(group, name)) {
 			var comment = new Comment();
 			comment.repositoryPath = repo.path();
 			comment.user = userService.getCurrentUser();
-			comment.text = map.getString("text");
+			comment.text = Maps.getString(map, "text");
 			comment.field = new DatasetField();
 			comment.field.modelType = type;
 			comment.field.refId = refId;
 			comment.field.commitId = commitId;
-			comment.field.path = map.getString("path");
+			comment.field.path = Maps.getString(map, "path");
 			if (comment.field.path == null) {
 				comment.field.path = "";
 			}
 			comment.restrictedToRole = parseRole(map);
 			comment.date = Calendar.getInstance().getTime();
-			comment.replyTo = service.get(map.getLong("replyTo"));
+			comment.replyTo = service.get(Maps.getLong(map, "replyTo"));
 			comment = service.insert(comment);
-			if (map.getBoolean("released")) {
+			if (Maps.getBoolean(map, "released")) {
 				comment = service.release(comment.id);
 			}
 			notificationService.fieldCommented(comment).send();
@@ -163,15 +162,14 @@ public class CommentController {
 	@PutMapping("{id}")
 	public Map<String, Object> edit(
 			@PathVariable("id") long id,
-			@RequestBody Map<String, Object> data) {
+			@RequestBody Map<String, Object> map) {
 		if (!settingsService.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
-		var map = ObjectMap.fromMap(data);
-		var comment = service.update(id, map.getString("text"));
+		var comment = service.update(id, Maps.getString(map, "text"));
 		if (comment == null)
 			throw Response.notFound();
 		try (var repo = repoService.get(comment.repositoryPath)) {
-			if (map.getBoolean("released")) {
+			if (Maps.getBoolean(map, "released")) {
 				comment = service.release(id);
 			}
 			return map(comment, repo);
@@ -212,7 +210,7 @@ public class CommentController {
 		service.delete(id);
 	}
 
-	private ObjectMap map(Comment comment, Repository repo) {
+	private Map<String, Object> map(Comment comment, Repository repo) {
 		var map = Comments.map(comment);
 		var field = comment.field;
 		var ref = repo.references().get(field.modelType, field.refId, field.commitId);
@@ -220,10 +218,10 @@ public class CommentController {
 		return map;
 	}
 
-	private Role parseRole(ObjectMap data) {
+	private Role parseRole(Map<String, Object> data) {
 		if (!data.containsKey("restrictedToRole"))
 			return null;
-		return Role.valueOf(data.getString("restrictedToRole"));
+		return Role.valueOf(Maps.getString(data, "restrictedToRole"));
 	}
 
 }

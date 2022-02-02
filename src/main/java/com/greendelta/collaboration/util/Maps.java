@@ -18,54 +18,42 @@ import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ObjectMap extends HashMap<String, Object> {
+public class Maps {
 
-	private static final long serialVersionUID = 8510487677972200938L;
-	private static final Logger log = LogManager.getLogger(ObjectMap.class);
+	private static final Logger log = LogManager.getLogger(Maps.class);
 	private static final ObjectMapper mapper = new ObjectMapper();
 
 	static {
 		mapper.addMixIn(RevCommit.class, IgnoreMixIn.class);
 	}
-	
-	public ObjectMap() {
-		this(new HashMap<>());
+
+	private Maps() {
 	}
 
-	public static ObjectMap fromJson(String json) {
-		return new ObjectMap(toMap(json));
+	public static Map<String, Object> create() {
+		return (Map<String, Object>) new HashMap<String, Object>();
 	}
 
-	public static ObjectMap fromMap(Map<String, Object> managed) {
-		return new ObjectMap(managed);
-	}
-
-	public static ObjectMap fromObject(Object object) {
+	public static Map<String, Object> of(Object object) {
 		if (object == null)
 			return null;
-		return new ObjectMap(mapper.convertValue(object, new TypeReference<Map<String, Object>>() {
-		}));
-	}
-
-	private ObjectMap(Map<String, Object> managed) {
-		if (managed != null) {
-			putAll(managed);
-		}
+		if (object instanceof String json)
+			return toMap(json);
+		return mapper.convertValue(object, new TypeReference<Map<String, Object>>() {
+		});
 	}
 
 	private static Map<String, Object> toMap(String json) {
-		if (json == null)
-			return null;
 		try {
-			return new ObjectMap(mapper.readValue(json, new TypeReference<Map<String, Object>>() {
-			}));
+			return mapper.readValue(json, new TypeReference<Map<String, Object>>() {
+			});
 		} catch (IOException e) {
 			log.error("Error mapping json", e);
 			return null;
 		}
 	}
 
-	public void removeAllBut(String... fields) {
+	public static void removeAllBut(Map<String, Object> map, String... fields) {
 		if (fields == null)
 			return;
 		var fieldSet = new HashSet<String>();
@@ -74,36 +62,22 @@ public class ObjectMap extends HashMap<String, Object> {
 				throw new IllegalArgumentException("removeAllBut doesn't support complex fields");
 			fieldSet.add(field);
 		}
-		for (var key : new HashSet<>(keySet())) {
+		for (var key : new HashSet<>(map.keySet())) {
 			if (!fieldSet.contains(key)) {
-				remove(key);
+				remove(map, key);
 			}
 		}
 	}
 
-	@Override
-	public boolean remove(Object key, Object value) {
-		if (key instanceof String && value instanceof String) {
-			remove(new String[] { key.toString(), value.toString() });
-			return true;
-		}
-		return super.remove(key, value);
-	}
-
-	public void remove(String... fields) {
+	public static void remove(Map<String, Object> map, String... fields) {
 		if (fields == null)
 			return;
 		for (String field : fields) {
-			remove(field);
+			remove(map, field);
 		}
 	}
 
-	@Override
-	public Object remove(Object field) {
-		return remove(this, field != null ? field.toString() : null);
-	}
-
-	private Object remove(Map<String, Object> map, String field) {
+	private static Object remove(Map<String, Object> map, String field) {
 		if (map == null)
 			return null;
 		if (field.contains(".")) {
@@ -118,13 +92,11 @@ public class ObjectMap extends HashMap<String, Object> {
 			}
 			return previous;
 		}
-		if (map == this)
-			return super.remove(field);
 		return map.remove(field);
 	}
 
 	@SuppressWarnings("unchecked")
-	private Collection<Object> toArray(Object value) {
+	private static Collection<Object> toArray(Object value) {
 		if (value == null)
 			return Collections.emptyList();
 		if (value instanceof Collection)
@@ -132,33 +104,25 @@ public class ObjectMap extends HashMap<String, Object> {
 		return Collections.singletonList(value);
 	}
 
-	@Override
-	public Object put(String field, Object value) {
-		Map<String, Object> map = this;
+	public static Object put(Map<String, Object> map, String field, Object value) {
 		if (field.contains(".")) {
 			var prefix = field.substring(0, field.lastIndexOf('.'));
 			field = field.substring(field.lastIndexOf('.') + 1);
 			map = get(map, prefix, true, true);
 		}
-		if (map == this)
-			return super.put(field, value);
 		return map.put(field, value);
 	}
 
-	public void nullify(String... fields) {
+	public static void nullify(Map<String, Object> map, String... fields) {
 		if (fields == null)
 			return;
 		for (var field : fields) {
-			put(field, null);
+			put(map, field, null);
 		}
 	}
 
-	public void removeEmptyOrNull() {
-		removeEmptyOrNull(this);
-	}
-
 	@SuppressWarnings("unchecked")
-	private void removeEmptyOrNull(Map<String, Object> map) {
+	public static void removeEmptyOrNull(Map<String, Object> map) {
 		for (var key : new HashSet<>(map.keySet())) {
 			var value = map.get(key);
 			if (map.get(key) == null) {
@@ -171,23 +135,16 @@ public class ObjectMap extends HashMap<String, Object> {
 		}
 	}
 
-	@Override
-	public Object get(Object field) {
+	public static <T> T get(Map<String, Object> map, String field) {
 		if (field == null)
 			return null;
-		return get(this, field.toString(), false, true);
-	}
-
-	public <T> T get(String field) {
-		if (field == null)
-			return null;
-		return get(this, field, false, true);
+		return get(map, field, false, true);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> List<T> getAll(String field, Class<T> clazz) {
+	public static <T> List<T> getAll(Map<String, Object> map, String field, Class<T> clazz) {
 		var values = new ArrayList<T>();
-		var all = getAll(this, field);
+		var all = getAll(map, field);
 		for (var value : all) {
 			if (clazz == Long.class && value instanceof Integer) {
 				value = ((Integer) value).longValue();
@@ -198,7 +155,7 @@ public class ObjectMap extends HashMap<String, Object> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Collection<Object> getAll(Map<String, Object> map, String field) {
+	private static Collection<Object> getAll(Map<String, Object> map, String field) {
 		Collection<Object> all = new ArrayList<>();
 		if (!field.contains("."))
 			return toArray(map.get(field));
@@ -216,7 +173,7 @@ public class ObjectMap extends HashMap<String, Object> {
 	// boolean initialCall is to distinguish between recursive call and initial
 	// call, createMissing only applies to recursive calls
 	@SuppressWarnings("unchecked")
-	private <T> T get(Map<String, Object> map, String field, boolean createMissing, boolean initialCall) {
+	private static <T> T get(Map<String, Object> map, String field, boolean createMissing, boolean initialCall) {
 		if (field.contains(".")) {
 			var prefix = field.substring(0, field.lastIndexOf('.'));
 			field = field.substring(field.lastIndexOf('.') + 1);
@@ -224,11 +181,7 @@ public class ObjectMap extends HashMap<String, Object> {
 		}
 		Object value = null;
 		if (map != null) {
-			if (map == this) {
-				value = super.get(field);
-			} else {
-				value = map.get(field);
-			}
+			value = map.get(field);
 		}
 		if (value == null && createMissing && !initialCall) {
 			value = new HashMap<String, Object>();
@@ -236,8 +189,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		return (T) value;
 	}
 
-	public int getArrayLength(String field) {
-		var array = get(this, field, false, true);
+	public static int getArrayLength(Map<String, Object> map, String field) {
+		var array = get(map, field, false, true);
 		if (array == null) {
 			array = 0;
 		}
@@ -246,8 +199,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		return 0;
 	}
 
-	public String[] getStringArray(String field) {
-		var value = get(field);
+	public static String[] getStringArray(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return null;
 		if (value instanceof String[] array)
@@ -262,8 +215,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		return null;
 	}
 
-	public String getString(String field) {
-		var value = get(field);
+	public static String getString(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return null;
 		if (value instanceof String[] array)
@@ -271,8 +224,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		return value.toString();
 	}
 
-	public long getLong(String field) {
-		var value = get(field);
+	public static long getLong(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return 0;
 		try {
@@ -284,8 +237,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		}
 	}
 
-	public double getDouble(String field) {
-		var value = get(field);
+	public static double getDouble(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return 0;
 		try {
@@ -297,8 +250,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		}
 	}
 
-	public int getInteger(String field) {
-		var value = get(field);
+	public static int getInteger(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return 0;
 		try {
@@ -310,8 +263,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		}
 	}
 
-	public boolean getBoolean(String field) {
-		var value = get(field);
+	public static boolean getBoolean(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return false;
 		String stringValue = null;
@@ -326,8 +279,8 @@ public class ObjectMap extends HashMap<String, Object> {
 		};
 	}
 
-	public boolean isArray(String field) {
-		var value = get(field);
+	public static boolean isArray(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return false;
 		if (value instanceof Collection)
@@ -338,8 +291,8 @@ public class ObjectMap extends HashMap<String, Object> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> List<T> getArray(String field) {
-		var value = get(field);
+	public static <T> List<T> getArray(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value == null)
 			return null;
 		if (value instanceof Collection)
@@ -349,20 +302,21 @@ public class ObjectMap extends HashMap<String, Object> {
 		return null;
 	}
 
-	public boolean isObject(String field) {
-		var value = get(field);
+	public static boolean isObject(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		return value instanceof Map;
 	}
 
 	@SuppressWarnings("unchecked")
-	public ObjectMap getObject(String field) {
-		var value = get(field);
+	public static Map<String, Object> getObject(Map<String, Object> map, String field) {
+		var value = get(map, field);
 		if (value instanceof Map)
-			return ObjectMap.fromMap((Map<String, Object>) value);
+			return (Map<String, Object>) value;
 		return null;
 	}
-	
+
 	@JsonIgnoreType
-	private class IgnoreMixIn {}
+	private class IgnoreMixIn {
+	}
 
 }

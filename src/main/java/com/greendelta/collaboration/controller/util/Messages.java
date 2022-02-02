@@ -1,10 +1,11 @@
 package com.greendelta.collaboration.controller.util;
 
 import java.util.List;
+import java.util.Map;
 
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 public class Messages {
 
@@ -12,13 +13,13 @@ public class Messages {
 		// only static access
 	}
 
-	public static List<ObjectMap> map(List<Message> messages, User currentUser) {
+	public static List<Map<String, Object>> map(List<Message> messages, User currentUser) {
 		return messages.stream().map(m -> map(m, currentUser)).toList();
 	}
 
-	public static ObjectMap map(Message message, User currentUser) {
-		var map = ObjectMap.fromObject(message);
-		map.remove("from", "to", "showReadReceipt");
+	public static Map<String, Object> map(Message message, User currentUser) {
+		var map = Maps.of(message);
+		Maps.remove(map, "from", "to", "showReadReceipt");
 		map.put("from", Users.mapForOthers(message.from));
 		map.put("to", Users.mapForOthers(message.to));
 		if (message.team != null) {

@@ -109,8 +109,6 @@ public class AdminAreaController {
 				ServerSetting.MODEL_TYPES_ORDER, ServerSetting.MODEL_TYPES_HIDDEN
 		});
 		var info = settingsService.serverConfig.toMap(setting -> relevantSettings.contains(setting));
-		// info.put("openWebServiceRequests",
-		// RequestListener.openRequest.get());
 		info.put("repositoriesOrder", repoService.getPublicRepositoryOrder());
 		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
 		return info;

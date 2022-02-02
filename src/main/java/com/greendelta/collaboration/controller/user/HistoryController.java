@@ -26,8 +26,8 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
-import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -50,7 +50,7 @@ public class HistoryController {
 	}
 
 	@GetMapping("{group}/{name}/{type}/{refId}")
-	public ResponseEntity<List<ObjectMap>> getCommitHistory(
+	public ResponseEntity<List<Map<String, Object>>> getCommitHistory(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("type") ModelType type,
@@ -65,7 +65,7 @@ public class HistoryController {
 	}
 
 	@GetMapping("{group}/{name}")
-	public ResponseEntity<List<ObjectMap>> getCommitHistory(
+	public ResponseEntity<List<Map<String, Object>>> getCommitHistory(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@RequestParam(name = "path", required = false) String path,
@@ -97,20 +97,20 @@ public class HistoryController {
 				return Response.noContent();
 			Collections.reverse(commits);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
-			var converted = SearchResults.convert(result, c -> ObjectMap.fromObject(c));
+			var converted = SearchResults.convert(result, c -> Maps.of(c));
 			return Response.ok(putAdditionalInfo(converted, repo, commits));
 		}
 	}
 
-	private Map<String, Object> putAdditionalInfo(SearchResult<ObjectMap> result, Repository repo,
+	private Map<String, Object> putAdditionalInfo(SearchResult<Map<String, Object>> result, Repository repo,
 			List<Commit> commits) {
 		var groupCount = new HashMap<String, Integer>();
 		result = SearchResults.convert(result, this::putUserName);
 		result.data.forEach(commitData -> {
 			var count = commits.stream()
-					.filter(c -> isSameDay(commitData.getLong("timestamp"), c.timestamp))
+					.filter(c -> isSameDay(Maps.getLong(commitData, "timestamp"), c.timestamp))
 					.toList().size();
-			var commitId = commitData.getString("id");
+			var commitId = Maps.getString(commitData, "id");
 			groupCount.put(commitId, count);
 			var commit = repo.commits().get(commitId);
 			var diffs = repo.diffs().find().withPrevious(commit.id).all();
@@ -118,8 +118,8 @@ public class HistoryController {
 			commitData.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			commitData.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
 		});
-		var map = ObjectMap.fromObject(result);
-		map.put("resultInfo.groupCount", groupCount);
+		var map = Maps.of(result);
+		Maps.put(map, "resultInfo.groupCount", groupCount);
 		return map;
 	}
 
@@ -153,7 +153,7 @@ public class HistoryController {
 	}
 
 	@GetMapping("references/{group}/{name}/{commitId}")
-	public SearchResult<ObjectMap> getReferences(
+	public SearchResult<Map<String, Object>> getReferences(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
@@ -173,17 +173,17 @@ public class HistoryController {
 		}
 	}
 
-	private List<ObjectMap> putUserName(List<Commit> commits) {
+	private List<Map<String, Object>> putUserName(List<Commit> commits) {
 		return commits.stream().map(c -> putUserName(c)).toList();
 	}
 
-	private ObjectMap putUserName(Commit commit) {
-		return putUserName(ObjectMap.fromObject(commit));
+	private Map<String, Object> putUserName(Commit commit) {
+		return putUserName(Maps.of(commit));
 	}
 
-	private ObjectMap putUserName(ObjectMap map) {
-		var user = userService.getForUsername(map.getString("user"));
-		map.put("userDisplayName", user != null ? user.name : map.getString("user"));
+	private Map<String, Object> putUserName(Map<String, Object> map) {
+		var user = userService.getForUsername(Maps.getString(map, "user"));
+		map.put("userDisplayName", user != null ? user.name : Maps.getString(map, "user"));
 		return map;
 	}
 
