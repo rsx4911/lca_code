@@ -9,6 +9,8 @@ mixin badge(key, value)
 .header-box
 	- var keys = Object.keys(selectedAggregations);
 	| #{resultInfo.totalCount} results
+	if resultInfo.indexing
+		div: small datasets are currently being reindexed, more search results might be available in some minutes
 	div 
 		if query
 			+badge('query', query)

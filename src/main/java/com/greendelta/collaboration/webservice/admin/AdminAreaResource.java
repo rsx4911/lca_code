@@ -34,6 +34,8 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.ReindexingStatus;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.Respond;
 
 import joptsimple.internal.Strings;
@@ -129,33 +131,64 @@ public class AdminAreaResource {
 		info.put("hiddenRepositories", repoService.getPublicHiddenRepositories());
 		info.put("orderedModelTypes", settingsService.getArray(Key.MODEL_TYPES_ORDER));
 		info.put("hiddenModelTypes", settingsService.getArray(Key.MODEL_TYPES_HIDDEN));
+		info.put("reindexingStatus", ObjectMap.fromObject(searchService.getReindexingStatus()));
 		return Respond.ok(info);
 	}
-	
+
 	@PUT
 	@Path("clearIndex")
 	public Response clearIndex() {
-		searchService.clearIndex();
+		if (searchService.isReindexing())
+			return Respond.conflict("Reindexing is already running");
+		ReindexingStatus status = searchService.startReindexing(1);
+		new Thread(() -> {
+			try {
+				searchService.clearIndex();
+				status.worked++;
+			} finally {
+				searchService.endReindexing();
+			}
+		}).start();
 		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT
 	@Path("reindex")
 	public Response reindex() {
-		searchService.clearIndex();
+		if (searchService.isReindexing())
+			return Respond.conflict("Reindexing is already running");
 		List<Repository> repos = repoService.getAllAccessible();
-		for (Repository repo : repos) {
-			indexService.index(repo);
-		}
+		ReindexingStatus status = searchService.startReindexing(repos.size());
+		new Thread(() -> {
+			try {
+				searchService.clearIndex();
+				for (Repository repo : repos) {
+					indexService.index(repo);
+					status.worked++;
+				}
+			} finally {
+				searchService.endReindexing();
+			}
+		}).start();
 		return Respond.ok(new HashMap<>());
 	}
 
 	@PUT
 	@Path("reindex/{group}/{repository}")
 	public Response reindex(@PathParam("group") String group, @PathParam("repository") String repository) {
+		if (searchService.isReindexing())
+			return Respond.conflict("Reindexing is already running");
 		Repository repo = repoService.get(group, repository);
-		searchService.remove(searchService.getDocumentIds(repo));
-		indexService.index(repo);
+		ReindexingStatus status = searchService.startReindexing(1);
+		new Thread(() -> {
+			try {
+				searchService.remove(searchService.getDocumentIds(repo));
+				indexService.index(repo);
+				status.worked++;
+			} finally {
+				searchService.endReindexing();
+			}
+		}).start();
 		return Respond.ok(new HashMap<>());
 	}
 

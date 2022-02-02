@@ -158,13 +158,9 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Clearing index'
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/clearIndex'
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully cleared index'
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -175,13 +171,9 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Indexing'
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/reindex'
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully reindexed repositories'
 
 			reindexRepository: (event) ->
 				target = $ Events.target event
@@ -195,13 +187,9 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Indexing'
 						$.ajax
 							type: 'PUT'
 							url: "ws/admin/area/reindex/#{group}/#{repository}"
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully reindexed repository'
 
 			initialize: () ->
 				@repositoryFilter = new Filter
@@ -210,6 +198,8 @@ define([
 					filterId: 'repository-filter'
 					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?'
+					beforeRender: (result) =>
+						result.reindexingStatus = @serverInfo.reindexingStatus			
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
