@@ -14,7 +14,6 @@ define([
 
 		initializeErrorHandling: () ->
 			$(document).ajaxError (event, response, options, error) ->
-				console.log(response)
 				switch response.status
 					when 401
 						unless currentUser.get('inLoginProcess')

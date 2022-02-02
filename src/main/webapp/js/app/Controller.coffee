@@ -123,7 +123,6 @@ define([
 			initializeUserMenu: () ->
 				searchContainer = if $('#global-search-bar').length then '#global-search-bar' else '#user-menu'
 				separateSearch = searchContainer isnt '#user-menu'
-				console.log separateSearch
 				@globalSearch = new GlobalSearch()
 				@globalSearch.render 
 					container: searchContainer
