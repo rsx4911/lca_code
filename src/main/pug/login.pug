@@ -43,6 +43,10 @@ html(lang='en')
 		script.
 			var show = function(subpage) {
 				$('#login').hide()
+				$('#login #username-group').removeClass('hidden');
+				$('#login #password-group').removeClass('hidden');
+				$('#login #token-group').addClass('hidden');
+				$('#login #token').val('');
 				$('#reset-password').hide()
 				$('#sign-up').hide()
 				$('#' + subpage).show()
