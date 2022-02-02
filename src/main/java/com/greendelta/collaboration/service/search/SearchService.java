@@ -1,7 +1,9 @@
 package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +29,7 @@ public class SearchService {
 	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
+	private ReindexingStatus reindexStatus;
 
 	@Autowired
 	public SearchService(SettingsService settingsService, QueryService queryService) {
@@ -120,5 +123,36 @@ public class SearchService {
 	private SearchClient getClient() {
 		return settingsService.searchConfig.getSearchClient();
 	}
+	
+	public boolean isReindexing() {
+		return reindexStatus != null;
+	}
 
+	public ReindexingStatus startReindexing(int total) {
+		if (reindexStatus != null)
+			throw new IllegalStateException("Already reindexing");
+		reindexStatus = new ReindexingStatus(total);
+		return reindexStatus;
+	}
+	
+	public ReindexingStatus getReindexingStatus() {
+		return reindexStatus;
+	}
+	
+	public void endReindexing() {
+		reindexStatus = null;
+	}
+
+	public class ReindexingStatus {
+
+		public final Date start;
+		public final int total;
+		public int worked;
+
+		private ReindexingStatus(int total) {
+			this.total = total;
+			this.start = Calendar.getInstance().getTime();
+		}
+
+	}
 }

@@ -77,7 +77,9 @@ public class SearchController {
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
 			var loggedIn = userService.getCurrentUser().id != 0;
 			var map = Maps.create();
-			map.put("resultInfo", result.resultInfo);
+			var resultInfo = Maps.of(result.resultInfo);
+			resultInfo.put("indexing", service.isReindexing());
+			map.put("resultInfo", resultInfo);
 			var data = result.data.stream().map(dsEntry -> {
 				var e = Maps.of(dsEntry);
 				var versions = new ArrayList<Map<String, Object>>();

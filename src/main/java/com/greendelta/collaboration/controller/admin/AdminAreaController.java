@@ -32,6 +32,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.util.Maps;
 
 @RestController
 @RequestMapping("ws/admin/area")
@@ -111,29 +112,57 @@ public class AdminAreaController {
 		var info = settingsService.serverConfig.toMap(setting -> relevantSettings.contains(setting));
 		info.put("repositoriesOrder", repoService.getPublicRepositoryOrder());
 		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
+		info.put("reindexingStatus", Maps.of(searchService.getReindexingStatus()));
 		return info;
 	}
 
 	@PutMapping("clearIndex")
 	public void clearIndex() {
-		searchService.clearIndex();
+		if (searchService.isReindexing())
+			throw Response.conflict("Reindexing is already running");
+		new Thread(() -> {
+			try {
+				var status = searchService.startReindexing(1);
+				searchService.clearIndex();
+				status.worked++;
+			} finally {
+				searchService.endReindexing();
+			}
+		}).start();
 	}
 
 	@PutMapping("reindex")
 	public void reindex() {
-		searchService.clearIndex();
-		try (var repositories = repoService.getAllAccessible()) {
-			repositories.forEach(repo -> searchService.index(repo));
-		}
+		if (searchService.isReindexing())
+			throw Response.conflict("Reindexing is already running");
+		new Thread(() -> {
+			var all = repoService.getAllAccessible();
+			var status = searchService.startReindexing(all.size());
+			searchService.clearIndex();
+			try (var repositories = all) {
+				repositories.forEach(repo -> searchService.index(repo));
+				status.worked++;
+			} finally {
+				searchService.endReindexing();
+			}
+		}).start();
 	}
 
 	@PutMapping("reindex/{group}/{repository}")
 	public void reindex(
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository) {
-		try (var repo = repoService.get(group, repository)) {
-			searchService.update(repo);
-		}
+		if (searchService.isReindexing())
+			throw Response.conflict("Reindexing is already running");
+		new Thread(() -> {
+			var status = searchService.startReindexing(1);
+			try (var repo = repoService.get(group, repository)) {
+				searchService.update(repo);
+				status.worked++;
+			} finally {
+				searchService.endReindexing();
+			}
+		}).start();
 	}
 
 	@PutMapping("announce")

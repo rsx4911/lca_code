@@ -44,7 +44,6 @@ define([
 				'click .model-types-order .glyphicon-download': (event) -> @changeOrder event, 'MODEL_TYPES_ORDER', 'modelTypesOrder', false
 				'click .repositories-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'REPOSITORIES_HIDDEN', 'repositoriesHidden'
 				'click .model-types-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'MODEL_TYPES_HIDDEN', 'modelTypesHidden'
-				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
 
 			changeOrder: (event, key, field, up) ->
@@ -118,14 +117,6 @@ define([
 					@setSetting key, value, () ->
 						Backbone.history.loadUrl()
 
-			refreshOpenWebServiceRequests: (event) ->
-				Events.preventDefault event
-				$.ajax
-					type: 'GET'
-					url: 'ws/admin/area/serverInfo'
-					success: (serverInfo) =>
-						$('#open-web-service-requests').html serverInfo.openWebServiceRequests
-
 			setAnnouncement: (event) ->
 				Events.preventDefault event
 				Layers.promptInput 'Announcement', 'textarea', @serverInfo.announcementMessage, (value) =>
@@ -157,13 +148,9 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Clearing index'
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/clearIndex'
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully cleared index'
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -174,13 +161,9 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Indexing'
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/reindex'
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully reindexed repositories'
 
 			reindexRepository: (event) ->
 				target = $ Events.target event
@@ -194,13 +177,9 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Indexing'
 						$.ajax
 							type: 'PUT'
 							url: "ws/admin/area/reindex/#{group}/#{repository}"
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully reindexed repository'
 
 			initialize: () ->
 				@repositoryFilter = new Filter
@@ -209,6 +188,8 @@ define([
 					filterId: 'repository-filter'
 					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?'
+					beforeRender: (result) =>
+						result.reindexingStatus = @serverInfo.reindexingStatus			
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
