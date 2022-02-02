@@ -34,6 +34,10 @@ public class Maps {
 		return (Map<String, Object>) new HashMap<String, Object>();
 	}
 
+	public static Map<String, Object> of(String key, Object value) {
+		return new HashMap<>(Map.of(key, value));
+	}
+
 	public static Map<String, Object> of(Object object) {
 		if (object == null)
 			return null;
