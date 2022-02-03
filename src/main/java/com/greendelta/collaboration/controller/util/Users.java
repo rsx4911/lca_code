@@ -37,7 +37,7 @@ public class Users {
 		if (user == null)
 			return null;
 		var map = Maps.of(user);
-		Maps.removeAllBut(map, "name", "username");
+		Maps.removeAllBut(map, "name", "username", "email");
 		map.put("deactivated", user.isDeactivated());
 		return map;
 	}
