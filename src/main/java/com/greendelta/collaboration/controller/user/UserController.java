@@ -128,6 +128,9 @@ public class UserController {
 		var userWithSameMail = service.getForEmail(user.email);
 		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
 			throw Response.badRequest("email", "Email is already in use");
+		userWithSameMail = service.getForUsername(user.email);
+		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
+			throw Response.badRequest("email", "Email is already in use");
 		fromDb.name = user.name;
 		fromDb.email = user.email;
 		var currentUser = service.getCurrentUser();

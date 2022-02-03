@@ -88,6 +88,12 @@ public class SessionController {
 			throw Response.unauthorized("Invalid credentials");
 		if (Strings.nullOrEmpty(password))
 			throw Response.unauthorized("Invalid credentials");
+		if (userService.getForUsername(username) == null) {
+			var user = userService.getForEmail(username);
+			if (user == null)
+				throw Response.unauthorized("Invalid credentials");
+			username = user.username;
+		}
 		try {
 			sessionService.login(username, password);
 		} catch (BadCredentialsException e) {
@@ -135,8 +141,9 @@ public class SessionController {
 			throw Response.badRequest("Already authenticated");
 		if (Strings.nullOrEmpty(username))
 			throw Response.badRequest("username", "Missing input: Username");
-		var userWithSameUsername = userService.getForUsername(username);
-		if (userWithSameUsername != null)
+		if (userService.getForUsername(username) != null)
+			throw Response.badRequest("username", "Username is already in use");
+		if (userService.getForEmail(username) != null)
 			throw Response.badRequest("username", "Username is already in use");
 		if (!Routes.isValid(username))
 			throw Response.badRequest("username",
@@ -147,8 +154,9 @@ public class SessionController {
 			throw Response.badRequest("username", "This is a reserved word");
 		if (Strings.nullOrEmpty(email))
 			throw Response.badRequest("email", "Missing input: E-Mail");
-		var userWithSameMail = userService.getForEmail(email);
-		if (userWithSameMail != null)
+		if (userService.getForEmail(email) != null)
+			throw Response.badRequest("email", "Email is already in use");
+		if (userService.getForUsername(email) != null)
 			throw Response.badRequest("email", "Email is already in use");
 		if (Strings.nullOrEmpty(name))
 			throw Response.badRequest("name", "Missing input: Name");

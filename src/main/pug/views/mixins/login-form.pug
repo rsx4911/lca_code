@@ -4,7 +4,7 @@ mixin login-form()
 	form#login(method='post')&attributes(attributes)
 		h3 Sign in
 		#login-general-message.alert.alert-danger(role='alert'): span.message
-		+input('username', 'Username')
+		+input('username', 'Username/Email')
 		+input('password', 'Password', 'password')
 			a.default-link(href='reset-password') Forgot your password?
 		+input('token', 'Token', 'text', false, false, true)
