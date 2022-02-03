@@ -85,7 +85,9 @@ public class SearchResource {
 	private Map<String, Object> map(SearchResult<IndexEntry> result) {
 		Map<String, Repository> repositories = Collections.map(repoService.getAllAccessible(), repo -> repo.toId());
 		ObjectMap map = ObjectMap.fromMap(new HashMap<>());
-		map.put("resultInfo", result.resultInfo);
+		ObjectMap resultInfo = ObjectMap.fromObject(result.resultInfo);
+		resultInfo.put("indexing", service.isReindexing());
+		map.put("resultInfo", resultInfo);
 		boolean loggedIn = userService.getCurrentUser().getId() != 0;
 		List<ObjectMap> data = Client.map(result.data, r -> {
 			ObjectMap rMap = ObjectMap.fromObject(r);

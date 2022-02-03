@@ -1,6 +1,8 @@
 package com.greendelta.collaboration.service.search;
 
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,6 +20,7 @@ import org.openlca.cloud.model.data.FileReference;
 import org.openlca.core.model.ModelType;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.greendelta.collaboration.model.index.IndexAction;
 import com.greendelta.collaboration.model.index.IndexEntry;
 import com.greendelta.collaboration.service.Repository;
@@ -33,12 +36,14 @@ import com.greendelta.search.wrapper.SearchQueryBuilder;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.SearchSorting;
 
+@Singleton
 public class SearchService {
 
 	private final static Logger log = LogManager.getLogger(SearchService.class);
 	private final SettingsService settingsService;
 	private final QueryService queryService;
 	private final IndexEntryParser parser = new IndexEntryParser();
+	private ReindexingStatus reindexStatus;
 
 	@Inject
 	public SearchService(SettingsService settingsService, QueryService queryService) {
@@ -302,6 +307,38 @@ public class SearchService {
 
 	private SearchClient getClient() {
 		return settingsService.getSearchConfig().getSearchClient();
+	}
+
+	public boolean isReindexing() {
+		return reindexStatus != null;
+	}
+
+	public ReindexingStatus startReindexing(int total) {
+		if (reindexStatus != null)
+			throw new IllegalStateException("Already reindexing");
+		reindexStatus = new ReindexingStatus(total);
+		return reindexStatus;
+	}
+
+	public ReindexingStatus getReindexingStatus() {
+		return reindexStatus;
+	}
+
+	public void endReindexing() {
+		reindexStatus = null;
+	}
+
+	public class ReindexingStatus {
+
+		public final Date start;
+		public final int total;
+		public int worked;
+
+		private ReindexingStatus(int total) {
+			this.total = total;
+			this.start = Calendar.getInstance().getTime();
+		}
+
 	}
 
 	public interface Filter extends Function<IndexEntry, Boolean> {
