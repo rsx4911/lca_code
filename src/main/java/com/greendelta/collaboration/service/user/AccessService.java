@@ -142,7 +142,7 @@ public class AccessService {
 
 	public boolean canManage(Comment comment) {
 		User user = userService.getCurrentUser();
-		if (comment.user.equals(user))
+		if (comment.user != null && comment.user.equals(user))
 			return true;
 		return canManageCommentsIn(comment.repositoryPath);
 	}
