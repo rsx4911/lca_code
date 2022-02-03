@@ -123,7 +123,7 @@ public class RepositoryController {
 			mappedRepo.put("userCanDelete", accessService.canDelete(path));
 			mappedRepo.put("userCanWrite", accessService.canWrite(path));
 			mappedRepo.put("userCanMove", accessService.canMove(path));
-			mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
+			mappedRepo.put("userCanClone", accessService.canMove(path));
 			mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(path));
 			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
 			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
