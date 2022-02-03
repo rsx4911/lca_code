@@ -31,7 +31,7 @@ public class Users {
 		if (user == null)
 			return null;
 		ObjectMap map = ObjectMap.fromObject(user);
-		map.removeAllBut("name", "username");
+		map.removeAllBut("name", "username", "email");
 		map.put("deactivated", user.isDeactivated());
 		return map;
 	}
