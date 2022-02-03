@@ -124,11 +124,13 @@ define([
 					type: if value is true or value is false then 'PUT' else 'GET'
 					url: "ws/user/twoFactorAuth/#{username}/#{value}"
 					success: (response) => 
-						Backbone.history.loadUrl()
 						if response.enabled
 							@showTwoFactorAuthentication response
 						else
 							Layers.closeActive()
+						@user.set 'twoFactorAuth', response.enabled
+						currentUser.set 'twoFactorAuth', response.enabled
+						Backbone.history.loadUrl()
 					error: (response) -> Status.error response.responseText
 
 			showTwoFactorAuthentication: (response) ->
