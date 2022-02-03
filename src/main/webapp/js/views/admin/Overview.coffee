@@ -29,6 +29,7 @@ define([
 				'click [data-action=clear-index]': 'clearIndex'
 				'click [data-action=reindex-repositories]': 'reindexRepositories'
 				'click [data-action=reindex-repository]': 'reindexRepository'
+				'click [data-action=copy-users-to-clipboard]': 'copyUsersToClipboard'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
@@ -161,6 +162,7 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/clearIndex'
+							success: () -> Backbone.history.loadUrl()
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -174,6 +176,7 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/reindex'
+							success: () -> Backbone.history.loadUrl()
 
 			reindexRepository: (event) ->
 				target = $ Events.target event
@@ -190,6 +193,22 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: "ws/admin/area/reindex/#{group}/#{repository}"
+							success: () -> Backbone.history.loadUrl()
+
+			copyUsersToClipboard: (event) ->
+				text = '"Username"\t"Name"\t"Email"\t"Active"\n'
+				for user in @userFilter.data
+					text += '"' + user.username + '"\t'
+					text += '"' + user.name + '"\t'
+					text += '"' + user.email + '"\t'
+					text += '"' + (if user.deactivated then 'no' else 'yes') + '"\n'
+				Layers.showMessageInLayer
+					title: 'User data'
+					body: "<span>Press CTRL+C to copy (hidden) text to clipboard</span><textarea id=\"user-data-text\" class=\"pull-right\" style=\"width:0;height:0;border:0;resize:none;outline:0;\">#{text}</textarea>"
+					buttons: [
+						{text: 'Close', callback: () -> Layers.closeActive()}
+					]
+				$('#user-data-text').select()				
 
 			initialize: () ->
 				@repositoryFilter = new Filter

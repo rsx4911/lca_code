@@ -80,7 +80,7 @@ public class NotificationService {
 		User currentUser = userService.getCurrentUser();
 		String url = getBaseUrl() + "/" + newRepo.toId();
 		String subject = "A repository was moved";
-		String message = "The repository " + oldRepo.toId() + " was moved to a href=\"" + url + "\">" + newRepo.toId()
+		String message = "The repository " + oldRepo.toId() + " was moved to <a href=\"" + url + "\">" + newRepo.toId()
 				+ "</a> by the user " + currentUser.name;
 		Set<EmailJob> emails = new HashSet<>();
 		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.REPOSITORY_MOVED, newRepo.toId())));

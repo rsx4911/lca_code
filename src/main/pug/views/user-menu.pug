@@ -19,10 +19,10 @@ mixin menu-items(searchIcon)
 		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout' aria-label='Logout')
 	if settings['COMMENTS_ENABLED'] === 'true'
 		a.toggle-review(href='#')
-			span.glyphicon.glyphicon-pencil(data-toggle='tooltip' data-placement='bottom' title='Review mode ' + reviewMode?'on':'off' aria-label='Review mode ' + reviewMode?'on':'off' data-active=reviewMode)
+			span.glyphicon.glyphicon-pencil(data-toggle='tooltip' data-placement='bottom' title='Review mode ' + (reviewMode?'on':'off') aria-label='Review mode ' + (reviewMode?'on':'off') data-active=reviewMode)
 	if isAdmin
 		a.toggle-debug(href='#')
-			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' aria-label='Debugging ' + debugMode?'on':'off' title='Debugging ' + debugMode?'on':'off')
+			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' aria-label='Debugging ' + (debugMode?'on':'off') title='Debugging ' + (debugMode?'on':'off'))
 
 if isPublic
 	.pull-right.responsive-menu.dropdown

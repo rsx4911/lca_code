@@ -53,6 +53,7 @@ define([
 				@loading = true
 				url = @getUrl()
 				$.get url, (result) => 
+					@data = result.data
 					@beforeRender?(result, @type)
 					callback.apply @, [result]
 					@loading = false

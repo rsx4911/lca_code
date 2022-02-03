@@ -146,7 +146,7 @@ public class RepositoryResource {
 		mappedRepo.put("userCanDelete", accessService.canDelete(id));
 		mappedRepo.put("userCanWrite", accessService.canWrite(id));
 		mappedRepo.put("userCanMove", accessService.canMove(id));
-		mappedRepo.put("userCanClone", accessService.canWrite(repo.group));
+		mappedRepo.put("userCanClone", accessService.canMove(id));
 		mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(id));
 		mappedRepo.put("userCanSetSettings", accessService.canSetSettings(id));
 		mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(id));

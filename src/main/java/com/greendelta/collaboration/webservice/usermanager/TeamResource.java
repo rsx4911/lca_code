@@ -3,6 +3,7 @@ package com.greendelta.collaboration.webservice.usermanager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -24,11 +25,13 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.util.Beans;
+import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Names;
+import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.webservice.Respond;
 import com.greendelta.collaboration.webservice.util.Teams;
 
@@ -99,6 +102,20 @@ public class TeamResource {
 		for (NotificationJob notification : notifications)
 			notification.send();
 		return Respond.ok(Teams.mapForManager(fromDb));
+	}
+
+	@PUT
+	@Path("{teamname}/activeuntil")
+	public Response setActiveUntil(@PathParam("teamname") String teamname, Map<String, Object> data) {
+		Team team = authorizedGetTeam(teamname);
+		if (team == null)
+			return Respond.notFound();
+		String date = ObjectMap.fromMap(data).getString("activeUntil");
+		for (User user : team.users) {
+			user.settings.activeUntil = Dates.fromString(date);
+			userService.update(user);
+		}
+		return Respond.ok(new HashMap<>());
 	}
 
 	@DELETE

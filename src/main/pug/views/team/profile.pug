@@ -20,6 +20,12 @@ div(class=team.id?'two-columns':null)
 				else
 					| Create
 			.clear
+		if team.id && team.users.length
+			.header-box Active until
+			form#active-form.content-box
+				+input('active-until', 'Active until (unlimited if empty) ', 'date', true)(class='input-sm')
+				button.btn.btn-lg.btn-success.pull-right(data-action='set-active-until') Set for all team users
+				.clear
 		if team.id
 			+avatar-box('team', team.teamname, true)
 	if team.id
@@ -31,7 +37,7 @@ div(class=team.id?'two-columns':null)
 			.content-box
 				each user in team.users
 					.team-member
-						+user-info(user.username, user.name)
+						a(href='administration/user/profile/' + user.username): +user-info(user.username, user.name)
 						button.btn.btn-xs.btn-danger.pull-right(data-action='remove-member' data-username=user.username, aria-label='Remove member ' + user.name)
 							span.glyphicon.glyphicon-minus
 						.clear

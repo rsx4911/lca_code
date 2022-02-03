@@ -20,7 +20,9 @@ define([
 			className: 'profile-view team-view multi-box-view'
 
 			events:
+				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 				'submit #team-form': 'saveTeam'
+				'submit #active-form': 'setActiveUntil'
 				'click [data-action=delete-team]': 'deleteTeam'
 				'click [data-action=add-members]': 'showAddMembersLayer'
 				'click [data-action=remove-member]': 'removeMember'
@@ -67,6 +69,17 @@ define([
 						success: () -> Router.navigate 'administration/overview'
 						error: (model, response) -> Forms.handleError 'team-form', response
 				return false
+
+			setActiveUntil: (event) ->
+				Events.preventDefault event
+				teamname = @team.get 'teamname'
+				value = @$('#active-until').val()
+				$.ajax
+					type: 'PUT'
+					url: "ws/usermanager/team/#{teamname}/activeuntil"
+					data: JSON.stringify { activeUntil: value }
+					contentType: 'application/json'
+					success: () -> Backbone.history.loadUrl()
 
 			showAddMembersLayer: (event) ->
 				Data.getUsers 'teams', null, (users) =>

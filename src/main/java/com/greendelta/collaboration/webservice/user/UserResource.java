@@ -136,6 +136,9 @@ public class UserResource {
 		User userWithSameMail = service.getForEmail(user.email);
 		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
 			return Respond.invalid("email", "Email is already in use");
+		userWithSameMail = service.getForUsername(user.email);
+		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
+			return Respond.invalid("email", "Email is already in use");
 		Beans.populateProperties(user, fromDb, "name", "email");
 		User currentUser = service.getCurrentUser();
 		if (currentUser.isAdmin()) {

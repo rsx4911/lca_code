@@ -96,6 +96,12 @@ public class SessionResource {
 			return Respond.unauthorized("Invalid credentials");
 		if (Strings.isNullOrEmpty(password))
 			return Respond.unauthorized("Invalid credentials");
+		if (userService.getForUsername(username) == null) {
+			User user = userService.getForEmail(username);
+			if (user == null)
+				return Respond.unauthorized("Invalid credentials");
+			username = user.username;
+		}
 		try {
 			subject.login(new UsernamePasswordToken(username, password));
 		} catch (IncorrectCredentialsException | UnknownAccountException e) {
@@ -148,8 +154,9 @@ public class SessionResource {
 			return Respond.conflict(null, "Already authenticated");
 		if (Strings.isNullOrEmpty(username))
 			return Respond.invalid("username", "Missing input: Username");
-		User userWithSameUsername = userService.getForUsername(username);
-		if (userWithSameUsername != null)
+		if (userService.getForUsername(username) != null)
+			return Respond.invalid("username", "Username is already in use");
+		if (userService.getForEmail(username) != null)
 			return Respond.invalid("username", "Username is already in use");
 		if (!Names.isValid(username))
 			return Respond.invalid("username",
@@ -160,8 +167,9 @@ public class SessionResource {
 			return Respond.invalid("username", "This is a reserved word");
 		if (Strings.isNullOrEmpty(email))
 			return Respond.invalid("email", "Missing input: E-Mail");
-		User userWithSameMail = userService.getForEmail(email);
-		if (userWithSameMail != null)
+		if (userService.getForEmail(email) != null)
+			return Respond.invalid("email", "Email is already in use");
+		if (userService.getForUsername(email) != null)
 			return Respond.invalid("email", "Email is already in use");
 		if (Strings.isNullOrEmpty(name))
 			return Respond.invalid("name", "Missing input: Name");
