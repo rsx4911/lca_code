@@ -151,6 +151,7 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/clearIndex'
+							success: () -> Backbone.history.loadUrl()
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -164,6 +165,7 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/reindex'
+							success: () -> Backbone.history.loadUrl()
 
 			reindexRepository: (event) ->
 				target = $ Events.target event
@@ -180,6 +182,7 @@ define([
 						$.ajax
 							type: 'PUT'
 							url: "ws/admin/area/reindex/#{group}/#{repository}"
+							success: () -> Backbone.history.loadUrl()
 
 			initialize: () ->
 				@repositoryFilter = new Filter
