@@ -107,11 +107,19 @@ public class UserService implements UserDetailsService {
 		var query = createQuery(user, filter);
 		var data = dao.getAll(query, parameters).stream()
 				.distinct()
-				.sorted((u1, u2) -> u1.name.toLowerCase().compareTo(u2.name.toLowerCase()))
+				.sorted(this::sortUser)
 				.toList();
 		return SearchResults.paged(page, pageSize, data);
 	}
 
+	private int sortUser(User u1, User u2) {
+		var b1 = u1.isDeactivated();
+		var b2 = u2.isDeactivated();
+		if (b1 != b2)
+			return Boolean.compare(b1, b2);
+		return u1.name.toLowerCase().compareTo(u2.name.toLowerCase());
+	}
+	
 	private String createQuery(User user, String filter) {
 		var jpql = new StringBuilder();
 		if (user.isUserManager()) {
