@@ -110,6 +110,10 @@ public class RepositoryController {
 		map.put("datasets", repo.references().find().count());
 		map.put("commits", repo.commits().find().all().size());
 		map.put("members", membershipService.getMemberships(repo.path()).size());
+		if (user.isDataManager()) {
+			var lastCommit = repo.commits().find().latest();
+			map.put("lastCommit", lastCommit != null ? lastCommit.timestamp : null);
+		}
 		return map;
 	}
 
