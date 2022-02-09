@@ -155,7 +155,7 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			return java.util.Collections.singletonMap("schemaVersion", repo.getSchemaVersion());
+			return Maps.of("schemaVersion", repo.getSchemaVersion().value());
 		}
 	}
 

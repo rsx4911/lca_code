@@ -11,11 +11,12 @@ import org.openlca.git.find.Datasets;
 import org.openlca.git.find.Diffs;
 import org.openlca.git.find.Entries;
 import org.openlca.git.find.References;
-import org.openlca.jsonld.Schema;
-import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.openlca.git.util.Repositories;
+import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
+import com.greendelta.collaboration.error.UnsupportedSchemaException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
@@ -87,8 +88,8 @@ public class Repository implements AutoCloseable {
 		return group + '-' + name + ".zip";
 	}
 
-	public String getSchemaVersion() {
-		return Schema.URI;
+	public SchemaVersion getSchemaVersion() {
+		return Repositories.versionOf(gitRepo);
 	}
 
 	public long getSize() {
@@ -104,11 +105,11 @@ public class Repository implements AutoCloseable {
 	private void checkVersion() {
 		try {
 			var version = getSchemaVersion();
-			if (!Schema.isSupportedSchema(version))
+			if (!version.isCurrent())
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {
 			log.error("Could not read context.json", e);
-			throw new UnsupportedSchemaException("null");
+			throw new UnsupportedSchemaException(null);
 		}
 	}
 

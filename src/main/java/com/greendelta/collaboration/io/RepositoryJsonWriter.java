@@ -42,7 +42,7 @@ public class RepositoryJsonWriter implements Closeable {
 		var data = repo.datasets().get(ref);
 		if (data == null)
 			return null;
-		zipStore.put(ModelPath.get(ref.type, ref.refId), data.getBytes("utf-8"));
+		zipStore.put(ModelPath.jsonOf(ref.type, ref.refId), data.getBytes("utf-8"));
 		repo.references().getBinaries(ref).forEach(binary -> {
 			zipStore.putBin(ref.type, ref.refId, binary, repo.datasets().getBinary(ref, binary));
 		});
