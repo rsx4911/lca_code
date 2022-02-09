@@ -39,6 +39,7 @@ public class Users {
 		var map = Maps.of(user);
 		Maps.removeAllBut(map, "name", "username", "email");
 		map.put("deactivated", user.isDeactivated());
+		map.put("activeUntil", user.settings.activeUntil);
 		return map;
 	}
 

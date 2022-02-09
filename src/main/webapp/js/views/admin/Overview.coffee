@@ -3,6 +3,7 @@ define([
 				'cs!utils/Announcements'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Format'
 				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!utils/ModelTypes'
@@ -18,7 +19,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Announcements, Events, Filter, Layers, Model, ModelTypes, Renderer, Status, Router, currentUser, settings, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Announcements, Events, Filter, Format, Layers, Model, ModelTypes, Renderer, Status, Router, currentUser, settings, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -215,6 +216,8 @@ define([
 					filterId: 'user-filter'
 					pageSizeId: 'users-page-size'
 					url: 'ws/user?'
+					beforeRender: (result) ->
+						result.formatDate = Format.date
 				@groupFilter = new Filter
 					container: '#groups'
 					template: groupsTemplate

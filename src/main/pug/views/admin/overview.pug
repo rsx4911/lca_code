@@ -47,7 +47,7 @@ mixin ordered-list(title, elements)
 					span.glyphicon(class='glyphicon-eye-' + (element.hidden ? 'close' : 'open') data-action='change-visibility')
 			
 .content-box.overview
-	div(class=isAdmin?'four-columns':'two-columns')
+	.two-columns
 		if isAdmin
 			div: +box('Repository', 'Repositories', repositories)
 		div: +box('User', 'Users', users)
