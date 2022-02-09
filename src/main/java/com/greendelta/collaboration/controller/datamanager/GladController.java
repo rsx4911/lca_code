@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -185,7 +186,7 @@ public class GladController {
 		if (s == null)
 			return;
 		var sb = new StringBuilder();
-		var br = new BufferedReader(new InputStreamReader(s, "utf-8"));
+		var br = new BufferedReader(new InputStreamReader(s, StandardCharsets.UTF_8));
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			sb.append(line + "\n");

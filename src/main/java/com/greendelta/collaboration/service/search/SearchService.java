@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -117,7 +118,7 @@ public class SearchService {
 		var stream = getClass().getResourceAsStream(resource);
 		if (stream == null)
 			return "{}";
-		return new String(stream.readAllBytes(), "utf-8");
+		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	private SearchClient getClient() {

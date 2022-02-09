@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -212,7 +213,7 @@ public class AdminAreaController {
 		if (s == null)
 			return null;
 		var sb = new StringBuilder();
-		var br = new BufferedReader(new InputStreamReader(s, "utf-8"));
+		var br = new BufferedReader(new InputStreamReader(s, StandardCharsets.UTF_8));
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			sb.append(line + "\n");

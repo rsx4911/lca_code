@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
 import javax.mail.Message.RecipientType;
@@ -34,7 +35,7 @@ public class EmailService {
 			var message = sender.createMimeMessage();
 			message.setRecipient(RecipientType.TO, new InternetAddress(mail.recipient));
 			message.setSentDate(Calendar.getInstance().getTime());
-			message.setSubject(mail.subject, "utf-8");
+			message.setSubject(mail.subject, StandardCharsets.UTF_8.name());
 			message.setFrom(new InternetAddress(config.get(MailSetting.DEFAULT_FROM)));
 			if (mail.isMixedContent()) {
 				message.setContent(createMixedContent(mail));
