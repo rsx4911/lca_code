@@ -12,6 +12,7 @@ import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 import org.openlca.git.find.FieldDefinition;
+import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Entry;
 import org.openlca.git.model.Entry.EntryType;
@@ -27,10 +28,6 @@ public class MetaData {
 		return toDatasetInfo(e, repo, Mode.BROWSE);
 	}
 
-	public static Map<String, Object> forSearch(Entry e, Repository repo) {
-		return toDatasetInfo(e, repo, Mode.SEARCH);
-	}
-
 	private static Map<String, Object> toDatasetInfo(Entry e, Repository repo, Mode mode) {
 		var entry = Maps.of(e);
 		entry.remove("objectId");
@@ -38,10 +35,6 @@ public class MetaData {
 			return entry;
 		putDatasetInfo(e.type, entry, e.objectId, repo, mode);
 		return entry;
-	}
-
-	public static Map<String, Object> forBrowse(Reference r, Repository repo) {
-		return toDatasetInfo(r, repo, Mode.BROWSE);
 	}
 
 	public static Map<String, Object> forSearch(Reference r, Repository repo) {
@@ -55,8 +48,8 @@ public class MetaData {
 		return ref;
 	}
 
-	public static Map<String, Object> forBrowse(Reference ref, DiffType diffType, Repository repo) {
-		return putDatasetInfo(ref, diffType, repo, Mode.BROWSE);
+	public static Map<String, Object> forBrowse(Diff diff, Repository repo) {
+		return putDatasetInfo(diff.ref(), diff.type, repo, Mode.BROWSE);
 	}
 
 	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {
@@ -65,7 +58,8 @@ public class MetaData {
 		return map;
 	}
 
-	private static void putDatasetInfo(ModelType type, Map<String, Object> entry, ObjectId oId, Repository repo, Mode mode) {
+	private static void putDatasetInfo(ModelType type, Map<String, Object> entry, ObjectId oId, Repository repo,
+			Mode mode) {
 		var defs = new ArrayList<FieldDefinition>();
 		defs.add(new FieldDefinition("name"));
 		if (type == ModelType.FLOW || type == ModelType.PROCESS) {
@@ -113,7 +107,8 @@ public class MetaData {
 		});
 	}
 
-	public static Stream<Map<String, Object>> sortByTypeAndName(Stream<Map<String, Object>> data, List<String> typesOrder) {
+	public static Stream<Map<String, Object>> sortByTypeAndName(Stream<Map<String, Object>> data,
+			List<String> typesOrder) {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "type");
 			var t2 = Maps.getString(m2, "type");

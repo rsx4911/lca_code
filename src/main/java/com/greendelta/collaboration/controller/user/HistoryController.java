@@ -77,8 +77,6 @@ public class HistoryController {
 					throw Response.notFound("Commit " + lastCommitId + " not found");
 			}
 			var commits = repo.commits().find().after(lastCommitId).path(path).all();
-			if (commits.size() == 0)
-				return Response.noContent();
 			Collections.reverse(commits);
 			return Response.ok(putUserName(commits));
 		}
@@ -93,8 +91,6 @@ public class HistoryController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
 		try (var repo = repoService.get(group, name)) {
 			var commits = repo.commits().find().all();
-			if (commits.size() == 0)
-				return Response.noContent();
 			Collections.reverse(commits);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
 			var converted = SearchResults.convert(result, c -> Maps.of(c));
@@ -166,7 +162,7 @@ public class HistoryController {
 			if (commit == null)
 				throw Response.notFound();
 			var refs = repo.diffs().find().type(type).withPrevious(commit.id).all();
-			var mapped = refs.stream().map(r -> MetaData.forBrowse(r.right, r.type, repo));
+			var mapped = refs.stream().map(r -> MetaData.forBrowse(r, repo));
 			List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
 			return SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());

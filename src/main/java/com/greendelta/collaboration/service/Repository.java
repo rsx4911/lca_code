@@ -89,7 +89,7 @@ public class Repository implements AutoCloseable {
 	}
 
 	public SchemaVersion getSchemaVersion() {
-		return Repositories.versionOf(gitRepo);
+		return Repositories.versionOf(gitRepo());
 	}
 
 	public long getSize() {
@@ -104,8 +104,10 @@ public class Repository implements AutoCloseable {
 
 	private void checkVersion() {
 		try {
+			if (commits().find().all().isEmpty())
+				return;
 			var version = getSchemaVersion();
-			if (!version.isCurrent())
+			if (version == null || !version.isCurrent())
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {
 			log.error("Could not read context.json", e);
