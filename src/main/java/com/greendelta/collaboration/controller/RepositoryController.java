@@ -7,6 +7,7 @@ import java.util.Map;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -70,7 +71,7 @@ public class RepositoryController {
 	}
 
 	@GetMapping("file/{group}/{name}/{type}/{refId}/{path}")
-	public byte[] getFile(
+	public ResponseEntity<byte[]> getFile(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("type") ModelType type,
@@ -84,7 +85,8 @@ public class RepositoryController {
 			var binary = repo.datasets().getBinary(ref, path);
 			if (binary == null)
 				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
-			return binary;
+			var filename = path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
+			return Response.ok(filename, binary);
 		}
 	}
 
