@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,7 +48,7 @@ public class SettingsController {
 	}
 
 	private void cleanup(ServerSetting key, List<String> values, boolean appendNew) {
-		List<String> list = service.get(key);
+		List<String> list = service.get(key, new ArrayList<>());
 		var filtered = list.stream().filter(name -> values.contains(name)).collect(Collectors.toList());
 		var changed = !filtered.equals(list);
 		if (!changed && !appendNew)

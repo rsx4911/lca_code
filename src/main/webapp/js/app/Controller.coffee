@@ -1,5 +1,6 @@
 define([
 				'cs!app/Navigation'
+				'cs!app/GlobalSearch'
 				'cs!app/UserMenu'
 				'cs!utils/Announcements'
 				'cs!utils/Events'
@@ -18,7 +19,7 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, UserMenu, Announcements, Events, Format, Layers, LocalStorage, Model, ReviewWidget, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, GlobalSearch, UserMenu, Announcements, Events, Format, Layers, LocalStorage, Model, ReviewWidget, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -103,7 +104,7 @@ define([
 			initializeNavigation: () ->
 				@navigation = new Navigation()
 				@navigation.render 
-					container: 'nav'
+					container: if $('#main-navigation').length then '#main-navigation' else 'nav'
 					noAnimation: true
 
 			initializeReviewWidget: () ->
@@ -120,9 +121,18 @@ define([
 					noAnimation: true
 
 			initializeUserMenu: () ->
-				@userMenu = new UserMenu()
+				searchContainer = if $('#global-search-bar').length then '#global-search-bar' else '#user-menu'
+				separateSearch = searchContainer isnt '#user-menu'
+				@globalSearch = new GlobalSearch()
+				@globalSearch.render 
+					container: searchContainer
+					append: true
+					noAnimation: true
+				@userMenu = new UserMenu
+					separateSearch: separateSearch
 				@userMenu.render 
 					container: '#user-menu'
+					append: true
 					noAnimation: true
 
 			initializeMaintenanceMode: () ->
@@ -320,7 +330,8 @@ define([
 						group: new Group({name: group})
 				@router.registerUserRoute 'groupTags', (group) -> @showView 
 					view: 'tags/Tags'
-					title: 'Tags' 
+					title: group
+					subTitle: 'Tags' 
 					nav: 
 						type: 'group'
 						active: 'tags'
@@ -462,7 +473,9 @@ define([
 						repository: new Repository({group: group, name: name})
 				@router.registerUserRoute 'repositoryTags', (group, name) -> @showView 
 					view: 'tags/Tags'
-					title: 'Tags' 
+					title: "#{group}/#{name}"
+					subTitle: 'Tags' 
+					href: "#{group}/#{name}"
 					nav: 
 						type: 'repository'
 						active: 'tags'
@@ -596,18 +609,20 @@ define([
 				if options?.hideSearchBar
 					$('#global-search-group').hide()
 				$('#global-search').val options?.viewOptions?.query	
+				container = if $('#main .center').length then '#main .center' else if $('#main .full-size').length then '#main .full-size' else '#main'
 				@checkGroupOrRepositoryExists options, () =>
-					$('#main .center').empty()
-					if options.fullWidth
-						$('#main .full-size').addClass 'full-width'
-					else
-						$('#main .full-size').removeClass 'full-width'
+					$(container).empty()
+					if $('#main .full-size').length
+						if options.fullWidth
+							$('#main .full-size').addClass 'full-width'
+						else
+							$('#main .full-size').removeClass 'full-width'
 					title1 = options.title or ''
 					title2 = options.title or ''
 					if options.title and options.subTitle and currentUser.isLoggedIn()
 						title1 += ' - ' + options.subTitle
 						title2 += ' | ' + options.subTitle
-					if currentUser.isLoggedIn() && !options.href
+					if !options.href
 						$('#header-title').html title1
 					else
 						$('#header-title').html '<a href="' + (options.href||title1) + '">' + title1 + '</a>'
@@ -621,7 +636,7 @@ define([
 					require ["cs!views/#{options.view}"], (View) =>
 						view = new View options.viewOptions
 						view.render
-							container: '#main .center'
+							container: container
 
 			showError: (statuscode) ->
 				Layers.hideProgressIndicator()

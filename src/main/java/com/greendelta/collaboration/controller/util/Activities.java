@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.openlca.git.model.Commit;
 
@@ -13,7 +14,7 @@ import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Dates;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 public class Activities {
 
@@ -21,8 +22,8 @@ public class Activities {
 		// only static access
 	}
 
-	public static ObjectMap map(Commit commit, Repository repo) {
-		var map = new ObjectMap();
+	public static Map<String, Object> map(Commit commit, Repository repo) {
+		var map = Maps.create();
 		map.put("type", ActivityType.COMMIT);
 		map.put("timestamp", commit.timestamp);
 		map.put("id", commit.id);
@@ -33,8 +34,8 @@ public class Activities {
 		return map;
 	}
 
-	public static ObjectMap map(Comment comment, Repository repo) {
-		var map = new ObjectMap();
+	public static Map<String, Object> map(Comment comment, Repository repo) {
+		var map = Maps.create();
 		map.put("type", ActivityType.COMMENT);
 		map.put("timestamp", comment.date.getTime());
 		map.put("id", comment.id);
@@ -48,13 +49,13 @@ public class Activities {
 			map.put("user", "anonymous");
 			map.put("userDisplayName", "Anonymous");
 		}
-		map.put("field", ObjectMap.fromObject(comment.field));
+		map.put("field", Maps.of(comment.field));
 		map.put("reply", comment.replyTo != null);
 		return map;
 	}
 
-	public static List<ObjectMap> map(Task task, Repository repo) {
-		var activities = new ArrayList<ObjectMap>();
+	public static List<Map<String, Object>> map(Task task, Repository repo) {
+		var activities = new ArrayList<Map<String, Object>>();
 		activities.add(map(task, task.startDate, ActivityType.TASK_STARTED, repo));
 		// previously tasks were missing to set the end date, so check for
 		// status
@@ -68,8 +69,8 @@ public class Activities {
 		return activities;
 	}
 
-	private static ObjectMap map(Task task, Date date, ActivityType type, Repository repo) {
-		var map = new ObjectMap();
+	private static Map<String, Object> map(Task task, Date date, ActivityType type, Repository repo) {
+		var map = Maps.create();
 		map.put("type", type);
 		// previously tasks were missing to set the end date, take the latest
 		// date and add a second
@@ -101,8 +102,8 @@ public class Activities {
 		return cal.getTime().getTime();
 	}
 
-	private static List<ObjectMap> map(Task task, TaskAssignment assignment, Repository repo) {
-		var activities = new ArrayList<ObjectMap>();
+	private static List<Map<String, Object>> map(Task task, TaskAssignment assignment, Repository repo) {
+		var activities = new ArrayList<Map<String, Object>>();
 		activities.add(map(task, assignment, assignment.startDate, ActivityType.TASK_ASSIGNED, repo));
 		if (assignment.endDate != null) {
 			ActivityType type = assignment.canceled ? ActivityType.TASK_ASSIGNMENT_CANCELED
@@ -112,8 +113,8 @@ public class Activities {
 		return activities;
 	}
 
-	private static ObjectMap map(Task task, TaskAssignment assignment, Date date, ActivityType type, Repository repo) {
-		var map = new ObjectMap();
+	private static Map<String, Object> map(Task task, TaskAssignment assignment, Date date, ActivityType type, Repository repo) {
+		var map = Maps.create();
 		map.put("type", type);
 		map.put("timestamp", date.getTime());
 		map.put("id", task.id);

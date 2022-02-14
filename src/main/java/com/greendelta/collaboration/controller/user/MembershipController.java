@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.util.Map;
+
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,6 @@ import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -49,21 +50,21 @@ public class MembershipController {
 	}
 
 	@GetMapping("{group}")
-	public SearchResult<ObjectMap> getAllForGroup(
+	public SearchResult<Map<String, Object>> getAllForGroup(
 			@PathVariable("group") String group,
 			@RequestParam(name = "filter", required = false) String filter) {
 		return getAll(group, null, filter);
 	}
 
 	@GetMapping("{group}/{repo}")
-	public SearchResult<ObjectMap> getAllForRepository(
+	public SearchResult<Map<String, Object>> getAllForRepository(
 			@PathVariable("group") String group,
 			@PathVariable("repo") String repo,
 			@RequestParam(name = "filter", required = false) String filter) {
 		return getAll(group, repo, filter);
 	}
 
-	private SearchResult<ObjectMap> getAll(String group, String repo, String filter) {
+	private SearchResult<Map<String, Object>> getAll(String group, String repo, String filter) {
 		var path = getAuthorizedPath(group, repo);
 		var memberships = service.getMemberships(path, filter);
 		return SearchResults.listConvert(memberships, Memberships::map);

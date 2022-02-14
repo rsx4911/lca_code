@@ -1,3 +1,21 @@
+#global-search-bar
+	display inline-block
+
+#global-search-bar, #user-menu
+
+	#global-search-group
+		
+		@media(max-width 767px)
+			display none !important
+		
+		.form-control-feedback
+			font-size 12px
+		
+		@media(max-width 1199px)
+	
+			input
+				width 150px
+
 #user-menu
 	float right
 	padding 18px 48px 18px 18px
@@ -19,11 +37,6 @@
 	.glyphicon
 		color rgb(84, 86, 91)
 		font-size 20px
-		
-	.search-link-icon		
-
-			@media(min-width 992px)
-				display none
 
 	.toggle-debug 
 		
@@ -38,19 +51,6 @@
 		
 		&[data-active]
 			color rgb(68, 157, 68)
-	
-	#global-search-group
-		
-		@media(max-width 991px)
-			display none
-		
-		.form-control-feedback
-			font-size 12px
-		
-		@media(max-width 1199px)
-	
-			input
-				width 150px
 
 	.message-icon.new-messages
 		color rgb(68, 157, 68)

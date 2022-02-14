@@ -162,7 +162,7 @@ public class SettingsService {
 			var subject = SecurityContextHolder.getContext().getAuthentication();
 			var isLoggedIn = subject != null && subject.isAuthenticated();
 			if (!isLoggedIn) {
-				hidden = get(ServerSetting.MODEL_TYPES_HIDDEN);
+				hidden = get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 			}
 			var types = new ArrayList<ModelType>();
 			for (var i = 0; i < value.size(); i++) {
@@ -180,7 +180,7 @@ public class SettingsService {
 		}
 
 		private List<String> getFilteredModelTypes() {
-			List<String> value = super.get(ServerSetting.MODEL_TYPES_ORDER, null);
+			List<String> value = super.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			List<String> defaults = ServerSetting.MODEL_TYPES_ORDER.getDefaultValue();
 			return value.stream().filter(v -> defaults.contains(v)).collect(Collectors.toList());
 		}

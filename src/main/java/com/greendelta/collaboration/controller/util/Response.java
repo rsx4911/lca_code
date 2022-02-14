@@ -45,6 +45,17 @@ public class Response {
 		});
 	}
 
+	public static ResponseEntity<byte[]> ok(String filename, byte[] data) {
+		var builder = ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM);
+		if (!Strings.nullOrEmpty(filename)) {
+			builder = builder.header("Content-Disposition", "attachment; filename=" + filename);
+		}
+		if (data.length > 0) {
+			builder = builder.header("Content-Length", Long.toString(data.length));
+		}
+		return builder.body(data);
+	}
+
 	public static ResponseEntity<StreamingResponseBody> ok(String filename, long filesize,
 			StreamingResponseBody stream) {
 		var builder = ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -146,9 +157,7 @@ public class Response {
 	}
 
 	private static ResponseStatusException status(HttpStatus status, String message) {
-		var e = new ResponseStatusException(status, message);
-		e.setStackTrace(new StackTraceElement[0]);
-		return e;
+		return new ResponseStatusException(status, message);
 	}
 
 }

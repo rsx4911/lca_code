@@ -43,6 +43,10 @@ html(lang='en')
 		script.
 			var show = function(subpage) {
 				$('#login').hide()
+				$('#login #username-group').removeClass('hidden');
+				$('#login #password-group').removeClass('hidden');
+				$('#login #token-group').addClass('hidden');
+				$('#login #token').val('');
 				$('#reset-password').hide()
 				$('#sign-up').hide()
 				$('#' + subpage).show()
@@ -89,7 +93,7 @@ html(lang='en')
 						}
 					}, error: function(response) {
 						$('#login-general-message').show();
-						$('#login-general-message .message').html(response.responseJSON.message);
+						$('#login-general-message .message').html(response.responseJSON ? response.responseJSON.message : response.responseText);
 						$('#login #token').val('');
 					}});
 				return false;
@@ -112,14 +116,9 @@ html(lang='en')
 					success: function(response) {
 						window.location.href = '';
 					}, error: function(response) {
-						var error = response.responseJSON.message
-						try {
-							error = JSON.parse(error).message
-						} catch (e) {
-							console.log(e)
-						}
+						var error = response.responseJSON
 						$('#sign-up-general-message').show();
-						$('#sign-up-general-message .message').html(error);
+						$('#sign-up-general-message .message').html(error.message);
 						if (error.field) {
 							$('#sign-up #' + error.field).parent().addClass('has-error');
 						}

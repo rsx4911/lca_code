@@ -2,9 +2,10 @@ package com.greendelta.collaboration.controller.util;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import com.greendelta.collaboration.model.Membership;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 public class Memberships {
 
@@ -12,7 +13,7 @@ public class Memberships {
 		// only static access
 	}
 
-	public static List<ObjectMap> map(List<Membership> memberships) {
+	public static List<Map<String, Object>> map(List<Membership> memberships) {
 		// each user of a team has a membership, but the teams also hold each
 		// user so only one team membership needs to remain for display purposes
 		var repoPlusTeam = new HashSet<String>();
@@ -29,8 +30,8 @@ public class Memberships {
 				.toList();
 	}
 
-	public static ObjectMap map(Membership membership) {
-		var map = ObjectMap.fromObject(membership);
+	public static Map<String, Object> map(Membership membership) {
+		var map = Maps.of(membership);
 		map.remove("id");
 		if (membership.team != null) {
 			map.put("team", Teams.mapForOthers(membership.team));

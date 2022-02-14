@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
+import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -107,9 +108,23 @@ public class UserService implements UserDetailsService {
 		var query = createQuery(user, filter);
 		var data = dao.getAll(query, parameters).stream()
 				.distinct()
-				.sorted((u1, u2) -> u1.name.toLowerCase().compareTo(u2.name.toLowerCase()))
+				.sorted(this::sortUser)
 				.toList();
 		return SearchResults.paged(page, pageSize, data);
+	}
+
+	private int sortUser(User u1, User u2) {
+		var d1 = u1.settings.activeUntil != null
+				? Dates.toCalendar(u1.settings.activeUntil, false).getTimeInMillis()
+				: Long.MAX_VALUE;
+		var d2 = u2.settings.activeUntil != null
+				? Dates.toCalendar(u2.settings.activeUntil, false).getTimeInMillis()
+				: Long.MAX_VALUE;
+		if (d1 > d2)
+			return -1;
+		if (d1 < d2)
+			return 1;
+		return u1.name.toLowerCase().compareTo(u2.name.toLowerCase());
 	}
 
 	private String createQuery(User user, String filter) {

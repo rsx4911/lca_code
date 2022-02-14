@@ -3,6 +3,7 @@ package com.greendelta.collaboration.io;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,13 +39,13 @@ public class RepositoryJsonWriter implements Closeable {
 		this.repo = repo;
 	}
 
-	public String put(Reference ref) throws IOException {
-		var data = repo.datasets().get(ref.objectId);
+	public String put(Reference ref) {
+		var data = repo.datasets().get(ref);
 		if (data == null)
 			return null;
-		zipStore.put(ModelPath.get(ref.type, ref.refId), data.getBytes("utf-8"));
-		repo.datasets().getBinaries(ref).forEach(binary -> {
-			zipStore.putBin(ref.type, ref.refId, binary.filename, binary.data);
+		zipStore.put(ModelPath.jsonOf(ref.type, ref.refId), data.getBytes(StandardCharsets.UTF_8));
+		repo.references().getBinaries(ref).forEach(binary -> {
+			zipStore.putBin(ref.type, ref.refId, binary, repo.datasets().getBinary(ref, binary));
 		});
 		return data;
 	}

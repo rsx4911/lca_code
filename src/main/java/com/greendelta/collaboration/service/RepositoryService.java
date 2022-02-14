@@ -23,7 +23,6 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.model.Commit;
-import org.openlca.jsonld.Schema.UnsupportedSchemaException;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +31,7 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
+import com.greendelta.collaboration.error.UnsupportedSchemaException;
 import com.greendelta.collaboration.io.Json2Repository;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;

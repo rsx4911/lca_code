@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -35,7 +36,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Dates;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 @RestController
 @RequestMapping("ws/datamanager/glad")
@@ -100,33 +101,33 @@ public class GladController {
 	}
 
 	private Map<String, Object> loadProcessData(Repository repo, Reference ref) {
-		var json = repo.datasets().get(ref.objectId);
-		var data = ObjectMap.fromJson(json);
+		var json = repo.datasets().get(ref);
+		var data = Maps.of(json);
 		data.put("catgeories", ref.category.split("/"));
-		data.put("contact", data.getString("processDocumentation.dataSetOwner.name"));
-		var reviewer = data.getString("processDocumentation.reviewer.name");
-		data.put("processType", getProcessType(data.getString("processType")));
-		var validFrom = Dates.getTime(data.get("processDocumentation.validFrom"));
+		data.put("contact", Maps.getString(data, "processDocumentation.dataSetOwner.name"));
+		var reviewer = Maps.getString(data, "processDocumentation.reviewer.name");
+		data.put("processType", getProcessType(Maps.getString(data, "processType")));
+		var validFrom = Dates.getTime(Maps.get(data, "processDocumentation.validFrom"));
 		data.put("validFrom", validFrom);
 		data.put("validFromYear", getYear(validFrom));
-		var validUntil = Dates.getTime(data.get("processDocumentation.validUntil"));
+		var validUntil = Dates.getTime(Maps.get(data, "processDocumentation.validUntil"));
 		data.put("validUntil", validUntil);
 		data.put("validUntilYear", getYear(validUntil));
-		data.put("technology", data.getString("processDocumentation.technologyDescription"));
+		data.put("technology", Maps.getString(data, "processDocumentation.technologyDescription"));
 		if (!Strings.nullOrEmpty(reviewer)) {
 			data.put("reviewers", new String[] { reviewer });
 			data.put("reviewType", "UNKNOWN");
 		}
-		if (data.get("location.latitude") != null && data.get("location.latitude") != null) {
-			data.put("latitude", data.getLong("location.latitude"));
-			data.put("longitude", data.getLong("location.longitude"));
+		if (Maps.get(data, "location.latitude") != null && Maps.get(data, "location.longitude") != null) {
+			data.put("latitude", Maps.getLong(data, "location.latitude"));
+			data.put("longitude", Maps.getLong(data, "location.longitude"));
 		}
-		data.put("location", data.getString("location.name"));
+		data.put("location", Maps.getString(data, "location.name"));
 		data.put("reviewed", !Strings.nullOrEmpty(reviewer));
-		data.put("copyrightProtected", data.getBoolean("processDocumentation.copyright"));
-		data.put("copyrightHolder", data.getString("processDocumentation.dataSetOwner.name"));
-		if (!Strings.nullOrEmpty(data.getString("defaultAllocationMethod"))) {
-			data.put("multifunctionalModeling", getModellingApproach(data.getString("defaultAllocationMethod")));
+		data.put("copyrightProtected", Maps.getBoolean(data, "processDocumentation.copyright"));
+		data.put("copyrightHolder", Maps.getString(data, "processDocumentation.dataSetOwner.name"));
+		if (!Strings.nullOrEmpty(Maps.getString(data, "defaultAllocationMethod"))) {
+			data.put("multifunctionalModeling", getModellingApproach(Maps.getString(data, "defaultAllocationMethod")));
 		}
 		return data;
 	}
@@ -185,7 +186,7 @@ public class GladController {
 		if (s == null)
 			return;
 		var sb = new StringBuilder();
-		var br = new BufferedReader(new InputStreamReader(s, "utf-8"));
+		var br = new BufferedReader(new InputStreamReader(s, StandardCharsets.UTF_8));
 		String line = null;
 		while ((line = br.readLine()) != null) {
 			sb.append(line + "\n");

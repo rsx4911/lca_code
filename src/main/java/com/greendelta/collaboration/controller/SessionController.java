@@ -30,7 +30,7 @@ import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Dates;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Routes;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
@@ -77,11 +77,10 @@ public class SessionController {
 	// TODO deactivation and two factor auth via spring security directly?
 	@PostMapping(path = "login")
 	public String login(
-			@RequestBody Map<String, Object> credentials,
+			@RequestBody Map<String, Object> form,
 			@Autowired HttpServletRequest request) {
-		var form = ObjectMap.fromMap(credentials);
-		var username = form.getString("username");
-		var password = form.getString("password");
+		var username = Maps.getString(form, "username");
+		var password = Maps.getString(form, "password");
 		log.info("User {} attempts to login", username);
 		if (!userService.isAnonymous())
 			throw Response.conflict("Already authenticated");
@@ -89,6 +88,12 @@ public class SessionController {
 			throw Response.unauthorized("Invalid credentials");
 		if (Strings.nullOrEmpty(password))
 			throw Response.unauthorized("Invalid credentials");
+		if (userService.getForUsername(username) == null) {
+			var user = userService.getForEmail(username);
+			if (user == null)
+				throw Response.unauthorized("Invalid credentials");
+			username = user.username;
+		}
 		try {
 			sessionService.login(username, password);
 		} catch (BadCredentialsException e) {
@@ -102,7 +107,7 @@ public class SessionController {
 			throw Response.unauthorized("User is deactivated or approval is pending");
 		}
 		if (!Strings.nullOrEmpty(user.twoFactorSecret)) {
-			Integer token = (int) form.getLong("token");
+			Integer token = (int) Maps.getLong(form, "token");
 			if (token == null || token == 0) {
 				sessionService.logout(request);
 				return "tokenRequired";
@@ -123,22 +128,22 @@ public class SessionController {
 	}
 
 	@PostMapping(path = "register")
-	public void register(@RequestBody Map<String, Object> data) {
+	public void register(@RequestBody Map<String, Object> form) {
 		if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED))
 			throw Response.unavailable("User registration feature not enabled");
-		var form = ObjectMap.fromMap(data);
-		var username = form.getString("username");
-		var name = form.getString("name");
-		var email = form.getString("email");
-		var password = form.getString("password");
-		var password2 = form.getString("password2");
+		var username = Maps.getString(form, "username");
+		var name = Maps.getString(form, "name");
+		var email = Maps.getString(form, "email");
+		var password = Maps.getString(form, "password");
+		var password2 = Maps.getString(form, "password2");
 		log.info("User {} attempts to register", username);
 		if (!userService.isAnonymous())
 			throw Response.badRequest("Already authenticated");
 		if (Strings.nullOrEmpty(username))
 			throw Response.badRequest("username", "Missing input: Username");
-		var userWithSameUsername = userService.getForUsername(username);
-		if (userWithSameUsername != null)
+		if (userService.getForUsername(username) != null)
+			throw Response.badRequest("username", "Username is already in use");
+		if (userService.getForEmail(username) != null)
 			throw Response.badRequest("username", "Username is already in use");
 		if (!Routes.isValid(username))
 			throw Response.badRequest("username",
@@ -149,8 +154,9 @@ public class SessionController {
 			throw Response.badRequest("username", "This is a reserved word");
 		if (Strings.nullOrEmpty(email))
 			throw Response.badRequest("email", "Missing input: E-Mail");
-		var userWithSameMail = userService.getForEmail(email);
-		if (userWithSameMail != null)
+		if (userService.getForEmail(email) != null)
+			throw Response.badRequest("email", "Email is already in use");
+		if (userService.getForUsername(email) != null)
 			throw Response.badRequest("email", "Email is already in use");
 		if (Strings.nullOrEmpty(name))
 			throw Response.badRequest("name", "Missing input: Name");

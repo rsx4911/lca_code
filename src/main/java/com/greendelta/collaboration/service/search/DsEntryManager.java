@@ -2,6 +2,7 @@ package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.core.model.ModelType;
@@ -11,8 +12,8 @@ import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
-import com.greendelta.collaboration.util.ObjectMap;
 
 class DsEntryManager {
 
@@ -62,37 +63,37 @@ class DsEntryManager {
 		return genericVersion(ref, metaData);
 	}
 
-	private DsVersion genericVersion(Reference ref, ObjectMap metaData) {
+	private DsVersion genericVersion(Reference ref, Map<String, Object> metaData) {
 		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
 		return v;
 	}
 
-	private void fillGenericVersion(DsVersion v, Reference ref, ObjectMap metaData) {
+	private void fillGenericVersion(DsVersion v, Reference ref, Map<String, Object> metaData) {
 		v.objectId = ref.objectId.name();
-		v.name = metaData.getString("name");
-		var tags = metaData.getString("tags");
+		v.name = Maps.getString(metaData, "name");
+		var tags = Maps.getString(metaData, "tags");
 		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
 		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
 
-	private DsVersion flowVersion(Reference ref, ObjectMap metaData) {
+	private DsVersion flowVersion(Reference ref, Map<String, Object> metaData) {
 		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
-		v.flowType = metaData.get("flowType");
+		v.flowType = Maps.get(metaData, "flowType");
 		return v;
 	}
 
-	private DsVersion processVersion(Reference ref, ObjectMap metaData) {
+	private DsVersion processVersion(Reference ref, Map<String, Object> metaData) {
 		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
-		v.location = metaData.get("location");
-		v.processType = metaData.get("processType");
-		v.contact = metaData.get("contact");
-		v.modellingApproach = metaData.get("modellingApproach");
-		v.validFromYear = metaData.get("validFromYear");
-		v.validUntilYear = metaData.get("validUntilYear");
+		v.location = Maps.get(metaData, "location");
+		v.processType = Maps.get(metaData, "processType");
+		v.contact = Maps.get(metaData, "contact");
+		v.modellingApproach = Maps.get(metaData, "modellingApproach");
+		v.validFromYear = Maps.get(metaData, "validFromYear");
+		v.validUntilYear = Maps.get(metaData, "validUntilYear");
 		return v;
 	}
 

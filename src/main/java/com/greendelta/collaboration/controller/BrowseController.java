@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,8 +22,8 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
-import com.greendelta.collaboration.util.ObjectMap;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -42,7 +43,7 @@ public class BrowseController {
 	}
 
 	@GetMapping("{group}/{name}")
-	public SearchResult<ObjectMap> getCategoryContent(
+	public SearchResult<Map<String, Object>> getCategoryContent(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@RequestParam(name = "categoryPath", required = false) String categoryPath,
@@ -54,43 +55,43 @@ public class BrowseController {
 		try (var repo = repoService.get(group, name)) {
 			var entries = repo.entries().find().commit(commitId).path(categoryPath).all();
 			if (path.isEmpty()) {
-				List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN);
+				List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 				entries = entries.stream().filter(e -> !typesHidden.contains(e.type.name())).toList();
 			}
 			var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
 			if (!path.isEmpty()) {
 				mapped = MetaData.sortByName(mapped);
 			} else {
-				List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER);
+				List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 				mapped = MetaData.sortByType(mapped, typesOrder);
 			}
 			var paged = SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList(),
-					m -> m.getString("name"));
+					m -> Maps.getString(m, "name"));
 			putOtherInfo(paged.data, repo, commitId, categoryPath);
 			return paged;
 		}
 	}
 
-	private void putOtherInfo(List<ObjectMap> entries, Repository repo, String commitId, String categoryPath) {
+	private void putOtherInfo(List<Map<String, Object>> entries, Repository repo, String commitId, String categoryPath) {
 		var user = userService.getCurrentUser();
 		var loggedIn = user.id != 0;
 		var commits = new HashMap<String, Commit>();
 		entries.forEach(entry -> {
 			var entryPath = Strings.nullOrEmpty(categoryPath)
-					? entry.getString("name")
-					: categoryPath + "/" + entry.getString("name");
+					? Maps.getString(entry, "name")
+					: categoryPath + "/" + Maps.getString(entry, "name");
 			if (loggedIn) {
 				putCommitInfo(entry, repo, commits);
 			}
-			if (!entry.getString("typeOfEntry").equals(EntryType.DATASET.name())) {
+			if (!Maps.getString(entry, "typeOfEntry").equals(EntryType.DATASET.name())) {
 				entry.put("count", repo.references().find().commit(commitId).path(entryPath).count());
 			}
 		});
 	}
 
-	private void putCommitInfo(ObjectMap entry, Repository repo, Map<String, Commit> commits) {
-		var commitId = entry.getString("commitId");
-		var fullPath = entry.getString("fullPath");
+	private void putCommitInfo(Map<String, Object> entry, Repository repo, Map<String, Commit> commits) {
+		var commitId = Maps.getString(entry, "commitId");
+		var fullPath = Maps.getString(entry, "fullPath");
 		commitId = repo.commits().find().path(fullPath).until(commitId).latestId();
 		var commit = commits.computeIfAbsent(commitId, repo.commits()::get);
 		entry.put("commitId", commit.id);
@@ -117,10 +118,10 @@ public class BrowseController {
 			if (!loggedIn && !commit.id.equals(commitId))
 				throw Response.unauthorized();
 			var ref = repo.references().get(type, refId, commit.id);
-			var dataset = repo.datasets().get(ref.objectId);
+			var dataset = repo.datasets().get(ref);
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
-			var map = ObjectMap.fromJson(dataset);
+			var map = Maps.of(dataset);
 			map.put("category", ref.category);
 			if (loggedIn) {
 				map.put("commitId", modelCommitId);

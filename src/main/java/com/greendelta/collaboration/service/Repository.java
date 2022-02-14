@@ -11,11 +11,12 @@ import org.openlca.git.find.Datasets;
 import org.openlca.git.find.Diffs;
 import org.openlca.git.find.Entries;
 import org.openlca.git.find.References;
-import org.openlca.jsonld.Schema;
-import org.openlca.jsonld.Schema.UnsupportedSchemaException;
+import org.openlca.git.util.Repositories;
+import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
+import com.greendelta.collaboration.error.UnsupportedSchemaException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
@@ -60,23 +61,23 @@ public class Repository implements AutoCloseable {
 	}
 
 	public Commits commits() {
-		return new Commits(gitRepo());
+		return Commits.of(gitRepo());
 	}
 
 	public Datasets datasets() {
-		return new Datasets(gitRepo());
+		return Datasets.of(gitRepo());
 	}
 
 	public References references() {
-		return new References(gitRepo());
+		return References.of(gitRepo());
 	}
 
 	public Diffs diffs() {
-		return new Diffs(gitRepo());
+		return Diffs.of(gitRepo());
 	}
 
 	public Entries entries() {
-		return new Entries(gitRepo());
+		return Entries.of(gitRepo());
 	}
 
 	public String path() {
@@ -87,8 +88,8 @@ public class Repository implements AutoCloseable {
 		return group + '-' + name + ".zip";
 	}
 
-	public String getSchemaVersion() {
-		return Schema.URI;
+	public SchemaVersion getSchemaVersion() {
+		return Repositories.versionOf(gitRepo());
 	}
 
 	public long getSize() {
@@ -103,12 +104,14 @@ public class Repository implements AutoCloseable {
 
 	private void checkVersion() {
 		try {
+			if (commits().find().all().isEmpty())
+				return;
 			var version = getSchemaVersion();
-			if (!Schema.isSupportedSchema(version))
+			if (version == null || !version.isCurrent())
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {
 			log.error("Could not read context.json", e);
-			throw new UnsupportedSchemaException("null");
+			throw new UnsupportedSchemaException(null);
 		}
 	}
 

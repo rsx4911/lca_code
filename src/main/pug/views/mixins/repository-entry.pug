@@ -16,6 +16,8 @@ mixin repository-entry(repo, inGroupView)
             +count-info(repo.commits, 'commit', 'commits', false)
             +count-info(repo.datasets, 'data set', 'data sets', false)
             +count-info(repo.members, 'member', 'members', true)
+            if repo.lastCommit && !inGroupView
+                | , last commit on #{formatDate(repo.lastCommit)}
         .description: i=repo.settings.description
         .tags
             if repo.settings.publicAccess

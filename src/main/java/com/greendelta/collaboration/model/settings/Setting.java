@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.model.settings;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,7 +27,7 @@ public class Setting extends AbstractEntity {
 	@Column
 	private String name;
 
-	@Column
+	@Column(length = 4000)
 	private String value;
 
 	@Lob
@@ -51,7 +51,7 @@ public class Setting extends AbstractEntity {
 			return (V) Integer.valueOf(Integer.parseInt(value));
 		if (type == Object.class && data != null) {
 			try {
-				String json = new String(data, Charset.forName("utf-8"));
+				String json = new String(data, StandardCharsets.UTF_8);
 				return new ObjectMapper().readValue(json, key.getSubType());
 			} catch (JsonProcessingException e) {
 				return key.getDefaultValue();
@@ -108,7 +108,7 @@ public class Setting extends AbstractEntity {
 			}
 		} else if (type == Object.class) {
 			if (value instanceof String) {
-				this.data = value.toString().getBytes(Charset.forName("utf-8"));
+				this.data = value.toString().getBytes(StandardCharsets.UTF_8);
 			} else {
 				try {
 					this.data = new ObjectMapper().writeValueAsBytes(value);

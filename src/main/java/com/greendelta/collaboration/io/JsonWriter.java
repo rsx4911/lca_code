@@ -15,7 +15,7 @@ import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 
 public class JsonWriter implements DatasetWriter {
 
@@ -58,38 +58,38 @@ public class JsonWriter implements DatasetWriter {
 			log.trace("No data set found: " + ref.type.name() + " " + ref.refId + " (commit " + commit.id + ")");
 			return;
 		}
-		var json = ObjectMap.fromJson(dataset);
+		var json = Maps.of(dataset);
 		collectReferences(json);
 	}
 
 	@SuppressWarnings("unchecked")
-	private void collectReferences(ObjectMap object) throws IOException {
+	private void collectReferences(Map<String, Object> object) throws IOException {
 		if (object == null)
 			return;
 		for (var key : object.keySet()) {
-			if (object.isArray(key)) {
-				for (var arrayElement : object.getArray(key)) {
+			if (Maps.isArray(object, key)) {
+				for (var arrayElement : Maps.getArray(object, key)) {
 					if (!(arrayElement instanceof Map))
 						continue;
-					collectReference(ObjectMap.fromMap((Map<String, Object>) arrayElement));
+					collectReference((Map<String, Object>) arrayElement);
 				}
 				continue;
 			}
-			if (!object.isObject(key))
+			if (!Maps.isObject(object, key))
 				continue;
-			collectReference(object.getObject(key));
+			collectReference(Maps.getObject(object, key));
 		}
 	}
 
-	private void collectReference(ObjectMap object) throws IOException {
+	private void collectReference(Map<String, Object> object) throws IOException {
 		if (!(object.containsKey("@type") && object.containsKey("@id"))) {
 			collectReferences(object);
 			return;
 		}
-		var type = getType(object.getString("@type"));
+		var type = getType(Maps.getString(object, "@type"));
 		if (type == null)
 			return;
-		var refId = object.getString("@id");
+		var refId = Maps.getString(object, "@id");
 		var ref = repo.references().get(type, refId, commit.id);
 		if (ref == null) {
 			log.trace("No data set found: " + type.name() + " " + refId);

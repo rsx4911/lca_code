@@ -141,7 +141,7 @@ public class DeleteService {
 	public void deleteLibrary(String name) {
 		try (var accessible = repoService.getAllAccessible()) {
 			accessible.forEach(repo -> repoService.setRestriction(repo, name, null));
-			libraryService.removeLibrary(name);
+			libraryService.delete(libraryService.getForName(name));
 		}
 	}
 

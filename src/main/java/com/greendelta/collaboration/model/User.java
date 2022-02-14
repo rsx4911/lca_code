@@ -8,6 +8,7 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -33,6 +34,7 @@ public class User extends AbstractEntity implements UserDetails {
 	public String password;
 
 	@Column
+	@Lob
 	public byte[] avatar;
 
 	@Column

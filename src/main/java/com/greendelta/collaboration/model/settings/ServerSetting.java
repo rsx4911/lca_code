@@ -29,7 +29,6 @@ public enum ServerSetting implements SettingKey {
 	SERVER_NAME(String.class, "LCA Collaboration Server"),
 	SERVER_URL(String.class),
 	REPOSITORY_PATH(String.class),
-	LIBRARY_PATH(String.class),
 	GLAD_URL(String.class),
 	GLAD_API_KEY_HEADER(String.class, "api-key"),
 	GLAD_API_KEY(String.class),
@@ -93,7 +92,7 @@ public enum ServerSetting implements SettingKey {
 	}
 
 	public boolean isPublic() {
-		return this != GLAD_API_KEY && this != REPOSITORY_PATH && this != LIBRARY_PATH;
+		return this != GLAD_API_KEY && this != REPOSITORY_PATH;
 	}
 
 }

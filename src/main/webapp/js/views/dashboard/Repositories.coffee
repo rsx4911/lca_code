@@ -2,6 +2,7 @@ define([
 				'backbone'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Format'
 				'cs!utils/Model'
 				'cs!utils/Renderer'
 				'cs!utils/Roles'
@@ -11,7 +12,7 @@ define([
 				'templates/views/dashboard/repositories-list'
 			]
 
-	(Backbone, Events, Filter, Model, Renderer, Roles, Router, currentUser, template, listTemplate) ->
+	(Backbone, Events, Filter, Format, Model, Renderer, Roles, Router, currentUser, template, listTemplate) ->
 
 		class DashboardRepositories extends Backbone.View
 
@@ -36,6 +37,7 @@ define([
 					filterId: 'filter'
 					url: 'ws/repository?module=DASHBOARD&onlyPublic=false&'
 					beforeRender: (result) =>
+						result.formatDate = Format.date
 						setRole = (r) ->
 							role = Roles[r.role]
 							if role

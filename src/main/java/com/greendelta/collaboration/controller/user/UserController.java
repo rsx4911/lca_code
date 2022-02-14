@@ -24,7 +24,7 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.SearchResults;
 
@@ -128,6 +128,9 @@ public class UserController {
 		var userWithSameMail = service.getForEmail(user.email);
 		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
 			throw Response.badRequest("email", "Email is already in use");
+		userWithSameMail = service.getForUsername(user.email);
+		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
+			throw Response.badRequest("email", "Email is already in use");
 		fromDb.name = user.name;
 		fromDb.email = user.email;
 		var currentUser = service.getCurrentUser();
@@ -162,10 +165,9 @@ public class UserController {
 	@PutMapping("setpassword/{username}")
 	public void setPassword(
 			@PathVariable("username") String username,
-			@RequestBody Map<String, Object> passwords) {
-		var map = ObjectMap.fromMap(passwords);
-		var password = map.getString("password");
-		var password2 = map.getString("password2");
+			@RequestBody Map<String, Object> map) {
+		var password = Maps.getString(map, "password");
+		var password2 = Maps.getString(map, "password2");
 		if (Strings.nullOrEmpty(password))
 			throw Response.badRequest("password", "Missing input: Password");
 		if (!Password.isValid(password)) {

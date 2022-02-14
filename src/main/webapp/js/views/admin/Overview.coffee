@@ -3,6 +3,7 @@ define([
 				'cs!utils/Announcements'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Format'
 				'cs!utils/Layers'
 				'cs!utils/Model'
 				'cs!utils/ModelTypes'
@@ -18,7 +19,7 @@ define([
 				'templates/views/admin/overview-team-list'
 			]
 
-	(Backbone, Announcements, Events, Filter, Layers, Model, ModelTypes, Renderer, Status, Router, currentUser, settings, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
+	(Backbone, Announcements, Events, Filter, Format, Layers, Model, ModelTypes, Renderer, Status, Router, currentUser, settings, template, repositoriesTemplate, usersTemplate, groupsTemplate, teamsTemplate) ->
 
 		class AdminOverview extends Backbone.View
 
@@ -29,6 +30,7 @@ define([
 				'click [data-action=clear-index]': 'clearIndex'
 				'click [data-action=reindex-repositories]': 'reindexRepositories'
 				'click [data-action=reindex-repository]': 'reindexRepository'
+				'click [data-action=copy-users-to-clipboard]': 'copyUsersToClipboard'
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new'
 				'click [data-action=create-user]': () -> Router.navigate 'administration/user/new'
 				'click [data-action=create-group]': () -> Router.navigate 'group/new'
@@ -44,7 +46,6 @@ define([
 				'click .model-types-order .glyphicon-download': (event) -> @changeOrder event, 'MODEL_TYPES_ORDER', 'modelTypesOrder', false
 				'click .repositories-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'REPOSITORIES_HIDDEN', 'repositoriesHidden'
 				'click .model-types-order [data-action=change-visibility]': (event) -> @changeVisibility event, 'MODEL_TYPES_HIDDEN', 'modelTypesHidden'
-				'click [data-action=refresh-open-web-service-requests]': 'refreshOpenWebServiceRequests'
 				'click [data-action=set-announcement]': 'setAnnouncement'
 
 			changeOrder: (event, key, field, up) ->
@@ -118,14 +119,6 @@ define([
 					@setSetting key, value, () ->
 						Backbone.history.loadUrl()
 
-			refreshOpenWebServiceRequests: (event) ->
-				Events.preventDefault event
-				$.ajax
-					type: 'GET'
-					url: 'ws/admin/area/serverInfo'
-					success: (serverInfo) =>
-						$('#open-web-service-requests').html serverInfo.openWebServiceRequests
-
 			setAnnouncement: (event) ->
 				Events.preventDefault event
 				Layers.promptInput 'Announcement', 'textarea', @serverInfo.announcementMessage, (value) =>
@@ -157,13 +150,10 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Clearing index'
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/clearIndex'
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully cleared index'
+							success: () -> Backbone.history.loadUrl()
 
 			reindexRepositories: () ->
 				Layers.askQuestion
@@ -174,13 +164,10 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Indexing'
 						$.ajax
 							type: 'PUT'
 							url: 'ws/admin/area/reindex'
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully reindexed repositories'
+							success: () -> Backbone.history.loadUrl()
 
 			reindexRepository: (event) ->
 				target = $ Events.target event
@@ -194,13 +181,25 @@ define([
 					onAnswer: (answer) =>
 						if answer isnt 1
 							return
-						Layers.showProgressIndicator 'Indexing'
 						$.ajax
 							type: 'PUT'
 							url: "ws/admin/area/reindex/#{group}/#{repository}"
-							success: () ->
-								Layers.hideProgressIndicator()
-								Status.success 'Successfully reindexed repository'
+							success: () -> Backbone.history.loadUrl()
+
+			copyUsersToClipboard: (event) ->
+				text = '"Username"\t"Name"\t"Email"\t"Active"\n'
+				for user in @userFilter.data
+					text += '"' + user.username + '"\t'
+					text += '"' + user.name + '"\t'
+					text += '"' + user.email + '"\t'
+					text += '"' + (if user.deactivated then 'no' else 'yes') + '"\n'
+				Layers.showMessageInLayer
+					title: 'User data'
+					body: "<span>Press CTRL+C to copy (hidden) text to clipboard</span><textarea id=\"user-data-text\" class=\"pull-right\" style=\"width:0;height:0;border:0;resize:none;outline:0;\">#{text}</textarea>"
+					buttons: [
+						{text: 'Close', callback: () -> Layers.closeActive()}
+					]
+				$('#user-data-text').select()				
 
 			initialize: () ->
 				@repositoryFilter = new Filter
@@ -209,12 +208,16 @@ define([
 					filterId: 'repository-filter'
 					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?'
+					beforeRender: (result) =>
+						result.reindexingStatus = @serverInfo.reindexingStatus			
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
 					filterId: 'user-filter'
 					pageSizeId: 'users-page-size'
 					url: 'ws/user?'
+					beforeRender: (result) ->
+						result.formatDate = Format.date
 				@groupFilter = new Filter
 					container: '#groups'
 					template: groupsTemplate

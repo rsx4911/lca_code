@@ -2,6 +2,7 @@ package com.greendelta.collaboration.controller.user;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,6 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
 
 @RestController
 @RequestMapping("ws/messaging")
@@ -43,7 +43,7 @@ public class MessagingController {
 	}
 
 	@GetMapping
-	public List<ObjectMap> getConversations() {
+	public List<Map<String, Object>> getConversations() {
 		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var user = userService.getCurrentUser();
@@ -52,7 +52,7 @@ public class MessagingController {
 	}
 
 	@GetMapping("user/{username}")
-	public ResponseEntity<List<ObjectMap>> getMessages(
+	public ResponseEntity<List<Map<String, Object>>> getMessages(
 			@PathVariable("username") String username,
 			@RequestParam(name = "before", required = false) long before) {
 		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
@@ -72,7 +72,7 @@ public class MessagingController {
 	}
 
 	@GetMapping("team/{teamname}")
-	public ResponseEntity<List<ObjectMap>> getTeamMessages(
+	public ResponseEntity<List<Map<String, Object>>> getTeamMessages(
 			@PathVariable("teamname") String teamname,
 			@RequestParam(name = "before", required = false) long before) {
 		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))

@@ -3,6 +3,7 @@ package com.greendelta.collaboration.controller.user;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -56,8 +57,12 @@ public class LibraryController {
 			var user = userService.getCurrentUser();
 			var userRole = membershipService.getRole(user, repo.path());
 			var restrictions = new ArrayList<LibraryRestriction>();
+			var libraries = service.getAll().stream()
+					.collect(Collectors.toMap(lib -> lib.name, lib -> lib.getRefIds()));
 			refIds.forEach(refId -> {
-				service.getLibraryNames(refId).forEach(library -> {
+				libraries.keySet().forEach(library -> {
+					if (!libraries.get(library).contains(refId))
+						return;
 					var restrictedToRole = restrictedTo.get(library);
 					if (restrictedToRole == null)
 						return;

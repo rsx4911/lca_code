@@ -3,6 +3,7 @@ define([
 				'cs!utils/Avatar'
 				'cs!utils/Events'
 				'cs!utils/Filter'
+				'cs!utils/Format'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
@@ -13,7 +14,7 @@ define([
 				'templates/views/group/repositories'
 			]
 
-	(Backbone, Avatar, Events, Filter, Forms, Layers, Renderer, Roles, Status, Router, template, listTemplate) ->
+	(Backbone, Avatar, Events, Filter, Format, Forms, Layers, Renderer, Roles, Status, Router, template, listTemplate) ->
 
 		class GroupView extends Backbone.View
 
@@ -41,6 +42,7 @@ define([
 					filterPrefix: "#{name}/"
 					url: "ws/repository?module=GROUP&"
 					beforeRender: (result) =>
+						result.formatDate = Format.date
 						setRole = (r) ->
 							role = Roles[r.role]
 							if role

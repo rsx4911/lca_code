@@ -6,46 +6,45 @@ import java.util.Map;
 import org.openlca.core.model.ModelType;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.ModelTypes;
-import com.greendelta.collaboration.util.ObjectMap;
 
 class DsEntryParser {
 
 	@SuppressWarnings("unchecked")
-	DsEntry parse(Map<String, Object> map) {
-		if (map == null)
+	DsEntry parse(Map<String, Object> entry) {
+		if (entry == null)
 			return null;
-		var entry = ObjectMap.fromMap(map);
 		var e = new DsEntry();
-		e.refId = entry.get("refId");
+		e.refId = Maps.get(entry, "refId");
 		e.type = ModelTypes.from(entry);
-		for (var vMap : entry.getAll("versions", Map.class)) {
-			var version = ObjectMap.fromMap(vMap);
+		for (var vMap : Maps.getAll(entry, "versions", Map.class)) {
+			var version = (Map<String, Object>) vMap;
 			var v = new DsVersion();
 			if (e.type == ModelType.PROCESS) {
 				v = parseProcessSpecific(version);
 			} else if (e.type == ModelType.FLOW) {
 				v = parseFlowSpecific(version);
 			}
-			v.objectId = version.get("objectId");
-			v.category = version.get("category");
-			v.categoryPaths = version.getAll("category", String.class);
-			v.name = version.get("name");
-			v.tags = version.get("tags");
+			v.objectId = Maps.get(version, "objectId");
+			v.category = Maps.get(version, "category");
+			v.categoryPaths = Maps.getAll(version, "category", String.class);
+			v.name = Maps.get(version, "name");
+			v.tags = Maps.get(version, "tags");
 			if (v.tags == null) {
 				v.tags = new ArrayList<>();
 			}
-			for (var cMap : version.getAll("repos", Map.class)) {
-				var commit = ObjectMap.fromMap(cMap);
+			for (var cMap : Maps.getAll(version, "repos", Map.class)) {
+				var commit = (Map<String, Object>) cMap;
 				var r = new DsRepo();
-				r.path = commit.get("id");
-				r.group = commit.get("group");
+				r.path = Maps.get(commit, "id");
+				r.group = Maps.get(commit, "group");
 				if (r.tags == null) {
 					r.tags = new ArrayList<>();
 				}
-				r.tags = commit.get("tags");
-				r.commitId = commit.get("commitId");
-				r.commitMessage = commit.get("commitMessage");
+				r.tags = Maps.get(commit, "tags");
+				r.commitId = Maps.get(commit, "commitId");
+				r.commitMessage = Maps.get(commit, "commitMessage");
 				v.repos.add(r);
 			}
 			e.versions.add(v);
@@ -53,18 +52,18 @@ class DsEntryParser {
 		return e;
 	}
 
-	private DsVersion parseProcessSpecific(ObjectMap version) {
+	private DsVersion parseProcessSpecific(Map<String, Object> version) {
 		var v = new DsVersion();
 		v.processType = ModelTypes.processType(version);
-		v.validFromYear = version.get("validFromYear");
-		v.validUntilYear = version.get("validUntilYear");
-		v.location = version.get("location");
+		v.validFromYear = Maps.get(version, "validFromYear");
+		v.validUntilYear = Maps.get(version, "validUntilYear");
+		v.location = Maps.get(version, "location");
 		v.modellingApproach = ModellingApproach.from(version);
-		v.contact = version.get("contact");
+		v.contact = Maps.get(version, "contact");
 		return v;
 	}
 
-	private DsVersion parseFlowSpecific(ObjectMap version) {
+	private DsVersion parseFlowSpecific(Map<String, Object> version) {
 		var v = new DsVersion();
 		v.flowType = ModelTypes.flowType(version);
 		return v;

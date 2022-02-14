@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Library;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.util.Routes;
@@ -36,18 +36,18 @@ public class LibraryController {
 	@GetMapping
 	public List<Map<String, Object>> getLibraries() {
 		var libraries = new ArrayList<Map<String, Object>>();
-		for (var name : service.getLibraryNames()) {
+		for (var library : service.getAll()) {
 			var map = new HashMap<String, Object>();
-			map.put("name", name);
-			map.put("count", service.getRefIds(name).size());
+			map.put("name", library.name);
+			map.put("count", library.getRefIds().size());
 			libraries.add(map);
 		}
 		return libraries;
 	}
 
 	@GetMapping("{name}")
-	public Set<String> getLibraryRefIds(@PathVariable("name") String name) {
-		return service.getRefIds(name);
+	public List<String> getLibraryRefIds(@PathVariable("name") String name) {
+		return service.getForName(name).getRefIds();
 	}
 
 	@PutMapping("{name}")
@@ -55,7 +55,16 @@ public class LibraryController {
 			@RequestBody List<String> refIds) {
 		if (!Routes.isValid(name, ' '))
 			throw Response.badRequest("name", "Only letters, numbers, underscore and space are allowed");
-		service.putLibrary(name, refIds);
+		var library = service.getForName(name);
+		if (library != null) {
+			library.setRefIds(refIds);
+			service.update(library);
+		} else {
+			library = new Library();
+			library.name = name;
+			library.setRefIds(refIds);
+			service.insert(library);
+		}
 	}
 
 	@DeleteMapping("{name}")

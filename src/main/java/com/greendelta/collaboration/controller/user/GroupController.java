@@ -28,7 +28,7 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.ObjectMap;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
@@ -56,7 +56,7 @@ public class GroupController {
 	}
 
 	@GetMapping
-	public SearchResult<ObjectMap> getAll(
+	public SearchResult<Map<String, Object>> getAll(
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter,
@@ -65,7 +65,7 @@ public class GroupController {
 		var result = service.getAll(page, pageSize, filter, true, onlyIfCanWrite);
 		var user = userService.getCurrentUser();
 		return SearchResults.convert(result, group -> {
-			var map = ObjectMap.fromMap(Collections.singletonMap("name", group));
+			var map = Maps.of("name", (Object) group);
 			var settings = service.getSettings(group);
 			map.put("settings", settings.toMap());
 			map.put("label", settings.get(GroupSetting.LABEL, group));

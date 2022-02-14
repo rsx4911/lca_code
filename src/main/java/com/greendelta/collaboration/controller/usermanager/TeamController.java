@@ -25,6 +25,8 @@ import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.NotificationService.NotificationJob;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Dates;
+import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
 
 @RestController("usermanagerTeamController")
@@ -96,6 +98,20 @@ public class TeamController {
 		fromDb = service.update(fromDb);
 		notifications.forEach(notification -> notification.send());
 		return Teams.mapForManager(fromDb);
+	}
+
+	@PutMapping("{teamname}/activeuntil")
+	public void setActiveUntil(
+			@PathVariable("teamname") String teamname,
+			@RequestBody Map<String, Object> data) {
+		var team = authorizedGetTeam(teamname);
+		if (team == null)
+			throw Response.notFound();
+		var date = Maps.getString(data, "activeUntil");
+		for (var user : team.users) {
+			user.settings.activeUntil = Dates.fromString(date);
+			userService.update(user);
+		}
 	}
 
 	@DeleteMapping("{teamname}")
