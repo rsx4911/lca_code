@@ -28,21 +28,21 @@ class DsEntryParser {
 			}
 			v.objectId = Maps.get(version, "objectId");
 			v.category = Maps.get(version, "category");
-			v.categoryPaths = Maps.getAll(version, "category", String.class);
+			v.categoryPaths = Maps.getAll(version, "categoryPaths", String.class);
 			v.name = Maps.get(version, "name");
-			v.tags = Maps.get(version, "tags");
+			v.tags = Maps.getAll(version, "tags", String.class);
 			if (v.tags == null) {
 				v.tags = new ArrayList<>();
 			}
 			for (var cMap : Maps.getAll(version, "repos", Map.class)) {
 				var commit = (Map<String, Object>) cMap;
 				var r = new DsRepo();
-				r.path = Maps.get(commit, "id");
+				r.path = Maps.get(commit, "path");
 				r.group = Maps.get(commit, "group");
 				if (r.tags == null) {
 					r.tags = new ArrayList<>();
 				}
-				r.tags = Maps.get(commit, "tags");
+				r.tags = Maps.getAll(commit, "tags", String.class);
 				r.commitId = Maps.get(commit, "commitId");
 				r.commitMessage = Maps.get(commit, "commitMessage");
 				v.repos.add(r);

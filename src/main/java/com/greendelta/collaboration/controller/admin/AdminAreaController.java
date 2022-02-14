@@ -7,6 +7,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,8 @@ import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -29,10 +32,12 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.EmailService;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.SearchService.ReindexingStatus;
 import com.greendelta.collaboration.util.Maps;
 
 @RestController
@@ -46,15 +51,18 @@ public class AdminAreaController {
 	public static final String SERVER_INFO_PATH = "/ws/admin/area/serverInfo";
 	private final RepositoryService repoService;
 	private final SearchService searchService;
+	private final IndexingService indexingService;
 	private final SettingsService settingsService;
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
 
 	@Autowired
 	public AdminAreaController(RepositoryService repoService, SearchService searchService,
-			SettingsService settingsService, EmailService emailService, AnnouncementService announcementService) {
+			IndexingService indexingService, SettingsService settingsService, EmailService emailService,
+			AnnouncementService announcementService) {
 		this.repoService = repoService;
 		this.searchService = searchService;
+		this.indexingService = indexingService;
 		this.settingsService = settingsService;
 		this.emailService = emailService;
 		this.announcementService = announcementService;
@@ -121,32 +129,23 @@ public class AdminAreaController {
 	public void clearIndex() {
 		if (searchService.isReindexing())
 			throw Response.conflict("Reindexing is already running");
-		new Thread(() -> {
-			try {
-				var status = searchService.startReindexing(1);
-				searchService.clearIndex();
-				status.worked++;
-			} finally {
-				searchService.endReindexing();
-			}
-		}).start();
+		try {
+			var status = searchService.startReindexing(1);
+			searchService.clearIndex();
+			status.worked++;
+		} finally {
+			searchService.endReindexing();
+		}
 	}
 
 	@PutMapping("reindex")
 	public void reindex() {
 		if (searchService.isReindexing())
 			throw Response.conflict("Reindexing is already running");
-		new Thread(() -> {
-			var all = repoService.getAllAccessible();
-			var status = searchService.startReindexing(all.size());
-			searchService.clearIndex();
-			try (var repositories = all) {
-				repositories.forEach(repo -> searchService.index(repo));
-				status.worked++;
-			} finally {
-				searchService.endReindexing();
-			}
-		}).start();
+		var all = repoService.getAllAccessible();
+		var status = searchService.startReindexing(all.size());
+		searchService.clearIndex();
+		indexingService.index(all, status);
 	}
 
 	@PutMapping("reindex/{group}/{repository}")
@@ -155,15 +154,9 @@ public class AdminAreaController {
 			@PathVariable("repository") String repository) {
 		if (searchService.isReindexing())
 			throw Response.conflict("Reindexing is already running");
-		new Thread(() -> {
-			var status = searchService.startReindexing(1);
-			try (var repo = repoService.get(group, repository)) {
-				searchService.update(repo);
-				status.worked++;
-			} finally {
-				searchService.endReindexing();
-			}
-		}).start();
+		var repo = repoService.get(group, repository);
+		var status = searchService.startReindexing(1);
+		indexingService.index(Arrays.asList(repo), status);
 	}
 
 	@PutMapping("announce")
@@ -220,6 +213,28 @@ public class AdminAreaController {
 		}
 		br.close();
 		return sb.toString();
+	}
+
+	@Service
+	public static class IndexingService {
+
+		private final SearchService searchService;
+
+		@Autowired
+		public IndexingService(SearchService searchService) {
+			this.searchService = searchService;
+		}
+
+		@Async
+		public void index(List<Repository> repositories, ReindexingStatus status) {
+			try {
+				repositories.forEach(searchService::index);
+				status.worked++;
+			} finally {
+				searchService.endReindexing();
+			}
+		}
+
 	}
 
 }
