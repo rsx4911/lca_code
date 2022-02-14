@@ -9,6 +9,7 @@ node_modules/
 /src/main/webapp/js/app/DynamicDependencies.coffee
 /src/main/webapp/*.html
 /src/main/webapp/css/main.css
+/custom/
 
 ### STS ###
 .apt_generated
