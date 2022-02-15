@@ -39,10 +39,10 @@ define([
 					type: 'POST'
 					url: 'ws/public/error'
 					contentType: 'application/json'
-					data: JSON.stringify({ stacktrace: error.responseJSON.trace, path: Backbone.history.fragment })
+					data: JSON.stringify({ stacktrace: error.responseJSON?.trace, path: Backbone.history.fragment })
 					complete: () -> 
 						if localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
-							localStorage?.setItem?('errorMessage', error.responseJSON.trace)
+							localStorage?.setItem?('errorMessage', error.responseJSON?.trace or error)
 							Router.navigate "error",
 								replace: true
 						window.inErrorHandling = false
