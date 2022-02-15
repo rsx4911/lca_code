@@ -165,7 +165,7 @@ define([
 					@dataset = dataset
 					@loadCommitHistory (commits) =>
 						@commits = commits
-						unless @commitId
+						if !@commitId && commits && commits.length
 							@commitId = commits[0].id
 						DatasetPrepare.applyTo @dataset
 						@doRender renderOptions
