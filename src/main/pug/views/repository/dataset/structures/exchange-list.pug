@@ -58,11 +58,14 @@ mixin exchange(exchange, other, index)
 	- var otherUnit = getValue(other, 'unit');
 	- var flow = getValue(exchange, 'flow');
 	- var otherFlow = getValue(other, 'flow');
+	- var location = getValue(exchange, 'location');
+	- var otherLocation = getValue(other, 'location');
 	- var title = amount ? amount + (otherAmount && otherAmount != amount ? ' / ' + otherAmount : '') : (otherAmount ? otherAmount : '');
 	- var amountChanged = compare(amount, otherAmount);
 	- var unitChanged = compare(unit, otherUnit) || compare(getValue(unit, 'name'), getValue(otherUnit, 'name'));
 	- var flowChanged = compare(flow, otherFlow) || compare(getValue(flow, 'name'), getValue(otherFlow, 'name'));
-	- var changed = amountChanged || unitChanged || flowChanged;
+	- var locationChanged = compare(location, otherLocation) || compare(getValue(location, 'name'), getValue(otherLocation, 'name'));
+	- var changed = amountChanged || unitChanged || flowChanged || locationChanged;
 	tr(class=index>=10?'toggleable':null, style=index>=10?'display:none':null)
 		td: span.same-size-font(title=title, data-compare=amountChanged)
 			img.icon-small(src='images/' + ((exchange?exchange.input:other.input)?'input':'output') + '.png' aria-label='Icon of ' + ((exchange?exchange.input:other.input)?'input':'output'))
@@ -81,4 +84,8 @@ mixin exchange(exchange, other, index)
 				span.original-value=unit.name
 			if otherUnit && (unitChanged || !unit)
 				span.comparison-value=otherUnit.name
-		td(data-compare=flowChanged): +ref(flow, otherFlow, null, true)
+		td
+			span(data-compare=flowChanged): +ref(flow, otherFlow, null, true)
+			if (location || otherLocation)
+				|  in 
+				span(data-compare=locationChanged): +ref(location, otherLocation, null, true)

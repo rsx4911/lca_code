@@ -8,6 +8,8 @@ mixin project-variant-table()
 				th=getLabel('variants.productSystem')
 				th=getLabel('variants.allocationMethod')
 				th=getLabel('variants.amount')
+				th=getLabel('variants.description')
+				th=getLabel('variants.isDisabled')
 				th
 		tbody
 			each values in getArrayValues(dataset, compareTo, 'VARIANT', 'variants')
@@ -27,4 +29,7 @@ mixin project-variant-row(variant, other)
 			+sub-field(variant, other, 'amount')
 			| &nbsp;
 			+sub-field(variant, other, 'unit.name')
+		+sub-field-cell(variant, other, 'description')
+		td 
+			+boolean-sub-field(variant, other, 'isDisabled')
 		td(data-path=variant&&system?'variants[' + system.id + '-' + variant.name + ']':null)

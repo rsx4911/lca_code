@@ -24,9 +24,7 @@ define([
 						for variant in dataset.variants
 							variant.allocationMethod = Allocation[variant.allocationMethod]
 				when 'ProductSystem'
-					Sort.parameterRedefs dataset
-					for exchange in dataset
-						exchange.internalId = exchange.flow.id
+					Sort.parameterSets dataset
 				when 'Process'
 					Sort.exchanges dataset
 					Sort.socialAspects dataset

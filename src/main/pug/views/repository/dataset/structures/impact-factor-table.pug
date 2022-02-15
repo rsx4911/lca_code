@@ -11,6 +11,7 @@ mixin impact-factor-table()
 			tr
 				th=getLabel('impactCategories.impactFactors.flow')
 				th=getLabel('impactCategories.impactFactors.flow.category')
+				th=getLabel('impactCategories.impactFactors.location')
 				th=getLabel('impactCategories.impactFactors.value')
 				th
 					if showUncertainties
@@ -52,5 +53,6 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 			+sub-field(category, otherCategory, 'referenceUnitName')
 			| /
 			+sub-field(unit, otherUnit, 'name')
+		+sub-field-ref-cell(factor, otherFactor, 'location')
 		+uncertainty-cell(factor, otherFactor, formatScientific)
 		td(data-path=flow?'impactCategories[' + category.Id + '].impactFactors[' + flow.id + ']':null)

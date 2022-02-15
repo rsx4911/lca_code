@@ -5,11 +5,10 @@ include ./structures/unit-table.pug
 	.model-left-content
 		+header
 		.content
-			table.table.no-head
-				tbody
-					+ref-row('defaultFlowProperty')
 			if hasAtLeastOne(dataset, compareTo, 'units') || reviewMode
 				h4(data-path='units')=getLabel('units')
 				+unit-table()
 	+meta
+		hr
+		+labeled-ref-block('defaultFlowProperty')
 	.clear

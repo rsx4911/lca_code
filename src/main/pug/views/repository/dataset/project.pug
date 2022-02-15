@@ -5,7 +5,10 @@ include ./structures/project-parameter-redef-table.pug
 .content-box
 	.model-left-content
 		+header
+
 		.content
+			table.table.no-head
+				tbody
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('variants', true)
 				+nav-tab('parameterRedefs')
@@ -20,4 +23,6 @@ include ./structures/project-parameter-redef-table.pug
 		+ref-block('impactMethod', '-')
 		strong=getLabel('nwSet')
 		+field-block('nwSet.name', '-')(data-path='nwSet')
+		+labeled-boolean-field-block('isWithCosts')
+		+labeled-boolean-field-block('isWithRegionalization')
 	.clear

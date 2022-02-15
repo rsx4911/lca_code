@@ -78,6 +78,7 @@ define([
 					when 'ALLOCATION_FACTOR' then if v.type is value.type && v.exchange?.internalId is value.exchange?.internalId && v.product?.id is value.product?.id then return v
 					when 'VARIANT' then if (v.productSystem?.id + '-' + v.name) is (value.productSystem?.id + '-' + value.name) then return v
 					when 'PARAMETER_REDEF' then if (if v.context then v.context.id else 'global') + v.name is (if value.context then value.context.id else 'global') + value.name then return v
+					when 'PARAMETER_REDEF_SET' then if v.name is value.name then return v
 			return null
 
 		hasAtLeastOne = (ref, ref2, arrayPath, elementPath, filter) ->
