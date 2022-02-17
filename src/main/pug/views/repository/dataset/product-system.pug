@@ -1,6 +1,4 @@
-include ./structures/product-system-parameter-redef-table.pug
-include ./structures/exchange-table.pug
-include ./structures/exchange-list.pug
+include ./structures/product-system-parameter-set-table.pug
 
 mixin target-amount-row()
 	tr
@@ -20,12 +18,10 @@ mixin target-amount-row()
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab(null, true, 'Overview')
 				+nav-tab('inventory')
-				if dataset.inventory && dataset.inventory.length
-					+nav-tab(null, false, 'Impacts')
 				if hasLinks && !standalone
 					+nav-tab(null, false, 'Supply chain')
 					+nav-tab(null, false, 'Graph')
-				+nav-tab('parameterRedefs')
+				+nav-tab('parameterSets')
 				if !standalone
 					+maximize-icon
 			.tab-content
@@ -43,16 +39,6 @@ mixin target-amount-row()
 										+field-row-value(name, otherName)
 							+ref-row('targetFlowProperty')
 							+target-amount-row()
-				+nav-tab-pane('inventory')
-					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
-					.clear
-					.exchange-tables.toggleable
-						+exchange-table('inventory', true)
-						+exchange-table('inventory', false)
-					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
-					.clear
-					.exchange-list.toggleable
-						+exchange-list(exchangeMap, otherExchangeMap)
 				if dataset.inventory && dataset.inventory.length
 					+nav-tab-pane('impacts', false, true)
 						label Impact method:
@@ -71,8 +57,12 @@ mixin target-amount-row()
 						#process-tree-container
 					+nav-tab-pane('graph', false, hasLinks)
 						iframe(src='graph/graph.html' width='100%' height='500px')
-				+nav-tab-pane('parameterRedefs')
-					+product-system-parameter-redef-table()
+				+nav-tab-pane('parameterSets')
+					- var sets = getArrayValues(dataset, compareTo, 'PARAMETER_REDEF_SET', 'parameterSets');
+					each values, i in sets
+						+product-system-parameter-set-table(values[0], values[1])
+						if i < sets.length - 1
+							hr
 	+meta
 		hr
 		strong=getLabel('processes')

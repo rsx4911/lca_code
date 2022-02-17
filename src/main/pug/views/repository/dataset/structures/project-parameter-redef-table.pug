@@ -8,6 +8,7 @@ mixin project-parameter-redef-table()
 				th=getLabel('parameters.name')
 				each variant in dataset.variants
 					th=variant.name
+				th=getLabel('parameters.isProtected')
 				th
 		tbody
 			each values in getArrayValues(dataset, compareTo, 'PARAMETER_REDEF', 'parameterRedefs')
@@ -30,6 +31,7 @@ mixin project-parameter-redef-row(parameter, other)
 				- var otherEntry = other ? other.values[index] : null;
 				- var otherValue = getValue(otherEntry, 'value');
 				+sub-field-cell(entry, otherEntry, 'value')(data-path=entry.commentPath)
+		td: +boolean-sub-field(paramter, other, 'isProtected')
 		if !parameter && other && other.values
 			each entry, index in other.values
 				td.comparison-value=entry.value

@@ -1,5 +1,4 @@
 include ./structures/impact-category-table.pug
-include ./structures/parameter-table.pug
 include ./structures/nw-factor-table.pug
 
 +menubar
@@ -10,7 +9,6 @@ include ./structures/nw-factor-table.pug
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('impactCategories', true)
 				+nav-tab('nwSets')
-				+nav-tab('parameters')
 			.tab-content
 				+nav-tab-pane('impactCategories', true)
 					+impact-category-table()
@@ -21,8 +19,8 @@ include ./structures/nw-factor-table.pug
 							|  - 
 							+sub-field(values[0], values[1], 'weightedScoreUnit')
 						+nw-factor-table(values[0], values[1])
-				+nav-tab-pane('parameters')
-					+parameter-table(true)
-					+parameter-table(false)
 	+meta
+		hr
+		+labeled-field-block('code', null, '-')
+		+labeled-ref-block('source')
 	.clear

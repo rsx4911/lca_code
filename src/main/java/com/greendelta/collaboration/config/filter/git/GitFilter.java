@@ -17,8 +17,6 @@ import org.eclipse.jgit.transport.resolver.FileResolver;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.greendelta.collaboration.io.RepositoryJsonWriter;
-import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -30,20 +28,20 @@ import com.greendelta.collaboration.service.user.NotificationService;
 @WebFilter(asyncSupported = true)
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
-	private final RepositoryService repoService;
-	private final SearchService searchService;
+//	private final RepositoryService repoService;
+//	private final SearchService searchService;
 	private final SettingsService settingsService;
-	private final NotificationService notificationService;
+//	private final NotificationService notificationService;
 	private final SessionService sessionService;
 	private final GitFilterConfig config;
 
 	@Autowired
 	public GitFilter(RepositoryService repoService, SearchService searchService, SettingsService settingsService,
 			NotificationService notificationService, SessionService sessionService, GitFilterConfig config) {
-		this.repoService = repoService;
-		this.searchService = searchService;
+//		this.repoService = repoService;
+//		this.searchService = searchService;
 		this.settingsService = settingsService;
-		this.notificationService = notificationService;
+//		this.notificationService = notificationService;
 		this.sessionService = sessionService;
 		this.config = config;
 	}
@@ -89,16 +87,18 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	}
 
 	private void runCommitPostProcessing(RepositoryPath path) {
-		try (var repo = repoService.get(path)) {
-			var commit = repo.commits().head();
-			var isPublic = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
-			var generateJson = repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
-			if (isPublic && generateJson) {
-				RepositoryJsonWriter.writeCurrentAsync(repo);
-			}
-			notificationService.dataCommitted(repo, commit);
-			new Thread(() -> searchService.index(repo, commit)).run();
-		}
+		// TODO
+		// try (var repo = repoService.get(path)) {
+		// var commit = repo.commits().head();
+		// var isPublic = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
+		// var generateJson =
+		// repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
+		// if (isPublic && generateJson) {
+		// RepositoryJsonWriter.writeCurrentAsync(repo);
+		// }
+		// notificationService.dataCommitted(repo, commit);
+		// new Thread(() -> searchService.index(repo, commit)).run();
+		// }
 	}
 
 }

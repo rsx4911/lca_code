@@ -1,6 +1,9 @@
 include ./mixins.pug
 
-mixin product-system-parameter-redef-table()
+mixin product-system-parameter-set-table(set, otherSet)
+	h4: +sub-field(set, otherSet, 'name')
+		br
+		small: +sub-field(set, otherSet, 'description')
 	table.table
 		thead
 			tr
@@ -8,12 +11,12 @@ mixin product-system-parameter-redef-table()
 				th=getLabel('parameterRedefs.name')
 				th=getLabel('parameterRedefs.value')
 				th
-					- var showUncertainties = hasAtLeastOne(dataset, compareTo, 'parameterRedefs', 'uncertainty');
+					- var showUncertainties = hasAtLeastOne(set, otherSet, 'parameters', 'uncertainty');
 					if showUncertainties
 						| #{getLabel('parameterRedefs.uncertainty')}
 				th
 		tbody
-			each values in getArrayValues(dataset, compareTo, 'PARAMETER_REDEF', 'parameterRedefs')
+			each values in getArrayValues(set, otherSet, 'PARAMETER_REDEF', 'parameters')
 				+product-system-parameter-redef-row(values[0], values[1])
 
 mixin product-system-parameter-redef-row(parameter, other)

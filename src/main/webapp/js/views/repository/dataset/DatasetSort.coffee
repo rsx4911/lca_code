@@ -77,6 +77,16 @@ define () ->
 	parameters: (dataset) ->
 		@sortByName dataset.parameters
 
+	parameterSets: (dataset) ->
+		unless dataset.parameterSets
+			return
+		dataset.parameterSets.sort (s1, s2) ->
+			if s1.isBaseline isnt s2.isBaseline
+				if s1.isBaseline
+					return -1
+				return 1
+			return 0
+
 	parameterRedefs: (dataset) ->
 		unless dataset.parameterRedefs
 			return

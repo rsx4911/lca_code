@@ -10,7 +10,7 @@ mixin exchange-table(field, input)
 	if count > 0
 		div
 			table.table(class=input?'inputs':'outputs')
-				- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false, description: false};
+				- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, avoidedProduct: false, description: false, location: false};
 				if exchanges
 					each exchange in exchanges
 						if exchange.input === input
@@ -20,6 +20,7 @@ mixin exchange-table(field, input)
 							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
 							- show.avoidedProduct = show.avoidedProduct || exchange.avoidedProduct;
 							- show.description = show.description || exchange.description;
+							- show.location = show.location || exchange.location;
 				if otherExchanges
 					each exchange in otherExchanges
 						if exchange.input === input
@@ -29,6 +30,7 @@ mixin exchange-table(field, input)
 							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
 							- show.avoidedProduct = show.avoidedProduct || exchange.avoidedProduct;
 							- show.description = show.description || exchange.description;
+							- show.location = show.location || exchange.location;
 				thead
 					tr
 						th
@@ -40,6 +42,7 @@ mixin exchange-table(field, input)
 						th=show.dqEntry?getLabel('exchanges.dqEntry'):''
 						th=show.defaultProvider?getLabel('exchanges.defaultProvider'):''
 						th=show.avoidedProduct?(input?getLabel('exchanges.avoidedWaste'):getLabel('exchanges.avoidedProduct')):''
+						th=show.location?(getLabel('exchanges.location')):''
 						th=show.description?(getLabel('exchanges.description')):''
 						th
 				tbody
@@ -76,7 +79,7 @@ mixin exchange-row(exchange, other, count, input, show)
 		td
 			+compare-icon(changed)
 			+ref(flow, otherFlow)
-		td: +category-field(category, otherCategory, true)
+		td: +category-field(category, otherCategory, true, 'Flow')
 		- var amount = getValue(exchange, 'amount');
 		- amount = amount || amount === 0
 		- var otherAmount = getValue(other, 'amount');
@@ -100,5 +103,6 @@ mixin exchange-row(exchange, other, count, input, show)
 		td
 			if show.avoidedProduct
 				+boolean-sub-field(exchange, other, 'avoidedProduct')
+		+sub-field-ref-cell(exchange, other, 'location')
 		+sub-field-cell(exchange, other, 'description', null, null, false, 75)
 		td(data-path=exchange?'exchanges[' + exchange.internalId +']':null)

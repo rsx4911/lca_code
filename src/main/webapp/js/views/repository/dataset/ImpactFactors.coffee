@@ -7,7 +7,7 @@ define () ->
 		for f in impactFactors
 			unless f.flow 
 				continue
-			cat = if f.flow.category then f.flow.category.split('/') or []
+			cat = if f.flow.category then f.flow.category.split('/') else []
 			if cat.length < 2
 				map[uncategorizedLabel][''].push f
 			else

@@ -11,6 +11,7 @@ mixin impact-factor-table()
 			tr
 				th=getLabel('impactCategories.impactFactors.flow')
 				th=getLabel('impactCategories.impactFactors.flow.category')
+				th=getLabel('impactCategories.impactFactors.location')
 				th=getLabel('impactCategories.impactFactors.value')
 				th
 					if showUncertainties
@@ -45,7 +46,8 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 			if category && otherCategory
 				+compare-icon(changed)
 			+ref(flow, otherFlow)
-		td: +category-field(flowCategory, otherFlowCategory, true)
+		td: +category-field(flowCategory, otherFlowCategory, true, 'Flow')
+		+sub-field-ref-cell(factor, otherFactor, 'location')
 		td 
 			+sub-field(factor, otherFactor, 'value', null, formatScientific)
 			|  

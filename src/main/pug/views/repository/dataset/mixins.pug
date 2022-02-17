@@ -338,7 +338,7 @@ mixin ref-block(path, defaultLabel)
 		+compare-icon(changed)
 		+ref(value, value2, defaultLabel)
 
-mixin category-field(category, category2, inTable)
+mixin category-field(category, category2, inTable, categoryType)
 	- var value = (category || '').split('/')
 	- var value2 = (category2 || '').split('/')
 	- var depth = inTable ? 2 : null;
@@ -346,7 +346,7 @@ mixin category-field(category, category2, inTable)
 	span(data-compare=categoryCompare)
 		+compare-icon(categoryCompare)
 		if value
-			- var typeLabel = getTypeLabel(getTypeAsEnum(dataset.type));
+			- var typeLabel = getTypeLabel(getTypeAsEnum(categoryType ? categoryType : dataset.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
 			+category-breadcrumb(value, url, true, depth)(data-path=!inTable?'category':null, class='original-value')
 			if value2

@@ -43,6 +43,9 @@ public class ClientErrorController {
 	}
 
 	private Throwable createException(String error) {
+		if (error == null) {
+			error = "";
+		}
 		var parts = error.contains("\t")
 				? error.split("\tat ")
 				: error.split(" at ");

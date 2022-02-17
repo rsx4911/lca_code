@@ -72,7 +72,8 @@ public class BrowseController {
 		}
 	}
 
-	private void putOtherInfo(List<Map<String, Object>> entries, Repository repo, String commitId, String categoryPath) {
+	private void putOtherInfo(List<Map<String, Object>> entries, Repository repo, String commitId,
+			String categoryPath) {
 		var user = userService.getCurrentUser();
 		var loggedIn = user.id != 0;
 		var commits = new HashMap<String, Commit>();
