@@ -171,7 +171,7 @@ public class BrowseController {
 				if (!Maps.getBoolean(unit, "referenceUnit"))
 					continue;
 				var name = Maps.getString(unit, "name");
-				Maps.put(factor, "referenceUnit", name);
+				Maps.put(flowProperty, "referenceUnit", name);
 				break;
 			}
 		}

@@ -47,12 +47,12 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 				+compare-icon(changed)
 			+ref(flow, otherFlow)
 		td: +category-field(flowCategory, otherFlowCategory, true)
+		+sub-field-ref-cell(factor, otherFactor, 'location')
 		td 
 			+sub-field(factor, otherFactor, 'value', null, formatScientific)
 			|  
 			+sub-field(category, otherCategory, 'referenceUnitName')
 			| /
 			+sub-field(unit, otherUnit, 'name')
-		+sub-field-ref-cell(factor, otherFactor, 'location')
 		+uncertainty-cell(factor, otherFactor, formatScientific)
 		td(data-path=flow?'impactCategories[' + category.Id + '].impactFactors[' + flow.id + ']':null)
