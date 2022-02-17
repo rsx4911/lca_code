@@ -79,7 +79,7 @@ mixin exchange-row(exchange, other, count, input, show)
 		td
 			+compare-icon(changed)
 			+ref(flow, otherFlow)
-		td: +category-field(category, otherCategory, true)
+		td: +category-field(category, otherCategory, true, 'Flow')
 		- var amount = getValue(exchange, 'amount');
 		- amount = amount || amount === 0
 		- var otherAmount = getValue(other, 'amount');

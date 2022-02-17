@@ -46,7 +46,7 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 			if category && otherCategory
 				+compare-icon(changed)
 			+ref(flow, otherFlow)
-		td: +category-field(flowCategory, otherFlowCategory, true)
+		td: +category-field(flowCategory, otherFlowCategory, true, 'Flow')
 		+sub-field-ref-cell(factor, otherFactor, 'location')
 		td 
 			+sub-field(factor, otherFactor, 'value', null, formatScientific)
