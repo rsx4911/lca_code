@@ -127,55 +127,8 @@ public class BrowseController {
 			if (loggedIn) {
 				map.put("commitId", modelCommitId);
 			}
-			appendAdditionalData(repo, commit, type, map);
 			return map;
 		}
-	}
-
-	private void appendAdditionalData(Repository repo, Commit commit, ModelType type, Map<String, Object> dataset) {
-		if (type == ModelType.PROCESS) {
-			putFlowCategory(repo, commit, dataset, "exchanges");
-		} else if (type == ModelType.IMPACT_CATEGORY) {
-			putFlowCategory(repo, commit, dataset, "impactFactors");
-		} else if (type == ModelType.FLOW) {
-			putReferenceUnits(repo, commit, dataset);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private void putFlowCategory(Repository repo, Commit commit, Map<String, Object> dataset, String arrayField) {
-		var array = Maps.getAll(dataset, arrayField, Map.class);
-		for (var element : array) {
-			var flow = Maps.getObject(element, "flow");
-			var refId = Maps.getString(flow, "@id");
-			var ref = repo.references().get(ModelType.FLOW, refId, commit.id);
-			Maps.put(flow, "category", ref.category);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private void putReferenceUnits(Repository repo, Commit commit, Map<String, Object> dataset) {
-		var factors = Maps.getAll(dataset, "flowProperties", Map.class);
-		for (var factor : factors) {
-			var flowProperty = Maps.getObject(factor, "flowProperty");
-			var propertyRefId = Maps.getString(flowProperty, "@id");
-			var propertyRef = repo.references().get(ModelType.FLOW_PROPERTY, propertyRefId, commit.id);
-			var propertyDataset = repo.datasets().get(propertyRef);
-			var propertyMap = Maps.of(propertyDataset);
-			var groupRefId = Maps.getString(propertyMap, "unitGroup.@id");
-			var groupRef = repo.references().get(ModelType.UNIT_GROUP, groupRefId, commit.id);
-			var groupDataset = repo.datasets().get(groupRef);
-			var groupMap = Maps.of(groupDataset);
-			var units = Maps.getAll(groupMap, "units", Map.class);
-			for (var unit : units) {
-				if (!Maps.getBoolean(unit, "referenceUnit"))
-					continue;
-				var name = Maps.getString(unit, "name");
-				Maps.put(flowProperty, "referenceUnit", name);
-				break;
-			}
-		}
-
 	}
 
 }
