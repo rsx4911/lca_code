@@ -24,8 +24,8 @@ mixin flow-property-row(factor, other, referenceFactor)
 		td
 			+compare-icon(changed)
 			+ref(property, otherProperty)
-		td 1 #{referenceFactor.flowProperty.referenceUnit} = 
+		td 1 #{referenceFactor.flowProperty.refUnit} = 
 			+sub-field(factor, other, 'conversionFactor')
 			|  
-			+sub-field(property, otherProperty, 'referenceUnit')
+			+sub-field(property, otherProperty, 'refUnit')
 		td(data-path=property?'flowProperties[' + property.id + ']':null)
