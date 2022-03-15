@@ -172,7 +172,7 @@ public class SettingsService {
 				types.add(ModelType.valueOf(value.get(i)));
 			}
 			for (var type : ModelType.values()) {
-				if (!type.isCategorized() || types.contains(type) || hidden.contains(type.name()))
+				if (types.contains(type) || hidden.contains(type.name()))
 					continue;
 				types.add(type);
 			}
