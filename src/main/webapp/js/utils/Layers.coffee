@@ -115,19 +115,6 @@ define([
 									button.context = view
 						(@_ showInLayer) options
 
-			showProgressInLayer: (options) ->
-				@showViewInLayer
-					title: options.title
-					view: 'ProgressLayer'
-					viewOptions: options
-					notCloseable: true
-					static: true
-					buttons: [
-						{id: 'progress-btn-close', text: 'Close', callback: 'close'}
-						{id: 'progress-btn-cancel', text: 'Cancel', callback: 'cancel'}
-						{id: 'progress-btn-run', className: 'btn-primary', text: 'Run', callback: 'start'}
-					]
-
 			showLoginLayer: () ->
 				@showViewInLayer
 					title: 'Login'
@@ -256,7 +243,7 @@ define([
 								$('#select-model-button').prop 'disabled', !isType
 								if isType and options.selectVersion
 									refId = data.node.original.id
-									@showProgressIndicator 'Loading<br>versions'
+									@showProgressIndicator ['Loading', 'versions']
 									$.ajax
 										type: 'GET'
 										url: "ws/history/#{options.repositoryPath}/#{options.type}/#{refId}"

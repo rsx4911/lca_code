@@ -66,7 +66,7 @@ define([
 				if @categoryPath
 					url += if @commitId then '&' else '?'
 					url += 'path=' + @getCategoryPath()
-				Layers.showProgressIndicator 'Collecting<br>data sets'
+				Layers.showProgressIndicator ['Collecting', 'data sets']
 				$.ajax
 					type: if selection then 'POST' else 'GET'
 					url: url

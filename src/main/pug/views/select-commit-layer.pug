@@ -5,4 +5,4 @@ form#commit-selection
 		each commit, i in commits
 			if commit.id !== commitId
 				option(value=commit.id)=i===0?'Latest':commit.id 
-				optgroup.additional-info(label!='&nbsp; &nbsp;' + formatCommitDescription(commit.message))
+				optgroup.additional-info(label=formatCommitDescription(commit.message))

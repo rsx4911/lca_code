@@ -2,5 +2,10 @@
 	.backdrop
 	.loader
 		img(src='images/loader.gif' aria-label='Loader image')
-		if message
-			span!=message
+		if Array.isArray(message)
+			span
+				each m in message
+					| #{m}
+					br
+		else
+			span=message
