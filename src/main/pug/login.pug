@@ -43,10 +43,10 @@ html(lang='en')
 		script.
 			var show = function(subpage) {
 				$('#login').hide()
-				$('#login #username-group').removeClass('hidden');
-				$('#login #password-group').removeClass('hidden');
-				$('#login #token-group').addClass('hidden');
-				$('#login #token').val('');
+				$('#login #username-group').removeClass('hidden')
+				$('#login #password-group').removeClass('hidden')
+				$('#login #token-group').addClass('hidden')
+				$('#login #token').val('')
 				$('#reset-password').hide()
 				$('#sign-up').hide()
 				$('#' + subpage).show()
@@ -54,7 +54,7 @@ html(lang='en')
 			var registerOnClickHandler = function(subpage) {
 				$('a[href=' + subpage + ']').on('click', function(e) {
 					e.preventDefault()
-					show(subpage)
+					window.location.href = subpage
 				})
 			}
 			registerOnClickHandler('login')
@@ -65,64 +65,64 @@ html(lang='en')
 				if (settings['USER_REGISTRATION_ENABLED']) {
 					$('.sign-up-link-container').show()
 				}
-			}});
+			}})
 			var type = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1)
 			if (type === 'reset-password' || type === 'sign-up') {
 				show(type)
 			}
-			$('#year').html(new Date().getFullYear());
+			$('#year').html(new Date().getFullYear())
 			$('#reset-password #email').on('keyup', function() {
 				$('#reset').attr('disabled', !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($('#email').val()))
 			})
 			$('#login').on('submit', function(event) {
-				$('#login-general-message').hide();
-				var data = {username: $('#login #username').val(), password: $('#login #password').val()};
+				$('#login-general-message').hide()
+				var data = {username: $('#login #username').val(), password: $('#login #password').val()}
 				if ($('#login #token').is(':visible')) {
-					data.token = $('#login #token').val();
+					data.token = $('#login #token').val()
 				}
 				$.ajax({type: 'POST', url: 'ws/public/login', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
 						if (response === 'tokenRequired') {
-							$('#login #username-group').addClass('hidden');
-							$('#login #password-group').addClass('hidden');
-							$('#login #token-group').removeClass('hidden');
-							$('#login-general-message').hide();
-							$('#login #token').focus();
+							$('#login #username-group').addClass('hidden')
+							$('#login #password-group').addClass('hidden')
+							$('#login #token-group').removeClass('hidden')
+							$('#login-general-message').hide()
+							$('#login #token').focus()
 						} else {
-							window.location.href = '';
+							window.location.href = ''
 						}
 					}, error: function(response) {
-						$('#login-general-message').show();
-						$('#login-general-message .message').html(response.responseJSON ? response.responseJSON.message : response.responseText);
-						$('#login #token').val('');
+						$('#login-general-message').show()
+						$('#login-general-message .message').html(response.responseJSON ? response.responseJSON.message : response.responseText)
+						$('#login #token').val('')
 					}});
-				return false;
-			});
+				return false
+			})
 			$('#reset-password').on('submit', function(event) {
-				$('#reset-password-general-message').hide();
-				var data = {email: $('#reset-password #email').val()};
+				$('#reset-password-general-message').hide()
+				var data = {email: $('#reset-password #email').val()}
 				$.ajax({type: 'POST', url: 'ws/public/request-password-reset', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
 						$('#reset, #reset-password #email').attr('disabled', true)
 						$('#reset').removeClass('btn-primary').addClass('btn-success').html('Password reset requested')
 					}});
-				return false;
-			});
+				return false
+			})
 			$('#sign-up').on('submit', function(event) {
-				$('#sign-up-general-message').hide();
+				$('#sign-up-general-message').hide()
 				$('#sign-up .has-error').removeClass('has-error')
 				var data = {username: $('#sign-up #username').val(), name: $('#sign-up #name').val(), email: $('#sign-up #email').val(), password: $('#sign-up #password').val(), password2: $('#sign-up #password2').val()};
 				$.ajax({type: 'POST', url: 'ws/public/register', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
-						window.location.href = '';
+						window.location.href = ''
 					}, error: function(response) {
 						var error = response.responseJSON
-						$('#sign-up-general-message').show();
-						$('#sign-up-general-message .message').html(error.message);
+						$('#sign-up-general-message').show()
+						$('#sign-up-general-message .message').html(error.message)
 						if (error.field) {
-							$('#sign-up #' + error.field).parent().addClass('has-error');
+							$('#sign-up #' + error.field).parent().addClass('has-error')
 						}
 
 					}});
-				return false;
-			});
+				return false
+			})

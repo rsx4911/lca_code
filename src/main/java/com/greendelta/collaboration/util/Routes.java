@@ -1,67 +1,24 @@
 package com.greendelta.collaboration.util;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Routes {
 
-	private final static List<String> USER_ROUTES;
-	private final static List<String> PUBLIC_RESOURCES;
-	private final static List<String> RESERVED;
+	private final static List<String> USER_ROUTES = Arrays.asList(
+			"repository", "user", "dashboard", "administration", "messages", "tasks", "group", "groups", "error");
+	
+	private final static List<String> PUBLIC_RESOURCES = Arrays.asList(
+			"css", "fonts", "images", "js", "graph");
 
-	static {
-		USER_ROUTES = new ArrayList<>();
-		USER_ROUTES.add("repository");
-		USER_ROUTES.add("user");
-		USER_ROUTES.add("dashboard");
-		USER_ROUTES.add("administration");
-		USER_ROUTES.add("messages");
-		USER_ROUTES.add("tasks");
-		USER_ROUTES.add("group");
-		USER_ROUTES.add("groups");
-		USER_ROUTES.add("error");
-
-		PUBLIC_RESOURCES = new ArrayList<>();
-		PUBLIC_RESOURCES.add("css");
-		PUBLIC_RESOURCES.add("fonts");
-		PUBLIC_RESOURCES.add("images");
-		PUBLIC_RESOURCES.add("js");
-		PUBLIC_RESOURCES.add("graph");
-
-		RESERVED = new ArrayList<>();
-		RESERVED.add("null");
-		RESERVED.add("undefined");
-		RESERVED.add("users");
-		RESERVED.add("team");
-		RESERVED.add("teams");
-		RESERVED.add("repositories");
-		RESERVED.add("categoryInfo");
-		RESERVED.add("count");
-		RESERVED.add("public");
-		RESERVED.add("ws");
-		RESERVED.add("sockets");
-		RESERVED.add("group");
-		RESERVED.add("groups");
-		RESERVED.add("dashboard");
-		RESERVED.add("commit");
-		RESERVED.add("category");
-		RESERVED.add("members");
-		RESERVED.add("member");
-		RESERVED.add("references");
-		RESERVED.add("settings");
-		RESERVED.add("admin");
-		RESERVED.add("usermanager");
-		RESERVED.add("datamanager");
-		RESERVED.add("messaging");
-		RESERVED.add("block");
-		RESERVED.add("unblock");
-		RESERVED.add("login");
-		RESERVED.add("search");
-		RESERVED.add("imprint");
-		RESERVED.add("overlay");
-		RESERVED.add("import");
-		RESERVED.add("export");
-	}
+	public final static List<String> PUBLIC_URLS = Arrays.asList(
+			"login", "reset-password", "sign-up", "imprint", "job", "maintenance");
+	
+	private final static List<String> RESERVED = Arrays.asList(
+			"null", "undefined", "users", "team", "teams", "repositories", "categoryInfo", "count", "public", "ws",
+			"sockets", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
+			"settings", "admin", "usermanager", "datamanager", "messaging", "block", "unblock", "login", "search",
+			"imprint", "overlay", "import", "export");
 
 	public static boolean isUserRoute(String name) {
 		return USER_ROUTES.contains(name);
@@ -74,10 +31,14 @@ public class Routes {
 	public static boolean isPublicResource(String name) {
 		return PUBLIC_RESOURCES.contains(name);
 	}
+	
+	public static boolean isPublicUrl(String name) {
+		return PUBLIC_URLS.contains(name);
+	}
 
 	public static boolean isReserved(String name) {
 		name = name.toLowerCase().strip();
-		return isUserRoute(name) || isPublicResource(name) || RESERVED.contains(name);
+		return isUserRoute(name) || isPublicResource(name) || isPublicUrl(name) || RESERVED.contains(name);
 	}
 
 	public static boolean isValid(String name, char... additionalValidChars) {

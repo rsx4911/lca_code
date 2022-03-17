@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.config;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -71,7 +72,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				response.setHeader("WWW-Authenticate", "Basic realm=\"" + serverName + "\"");
 			}
 		} else {
-			response.sendRedirect(request.getServletContext().getContextPath() + "/login");
+			var part = url.substring(url.lastIndexOf("/") + 1);
+			if (!Arrays.asList("login", "reset-password", "sign-up").contains(part)) {
+				response.sendRedirect(request.getServletContext().getContextPath() + "/login");
+			}
 		}
 	}
 

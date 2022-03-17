@@ -30,7 +30,7 @@ public class SinglePageFilter implements Filter {
 	private final UserService userService;
 	private final SettingsService settingsService;
 	private final GitFilterConfig gitFilterConfig;
-	
+
 	@Autowired
 	public SinglePageFilter(UserService userService, SettingsService settingsService, GitFilterConfig gitFilterConfig) {
 		this.userService = userService;
@@ -50,15 +50,19 @@ public class SinglePageFilter implements Filter {
 		var url = request.getRequestURI();
 		var isMaintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
 		var isLoginUrl = url.equals("/login") || url.equals("/reset-password") || url.equals("/sign-up");
-		var isJobUrl = url.equals("/job");
 		var isMaintenanceUrl = url.equals("/maintenance");
 		var user = userService.getCurrentUser();
 		if (isMaintenanceMode && !isLoginUrl && !isMaintenanceUrl && !user.isAdmin()) {
 			redirect(request.getContextPath() + "/maintenance", response);
 			return;
 		}
-		if (isJobUrl) {
-			forward("/job.html", request, response);
+		if ((isLoginUrl && user.id != 0) || (isMaintenanceUrl && !isMaintenanceMode)) {
+			redirect(request.getContextPath() + "/", response);
+			return;
+		}
+		var route = url.substring(url.lastIndexOf('/') + 1);
+		if (!isLoginUrl && (CUSTOM_PUBLIC_RESOURCES.contains("/" + route) || Routes.isPublicUrl(route))) {
+			forward("/" + route + ".html", request, response);
 			return;
 		}
 		var publicRepositoriesEnabled = settingsService.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
@@ -69,15 +73,6 @@ public class SinglePageFilter implements Filter {
 				return;
 			}
 			forward("/login.html", request, response);
-			return;
-		}
-		if ((isLoginUrl && user.id != 0) || (isMaintenanceUrl && !isMaintenanceMode)) {
-			redirect(request.getContextPath() + "/", response);
-			return;
-		}
-		var route = url.substring(url.lastIndexOf('/'));
-		if (CUSTOM_PUBLIC_RESOURCES.contains(route) || route.equals("/maintenance") || route.equals("/imprint")) {
-			forward(route + ".html", request, response);
 			return;
 		}
 		// String redirectUrl = sessionProvider.get().redirectUrl;
