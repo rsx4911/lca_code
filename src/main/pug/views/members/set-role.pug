@@ -8,4 +8,4 @@ form#set-role-form
 		each role in roles
 			option(value=role.id)=role.name
 			- var description = type === 'group' ? role.descriptionForGroup : role.descriptionForRepository
-			optgroup.additional-info(label!='&nbsp; &nbsp;' + description)
+			optgroup.additional-info(label=description)

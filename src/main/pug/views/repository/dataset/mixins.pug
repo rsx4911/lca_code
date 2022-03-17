@@ -13,7 +13,7 @@ mixin menubar()
 						if commit.id === dataset.commitId
 							- currentCommit = commit;
 						option(value=commit.id, selected=commit.id===commitId, class=commit.modelHasChanged?'highlight':null)=i===0?'Latest':commit.id 
-						optgroup.additional-info(label!='&nbsp; &nbsp;' + formatCommitDescription(commit.message))
+						optgroup.additional-info(label=formatCommitDescription(commit.message))
 				if dataset.deleted
 					.badge.pull-right.deleted Deleted
 				else
