@@ -16,7 +16,7 @@ define([
 
 		getModel: (dataset) ->
 			model = {}
-			@addNode model, dataset.referenceProcess, dataset, true
+			@addNode model, dataset.refProcess, dataset, true
 			return model
 
 		addNode: (model, process, dataset, isRef) ->
@@ -61,7 +61,7 @@ define([
 			$('tbody', table).empty()
 			for category in method.impactCategories
 				category.result = @calculateResult dataset, category
-				$('tbody', table).append "<tr><td>#{category.name}</td><td>#{Format.scientific(category.result)} #{category.referenceUnitName}</td></tr>"
+				$('tbody', table).append "<tr><td>#{category.name}</td><td>#{Format.scientific(category.result)} #{category.refUnit}</td></tr>"
 			table.unbind('appendCache applyWidgetId applyWidgets sorton update updateCell').removeClass('tablesorter').find('thead th').unbind('click mousedown').removeClass('header headerSortDown headerSortUp')
 			table.tablesorter()
 			table.show()

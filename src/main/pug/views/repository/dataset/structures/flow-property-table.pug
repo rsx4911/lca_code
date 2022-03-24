@@ -8,23 +8,23 @@ mixin flow-property-table()
 				th=getLabel('flowProperties.formula')
 				th
 		tbody
-			- var referenceFactor = null;
+			- var refFactor = null;
 			if dataset.flowProperties
 				each factor in dataset.flowProperties
-					if factor.referenceFlowProperty
-						- referenceFactor = factor
+					if factor.isRefFlowProperty
+						- refFactor = factor
 			each values in getArrayValues(dataset, compareTo, 'FLOW_PROPERTY_FACTOR', 'flowProperties')
-				+flow-property-row(values[0], values[1], referenceFactor)
+				+flow-property-row(values[0], values[1], refFactor)
 
-mixin flow-property-row(factor, other, referenceFactor)
+mixin flow-property-row(factor, other, refFactor)
 	- var changed = compareTo && !other ? 'added' : (compareTo && !factor ? 'removed' : null);
 	- var property = getValue(factor, 'flowProperty');
 	- var otherProperty = getValue(other, 'flowProperty');
-	tr(data-compare=changed, class=getValue(factor, 'referenceFlowProperty')?'reference':null)
+	tr(data-compare=changed, class=getValue(factor, 'isRefFlowProperty')?'reference':null)
 		td
 			+compare-icon(changed)
 			+ref(property, otherProperty)
-		td 1 #{referenceFactor.flowProperty.refUnit} = 
+		td 1 #{refFactor.flowProperty.refUnit} = 
 			+sub-field(factor, other, 'conversionFactor')
 			|  
 			+sub-field(property, otherProperty, 'refUnit')

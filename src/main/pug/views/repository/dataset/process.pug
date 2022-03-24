@@ -42,7 +42,7 @@ include ./structures/parameter-table.pug
 							+field-row('processDocumentation.restrictionsDescription')
 							+field-row('processDocumentation.projectDescription')
 							+field-row('processDocumentation.creationDate', formatDate)
-							+boolean-field-row('processDocumentation.copyright')
+							+boolean-field-row('processDocumentation.isCopyrightProtected')
 							+field-row('processDocumentation.inventoryMethodDescription')
 							+field-row('processDocumentation.modelingConstantsDescription')
 							+field-row('processDocumentation.completenessDescription')
@@ -64,18 +64,18 @@ include ./structures/parameter-table.pug
 					+parameter-table(false)
 	+meta
 		hr
-		strong=getLabel('quantitativeReference')
+		strong=getLabel('isQuantitativeReference')
 		- var flow = null;
 		- var otherFlow = null;
 		- var eIndex = -1;
 		if dataset.exchanges
 			each exchange, index in dataset.exchanges
-				if exchange.quantitativeReference
+				if exchange.isQuantitativeReference
 					- flow = exchange.flow;
 					- eIndex = index;
 		if compareTo && compareTo.exchanges
 			each otherExchange, index in compareTo.exchanges
-				if otherExchange.quantitativeReference
+				if otherExchange.isQuantitativeReference
 					- otherFlow = otherExchange.flow;
 		- var qRefChanged = compareTo ? compare(flow, otherFlow) : null;
 		div(data-compare=qRefChanged)
@@ -84,7 +84,7 @@ include ./structures/parameter-table.pug
 		+labeled-ref-block('location')
 		- var typeFormat = function(value) {return value==='LCI_RESULT'?'System process':'Unit process'};
 		+labeled-field-block('processType', typeFormat)
-		+labeled-boolean-field-block('infrastructureProcess')
+		+labeled-boolean-field-block('isInfrastructureProcess')
 		if (doc && (doc.validFrom || doc.validUntil)) || reviewMode
 			hr
 			+labeled-field-block('processDocumentation.validFrom', formatDate, '-')

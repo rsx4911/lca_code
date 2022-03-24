@@ -7,9 +7,9 @@ include ./mixins.pug
 		.content
 			table.table.no-head
 				tbody
-					- var getParameterType = function(value, parent) { return parent ? (parent.inputParameter ? 'Input' : 'Dependant') : null;};
-					+field-row('inputParameter', getParameterType)
-					- var getFormula = function (value, parent) { return parent ? (parent.inputParameter ? parent.value : (parent.formula + ' = ' + parent.value)) : null;}; 
-					+field-row(dataset.inputParameter?'value':'formula', getFormula)
+					- var getParameterType = function(value, parent) { return parent ? (parent.isIputParameter ? 'Input' : 'Dependant') : null;};
+					+field-row('isIputParameter', getParameterType)
+					- var getFormula = function (value, parent) { return parent ? (parent.isIputParameter ? parent.value : (parent.formula + ' = ' + parent.value)) : null;}; 
+					+field-row(dataset.isIputParameter?'value':'formula', getFormula)
 	+meta
 	.clear

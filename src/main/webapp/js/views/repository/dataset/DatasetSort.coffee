@@ -114,9 +114,9 @@ define () ->
 		unless dataset.flowProperties
 			return
 		dataset.flowProperties.sort (f1, f2) ->
-			if f1.referenceFlowProperty
+			if f1.isRefFlowProperty
 				return -1
-			if f2.referenceFlowProperty
+			if f2.isRefFlowProperty
 				return 1
 			if f1.flowProperty.name.toLowerCase() < f2.flowProperty.name.toLowerCase()
 				return -1	
@@ -128,9 +128,9 @@ define () ->
 		unless dataset.units
 			return
 		dataset.units.sort (u1, u2) ->
-			if u1.referenceUnit
+			if u1.isRefUnit
 				return -1
-			if u2.referenceUnit
+			if u2.isRefUnit
 				return 1
 			if u1.name.toLowerCase() < u2.name.toLowerCase()
 				return -1	

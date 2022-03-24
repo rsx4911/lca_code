@@ -30,7 +30,7 @@ define([
 						id = node.id
 						elements = []
 						if id is '#'
-							element = @toElement @dataset.referenceProcess
+							element = @toElement @dataset.refProcess
 							element.state = opened: true
 							elements.push element
 						else
@@ -73,7 +73,6 @@ define([
 		openProcess: (type, id) ->
 			group = @repository.get 'group'
 			name = @repository.get 'name'
-			console.log(type)
 			dsType = if type is 'Process' then 'PROCESS' else 'PRODUCT_SYSTEM'
 			Router.navigate "#{group}/#{name}/dataset/#{dsType}/#{id}?commitId=" + @commitId
 
