@@ -28,14 +28,14 @@ mixin target-amount-row()
 				+nav-tab-pane('overview', true, true)
 					table.table.no-head
 						tbody
-							+ref-row('referenceProcess')
-							if dataset.referenceExchange && dataset.referenceExchange.flow
-								+ref-row('referenceExchange.flow')
+							+ref-row('refProcess')
+							if dataset.refExchange && dataset.refExchange.flow
+								+ref-row('refExchange.flow')
 							else
-								- var name = dataset.referenceExchange ? dataset.referenceExchange.name : null;
-								- var otherName = compareTo && compareTo.referenceExchange ? compareTo.referenceExchange.name : null;
+								- var name = dataset.refExchange ? dataset.refExchange.name : null;
+								- var otherName = compareTo && compareTo.refExchange ? compareTo.refExchange.name : null;
 								if name || otherName || reviewMode
-									+field-row-frame('referenceExchange.name')
+									+field-row-frame('refExchange.name')
 										+field-row-value(name, otherName)
 							+ref-row('targetFlowProperty')
 							+target-amount-row()

@@ -30,7 +30,7 @@ define([
 						id = node.id
 						elements = []
 						if id is '#'
-							element = @toElement @dataset.referenceProcess
+							element = @toElement @dataset.refProcess
 							element.state = opened: true
 							elements.push element
 						else

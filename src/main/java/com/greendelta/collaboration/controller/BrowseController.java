@@ -123,7 +123,6 @@ public class BrowseController {
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 			var map = Maps.of(dataset);
-			map.put("category", ref.category);
 			if (loggedIn) {
 				map.put("commitId", modelCommitId);
 			}

@@ -68,7 +68,7 @@ define([
 								return v
 						else if v.flow?.id is value.flow?.id
 							return v
-					when 'PARAMETER' then if v.name is value.name and v.inputParameter is value.inputParameter then return v
+					when 'PARAMETER' then if v.name is value.name and v.isInputParameter is value.isInputParameter then return v
 					when 'FLOW' then if v.id is value.id then return v
 					when 'PRODUCT' then if v.id is value.id then return v
 					when 'IMPACT_CATEGORY' then if v.id is value.id then return v

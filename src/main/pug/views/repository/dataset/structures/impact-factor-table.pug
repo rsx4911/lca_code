@@ -21,7 +21,7 @@ mixin impact-factor-table()
 			- var count = 0;
 			each values in factors
 				- var categoryId = getValue(dataset, 'id');
-				- var referenceUnit = getValue(dataset, 'referenceUnitName');
+				- var refUnit = getValue(dataset, 'refUnit');
 				+impact-factor-row(dataset, compareTo, values[0], values[1], count)
 				- count++;
 	if count > 10 && !compareTo
@@ -51,7 +51,7 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 		td 
 			+sub-field(factor, otherFactor, 'value', null, formatScientific)
 			|  
-			+sub-field(category, otherCategory, 'referenceUnitName')
+			+sub-field(category, otherCategory, 'refUnit')
 			| /
 			+sub-field(unit, otherUnit, 'name')
 		+uncertainty-cell(factor, otherFactor, formatScientific)

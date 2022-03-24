@@ -4,10 +4,10 @@ mixin unit-table()
 	table.table.units
 		- var showSynonyms = hasAtLeastOne(dataset, compareTo, 'units', 'synonyms');
 		- var showSynonyms = hasAtLeastOne(dataset, compareTo, 'units', 'description');
-		- var referenceUnit = null;
+		- var refUnit = null;
 		each unit in dataset.units
-			if unit.referenceUnit
-				- referenceUnit = unit
+			if unit.isRefUnit
+				- refUnit = unit
 		thead
 			tr
 				th=getLabel('units.name')
@@ -21,11 +21,11 @@ mixin unit-table()
 				th
 		tbody
 			each values in getArrayValues(dataset, compareTo, 'UNIT', 'units')
-				+unit-row(values[0], values[1], referenceUnit)
+				+unit-row(values[0], values[1], refUnit)
 
-mixin unit-row(unit, other, referenceUnit)
+mixin unit-row(unit, other, refUnit)
 	- var changed = compareTo && !other ? 'added' : (compareTo && !unit ? 'removed' : null);
-	tr(data-compare=changed, class=unit&&unit.referenceUnit?'reference':null)
+	tr(data-compare=changed, class=unit&&unit.isRefUnit?'reference':null)
 		td
 			+compare-icon(changed)
 			| #{unit?unit.name:other.name}
@@ -33,6 +33,6 @@ mixin unit-row(unit, other, referenceUnit)
 		+sub-field-cell(unit, other, 'synonyms')
 		td 1 #{unit?unit.name:other.name} = 
 			+sub-field(unit, other, 'conversionFactor')
-			|  #{referenceUnit.name}
+			|  #{refUnit.name}
 		td(data-path=unit?'units[' + unit.name + ']':null)
 

@@ -6,7 +6,7 @@ define () ->
 			for e in exchanges
 				if dsType is 'PRODUCT_SYSTEM'
 					e.internalId = e.flow.id
-				if e.input
+				if e.isInput
 					switch e.flow.flowType
 						when 'PRODUCT_FLOW'
 							model.usedProducts.push e
@@ -15,9 +15,9 @@ define () ->
 						when 'ELEMENTARY_FLOW'
 							model.resources.push e
 				else
-					if e.quantitativeReference
-						model.referenceProduct = e
-					else if e.avoidedProduct
+					if e.isQuantitativeReference
+						model.refProduct = e
+					else if e.isAvoidedProduct
 						model.avoidedProducts.push e
 					else 
 						switch e.flow.flowType
