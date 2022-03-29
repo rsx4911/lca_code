@@ -15,36 +15,24 @@ import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jgit.http.server.glue.ServletBinder;
 import org.eclipse.jgit.transport.resolver.FileResolver;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.search.SearchService;
-import com.greendelta.collaboration.service.user.NotificationService;
 
 @WebFilter(asyncSupported = true)
+@Component
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
-//	private final RepositoryService repoService;
-//	private final SearchService searchService;
-	private final SettingsService settingsService;
-//	private final NotificationService notificationService;
-	private final SessionService sessionService;
-	private final GitFilterConfig config;
-
-	@Autowired
-	public GitFilter(RepositoryService repoService, SearchService searchService, SettingsService settingsService,
-			NotificationService notificationService, SessionService sessionService, GitFilterConfig config) {
-//		this.repoService = repoService;
-//		this.searchService = searchService;
-		this.settingsService = settingsService;
-//		this.notificationService = notificationService;
-		this.sessionService = sessionService;
-		this.config = config;
-	}
+	// private RepositoryService repoService;
+	// private SearchService searchService;
+	private SettingsService settingsService;
+	// private NotificationService notificationService;
+	private SessionService sessionService;
+	private GitFilterConfig config;
 
 	@Override
 	public ServletBinder serve(String path) {
@@ -64,14 +52,24 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	}
 
 	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
+	public void init(FilterConfig config) throws ServletException {
+		initBeans(config);
 		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
 		if (path == null)
 			return;
 		setRepositoryResolver(new FileResolver<>(new File(path), true));
-		super.init(filterConfig);
+		super.init(config);
 	}
 
+	private void initBeans(FilterConfig config) {
+		if (settingsService != null)
+			return;
+		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
+		settingsService = app.getBean(SettingsService.class);
+		sessionService = app.getBean(SessionService.class);
+		this.config = app.getBean(GitFilterConfig.class);
+	}
+	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
