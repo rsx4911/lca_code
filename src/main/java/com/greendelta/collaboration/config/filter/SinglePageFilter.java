@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -14,7 +15,8 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -23,21 +25,26 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Routes;
 
 @WebFilter(asyncSupported = true)
+@Component
 public class SinglePageFilter implements Filter {
 
 	// custom gulp build can change publicly available "html" resources
 	public static final List<String> CUSTOM_PUBLIC_RESOURCES = Arrays.asList("/header", "/imprint", "/index", "/index", "/login", "/test");
-	private final UserService userService;
-	private final SettingsService settingsService;
-	private final GitFilterConfig gitFilterConfig;
+	private UserService userService;
+	private SettingsService settingsService;
+	private GitFilterConfig gitFilterConfig;
 
-	@Autowired
-	public SinglePageFilter(UserService userService, SettingsService settingsService, GitFilterConfig gitFilterConfig) {
-		this.userService = userService;
-		this.settingsService = settingsService;
-		this.gitFilterConfig = gitFilterConfig;
+	@Override
+	public void init(FilterConfig config) throws ServletException {
+		if (settingsService != null)
+			return;
+		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
+		userService = app.getBean(UserService.class);
+		settingsService = app.getBean(SettingsService.class);
+		gitFilterConfig = app.getBean(GitFilterConfig.class);
 	}
 
+	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws ServletException, IOException {
