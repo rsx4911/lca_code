@@ -22,6 +22,7 @@ import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
+import com.greendelta.collaboration.util.Requests;
 import com.greendelta.collaboration.util.Routes;
 
 @WebFilter(asyncSupported = true)
@@ -54,7 +55,7 @@ public class SinglePageFilter implements Filter {
 			chain.doFilter(request, response);
 			return;
 		}
-		var url = request.getRequestURI();
+		var url = Requests.getRelativePath(request);
 		var isMaintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
 		var isLoginUrl = url.equals("/login") || url.equals("/reset-password") || url.equals("/sign-up");
 		var isMaintenanceUrl = url.equals("/maintenance");
@@ -97,7 +98,7 @@ public class SinglePageFilter implements Filter {
 	}
 
 	private boolean doApply(HttpServletRequest request) throws IOException, ServletException {
-		var url = request.getRequestURI();
+		var url = Requests.getRelativePath(request);
 		if (url.startsWith("/ws/"))
 			return false;
 		url = url.substring(1);

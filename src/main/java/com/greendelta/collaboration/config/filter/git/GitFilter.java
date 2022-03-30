@@ -22,6 +22,7 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.util.Requests;
 
 @WebFilter(asyncSupported = true)
 @Component
@@ -69,7 +70,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		sessionService = app.getBean(SessionService.class);
 		this.config = app.getBean(GitFilterConfig.class);
 	}
-	
+
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
@@ -79,7 +80,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		if (!config.isGitUrl(request))
 			return;
 		if (request.isGitPush()) {
-			runCommitPostProcessing(new RepositoryPath(request.getRequestURI()));
+			runCommitPostProcessing(new RepositoryPath(Requests.getRelativePath(request)));
 		}
 		request.basicHttpLogout(sessionService);
 	}

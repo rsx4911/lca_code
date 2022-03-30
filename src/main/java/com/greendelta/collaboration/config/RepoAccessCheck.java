@@ -16,6 +16,7 @@ import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.util.Requests;
 
 @Component
 public class RepoAccessCheck {
@@ -35,7 +36,7 @@ public class RepoAccessCheck {
 	}
 
 	public boolean canAccess(HttpServletRequest request) throws ServletException, IOException {
-		var path = new RepositoryPath(request.getRequestURI());
+		var path = new RepositoryPath(Requests.getRelativePath(request));
 		if (!path.isGroupOrRepo())
 			return true;
 		if (!gitFilterConfig.isGitUrl(request))
