@@ -95,7 +95,13 @@ public class MetaData {
 
 	public static Stream<Map<String, Object>> sortByName(Stream<Map<String, Object>> data) {
 		return data.sorted((m1, m2) -> {
-			return Maps.getString(m1, "name").toLowerCase().compareTo(Maps.getString(m2, "name").toLowerCase());
+			var isCat1 = EntryType.CATEGORY.name().equals(Maps.getString(m1, "typeOfEntry"));
+			var isCat2 = EntryType.CATEGORY.name().equals(Maps.getString(m2, "typeOfEntry"));
+			if (isCat1 != isCat2)
+				return Boolean.compare(!isCat1, !isCat2);
+			var n1 = Maps.getString(m1, "name").toLowerCase();
+			var n2 = Maps.getString(m2, "name").toLowerCase();
+			return n1.compareTo(n2);
 		});
 	}
 
