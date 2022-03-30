@@ -10,6 +10,7 @@ import org.eclipse.jgit.http.server.GitSmartHttpTools;
 import org.springframework.security.authentication.BadCredentialsException;
 
 import com.greendelta.collaboration.service.SessionService;
+import com.greendelta.collaboration.util.Requests;
 
 public class GitRequest extends HttpServletRequestWrapper {
 
@@ -27,12 +28,7 @@ public class GitRequest extends HttpServletRequestWrapper {
 	@Override
 	public String getPathInfo() {
 		// default servlet returns incorrect pathinfo
-		var pathInfo = getRequest().getRequestURI();
-		var contextPath = getRequest().getContextPath();
-		if (contextPath != null && contextPath.length() > 0) {
-			pathInfo = pathInfo.substring(contextPath.length() + 1);
-		}
-		return pathInfo;
+		return Requests.getRelativePath(this);
 	}
 
 	@Override

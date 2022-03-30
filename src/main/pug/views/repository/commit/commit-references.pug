@@ -2,29 +2,28 @@ include ../../mixins/category-breadcrumb.pug
 include ../../mixins/paging.pug
 
 each dataset in data
-	if dataset.type !== 'IMPACT_CATEGORY' && dataset.type !== 'NW_SET'
-		.file-reference(id=dataset.id)
-			- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;				
-			.header
-				a(data-type=dataset.added?'added':dataset.deleted?'deleted':'changed' href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
-					if dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED'
-						- var action = dataset.diffType === 'ADDED' ? 'add' : 'delete';
-						if dataset.type === 'PROCESS' && dataset.processType
-							- var processType = dataset.processType === 'LCI_RESULT' ? 'process_system' : 'process_unit';
-							img.model-icon-small(src='images/model/small/overlay/' + action + '/' + processType + '.png', aria-label='Model icon of ' + dataset.processType + ' ' + action)
-						else if dataset.type === 'FLOW' && dataset.flowType
-							- var flowType = dataset.flowType === 'PRODUCT_FLOW' ? 'flow_product' : dataset.flowType === 'WASTE_FLOW' ? 'flow_waste' : 'flow_elementary';
-							img.model-icon-small(src='images/model/small/overlay/' + action + '/' + flowType + '.png', aria-label='Model icon of ' + dataset.flowType + ' ' + action)
-						else
-							img.model-icon-small(src='images/model/small/overlay/' + action + '/' + dataset.type.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.type + ' ' + action)
+	.file-reference(id=dataset.id)
+		- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;				
+		.header
+			a(data-type=dataset.added?'added':dataset.deleted?'deleted':'changed' href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
+				if dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED'
+					- var action = dataset.diffType === 'ADDED' ? 'add' : 'delete';
+					if dataset.type === 'PROCESS' && dataset.processType
+						- var processType = dataset.processType === 'LCI_RESULT' ? 'process_system' : 'process_unit';
+						img.model-icon-small(src='images/model/small/overlay/' + action + '/' + processType + '.png', aria-label='Model icon of ' + dataset.processType + ' ' + action)
+					else if dataset.type === 'FLOW' && dataset.flowType
+						- var flowType = dataset.flowType === 'PRODUCT_FLOW' ? 'flow_product' : dataset.flowType === 'WASTE_FLOW' ? 'flow_waste' : 'flow_elementary';
+						img.model-icon-small(src='images/model/small/overlay/' + action + '/' + flowType + '.png', aria-label='Model icon of ' + dataset.flowType + ' ' + action)
 					else
-						img.model-icon-small(src='images/model/small/' + dataset.type.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.type)
-					if dataset.diffType === 'DELETED'
-						del=dataset.name
-					else
-						span=dataset.name
-				if dataset.category && dataset.category.length
-					- var catUrl = baseUrl + 's/' + getTypeLabel(dataset.type);
-					+category-breadcrumb(dataset.category.split('/'), catUrl, true)
+						img.model-icon-small(src='images/model/small/overlay/' + action + '/' + dataset.type.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.type + ' ' + action)
+				else
+					img.model-icon-small(src='images/model/small/' + dataset.type.toLowerCase() + '.png', aria-label='Model icon of ' + dataset.type)
+				if dataset.diffType === 'DELETED'
+					del=dataset.name
+				else
+					span=dataset.name
+			if dataset.category && dataset.category.length
+				- var catUrl = baseUrl + 's/' + getTypeLabel(dataset.type);
+				+category-breadcrumb(dataset.category.split('/'), catUrl, true)
 if !standalone
 	+paging(resultInfo)
