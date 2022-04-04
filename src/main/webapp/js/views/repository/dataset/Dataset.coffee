@@ -34,10 +34,12 @@ define([
 				'templates/views/repository/dataset/actor'
 				'templates/views/repository/dataset/location'
 				'templates/views/repository/dataset/dq-system'
+				'templates/views/repository/dataset/epd'
+				'templates/views/repository/dataset/result'
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, ImpactFactors, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, impactCategory, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem) ->
+	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, ImpactFactors, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, impactCategory, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, epd, result) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -58,6 +60,8 @@ define([
 					when 'ACTOR' then return actor
 					when 'LOCATION' then return location
 					when 'DQ_SYSTEM' then return dqSystem
+					when 'EPD' then return epd
+					when 'RESULT' then return result
 
 			loadDataset: (refId, commitId, callback) ->
 				urlPart = @getUrlPart @type, refId

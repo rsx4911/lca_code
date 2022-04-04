@@ -1,0 +1,33 @@
+include ./mixins.pug
+
+mixin flow-result-table(isInput)
+	- var results = [];
+	- var showDescription = false;
+	each values in getArrayValues(dataset, compareTo, 'FLOW_RESULT', 'flowResults')
+		- var result = values[0] || values[1];
+		if result.isInput === isInput
+			- results.push(values);
+			- showDescription = showDescription || result.description;
+	if results.length > 0
+		table.table.flow-results
+			thead
+				tr
+					th
+					th=getLabel('flowResults.flow')
+					th=getLabel('flowResults.amount')
+					if showDescription
+						th=getLabel('flowResults.description')
+					th
+			tbody
+				each values in results
+					+flow-result-row(values[0], values[1], isInput, showDescription)
+
+mixin flow-result-row(result, otherResult, isInput, showDescription)
+	- var changed = compareTo && !otherResult ? 'added' : (compareTo && !result ? 'removed' : null);
+	tr(data-compare=changed)
+		td: img.icon-small(src='images/' + (isInput?'input':'output') + '.png' aria-label='Icon of ' + (isInput?'input':'output'))
+		+sub-field-ref-cell(result, otherResult, 'flow')
+		+sub-field-cell(result, otherResult, 'amount')
+		if showDescription
+			+sub-field-cell(result, otherResult, 'description')
+		td(data-path=result&&result.flow?'flowResults[' + result.flow.id +']':null)

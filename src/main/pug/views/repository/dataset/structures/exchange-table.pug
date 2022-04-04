@@ -1,36 +1,22 @@
 include ./mixins.pug
 
 mixin exchange-table(field, isInput)
-	- var count = 0;
-	- var exchanges = getValue(dataset, field);
-	- var otherExchanges = compareTo ? getValue(compareTo, field) : null;
-	each exchange in exchanges
+	- var exchanges = [];
+	- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, isAvoidedProduct: false, description: false, location: false};
+	each values in getArrayValues(dataset, compareTo, 'EXCHANGE', field)
+		- var exchange = values[0] || values[1];
 		if exchange.isInput === isInput
-			- count++;
-	if count > 0
+			- exchanges.push(values);
+			- show.costs = show.costs || exchange.costValue || exchange.currency;
+			- show.dqEntry = show.dqEntry || exchange.dqEntry;
+			- show.uncertainty = show.uncertainty || exchange.uncertainty;
+			- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
+			- show.isAvoidedProduct = show.isAvoidedProduct || exchange.isAvoidedProduct;
+			- show.description = show.description || exchange.description;
+			- show.location = show.location || exchange.location;
+	if exchanges.length > 0
 		div
 			table.table(class=isInput?'inputs':'outputs')
-				- var show = {costs: false, uncertainty: false, dqEntry: false, defaultProvider: false, isAvoidedProduct: false, description: false, location: false};
-				if exchanges
-					each exchange in exchanges
-						if exchange.isInput === isInput
-							- show.costs = show.costs || exchange.costValue || exchange.currency;
-							- show.dqEntry = show.dqEntry || exchange.dqEntry;
-							- show.uncertainty = show.uncertainty || exchange.uncertainty;
-							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
-							- show.isAvoidedProduct = show.isAvoidedProduct || exchange.isAvoidedProduct;
-							- show.description = show.description || exchange.description;
-							- show.location = show.location || exchange.location;
-				if otherExchanges
-					each exchange in otherExchanges
-						if exchange.isInput === isInput
-							- show.costs = show.costs || exchange.costValue || exchange.currency;
-							- show.dqEntry = show.dqEntry || exchange.dqEntry;
-							- show.uncertainty = show.uncertainty || exchange.uncertainty;
-							- show.defaultProvider = show.defaultProvider || exchange.defaultProvider;
-							- show.isAvoidedProduct = show.isAvoidedProduct || exchange.isAvoidedProduct;
-							- show.description = show.description || exchange.description;
-							- show.location = show.location || exchange.location;
 				thead
 					tr
 						th
@@ -46,13 +32,10 @@ mixin exchange-table(field, isInput)
 						th=show.description?(getLabel('exchanges.description')):''
 						th
 				tbody
-					- count = 0;
-					each values in getArrayValues(dataset, compareTo, 'EXCHANGE', field)
-						if (values[0] ? values[0].isInput : values[1].isInput) === isInput
-							+exchange-row(values[0], values[1], count, isInput, show)
-							- count++;
-			if count > 10 && !compareTo
-				a.toggle-control(href='#') Show #{count - 10} more
+					each values in exchanges
+						+exchange-row(values[0], values[1], exchanges.length, isInput, show)
+			if exchanges.length > 10 && !compareTo
+				a.toggle-control(href='#') Show #{exchanges.length - 10} more
 				a.toggle-control(href='#' style='display:none') Show less
 				if isInput
 					p &nbsp;

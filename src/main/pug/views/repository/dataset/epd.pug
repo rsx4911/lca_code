@@ -1,0 +1,23 @@
+include ./structures/epd-modules-table.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			+epd-modules-table
+	+meta
+		hr
+		strong=getLabel('product.flow')
+		div
+			+field('product.amount')
+			|  
+			+field('product.unit.name')
+			|  
+			+ref-field('product.flow')
+		hr
+		+labeled-ref-block('manufacturer')
+		+labeled-ref-block('programOperator')
+		+labeled-ref-block('pcr')
+		+labeled-ref-block('verifier')
+	.clear
