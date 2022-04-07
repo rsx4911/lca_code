@@ -28,7 +28,7 @@ public class FrontendReference {
 			} else {
 				all.addAll(repo.references().find()
 						.path(ref.fullPath).commit(ref.commitId)
-						.all().stream().filter(r -> !paths.contains(r.fullPath))
+						.all().stream().filter(r -> !paths.contains(r.path))
 						.toList());
 			}
 		}
