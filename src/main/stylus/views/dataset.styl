@@ -126,29 +126,31 @@
 		.table.inputs, .table.outputs
 			margin-bottom 0
 	
-		.table.inputs > thead > tr > th, .table.outputs > thead > tr > th, .table.inputs > tbody > tr > td, .table.outputs > tbody > tr > td
-			
-			&:nth-child(4)
-				text-align right
+		.table.inputs, .table.outputs, .table.flow-results
 
-		.table.inputs > tbody > tr > td, .table.inputs > thead > tr > th, .table.outputs > tbody > tr > td, .table.outputs > thead > tr > th
-			
-			&:first-child
-				width 35px
-				min-width initial
+			& > tbody > tr > td, & > thead > tr > th
 
-			&:nth-child(3), &:nth-child(8), &:nth-child(10), &:nth-child(11)
+				&:first-child
+					width 35px
+					min-width initial
 
-				@media(max-width 479px)
-					display none
+		.table.inputs, .table.outputs
+		
+			& > tbody > tr > td, & > thead > tr > th
 
-			&:nth-child(4)
-				white-space nowrap
+				&:nth-child(3), &:nth-child(8), &:nth-child(10), &:nth-child(11)
 
-			&:nth-child(5), &:nth-child(6), &:nth-child(7)
+					@media(max-width 479px)
+						display none
 
-				@media(max-width 991px)
-					display none
+				&:nth-child(4)
+					text-align right
+					white-space nowrap
+
+				&:nth-child(5), &:nth-child(6), &:nth-child(7)
+
+					@media(max-width 991px)
+						display none
 
 		@media(max-width 767px)
 			

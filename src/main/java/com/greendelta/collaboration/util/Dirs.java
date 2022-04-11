@@ -37,15 +37,16 @@ public class Dirs {
 	}
 
 	public static boolean delete(File dir) {
-		if (dir == null || !Files.exists(dir.toPath()))
+		if (dir == null || dir.exists())
 			return false;
-		try {
-			Files.walkFileTree(dir.toPath(), new Delete());
+		if (!dir.isDirectory()) {
+			dir.delete();
 			return true;
-		} catch (IOException e) {
-			log.error("failed to delete " + dir, e);
-			return false;
 		}
+		for (var child : dir.listFiles()) {
+			delete(child);
+		}
+		return true;
 	}
 
 	private static class Copy extends SimpleFileVisitor<Path> {
@@ -76,21 +77,4 @@ public class Dirs {
 		}
 	}
 
-	private static class Delete extends SimpleFileVisitor<Path> {
-		@Override
-		public FileVisitResult visitFile(Path file, BasicFileAttributes atts)
-				throws IOException {
-			Files.delete(file);
-			return FileVisitResult.CONTINUE;
-		}
-
-		@Override
-		public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-				throws IOException {
-			if (exc != null)
-				throw exc;
-			Files.delete(dir);
-			return FileVisitResult.CONTINUE;
-		}
-	}
 }

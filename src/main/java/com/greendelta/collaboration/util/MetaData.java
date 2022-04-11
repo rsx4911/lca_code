@@ -49,7 +49,11 @@ public class MetaData {
 	}
 
 	public static Map<String, Object> forBrowse(Diff diff, Repository repo) {
-		return putDatasetInfo(diff.ref(), diff.type, repo, Mode.BROWSE);
+		var ref = diff.type == DiffType.DELETED ? diff.left : diff.right;
+		var meta = putDatasetInfo(ref, diff.type, repo, Mode.BROWSE);
+		var commitId = diff.right != null ? diff.right.commitId : diff.left.commitId;
+		meta.put("commitId", commitId);
+		return meta;
 	}
 
 	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {

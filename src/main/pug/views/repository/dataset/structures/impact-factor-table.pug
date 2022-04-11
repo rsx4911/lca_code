@@ -55,4 +55,4 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 			| /
 			+sub-field(unit, otherUnit, 'name')
 		+uncertainty-cell(factor, otherFactor, formatScientific)
-		td(data-path=flow?'impactCategories[' + category.Id + '].impactFactors[' + flow.id + ']':null)
+		td(data-path=flow?'impactCategories[' + category.id + '].impactFactors[' + flow.id + ']':null)

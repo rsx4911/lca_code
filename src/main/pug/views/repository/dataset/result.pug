@@ -1,0 +1,22 @@
+include ./structures/impact-result-table.pug
+include ./structures/flow-result-table.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		.content
+			ul.nav.nav-tabs(role='tablist')
+				+nav-tab('impactResults', true)
+				+nav-tab('flowResults')
+			.tab-content
+				+nav-tab-pane('impactResults', true)
+					+impact-result-table()
+				+nav-tab-pane('flowResults')
+					+flow-result-table(true)
+					+flow-result-table(false)
+	+meta
+		hr
+		+labeled-ref-block('productSystem')
+		+labeled-ref-block('impactMethod')
+	.clear

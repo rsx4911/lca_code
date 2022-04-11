@@ -223,11 +223,7 @@ public class RepositoryController {
 			@PathVariable("name") String name,
 			@PathVariable("newGroup") String newGroup,
 			@PathVariable("newName") String newName) {
-		if (!group.equals(newGroup))
-			if (!groupService.exists(newGroup))
-				throw Response.badRequest("newGroup", "Specified group does not exist");
-		if (service.exists(newGroup, newName))
-			throw Response.badRequest("newName", "Specified repository does already exist");
+		checkValid(newGroup, newName);
 		try (var repo = service.get(group, name)) {
 			if (!service.move(repo, newGroup, newName))
 				throw Response.error("Repository could not be moved");

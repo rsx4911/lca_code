@@ -123,7 +123,7 @@ mixin nav-tab(path, active, label)
 	if !path || reviewMode || hasAtLeastOne(dataset, compareTo, path)
 		li(role='presentation' class=active?'active':null)
 			- var id = path || label.replace(' ', '-').toLowerCase();
-			a(href=('#' + id) aria-controls=id role='tab' data-toggle='tab' data-path=path)=path?getLabel(path):label
+			a(href=('#' + id) aria-controls=id role='tab' data-toggle='tab' data-path=path)=label||getLabel(path)
 				|  
 				span.badge.change-count
 
@@ -329,6 +329,14 @@ mixin ref-row(path)
 			td(data-compare=changed, data-path=path)
 				+compare-icon(changed)
 				+ref(value, value2)
+
+mixin ref-field(path, defaultLabel)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path); 
+	- var changed = compareTo ? compare(value, value2) : null;
+	span(data-compare=changed, data-path=path)
+		+compare-icon(changed)
+		+ref(value, value2, defaultLabel)
 
 mixin ref-block(path, defaultLabel)
 	- var value = getValue(dataset, path);
