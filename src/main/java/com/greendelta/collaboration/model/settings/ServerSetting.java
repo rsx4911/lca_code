@@ -9,21 +9,21 @@ import com.greendelta.collaboration.util.ModelTypes;
 public enum ServerSetting implements SettingKey {
 
 	// features
-	MESSAGING_ENABLED(Boolean.class, true),
+	MESSAGING_ENABLED(Boolean.class, false),
 	TASKS_ENABLED(Boolean.class, true),
 	COMMENTS_ENABLED(Boolean.class, true),
-	PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
-	NOTIFICATIONS_ENABLED(Boolean.class, true),
-	USER_REGISTRATION_ENABLED(Boolean.class, true),
-	USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, true),
+	PUBLIC_REPOSITORY_ENABLED(Boolean.class, false),
+	NOTIFICATIONS_ENABLED(Boolean.class, false),
+	USER_REGISTRATION_ENABLED(Boolean.class, false),
+	USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, false),
 	DASHBOARD_ACTIVITIES_ENABLED(Boolean.class, true),
 	REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
-	HOMEPAGE_ENABLED(Boolean.class, true),
+	HOMEPAGE_ENABLED(Boolean.class, false),
 	REPOSITORY_TAGS_ENABLED(Boolean.class, true),
 	DATASET_TAGS_ENABLED(Boolean.class, true),
-	DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, true),
-	DATASET_TAGS_ON_GROUPS_ENABLED(Boolean.class, true),
-	DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, true),
+	DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, false),
+	DATASET_TAGS_ON_GROUPS_ENABLED(Boolean.class, false),
+	DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, false),
 
 	// basic settings
 	SERVER_NAME(String.class, "LCA Collaboration Server"),
