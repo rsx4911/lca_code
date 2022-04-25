@@ -79,7 +79,7 @@ define([
 					when 'VARIANT' then if (v.productSystem?.id + '-' + v.name) is (value.productSystem?.id + '-' + value.name) then return v
 					when 'PARAMETER_REDEF' then if (if v.context then v.context.id else 'global') + v.name is (if value.context then value.context.id else 'global') + value.name then return v
 					when 'PARAMETER_REDEF_SET' then if v.name is value.name then return v
-					when 'EPD_MODULE' then if v.name is value.name then return v
+					when 'EPD_MODULE' then if v.name is value.name and v.result?.id is value.result?.id then return v
 					when 'IMPACT_RESULT' then if v.indicator?.id is value.indicator?.id then return v
 					when 'FLOW_RESULT' then if v.flow?.id is value.flow?.id then return v
 			return null
