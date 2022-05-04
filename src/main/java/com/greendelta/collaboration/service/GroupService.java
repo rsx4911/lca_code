@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.openlca.util.Dirs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,6 @@ import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -97,7 +97,8 @@ public class GroupService {
 		var path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
-		return Dirs.delete(new File(path));
+		Dirs.delete(new File(path));
+		return true;
 	}
 
 	public long getCount(boolean adminArea) {
