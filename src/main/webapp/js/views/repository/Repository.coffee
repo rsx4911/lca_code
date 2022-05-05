@@ -106,7 +106,6 @@ define([
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
 				size = @$('#maxSize').val()
 				unit = parseInt @$('#maxSize-group #unit').val()
 				if unit is 1073741824
@@ -132,21 +131,21 @@ define([
 				target = $ Events.target event
 				library = target.attr('id').replace('@', ' ')
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
+				repoPath = "#{repository.group}/#{repository.name}"
 				role = target.val()
 				$.ajax
 					type: if role then 'PUT' else 'DELETE'
-					url: "ws/repository/restriction/#{fullPath}/#{library}" + (if role then "/#{role}" else '')
+					url: "ws/repository/restriction/#{repoPath}/#{library}" + (if role then "/#{role}" else '')
 
 			deleteRepository: (event) ->
 				Events.preventDefault event
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
-				Layers.askDeleteQuestion "repository #{fullPath}", fullPath, () =>
+				repoPath = "#{repository.group}/#{repository.name}"
+				Layers.askDeleteQuestion "repository #{repoPath}", repoPath, () =>
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
-						url: "ws/repository/#{fullPath}"
+						url: "ws/repository/#{repoPath}"
 						success: () =>
 							Layers.hideProgressIndicator()
 							Router.navigate 'dashboard/repositories'
@@ -154,10 +153,10 @@ define([
 			openCloneLayer: (event) ->
 				Events.preventDefault event
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
+				repoPath = "#{repository.group}/#{repository.name}"
 				@loadCommitsAndGroups (commits, groups) =>
 					Layers.showTemplateInLayer
-						title: "Clone #{fullPath}"
+						title: "Clone #{repoPath}"
 						template: 'repository/clone'
 						model: {commits: commits, groups: groups, formatCommitDescription: Format.formatCommitDescription}
 						buttons: [{text: 'Clone', className: 'btn-success', callback: () => @cloneRepository()}]
@@ -168,10 +167,10 @@ define([
 			openMoveLayer: (event) ->
 				Events.preventDefault event
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
+				repoPath = "#{repository.group}/#{repository.name}"
 				@loadGroups (groups) =>
 					Layers.showTemplateInLayer
-						title: "Move #{fullPath}"
+						title: "Move #{repoPath}"
 						template: 'repository/move'
 						model: {groups: groups}
 						buttons: [{text: 'Move', className: 'btn-success', callback: () => @moveRepository()}]
@@ -182,16 +181,16 @@ define([
 			exportRepository: (event) ->
 				Events.preventDefault event
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
+				repoPath = "#{repository.group}/#{repository.name}"
 				@$('iframe#export-frame').remove()
-				@$el.append '<iframe id="export-frame" class="hidden" border="0" height="0" width="0" src="ws/repository/export/' + fullPath + '"></iframe>'
+				@$el.append '<iframe id="export-frame" class="hidden" border="0" height="0" width="0" src="ws/repository/export/' + repoPath + '"></iframe>'
 
 			loadCommitsAndGroups: (callback) ->
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
+				repoPath = "#{repository.group}/#{repository.name}"
 				$.ajax
 					type: 'GET'
-					url: "ws/history/#{fullPath}"
+					url: "ws/history/#{repoPath}"
 					success: (commits) =>
 						@loadGroups (groups) =>
 							callback commits, groups
@@ -249,9 +248,9 @@ define([
 
 			pushToGlad: () ->
 				repository = @repository.toJSON()
-				fullPath = "#{repository.group}/#{repository.name}"
+				repoPath = "#{repository.group}/#{repository.name}"
 				Layers.selectModel
-					repositoryPath: fullPath
+					repositoryPath: repoPath
 					multipleSelection: true
 					type: 'PROCESS'
 					callback: (selection) ->
@@ -260,7 +259,7 @@ define([
 							Layers.showProgressIndicator 'Pushing'
 							$.ajax
 								type: 'PUT'
-								url: "ws/datamanager/glad/push/#{fullPath}"
+								url: "ws/datamanager/glad/push/#{repoPath}"
 								contentType: 'application/json'
 								data: JSON.stringify(input)
 								success: (response) ->
