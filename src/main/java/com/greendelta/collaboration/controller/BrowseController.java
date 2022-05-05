@@ -92,8 +92,8 @@ public class BrowseController {
 
 	private void putCommitInfo(Map<String, Object> entry, Repository repo, Map<String, Commit> commits) {
 		var commitId = Maps.getString(entry, "commitId");
-		var fullPath = Maps.getString(entry, "fullPath");
-		commitId = repo.commits().find().path(fullPath).until(commitId).latestId();
+		var path = Maps.getString(entry, "path");
+		commitId = repo.commits().find().path(path).until(commitId).latestId();
 		var commit = commits.computeIfAbsent(commitId, repo.commits()::get);
 		entry.put("commitId", commit.id);
 		entry.put("commitMessage", commit.message);

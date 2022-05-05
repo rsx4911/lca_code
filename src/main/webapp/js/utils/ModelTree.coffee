@@ -27,7 +27,7 @@ define([
 									if path
 										if e.typeOfEntry is 'CATEGORY'
 											data.push 
-												id: "#{e.type}/#{e.fullPath}"
+												id: "#{e.type}/#{e.path}"
 												text: e.name
 												children: true
 												icon: "images/model/small/category/#{e.type.toLowerCase()}.png"
@@ -40,7 +40,7 @@ define([
 												id: e.refId
 												text: e.name
 												commitId: e.commitId
-												fullPath: e.fullPath
+												path: e.path
 												icon: "images/model/small/#{e.type.toLowerCase()}.png"
 												type: e.type
 									else
@@ -53,8 +53,8 @@ define([
 								callback data
 
 		# returns elements in three different types:
-		# 1) ModelType elements, e.g. {fullPath: 'FLOW'}
-		# 2) Category elements, e.g. {fullPath: $categoryType/$path}
+		# 1) ModelType elements, e.g. {path: 'FLOW'}
+		# 2) Category elements, e.g. {path: $categoryType/$path}
 		# 3) Model elements, e.g. {refId: '4321-...', type: 'FLOW'}
 		# if a parent is already in the elements to be returned, child elements will not be added
 		# because the tree is lazy loaded, the calling code must add missing (not selected in UI) elements anyway
@@ -66,20 +66,20 @@ define([
 			for e in selected
 				if !e.original.type # is model type 
 					types.push e.original.id
-					elements.push {fullPath: e.original.id, commitId: e.commitId}
+					elements.push {path: e.original.id, commitId: e.commitId}
 			for e in selected
 				if e.original.typeOfEntry is 'CATEGORY' # is category
 					if $.inArray(e.original.type, types) isnt -1
 						continue
 					paths.push e.original.id
-					elements.push {fullPath: "#{e.original.type}/#{e.original.id}", commitId: e.commitId}
+					elements.push {path: "#{e.original.type}/#{e.original.id}", commitId: e.commitId}
 			for e in selected
 				if e.original.type && e.original.typeOfEntry isnt 'CATEGORY' # is model
 					if $.inArray(e.original.type, types) isnt -1
 						continue
 					skip = false
 					for path in paths
-						if "#{e.original.type}/#{e.original.fullPath}".indexOf(path) is 0
+						if "#{e.original.type}/#{e.original.path}".indexOf(path) is 0
 							skip = true
 							break
 					if skip

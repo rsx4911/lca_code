@@ -23,6 +23,7 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.model.Commit;
+import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,6 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Dirs;
 import com.greendelta.collaboration.util.SearchResults;
 
 @Service
@@ -144,7 +144,7 @@ public class RepositoryService {
 			Git.init().setBare(true).setDirectory(dir).call();
 		} catch (GitAPIException e) {
 			log.error("Error initializing git repository", e);
-			dir.delete();
+			Dirs.delete(dir);
 			throw new Error(e);
 		}
 	}
@@ -159,11 +159,7 @@ public class RepositoryService {
 		if (exists(group, name))
 			return false;
 		try (var newRepo = create(group, name)) {
-			var moved = Dirs.move(repo.dir, newRepo.dir);
-			if (!moved) {
-				delete(newRepo);
-				return false;
-			}
+			Dirs.move(repo.dir.toPath(), newRepo.dir.toPath());
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
@@ -188,7 +184,7 @@ public class RepositoryService {
 		if (!accessService.canWrite(to.group))
 			throw new ForbiddenAccessException(to.group, "WRITE");
 		try {
-			Dirs.copy(from.dir, to.dir);
+			Dirs.copy(from.dir.toPath(), to.dir.toPath());
 			if (resetTo != null) {
 				try (var gitRepo = new FileRepository(to.dir)) {
 					var command = new ResetCommand(gitRepo);
@@ -223,7 +219,8 @@ public class RepositoryService {
 		if (path == null)
 			return false;
 		repo.close();
-		return Dirs.delete(new File(path));
+		Dirs.delete(new File(path));
+		return true;
 	}
 
 	public StreamingResponseBody pack(Repository repo) {
@@ -256,9 +253,8 @@ public class RepositoryService {
 
 	public void unpack(Repository repo, InputStream input) {
 		try {
-			org.openlca.util.Dirs.delete(repo.dir.toPath());
+			Dirs.delete(repo.dir);
 			create(repo.group, repo.name).close();
-			;
 			var repoPath = repo.dir.toPath();
 			var in = new ZipInputStream(input);
 			ZipEntry entry = null;
