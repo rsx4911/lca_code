@@ -1,11 +1,14 @@
 package com.greendelta.collaboration.config;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +28,7 @@ import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
 import com.greendelta.collaboration.model.Authority;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.util.Requests;
 
 @Configuration
 @EnableWebSecurity
@@ -74,7 +78,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		} else {
 			var part = url.substring(url.lastIndexOf("/") + 1);
 			if (!Arrays.asList("login", "reset-password", "sign-up").contains(part)) {
-				response.sendRedirect(request.getServletContext().getContextPath() + "/login");
+				var route = Requests.getRelativePath(request);
+				var query = request.getQueryString();
+				if (!Strings.nullOrEmpty(query)) {
+					route += "?" + query;
+				}
+				route = URLEncoder.encode(route, StandardCharsets.UTF_8.toString());
+				response.sendRedirect(request.getServletContext().getContextPath() + "/login?redirectUrl=" + route);
 			}
 		}
 	}
