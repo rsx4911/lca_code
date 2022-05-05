@@ -226,7 +226,8 @@
             $('#login-general-message').hide();
             $('#login #token').focus();
           } else {
-            window.location.href = '';
+				var params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
+				window.location.href = params.redirectUrl || '';
           }
         }, error: function (response) {
           $('#login-general-message').show();
