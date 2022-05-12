@@ -11,6 +11,7 @@ import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
+import org.openlca.git.util.Diffs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -109,7 +110,7 @@ public class HistoryController {
 			var commitId = Maps.getString(commitData, "id");
 			groupCount.put(commitId, count);
 			var commit = repo.commits().get(commitId);
-			var diffs = repo.diffs().find().withPrevious(commit.id).all();
+			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 			commitData.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 			commitData.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			commitData.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
@@ -139,7 +140,7 @@ public class HistoryController {
 			if (commit == null)
 				throw Response.notFound();
 			var map = putUserName(commit);
-			var diffs = repo.diffs().find().withPrevious(commit.id).all();
+			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 			map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 			map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			map.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
@@ -161,8 +162,9 @@ public class HistoryController {
 			var commit = repo.commits().get(commitId);
 			if (commit == null)
 				throw Response.notFound();
-			var refs = repo.diffs().find().type(type).withPrevious(commit.id).all();
-			var mapped = refs.stream().map(r -> MetaData.forBrowse(r, repo));
+			var typeFilter = type != null ? Collections.singletonList(type.name()) : null;
+			var diffs = Diffs.withPrevious(repo.gitRepo(), commit, typeFilter);
+			var mapped = diffs.stream().map(d -> MetaData.forBrowse(d, repo));
 			List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
 			return SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());

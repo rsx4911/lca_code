@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
+import org.openlca.git.util.Diffs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -114,7 +115,7 @@ public class ActivityController {
 	private void putAdditionalInfo(Map<String, Object> entry, Repository repo, Commit commit) {
 		var user = userService.getForUsername(commit.user);
 		entry.put("userDisplayName", user != null ? user.name : commit.user);
-		var diffs = repo.diffs().find().withPrevious(commit.id).all();
+		var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 		entry.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 		entry.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 		entry.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());

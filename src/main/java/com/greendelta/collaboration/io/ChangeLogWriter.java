@@ -19,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
+import org.openlca.git.util.Diffs;
 import org.springframework.http.HttpStatus;
 
 import com.greendelta.collaboration.error.WebRequestException;
@@ -34,30 +35,23 @@ public class ChangeLogWriter {
 			var data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
 			var commits = repo.commits().find().all();
-			Commit previous = null;
 			for (var commit : commits) {
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				var d = repo.diffs().find();
-				if (previous == null) {
-					d = d.withPrevious(commit.id);
-				} else {
-					d = d.between(previous.id, commit.id);
-				}
-				for (var diff : d.all()) {
+				var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+				for (var diff : diffs) {
 					if (diff.type != DiffType.MODIFIED)
 						continue;
 					data = renderDiff(request, repo, diff);
 					packResource(zos, diff.ref().refId + ".html", data);
 				}
-				previous = commit;
 			}
 		});
 	}
 
 	public File generate(HttpServletRequest request, Repository repo, Commit commit) throws WebRequestException {
 		return generate(zos -> {
-			var diffs = repo.diffs().find().withPrevious(commit.id).all();
+			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {
