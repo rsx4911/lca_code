@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.find.Commits;
 import org.openlca.git.find.Datasets;
-import org.openlca.git.find.Diffs;
 import org.openlca.git.find.Entries;
 import org.openlca.git.find.References;
 import org.openlca.git.util.Repositories;
@@ -48,7 +47,7 @@ public class Repository implements AutoCloseable {
 		this.groupSettings = groupSettings;
 	}
 
-	private FileRepository gitRepo() {
+	public FileRepository gitRepo() {
 		if (gitRepo == null) {
 			try {
 				gitRepo = new FileRepository(dir);
@@ -70,10 +69,6 @@ public class Repository implements AutoCloseable {
 
 	public References references() {
 		return References.of(gitRepo());
-	}
-
-	public Diffs diffs() {
-		return Diffs.of(gitRepo());
 	}
 
 	public Entries entries() {

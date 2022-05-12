@@ -14,6 +14,7 @@ import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
+import org.openlca.git.util.Diffs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,7 @@ public class SearchService {
 
 	public void index(Repository repo, Commit commit) {
 		var manager = new DsEntryManager(repo, commit);
-		var diffs = repo.diffs().find().withPrevious(commit.id).all();
+		var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 				.forEach(diff -> index(repo, manager, diff.right));
 		Diff.filter(diffs, DiffType.DELETED)
@@ -93,7 +94,7 @@ public class SearchService {
 		Collections.reverse(commits);
 		commits.forEach(commit -> {
 			var manager = new DsEntryManager(repo, commit);
-			var diffs = repo.diffs().find().withPrevious(commit.id).all();
+			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 					.forEach(diff -> remove(manager, diff.right));
 		});
