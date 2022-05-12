@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
@@ -51,9 +52,9 @@ public class SearchService {
 		var manager = new DsEntryManager(repo, commit);
 		var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
-				.forEach(diff -> index(repo, manager, diff.right));
+				.forEach(diff -> index(repo, manager, diff.toReference(Side.NEW)));
 		Diff.filter(diffs, DiffType.DELETED)
-				.forEach(diff -> remove(manager, diff.left));
+				.forEach(diff -> remove(manager, diff.toReference(Side.OLD)));
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {
@@ -96,7 +97,7 @@ public class SearchService {
 			var manager = new DsEntryManager(repo, commit);
 			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
-					.forEach(diff -> remove(manager, diff.right));
+					.forEach(diff -> remove(manager, diff.toReference(Side.NEW)));
 		});
 	}
 

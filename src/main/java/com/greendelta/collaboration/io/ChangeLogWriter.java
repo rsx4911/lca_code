@@ -40,10 +40,10 @@ public class ChangeLogWriter {
 				packResource(zos, commit.id + ".html", data);
 				var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
 				for (var diff : diffs) {
-					if (diff.type != DiffType.MODIFIED)
+					if (diff.diffType != DiffType.MODIFIED)
 						continue;
 					data = renderDiff(request, repo, diff);
-					packResource(zos, diff.ref().refId + ".html", data);
+					packResource(zos, diff.refId + ".html", data);
 				}
 			}
 		});
@@ -55,10 +55,10 @@ public class ChangeLogWriter {
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {
-				if (diff.type != DiffType.MODIFIED)
+				if (diff.diffType != DiffType.MODIFIED)
 					continue;
 				data = renderDiff(request, repo, diff);
-				packResource(zos, diff.ref().refId + ".html", data);
+				packResource(zos, diff.refId + ".html", data);
 			}
 		});
 	}
@@ -91,8 +91,8 @@ public class ChangeLogWriter {
 
 	private String renderDiff(HttpServletRequest request, Repository repo, Diff diff)
 			throws WebRequestException {
-		var route = "/" + repo.path() + "/dataset/" + diff.right.type.name() + "/" + diff.right.refId + "?commitId="
-				+ diff.right.commitId + "&compareToCommitId=" + diff.left.commitId;
+		var route = "/" + repo.path() + "/dataset/" + diff.type.name() + "/" + diff.refId + "?commitId="
+				+ diff.newCommitId + "&compareToCommitId=" + diff.oldCommitId;
 		return renderSsr(request, route);
 	}
 

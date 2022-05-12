@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
@@ -49,9 +50,9 @@ public class MetaData {
 	}
 
 	public static Map<String, Object> forBrowse(Diff diff, Repository repo) {
-		var ref = diff.type == DiffType.DELETED ? diff.left : diff.right;
-		var meta = putDatasetInfo(ref, diff.type, repo, Mode.BROWSE);
-		var commitId = diff.right != null ? diff.right.commitId : diff.left.commitId;
+		var ref = diff.diffType == DiffType.DELETED ? diff.toReference(Side.OLD) : diff.toReference(Side.NEW);
+		var meta = putDatasetInfo(ref, diff.diffType, repo, Mode.BROWSE);
+		var commitId = diff.newCommitId != null ? diff.newCommitId : diff.oldCommitId;
 		meta.put("commitId", commitId);
 		return meta;
 	}
