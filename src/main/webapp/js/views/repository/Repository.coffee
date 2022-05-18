@@ -29,7 +29,7 @@ define([
 				'change #unit': 'updateMaxSize'
 				'change #tags': 'setTags'
 				'change [data-setting]:not([type=checkbox])': 'setSetting'
-				'change .library-restrictions select': 'updateRestriction'
+				'change .restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
 				'click [data-action=clone-repository]': 'openCloneLayer'
@@ -129,13 +129,13 @@ define([
 
 			updateRestriction: (event) ->
 				target = $ Events.target event
-				library = target.attr('id').replace('@', ' ')
+				restriction = target.attr('id').replace('@', ' ')
 				repository = @repository.toJSON()
 				repoPath = "#{repository.group}/#{repository.name}"
 				role = target.val()
 				$.ajax
 					type: if role then 'PUT' else 'DELETE'
-					url: "ws/repository/restriction/#{repoPath}/#{library}" + (if role then "/#{role}" else '')
+					url: "ws/repository/restriction/#{repoPath}/#{restriction}" + (if role then "/#{role}" else '')
 
 			deleteRepository: (event) ->
 				Events.preventDefault event

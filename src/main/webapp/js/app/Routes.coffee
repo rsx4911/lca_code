@@ -28,7 +28,7 @@ define([
 				'administration/user/profile/:username': 'adminUserEdit'
 				'administration/team/new': 'adminTeamNew'
 				'administration/team/profile/:teamname': 'adminTeamEdit'
-				'administration/libraries': 'adminLibraries'
+				'administration/restrictions': 'adminRestrictions'
 				'administration/settings': 'adminSettings'
 				'administration/maintenance': 'adminMaintenance'
 				'messages(/:username)': 'messages'

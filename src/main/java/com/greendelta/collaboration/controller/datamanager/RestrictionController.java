@@ -15,61 +15,61 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.Library;
+import com.greendelta.collaboration.model.Restriction;
 import com.greendelta.collaboration.service.DeleteService;
-import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.service.RestrictionService;
 import com.greendelta.collaboration.util.Routes;
 
-@RestController("datamanager-LibraryController")
-@RequestMapping("ws/datamanager/library")
-public class LibraryController {
+@RestController("datamanager-RestrictionController")
+@RequestMapping("ws/datamanager/restrictions")
+public class RestrictionController {
 
-	private final LibraryService service;
+	private final RestrictionService service;
 	private final DeleteService deleteService;
 
 	@Autowired
-	public LibraryController(LibraryService service, DeleteService deleteService) {
+	public RestrictionController(RestrictionService service, DeleteService deleteService) {
 		this.service = service;
 		this.deleteService = deleteService;
 	}
 
 	@GetMapping
-	public List<Map<String, Object>> getLibraries() {
-		var libraries = new ArrayList<Map<String, Object>>();
-		for (var library : service.getAll()) {
+	public List<Map<String, Object>> getRestrictions() {
+		var restrictions = new ArrayList<Map<String, Object>>();
+		for (var restriction : service.getAll()) {
 			var map = new HashMap<String, Object>();
-			map.put("name", library.name);
-			map.put("count", library.getRefIds().size());
-			libraries.add(map);
+			map.put("name", restriction.name);
+			map.put("count", restriction.getRefIds().size());
+			restrictions.add(map);
 		}
-		return libraries;
+		return restrictions;
 	}
 
 	@GetMapping("{name}")
-	public List<String> getLibraryRefIds(@PathVariable("name") String name) {
+	public List<String> getRestrictionRefIds(@PathVariable("name") String name) {
 		return service.getForName(name).getRefIds();
 	}
 
 	@PutMapping("{name}")
-	public void putLibrary(@PathVariable("name") String name,
+	public void putRestriction(@PathVariable("name") String name,
 			@RequestBody List<String> refIds) {
 		if (!Routes.isValid(name, ' '))
 			throw Response.badRequest("name", "Only letters, numbers, underscore and space are allowed");
-		var library = service.getForName(name);
-		if (library != null) {
-			library.setRefIds(refIds);
-			service.update(library);
+		var restriction = service.getForName(name);
+		if (restriction != null) {
+			restriction.setRefIds(refIds);
+			service.update(restriction);
 		} else {
-			library = new Library();
-			library.name = name;
-			library.setRefIds(refIds);
-			service.insert(library);
+			restriction = new Restriction();
+			restriction.name = name;
+			restriction.setRefIds(refIds);
+			service.insert(restriction);
 		}
 	}
 
 	@DeleteMapping("{name}")
-	public void removeLibrary(@PathVariable("name") String name) {
-		deleteService.deleteLibrary(name);
+	public void removeRestriction(@PathVariable("name") String name) {
+		deleteService.deleteRestriction(name);
 	}
 
 }

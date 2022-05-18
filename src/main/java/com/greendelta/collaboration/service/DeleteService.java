@@ -29,14 +29,14 @@ public class DeleteService {
 	private final MessagingService messagingService;
 	private final AccessService accessService;
 	private final CommentService commentService;
-	private final LibraryService libraryService;
+	private final RestrictionService restrictionService;
 	private final SettingsService settingsService;
 
 	@Autowired
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, CommentService commentService,
-			LibraryService libraryService, SettingsService settingsService) {
+			RestrictionService restrictionService, SettingsService settingsService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -46,7 +46,7 @@ public class DeleteService {
 		this.messagingService = messagingService;
 		this.accessService = accessService;
 		this.commentService = commentService;
-		this.libraryService = libraryService;
+		this.restrictionService = restrictionService;
 		this.settingsService = settingsService;
 	}
 
@@ -138,10 +138,10 @@ public class DeleteService {
 		groupService.delete(name);
 	}
 
-	public void deleteLibrary(String name) {
+	public void deleteRestriction(String name) {
 		try (var accessible = repoService.getAllAccessible()) {
 			accessible.forEach(repo -> repoService.setRestriction(repo, name, null));
-			libraryService.delete(libraryService.getForName(name));
+			restrictionService.delete(restrictionService.getForName(name));
 		}
 	}
 

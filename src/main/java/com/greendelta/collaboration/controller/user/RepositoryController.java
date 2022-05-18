@@ -36,9 +36,9 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.RestrictionService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
@@ -59,13 +59,13 @@ public class RepositoryController {
 	private final AccessService accessService;
 	private final SearchService searchService;
 	private final DeleteService deleteService;
-	private final LibraryService libraryService;
+	private final RestrictionService restrictionService;
 	private final NotificationService notificationService;
 
 	@Autowired
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
-			SearchService searchService, DeleteService deleteService, LibraryService libraryService,
+			SearchService searchService, DeleteService deleteService, RestrictionService restrictionService,
 			NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
@@ -74,7 +74,7 @@ public class RepositoryController {
 		this.accessService = accessService;
 		this.searchService = searchService;
 		this.deleteService = deleteService;
-		this.libraryService = libraryService;
+		this.restrictionService = restrictionService;
 		this.notificationService = notificationService;
 	}
 
@@ -91,16 +91,16 @@ public class RepositoryController {
 				return Response.ok(SearchResults.convert(all, Repositories::map));
 			var user = userService.getCurrentUser();
 			switch (module) {
-			case DASHBOARD, GROUP:
-				return Response.ok(SearchResults.convert(all,
-						repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
-			case REVIEW:
-				return Response.ok(all.data.stream()
-						.filter(repo -> accessService.canManageTaskIn(repo.path()))
-						.map(Repositories::map)
-						.toList());
-			default:
-				return Response.ok(all.data.stream().map(Repositories::map).toList());
+				case DASHBOARD, GROUP:
+					return Response.ok(SearchResults.convert(all,
+							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
+				case REVIEW:
+					return Response.ok(all.data.stream()
+							.filter(repo -> accessService.canManageTaskIn(repo.path()))
+							.map(Repositories::map)
+							.toList());
+				default:
+					return Response.ok(all.data.stream().map(Repositories::map).toList());
 			}
 		}
 	}
@@ -132,11 +132,11 @@ public class RepositoryController {
 			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
 			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
 			mappedRepo.put("size", repo.getSize());
-			var restrictions = repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS, new HashMap<String, Role>());
-			libraryService.getAll().stream()
+			var restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS, new HashMap<String, Role>());
+			restrictionService.getAll().stream()
 					.filter(lib -> !restrictions.containsKey(lib.name))
 					.forEach(lib -> restrictions.put(lib.name, null));
-			mappedRepo.put("libraryRestrictions", restrictions);
+			mappedRepo.put("restrictions", restrictions);
 			return mappedRepo;
 		}
 	}
@@ -358,24 +358,24 @@ public class RepositoryController {
 		RepositoryJsonWriter.writeCurrentAsync(repo);
 	}
 
-	@PutMapping("restriction/{group}/{name}/{library}/{role}")
+	@PutMapping("restriction/{group}/{name}/{restriction}/{role}")
 	public void setRestriction(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
-			@PathVariable("library") String library,
+			@PathVariable("restriction") String restriction,
 			@PathVariable("role") Role role) {
 		try (var repo = service.get(group, name)) {
-			service.setRestriction(repo, library, role);
+			service.setRestriction(repo, restriction, role);
 		}
 	}
 
-	@DeleteMapping("restriction/{group}/{name}/{library}")
+	@DeleteMapping("restriction/{group}/{name}/{restriction}")
 	public void removeRestriction(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
-			@PathVariable("library") String library) {
+			@PathVariable("restriction") String restriction) {
 		try (var repo = service.get(group, name)) {
-			service.setRestriction(repo, library, null);
+			service.setRestriction(repo, restriction, null);
 		}
 	}
 

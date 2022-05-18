@@ -196,14 +196,14 @@ public class RepositoryService {
 		return true;
 	}
 
-	public void setRestriction(Repository repo, String library, Role restriction) {
-		Map<String, Role> restrictions = repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS, new HashMap<>());
-		if (restriction == null) {
-			restrictions.remove(library);
+	public void setRestriction(Repository repo, String restriction, Role restrictedTo) {
+		Map<String, Role> restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS, new HashMap<>());
+		if (restrictedTo == null) {
+			restrictions.remove(restriction);
 		} else {
-			restrictions.put(library, restriction);
+			restrictions.put(restriction, restrictedTo);
 		}
-		repo.settings.set(RepositorySetting.LIBRARY_RESTRICTIONS, restrictions);
+		repo.settings.set(RepositorySetting.RESTRICTIONS, restrictions);
 	}
 
 	public boolean delete(Repository repo) {

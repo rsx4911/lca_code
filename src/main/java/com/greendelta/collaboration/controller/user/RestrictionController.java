@@ -14,26 +14,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.LibraryRestriction;
-import com.greendelta.collaboration.model.LibraryRestriction.RestrictionType;
+import com.greendelta.collaboration.model.RestrictionEntry;
+import com.greendelta.collaboration.model.RestrictionEntry.RestrictionType;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.service.RestrictionService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController
-@RequestMapping("ws/library")
-public class LibraryController {
+@RequestMapping("ws/restrictions")
+public class RestrictionController {
 
-	private final LibraryService service;
+	private final RestrictionService service;
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final MembershipService membershipService;
 
 	@Autowired
-	public LibraryController(LibraryService service, RepositoryService repoService, UserService userService,
+	public RestrictionController(RestrictionService service, RepositoryService repoService, UserService userService,
 			MembershipService membershipService) {
 		this.service = service;
 		this.repoService = repoService;
@@ -42,40 +42,40 @@ public class LibraryController {
 	}
 
 	@PostMapping
-	public ResponseEntity<List<LibraryRestriction>> checkAgainstLibraries(
+	public ResponseEntity<List<RestrictionEntry>> checkAgainstLibraries(
 			@RequestParam("group") String group,
 			@RequestParam("name") String name,
 			@RequestBody List<String> refIds) {
 		return check(group, name, refIds);
 	}
 
-	private ResponseEntity<List<LibraryRestriction>> check(String group, String name, List<String> refIds) {
+	private ResponseEntity<List<RestrictionEntry>> check(String group, String name, List<String> refIds) {
 		try (var repo = repoService.get(group, name)) {
-			Map<String, Role> restrictedTo = repo.settings.get(RepositorySetting.LIBRARY_RESTRICTIONS);
+			Map<String, Role> restrictedTo = repo.settings.get(RepositorySetting.RESTRICTIONS);
 			if (restrictedTo.isEmpty())
 				return Response.noContent();
 			var user = userService.getCurrentUser();
 			var userRole = membershipService.getRole(user, repo.path());
-			var restrictions = new ArrayList<LibraryRestriction>();
-			var libraries = service.getAll().stream()
+			var entries = new ArrayList<RestrictionEntry>();
+			var restrictions = service.getAll().stream()
 					.collect(Collectors.toMap(lib -> lib.name, lib -> lib.getRefIds()));
 			refIds.forEach(refId -> {
-				libraries.keySet().forEach(library -> {
-					if (!libraries.get(library).contains(refId))
+				restrictions.keySet().forEach(restriction -> {
+					if (!restrictions.get(restriction).contains(refId))
 						return;
-					var restrictedToRole = restrictedTo.get(library);
+					var restrictedToRole = restrictedTo.get(restriction);
 					if (restrictedToRole == null)
 						return;
 					if (userRole == null || !userRole.matches(restrictedToRole)) {
-						restrictions.add(new LibraryRestriction(refId, library, RestrictionType.FORBIDDEN));
+						entries.add(new RestrictionEntry(refId, restriction, RestrictionType.FORBIDDEN));
 					} else {
-						restrictions.add(new LibraryRestriction(refId, library, RestrictionType.WARNING));
+						entries.add(new RestrictionEntry(refId, restriction, RestrictionType.WARNING));
 					}
 				});
 			});
-			if (restrictions.isEmpty())
+			if (entries.isEmpty())
 				return Response.noContent();
-			return Response.ok(restrictions);
+			return Response.ok(entries);
 		}
 	}
 

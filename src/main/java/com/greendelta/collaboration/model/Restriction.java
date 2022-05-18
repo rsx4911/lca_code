@@ -10,7 +10,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table
-public class Library extends AbstractEntity {
+public class Restriction extends AbstractEntity {
 
 	@Column
 	public String name;
