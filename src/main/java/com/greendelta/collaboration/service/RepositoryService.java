@@ -88,12 +88,6 @@ public class RepositoryService {
 		return settingsService.get(ServerSetting.REPOSITORY_PATH);
 	}
 
-	public Repository get(RepositoryPath path) {
-		if (!path.isRepo())
-			throw new RepositoryNotFoundException("");
-		return get(path.group, path.repo);
-	}
-
 	public Repository get(String group, String name) {
 		var path = getRootPath();
 		var id = new RepositoryPath(group, name).toString();
@@ -311,7 +305,7 @@ public class RepositoryService {
 	public RepositorySearchResult getAll(int page, int pageSize, String filter, boolean onlyPublic,
 			boolean adminArea) {
 		var accessible = getAll(onlyPublic, adminArea);
-		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, (repo) -> repo.path());
+		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, repo -> repo.path());
 		return new RepositorySearchResult(result);
 	}
 
@@ -342,8 +336,10 @@ public class RepositoryService {
 					if (!accessService.canRead(repoPath.toString(), !adminArea))
 						continue;
 					var repo = get(group.getName(), name.getName());
-					if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS))
+					if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
+						repo.close();
 						continue;
+					}
 					repos.add(repo);
 				} catch (UnsupportedSchemaException e) {
 					// ignore, just don't add to list
