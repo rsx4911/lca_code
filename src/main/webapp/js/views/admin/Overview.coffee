@@ -223,7 +223,7 @@ define([
 					template: groupsTemplate
 					filterId: 'group-filter'
 					pageSizeId: 'groups-page-size'
-					url: 'ws/group?'
+					url: 'ws/group?adminArea=true&'
 				@teamFilter = new Filter
 					container: '#teams'
 					template: teamsTemplate
