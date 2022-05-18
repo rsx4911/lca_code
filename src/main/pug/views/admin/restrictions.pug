@@ -1,9 +1,9 @@
 .header-box
-	.btn.btn-success.pull-right(data-action='add') Add restriction
+	.btn.btn-success.pull-right(data-action='add') Add restriction set
 	.clear
 .content-box
-	each restriction in restrictions
-		.entry #{restriction.name} (#{restriction.count} data set ids)
-			.btn.btn-default.btn-xs.pull-right(data-action='show' data-restriction=restriction.name) Show
-			.btn.btn-warning.btn-xs.pull-right(data-action='replace' data-restriction=restriction.name) Replace
-			.btn.btn-danger.btn-xs.pull-right(data-action='delete' data-restriction=restriction.name) Delete
+	each set in restrictions
+		.entry #{set.name} (#{set.count} data set ids)
+			.btn.btn-default.btn-xs.pull-right(data-action='show' data-restriction=set.name) Show
+			.btn.btn-warning.btn-xs.pull-right(data-action='replace' data-restriction=set.name) Replace
+			.btn.btn-danger.btn-xs.pull-right(data-action='delete' data-restriction=set.name) Delete

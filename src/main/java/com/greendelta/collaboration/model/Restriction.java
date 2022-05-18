@@ -1,30 +1,23 @@
 package com.greendelta.collaboration.model;
 
-import java.util.Arrays;
-import java.util.List;
+public class Restriction {
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+	public final String datasetRefId;
+	public final String name;
+	public final RestrictionType type;
 
-@Entity
-@Table
-public class Restriction extends AbstractEntity {
-
-	@Column
-	public String name;
-
-	@Column
-	@Lob
-	private String refIds;
-
-	public List<String> getRefIds() {
-		return Arrays.asList(refIds.split(";"));
+	public Restriction(String datasetRefId, String name, RestrictionType type) {
+		this.datasetRefId = datasetRefId;
+		this.name = name;
+		this.type = type;
 	}
 
-	public void setRefIds(List<String> refIds) {
-		this.refIds = String.join(";", refIds);
-	}
+	public enum RestrictionType {
 
+		WARNING,
+
+		FORBIDDEN;
+
+	}
+	
 }

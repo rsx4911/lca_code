@@ -5,35 +5,35 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.model.Restriction;
+import com.greendelta.collaboration.model.RestrictionSet;
 
 @Service
 public class RestrictionService {
 
-	private final Dao<Restriction> dao;
+	private final Dao<RestrictionSet> dao;
 
 	@Autowired
-	public RestrictionService(Dao<Restriction> dao) {
+	public RestrictionService(Dao<RestrictionSet> dao) {
 		this.dao = dao;
 	}
 
-	public List<Restriction> getAll() {
+	public List<RestrictionSet> getAll() {
 		return dao.getAll();
 	}
 
-	public Restriction insert(Restriction restriction) {
-		return dao.insert(restriction);
+	public RestrictionSet insert(RestrictionSet set) {
+		return dao.insert(set);
 	}
 
-	public Restriction update(Restriction restriction) {
-		return dao.update(restriction);
+	public RestrictionSet update(RestrictionSet set) {
+		return dao.update(set);
 	}
 
-	public void delete(Restriction restriction) {
-		dao.delete(restriction);
+	public void delete(RestrictionSet set) {
+		dao.delete(set);
 	}
 
-	public Restriction getForName(String name) {
+	public RestrictionSet getForName(String name) {
 		return dao.getFirstForAttribute("name", name);
 	}
 

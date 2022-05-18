@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.Restriction;
+import com.greendelta.collaboration.model.RestrictionSet;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.RestrictionService;
 import com.greendelta.collaboration.util.Routes;
@@ -36,10 +36,10 @@ public class RestrictionController {
 	@GetMapping
 	public List<Map<String, Object>> getRestrictions() {
 		var restrictions = new ArrayList<Map<String, Object>>();
-		for (var restriction : service.getAll()) {
+		for (var set : service.getAll()) {
 			var map = new HashMap<String, Object>();
-			map.put("name", restriction.name);
-			map.put("count", restriction.getRefIds().size());
+			map.put("name", set.name);
+			map.put("count", set.getRefIds().size());
 			restrictions.add(map);
 		}
 		return restrictions;
@@ -55,15 +55,15 @@ public class RestrictionController {
 			@RequestBody List<String> refIds) {
 		if (!Routes.isValid(name, ' '))
 			throw Response.badRequest("name", "Only letters, numbers, underscore and space are allowed");
-		var restriction = service.getForName(name);
-		if (restriction != null) {
-			restriction.setRefIds(refIds);
-			service.update(restriction);
+		var set = service.getForName(name);
+		if (set != null) {
+			set.setRefIds(refIds);
+			service.update(set);
 		} else {
-			restriction = new Restriction();
-			restriction.name = name;
-			restriction.setRefIds(refIds);
-			service.insert(restriction);
+			set = new RestrictionSet();
+			set.name = name;
+			set.setRefIds(refIds);
+			service.insert(set);
 		}
 	}
 

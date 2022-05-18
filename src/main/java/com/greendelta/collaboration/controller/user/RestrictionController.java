@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.RestrictionEntry;
-import com.greendelta.collaboration.model.RestrictionEntry.RestrictionType;
+import com.greendelta.collaboration.model.Restriction;
+import com.greendelta.collaboration.model.Restriction.RestrictionType;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.RestrictionService;
@@ -42,21 +42,21 @@ public class RestrictionController {
 	}
 
 	@PostMapping
-	public ResponseEntity<List<RestrictionEntry>> checkAgainstLibraries(
+	public ResponseEntity<List<Restriction>> checkAgainstLibraries(
 			@RequestParam("group") String group,
 			@RequestParam("name") String name,
 			@RequestBody List<String> refIds) {
 		return check(group, name, refIds);
 	}
 
-	private ResponseEntity<List<RestrictionEntry>> check(String group, String name, List<String> refIds) {
+	private ResponseEntity<List<Restriction>> check(String group, String name, List<String> refIds) {
 		try (var repo = repoService.get(group, name)) {
 			Map<String, Role> restrictedTo = repo.settings.get(RepositorySetting.RESTRICTIONS);
 			if (restrictedTo.isEmpty())
 				return Response.noContent();
 			var user = userService.getCurrentUser();
 			var userRole = membershipService.getRole(user, repo.path());
-			var entries = new ArrayList<RestrictionEntry>();
+			var entries = new ArrayList<Restriction>();
 			var restrictions = service.getAll().stream()
 					.collect(Collectors.toMap(lib -> lib.name, lib -> lib.getRefIds()));
 			refIds.forEach(refId -> {
@@ -67,9 +67,9 @@ public class RestrictionController {
 					if (restrictedToRole == null)
 						return;
 					if (userRole == null || !userRole.matches(restrictedToRole)) {
-						entries.add(new RestrictionEntry(refId, restriction, RestrictionType.FORBIDDEN));
+						entries.add(new Restriction(refId, restriction, RestrictionType.FORBIDDEN));
 					} else {
-						entries.add(new RestrictionEntry(refId, restriction, RestrictionType.WARNING));
+						entries.add(new Restriction(refId, restriction, RestrictionType.WARNING));
 					}
 				});
 			});
