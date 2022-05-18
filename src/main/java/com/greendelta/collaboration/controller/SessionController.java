@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,9 +63,10 @@ public class SessionController {
 	}
 
 	@GetMapping
-	public Map<String, Object> getCurrentUser(@AuthenticationPrincipal User user) {
+	public Map<String, Object> getCurrentUser() {
 		if (userService.isAnonymous())
 			return Collections.singletonMap("id", 0);
+		var user = userService.getCurrentUser();
 		var mapped = Users.mapForSelf(user);
 		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(user).size());
