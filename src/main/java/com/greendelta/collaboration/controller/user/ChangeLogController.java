@@ -19,7 +19,9 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.ChangeLogWriter;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController
@@ -29,11 +31,13 @@ public class ChangeLogController {
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
 	private final RepositoryService repoService;
 	private final UserService userService;
+	private final SettingsService settingsService;
 
 	@Autowired
-	public ChangeLogController(RepositoryService repoService, UserService userService) {
+	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settingsService) {
 		this.repoService = repoService;
 		this.userService = userService;
+		this.settingsService = settingsService;
 	}
 
 	@GetMapping("{group}/{name}")
@@ -50,6 +54,8 @@ public class ChangeLogController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {
+		if (!settingsService.is(ServerSetting.CHANGE_LOG_ENABLED))
+			throw Response.unavailable("Change log feature not enabled");
 		try (var repo = repoService.get(group, name)) {
 			File file = null;
 			String filename = null;

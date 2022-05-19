@@ -16,6 +16,7 @@ public enum ServerSetting implements SettingKey {
 	NOTIFICATIONS_ENABLED(Boolean.class, false),
 	USER_REGISTRATION_ENABLED(Boolean.class, false),
 	USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, false),
+	CHANGE_LOG_ENABLED(Boolean.class, false),
 	DASHBOARD_ACTIVITIES_ENABLED(Boolean.class, true),
 	REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
 	HOMEPAGE_ENABLED(Boolean.class, false),

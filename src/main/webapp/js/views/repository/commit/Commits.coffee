@@ -6,11 +6,12 @@ define([
 				'cs!utils/Format'
 				'cs!utils/Renderer'
 				'cs!views/repository/Download'
+				'cs!models/Settings'
 				'templates/views/repository/commit/commits'
 				'templates/views/repository/commit/commit-list'
 			]
 
-	(Backbone, moment, Events, Filter, Format, Renderer, Download, template, listTemplate) ->
+	(Backbone, moment, Events, Filter, Format, Renderer, Download, settings, template, listTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
 
@@ -42,7 +43,7 @@ define([
 
 			render: (renderOptions) ->
 				@$el.html template
-					canCreateChangeLog: @repository.get('userCanCreateChangeLog')
+					canCreateChangeLog: settings.is('CHANGE_LOG_ENABLED') and @repository.get('userCanCreateChangeLog')
 					standalone: @standalone
 				Renderer.render @, renderOptions
 				@filter.init()
