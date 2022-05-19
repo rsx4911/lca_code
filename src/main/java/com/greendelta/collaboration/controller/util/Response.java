@@ -156,7 +156,7 @@ public class Response {
 		return status(e.status, e.message);
 	}
 
-	private static ResponseStatusException status(HttpStatus status, String message) {
+	public static ResponseStatusException status(HttpStatus status, String message) {
 		return new ResponseStatusException(status, message);
 	}
 

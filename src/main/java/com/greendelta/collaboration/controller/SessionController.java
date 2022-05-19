@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,7 +32,6 @@ import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Routes;
-import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 @RestController
 @RequestMapping("ws/public")
@@ -47,7 +46,6 @@ public class SessionController {
 	private final JobService jobService;
 	private final NotificationService notificationService;
 	private final SessionService sessionService;
-	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Autowired
 	public SessionController(UserService userService, GroupService groupService, TaskService taskService,
@@ -94,45 +92,14 @@ public class SessionController {
 				throw Response.unauthorized("Invalid credentials");
 			username = user.username;
 		}
-		try {
-			sessionService.login(username, password);
-		} catch (BadCredentialsException e) {
-			var user = userService.getForUsername(username);
-			if (Strings.nullOrEmpty(user.password))
-				throw Response.badRequest(
-						"We have updated our password encryption. Since we only store encrypted passwords, we are not able to migrate your current password. Please use the 'Forgot your password?' link below to request a new password being sent to your email address.");
-			throw Response.unauthorized("Invalid credentials");
-		}
-		if (userService.isAnonymous())
-			throw Response.unauthorized("Unknown error");
-		var user = userService.getCurrentUser();
-		if (user.isDeactivated()) {
-			sessionService.logout(request);
-			throw Response.unauthorized("User is deactivated or approval is pending");
-		}
-		if (!Strings.nullOrEmpty(user.twoFactorSecret)) {
-			Integer token = (int) Maps.getLong(form, "token");
-			if (token == null || token == 0) {
-				sessionService.logout(request);
-				return "tokenRequired";
-			}
-			var valid = authenticator.authorize(user.twoFactorSecret, token);
-			if (!valid) {
-				sessionService.logout(request);
-				throw Response.unauthorized("Invalid token");
-			}
-		}
-		var maintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
-		if (maintenanceMode && !user.isAdmin()) {
-			sessionService.logout(request);
-			throw Response.forbidden(settingsService.get(ServerSetting.MAINTENANCE_MESSAGE));
-		}
-		log.info("User {} successfully logged in", username);
-		return "";
+		Integer token = (int) Maps.getLong(form, "token");
+		return login(request, username, password, token);
 	}
 
 	@PostMapping(path = "register")
-	public void register(@RequestBody Map<String, Object> form) {
+	public void register(
+			@RequestBody Map<String, Object> form,
+			@Autowired HttpServletRequest request) {
 		if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED))
 			throw Response.unavailable("User registration feature not enabled");
 		var username = Maps.getString(form, "username");
@@ -189,13 +156,19 @@ public class SessionController {
 		if (adminApproval) {
 			notificationService.userRegistered(user).send();
 		} else {
-			try {
-				sessionService.login(username, password);
-			} catch (BadCredentialsException e) {
-				throw Response.unauthorized("Invalid credentials");
-			}
+			login(request, username, password, null);
 		}
 		log.info("User {} successfully registered", username);
+	}
+
+	private String login(HttpServletRequest request, String username, String password, Integer token) {
+		var response = sessionService.login(request, username, password, token);
+		if (response.status() == HttpStatus.BAD_REQUEST && response.message().equals("tokenRequired"))
+			return response.message();
+		if (response.status() != HttpStatus.OK)
+			throw Response.status(response.status(), response.message());
+		log.info("User {} successfully logged in", username);
+		return "";
 	}
 
 	@PostMapping(path = "request-password-reset")
