@@ -7,7 +7,7 @@ include ../../mixins/user-info.pug
 		div=commit.message
 		div: small=commit.id
 		div: small: +commit-info(commit.additions, commit.updates, commit.deletions)
-	if !standalone && commit.canCreateChangeLog
+	if !standalone && changeLogEnabled && commit.canCreateChangeLog
 		button.btn.btn-md.btn-success.pull-right.download-changelog Download changelog
 	.clear
 	if !standalone

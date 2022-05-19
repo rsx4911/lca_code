@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.greendelta.collaboration.model.Comment;
-import com.greendelta.collaboration.model.Library;
+import com.greendelta.collaboration.model.RestrictionSet;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.Team;
@@ -44,8 +44,8 @@ public class DaoConfig {
 	}
 
 	@Bean
-	public Dao<Library> libraryDao() {
-		return new Dao<>(Library.class);
+	public Dao<RestrictionSet> restrictionSetDao() {
+		return new Dao<>(RestrictionSet.class);
 	}
 
 	@Bean

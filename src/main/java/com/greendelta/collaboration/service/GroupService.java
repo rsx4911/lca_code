@@ -140,7 +140,7 @@ public class GroupService {
 				continue;
 			if (onlyIfCanWrite && !accessService.canWrite(group.getName()))
 				continue;
-			if (isUserNamespace(group.getName()) && (user == null || !group.getName().equals(user.username)))
+			if (isUserNamespace(group.getName()) && (adminArea || user == null || !group.getName().equals(user.username)))
 				continue;
 			groups.add(group.getName());
 		}

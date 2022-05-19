@@ -1,0 +1,9 @@
+include ../mixins/forms.pug
+
+#add-restriction
+	#add-restriction-general-message-group.alert(role='alert'): span.message
+	if isNew
+		+input('name', 'Restriction set name')
+	else
+		+input('name', 'Restriction set name', 'hidden')
+	+textarea('ref-ids', 'Data set reference ids (one id per line)')(rows=10)

@@ -142,10 +142,11 @@ public class AdminAreaController {
 	public void reindex() {
 		if (searchService.isReindexing())
 			throw Response.conflict("Reindexing is already running");
-		var all = repoService.getAllAccessible();
-		var status = searchService.startReindexing(all.size());
-		searchService.clearIndex();
-		indexingService.index(all, status);
+		try (var all = repoService.getAllAccessible()) {
+			var status = searchService.startReindexing(all.size());
+			searchService.clearIndex();
+			indexingService.index(all, status);
+		}
 	}
 
 	@PutMapping("reindex/{group}/{repository}")
@@ -154,9 +155,10 @@ public class AdminAreaController {
 			@PathVariable("repository") String repository) {
 		if (searchService.isReindexing())
 			throw Response.conflict("Reindexing is already running");
-		var repo = repoService.get(group, repository);
-		var status = searchService.startReindexing(1);
-		indexingService.index(Arrays.asList(repo), status);
+		try (var repo = repoService.get(group, repository)) {
+			var status = searchService.startReindexing(1);
+			indexingService.index(Arrays.asList(repo), status);
+		}
 	}
 
 	@PutMapping("announce")

@@ -1,14 +1,14 @@
 package com.greendelta.collaboration.model;
 
-public class LibraryRestriction {
+public class Restriction {
 
 	public final String datasetRefId;
-	public final String library;
+	public final String name;
 	public final RestrictionType type;
 
-	public LibraryRestriction(String datasetRefId, String library, RestrictionType type) {
+	public Restriction(String datasetRefId, String name, RestrictionType type) {
 		this.datasetRefId = datasetRefId;
-		this.library = library;
+		this.name = name;
 		this.type = type;
 	}
 
