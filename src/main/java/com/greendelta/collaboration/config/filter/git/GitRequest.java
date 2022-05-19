@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.eclipse.jgit.http.server.GitSmartHttpTools;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.HttpStatus;
 
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.util.Requests;
@@ -47,10 +47,20 @@ public class GitRequest extends HttpServletRequestWrapper {
 		if (principal.length != 2)
 			return false;
 		try {
-			sessionService.login(principal[0], principal[1]);
-			this.remoteUser = principal[0];
-			return true;
-		} catch (BadCredentialsException e) {
+			var username = principal[0];
+			var password = principal[1];
+			var token = (Integer) null;
+			if (password.contains("&token=") && password.length() == password.lastIndexOf("&token=") + 13) {
+				token = Integer.parseInt(password.substring(password.lastIndexOf("&token=") + 7));
+				password = password.substring(0, password.lastIndexOf("&token="));
+			}
+			var response = sessionService.login(this, username, password, token);
+			if (response.status() == HttpStatus.OK) {
+				this.remoteUser = username;
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
 			return false;
 		}
 	}
