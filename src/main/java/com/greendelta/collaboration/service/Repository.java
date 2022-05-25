@@ -84,7 +84,10 @@ public class Repository implements AutoCloseable {
 	}
 
 	public SchemaVersion getSchemaVersion() {
-		return Repositories.versionOf(gitRepo());
+		var info = Repositories.infoOf(gitRepo());
+		if (info == null)
+			return null;
+		return info.schemaVersion();
 	}
 
 	public long getSize() {
