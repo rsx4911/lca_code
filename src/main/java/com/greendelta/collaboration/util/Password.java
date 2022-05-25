@@ -69,4 +69,23 @@ public class Password {
 		return occurrences >= minimum;
 	}
 
+	public static Integer getToken(String password) {
+		return getToken(password, null);
+	}
+
+	public static Integer getToken(String password, Integer token) {
+		if (token != null && token != 0)
+			return token;
+		var i = password.lastIndexOf("&token=");
+		if (i == -1 || password.length() != i + 13)
+			return null;
+		return Integer.parseInt(password.substring(password.lastIndexOf("&token=") + 7));
+	}
+
+	public static String getPasswordWithoutToken(String password) {
+		if (!password.contains("&token="))
+			return password;
+		return password.substring(0, password.lastIndexOf("&token="));
+	}
+
 }
