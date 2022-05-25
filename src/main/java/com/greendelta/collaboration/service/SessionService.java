@@ -30,7 +30,7 @@ public class SessionService {
 		this.userService = userService;
 		this.settingsService = settingsService;
 	}
-
+	
 	public LoginResponse login(HttpServletRequest request, String username, String password, Integer token) {
 		try {
 			var auth = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));

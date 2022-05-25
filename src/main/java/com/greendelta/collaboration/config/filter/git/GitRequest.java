@@ -10,6 +10,7 @@ import org.eclipse.jgit.http.server.GitSmartHttpTools;
 import org.springframework.http.HttpStatus;
 
 import com.greendelta.collaboration.service.SessionService;
+import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Requests;
 
 public class GitRequest extends HttpServletRequestWrapper {
@@ -48,12 +49,8 @@ public class GitRequest extends HttpServletRequestWrapper {
 			return false;
 		try {
 			var username = principal[0];
-			var password = principal[1];
-			var token = (Integer) null;
-			if (password.contains("&token=") && password.length() == password.lastIndexOf("&token=") + 13) {
-				token = Integer.parseInt(password.substring(password.lastIndexOf("&token=") + 7));
-				password = password.substring(0, password.lastIndexOf("&token="));
-			}
+			var password = Password.getPasswordWithoutToken(principal[1]);
+			var token = Password.getToken(principal[1]);
 			var response = sessionService.login(this, username, password, token);
 			if (response.status() == HttpStatus.OK) {
 				this.remoteUser = username;

@@ -92,7 +92,8 @@ public class SessionController {
 				throw Response.unauthorized("Invalid credentials");
 			username = user.username;
 		}
-		Integer token = (int) Maps.getLong(form, "token");
+		password = Password.getPasswordWithoutToken(password);
+		var token = Password.getToken(password, (int) Maps.getLong(form, "token"));
 		return login(request, username, password, token);
 	}
 
