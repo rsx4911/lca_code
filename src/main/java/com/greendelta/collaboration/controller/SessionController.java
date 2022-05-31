@@ -73,7 +73,7 @@ public class SessionController {
 	}
 
 	// TODO deactivation and two factor auth via spring security directly?
-	@PostMapping(path = "login")
+	@PostMapping("login")
 	public String login(
 			@RequestBody Map<String, Object> form,
 			@Autowired HttpServletRequest request) {
@@ -97,7 +97,7 @@ public class SessionController {
 		return login(request, username, password, token);
 	}
 
-	@PostMapping(path = "register")
+	@PostMapping("register")
 	public void register(
 			@RequestBody Map<String, Object> form,
 			@Autowired HttpServletRequest request) {
@@ -172,14 +172,14 @@ public class SessionController {
 		return "";
 	}
 
-	@PostMapping(path = "request-password-reset")
+	@PostMapping("request-password-reset")
 	public void requestPasswordReset(@RequestBody Map<String, Object> data) {
 		var email = data.get("email").toString();
 		jobService.requestPasswordReset(email);
 		log.info("Requested password reset for {}", email);
 	}
 
-	@PostMapping(path = "run-job")
+	@PostMapping("run-job")
 	public String runJob(@RequestBody Map<String, Object> data) {
 		if (data.get("token") == null || data.get("token").toString().isEmpty())
 			throw Response.badRequest("Invalid token");
