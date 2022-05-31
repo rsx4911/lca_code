@@ -57,7 +57,7 @@ public class SessionService {
 			var valid = authenticator.authorize(user.twoFactorSecret, token);
 			if (!valid) {
 				logout(request);
-				return new LoginResponse(HttpStatus.UNAUTHORIZED, "Invalid token");
+				return new LoginResponse(HttpStatus.BAD_REQUEST, "Invalid token");
 			}
 		}
 		var maintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
