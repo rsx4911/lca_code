@@ -43,24 +43,24 @@ public class ReviewController {
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public ReviewController(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.accessService = accessService;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping("{id}")
 	public Map<String, Object> get(@PathVariable("id") long id) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)
@@ -72,7 +72,7 @@ public class ReviewController {
 
 	@PostMapping
 	public Map<String, Object> start(@RequestBody Review review) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		checkValidity(review);
 		try (var repo = repoService.get(review.repositoryPath)) {
@@ -84,7 +84,7 @@ public class ReviewController {
 
 	@PutMapping("{id}")
 	public Map<String, Object> update(@RequestBody Review review) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		if (Strings.nullOrEmpty(review.name))
 			throw Response.badRequest("name", "Missing input: Name");
@@ -105,7 +105,7 @@ public class ReviewController {
 	public Map<String, Object> setReferences(
 			@PathVariable("id") long id,
 			@RequestBody List<FrontendReference> references) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)
@@ -123,7 +123,7 @@ public class ReviewController {
 
 	@PutMapping("{id}/complete")
 	public Map<String, Object> completeReview(@PathVariable("id") long id) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		Review review = service.get(id);
 		if (review == null)
@@ -137,7 +137,7 @@ public class ReviewController {
 
 	@PutMapping("{id}/cancel")
 	public Map<String, Object> cancelReview(@PathVariable("id") long id) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)
@@ -153,7 +153,7 @@ public class ReviewController {
 	public Map<String, Object> assignReviewer(
 			@PathVariable("id") long id,
 			@PathVariable("username") String username) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)
@@ -174,7 +174,7 @@ public class ReviewController {
 	public Map<String, Object> completeAssignment(
 			@PathVariable("id") long id,
 			@PathVariable("username") String username) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)
@@ -194,7 +194,7 @@ public class ReviewController {
 	public Map<String, Object> cancelAssignment(
 			@PathVariable("id") long id,
 			@PathVariable("username") String username) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)
@@ -215,7 +215,7 @@ public class ReviewController {
 			@PathVariable("id") long id,
 			@PathVariable("referenceId") long referenceId,
 			@PathVariable("value") boolean value) {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
 		if (review == null)

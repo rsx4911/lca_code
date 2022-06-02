@@ -39,15 +39,15 @@ public class HistoryController {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final AccessService accessService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public HistoryController(RepositoryService repoService, UserService userService, AccessService accessService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping("{group}/{name}/{type}/{refId}")
@@ -165,7 +165,7 @@ public class HistoryController {
 			var typeFilter = type != null ? Collections.singletonList(type.name()) : null;
 			var diffs = Diffs.withPrevious(repo.gitRepo(), commit, typeFilter);
 			var mapped = diffs.stream().map(d -> MetaData.forBrowse(d, repo));
-			List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
+			List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
 			return SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());
 		}

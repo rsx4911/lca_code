@@ -31,13 +31,13 @@ public class ChangeLogController {
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
 	private final RepositoryService repoService;
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settingsService) {
+	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping("{group}/{name}")
@@ -54,7 +54,7 @@ public class ChangeLogController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {
-		if (!settingsService.is(ServerSetting.CHANGE_LOG_ENABLED))
+		if (!settings.is(ServerSetting.CHANGE_LOG_ENABLED))
 			throw Response.unavailable("Change log feature not enabled");
 		try (var repo = repoService.get(group, name)) {
 			File file = null;

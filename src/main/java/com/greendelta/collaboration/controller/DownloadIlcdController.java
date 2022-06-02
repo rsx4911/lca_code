@@ -31,13 +31,13 @@ import com.greendelta.collaboration.service.user.UserService;
 @RequestMapping("ws/public/download/ilcd")
 public class DownloadIlcdController extends DownloadController {
 
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public DownloadIlcdController(RepositoryService repoService, UserService userService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		super(repoService, userService);
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@Override
@@ -84,7 +84,7 @@ public class DownloadIlcdController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		String serverUrl = settingsService.get(ServerSetting.SERVER_URL);
+		String serverUrl = settings.get(ServerSetting.SERVER_URL);
 		return new IlcdWriter(serverUrl, repo, commit);
 	}
 

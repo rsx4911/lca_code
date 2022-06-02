@@ -14,6 +14,7 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.RestrictionService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -30,13 +31,13 @@ public class DeleteService {
 	private final AccessService accessService;
 	private final CommentService commentService;
 	private final RestrictionService restrictionService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, CommentService commentService,
-			RestrictionService restrictionService, SettingsService settingsService) {
+			RestrictionService restrictionService, SettingsService settings) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -47,7 +48,7 @@ public class DeleteService {
 		this.accessService = accessService;
 		this.commentService = commentService;
 		this.restrictionService = restrictionService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	public void delete(User user) {
@@ -58,7 +59,7 @@ public class DeleteService {
 			result.data.forEach(repo -> delete(repo));
 		}
 		groupService.delete(user.username);
-		settingsService.get(SettingType.GROUP_SETTING, user.username, accessService::canSetSettings).delete();
+		settings.get(SettingType.GROUP_SETTING, user.username, accessService::canSetSettings).delete();
 		teamService.getTeamsFor(user).forEach(team -> {
 			teamService.removeMember(user, team);
 		});
@@ -134,7 +135,7 @@ public class DeleteService {
 			}
 		}
 		memberService.removeMemberships(name);
-		settingsService.get(SettingType.GROUP_SETTING, name, accessService::canSetSettings).delete();
+		settings.get(SettingType.GROUP_SETTING, name, accessService::canSetSettings).delete();
 		groupService.delete(name);
 	}
 

@@ -3,6 +3,7 @@ package com.greendelta.collaboration.model.settings;
 import java.util.ArrayList;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.greendelta.collaboration.model.LibraryAccess;
 import com.greendelta.collaboration.util.JacksonTypes;
 import com.greendelta.collaboration.util.ModelTypes;
 
@@ -30,6 +31,7 @@ public enum ServerSetting implements SettingKey {
 	SERVER_NAME(String.class, "LCA Collaboration Server"),
 	SERVER_URL(String.class),
 	REPOSITORY_PATH(String.class),
+	LIBRARY_PATH(String.class),
 	GLAD_URL(String.class),
 	GLAD_API_KEY_HEADER(String.class, "api-key"),
 	GLAD_API_KEY(String.class),
@@ -53,7 +55,10 @@ public enum ServerSetting implements SettingKey {
 	ANNOUNCEMENT_MESSAGE(String.class),
 
 	// license agreement
-	LICENSE_AGREEMENT_TEXT(String.class);
+	LICENSE_AGREEMENT_TEXT(String.class),
+	
+	// library access
+	LIBRARY_ACCESS(LibraryAccess.class);
 
 	private final Class<?> type;
 	private final TypeReference<?> subType;

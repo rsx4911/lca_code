@@ -21,14 +21,14 @@ public class SessionService {
 
 	private final AuthenticationManager authManager;
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
 	@Autowired
-	public SessionService(AuthenticationManager authManager, UserService userService, SettingsService settingsService) {
+	public SessionService(AuthenticationManager authManager, UserService userService, SettingsService settings) {
 		this.authManager = authManager;
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 	
 	public LoginResponse login(HttpServletRequest request, String username, String password, Integer token) {
@@ -60,10 +60,10 @@ public class SessionService {
 				return new LoginResponse(HttpStatus.BAD_REQUEST, "Invalid token");
 			}
 		}
-		var maintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
+		var maintenanceMode = settings.is(ServerSetting.MAINTENANCE_MODE);
 		if (maintenanceMode && !user.isAdmin()) {
 			logout(request);
-			return new LoginResponse(HttpStatus.FORBIDDEN, settingsService.get(ServerSetting.MAINTENANCE_MESSAGE));
+			return new LoginResponse(HttpStatus.FORBIDDEN, settings.get(ServerSetting.MAINTENANCE_MESSAGE));
 		}
 		return new LoginResponse(HttpStatus.OK, null);
 	}

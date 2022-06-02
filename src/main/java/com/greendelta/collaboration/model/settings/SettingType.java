@@ -7,7 +7,8 @@ public enum SettingType {
 	MAIL_SETTING(MailSetting.class, true),
 	SEARCH_SETTING(SearchSetting.class, true),
 	REPOSITORY_SETTING(RepositorySetting.class, false),
-	GROUP_SETTING(GroupSetting.class, false);
+	GROUP_SETTING(GroupSetting.class, false),
+	LIBRARY_SETTING(LibrarySetting.class, false);
 
 	public final Class<? extends Enum<? extends SettingKey>> enumClass;
 	public final boolean singleton;
@@ -40,6 +41,7 @@ public enum SettingType {
 
 		SERVER,
 		DATA;
+		
 	}
 
 }

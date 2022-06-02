@@ -32,16 +32,16 @@ public class SinglePageFilter implements Filter {
 	// custom gulp build can change publicly available "html" resources
 	public static final List<String> CUSTOM_PUBLIC_RESOURCES = Arrays.asList();
 	private UserService userService;
-	private SettingsService settingsService;
+	private SettingsService settings;
 	private GitFilterConfig gitFilterConfig;
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		if (settingsService != null)
+		if (settings != null)
 			return;
 		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
 		userService = app.getBean(UserService.class);
-		settingsService = app.getBean(SettingsService.class);
+		settings = app.getBean(SettingsService.class);
 		gitFilterConfig = app.getBean(GitFilterConfig.class);
 	}
 
@@ -56,7 +56,7 @@ public class SinglePageFilter implements Filter {
 			return;
 		}
 		var url = Requests.getRelativePath(request);
-		var isMaintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
+		var isMaintenanceMode = settings.is(ServerSetting.MAINTENANCE_MODE);
 		var isLoginUrl = url.equals("/login") || url.equals("/reset-password") || url.equals("/sign-up");
 		var isMaintenanceUrl = url.equals("/maintenance");
 		var user = userService.getCurrentUser();
@@ -73,9 +73,9 @@ public class SinglePageFilter implements Filter {
 			forward("/" + route + ".html", request, response);
 			return;
 		}
-		var publicRepositoriesEnabled = settingsService.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
-		var userRegistrationEnabled = settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED);
-		if (user.id == 0 && (isLoginUrl || !publicRepositoriesEnabled)) {
+		var publicRepositoriesEnabled = settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
+		var userRegistrationEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
+		if (user.isAnonymous() && (isLoginUrl || !publicRepositoriesEnabled)) {
 			if ((!publicRepositoriesEnabled && !isLoginUrl) || (!userRegistrationEnabled && url.equals("/sign-up"))) {
 				redirect("/login", response);
 				return;
@@ -90,7 +90,7 @@ public class SinglePageFilter implements Filter {
 		// return;
 		// }
 		var publicIndex = request.getServletContext().getRealPath("index_public.html");
-		if (user.id == 0 && publicIndex != null && new File(publicIndex).exists()) {
+		if (user.isAnonymous() && publicIndex != null && new File(publicIndex).exists()) {
 			forward("/index_public.html", request, response);
 		} else {
 			forward("/index.html", request, response);

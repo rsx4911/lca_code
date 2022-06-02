@@ -33,13 +33,13 @@ public class BrowseController {
 
 	private final RepositoryService repoService;
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public BrowseController(RepositoryService repoService, UserService userService, SettingsService settingsService) {
+	public BrowseController(RepositoryService repoService, UserService userService, SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping("{group}/{name}")
@@ -55,14 +55,14 @@ public class BrowseController {
 		try (var repo = repoService.get(group, name)) {
 			var entries = repo.entries().find().commit(commitId).path(categoryPath).all();
 			if (path.isEmpty()) {
-				List<String> typesHidden = settingsService.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
+				List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 				entries = entries.stream().filter(e -> !typesHidden.contains(e.type.name())).toList();
 			}
 			var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
 			if (!path.isEmpty()) {
 				mapped = MetaData.sortByName(mapped);
 			} else {
-				List<String> typesOrder = settingsService.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
+				List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 				mapped = MetaData.sortByType(mapped, typesOrder);
 			}
 			var paged = SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList(),

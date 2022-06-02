@@ -9,8 +9,9 @@ include ../mixins/forms.pug
 			+input('SERVER_SETTING__SERVER_NAME', 'Server name')
 			+input('SERVER_SETTING__SERVER_URL', 'Server base url (e.g. used in email links)')
 		.clear
-		div
+		.two-columns
 			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
+			+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
 		.clear
 		.three-columns
 			+input('SERVER_SETTING__GLAD_URL', 'Glad service base url')

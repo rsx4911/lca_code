@@ -29,14 +29,14 @@ import com.greendelta.search.wrapper.SearchResult;
 public class SearchService {
 
 	private static final Logger log = LogManager.getLogger(SearchService.class);
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
 	private ReindexingStatus reindexStatus;
 
 	@Autowired
-	public SearchService(SettingsService settingsService, QueryService queryService) {
-		this.settingsService = settingsService;
+	public SearchService(SettingsService settings, QueryService queryService) {
+		this.settings = settings;
 		this.queryService = queryService;
 	}
 
@@ -124,7 +124,7 @@ public class SearchService {
 	}
 
 	private SearchClient getClient() {
-		return settingsService.searchConfig.getSearchClient();
+		return settings.searchConfig.getSearchClient();
 	}
 	
 	public boolean isReindexing() {

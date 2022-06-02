@@ -43,6 +43,8 @@ public class Setting extends AbstractEntity {
 		if (key.getType().equals(byte[].class))
 			return (V) data;
 		var type = key.getType();
+		if (type.isEnum())
+			return getEnumValue(type, value);
 		if (type == Boolean.class && value != null)
 			return (V) Boolean.valueOf(Boolean.parseBoolean(value));
 		if (type == Integer.class && value != null)
@@ -66,6 +68,14 @@ public class Setting extends AbstractEntity {
 		return (V) value;
 	}
 
+	@SuppressWarnings("unchecked")
+	private <V> V getEnumValue(Class<?> type, String value) {
+		for (var v : type.getEnumConstants())
+			if (v.toString().equals(value))
+				return (V) v;
+		return null;
+	}
+
 	public void setValue(Object value) {
 		var type = getKey().getType();
 		if (value == null) {
@@ -73,7 +83,9 @@ public class Setting extends AbstractEntity {
 			this.data = null;
 			return;
 		}
-		if (type == Boolean.class) {
+		if (type.isEnum()) {
+			this.value = value.toString();
+		} else if (type == Boolean.class) {
 			if (value.getClass() == Boolean.class) {
 				this.value = Boolean.toString((boolean) value);
 			} else {

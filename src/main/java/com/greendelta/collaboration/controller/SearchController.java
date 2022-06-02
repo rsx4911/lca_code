@@ -45,16 +45,16 @@ public class SearchController {
 	private final RepositoryService repoService;
 	private final GroupService groupService;
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
-			UserService userService, SettingsService settingsService) {
+			UserService userService, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.groupService = groupService;
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping
@@ -103,10 +103,10 @@ public class SearchController {
 			}).toList();
 			map.put("data", data);
 			var aggregations = result.aggregations.stream().filter(a -> {
-				if (!settingsService.is(ServerSetting.REPOSITORY_TAGS_ENABLED)
+				if (!settings.is(ServerSetting.REPOSITORY_TAGS_ENABLED)
 						&& a.name.equals(Aggregations.REPOSITORY_TAGS.name))
 					return false;
-				if (!settingsService.is(ServerSetting.DATASET_TAGS_ENABLED)
+				if (!settings.is(ServerSetting.DATASET_TAGS_ENABLED)
 						&& a.name.equals(Aggregations.DATASET_TAGS.name))
 					return false;
 				return true;

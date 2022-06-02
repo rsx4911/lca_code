@@ -98,6 +98,7 @@ define([
 						if currentUser.isAdmin()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
 						if currentUser.isDataManager()
+							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id:'libraries'}
 							adminMenu.push {href: @concatUrl(prefix, 'administration/restrictions'), imageSrc: 'images/restrictions.png', label: 'Restricted data sets', id:'restrictions'}
 						return adminMenu
 
@@ -196,6 +197,18 @@ define([
 					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
+				@router.registerAdminRoute 'adminLibraries', 'dataManager', -> @showView 
+					view: 'admin/Libraries'
+					title: 'Admin area - Libraries'
+					nav:
+						type: 'admin'
+						active: 'libraries'
+				@router.registerAdminRoute 'adminAddLibrary', 'dataManager', -> @showView 
+					view: 'admin/AddLibrary'
+					title: 'Admin area - New library'
+					nav:
+						type: 'admin'
+						active: 'libraries'
 				@router.registerAdminRoute 'adminRestrictions', 'dataManager', -> @showView 
 					view: 'admin/Restrictions'
 					title: 'Admin area - Restricted data sets'

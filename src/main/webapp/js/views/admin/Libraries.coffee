@@ -1,0 +1,55 @@
+define([
+				'backbone'
+				'cs!app/Router'
+				'cs!utils/Events'
+				'cs!utils/Layers'
+				'cs!utils/Renderer'
+				'cs!utils/Status'
+				'templates/views/admin/libraries'
+			]
+
+	(Backbone, Router, Events, Layers, Renderer, Status, template) ->
+
+		class AdminLibraries extends Backbone.View
+
+			loadData = (callback) ->
+				$.ajax
+					type: 'GET'
+					url: 'ws/libraries'
+					success: (libraries) ->
+						$.ajax
+							type: 'GET'
+							url: 'ws/datamanager/libraries/missing'
+							success: (missingLibraryIds) ->
+								callback libraries, missingLibraryIds
+
+			deleteLibrary = (event) ->
+				target = $ Events.target event
+				id = target.attr 'data-id'
+				Layers.askDeleteQuestion "library #{id}", '', () =>
+					Layers.showProgressIndicator 'Deleting'
+					$.ajax
+						type: 'DELETE'
+						url: "ws/datamanager/libraries/#{id}"
+						success: () -> 
+							Layers.hideProgressIndicator()
+							Status.success "Successfully deleted library #{id}"
+							Backbone.history.loadUrl()
+						error: (response) ->
+							Layers.hideProgressIndicator()
+							Status.error response.responseText
+				
+			className: 'admin-libraries multi-box-view'
+
+			events:
+				'click [data-action=add]': () -> Router.navigate 'administration/libraries/add'
+				'click [data-action=delete]': deleteLibrary
+
+			render: (renderOptions) ->
+				loadData (libraries, missingLibraryIds) =>
+					@$el.html template
+						libraries: libraries
+						missingLibraryIds: missingLibraryIds
+					Renderer.render @, renderOptions
+
+)

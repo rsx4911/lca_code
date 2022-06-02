@@ -18,9 +18,9 @@ import com.greendelta.collaboration.model.Restriction;
 import com.greendelta.collaboration.model.Restriction.RestrictionType;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.service.RestrictionService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.RestrictionService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController

@@ -21,17 +21,17 @@ import com.greendelta.collaboration.service.user.UserService;
 public class NotificationsController {
 
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public NotificationsController(UserService userService, SettingsService settingsService) {
+	public NotificationsController(UserService userService, SettingsService settings) {
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping
 	public List<Notification> getEnabled() {
-		if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
+		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
 		return Arrays.asList(Notification.values()).stream()
@@ -41,7 +41,7 @@ public class NotificationsController {
 
 	@PutMapping("enable/{notifications}")
 	public void enable(@PathVariable("notifications") String notifications) {
-		if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
+		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
 		parse(notifications).forEach(notification -> currentUser.enable(notification));
@@ -50,7 +50,7 @@ public class NotificationsController {
 
 	@PutMapping("disable/{notifications}")
 	public void disable(@PathVariable("notifications") String notifications) {
-		if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
+		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
 		parse(notifications).forEach(notification -> currentUser.disable(notification));

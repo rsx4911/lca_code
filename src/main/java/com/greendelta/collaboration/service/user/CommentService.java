@@ -26,15 +26,15 @@ public class CommentService {
 	private final Dao<Comment> dao;
 	private final AccessService accessService;
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.dao = dao;
 		this.accessService = accessService;
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	public List<Comment> getAllTopSorted(Repository repo, String filter) {
@@ -176,10 +176,10 @@ public class CommentService {
 		if (accessService.canManageCommentsIn(comment.repositoryPath)) {
 			comment.approved = true;
 		} else {
-			String repoPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
+			String repoPath = settings.get(ServerSetting.REPOSITORY_PATH);
 			if (repoPath != null) {
 				var path = new RepositoryPath(comment.repositoryPath).toString();
-				if (!settingsService.is(RepositorySetting.COMMENT_APPROVAL, path)) {
+				if (!settings.is(RepositorySetting.COMMENT_APPROVAL, path)) {
 					comment.approved = true;
 				}
 			}

@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -59,17 +58,17 @@ public class RepositoryService {
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final CommentService commentService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final TaskService taskService;
 
 	@Autowired
 	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settingsService, TaskService taskService) {
+			CommentService commentService, SettingsService settings, TaskService taskService) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 		this.taskService = taskService;
 	}
 
@@ -85,7 +84,7 @@ public class RepositoryService {
 	}
 
 	private String getRootPath() {
-		return settingsService.get(ServerSetting.REPOSITORY_PATH);
+		return settings.get(ServerSetting.REPOSITORY_PATH);
 	}
 
 	public Repository get(String group, String name) {
@@ -95,11 +94,11 @@ public class RepositoryService {
 			throw new ForbiddenAccessException(id, "READ");
 		if (!accessService.canRead(id))
 			throw new ForbiddenAccessException(id, "READ");
-		Settings<RepositorySetting> settings = settingsService.get(SettingType.REPOSITORY_SETTING, id,
+		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
-		Settings<GroupSetting> groupSettings = settingsService.get(SettingType.GROUP_SETTING, group,
+		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group,
 				accessService::canSetSettings);
-		return new Repository(path, group, name, settings, groupSettings);
+		return new Repository(path, group, name, repoSettings, groupSettings);
 	}
 
 	public boolean exists(String group, String name) {
@@ -218,31 +217,27 @@ public class RepositoryService {
 	}
 
 	public StreamingResponseBody pack(Repository repo) {
-		return new StreamingResponseBody() {
-			@Override
-			public void writeTo(OutputStream output) throws IOException {
-				var out = new ZipOutputStream(output);
-				write(repo.dir.toPath(), repo.dir, out);
-				out.close();
-			}
-
-			private void write(Path repoPath, File file, ZipOutputStream out) throws IOException {
-				if (file.isDirectory()) {
-					for (var child : file.listFiles()) {
-						write(repoPath, child, out);
-					}
-					return;
-				}
-				if (!file.isFile())
-					return;
-				var path = file.toPath();
-				var entry = repoPath.relativize(path).toString().replace('\\', '/');
-				out.putNextEntry(new ZipEntry(entry));
-				java.nio.file.Files.copy(path, out);
-				out.closeEntry();
-			}
-
+		return output -> {
+			var out = new ZipOutputStream(output);
+			write(repo.dir.toPath(), repo.dir, out);
+			out.close();
 		};
+	}
+
+	private void write(Path repoPath, File file, ZipOutputStream out) throws IOException {
+		if (file.isDirectory()) {
+			for (var child : file.listFiles()) {
+				write(repoPath, child, out);
+			}
+			return;
+		}
+		if (!file.isFile())
+			return;
+		var path = file.toPath();
+		var entry = repoPath.relativize(path).toString().replace('\\', '/');
+		out.putNextEntry(new ZipEntry(entry));
+		java.nio.file.Files.copy(path, out);
+		out.closeEntry();
 	}
 
 	public void unpack(Repository repo, InputStream input) {
@@ -287,7 +282,7 @@ public class RepositoryService {
 	public int getNoOfRepositories(User user) {
 		if (user.username == null || user.username.isEmpty())
 			return 0;
-		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		if (path == null || path.isEmpty())
 			return 0;
 		var userGroup = new File(path, user.username);
@@ -358,7 +353,7 @@ public class RepositoryService {
 	}
 
 	private List<String> getRepositoryList(ServerSetting key, boolean addMissing) {
-		List<String> repositoryArray = settingsService.get(key, new ArrayList<>());
+		List<String> repositoryArray = settings.get(key, new ArrayList<>());
 		try (var repos = getPublic()) {
 			var repoMap = repos.stream()
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
@@ -373,7 +368,7 @@ public class RepositoryService {
 				repoMap.values().forEach(repo -> repoIds.add(repo.path()));
 			}
 			if (userService.getCurrentUser().isAdmin()) {
-				settingsService.set(key, repoIds);
+				settings.set(key, repoIds);
 			}
 			return repoIds;
 		}

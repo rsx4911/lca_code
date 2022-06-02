@@ -1,0 +1,22 @@
+.header-box Libraries
+	button.btn.btn-success.pull-right(data-action='add') Add library
+	.clear
+.content-box
+	if !libraries || !libraries.length
+		em No libraries available
+	ol.libraries
+		each library in libraries
+			- var id = library.name + (library.version ? ' ' + library.version : '');
+			li #{id} 
+				button.btn.btn-xs.btn-danger(data-action='delete' data-id=id) Delete
+				div=library.description
+.header-box Missing libraries
+	.clear
+.content-box
+	if !missingLibraryIds || !missingLibraryIds.length
+		em No missing libraries found
+	else
+		p The following libraries are linked in repositories, but are not present on the server. For users to be able to work with these repositories, you will need to share the required libraries with them manually - or add them here.
+		ol.libraries
+			each id in missingLibraryIds
+				li=id

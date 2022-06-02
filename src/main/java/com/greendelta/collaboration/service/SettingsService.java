@@ -41,6 +41,7 @@ import com.greendelta.search.wrapper.os.OsRestClient;
 public class SettingsService {
 
 	static final Logger log = LogManager.getLogger(SettingsService.class);
+	public final AccessTypes ACCESS = new AccessTypes();
 	public final Imprint imprint = new Imprint();
 	public final MailConfig mailConfig = new MailConfig();
 	public final SearchConfig searchConfig = new SearchConfig();
@@ -68,16 +69,8 @@ public class SettingsService {
 	}
 
 	public <V> V get(SettingKey key, V defaultValue) {
-		return get(key, null, defaultValue);
-	}
-
-	public <V> V get(SettingKey key, String owner) {
-		return get(key, owner, null);
-	}
-
-	public <V> V get(SettingKey key, String owner, V defaultValue) {
 		var type = SettingType.getFor(key);
-		return get(type, owner).get(key, defaultValue);
+		return get(type, null).get(key, defaultValue);
 	}
 
 	public <V> void set(SettingKey key, V value) {
@@ -92,11 +85,11 @@ public class SettingsService {
 	@SuppressWarnings("unchecked")
 	private <T extends SettingKey> Settings<T> get(SettingType type) {
 		return (Settings<T>) switch (type) {
-		case SERVER_SETTING -> serverConfig;
-		case MAIL_SETTING -> mailConfig;
-		case SEARCH_SETTING -> searchConfig;
-		case IMPRINT_SETTING -> imprint;
-		default -> get(type, null);
+			case SERVER_SETTING -> serverConfig;
+			case MAIL_SETTING -> mailConfig;
+			case SEARCH_SETTING -> searchConfig;
+			case IMPRINT_SETTING -> imprint;
+			default -> get(type, null);
 		};
 	}
 
@@ -331,7 +324,7 @@ public class SettingsService {
 			this.owner = owner;
 			this.local = type == null ? new HashMap<>() : null;
 			if (type != null && access == null && owner == null) {
-				access = new AdminAccess();
+				access = ACCESS.ADMIN;
 			}
 			this.access = access;
 		}
@@ -446,17 +439,17 @@ public class SettingsService {
 
 	public interface Access {
 
-		boolean allowed(String groupOrRepo);
+		boolean allowed(String owner);
 
 	}
 
-	private class AdminAccess implements Access {
+	public class AccessTypes {
 
-		@Override
-		public boolean allowed(String groupOrRepo) {
-			var user = userService.getCurrentUser();
-			return user != null && user.isAdmin();
+		private AccessTypes() {
 		}
+
+		public Access ADMIN = owner -> userService.getCurrentUser().isAdmin();
+		public Access DATA_MANAGER = owner -> userService.getCurrentUser().isDataManager();
 
 	}
 

@@ -52,6 +52,23 @@ define([
 						setValue values, name, value
 				return values
 
+			toFormData: (form) ->
+				data = new FormData()
+				fields = $ 'input, select, textarea', "##{form}"
+				for field in fields
+					field = $ field
+					name = field.attr 'name'
+					type = field.attr 'type'
+					if type is 'checkbox'
+						data.append name, field.is ':checked'
+					else if type is 'file' and field[0].files[0]
+						data.append name, field[0].files[0]
+					else if type is 'number'
+						data.append name, parseFloat field.val()
+					else
+						data.append name, field.val() 
+				return data
+
 			fill: (form, json) ->
 				fields = $ 'input, select, textarea', "##{form}"
 				for field in fields

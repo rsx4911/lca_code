@@ -11,26 +11,26 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 @Service
 public class AnnouncementService {
 
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public AnnouncementService(SettingsService settingsService) {
-		this.settingsService = settingsService;
+	public AnnouncementService(SettingsService settings) {
+		this.settings = settings;
 	}
 
 	public void announce(String message) {
-		settingsService.set(ServerSetting.ANNOUNCEMENT_ID, UUID.randomUUID().toString());
-		settingsService.set(ServerSetting.ANNOUNCEMENT_MESSAGE, message);
+		settings.set(ServerSetting.ANNOUNCEMENT_ID, UUID.randomUUID().toString());
+		settings.set(ServerSetting.ANNOUNCEMENT_MESSAGE, message);
 	}
 
 	public void clear() {
-		settingsService.set(ServerSetting.ANNOUNCEMENT_ID, null);
-		settingsService.set(ServerSetting.ANNOUNCEMENT_MESSAGE, null);
+		settings.set(ServerSetting.ANNOUNCEMENT_ID, null);
+		settings.set(ServerSetting.ANNOUNCEMENT_MESSAGE, null);
 	}
 
 	public Announcement getAnnouncement() {
-		String id = settingsService.get(ServerSetting.ANNOUNCEMENT_ID);
-		String message = settingsService.get(ServerSetting.ANNOUNCEMENT_MESSAGE);
+		String id = settings.get(ServerSetting.ANNOUNCEMENT_ID);
+		String message = settings.get(ServerSetting.ANNOUNCEMENT_MESSAGE);
 		if (Strings.nullOrEmpty(id) || Strings.nullOrEmpty(message))
 			return null;
 		return new Announcement(id, message);

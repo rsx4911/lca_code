@@ -11,7 +11,7 @@ define([
 
 		class AdminRestrictions extends Backbone.View
 
-			className: 'admin-restrictions content-box'
+			className: 'admin-restrictions multi-box-view'
 
 			events: 
 				'click [data-action=add]': (event) -> @showAddDialog event, true

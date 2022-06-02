@@ -30,7 +30,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
 	// private RepositoryService repoService;
 	// private SearchService searchService;
-	private SettingsService settingsService;
+	private SettingsService settings;
 	// private NotificationService notificationService;
 	private SessionService sessionService;
 	private GitFilterConfig config;
@@ -55,7 +55,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	@Override
 	public void init(FilterConfig config) throws ServletException {
 		initBeans(config);
-		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		if (path == null)
 			return;
 		setRepositoryResolver(new FileResolver<>(new File(path), true));
@@ -63,10 +63,10 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	}
 
 	private void initBeans(FilterConfig config) {
-		if (settingsService != null)
+		if (settings != null)
 			return;
 		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
-		settingsService = app.getBean(SettingsService.class);
+		settings = app.getBean(SettingsService.class);
 		sessionService = app.getBean(SessionService.class);
 		this.config = app.getBean(GitFilterConfig.class);
 	}

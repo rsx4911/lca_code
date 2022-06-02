@@ -32,7 +32,7 @@ public class ClientErrorController {
 
 	private String getUserInfo() {
 		var user = userService.getCurrentUser();
-		if (user == null || user.id == 0l)
+		if (user.isAnonymous())
 			return "anonymous";
 		var info = "{";
 		info += "id: " + user.id;
