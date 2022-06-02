@@ -18,6 +18,8 @@ public class ModelTypes {
 			ModelType.IMPACT_METHOD.name(),
 			ModelType.IMPACT_CATEGORY.name(),
 			ModelType.FLOW.name(),
+			ModelType.EPD.name(),
+			ModelType.RESULT.name(),
 			ModelType.SOCIAL_INDICATOR.name(),
 			ModelType.PARAMETER.name(),
 			ModelType.DQ_SYSTEM.name(),
