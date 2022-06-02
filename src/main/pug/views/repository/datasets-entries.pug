@@ -22,22 +22,28 @@ if categoryPath
 			td
 each entry in data
 	- var name = entry.typeOfEntry === 'MODEL_TYPE' ? getRootLabel(entry.type) : entry.name;
-	- var iconUrl = entry.typeOfEntry === 'DATASET' ? getIcon(entry) : 'category/' + entry.type.toLowerCase() + '.png';
-	- var url = '';
+	- var iconUrl = entry.typeOfEntry === 'DATASET' || entry.typeOfEntry === 'LIBRARY' ? getIcon(entry) : 'category/' + entry.type.toLowerCase() + '.png';
+	- var url = baseUrl;
+	- var target = null;
 	if entry.typeOfEntry === 'MODEL_TYPE'
-		- url = '/datasets/' + name; 
+		- url += '/datasets/' + name; 
 	else if entry.typeOfEntry === 'CATEGORY'
-		- url = '/datasets/' + categoryPath + '/' + entry.name; 
+		- url += '/datasets/' + categoryPath + '/' + entry.name; 
+	else if entry.type === 'LIBRARY'
+		- url = '/ws/libraries/' + entry.name;
+		- target = '_blank';
 	else
-		- url = '/dataset/' + entry.type + '/' + entry.refId; 
-	if commitId
+		- url += '/dataset/' + entry.type + '/' + entry.refId; 
+	if commitId && !target
 		- url += '?commitId=' + commitId;
 	tr
-		td: img.model-icon-small(src='images/model/small/' + iconUrl, aria-label='Model icon of ' + entry.type)
-		td: a(href=baseUrl + url): strong
-			|  #{name}
-			if entry.typeOfEntry !== 'DATASET'
-				+count-span(entry) 
+		td: img.model-icon-small(src='images/model/small/' + iconUrl, aria-label='Model icon of ' + type)
+		if entry.typeOfEntry === 'LIBRARY' && !entry.available
+			td: strong=name
+		else
+			td: a(href=url target=target): strong=name
+				if entry.typeOfEntry !== 'DATASET' && entry.typeOfEntry !== 'LIBRARY'
+					+count-span(entry) 
 		if !isPublic
 			td=formatLastUpdate(entry.commitTimestamp)
 			+commit-link-cell(entry)

@@ -7,7 +7,9 @@
 	ol.libraries
 		each library in libraries
 			- var id = library.name + (library.version ? ' ' + library.version : '');
-			li #{id} 
+			li
+				a(href='/ws/libraries/' + id target='_blank') #{id}
+				|  
 				button.btn.btn-xs.btn-danger(data-action='delete' data-id=id) Delete
 				div=library.description
 .header-box Missing libraries
