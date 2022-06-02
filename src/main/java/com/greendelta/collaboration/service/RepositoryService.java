@@ -300,7 +300,7 @@ public class RepositoryService {
 	public RepositorySearchResult getAll(int page, int pageSize, String filter, boolean onlyPublic,
 			boolean adminArea) {
 		var accessible = getAll(onlyPublic, adminArea);
-		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, repo -> repo.path());
+		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, Repository::path);
 		return new RepositorySearchResult(result);
 	}
 

@@ -93,7 +93,7 @@ public class HistoryController {
 		try (var repo = repoService.get(group, name)) {
 			var commits = repo.commits().find().all();
 			Collections.reverse(commits);
-			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, (c) -> c.message);
+			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, c -> c.message);
 			var converted = SearchResults.convert(result, c -> Maps.of(c));
 			return Response.ok(putAdditionalInfo(converted, repo, commits));
 		}

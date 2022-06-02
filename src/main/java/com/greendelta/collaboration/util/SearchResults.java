@@ -2,6 +2,7 @@ package com.greendelta.collaboration.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.greendelta.search.wrapper.SearchResult;
@@ -57,6 +58,11 @@ public class SearchResults {
 		return pagedAndFiltered(page, pageSize, filter, toFilter, (value) -> {
 			return value.toString();
 		});
+	}
+
+	public static <T extends Map<String, Object>> SearchResult<T> pagedAndFiltered(int page, int pageSize,
+			String filter, List<T> toFilter, String field) {
+		return pagedAndFiltered(page, pageSize, filter, toFilter, map -> Maps.get(map, field));
 	}
 
 	public static <T> SearchResult<T> pagedAndFiltered(int page, int pageSize, String filter, List<T> toFilter,
