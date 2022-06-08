@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.controller;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -81,11 +80,11 @@ public class BrowseController {
 			var objectId = repo.ids().get(PackageInfo.FILE_NAME, commit.id);
 			entries.add(new Entry(PackageInfo.FILE_NAME, commit.id, objectId));
 		}
-		entries = entries.stream().filter(e -> !typesHidden.contains(e.type.name())).toList();
+		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
 		var typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<String>());
 		return MetaData.sortByType(mapped, typesOrder).map(map -> {
-			if ("UNKNOWN".equals(map.get("type"))) {
+			if (map.get("type") == null) {
 				map.put("type", "LIBRARY");
 			}
 			return map;
@@ -121,11 +120,10 @@ public class BrowseController {
 	private void putOtherInfo(List<Map<String, Object>> entries, Repository repo, Commit commit, String categoryPath) {
 		var user = userService.getCurrentUser();
 		var loggedIn = user.id != 0;
-		var commits = new HashMap<String, Commit>();
 		for (var entry : entries) {
 			var name = Maps.getString(entry, "name");
 			if (loggedIn) {
-				putCommitInfo(entry, repo, commits);
+				putCommitInfo(entry, repo);
 			}
 			if (entry.get("typeOfEntry").equals(EntryType.DATASET.name()))
 				continue;
@@ -142,14 +140,28 @@ public class BrowseController {
 		}
 	}
 
-	private void putCommitInfo(Map<String, Object> entry, Repository repo, Map<String, Commit> commits) {
-		var commitId = Maps.getString(entry, "commitId");
-		var path = Maps.getString(entry, "path");
-		commitId = repo.commits().find().path(path).until(commitId).latestId();
-		var commit = commits.computeIfAbsent(commitId, repo.commits()::get);
+	private void putCommitInfo(Map<String, Object> entry, Repository repo) {
+		var commit = getCommit(entry, repo);
 		entry.put("commitId", commit.id);
 		entry.put("commitMessage", commit.message);
 		entry.put("commitTimestamp", commit.timestamp);
+	}
+
+	private Commit getCommit(Map<String, Object> entry, Repository repo) {
+		var path = Maps.getString(entry, "path");
+		var commitId = Maps.getString(entry, "commitId");
+		if (!path.startsWith(PackageInfo.FILE_NAME + "/"))
+			return repo.commits().find().path(path).until(commitId).latest();
+		var library = Maps.getString(entry, "refId");
+		var commits = repo.commits().find().path(PackageInfo.FILE_NAME).until(commitId).all();
+		for (var i = commits.size() - 1; i >= 0; i--) {
+			var commit = commits.get(i);
+			var info = Repositories.infoOf(repo.gitRepo(), commit);
+			if (info.libraries().contains(library))
+				continue;
+			return commits.get(i + 1);
+		}
+		return commits.get(0);
 	}
 
 	@GetMapping("{group}/{name}/{type}/{refId}")
