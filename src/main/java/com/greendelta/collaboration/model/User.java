@@ -151,5 +151,9 @@ public class User extends AbstractEntity implements UserDetails {
 	public boolean isEnabled() {
 		return true;
 	}
+	
+	public boolean isAnonymous() {
+		return id == 0l;
+	}
 
 }

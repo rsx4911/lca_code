@@ -27,10 +27,10 @@ public class MembershipService {
 	private final AccessService accessService;
 
 	@Autowired
-	public MembershipService(Dao<Membership> dao, UserService userService, SettingsService settingsService) {
+	public MembershipService(Dao<Membership> dao, UserService userService, SettingsService settings) {
 		this.dao = dao;
 		// cannot inject access service - would result in a dependency loop
-		this.accessService = new AccessService(userService, this, settingsService);
+		this.accessService = new AccessService(userService, this, settings);
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {

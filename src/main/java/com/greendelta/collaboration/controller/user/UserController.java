@@ -35,15 +35,15 @@ public class UserController {
 	private final UserService service;
 	private final MessagingService messagingService;
 	private final AccessService accessService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public UserController(UserService service, MessagingService messagingService, AccessService accessService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.service = service;
 		this.messagingService = messagingService;
 		this.accessService = accessService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping
@@ -107,7 +107,7 @@ public class UserController {
 		if (user == null)
 			throw Response.notFound();
 		var response = new HashMap<String, Object>();
-		String servername = settingsService.get(ServerSetting.SERVER_NAME);
+		String servername = settings.get(ServerSetting.SERVER_NAME);
 		response.put("url", service.getTwoFactorUrl(user, servername));
 		response.put("key", user.twoFactorSecret);
 		response.put("enabled", true);
@@ -195,7 +195,7 @@ public class UserController {
 			user = service.update(user);
 			return new HashMap<>();
 		}
-		String servername = settingsService.get(ServerSetting.SERVER_NAME);
+		String servername = settings.get(ServerSetting.SERVER_NAME);
 		var url = service.enableTwoFactorAuthentication(user, servername);
 		var response = new HashMap<String, Object>();
 		response.put("url", url);

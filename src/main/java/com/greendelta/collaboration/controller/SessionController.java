@@ -42,19 +42,19 @@ public class SessionController {
 	private final UserService userService;
 	private final GroupService groupService;
 	private final TaskService taskService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final JobService jobService;
 	private final NotificationService notificationService;
 	private final SessionService sessionService;
 
 	@Autowired
 	public SessionController(UserService userService, GroupService groupService, TaskService taskService,
-			SettingsService settingsService, JobService jobService, NotificationService notificationService,
+			SettingsService settings, JobService jobService, NotificationService notificationService,
 			SessionService sessionService) {
 		this.userService = userService;
 		this.groupService = groupService;
 		this.taskService = taskService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 		this.jobService = jobService;
 		this.notificationService = notificationService;
 		this.sessionService = sessionService;
@@ -66,14 +66,14 @@ public class SessionController {
 			return Collections.singletonMap("id", 0);
 		var user = userService.getCurrentUser();
 		var mapped = Users.mapForSelf(user);
-		String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(user).size());
 		mapped.put("noOfRepositories", userService.getNoOfRepositories(user, path));
 		return mapped;
 	}
 
 	// TODO deactivation and two factor auth via spring security directly?
-	@PostMapping(path = "login")
+	@PostMapping("login")
 	public String login(
 			@RequestBody Map<String, Object> form,
 			@Autowired HttpServletRequest request) {
@@ -97,11 +97,11 @@ public class SessionController {
 		return login(request, username, password, token);
 	}
 
-	@PostMapping(path = "register")
+	@PostMapping("register")
 	public void register(
 			@RequestBody Map<String, Object> form,
 			@Autowired HttpServletRequest request) {
-		if (!settingsService.is(ServerSetting.USER_REGISTRATION_ENABLED))
+		if (!settings.is(ServerSetting.USER_REGISTRATION_ENABLED))
 			throw Response.unavailable("User registration feature not enabled");
 		var username = Maps.getString(form, "username");
 		var name = Maps.getString(form, "name");
@@ -145,7 +145,7 @@ public class SessionController {
 		user.username = username;
 		user.name = name;
 		user.email = email;
-		var adminApproval = settingsService.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED);
+		var adminApproval = settings.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED);
 		if (adminApproval) {
 			var cal = Calendar.getInstance();
 			cal.add(Calendar.DAY_OF_MONTH, -1);
@@ -172,14 +172,14 @@ public class SessionController {
 		return "";
 	}
 
-	@PostMapping(path = "request-password-reset")
+	@PostMapping("request-password-reset")
 	public void requestPasswordReset(@RequestBody Map<String, Object> data) {
 		var email = data.get("email").toString();
 		jobService.requestPasswordReset(email);
 		log.info("Requested password reset for {}", email);
 	}
 
-	@PostMapping(path = "run-job")
+	@PostMapping("run-job")
 	public String runJob(@RequestBody Map<String, Object> data) {
 		if (data.get("token") == null || data.get("token").toString().isEmpty())
 			throw Response.badRequest("Invalid token");

@@ -24,14 +24,14 @@ public class AccessService {
 
 	private final UserService userService;
 	private final MembershipService membershipService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public AccessService(UserService userService, MembershipService membershipService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.userService = userService;
 		this.membershipService = membershipService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	public boolean canRead(String groupOrRepo) {
@@ -105,7 +105,7 @@ public class AccessService {
 			if (!user.settings.canCreateRepositories)
 				return false;
 			var noOfRepos = user.settings.noOfRepositories;
-			String path = settingsService.get(ServerSetting.REPOSITORY_PATH);
+			String path = settings.get(ServerSetting.REPOSITORY_PATH);
 			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories(user, path);
 		}
 		return hasPermissionTo(Permission.CREATE, group);
@@ -204,15 +204,15 @@ public class AccessService {
 	}
 
 	private boolean isPublic(String groupOrRepo) {
-		if (!settingsService.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED))
+		if (!settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED))
 			return false;
-		String repositoryPath = settingsService.get(ServerSetting.REPOSITORY_PATH);
+		String repositoryPath = settings.get(ServerSetting.REPOSITORY_PATH);
 		if (repositoryPath == null)
 			return false;
 		var dir = new File(repositoryPath, groupOrRepo);
 		if (!isGroup(groupOrRepo)) {
 			try {
-				return settingsService.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
+				return settings.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
 			} catch (UnsupportedSchemaException e) {
 				return false;
 			}
@@ -222,7 +222,7 @@ public class AccessService {
 		for (var child : dir.listFiles()) {
 			try {
 				var path = new RepositoryPath(groupOrRepo, child.getName()).toString();
-				if (settingsService.is(RepositorySetting.PUBLIC_ACCESS, path))
+				if (settings.is(RepositorySetting.PUBLIC_ACCESS, path))
 					return true;
 			} catch (RepositoryNotFoundException | UnsupportedSchemaException e) {
 				// ignore

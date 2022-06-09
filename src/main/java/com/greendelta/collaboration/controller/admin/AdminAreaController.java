@@ -52,18 +52,18 @@ public class AdminAreaController {
 	private final RepositoryService repoService;
 	private final SearchService searchService;
 	private final IndexingService indexingService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
 
 	@Autowired
 	public AdminAreaController(RepositoryService repoService, SearchService searchService,
-			IndexingService indexingService, SettingsService settingsService, EmailService emailService,
+			IndexingService indexingService, SettingsService settings, EmailService emailService,
 			AnnouncementService announcementService) {
 		this.repoService = repoService;
 		this.searchService = searchService;
 		this.indexingService = indexingService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 		this.emailService = emailService;
 		this.announcementService = announcementService;
 	}
@@ -71,7 +71,7 @@ public class AdminAreaController {
 	@GetMapping("testGladConfig")
 	public void testGladConfig() {
 		try {
-			var config = settingsService.serverConfig;
+			var config = settings.serverConfig;
 			String gladUrl = config.get(ServerSetting.GLAD_URL);
 			if (gladUrl == null || gladUrl.isEmpty())
 				throw Response.error("No glad url specified");
@@ -88,7 +88,7 @@ public class AdminAreaController {
 
 	@GetMapping("testSearchConfig")
 	public void testSearchConfig() {
-		SearchConfig config = settingsService.searchConfig;
+		SearchConfig config = settings.searchConfig;
 		try {
 			var client = config.getClient();
 			String indexName = config.get(SearchSetting.INDEX_NAME);
@@ -118,7 +118,7 @@ public class AdminAreaController {
 				ServerSetting.LICENSE_AGREEMENT_TEXT, ServerSetting.HOME_TITLE, ServerSetting.HOME_TEXT,
 				ServerSetting.MODEL_TYPES_ORDER, ServerSetting.MODEL_TYPES_HIDDEN
 		});
-		var info = settingsService.serverConfig.toMap(setting -> relevantSettings.contains(setting));
+		var info = settings.serverConfig.toMap(setting -> relevantSettings.contains(setting));
 		info.put("repositoriesOrder", repoService.getPublicRepositoryOrder());
 		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
 		info.put("reindexingStatus", Maps.of(searchService.getReindexingStatus()));
@@ -177,7 +177,7 @@ public class AdminAreaController {
 				.filter(type -> type.singleton)
 				.collect(Collectors.toMap(
 						type -> type.name(),
-						type -> settingsService.getMap(type)));
+						type -> settings.getMap(type)));
 	}
 
 	@PutMapping("settings")
@@ -188,7 +188,7 @@ public class AdminAreaController {
 		if (value != null && value.trim().isEmpty()) {
 			value = null;
 		}
-		settingsService.set(key, value);
+		settings.set(key, value);
 	}
 
 	private String get(String gladBaseUrl, String headerField, String headerValue) throws Exception {

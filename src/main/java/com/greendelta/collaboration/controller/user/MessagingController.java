@@ -31,20 +31,20 @@ public class MessagingController {
 	private final MessagingService service;
 	private final UserService userService;
 	private final TeamService teamService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public MessagingController(MessagingService service, UserService userService, TeamService teamService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.service = service;
 		this.userService = userService;
 		this.teamService = teamService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping
 	public List<Map<String, Object>> getConversations() {
-		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
+		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var user = userService.getCurrentUser();
 		var conversations = service.getConversations(user);
@@ -55,7 +55,7 @@ public class MessagingController {
 	public ResponseEntity<List<Map<String, Object>>> getMessages(
 			@PathVariable("username") String username,
 			@RequestParam(name = "before", required = false) long before) {
-		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
+		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var user = userService.getCurrentUser();
 		var other = userService.getForUsername(username);
@@ -75,7 +75,7 @@ public class MessagingController {
 	public ResponseEntity<List<Map<String, Object>>> getTeamMessages(
 			@PathVariable("teamname") String teamname,
 			@RequestParam(name = "before", required = false) long before) {
-		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
+		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var team = teamService.getForTeamname(teamname);
 		var cal = Calendar.getInstance();
@@ -90,21 +90,21 @@ public class MessagingController {
 	}
 
 	@PutMapping("settings")
-	public UserSettings updateSettings(@RequestBody UserSettings settings) {
-		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
+	public UserSettings updateSettings(@RequestBody UserSettings userSettings) {
+		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var currentUser = userService.getCurrentUser();
-		currentUser.settings.messagingEnabled = settings.messagingEnabled;
-		currentUser.settings.messagingRestricted = settings.messagingRestricted;
-		currentUser.settings.showOnlineStatus = settings.showOnlineStatus;
-		currentUser.settings.showReadReceipt = settings.showReadReceipt;
+		currentUser.settings.messagingEnabled = userSettings.messagingEnabled;
+		currentUser.settings.messagingRestricted = userSettings.messagingRestricted;
+		currentUser.settings.showOnlineStatus = userSettings.showOnlineStatus;
+		currentUser.settings.showReadReceipt = userSettings.showReadReceipt;
 		currentUser = userService.update(currentUser);
 		return currentUser.settings;
 	}
 
 	@PutMapping("block/{username}")
 	public void blockUser(@PathVariable("username") String username) {
-		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
+		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var other = userService.getForUsername(username);
 		if (other == null)
@@ -116,7 +116,7 @@ public class MessagingController {
 
 	@PutMapping("unblock/{username}")
 	public void unblockUser(@PathVariable("username") String username) {
-		if (!settingsService.is(ServerSetting.MESSAGING_ENABLED))
+		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var other = userService.getForUsername(username);
 		if (other == null)

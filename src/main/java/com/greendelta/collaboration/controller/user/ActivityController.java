@@ -41,16 +41,16 @@ public class ActivityController {
 	private final RepositoryService repoService;
 	private final CommentService commentService;
 	private final TaskService taskService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public ActivityController(UserService userService, RepositoryService repoService, CommentService commentService,
-			TaskService taskService, SettingsService settingsService) {
+			TaskService taskService, SettingsService settings) {
 		this.userService = userService;
 		this.repoService = repoService;
 		this.commentService = commentService;
 		this.taskService = taskService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping
@@ -61,9 +61,9 @@ public class ActivityController {
 			@RequestParam(name = "showCommentActivities", defaultValue = "true") boolean showCommentActivities,
 			@RequestParam(name = "showTaskActivities", defaultValue = "true") boolean showTaskActivities,
 			@RequestParam(name = "repositoryPath", required = false) String repositoryPath) {
-		if (repositoryPath == null && !settingsService.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED))
+		if (repositoryPath == null && !settings.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED))
 			throw Response.unavailable("Dashboard activities feature not enabled");
-		if (repositoryPath != null && !settingsService.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
+		if (repositoryPath != null && !settings.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
 			throw Response.unavailable("Repository activities feature not enabled");
 		try (var repositories = getRepositories(repositoryPath)) {
 			var activities = new ArrayList<Map<String, Object>>();
@@ -122,14 +122,14 @@ public class ActivityController {
 	}
 
 	@PutMapping("settings")
-	public UserSettings updateSettings(@RequestBody UserSettings settings) {
-		if (!settingsService.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED)
-				&& !settingsService.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
+	public UserSettings updateSettings(@RequestBody UserSettings userSettings) {
+		if (!settings.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED)
+				&& !settings.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))
 			throw Response.unavailable("Activities feature not enabled");
 		var currentUser = userService.getCurrentUser();
-		currentUser.settings.showCommentActivities = settings.showCommentActivities;
-		currentUser.settings.showCommitActivities = settings.showCommitActivities;
-		currentUser.settings.showTaskActivities = settings.showTaskActivities;
+		currentUser.settings.showCommentActivities = userSettings.showCommentActivities;
+		currentUser.settings.showCommitActivities = userSettings.showCommitActivities;
+		currentUser.settings.showTaskActivities = userSettings.showTaskActivities;
 		currentUser = userService.update(currentUser);
 		return currentUser.settings;
 	}

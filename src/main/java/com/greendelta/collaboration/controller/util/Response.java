@@ -2,7 +2,6 @@ package com.greendelta.collaboration.controller.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 
 import org.openlca.util.Strings;
@@ -33,14 +32,10 @@ public class Response {
 		} catch (IOException e) {
 			// ignore, not relevant
 		}
-		return ok(filename, filesize, new StreamingResponseBody() {
-
-			@Override
-			public void writeTo(OutputStream output) throws IOException {
-				Files.copy(file.toPath(), output);
-				if (callback != null) {
-					callback.run();
-				}
+		return ok(filename, filesize, output -> {
+			Files.copy(file.toPath(), output);
+			if (callback != null) {
+				callback.run();
 			}
 		});
 	}

@@ -18,6 +18,7 @@ define () ->
 	DQ_SYSTEM: 'Data quality systems'
 	EPD: 'EPDs'
 	RESULT: 'Results'
+	LIBRARY: 'Libraries'
 
 	ordinal: (type) ->
 		for key, index in Object.keys(@)

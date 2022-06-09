@@ -95,7 +95,7 @@ abstract class DownloadController {
 	}
 
 	private String getUserId(User user) {
-		if (user == null || user.id == 0l || user.username == null)
+		if (user.isAnonymous())
 			return "anonymous";
 		return user.username;
 	}

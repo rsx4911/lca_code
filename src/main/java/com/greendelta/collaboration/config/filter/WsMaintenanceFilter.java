@@ -19,21 +19,21 @@ import com.greendelta.collaboration.service.user.UserService;
 @Component
 public class WsMaintenanceFilter extends AccessFilter {
 
-	private SettingsService settingsService;
+	private SettingsService settings;
 	private UserService userService;
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		if (settingsService != null)
+		if (settings != null)
 			return;
 		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
 		userService = app.getBean(UserService.class);
-		settingsService = app.getBean(SettingsService.class);
+		settings = app.getBean(SettingsService.class);
 	}
 
 	@Override
 	protected boolean isAccessDenied(HttpServletRequest request) {
-		var maintenanceMode = settingsService.is(ServerSetting.MAINTENANCE_MODE);
+		var maintenanceMode = settings.is(ServerSetting.MAINTENANCE_MODE);
 		if (!maintenanceMode)
 			return false;
 		var url = request.getRequestURL().toString();
@@ -47,7 +47,7 @@ public class WsMaintenanceFilter extends AccessFilter {
 	@Override
 	protected void onAccessDenied(HttpServletResponse response) throws IOException {
 		response.setStatus(406);
-		var message = settingsService.get(ServerSetting.MAINTENANCE_MESSAGE);
+		var message = settings.get(ServerSetting.MAINTENANCE_MESSAGE);
 		response.getWriter().print(message);
 	}
 

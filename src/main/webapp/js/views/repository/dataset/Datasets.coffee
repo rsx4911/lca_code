@@ -81,7 +81,7 @@ define([
 			className: 'repository-datasets'
 
 			events: 
-				'click a:not([href="#"])': (event) -> Events.followLink event
+				'click a:not([href="#"]):not([target=_blank])': (event) -> Events.followLink event
 				'click a[data-format]:not([data-action=select-data])': 'downloadData'
 				'click a[data-action=select-data]': 'selectData'
 				'change #commit': 'changeCommit'

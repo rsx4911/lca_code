@@ -28,6 +28,8 @@ define([
 				'administration/user/profile/:username': 'adminUserEdit'
 				'administration/team/new': 'adminTeamNew'
 				'administration/team/profile/:teamname': 'adminTeamEdit'
+				'administration/libraries': 'adminLibraries'
+				'administration/libraries/add': 'adminAddLibrary'
 				'administration/restrictions': 'adminRestrictions'
 				'administration/settings': 'adminSettings'
 				'administration/maintenance': 'adminMaintenance'

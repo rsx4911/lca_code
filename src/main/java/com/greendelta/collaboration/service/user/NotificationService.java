@@ -31,15 +31,15 @@ public class NotificationService {
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final EmailService emailService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public NotificationService(UserService userService, MembershipService membershipService, EmailService emailService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.emailService = emailService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	public NotificationJob groupCreated(String group) {
@@ -429,7 +429,7 @@ public class NotificationService {
 	public NotificationJob userRegistered(User user) {
 		var subject = "A new user registered";
 		var message = "A new user with username " + user.username + " registered.";
-		if (settingsService.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED)) {
+		if (settings.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED)) {
 			subject += " and is awaiting approval";
 			String profileUrl = getBaseUrl() + "/administration/user/profile/" + user.username;
 			message += " To approve the new user account you need to active the user at <a href=\"" + profileUrl + "\">"
@@ -578,7 +578,7 @@ public class NotificationService {
 		content += "<div style=\"font-size:80%;\">This message was automatically sent to you by the system. If you do not wish to receive this type of notification again, you can configure the notification settings in your <a href=\""
 				+ getBaseUrl() + "/user/notifications\">profile</a>" + "<br>";
 		content += "<hr>";
-		var imprint = settingsService.imprint;
+		var imprint = settings.imprint;
 		if (imprint == null)
 			return content;
 		content += imprint.toEmailFooter();
@@ -586,7 +586,7 @@ public class NotificationService {
 	}
 
 	private String getBaseUrl() {
-		return settingsService.get(ServerSetting.SERVER_URL);
+		return settings.get(ServerSetting.SERVER_URL);
 	}
 
 	private Set<EmailJob> createEmails(String subject, String message, Set<User> recipients) {
@@ -678,7 +678,7 @@ public class NotificationService {
 		}
 
 		public void send() {
-			if (!settingsService.is(ServerSetting.NOTIFICATIONS_ENABLED))
+			if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 				return;
 			for (var job : jobs) {
 				emailService.send(job);

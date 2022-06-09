@@ -8,7 +8,6 @@ import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 
-
 public class ModelTypes {
 
 	public static final List<String> DEFAULT_ORDER = Arrays.asList(new String[] {
@@ -18,6 +17,8 @@ public class ModelTypes {
 			ModelType.IMPACT_METHOD.name(),
 			ModelType.IMPACT_CATEGORY.name(),
 			ModelType.FLOW.name(),
+			ModelType.EPD.name(),
+			ModelType.RESULT.name(),
 			ModelType.SOCIAL_INDICATOR.name(),
 			ModelType.PARAMETER.name(),
 			ModelType.DQ_SYSTEM.name(),
@@ -26,7 +27,8 @@ public class ModelTypes {
 			ModelType.CURRENCY.name(),
 			ModelType.ACTOR.name(),
 			ModelType.SOURCE.name(),
-			ModelType.LOCATION.name()
+			ModelType.LOCATION.name(),
+			"null"
 	});
 
 	public static ModelType from(Map<String, Object> map) {

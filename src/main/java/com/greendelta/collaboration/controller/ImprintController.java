@@ -13,16 +13,16 @@ import com.greendelta.collaboration.service.SettingsService;
 @RequestMapping("ws/public/imprint")
 public class ImprintController {
 
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public ImprintController(SettingsService settingsService) {
-		this.settingsService = settingsService;
+	public ImprintController(SettingsService settings) {
+		this.settings = settings;
 	}
 
 	@GetMapping
 	public Map<String, Object> get() {
-		return settingsService.imprint.toMap();
+		return settings.imprint.toMap();
 	}
 
 }

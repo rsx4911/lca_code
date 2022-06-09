@@ -117,7 +117,7 @@ define([
 
 			showLoginLayer: () ->
 				@showViewInLayer
-					title: 'Login'
+					title: 'Sign in'
 					view: 'LoginLayer'
 					notCloseable: true
 					static: true
@@ -315,14 +315,15 @@ define([
 						confirmationPhrase: confirmationPhrase
 					buttons: buttons
 					callback: () =>
-						$('#btn-confirm-delete').prop 'disabled', true
-						$('#confirmation-phrase').on 'keyup', (event) ->
-							target = $ Events.target event
-							$('#btn-confirm-delete').prop 'disabled', (target.val() isnt confirmationPhrase)
+						if confirmationPhrase
+							$('#btn-confirm-delete').prop 'disabled', true
+							$('#confirmation-phrase').on 'keyup', (event) ->
+								target = $ Events.target event
+								$('#btn-confirm-delete').prop 'disabled', (target.val() isnt confirmationPhrase)
 						$('#confirmation-phrase').on 'keydown', (event) =>
 							target = $ Events.target event
 							key = Events.keyCode event
-							if target.val() is confirmationPhrase and key is 13
+							if (!confirmationPhrase or target.val() is confirmationPhrase) and key is 13
 								@closeActive()
 								callback?()								
 

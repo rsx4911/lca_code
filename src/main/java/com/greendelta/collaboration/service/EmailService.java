@@ -21,15 +21,15 @@ import com.greendelta.collaboration.model.settings.MailSetting;
 public class EmailService {
 
 	private static final Logger log = LogManager.getLogger(EmailService.class);
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public EmailService(SettingsService settingsService) {
-		this.settingsService = settingsService;
+	public EmailService(SettingsService settings) {
+		this.settings = settings;
 	}
 
 	public void send(EmailJob mail) {
-		var config = settingsService.mailConfig;
+		var config = settings.mailConfig;
 		var sender = config.getMailSender();
 		try {
 			var message = sender.createMimeMessage();

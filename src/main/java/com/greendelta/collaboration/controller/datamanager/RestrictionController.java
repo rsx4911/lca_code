@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.RestrictionSet;
 import com.greendelta.collaboration.service.DeleteService;
-import com.greendelta.collaboration.service.RestrictionService;
+import com.greendelta.collaboration.service.user.RestrictionService;
 import com.greendelta.collaboration.util.Routes;
 
 @RestController("datamanager-RestrictionController")

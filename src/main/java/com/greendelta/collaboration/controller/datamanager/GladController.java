@@ -50,12 +50,12 @@ public class GladController {
 			"publiclyAccessible"));
 
 	private final RepositoryService repoService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
-	public GladController(RepositoryService repoService, SettingsService settingsService) {
+	public GladController(RepositoryService repoService, SettingsService settings) {
 		this.repoService = repoService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@PutMapping("push/{group}/{name}")
@@ -63,7 +63,7 @@ public class GladController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@RequestBody Input input) {
-		var config = settingsService.serverConfig;
+		var config = settings.serverConfig;
 		String gladUrl = config.get(ServerSetting.GLAD_URL);
 		String gladHeaderField = config.get(ServerSetting.GLAD_API_KEY_HEADER);
 		String gladHeaderValue = config.get(ServerSetting.GLAD_API_KEY);

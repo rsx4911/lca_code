@@ -15,19 +15,19 @@ import com.greendelta.search.wrapper.score.Score;
 class ScoreService {
 
 	private final RepositoryService repoService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final UserService userService;
 
 	@Autowired
-	ScoreService(RepositoryService repoService, SettingsService settingsService, UserService userService) {
+	ScoreService(RepositoryService repoService, SettingsService settings, UserService userService) {
 		this.repoService = repoService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 		this.userService = userService;
 	}
 
 	void applyTo(SearchQueryBuilder builder) {
 		var currentUser = userService.getCurrentUser();
-		if (currentUser.id == 0) {
+		if (currentUser.isAnonymous()) {
 			applyRepositoryOrder(builder);
 		}
 		applyTypeOrder(builder);
@@ -45,7 +45,7 @@ class ScoreService {
 
 	private void applyTypeOrder(SearchQueryBuilder builder) {
 		var score = new Score(Aggregations.MODEL_TYPE.field);
-		var types = settingsService.serverConfig.getModelTypes();
+		var types = settings.serverConfig.getModelTypes();
 		for (var i = 0; i < types.length; i++) {
 			score.addCase(types.length - i + 1, Comparator.EQUALS, "\"" + types[i].name() + "\"");
 		}

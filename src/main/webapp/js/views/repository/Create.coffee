@@ -26,6 +26,7 @@ define([
 						callback options
 
 			createRepository: () ->
+				Events.preventDefault event
 				@repository.set Forms.toJson 'repository-form'
 				@repository.set 'isNew', true
 				Model.save @repository, 

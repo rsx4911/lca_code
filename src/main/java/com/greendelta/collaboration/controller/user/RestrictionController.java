@@ -18,9 +18,9 @@ import com.greendelta.collaboration.model.Restriction;
 import com.greendelta.collaboration.model.Restriction.RestrictionType;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.service.RestrictionService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.RestrictionService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController
@@ -52,7 +52,7 @@ public class RestrictionController {
 	private ResponseEntity<List<Restriction>> check(String group, String name, List<String> refIds) {
 		try (var repo = repoService.get(group, name)) {
 			Map<String, Role> restrictedTo = repo.settings.get(RepositorySetting.RESTRICTIONS);
-			if (restrictedTo.isEmpty())
+			if (restrictedTo == null || restrictedTo.isEmpty())
 				return Response.noContent();
 			var user = userService.getCurrentUser();
 			var userRole = membershipService.getRole(user, repo.path());

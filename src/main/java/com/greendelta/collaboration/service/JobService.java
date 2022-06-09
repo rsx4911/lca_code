@@ -23,15 +23,15 @@ public class JobService {
 	private final Dao<Job> dao;
 	private final UserService userService;
 	private final EmailService emailService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public JobService(Dao<Job> dao, UserService userService, EmailService emailService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.dao = dao;
 		this.userService = userService;
 		this.emailService = emailService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	public void requestPasswordReset(String email) {
@@ -70,12 +70,12 @@ public class JobService {
 	}
 
 	private String getPasswordResetRequestEmailText(User user, String token) {
-		String baseUrl = settingsService.get(ServerSetting.SERVER_URL);
+		String baseUrl = settings.get(ServerSetting.SERVER_URL);
 		var resetUrl = baseUrl + "/job?token=" + token + "&type=" + JobType.RESET_PASSWORD;
 		var content = "Dear " + user.name + ",<br><br>";
 		content += "You requested to reset your password. Please click the link below to proceed with the request, a new password will automatically be set and send to you.<br><br>";
 		content += "<a href=\"" + resetUrl + "\">" + resetUrl + "</a><br><br>";
-		var imprint = settingsService.imprint;
+		var imprint = settings.imprint;
 		if (imprint == null)
 			return content;
 		content += imprint.toEmailFooter();
@@ -116,7 +116,7 @@ public class JobService {
 		var content = "Dear " + user.name + ",<br><br>";
 		content += "Your password was successfully reset to " + password
 				+ " - Please update it directly after logging in.<br><br>";
-		var imprint = settingsService.imprint;
+		var imprint = settings.imprint;
 		if (imprint == null)
 			return content;
 		content += imprint.toEmailFooter();

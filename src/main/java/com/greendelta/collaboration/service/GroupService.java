@@ -26,19 +26,19 @@ public class GroupService {
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public GroupService(AccessService accessService, MembershipService membershipService, UserService userService,
-			SettingsService settingsService) {
+			SettingsService settings) {
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	private String getRootPath() {
-		return settingsService.get(ServerSetting.REPOSITORY_PATH);
+		return settings.get(ServerSetting.REPOSITORY_PATH);
 	}
 
 	public boolean exists(String group) {
@@ -140,7 +140,8 @@ public class GroupService {
 				continue;
 			if (onlyIfCanWrite && !accessService.canWrite(group.getName()))
 				continue;
-			if (isUserNamespace(group.getName()) && (adminArea || user == null || !group.getName().equals(user.username)))
+			if (isUserNamespace(group.getName())
+					&& (adminArea || user == null || !group.getName().equals(user.username)))
 				continue;
 			groups.add(group.getName());
 		}
@@ -157,18 +158,18 @@ public class GroupService {
 	public Settings<GroupSetting> getSettings(String group) {
 		if (!accessService.canRead(group))
 			throw new ForbiddenAccessException(group, "READ");
-		Settings<GroupSetting> settings = settingsService.get(SettingType.GROUP_SETTING, group,
+		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group,
 				accessService::canSetSettings);
 		var user = userService.getForUsername(group);
 		if (user == null)
-			return settings;
-		if (settings.get(GroupSetting.LABEL) == null) {
-			settings.set(GroupSetting.LABEL, user.name);
+			return groupSettings;
+		if (groupSettings.get(GroupSetting.LABEL) == null) {
+			groupSettings.set(GroupSetting.LABEL, user.name);
 		}
-		if (settings.get(GroupSetting.DESCRIPTION) == null) {
-			settings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
+		if (groupSettings.get(GroupSetting.DESCRIPTION) == null) {
+			groupSettings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
 		}
-		return settings;
+		return groupSettings;
 	}
 
 }

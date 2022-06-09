@@ -12,10 +12,18 @@ define([
 
 			events: 
 				'submit #login': 'login'
+				'keydown #login input': 'submit' 
 
 			render: (renderOptions) ->
 				@$el.html template()
+				@$('h3').remove()
 				Renderer.render @, renderOptions
+
+			submit: (event) ->
+				target = $ Events.target event
+				key = Events.keyCode event
+				if key is 13
+					@login()
 
 			login: () ->
 				Events.preventDefault event

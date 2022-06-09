@@ -26,14 +26,14 @@ import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuild
 @Service
 class QueryService {
 
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final RepositoryService repoService;
 	private final ScoreService scoreService;
 	private final DsEntryParser parser = new DsEntryParser();
 
 	@Autowired
-	QueryService(SettingsService settingsService, RepositoryService repoService, ScoreService scoreService) {
-		this.settingsService = settingsService;
+	QueryService(SettingsService settings, RepositoryService repoService, ScoreService scoreService) {
+		this.settings = settings;
 		this.repoService = repoService;
 		this.scoreService = scoreService;
 	}
@@ -51,7 +51,7 @@ class QueryService {
 			builder.page(page);
 			builder.pageSize(pageSize);
 			scoreService.applyTo(builder);
-			var client = settingsService.searchConfig.getSearchClient();
+			var client = settings.searchConfig.getSearchClient();
 			var searchQuery = builder.build();
 			var result = client.search(searchQuery);
 			return SearchResults.convert(result, parser::parse);
@@ -120,7 +120,7 @@ class QueryService {
 
 	private void putTypeFilter(SearchQueryBuilder builder, Set<ModelType> filteredTypes) {
 		var types = new ArrayList<String>();
-		var allTypes = settingsService.serverConfig.getModelTypes();
+		var allTypes = settings.serverConfig.getModelTypes();
 		for (var type : allTypes) {
 			if (!filteredTypes.isEmpty() && !filteredTypes.contains(type))
 				continue;

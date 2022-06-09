@@ -26,21 +26,21 @@ public class TaskController {
 	private final UserService userService;
 	private final RepositoryService repoService;
 	private final AccessService accessService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 
 	@Autowired
 	public TaskController(TaskService service, UserService userService, RepositoryService repoService,
-			AccessService accessService, SettingsService settingsService) {
+			AccessService accessService, SettingsService settings) {
 		this.service = service;
 		this.userService = userService;
 		this.repoService = repoService;
 		this.accessService = accessService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 	}
 
 	@GetMapping
 	public Map<String, Object> getAll() {
-		if (!settingsService.is(ServerSetting.TASKS_ENABLED))
+		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		try (var accessible = repoService.getAllAccessible()) {
 			var repositories = accessible.stream()

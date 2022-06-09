@@ -22,15 +22,15 @@ import com.greendelta.collaboration.util.Requests;
 public class RepoAccessCheck {
 
 	private final AccessService accessService;
-	private final SettingsService settingsService;
+	private final SettingsService settings;
 	private final SessionService sessionService;
 	private final GitFilterConfig gitFilterConfig;
 
 	@Autowired
-	public RepoAccessCheck(AccessService accessService, SettingsService settingsService, SessionService sessionService,
+	public RepoAccessCheck(AccessService accessService, SettingsService settings, SessionService sessionService,
 			GitFilterConfig gitFilterConfig) {
 		this.accessService = accessService;
-		this.settingsService = settingsService;
+		this.settings = settings;
 		this.sessionService = sessionService;
 		this.gitFilterConfig = gitFilterConfig;
 	}
@@ -59,7 +59,7 @@ public class RepoAccessCheck {
 	}
 
 	private boolean areCommitsProhibited(String repoId) {
-		return settingsService.get(SettingType.REPOSITORY_SETTING, repoId, accessService::canSetSettings)
+		return settings.get(SettingType.REPOSITORY_SETTING, repoId, accessService::canSetSettings)
 				.is(RepositorySetting.PROHIBIT_COMMITS);
 	}
 
