@@ -4,21 +4,47 @@
 .content-box
 	if !libraries || !libraries.length
 		em No libraries available
-	ol.libraries
-		each library in libraries
-			- var id = library.name + (library.version ? ' ' + library.version : '');
-			li
-				a(href='/ws/libraries/' + id target='_blank') #{id}
-				|  
-				button.btn.btn-xs.btn-danger(data-action='delete' data-id=id) Delete
-				div=library.description
+	else
+		table.table.table-bordered
+			theader
+				tr
+					th Library
+					th Description
+					th Linked in repositories
+					th
+			tbody
+				each library in libraries
+					- var id = library.name + (library.version ? ' ' + library.version : '');
+					tr
+						td: a(href='ws/libraries/' + id target='_blank')=id
+						td=library.description||'-'
+						td
+							.comma-separated
+								each repo in (library.linkedIn || [])
+									span: a(href='/' + repo)=repo
+						td
+							button.btn.btn-xs.btn-danger(data-action='delete' data-id=id) Delete
+
 .header-box Missing libraries
 	.clear
 .content-box
-	if !missingLibraryIds || !missingLibraryIds.length
+	if !missingLibraries || !missingLibraries.length
 		em No missing libraries found
 	else
 		p The following libraries are linked in repositories, but are not present on the server. For users to be able to work with these repositories, you will need to share the required libraries with them manually - or add them here.
-		ol.libraries
-			each id in missingLibraryIds
-				li=id
+		table.table.table-bordered
+			theader
+				tr
+					th Library
+					th Linked in repositories
+					th
+			tbody
+				each library in missingLibraries
+					tr
+						td=library.id
+						td
+							.comma-separated
+								each repo in (library.linkedIn || [])
+									span: a(href='/' + repo)=repo
+						td
+							button.btn.btn-xs.btn-success(data-action='add') Add

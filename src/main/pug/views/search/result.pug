@@ -28,12 +28,12 @@ mixin repositories(dataset, versionIndex)
 	- var version = dataset.versions[versionIndex];
 	- var versions = dataset.versions.length;
 	.result-repositories found in #{version.repos.length === 1 ? 'repository' : 'repositories'} 
-		span.comma-list
+		span.comma-separated
 			each repo in version.repos
 				+link(dataset, repo, repo.path, true)
 	if versions > 1
 		div #{versions - 1} other #{versions > 2 ? 'versions' : 'version'} found in  
-			span.comma-list
+			span.comma-separated
 				each v, index in dataset.versions
 					if index !== versionIndex
 						each repo in v.repos

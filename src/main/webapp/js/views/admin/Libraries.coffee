@@ -20,8 +20,8 @@ define([
 						$.ajax
 							type: 'GET'
 							url: 'ws/datamanager/libraries/missing'
-							success: (missingLibraryIds) ->
-								callback libraries, missingLibraryIds
+							success: (missingLibraries) ->
+								callback libraries, missingLibraries
 
 			deleteLibrary = (event) ->
 				target = $ Events.target event
@@ -46,10 +46,10 @@ define([
 				'click [data-action=delete]': deleteLibrary
 
 			render: (renderOptions) ->
-				loadData (libraries, missingLibraryIds) =>
+				loadData (libraries, missingLibraries) =>
 					@$el.html template
 						libraries: libraries
-						missingLibraryIds: missingLibraryIds
+						missingLibraries: missingLibraries
 					Renderer.render @, renderOptions
 
 )
