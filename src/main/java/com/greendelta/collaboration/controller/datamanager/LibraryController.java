@@ -1,14 +1,11 @@
 package com.greendelta.collaboration.controller.datamanager;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.openlca.git.util.Repositories;
-import org.openlca.jsonld.PackageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,17 +37,26 @@ public class LibraryController {
 	}
 
 	@GetMapping("missing")
-	public Set<String> getMissing() {
-		var libraries = service.getAllAccessible();
-		return repoService.getAllAccessible().stream()
-				.map(Repository::gitRepo)
-				.map(Repositories::infoOf)
-				.filter(Objects::nonNull)
-				.map(PackageInfo::libraries)
-				.flatMap(List::stream)
-				.distinct()
-				.filter(Predicate.not(libraries::contains))
-				.collect(Collectors.toSet());
+	public List<HashMap<String, Object>> getMissing() {
+		try (var repos = repoService.getAllAccessible()) {
+			var libraries = service.getAllAccessible();
+			var missing = repoService.getAllAccessible().stream()
+					.map(Repository::linkedLibraries)
+					.flatMap(List::stream)
+					.distinct()
+					.filter(Predicate.not(libraries::contains))
+					.collect(Collectors.toSet());
+			return missing.stream().map(lib -> {
+				var linkedIn = repos.stream()
+						.filter(repo -> repo.linkedLibraries().contains(lib))
+						.map(Repository::toId)
+						.toList();
+				var info = new HashMap<String, Object>();
+				info.put("id", lib);
+				info.put("linkedIn", linkedIn);
+				return info;
+			}).toList();
+		}
 	}
 
 	@PostMapping

@@ -119,7 +119,13 @@ public class LibraryService {
 		var file = new File(getLibraryPath(), id + ".zip");
 		if (!file.exists())
 			return null;
-		return new LibraryInfo(LibraryPackage.getInfo(file));
+		try (var repos = repoService.getAllAccessible()) {
+			var linkedIn = repos.stream()
+					.filter(repo -> repo.linkedLibraries().contains(id))
+					.map(Repository::toId)
+					.distinct().toList();
+			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn);
+		}
 	}
 
 	private String getLibraryPath() {
@@ -168,13 +174,14 @@ public class LibraryService {
 		}
 
 	}
-	
-	public record LibraryInfo(String name, String version, String description, boolean isRegionalized) {
-		
-		private LibraryInfo(org.openlca.core.library.LibraryInfo info) {
-			this(info.name(), info.version(), info.description(), info.isRegionalized());
+
+	public record LibraryInfo(String name, String version, String description, boolean isRegionalized,
+			List<String> linkedIn) {
+
+		private LibraryInfo(org.openlca.core.library.LibraryInfo info, List<String> linkedIn) {
+			this(info.name(), info.version(), info.description(), info.isRegionalized(), linkedIn);
 		}
-		
+
 	}
 
 }

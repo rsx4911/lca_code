@@ -2,6 +2,8 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,6 +62,13 @@ public class Repository implements AutoCloseable {
 		return gitRepo;
 	}
 
+	public List<String> linkedLibraries() {
+		var info = Repositories.infoOf(gitRepo());
+		if (info == null || info.libraries() == null)
+			return new ArrayList<>();
+		return info.libraries();
+	}
+
 	public Commits commits() {
 		return Commits.of(gitRepo());
 	}
@@ -79,6 +88,7 @@ public class Repository implements AutoCloseable {
 	public Ids ids() {
 		return Ids.of(gitRepo());
 	}
+
 	public String path() {
 		return path.toString();
 	}
@@ -123,6 +133,10 @@ public class Repository implements AutoCloseable {
 
 	public File getCachedJsonFile() {
 		return new File(dir, "cached-json.zip");
+	}
+
+	public String toId() {
+		return group + "/" + name;
 	}
 
 	@Override
