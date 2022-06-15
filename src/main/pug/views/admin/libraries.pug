@@ -24,7 +24,7 @@
 							else
 								.comma-separated
 									each repo in library.linkedIn
-										span: a(href='/' + repo)=repo
+										span: a.follow(href='/' + repo + '/datasets/Libraries')=repo
 						td
 							button.btn.btn-xs.btn-danger(data-action='delete' data-id=id) Delete
 
@@ -48,6 +48,6 @@
 						td
 							.comma-separated
 								each repo in (library.linkedIn || [])
-									span: a(href='/' + repo)=repo
+									span: a.follow(href='/' + repo + '/datasets/Libraries')=repo
 						td
 							button.btn.btn-xs.btn-success(data-action='add') Add

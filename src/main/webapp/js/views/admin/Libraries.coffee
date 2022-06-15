@@ -42,6 +42,7 @@ define([
 			className: 'admin-libraries multi-box-view'
 
 			events:
+				'click a[href].follow': (event) -> Events.followLink event
 				'click [data-action=add]': () -> Router.navigate 'administration/libraries/add'
 				'click [data-action=delete]': deleteLibrary
 
