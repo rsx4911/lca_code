@@ -50,7 +50,7 @@ public class SearchService {
 
 	public void index(Repository repo, Commit commit) {
 		var manager = new DsEntryManager(repo, commit);
-		var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+		var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 				.forEach(diff -> index(repo, manager, diff.toReference(Side.NEW)));
 		Diff.filter(diffs, DiffType.DELETED)
@@ -95,7 +95,7 @@ public class SearchService {
 		Collections.reverse(commits);
 		commits.forEach(commit -> {
 			var manager = new DsEntryManager(repo, commit);
-			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 					.forEach(diff -> remove(manager, diff.toReference(Side.NEW)));
 		});

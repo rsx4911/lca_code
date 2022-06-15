@@ -38,7 +38,7 @@ public class ChangeLogWriter {
 			for (var commit : commits) {
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+				var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 				for (var diff : diffs) {
 					if (diff.diffType != DiffType.MODIFIED)
 						continue;
@@ -51,7 +51,7 @@ public class ChangeLogWriter {
 
 	public File generate(HttpServletRequest request, Repository repo, Commit commit) throws WebRequestException {
 		return generate(zos -> {
-			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {

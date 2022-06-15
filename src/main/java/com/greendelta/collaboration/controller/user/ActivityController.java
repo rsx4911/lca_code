@@ -115,7 +115,7 @@ public class ActivityController {
 	private void putAdditionalInfo(Map<String, Object> entry, Repository repo, Commit commit) {
 		var user = userService.getForUsername(commit.user);
 		entry.put("userDisplayName", user != null ? user.name : commit.user);
-		var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+		var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 		entry.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 		entry.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 		entry.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
