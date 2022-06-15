@@ -72,14 +72,13 @@ public class LibraryService {
 			var info = LibraryPackage.getInfo(tmpFile.toFile());
 			if (info == null)
 				return null;
-			var id = info.toId();
-			var file = new File(libraryPath, id + ".zip");
+			var file = new File(libraryPath, info.name() + ".zip");
 			if (file.exists())
 				throw new IOException("existed");
 			Files.copy(tmpFile, file.toPath());
-			settings.get(SettingType.LIBRARY_SETTING, id, settings.ACCESS.DATA_MANAGER)
+			settings.get(SettingType.LIBRARY_SETTING, info.name(), settings.ACCESS.DATA_MANAGER)
 					.set(LibrarySetting.ACCESS, access);
-			return id;
+			return info.name();
 		} catch (IOException e) {
 			if (!"existed".equals(e.getMessage())) {
 				log.error("Error writing library", e);
@@ -175,11 +174,10 @@ public class LibraryService {
 
 	}
 
-	public record LibraryInfo(String name, String version, String description, boolean isRegionalized,
-			List<String> linkedIn) {
+	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn) {
 
 		private LibraryInfo(org.openlca.core.library.LibraryInfo info, List<String> linkedIn) {
-			this(info.name(), info.version(), info.description(), info.isRegionalized(), linkedIn);
+			this(info.name(), info.description(), info.isRegionalized(), linkedIn);
 		}
 
 	}
