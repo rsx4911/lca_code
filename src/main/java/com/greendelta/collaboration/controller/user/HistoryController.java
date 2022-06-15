@@ -110,7 +110,7 @@ public class HistoryController {
 			var commitId = Maps.getString(commitData, "id");
 			groupCount.put(commitId, count);
 			var commit = repo.commits().get(commitId);
-			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 			commitData.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 			commitData.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			commitData.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
@@ -140,7 +140,7 @@ public class HistoryController {
 			if (commit == null)
 				throw Response.notFound();
 			var map = putUserName(commit);
-			var diffs = Diffs.withPrevious(repo.gitRepo(), commit);
+			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 			map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 			map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			map.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
@@ -163,7 +163,7 @@ public class HistoryController {
 			if (commit == null)
 				throw Response.notFound();
 			var typeFilter = type != null ? Collections.singletonList(type.name()) : null;
-			var diffs = Diffs.withPrevious(repo.gitRepo(), commit, typeFilter);
+			var diffs = Diffs.of(repo.gitRepo(), commit).filter(typeFilter).withPreviousCommit();
 			var mapped = diffs.stream().map(d -> MetaData.forBrowse(d, repo));
 			List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
