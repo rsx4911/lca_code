@@ -180,10 +180,13 @@ public class RepositoryService {
 			Dirs.copy(from.dir.toPath(), to.dir.toPath());
 			if (resetTo != null) {
 				try (var gitRepo = new FileRepository(to.dir)) {
-					var command = new ResetCommand(gitRepo);
-					command.setMode(ResetType.SOFT);
-					command.setRef(resetTo.id);
-					command.call();
+					new ResetCommand(gitRepo)
+							.setMode(ResetType.SOFT)
+							.setRef(resetTo.id)
+							.call();
+					try (var git = new Git(gitRepo)) {
+						git.gc().setPrunePreserved(true).setAggressive(true).call();
+					}
 				}
 			}
 		} catch (Exception e) {
