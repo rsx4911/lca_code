@@ -57,6 +57,14 @@ public class MetaData {
 		return meta;
 	}
 
+	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
+		var ref = repo.references().get(type, refId, commitId);
+		var id = repo.ids().get(ref.path);
+		var info = repo.datasets().parse(id, "name");
+		var name = info.get("name");
+		return name != null ? name.toString() : "";
+	}
+
 	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {
 		var map = toDatasetInfo(ref, repo, mode);
 		map.put("diffType", diffType);

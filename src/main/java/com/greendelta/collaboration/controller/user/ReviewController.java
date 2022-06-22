@@ -225,7 +225,6 @@ public class ReviewController {
 	}
 
 	private Map<String, Object> getActiveTasks() {
-		// TODO return integer
 		var user = userService.getCurrentUser();
 		var activeTasks = taskService.getAllActiveFor(user).size();
 		return Collections.singletonMap("activeTasks", Integer.toString(activeTasks));
@@ -236,8 +235,6 @@ public class ReviewController {
 		reference.type = ref.type;
 		reference.refId = ref.refId;
 		reference.commitId = ref.commitId;
-		// TODO set name
-		// reference.name = ref.name;
 		return reference;
 	}
 

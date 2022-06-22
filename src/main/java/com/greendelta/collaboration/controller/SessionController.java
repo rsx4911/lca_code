@@ -72,7 +72,6 @@ public class SessionController {
 		return mapped;
 	}
 
-	// TODO deactivation and two factor auth via spring security directly?
 	@PostMapping("login")
 	public String login(
 			@RequestBody Map<String, Object> form,

@@ -1,9 +1,15 @@
 package com.greendelta.collaboration.controller.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.greendelta.collaboration.model.task.Review;
+import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.util.Maps;
+import com.greendelta.collaboration.util.MetaData;
 
 public class Reviews {
 
@@ -12,7 +18,20 @@ public class Reviews {
 	}
 
 	public static Map<String, Object> map(Review review, Repository repo) {
-		return Tasks.map(review, repo);
+		var map = Tasks.map(review, repo);
+		map.put("references", map(review.references, repo));
+		return map;
+	}
+
+	private static List<Map<String, Object>> map(Set<ReviewReference> references, Repository repo) {
+		var list = new ArrayList<Map<String, Object>>();
+		for (var ref : references) {
+			var map = Maps.of(ref);
+			map.put("reviewer", Users.mapForOthers(ref.reviewer));
+			map.put("name", MetaData.getName(repo, ref.type, ref.refId, ref.commitId));
+			list.add(map);
+		}
+		return list;
 	}
 
 }

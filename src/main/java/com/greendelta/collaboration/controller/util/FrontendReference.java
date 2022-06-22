@@ -15,21 +15,27 @@ public class FrontendReference {
 	public String refId;
 	public String path;
 	public String commitId;
-	public String name;
 
 	public static List<Reference> collect(Repository repo, List<FrontendReference> refs) {
 		var all = new ArrayList<Reference>();
 		var paths = new HashSet<String>();
 		for (var ref : refs) {
 			if (ref.refId != null) {
-				if (paths.contains(ref.path))
-					continue;
-				all.add(repo.references().get(ref.type, ref.refId, ref.commitId));
+				var r = repo.references().get(ref.type, ref.refId, ref.commitId);
+				if (!paths.contains(r.path)) {
+					all.add(r);
+					paths.add(r.path);
+				}
 			} else {
-				all.addAll(repo.references().find()
-						.path(ref.path).commit(ref.commitId)
-						.all().stream().filter(r -> !paths.contains(r.path))
-						.toList());
+				repo.references().find()
+						.path(ref.path)
+						.commit(ref.commitId)
+						.all().stream()
+						.filter(r -> !paths.contains(r.path))
+						.forEach(r -> {
+							all.add(r);
+							paths.add(r.path);
+						});
 			}
 		}
 		return all;

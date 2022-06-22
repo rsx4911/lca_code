@@ -28,9 +28,6 @@ public class ReviewReference extends AbstractEntity {
 	@Column
 	public String commitId;
 
-	@Column
-	public String name;
-
 	@OneToOne
 	@JoinColumn
 	public User reviewer;
