@@ -40,7 +40,7 @@ public class LibraryController {
 	public List<HashMap<String, Object>> getMissing() {
 		try (var repos = repoService.getAllAccessible()) {
 			var libraries = service.getAllAccessible();
-			var missing = repoService.getAllAccessible().stream()
+			var missing = repos.stream()
 					.map(Repository::linkedLibraries)
 					.flatMap(List::stream)
 					.distinct()

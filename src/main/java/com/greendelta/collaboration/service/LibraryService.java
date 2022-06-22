@@ -161,14 +161,16 @@ public class LibraryService {
 		private Set<String> linkedLibraries() {
 			if (linkedLibraries != null)
 				return linkedLibraries;
-			linkedLibraries = repoService.getAllAccessible().stream()
-					.map(Repository::gitRepo)
-					.map(Repositories::infoOf)
-					.filter(Objects::nonNull)
-					.map(PackageInfo::libraries)
-					.flatMap(List::stream)
-					.distinct()
-					.collect(Collectors.toSet());
+			try (var accessible = repoService.getAllAccessible()) {
+				linkedLibraries = accessible.stream()
+						.map(Repository::gitRepo)
+						.map(Repositories::infoOf)
+						.filter(Objects::nonNull)
+						.map(PackageInfo::libraries)
+						.flatMap(List::stream)
+						.distinct()
+						.collect(Collectors.toSet());
+			}
 			return linkedLibraries;
 		}
 

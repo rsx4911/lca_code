@@ -8,7 +8,7 @@ public class RepositoryList extends ArrayList<Repository> implements AutoCloseab
 
 	@Override
 	public void close() {
-		forEach(repo -> repo.close());
+		forEach(Repository::close);
 	}
 
 }
