@@ -3,7 +3,6 @@ package com.greendelta.collaboration.controller.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
@@ -23,7 +22,7 @@ public class Reviews {
 		return map;
 	}
 
-	private static List<Map<String, Object>> map(Set<ReviewReference> references, Repository repo) {
+	private static List<Map<String, Object>> map(List<ReviewReference> references, Repository repo) {
 		var list = new ArrayList<Map<String, Object>>();
 		for (var ref : references) {
 			var map = Maps.of(ref);

@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.model.task;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -41,12 +43,14 @@ public class ReviewReference extends AbstractEntity {
 		var ref = (ReviewReference) obj;
 		if (!Strings.nullOrEqual(ref.refId, refId))
 			return false;
+		if (!Strings.nullOrEqual(ref.commitId, commitId))
+			return false;
 		return ref.type == type;
 	}
 
 	@Override
 	public int hashCode() {
-		return (type.name() + refId).hashCode();
+		return Objects.hash(type.name(), refId, commitId);
 	}
 
 }
