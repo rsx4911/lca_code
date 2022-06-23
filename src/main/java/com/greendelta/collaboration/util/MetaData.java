@@ -12,11 +12,11 @@ import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
-import org.openlca.git.find.FieldDefinition;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Entry;
 import org.openlca.git.model.Entry.EntryType;
+import org.openlca.git.util.FieldDefinition;
 import org.openlca.git.model.Reference;
 import org.openlca.jsonld.Enums;
 

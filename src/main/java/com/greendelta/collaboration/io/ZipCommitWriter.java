@@ -1,0 +1,135 @@
+package com.greendelta.collaboration.io;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
+import java.util.zip.ZipException;
+
+import org.eclipse.jgit.lib.PersonIdent;
+import org.eclipse.jgit.lib.Repository;
+import org.openlca.core.model.ModelType;
+import org.openlca.git.model.Change;
+import org.openlca.git.model.DiffType;
+import org.openlca.git.model.ModelRef;
+import org.openlca.git.util.BinaryResolver;
+import org.openlca.git.util.GitUtil;
+import org.openlca.git.util.MetaDataParser;
+import org.openlca.git.util.Repositories;
+import org.openlca.git.writer.CommitWriter;
+import org.openlca.jsonld.ModelPath;
+import org.openlca.jsonld.ZipStore;
+import org.openlca.util.Strings;
+
+import com.greendelta.collaboration.model.User;
+
+public class ZipCommitWriter extends CommitWriter {
+
+	private final ZipStore zip;
+
+	public ZipCommitWriter(ZipStore zip, Repository repo) {
+		super(repo, new ZipBinaryResolver(zip));
+		this.zip = zip;
+	}
+
+	public static void write(InputStream stream, Repository git, User user, String commitMessage)
+			throws ZipException, IOException {
+		var tmpFile = Files.createTempFile("cs-json2repository-", ".zip");
+		Files.copy(stream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+		var zip = ZipStore.open(tmpFile.toFile());
+		var writer = new ZipCommitWriter(zip, git);
+		writer.as(new PersonIdent(user.username, user.email));
+		writer.write(commitMessage);
+		zip.close();
+		Files.delete(tmpFile);
+	}
+
+	private void write(String message) throws IOException {
+		var previousCommit = Repositories.headCommitOf(repo);
+		if (previousCommit == null) {
+			write(message, getChanges());
+		} else {
+			write(message, getChanges(), previousCommit.getId());
+		}
+	}
+
+	private List<Change> getChanges() {
+		return Arrays.asList(ModelType.values()).stream()
+				.filter(ModelType::isRoot)
+				.sorted((t1, t2) -> Strings.compare(t1.name(), t2.name()))
+				.map(this::getChanges)
+				.flatMap(List::stream)
+				.toList();
+	}
+
+	private List<Change> getChanges(ModelType type) {
+		return zip.getRefIds(type).stream()
+				.map(refId -> getPath(type, refId))
+				.map(path -> new Change(DiffType.ADDED, new ModelRef(path)))
+				.toList();
+	}
+
+	private String getPath(ModelType type, String refId) {
+		var category = getCategory(type, refId);
+		if (Strings.nullOrEmpty(category))
+			return type.name() + "/" + refId + GitUtil.DATASET_SUFFIX;
+		return type.name() + "/" + category + "/" + refId + GitUtil.DATASET_SUFFIX;
+	}
+
+	private String getCategory(ModelType type, String refId) {
+		var path = ModelPath.jsonOf(type, refId);
+		var stream = zip.getStream(path);
+		var data = MetaDataParser.parse(stream, "category");
+		if (data.get("category") != null)
+			return data.get("category").toString();
+		return null;
+	}
+
+	@Override
+	protected byte[] getData(Change change) throws IOException {
+		var path = ModelPath.jsonOf(change.type, change.refId);
+		return zip.getBytes(path);
+	}
+
+	private static class ZipBinaryResolver implements BinaryResolver {
+
+		private final ZipStore zip;
+
+		private ZipBinaryResolver(ZipStore zip) {
+			this.zip = zip;
+		}
+
+		@Override
+		public List<String> list(Change change, String relativePath) {
+			var root = ModelPath.binFolderOf(change.type, change.refId);
+			var path = getPath(change, relativePath);
+			return zip.getFiles(path).stream()
+					.map(p -> p.substring(root.length() + 2))
+					.toList();
+		}
+
+		@Override
+		public boolean isDirectory(Change change, String relativePath) {
+			var path = getPath(change, relativePath);
+			var files = zip.getBinFiles(change.type, change.refId);
+			return !files.contains("/" + path);
+		}
+
+		@Override
+		public byte[] resolve(Change change, String relativePath) throws IOException {
+			var path = getPath(change, relativePath);
+			return zip.getBytes(path);
+		}
+
+		private String getPath(Change change, String relativePath) {
+			var root = ModelPath.binFolderOf(change.type, change.refId);
+			if (Strings.nullOrEmpty(root))
+				return root;
+			return root + "/" + relativePath;
+		}
+
+	}
+
+}
