@@ -15,6 +15,7 @@ import org.openlca.git.find.Ids;
 import org.openlca.git.find.References;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.SchemaVersion;
+import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
@@ -105,8 +106,7 @@ public class Repository implements AutoCloseable {
 	}
 
 	public long getSize() {
-		// TODO determine size
-		return 0;
+		return Dirs.size(dir.toPath());
 	}
 
 	public String getLabel() {

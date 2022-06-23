@@ -85,7 +85,6 @@ public class SearchService {
 	}
 
 	public void update(Repository oldRepo, Repository newRepo) {
-		// TODO more efficient
 		remove(oldRepo);
 		index(newRepo);
 	}
