@@ -12,7 +12,7 @@ import com.greendelta.search.wrapper.aggregations.TermsAggregation;
 public class Aggregations {
 
 	public static final TermsAggregation GROUP = new TermsAggregation("group", "versions.repos.group");
-	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId", "versions.repos.id");
+	public static final TermsAggregation REPOSITORY = new TermsAggregation("repositoryId", "versions.repos.path");
 	public static final TermsAggregation MODEL_TYPE = new TermsAggregation("type", "type");
 	public static final TermsAggregation REPOSITORY_TAGS = new TermsAggregation("repositoryTags",
 			"versions.repos.tags");

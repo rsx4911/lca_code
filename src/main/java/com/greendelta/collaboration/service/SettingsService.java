@@ -175,7 +175,7 @@ public class SettingsService {
 		private List<String> getFilteredModelTypes() {
 			List<String> value = super.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			List<String> defaults = ServerSetting.MODEL_TYPES_ORDER.getDefaultValue();
-			return value.stream().filter(v -> defaults.contains(v)).collect(Collectors.toList());
+			return value.stream().filter(v -> !"null".equals(v) && defaults.contains(v)).collect(Collectors.toList());
 		}
 
 		@Override

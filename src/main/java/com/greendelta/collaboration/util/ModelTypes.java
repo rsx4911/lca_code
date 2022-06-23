@@ -27,8 +27,7 @@ public class ModelTypes {
 			ModelType.CURRENCY.name(),
 			ModelType.ACTOR.name(),
 			ModelType.SOURCE.name(),
-			ModelType.LOCATION.name(),
-			"null"
+			ModelType.LOCATION.name()
 	});
 
 	public static ModelType from(Map<String, Object> map) {

@@ -13,6 +13,7 @@ import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -348,6 +349,7 @@ public class RepositoryController {
 		return new ArrayList<>();
 	}
 
+	@Async
 	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
 		var file = repo.getCachedJsonFile();
 		if (file.exists()) {
@@ -355,7 +357,7 @@ public class RepositoryController {
 		}
 		if (!create)
 			return;
-		RepositoryJsonWriter.writeCurrentAsync(repo);
+		RepositoryJsonWriter.writeCurrent(repo);
 	}
 
 	@PutMapping("restriction/{group}/{name}/{restriction}/{role}")

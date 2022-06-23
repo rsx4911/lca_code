@@ -15,23 +15,33 @@ import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jgit.http.server.glue.ServletBinder;
 import org.eclipse.jgit.transport.resolver.FileResolver;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
+import org.openlca.git.model.Commit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.greendelta.collaboration.io.RepositoryJsonWriter;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.util.Requests;
 
 @WebFilter(asyncSupported = true)
 @Component
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
-	// private RepositoryService repoService;
-	// private SearchService searchService;
+	private RepositoryService repoService;
+	private PostReceiveService postReceiveService;
 	private SettingsService settings;
-	// private NotificationService notificationService;
+	private NotificationService notificationService;
 	private SessionService sessionService;
 	private GitFilterConfig config;
 
@@ -66,7 +76,10 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		if (settings != null)
 			return;
 		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
+		repoService = app.getBean(RepositoryService.class);
+		postReceiveService = app.getBean(PostReceiveService.class);
 		settings = app.getBean(SettingsService.class);
+		notificationService = app.getBean(NotificationService.class);
 		sessionService = app.getBean(SessionService.class);
 		this.config = app.getBean(GitFilterConfig.class);
 	}
@@ -86,18 +99,38 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	}
 
 	private void runCommitPostProcessing(RepositoryPath path) {
-		// TODO
-		// try (var repo = repoService.get(path)) {
-		// var commit = repo.commits().head();
-		// var isPublic = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
-		// var generateJson =
-		// repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
-		// if (isPublic && generateJson) {
-		// RepositoryJsonWriter.writeCurrentAsync(repo);
-		// }
-		// notificationService.dataCommitted(repo, commit);
-		// new Thread(() -> searchService.index(repo, commit)).run();
-		// }
+		try (var repo = repoService.get(path.group, path.repo)) {
+			var commit = repo.commits().head();
+			var isPublic = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
+			var generateJson = repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
+			notificationService.dataCommitted(repo, commit);
+			if (isPublic && generateJson) {
+				postReceiveService.generateJson(repo);
+			}
+			postReceiveService.index(repo, commit);
+		}
+	}
+
+	@Service
+	public static class PostReceiveService {
+
+		private final SearchService searchService;
+
+		@Autowired
+		public PostReceiveService(SearchService searchService) {
+			this.searchService = searchService;
+		}
+
+		@Async
+		public void index(Repository repo, Commit commit) {
+			searchService.index(repo, commit);
+		}
+		
+		@Async
+		public void generateJson(Repository repo) {
+			RepositoryJsonWriter.writeCurrent(repo);
+		}
+
 	}
 
 }

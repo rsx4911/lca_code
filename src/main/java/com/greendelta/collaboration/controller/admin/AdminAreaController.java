@@ -230,8 +230,10 @@ public class AdminAreaController {
 		@Async
 		public void index(List<Repository> repositories, ReindexingStatus status) {
 			try {
-				repositories.forEach(searchService::index);
-				status.worked++;
+				repositories.forEach(repo -> {
+					searchService.index(repo);
+					status.worked++;
+				});
 			} finally {
 				searchService.endReindexing();
 			}

@@ -115,14 +115,10 @@ public class MetaData {
 	public static Stream<Map<String, Object>> sortByType(Stream<Map<String, Object>> data, List<String> typesOrder) {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "type");
-			if (t1 == null) {
-				t1 = "null";
-			}
 			var t2 = Maps.getString(m2, "type");
-			if (t2 == null) {
-				t2 = "null";
-			}
-			return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
+			var i1 = t1 != null ? typesOrder.indexOf(t1) : typesOrder.size();
+			var i2 = t2 != null ? typesOrder.indexOf(t2) : typesOrder.size();
+			return Integer.compare(i1, i2);
 		});
 	}
 
