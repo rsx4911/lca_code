@@ -30,10 +30,11 @@ define () ->
 	nwFactors: (dataset) ->
 		@sortByName dataset.factors, 'impactCategory'
 
-	exchanges: (dataset) ->
-		unless dataset.exchanges
+	exchanges: (dataset, field) ->
+		exchanges = dataset[field]
+		unless exchanges
 			return
-		dataset.exchanges.sort (e1, e2) ->
+		exchanges.sort (e1, e2) ->
 			if e1.flow.flowType is 'PRODUCT_FLOW' and e2.flow.flowType isnt 'PRODUCT_FLOW'
 				return -1
 			if e1.flow.flowType isnt 'PRODUCT_FLOW' and e2.flow.flowType is 'PRODUCT_FLOW'

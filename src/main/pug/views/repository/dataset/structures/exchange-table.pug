@@ -32,8 +32,8 @@ mixin exchange-table(field, isInput)
 						th=show.description?(getLabel('exchanges.description')):''
 						th
 				tbody
-					each values in exchanges
-						+exchange-row(values[0], values[1], exchanges.length, isInput, show)
+					each values, count in exchanges
+						+exchange-row(values[0], values[1], count, isInput, show)
 			if exchanges.length > 10 && !compareTo
 				a.toggle-control(href='#') Show #{exchanges.length - 10} more
 				a.toggle-control(href='#' style='display:none') Show less
@@ -41,7 +41,7 @@ mixin exchange-table(field, isInput)
 					p &nbsp;
 
 mixin exchange-row(exchange, other, count, isInput, show)
-	- var clazz = getValue(exchange, 'isQuantitativeReference') ? 'reference' : '';
+	- var clazz = getValue(exchange, 'isQuantitativeReference') || getValue(exchange, 'isRefFlow') ? 'reference' : '';
 	- var style = null;
 	if count >= 10 && !compareTo
 		- clazz += ' toggleable';

@@ -4,7 +4,7 @@ define () ->
 		model = {byProducts: [], producedWaste: [], avoidedProducts: [], usedProducts: [], recycledWaste: [], emissions: [], resources: []}
 		if exchanges
 			for e in exchanges
-				if dsType is 'PRODUCT_SYSTEM'
+				if dsType is 'RESULT'
 					e.internalId = e.flow.id
 				if e.isInput
 					switch e.flow.flowType

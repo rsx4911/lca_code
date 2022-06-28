@@ -39,40 +39,4 @@ define([
 		initTree: (repository, dataset, commitId) ->
 			Tree.init repository, dataset, commitId
 
-		selectImpactMethod: (repository, dataset) ->
-			repositoryPath = repository.get('group') + '/' + repository.get('name')
-			Layers.selectModel 
-				repositoryPath: repositoryPath
-				multipleSelection: false
-				selectVersion: true
-				type: 'IMPACT_METHOD'
-				callback: (methodId, commitId) =>
-					Layers.closeActive()
-					Layers.showProgressIndicator 'Loading'
-					$.ajax
-						type: 'GET'
-						url: "ws/public/browse/#{repositoryPath}/IMPACT_METHOD/#{methodId}"
-						success: (impactMethod) => @applyImpactMethod dataset, impactMethod
-						error: () -> Layers.hideProgressIndicator()
-
-		applyImpactMethod: (dataset, method) ->
-			$('.impact-method').html method.name
-			table = $ 'table.impact-result-table'
-			$('tbody', table).empty()
-			for category in method.impactCategories
-				category.result = @calculateResult dataset, category
-				$('tbody', table).append "<tr><td>#{category.name}</td><td>#{Format.scientific(category.result)} #{category.refUnit}</td></tr>"
-			table.unbind('appendCache applyWidgetId applyWidgets sorton update updateCell').removeClass('tablesorter').find('thead th').unbind('click mousedown').removeClass('header headerSortDown headerSortUp')
-			table.tablesorter()
-			table.show()
-			Layers.hideProgressIndicator()
-
-		calculateResult: (dataset, category) ->
-			result = 0
-			for factor in category.impactFactors
-				for exchange in dataset.inventory
-					if exchange.flow.id is factor.flow['@id']
-						result += factor.value * exchange.amount
-			return result
-
 )
