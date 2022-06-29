@@ -26,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.settings.ImprintSetting;
 import com.greendelta.collaboration.model.settings.MailSetting;
 import com.greendelta.collaboration.model.settings.SearchSetting;
@@ -450,6 +451,17 @@ public class SettingsService {
 
 		public Access ADMIN = owner -> userService.getCurrentUser().isAdmin();
 		public Access DATA_MANAGER = owner -> userService.getCurrentUser().isDataManager();
+		public Access USER = owner -> userService.getCurrentUser().id != 0;
+
+		public Access TEAM_DATA(Team team) {
+			return owner -> {
+				if (userService.getCurrentUser().isDataManager())
+					return true;
+				if (team == null)
+					return false;
+				return team.users.contains(userService.getCurrentUser());
+			};
+		}
 
 	}
 

@@ -19,7 +19,7 @@ define([
 					success: (libraries) ->
 						$.ajax
 							type: 'GET'
-							url: 'ws/datamanager/libraries/missing'
+							url: 'ws/libraries/missing'
 							success: (missingLibraries) ->
 								callback libraries, missingLibraries
 
@@ -30,7 +30,7 @@ define([
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
-						url: "ws/datamanager/libraries/#{id}"
+						url: "ws/libraries/#{id}"
 						success: () -> 
 							Layers.hideProgressIndicator()
 							Status.success "Successfully deleted library #{id}"

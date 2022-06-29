@@ -31,7 +31,7 @@ define([
 				Layers.showProgressIndicator ['Uploading']
 				$.ajax
 					type: 'POST'
-					url: 'ws/datamanager/libraries'
+					url: 'ws/libraries'
 					cache: false
 					contentType: false
 					processData: false
