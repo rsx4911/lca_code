@@ -1,50 +1,24 @@
+include ../mixins/libraries.pug
+
 .header-box Libraries
 	button.btn.btn-success.pull-right(data-action='add') Add library
 	.clear
 .content-box
-	if !libraries || !libraries.length
-		em No libraries available
+	if !groups || !Object.keys(groups).length
+		em No libraries uploaded
 	else
-		table.table.table-bordered
-			theader
-				tr
-					th Library
-					th Description
-					th Linked in repositories
-					th
-			tbody
-				each library in libraries
-					- var id = library.name + (library.version ? ' ' + library.version : '');
-					tr
-						td: a(href='ws/libraries/' + id target='_blank')=id
-						td=library.description||'-'
-						td
-							.comma-separated
-								each repo in (library.linkedIn || [])
-									span: a(href='/' + repo)=repo
-						td
-							button.btn.btn-xs.btn-danger(data-action='delete' data-id=id) Delete
-
+		- var accesses = [{ type: 'PUBLIC', label: 'Public libraries' }, { type:'USER', label: 'Private libraries' }, { type: 'MEMBER', label: 'Member libraries' }];
+		each access in accesses
+			+access-group(groups[access.type], access.label, access.type)
+		each access in Object.keys(groups)
+			if !accesses.find(function (a) { return a.type === access})
+				- var label = 'Libraries of team ' + access;
+				+access-group(groups[access], label, access)
 .header-box Missing libraries
 	.clear
 .content-box
+	p The following libraries are linked in repositories, but are not present on the server. For users to be able to work with these repositories, you will need to share the required libraries with them manually - or add them here.
 	if !missingLibraries || !missingLibraries.length
 		em No missing libraries found
 	else
-		p The following libraries are linked in repositories, but are not present on the server. For users to be able to work with these repositories, you will need to share the required libraries with them manually - or add them here.
-		table.table.table-bordered
-			theader
-				tr
-					th Library
-					th Linked in repositories
-					th
-			tbody
-				each library in missingLibraries
-					tr
-						td=library.id
-						td
-							.comma-separated
-								each repo in (library.linkedIn || [])
-									span: a(href='/' + repo)=repo
-						td
-							button.btn.btn-xs.btn-success(data-action='add') Add
+		+missing-libraries(missingLibraries)

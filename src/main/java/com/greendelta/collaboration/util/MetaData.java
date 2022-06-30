@@ -12,11 +12,11 @@ import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
-import org.openlca.git.find.FieldDefinition;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Entry;
 import org.openlca.git.model.Entry.EntryType;
+import org.openlca.git.util.FieldDefinition;
 import org.openlca.git.model.Reference;
 import org.openlca.jsonld.Enums;
 
@@ -55,6 +55,14 @@ public class MetaData {
 		var commitId = diff.newCommitId != null ? diff.newCommitId : diff.oldCommitId;
 		meta.put("commitId", commitId);
 		return meta;
+	}
+
+	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
+		var ref = repo.references().get(type, refId, commitId);
+		var id = repo.ids().get(ref.path);
+		var info = repo.datasets().parse(id, "name");
+		var name = info.get("name");
+		return name != null ? name.toString() : "";
 	}
 
 	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {
@@ -107,14 +115,10 @@ public class MetaData {
 	public static Stream<Map<String, Object>> sortByType(Stream<Map<String, Object>> data, List<String> typesOrder) {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "type");
-			if (t1 == null) {
-				t1 = "null";
-			}
 			var t2 = Maps.getString(m2, "type");
-			if (t2 == null) {
-				t2 = "null";
-			}
-			return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
+			var i1 = t1 != null ? typesOrder.indexOf(t1) : typesOrder.size();
+			var i2 = t2 != null ? typesOrder.indexOf(t2) : typesOrder.size();
+			return Integer.compare(i1, i2);
 		});
 	}
 

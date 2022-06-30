@@ -19,19 +19,17 @@ public class RepositoryJsonWriter implements Closeable {
 	private final ZipStore zipStore;
 	private final Repository repo;
 
-	public static void writeCurrentAsync(Repository repo) {
+	public static void writeCurrent(Repository repo) {
 		var refs = repo.references().find().all();
-		new Thread(() -> {
-			try {
-				var writer = new RepositoryJsonWriter(repo, repo.getCachedJsonFile());
-				for (var ref : refs) {
-					writer.put(ref);
-				}
-				writer.close();
-			} catch (IOException e) {
-				log.error("Error writing json-ld archive", e);
+		try {
+			var writer = new RepositoryJsonWriter(repo, repo.getCachedJsonFile());
+			for (var ref : refs) {
+				writer.put(ref);
 			}
-		}).start();
+			writer.close();
+		} catch (IOException e) {
+			log.error("Error writing json-ld archive", e);
+		}
 	}
 
 	public RepositoryJsonWriter(Repository repo, File file) throws IOException {

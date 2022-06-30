@@ -16,7 +16,7 @@ public class RepositorySearchResult extends SearchResult<Repository> implements 
 
 	@Override
 	public void close() {
-		data.forEach(repo -> repo.close());
+		data.forEach(Repository::close);
 	}
 
 }

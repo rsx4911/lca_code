@@ -8,4 +8,11 @@ public enum LibraryAccess {
 	
 	MEMBER;
 	
+	public static boolean isTeamAccess(String access) {
+		for (var a : LibraryAccess.values())
+			if (a.name().equals(access))
+				return false;
+		return true;
+	}
+		
 }

@@ -1,5 +1,6 @@
 include ./structures/impact-result-table.pug
-include ./structures/flow-result-table.pug
+include ./structures/exchange-table.pug
+include ./structures/exchange-list.pug
 
 +menubar
 .content-box
@@ -7,14 +8,23 @@ include ./structures/flow-result-table.pug
 		+header
 		.content
 			ul.nav.nav-tabs(role='tablist')
-				+nav-tab('impactResults', true)
-				+nav-tab('flowResults')
+				- var showImpactResults = (dataset.impactResults && dataset.impactResult.length) || (compareTo && compareTo.impactResults && compareTo.impactResult.length)
+				- var showFlowResults = !showImpactResults && (dataset.flowResults && dataset.flowResults.length) || (compareTo && compareTo.flowResults && compareTo.flowResults.length)
+				+nav-tab('impactResults', showImpactResults)
+				+nav-tab('flowResults', showFlowResults)
 			.tab-content
-				+nav-tab-pane('impactResults', true)
+				+nav-tab-pane('impactResults', showImpactResults)
 					+impact-result-table()
-				+nav-tab-pane('flowResults')
-					+flow-result-table(true)
-					+flow-result-table(false)
+				+nav-tab-pane('flowResults', showFlowResults)
+					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
+					.clear
+					.exchange-tables.toggleable
+						+exchange-table('flowResults', true)
+						+exchange-table('flowResults', false)
+					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
+					.clear
+					.exchange-list.toggleable
+						+exchange-list(exchangeMap, otherExchangeMap)
 	+meta
 		hr
 		+labeled-ref-block('productSystem')

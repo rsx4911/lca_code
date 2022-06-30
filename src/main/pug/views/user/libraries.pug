@@ -1,0 +1,19 @@
+include ../mixins/libraries.pug
+
+.header-box Team libraries
+	button.btn.btn-success.pull-right(data-action='add') Add library
+	.clear
+.content-box
+	if !groups || !Object.keys(groups).length
+		em No libraries uploaded
+	else
+		each access in Object.keys(groups)
+			- var label = "Libraries of team '" + access + "'";
+			+access-group(groups[access], label, access)
+
+if missingLibraries && missingLibraries.length
+	.header-box Missing libraries
+		.clear
+	.content-box
+		p The following libraries are linked in repositories you have access to, but are not present on the server. For members of your team to be able to work with these repositories, you will need to share the required libraries with them manually - or add them here.
+		+missing-libraries(missingLibraries)

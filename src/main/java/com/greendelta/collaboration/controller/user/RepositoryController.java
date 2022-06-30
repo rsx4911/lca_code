@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,8 +10,11 @@ import java.util.Map;
 
 import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Avatar;
@@ -52,6 +55,7 @@ import com.greendelta.collaboration.util.SearchResults;
 @RequestMapping("ws/repository")
 public class RepositoryController {
 
+	private static final Logger log = LoggerFactory.getLogger(RepositoryController.class);
 	private final RepositoryService service;
 	private final GroupService groupService;
 	private final UserService userService;
@@ -200,20 +204,22 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@RequestParam("commitMessage") String commitMessage,
-			@RequestParam("file") InputStream input,
+			@RequestParam("file") MultipartFile input,
 			@RequestParam("format") String format) {
 		try (var repo = service.get(group, name)) {
 			if (format != null && "json-ld".equals(format.toLowerCase())) {
 				if (Strings.nullOrEmpty(commitMessage))
 					throw Response.badRequest("commitMessage", "Missing input: Commit message");
-				service.importJsonLd(repo, input, commitMessage);
+				service.importJsonLd(repo, input.getInputStream(), commitMessage);
 			} else {
-				service.unpack(repo, input);
+				service.unpack(repo, input.getInputStream());
 			}
 			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 				repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 			}
 			searchService.index(repo);
+		} catch (IOException e) {
+			log.error("Error getting input stream from multipart file", e);
 		}
 	}
 
@@ -348,6 +354,7 @@ public class RepositoryController {
 		return new ArrayList<>();
 	}
 
+	@Async
 	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
 		var file = repo.getCachedJsonFile();
 		if (file.exists()) {
@@ -355,7 +362,7 @@ public class RepositoryController {
 		}
 		if (!create)
 			return;
-		RepositoryJsonWriter.writeCurrentAsync(repo);
+		RepositoryJsonWriter.writeCurrent(repo);
 	}
 
 	@PutMapping("restriction/{group}/{name}/{restriction}/{role}")

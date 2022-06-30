@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.greendelta.collaboration.controller.util.FrontendReference;
+import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.IlcdWriter;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -70,7 +70,7 @@ public class DownloadIlcdController extends DownloadController {
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository,
 			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestBody List<FrontendReference> references) {
+			@RequestBody FrontendReferences references) {
 		return super.prepare(group, repository, commitId, collectRefs(group, repository, references));
 	}
 

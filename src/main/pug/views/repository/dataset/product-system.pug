@@ -17,7 +17,6 @@ mixin target-amount-row()
 			- var hasLinks = hasAtLeastOne(dataset, null, 'processLinks');
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab(null, true, 'Overview')
-				+nav-tab('inventory')
 				if hasLinks && !standalone
 					+nav-tab(null, false, 'Supply chain')
 					+nav-tab(null, false, 'Graph')
@@ -39,19 +38,6 @@ mixin target-amount-row()
 										+field-row-value(name, otherName)
 							+ref-row('targetFlowProperty')
 							+target-amount-row()
-				if dataset.inventory && dataset.inventory.length
-					+nav-tab-pane('impacts', false, true)
-						label Impact method:
-						|  
-						span.impact-method No selection
-						|  
-						button.btn.btn-sm.btn-default.select-method Select...
-						table.table.impact-result-table.no-sorting(style='display:none;')
-							thead
-								tr
-									th Impact category
-									th Result
-							tbody
 				if !standalone
 					+nav-tab-pane('supply-chain', false, hasLinks)
 						#process-tree-container

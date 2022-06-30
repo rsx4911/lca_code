@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.greendelta.collaboration.controller.util.FrontendReference;
+import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Reviews;
 import com.greendelta.collaboration.error.WebRequestException;
@@ -97,14 +96,14 @@ public class ReviewController {
 			throw Response.badRequest("name", "Missing input: Name");
 		if (Strings.nullOrEmpty(review.repositoryPath))
 			throw Response.badRequest("repositoryPath", "Missing input: Repository path");
-		if (!review.assignments.isEmpty() || review.id == 0)
+		if (!review.assignments.isEmpty() || review.id != 0)
 			throw Response.conflict("Review object already exists");
 	}
 
 	@PutMapping("{id}/references")
 	public Map<String, Object> setReferences(
 			@PathVariable("id") long id,
-			@RequestBody List<FrontendReference> references) {
+			@RequestBody FrontendReferences references) {
 		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
@@ -115,7 +114,7 @@ public class ReviewController {
 		try (var repo = repoService.get(review.repositoryPath)) {
 			if (repo == null)
 				throw Response.notFound("No repository with id " + review.repositoryPath + " found");
-			var refs = FrontendReference.collect(repo, references);
+			var refs = FrontendReferences.collect(repo, references);
 			service.setReferences(id, refs.stream().map(ref -> convert(repo, ref)).collect(Collectors.toSet()));
 			return getActiveTasks();
 		}
@@ -225,7 +224,6 @@ public class ReviewController {
 	}
 
 	private Map<String, Object> getActiveTasks() {
-		// TODO return integer
 		var user = userService.getCurrentUser();
 		var activeTasks = taskService.getAllActiveFor(user).size();
 		return Collections.singletonMap("activeTasks", Integer.toString(activeTasks));
@@ -236,8 +234,6 @@ public class ReviewController {
 		reference.type = ref.type;
 		reference.refId = ref.refId;
 		reference.commitId = ref.commitId;
-		// TODO set name
-		// reference.name = ref.name;
 		return reference;
 	}
 

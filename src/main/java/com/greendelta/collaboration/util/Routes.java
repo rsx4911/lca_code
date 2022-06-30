@@ -18,7 +18,7 @@ public class Routes {
 			"null", "undefined", "users", "team", "teams", "repositories", "categoryInfo", "count", "public", "ws",
 			"sockets", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
 			"settings", "admin", "usermanager", "datamanager", "messaging", "block", "unblock", "login", "search",
-			"imprint", "overlay", "import", "export");
+			"imprint", "overlay", "import", "export", "missing");
 
 	public static boolean isUserRoute(String name) {
 		return USER_ROUTES.contains(name);

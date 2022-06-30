@@ -19,13 +19,15 @@ import com.greendelta.collaboration.service.user.UserService;
 public abstract class TaskExecutionService<T extends Task> {
 
 	private final Dao<T> dao;
+	private final Dao<TaskAssignment> assignmentDao;
 	private final UserService userService;
 	private final RepositoryService repoService;
 	private final AccessService accessService;
 
-	protected TaskExecutionService(Dao<T> dao, UserService userService, RepositoryService repoService,
+	protected TaskExecutionService(Dao<T> dao, Dao<TaskAssignment> assignmentDao, UserService userService, RepositoryService repoService,
 			AccessService accessService) {
 		this.dao = dao;
+		this.assignmentDao = assignmentDao;
 		this.userService = userService;
 		this.repoService = repoService;
 		this.accessService = accessService;
@@ -151,9 +153,9 @@ public abstract class TaskExecutionService<T extends Task> {
 	}
 
 	private void setTaskAssignmentIds(T task) {
-		var lastId = dao.getLastId(TaskAssignment.class);
+		var lastId = assignmentDao.getLastId();
 		for (var assignment : task.assignments) {
-			if (assignment.id == 0)
+			if (assignment.id != 0)
 				continue;
 			assignment.id = ++lastId;
 		}

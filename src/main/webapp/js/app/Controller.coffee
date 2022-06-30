@@ -68,6 +68,8 @@ define([
 							userMenu.push {href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
 						if settings.is('NOTIFICATIONS_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
+						if currentUser.get('isInTeam') is true or currentUser.get('isInTeam') is 'true' 
+							userMenu.push {href: @concatUrl(prefix, 'user/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id:'libraries'}
 						return userMenu
 					when 'group'
 						isUserspace = currentUser.isLoggedIn() && currentUser.get('username') is options.urlPrefix
@@ -198,14 +200,18 @@ define([
 					viewOptions: 
 						team: new Team {teamname: teamname}
 				@router.registerAdminRoute 'adminLibraries', 'dataManager', -> @showView 
-					view: 'admin/Libraries'
+					view: 'libraries/Libraries'
 					title: 'Admin area - Libraries'
+					viewOptions: 
+						isAdminArea: true
 					nav:
 						type: 'admin'
 						active: 'libraries'
 				@router.registerAdminRoute 'adminAddLibrary', 'dataManager', -> @showView 
-					view: 'admin/AddLibrary'
+					view: 'libraries/Add'
 					title: 'Admin area - New library'
+					viewOptions: 
+						isAdminArea: true
 					nav:
 						type: 'admin'
 						active: 'libraries'
@@ -265,6 +271,22 @@ define([
 					nav: 
 						type: 'user'
 						active: 'notifications'
+				@router.registerUserRoute 'userLibraries', -> @showView 
+					view: 'libraries/Libraries'
+					title: 'Libraries'
+					viewOptions: 
+						isAdminArea: false
+					nav:
+						type: 'user'
+						active: 'libraries'
+				@router.registerUserRoute 'userAddLibrary', -> @showView 
+					view: 'libraries/Add'
+					title: 'New library'
+					viewOptions: 
+						isAdminArea: false
+					nav:
+						type: 'admin'
+						active: 'libraries'
 				@router.registerUserRoute 'landingPage', -> 
 					if currentUser.isLoggedIn()
 						@showView 

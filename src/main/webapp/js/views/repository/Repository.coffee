@@ -255,7 +255,7 @@ define([
 					type: 'PROCESS'
 					callback: (selection) ->
 						Layers.promptInput 'Dataprovider', 'text', settings.getVal('SERVER_NAME'), (dataprovider) ->
-							input = {references: selection, dataprovider: dataprovider}
+							input = {paths: selection, dataprovider: dataprovider}
 							Layers.showProgressIndicator 'Pushing'
 							$.ajax
 								type: 'PUT'

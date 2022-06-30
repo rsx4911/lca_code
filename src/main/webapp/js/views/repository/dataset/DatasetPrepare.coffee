@@ -26,7 +26,7 @@ define([
 				when 'ProductSystem'
 					Sort.parameterSets dataset
 				when 'Process'
-					Sort.exchanges dataset
+					Sort.exchanges dataset, 'exchanges'
 					Sort.socialAspects dataset
 					Sort.parameters dataset
 					@prepareAllocationFactors dataset
@@ -42,6 +42,8 @@ define([
 					Sort.units dataset
 				when 'DQSystem'
 					Sort.indicatorsAndScores dataset
+				when 'Result'
+					Sort.exchanges dataset, 'flowResults'
 
 		removeAtSigns: (object) ->
 			unless object

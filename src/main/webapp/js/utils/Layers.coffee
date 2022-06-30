@@ -159,6 +159,27 @@ define([
 				if value
 					$('#input-data').val value
 
+			handleUserAndTeamData: (options, users, teams) =>
+				existing = options.exclude or []
+				if options.excludeSelf
+					existing.push username: currentUser.get('username')
+				users = if !options.users then [] else Data.usersToOptions users, existing, (options.excludeSelf or options.exclude)
+				teams = if !options.teams then [] else Data.teamsToOptions teams
+				@showTemplateInLayer
+					template: 'select-user'
+					title: if options.title then options.title else 'Select user'
+					model: {users: users, teams: teams}
+					buttons: [
+						{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () =>
+							selection = $ '.modal #user-selection-name option:selected'
+							type = selection.attr 'data-group-id'
+							id = selection.val()
+							displayName = selection.text()
+							@closeActive()
+							options.callback {type: type, id: id, displayName: displayName}
+						}
+					]
+
 			selectUser: (options) ->
 				unless options
 					options = {users: true, teams: true}
@@ -166,31 +187,12 @@ define([
 				options.teams = if options.teams is false then false else true
 				if !options.users and !options.teams
 					return
-				dataFunction = Data.getUsersAndTeams
 				if !options.users
-					dataFunction = Data.getTeams
+					Data.getTeams options.module, (teams) => @handleUserAndTeamData options, null, teams
 				else if !options.teams
-					dataFunction = Data.getUsers
-				dataFunction.call Data, options.module, options.repository, (users, teams) =>
-					existing = options.exclude or []
-					if options.excludeSelf
-						existing.push username: currentUser.get('username')
-					users = if !options.users then [] else Data.usersToOptions users, existing, (options.excludeSelf or options.exclude)
-					teams = if !options.teams then [] else Data.teamsToOptions teams
-					@showTemplateInLayer
-						template: 'select-user'
-						title: if options.title then options.title else 'Select user'
-						model: {users: users, teams: teams}
-						buttons: [
-							{id: 'select-user', className: 'btn-primary', text: 'Select', callback: () =>
-								selection = $ '.modal #user-selection-name option:selected'
-								type = selection.attr 'data-group-id'
-								id = selection.val()
-								displayName = selection.text()
-								@closeActive()
-								options.callback {type: type, id: id, displayName: displayName}
-							}
-						]
+					Data.getUsers options.module, options.repository, (users) => @handleUserAndTeamData options, users
+				else
+					Data.getUsersAndTeams options.module, options.repository, (users, teams) => @handleUserAndTeamData options, users, teams
 
 			selectModel: (options) ->
 				unless options

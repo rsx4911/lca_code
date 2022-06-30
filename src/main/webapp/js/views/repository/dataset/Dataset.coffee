@@ -146,7 +146,6 @@ define([
 				'change #commitId': 'switchCommit'
 				'click [href="#supply-chain"]': (event) -> @doInitialize 'process-tree', () => ProductSystem.initTree @repository, @dataset, @commitId
 				'click [href="#graph"]': (event) -> @doInitialize 'process-graph', () => ProductSystem.initGraph @dataset
-				'click .select-method': (event) -> ProductSystem.selectImpactMethod @repository, @dataset
 
 			initialize: (options) ->
 				{@repository, @type, @refId, @commitId, @commentPath, @compareToCommitId, @standalone} = options
@@ -178,11 +177,7 @@ define([
 				template = @getTemplate()
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				exchangesField = null
-				if @dataset.type is 'Process'
-					exchangesField = 'exchanges'
-				else if @dataset.type is 'ProductSystem'
-					exchangesField = 'inventory'
+				exchangesField = if @dataset.type is 'Process' then 'exchanges' else if @dataset.type is 'Result' then 'flowResults' else null
 				model =
 					standalone: @standalone
 					dataset: @dataset

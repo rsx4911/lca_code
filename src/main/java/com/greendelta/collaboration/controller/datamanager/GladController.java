@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.greendelta.collaboration.controller.util.FrontendReference;
+import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.glad.ProcessType;
@@ -72,7 +72,7 @@ public class GladController {
 		try (var repo = repoService.get(group, name)) {
 			if (repo == null)
 				throw Response.notFound("No repository with id " + group + "/" + name + " found");
-			var refs = FrontendReference.collect(repo, input.references);
+			var refs = FrontendReferences.collect(repo, input);
 			if (refs.isEmpty())
 				throw Response.notFound("No data in repository " + group + "/" + name + " found");
 			refs.forEach(ref -> {
@@ -195,10 +195,9 @@ public class GladController {
 		throw new Exception(sb.toString());
 	}
 
-	private static class Input {
+	private static class Input extends FrontendReferences {
 
 		public String dataprovider;
-		public List<FrontendReference> references;
 
 	}
 

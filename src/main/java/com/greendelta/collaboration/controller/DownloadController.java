@@ -16,7 +16,7 @@ import org.openlca.git.model.Reference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.greendelta.collaboration.controller.util.FrontendReference;
+import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.model.User;
@@ -81,9 +81,9 @@ abstract class DownloadController {
 		}
 	}
 
-	protected List<Reference> collectRefs(String group, String repository, List<FrontendReference> references) {
+	protected List<Reference> collectRefs(String group, String repository, FrontendReferences references) {
 		try (var repo = repoService.get(group, repository)) {
-			return FrontendReference.collect(repo, references);
+			return FrontendReferences.collect(repo, references);
 		}
 	}
 

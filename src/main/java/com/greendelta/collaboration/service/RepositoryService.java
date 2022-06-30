@@ -27,12 +27,11 @@ import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import org.zeroturnaround.zip.ZipUtil;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
 import com.greendelta.collaboration.error.UnsupportedSchemaException;
-import com.greendelta.collaboration.io.Json2Repository;
+import com.greendelta.collaboration.io.ZipCommitWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -180,10 +179,13 @@ public class RepositoryService {
 			Dirs.copy(from.dir.toPath(), to.dir.toPath());
 			if (resetTo != null) {
 				try (var gitRepo = new FileRepository(to.dir)) {
-					var command = new ResetCommand(gitRepo);
-					command.setMode(ResetType.SOFT);
-					command.setRef(resetTo.id);
-					command.call();
+					new ResetCommand(gitRepo)
+							.setMode(ResetType.SOFT)
+							.setRef(resetTo.id)
+							.call();
+					try (var git = new Git(gitRepo)) {
+						git.gc().setPrunePreserved(true).setAggressive(true).call();
+					}
 				}
 			}
 		} catch (Exception e) {
@@ -268,12 +270,9 @@ public class RepositoryService {
 	}
 
 	public void importJsonLd(Repository repo, InputStream input, String commitMessage) {
-		org.openlca.util.Dirs.delete(repo.dir.toPath());
-		create(repo.group, repo.name).close();
 		var user = userService.getCurrentUser();
-		ZipUtil.unpack(input, repo.dir);
 		try {
-			Json2Repository.convert(repo.dir, user, commitMessage);
+			ZipCommitWriter.write(input, repo.gitRepo(), user, commitMessage);
 		} catch (IOException e) {
 			log.error("Error converting json to repository", e);
 		}

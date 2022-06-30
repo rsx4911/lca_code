@@ -179,10 +179,6 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public long getLastId() {
-		return getLastId(entityType);
-	}
-
-	public long getLastId(Class<? extends AbstractEntity> entityType) {
 		var query = "SELECT o FROM " + entityType.getSimpleName() + " o ORDER BY o.id DESC";
 		var value = getFirst(query, Collections.emptyMap());
 		if (value == null)

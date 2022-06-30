@@ -56,7 +56,7 @@ public class DeleteService {
 		if (!currentUser.isUserManager())
 			throw new ForbiddenAccessException("User " + user.id, "DELETE");
 		try (var result = repoService.getAll(0, 0, user.username + "/", false, false)) {
-			result.data.forEach(repo -> delete(repo));
+			result.data.forEach(this::delete);
 		}
 		groupService.delete(user.username);
 		settings.get(SettingType.GROUP_SETTING, user.username, accessService::canSetSettings).delete();

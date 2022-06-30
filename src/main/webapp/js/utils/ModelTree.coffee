@@ -5,6 +5,23 @@ define([
 
 	(ModelTypes) ->
 
+		countChar = (str, find) ->
+			count = 0
+			for c in str
+				if c is find
+					count++
+			return count
+
+		onlyRetainTopLevel = (paths) -> 
+			conjuncted = []
+			if paths.find((path) -> path is '')
+				return conjuncted
+			paths.sort (p1, p2) -> countChar(p1, '/') -  countChar(p2, '/')
+			paths.forEach (path) ->
+				unless conjuncted.find((candidate) -> path.startsWith(candidate + '/'))
+					conjuncted.push(path)
+			return conjuncted
+	
 		init: (container, repositoryPath, options) ->
 			defaultPath = options?.defaultPath || ''
 			multipleSelection = options?.multipleSelection || false
@@ -24,32 +41,13 @@ define([
 								if path
 									result.data.sort (a, b) -> return if a.name < b.name then -1 else if a.name > b.name then 1 else 0
 								for e in result.data
-									if path
-										if e.typeOfEntry is 'CATEGORY'
-											data.push 
-												id: "#{e.type}/#{e.path}"
-												text: e.name
-												children: true
-												icon: "images/model/small/category/#{e.type.toLowerCase()}.png"
-												refId: e.refId
-												type: 'CATEGORY'
-												categoryType: e.type
-												commitId: e.commitId
-										else
-											data.push 
-												id: e.refId
-												text: e.name
-												commitId: e.commitId
-												path: e.path
-												icon: "images/model/small/#{e.type.toLowerCase()}.png"
-												type: e.type
-									else
-										data.push
-											id: e.type
-											commitId: e.commitId
-											text: ModelTypes[e.type]
-											children: true
-											icon: "images/model/small/category/#{e.type.toLowerCase()}.png"
+									data.push
+										id: e.path
+										refId: if e.typeOfEntry is 'DATASET' then e.refId else null
+										text: if e.typeOfEntry is 'MODEL_TYPE' then ModelTypes[e.type] else e.name
+										children: e.typeofEntry isnt 'DATASET'
+										commitId: e.commitId
+										icon: "images/model/small/#{if e.typeOfEntry isnt 'DATASET' then 'category/' else ''}#{e.type.toLowerCase()}.png"
 								callback data
 
 		# returns elements in three different types:
@@ -60,35 +58,15 @@ define([
 		# because the tree is lazy loaded, the calling code must add missing (not selected in UI) elements anyway
 		getSelection: (container, firstOnly) ->
 			selected = $('#model-tree').jstree 'get_selected', true
-			elements = []
-			types = []
+			if firstOnly
+				for e in selected
+					if e.refId
+						return refId
+				return null
 			paths = []
 			for e in selected
-				if !e.original.type # is model type 
-					types.push e.original.id
-					elements.push {path: e.original.id, commitId: e.commitId}
-			for e in selected
-				if e.original.typeOfEntry is 'CATEGORY' # is category
-					if $.inArray(e.original.type, types) isnt -1
-						continue
-					paths.push e.original.id
-					elements.push {path: "#{e.original.type}/#{e.original.id}", commitId: e.commitId}
-			for e in selected
-				if e.original.type && e.original.typeOfEntry isnt 'CATEGORY' # is model
-					if $.inArray(e.original.type, types) isnt -1
-						continue
-					skip = false
-					for path in paths
-						if "#{e.original.type}/#{e.original.path}".indexOf(path) is 0
-							skip = true
-							break
-					if skip
-						continue
-					elements.push {type: e.original.type, refId : e.original.id, commitId: e.commitId}
-			if firstOnly
-				if elements.length
-					return elements[0]
-				return null
-			return elements
+				paths.push(e.original.id)
+			paths = onlyRetainTopLevel paths			
+			return paths
  
 )

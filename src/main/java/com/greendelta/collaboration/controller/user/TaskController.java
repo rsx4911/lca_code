@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Tasks;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
@@ -44,7 +45,7 @@ public class TaskController {
 			throw Response.unavailable("Task feature not enabled");
 		try (var accessible = repoService.getAllAccessible()) {
 			var repositories = accessible.stream()
-					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
+					.collect(Collectors.toMap(Repository::path, repo -> repo));
 			var user = userService.getCurrentUser();
 			var result = Maps.create();
 			result.put("tasks", service.getAllFor(user).stream()

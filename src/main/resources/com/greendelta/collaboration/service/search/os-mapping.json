@@ -1,94 +1,71 @@
 {
 	"properties": {
-		"refId": {
-			"type": "keyword"
-		},
 		"type": {
 			"type": "keyword"
 		},
-		"version": {
-			"type": "text"
-		},
-		"lastChange": {
-			"type": "long"
-		},
-		"name": {
-			"type": "text"
-		},
-		"categories": {
+		"refId": {
 			"type": "keyword"
 		},
-		"categoryRefId": {
-			"type": "keyword"
-		},
-		"categoryType": {
-			"type": "keyword"
-		},
-		"repositoryId": {
-			"type": "keyword"
-		},
-		"group": {
-			"type": "keyword"
-		},
-		"commitId": {
-			"type": "keyword"
-		},
-		"commitMessage": {
-			"type": "text"
-		},
-		"commitTimestamp": {
-			"type": "long"
-		},
-		"action": {
-			"type": "keyword"
-		},
-		"mostRecent": {
-			"type": "boolean"
-		},
-		"commits": {
-			"type": "keyword"
-		},
-		"path": {
-			"type": "keyword"
-		},
-		"category": {
-			"type": "text"
-		},
-		"categoryPaths": {
-			"type": "keyword"
-		},
-		"repositoryTags": {
-			"type": "keyword"
-		},
-		"datasetTags": {
-			"type": "keyword"
-		},
-		"flowType": {
-			"type": "keyword"
-		},
-		"processType": {
-			"type": "keyword"
-		},
-		"validFromYear": {
-			"type": "keyword"
-		},
-		"validUntilYear": {
-			"type": "keyword"
-		},
-		"location": {
-			"type": "keyword"
-		},
-		"modellingApproach": {
-			"type": "keyword"
-		},
-		"contact": {
-			"type": "keyword"
-		},
-		"inputs": {
-			"type": "keyword"
-		},
-		"outputs": {
-			"type": "keyword"
+		"versions": {
+			"type": "nested",
+			"properties": {
+				"objectId": {
+					"type": "keyword"
+				},
+				"name": {
+					"type": "keyword"
+				},
+				"category": {
+					"type": "keyword"
+				},
+				"categoryPaths": {
+					"type": "keyword"
+				},
+				"tags": {
+					"type": "keyword"
+				},
+				"modellingApproach": {
+					"type": "keyword"
+				},
+				"flowType": {
+					"type": "keyword"
+				},
+				"processType": {
+					"type": "keyword"
+				},
+				"contact": {
+					"type": "keyword"
+				},
+				"location": {
+					"type": "keyword"
+				},
+				"validFromYear": {
+					"type": "keyword"
+				},
+				"validUntilYear": {
+					"type": "keyword"
+				},
+				"repos": {
+					"type": "nested",
+					"properties": {
+						"group": {
+							"type": "keyword"
+						},
+						"path": {
+							"type": "keyword"
+						},
+						"commitId": {
+							"type": "keyword"
+						},
+						"commitMessage": {
+							"type": "keyword"
+						},
+						"tags": {
+							"type": "keyword"
+						}
+					}
+				}
+			}
 		}
 	}
 }
