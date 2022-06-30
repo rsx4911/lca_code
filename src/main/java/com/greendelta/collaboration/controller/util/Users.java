@@ -14,6 +14,14 @@ public class Users {
 	}
 
 	public static Map<String, Object> mapForSelf(User user) {
+		return mapForSelf(user, null);
+	}
+
+	public static Map<String, Object> mapForCurrentUser(User user, boolean isInTeam) {
+		return mapForSelf(user, isInTeam);		
+	}
+
+	private static Map<String, Object> mapForSelf(User user, Boolean isInTeam) {
 		var map = Maps.of(user);
 		Maps.remove(map, "password", "avatar", "twoFactorSecret", "authorities", "accountNonExpired",
 				"accountNonLocked",
@@ -22,6 +30,9 @@ public class Users {
 			map.put("twoFactorAuth", true);
 		}
 		Maps.put(map, "settings.blockedUsers", user.settings.blockedUsers.stream().map(Users::mapForOthers).toList());
+		if (isInTeam != null) {
+			Maps.put(map, "isInTeam", isInTeam);
+		}
 		return map;
 	}
 

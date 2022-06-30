@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -50,23 +51,29 @@ public class LibraryService {
 	}
 
 	public List<String> getAllAccessible() {
-		return getAccessibleForTeam(null);
+		return getAccessibleForTeams(new ArrayList<>());
 	}
 
-	public List<String> getAccessibleForTeam(String teamname) {
+	public List<String> getAccessibleForTeams() {
 		var currentUser = userService.getCurrentUser();
-		if (!currentUser.isDataManager() && (teamname == null || !isTeamMember(teamname, currentUser)))
-			throw new ForbiddenAccessException("LIBRARIES", "READ");
+		var teams = teamService.getTeamsFor(currentUser);
+		if (teams.isEmpty())
+			return new ArrayList<>();
+		return getAccessibleForTeams(teams.stream().map(team -> team.teamname).toList());
+	}
+
+	public List<String> getAccessibleForTeams(List<String> teams) {
 		var libraryPath = getLibraryPath();
 		if (libraryPath == null)
 			return new ArrayList<String>();
 		var accessCheck = new AccessCheck();
 		var libraries = new ArrayList<String>();
 		for (var file : new File(libraryPath).listFiles()) {
-			if (!file.getName().endsWith(".zip"))
+			var name = file.getName();
+			if (!name.endsWith(".zip"))
 				continue;
-			var id = file.getName().substring(file.getName().indexOf("_") + 1, file.getName().lastIndexOf(".zip"));
-			if (!accessCheck.canAccess(id, teamname))
+			var id = name.substring(0, name.lastIndexOf(".zip"));
+			if (!accessCheck.canAccess(id, teams))
 				continue;
 			libraries.add(id);
 		}
@@ -87,11 +94,13 @@ public class LibraryService {
 			if (info == null)
 				return null;
 			var id = info.name();
-			var file = getLibraryFile(id, access);
-			if (file.exists())
+			var file = getLibraryFile(id);
+			if (file.exists() && getAccessTypes(id).contains(access))
 				throw new IOException("existed");
-			Files.copy(tmpFile, file.toPath());
-			setAccessType(info.name(), access);
+			if (!file.exists()) {
+				Files.copy(tmpFile, file.toPath());
+			}
+			addAccessType(info.name(), access);
 			return info.name();
 		} catch (IOException e) {
 			if (!"existed".equals(e.getMessage())) {
@@ -103,14 +112,16 @@ public class LibraryService {
 		}
 	}
 
-	public boolean delete(String id) {
-		var access = getAccessType(id);
-		checkWriteAccess(id, access);
-		var file = getLibraryFile(id, access);
+	public boolean delete(String id, String access) {
+		checkWriteAccess(id, Arrays.asList(access));
+		var file = getLibraryFile(id);
 		if (!file.exists())
 			return false;
 		try {
-			Files.delete(file.toPath());
+			var accessTypes = removeAccessType(id, access);
+			if (accessTypes.isEmpty()) {
+				Files.delete(file.toPath());
+			}
 			return true;
 		} catch (IOException e) {
 			log.error("Error deleting library from disk", e);
@@ -118,15 +129,18 @@ public class LibraryService {
 		}
 	}
 
-	private void checkWriteAccess(String id, String access) {
+	private void checkWriteAccess(String id, List<String> accessTypes) {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.isDataManager())
 			return;
-		if (!LibraryAccess.isTeamAccess(access))
-			throw new ForbiddenAccessException(id, "WRITE");
-		var team = teamService.getForTeamname(access);
-		if (team == null || !team.users.contains(currentUser))
-			throw new ForbiddenAccessException(id, "WRITE");
+		for (var access : accessTypes) {
+			if (LibraryAccess.isTeamAccess(access)) {
+				var team = teamService.getForTeamname(access);
+				if (team != null && team.users.contains(currentUser))
+					return;
+			}
+		}
+		throw new ForbiddenAccessException(id, "WRITE");
 	}
 
 	private boolean isTeamMember(String teamname, User user) {
@@ -137,16 +151,16 @@ public class LibraryService {
 	}
 
 	public File get(String id) {
-		if (!new AccessCheck().canAccess(id, null))
+		if (!new AccessCheck().canAccess(id, new ArrayList<>()))
 			throw new ForbiddenAccessException(id, "READ");
-		var file = getLibraryFile(id, getAccessType(id));
+		var file = getLibraryFile(id);
 		if (!file.exists())
 			return null;
 		return file;
 	}
 
-	public LibraryInfo getInfo(String id) {
-		var file = getLibraryFile(id, getAccessType(id));
+	public LibraryInfo getInfo(String id, boolean isAdminArea) {
+		var file = getLibraryFile(id);
 		if (!file.exists())
 			return null;
 		try (var repos = repoService.getAllAccessible()) {
@@ -154,13 +168,20 @@ public class LibraryService {
 					.filter(repo -> repo.linkedLibraries().contains(id))
 					.map(Repository::toId)
 					.distinct().toList();
-			var access = getAccessType(id);
-			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn, access);
+			var accesses = getAccessTypes(id);
+			if (!isAdminArea) {
+				for (var access : LibraryAccess.values()) {
+					accesses.remove(access.name());
+				}
+			}
+			if (accesses.isEmpty())
+				return null;
+			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn, accesses);
 		}
 	}
 
-	private File getLibraryFile(String id, String access) {
-		return new File(access + "_" + id + ".zip");
+	private File getLibraryFile(String id) {
+		return new File(getLibraryPath(), id + ".zip");
 	}
 
 	private String getLibraryPath() {
@@ -170,17 +191,40 @@ public class LibraryService {
 		return libraryPath;
 	}
 
-	private String getAccessType(String id) {
+	private List<String> getAccessTypes(String id) {
 		return settings.get(SettingType.LIBRARY_SETTING, id, settings.ACCESS.USER)
-				.get(LibrarySetting.ACCESS);
+				.get(LibrarySetting.ACCESS, new ArrayList<>());
 	}
 
-	private void setAccessType(String id, String access) {
+	private List<String> addAccessType(String id, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
 				: settings.ACCESS.DATA_MANAGER;
+		var accessTypes = getAccessTypes(id);
+		if (accessTypes.contains(access))
+			return accessTypes;
+		accessTypes.add(access);
 		settings.get(SettingType.LIBRARY_SETTING, id, settingsAccess)
-				.set(LibrarySetting.ACCESS, access);
+				.set(LibrarySetting.ACCESS, accessTypes);
+		return accessTypes;
+	}
+
+	private List<String> removeAccessType(String id, String access) {
+		var settingsAccess = LibraryAccess.isTeamAccess(access)
+				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
+				: settings.ACCESS.DATA_MANAGER;
+		var accessTypes = getAccessTypes(id);
+		if (!accessTypes.contains(access))
+			return accessTypes;
+		accessTypes.remove(access);
+		if (accessTypes.isEmpty()) {
+			settings.get(SettingType.LIBRARY_SETTING, id, settingsAccess)
+			.set(LibrarySetting.ACCESS, null);
+		} else {
+			settings.get(SettingType.LIBRARY_SETTING, id, settingsAccess)
+					.set(LibrarySetting.ACCESS, accessTypes);
+		}
+		return accessTypes;
 	}
 
 	private class AccessCheck {
@@ -192,20 +236,28 @@ public class LibraryService {
 			this.user = userService.getCurrentUser();
 		}
 
-		private boolean canAccess(String library, String teamname) {
+		private boolean canAccess(String library, List<String> teamnames) {
+			var accesses = getAccessTypes(library);
+			if (accesses.isEmpty())
+				return false;
+			if (!teamnames.isEmpty())
+				return teamnames.stream()
+						.filter(accesses::contains)
+						.filter(access -> isTeamMember(access, user))
+						.count() > 0;
 			if (user.isDataManager())
 				return true;
-			String access = getAccessType(library);
-			if (access == null)
-				return false;
-			if (teamname != null && !access.equals(teamname))
-				return false;
-			return switch (access) {
-				case "PUBLIC" -> true;
-				case "USER" -> !user.isAnonymous();
-				case "MEMBER" -> linkedLibraries().contains(library);
-				default -> isTeamMember(access, user);
-			};
+			for (var access : accesses) {
+				var hasAccess = switch (access) {
+					case "PUBLIC" -> true;
+					case "USER" -> !user.isAnonymous();
+					case "MEMBER" -> linkedLibraries().contains(library);
+					default -> isTeamMember(access, user);
+				};
+				if (hasAccess)
+					return true;
+			}
+			return false;
 		}
 
 		private Set<String> linkedLibraries() {
@@ -227,10 +279,11 @@ public class LibraryService {
 	}
 
 	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn,
-			String access) {
+			List<String> accessTypes) {
 
-		private LibraryInfo(org.openlca.core.library.LibraryInfo info, List<String> linkedIn, String access) {
-			this(info.name(), info.description(), info.isRegionalized(), linkedIn, access);
+		private LibraryInfo(org.openlca.core.library.LibraryInfo info, List<String> linkedIn,
+				List<String> accessTypes) {
+			this(info.name(), info.description(), info.isRegionalized(), linkedIn, accessTypes);
 		}
 
 	}

@@ -17,6 +17,8 @@ define([
 				'user/activities': 'userActivities'
 				'user/messaging': 'userMessaging'
 				'user/notifications': 'userNotifications'
+				'user/libraries': 'userLibraries'
+				'user/libraries/add': 'userAddLibrary'
 				'dashboard': 'dashboardActivities'
 				'dashboard/activities': if settings.is('DASHBOARD_ACTIVITIES_ENABLED') then 'dashboardActivities' else 'dashboardRepositories'
 				'dashboard/repositories': 'dashboardRepositories'

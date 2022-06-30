@@ -37,7 +37,7 @@ public class TeamController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "module", required = false) Module module) {
-		var result = service.getVisible(page, pageSize, filter);
+		var result = service.getVisible(page, pageSize, filter, module == Module.TEAM_LIBRARIES);
 		if (module == null)
 			return Response.ok(SearchResults.convert(result, Teams::mapForOthers));
 		return Response.ok(result.data.stream().map(Teams::mapForOthers).toList());

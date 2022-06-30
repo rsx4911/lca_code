@@ -4,6 +4,7 @@ include ../mixins/forms.pug
 form#library-form.content-box
 	#library-form-general-message-group.alert(role='alert'): span.message
 	+input('file', 'File*', 'file')
-	+select('access', 'Access', [['PUBLIC', 'Public'], ['USER', 'Only users'], ['MEMBER', 'Only members of linking repository']], 'PUBLIC')
+	- var accessLabel = isAdminArea ? 'Access' : 'Team access';
+	+select('access', accessLabel, accessTypes, accessTypes[0][0])
 	button.btn.btn-lg.btn-success.pull-right(data-action='add') Add
 	.clear

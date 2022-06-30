@@ -14,12 +14,10 @@ define () ->
 			success: (users) =>
 				callback users
 
-	getTeams: (module, repositoryPath, callback) ->
-		unless repositoryPath 
-			repositoryPath = ''
+	getTeams: (module, callback) ->
 		$.ajax
 			type: 'GET'
-			url: "ws/team?module=#{module.toUpperCase()}&repositoryPath=#{repositoryPath}"
+			url: "ws/team?module=#{module.toUpperCase()}"
 			success: (teams) =>
 				callback teams
 

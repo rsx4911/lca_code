@@ -7,7 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -28,7 +28,7 @@ public class Team extends AbstractEntity {
 	 * Don't add/remove users directly, use teamService.addMember/removeMember
 	 * so memberships are also added/removed
 	 */
-	@OneToMany
+	@ManyToMany
 	@JoinTable
 	public final List<User> users = new ArrayList<>();
 

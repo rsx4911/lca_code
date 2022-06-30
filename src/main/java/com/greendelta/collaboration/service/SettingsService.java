@@ -118,11 +118,15 @@ public class SettingsService {
 		if (!update) {
 			setting = Setting.create(type, key, owner);
 		}
-		setting.setValue(value);
-		if (update) {
-			dao.update(setting);
+		if (value == null) {
+			dao.delete(setting);
 		} else {
-			dao.insert(setting);
+			setting.setValue(value);
+			if (update) {
+				dao.update(setting);
+			} else {
+				dao.insert(setting);
+			}
 		}
 	}
 
@@ -363,6 +367,15 @@ public class SettingsService {
 			} else {
 				checkAccess(owner);
 				SettingsService.this.set(type, key, owner, value);
+			}
+		}
+
+		public void delete(T key) {
+			if (local != null) {
+				local.remove(key);
+			} else {
+				checkAccess(owner);
+				SettingsService.this.set(type, key, owner, null);
 			}
 		}
 

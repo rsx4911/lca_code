@@ -27,6 +27,7 @@ import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Maps;
@@ -41,6 +42,7 @@ public class SessionController {
 
 	private final UserService userService;
 	private final GroupService groupService;
+	private final TeamService teamService;
 	private final TaskService taskService;
 	private final SettingsService settings;
 	private final JobService jobService;
@@ -48,11 +50,12 @@ public class SessionController {
 	private final SessionService sessionService;
 
 	@Autowired
-	public SessionController(UserService userService, GroupService groupService, TaskService taskService,
+	public SessionController(UserService userService, GroupService groupService, TeamService teamService, TaskService taskService,
 			SettingsService settings, JobService jobService, NotificationService notificationService,
 			SessionService sessionService) {
 		this.userService = userService;
 		this.groupService = groupService;
+		this.teamService = teamService;
 		this.taskService = taskService;
 		this.settings = settings;
 		this.jobService = jobService;
@@ -65,7 +68,8 @@ public class SessionController {
 		if (userService.isAnonymous())
 			return Collections.singletonMap("id", 0);
 		var user = userService.getCurrentUser();
-		var mapped = Users.mapForSelf(user);
+		var isInTeam = !teamService.getTeamsFor(user).isEmpty();
+		var mapped = Users.mapForCurrentUser(user, isInTeam);
 		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(user).size());
 		mapped.put("noOfRepositories", userService.getNoOfRepositories(user, path));

@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.user;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -75,18 +74,16 @@ public class TeamService {
 		return dao.getCount();
 	}
 
-	public SearchResult<Team> getVisible(int page, int pageSize, String filter) {
+	public SearchResult<Team> getVisible(int page, int pageSize, String filter, boolean isTeamLibraries) {
 		var user = userService.getCurrentUser();
-		if (user == null)
-			return SearchResults.from(new ArrayList<>());
 		var parameters = new HashMap<String, Object>();
-		if (!user.isUserManager()) {
+		if (isTeamLibraries || !user.isUserManager()) {
 			parameters.put("user", user);
 		}
 		if (!Strings.nullOrEmpty(filter)) {
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
 		}
-		var query = createQuery(user, filter);
+		var query = createQuery(user, filter, isTeamLibraries);
 		var data = dao.getAll(query, parameters).stream()
 				.distinct()
 				.sorted((t1, t2) -> t1.name.toLowerCase().compareTo(t2.name.toLowerCase()))
@@ -94,17 +91,18 @@ public class TeamService {
 		return SearchResults.paged(page, pageSize, data);
 	}
 
-	private String createQuery(User user, String filter) {
+	private String createQuery(User user, String filter, boolean isTeamLibraries) {
 		var jpql = new StringBuilder();
-		if (user.isUserManager()) {
+		if (isTeamLibraries || !user.isUserManager()) {
+			jpql.append("SELECT t FROM Team t WHERE :user MEMBER OF t.users");
+			if (!Strings.nullOrEmpty(filter)) {
+				jpql.append(" AND LOWER(t.name) LIKE :name");
+			}
+		} else {
 			jpql.append("SELECT t FROM Team t");
 			if (!Strings.nullOrEmpty(filter)) {
 				jpql.append(" WHERE LOWER(t.name) LIKE :name");
 			}
-		} else {
-			jpql.append("SELECT t FROM Team t WHERE :user MEMBER OF t.users");
-			if (!Strings.nullOrEmpty(filter))
-				jpql.append(" AND LOWER(t.name) LIKE :name");
 		}
 		return jpql.toString();
 	}

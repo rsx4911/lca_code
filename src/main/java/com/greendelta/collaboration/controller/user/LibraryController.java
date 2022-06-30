@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.LibraryAccess;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.LibraryService.LibraryInfo;
 import com.greendelta.collaboration.service.Repository;
@@ -40,20 +39,12 @@ public class LibraryController {
 
 	@GetMapping
 	public List<LibraryInfo> getAll() {
-		return service.getAllAccessible().stream().map(service::getInfo).toList();
+		return service.getAllAccessible().stream().map(lib -> service.getInfo(lib, true)).toList();
 	}
 
-	@GetMapping("{teamname}")
-	public List<LibraryInfo> getAllForTeam(@PathVariable("teamname") String teamname) {
-		return service.getAccessibleForTeam(teamname).stream().map(service::getInfo).toList();
-	}
-
-	@GetMapping("{id}")
-	public ResponseEntity<StreamingResponseBody> get(@PathVariable("id") String id) {
-		var library = service.get(id);
-		if (library == null)
-			throw Response.notFound();
-		return Response.ok(library.getName(), library);
+	@GetMapping("teams")
+	public List<LibraryInfo> getAllForTeams() {
+		return service.getAccessibleForTeams().stream().map(lib -> service.getInfo(lib, false)).toList();
 	}
 
 	@GetMapping("missing")
@@ -79,12 +70,20 @@ public class LibraryController {
 		}
 	}
 
+	@GetMapping("{id}")
+	public ResponseEntity<StreamingResponseBody> get(@PathVariable("id") String id) {
+		var library = service.get(id);
+		if (library == null)
+			throw Response.notFound();
+		return Response.ok(library.getName(), library);
+	}
+
 	@PostMapping
 	public String create(
 			@RequestParam("file") MultipartFile file,
-			@RequestParam("access") LibraryAccess access) {
+			@RequestParam("access") String access) {
 		try (var stream = file.getInputStream()) {
-			var id = service.insert(stream, access.name());
+			var id = service.insert(stream, access);
 			if (id == null)
 				throw Response.badRequest("file", "Not a valid library file");
 			return id;
@@ -95,11 +94,11 @@ public class LibraryController {
 		}
 	}
 
-	@DeleteMapping("{id}")
-	public void delete(@PathVariable("id") String id) {
+	@DeleteMapping("{id}/{access}")
+	public void delete(@PathVariable("id") String id, @PathVariable("access") String access) {
 		if (service.get(id) == null)
 			throw Response.notFound("No library " + id + " found");
-		if (!service.delete(id))
+		if (!service.delete(id, access))
 			throw Response.error("Error deleting library " + id);
 	}
 
