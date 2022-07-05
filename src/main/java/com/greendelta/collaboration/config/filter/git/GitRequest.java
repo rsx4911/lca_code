@@ -66,12 +66,24 @@ public class GitRequest extends HttpServletRequestWrapper {
 		this.remoteUser = null;
 	}
 
-	public boolean isGitPush() {
+	public GitAction getGitAction() {
 		var pathInfo = getPathInfo();
 		if (pathInfo != null && pathInfo.endsWith("/" + GitSmartHttpTools.RECEIVE_PACK))
-			return true;
+			return GitAction.GIT_PUSH;
 		var query = getQueryString();
-		return query != null && query.equals("service=" + GitSmartHttpTools.RECEIVE_PACK);
+		if (query != null && query.equals("service=" + GitSmartHttpTools.RECEIVE_PACK))
+			return GitAction.GIT_PUSH_SERVICE;
+		return GitAction.OTHER;
 	}
 
+	public enum GitAction {
+		
+		GIT_PUSH,
+		
+		GIT_PUSH_SERVICE,
+
+		OTHER;
+		
+	}
+	
 }
