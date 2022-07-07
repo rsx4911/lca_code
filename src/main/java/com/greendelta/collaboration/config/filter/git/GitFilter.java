@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import com.greendelta.collaboration.config.filter.git.GitRequest.GitAction;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -92,7 +93,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		super.doFilter(request, response, new FilterChainWrapper(request, response, chain));
 		if (!config.isGitUrl(request))
 			return;
-		if (request.isGitPush()) {
+		if (request.getGitAction() == GitAction.GIT_PUSH) {
 			runCommitPostProcessing(new RepositoryPath(Requests.getRelativePath(request)));
 		}
 		request.basicHttpLogout(sessionService);
@@ -125,7 +126,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		public void index(Repository repo, Commit commit) {
 			searchService.index(repo, commit);
 		}
-		
+
 		@Async
 		public void generateJson(Repository repo) {
 			RepositoryJsonWriter.writeCurrent(repo);

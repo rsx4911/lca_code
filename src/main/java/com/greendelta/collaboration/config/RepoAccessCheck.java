@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
 import com.greendelta.collaboration.config.filter.git.GitRequest;
+import com.greendelta.collaboration.config.filter.git.GitRequest.GitAction;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
@@ -47,7 +48,7 @@ public class RepoAccessCheck {
 	private boolean canGitAccess(GitRequest request, String repoId) throws IOException, ServletException {
 		var loggedIn = request.basicHttpLogin(sessionService);
 		var canAccess = false;
-		if (request.isGitPush()) {
+		if (request.getGitAction() == GitAction.GIT_PUSH || request.getGitAction() == GitAction.GIT_PUSH_SERVICE) {
 			canAccess = accessService.canWrite(repoId) && !areCommitsProhibited(repoId);
 		} else {
 			canAccess = accessService.canRead(repoId);

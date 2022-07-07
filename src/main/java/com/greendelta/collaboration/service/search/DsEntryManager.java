@@ -36,6 +36,15 @@ class DsEntryManager {
 			v = createVersion(ref);
 			e.versions.add(v);
 		}
+		for (var other : new ArrayList<>(e.versions)) {
+			if (other == v)
+				continue;
+			var r = getRepo(other);
+			other.repos.remove(r);
+			if (other.repos.isEmpty()) {
+				e.versions.remove(other);
+			}
+		}
 		var r = getRepo(v);
 		if (r == null) {
 			r = createRepo(ref);
