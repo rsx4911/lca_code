@@ -41,7 +41,7 @@ import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -61,7 +61,7 @@ public class RepositoryController {
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final AccessService accessService;
-	private final SearchService searchService;
+	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final RestrictionService restrictionService;
 	private final NotificationService notificationService;
@@ -69,14 +69,14 @@ public class RepositoryController {
 	@Autowired
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
-			SearchService searchService, DeleteService deleteService, RestrictionService restrictionService,
+			IndexService indexService, DeleteService deleteService, RestrictionService restrictionService,
 			NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.accessService = accessService;
-		this.searchService = searchService;
+		this.indexService= indexService;
 		this.deleteService = deleteService;
 		this.restrictionService = restrictionService;
 		this.notificationService = notificationService;
@@ -217,7 +217,7 @@ public class RepositoryController {
 			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 				repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 			}
-			searchService.index(repo);
+			indexService.index(repo);
 		} catch (IOException e) {
 			log.error("Error getting input stream from multipart file", e);
 		}
@@ -234,7 +234,7 @@ public class RepositoryController {
 			if (!service.move(repo, newGroup, newName))
 				throw Response.error("Repository could not be moved");
 			try (var newRepo = service.get(newGroup, newName)) {
-				searchService.update(repo, newRepo);
+				indexService.update(repo, newRepo);
 				notificationService.repositoryMoved(repo, newRepo).send();
 				return Response.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 			}
@@ -260,7 +260,7 @@ public class RepositoryController {
 				deleteService.delete(to);
 				throw Response.error("Unexpected error during cloning");
 			}
-			searchService.index(to);
+			indexService.index(to);
 		}
 	}
 
@@ -289,7 +289,7 @@ public class RepositoryController {
 			try (var client = new RepositoryClient(url, username, password)) {
 				client.exportRepository(repoId, stream -> {
 					service.unpack(repo, stream);
-					searchService.index(repo);
+					indexService.index(repo);
 				});
 			}
 		} catch (WebRequestException e) {
@@ -338,7 +338,7 @@ public class RepositoryController {
 				}
 			}
 			if (updateSearch) {
-				searchService.update(repo);
+				indexService.update(repo);
 			}
 		}
 	}
@@ -392,7 +392,7 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
 			var notification = notificationService.repositoryDeleted(repo);
-			searchService.remove(repo);
+			indexService.remove(repo);
 			deleteService.delete(repo);
 			notification.send();
 		}

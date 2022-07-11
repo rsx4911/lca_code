@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriUtils;
 
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.InputOutputData.ProcessDescriptor;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -151,7 +152,10 @@ public class SearchController {
 		if (commitId == null) {
 			commitId = repo.commits().find().latestId();
 		}
-		var data = ioDataService.get(repositoryId, commitId);
+		if (commitId == null)
+			throw Response.notFound();
+		var commit = repo.commits().get(commitId);
+		var data = ioDataService.get(repo, commit);
 		if (data == null)
 			return SearchResults.pagedAndFiltered(page, pageSize, filter, new ArrayList<>());
 		var list = direction == Direction.CONSUMERS
