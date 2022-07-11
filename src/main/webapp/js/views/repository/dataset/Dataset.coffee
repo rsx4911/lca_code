@@ -163,13 +163,11 @@ define([
 					@commitId = null
 					Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId, 
 						trigger: false
-						replace: true					
+						replace: true	
 				@loadDataset @refId, @commitId, (dataset) =>
 					@dataset = dataset
 					@loadCommitHistory (commits) =>
 						@commits = commits
-						if !@commitId && commits && commits.length
-							@commitId = commits[0].id
 						DatasetPrepare.applyTo @dataset
 						@doRender renderOptions
 
@@ -182,7 +180,7 @@ define([
 					standalone: @standalone
 					dataset: @dataset
 					commits: @commits
-					commitId: @commitId or @commits?[0]?.id
+					commitId: @commitId
 					compareTo: @compareTo
 					comparisonCommitId: comparisonCommitId
 					baseUrl: "#{group}/#{name}/dataset"

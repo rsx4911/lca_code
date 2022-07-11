@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.greendelta.collaboration.model.Comment;
+import com.greendelta.collaboration.model.InputOutputData;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Message;
 import com.greendelta.collaboration.model.RestrictionSet;
@@ -80,4 +81,8 @@ public class DaoConfig {
 		return new Dao<>(User.class);
 	}
 
+	@Bean
+	public Dao<InputOutputData> inputOutputDataDao() {
+		return new Dao<>(InputOutputData.class);
+	}
 }

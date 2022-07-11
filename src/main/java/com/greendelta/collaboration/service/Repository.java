@@ -135,10 +135,6 @@ public class Repository implements AutoCloseable {
 		return new File(dir, "cached-json.zip");
 	}
 
-	public String toId() {
-		return group + "/" + name;
-	}
-
 	@Override
 	public void close() {
 		if (gitRepo != null) {

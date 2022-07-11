@@ -99,18 +99,18 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
-	public NotificationJob dataCommitted(Repository repo, Commit commit) {
+	public NotificationJob dataPushed(Repository repo, Commit commit) {
 		var currentUser = userService.getCurrentUser();
 		var repoUrl = getBaseUrl() + "/" + repo.path();
 		var commitUrl = getBaseUrl() + "/" + repo.path() + "/commit/" + commit.id;
-		var subject = "Data was committed";
-		var message = "Data was committed to <a href=\"" + repoUrl + "\">" + repo.path()
+		var subject = "Data was pushed";
+		var message = "Data was pushed to <a href=\"" + repoUrl + "\">" + repo.path()
 				+ "</a> by the user "
-				+ currentUser.name + " with message <a href=\"" + commitUrl + "\">" + commit.message + "</a>";
+				+ currentUser.name + "; last commit was <a href=\"" + commitUrl + "\">" + commit.message + "</a>";
 		var emails = new HashSet<EmailJob>();
-		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.path())));
-		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_COMMITTED, repo.group)));
-		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.DATA_COMMITTED, false)));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_PUSHED, repo.path())));
+		emails.addAll(createEmails(subject, message, getMemberUsers(Notification.DATA_PUSHED, repo.group)));
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.DATA_PUSHED, false)));
 		return new NotificationJob(emails);
 	}
 

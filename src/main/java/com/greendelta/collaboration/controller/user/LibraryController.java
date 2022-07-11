@@ -60,7 +60,7 @@ public class LibraryController {
 			return missing.stream().map(lib -> {
 				var linkedIn = repos.stream()
 						.filter(repo -> repo.linkedLibraries().contains(lib))
-						.map(Repository::toId)
+						.map(Repository::path)
 						.toList();
 				var info = new HashMap<String, Object>();
 				info.put("id", lib);
