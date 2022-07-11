@@ -32,31 +32,28 @@ public class SearchService {
 	private static final Logger log = LogManager.getLogger(SearchService.class);
 	private final SettingsService settings;
 	private final QueryService queryService;
-	private final InputOutputDataService ioDataService;
 	private final DsEntryParser parser = new DsEntryParser();
 	private ReindexingStatus reindexStatus;
 
 	@Autowired
-	public SearchService(SettingsService settings, QueryService queryService, InputOutputDataService ioDataService) {
+	public SearchService(SettingsService settings, QueryService queryService) {
 		this.settings = settings;
 		this.queryService = queryService;
-		this.ioDataService = ioDataService;
 	}
 
 	public SearchResult<DsEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
 		return queryService.query(query, page, pageSize, filters);
 	}
 
-	public void index(Repository repo) {
-		ioDataService.delete(repo.path());
+	void index(Repository repo) {
 		index(repo, repo.commits().find().all());
 	}
 
-	public void index(Repository repo, Commit commit) {
+	void index(Repository repo, Commit commit) {
 		index(repo, Collections.singletonList(commit));
 	}
 
-	public void index(Repository repo, List<Commit> commits) {
+	private void index(Repository repo, List<Commit> commits) {
 		commits.stream().forEach(commit -> {
 			var manager = new DsEntryManager(repo, commit);
 			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
@@ -65,7 +62,6 @@ public class SearchService {
 			Diff.filter(diffs, DiffType.DELETED)
 					.forEach(diff -> remove(manager, diff.toReference(Side.OLD)));
 		});
-		ioDataService.index(repo);
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {
@@ -91,11 +87,11 @@ public class SearchService {
 		return parser.parse(entry);
 	}
 
-	public void update(Repository repo) {
+	void update(Repository repo) {
 		update(repo, repo);
 	}
 
-	public void update(Repository oldRepo, Repository newRepo) {
+	void update(Repository oldRepo, Repository newRepo) {
 		remove(oldRepo);
 		index(newRepo);
 	}
@@ -113,7 +109,6 @@ public class SearchService {
 
 	public void clearIndex() {
 		getClient().delete();
-		ioDataService.clear();
 		createIndex();
 	}
 

@@ -35,31 +35,37 @@ public class InputOutputDataService {
 		return dao.insert(data);
 	}
 
-	public InputOutputData get(String repositoryPath, String commitId) {
+	public InputOutputData get(Repository repo, Commit commit) {
 		return dao.getFirst("SELECT data FROM InputOutputData data "
 				+ "WHERE data.repositoryPath = :repositoryPath "
 				+ "AND data.commitId = :commitId",
-				Map.of("repositoryPath", repositoryPath,
-						"commitId", commitId));
+				Map.of("repositoryPath", repo.path(),
+						"commitId", commit.id));
 	}
 
-	public void delete(String repositoryPath) {
+	public void delete(Repository repo) {
 		dao.update("DELETE FROM InputOutputData data WHERE data.repositoryPath = :repositoryPath",
-				Maps.of("repositoryPath", repositoryPath));
+				Maps.of("repositoryPath", repo.path()));
 	}
 
 	public void clear() {
 		dao.update("DELETE FROM InputOutputData data", Collections.emptyMap());
 	}
 
-	public void index(Repository repo) {
+	void update(Repository repo, Repository newRepo) {
+		dao.update("UPDATE InputOutputData data SET data.repositoryPath = :newPath WHERE data.repositoryPath = :path",
+				Map.of("path", repo.path(),
+						"newPath", newRepo.path()));
+	}
+
+	void update(Repository repo) {
 		var commits = repo.commits().find().all();
 		var previous = new InputOutputData();
 		for (var commit : commits) {
-			var data = get(repo.path(), commit.id);
+			var data = get(repo, commit);
 			if (data != null) {
 				previous = data;
-				return;
+				continue;
 			}
 			var current = new InputOutputData();
 			current.repositoryPath = repo.path();
