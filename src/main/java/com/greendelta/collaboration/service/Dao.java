@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,24 +35,20 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public List<T> getAll() {
-		var em = createManager();
 		var jpql = "SELECT o FROM " + entityType.getSimpleName() + " o";
-		var query = em.createQuery(jpql, entityType);
+		var entityManager = createManager();
+		var query = entityManager.createQuery(jpql, entityType);
 		return query.getResultList();
 	}
 
-	public List<T> getAll(String jpql, Map<String, ? extends Object> parameters) {
+	public List<T> getAll(String jpql, Map<String, Object> parameters) {
 		return getAll(jpql, parameters, 0, 0);
 	}
 
-	public List<T> getAll(String jpql, Map<String, ? extends Object> parameters, int start, int limit) {
-		var em = createManager();
-		var query = em.createQuery(jpql, entityType);
-		if (parameters != null) {
-			for (var parameter : parameters.keySet()) {
-				query.setParameter(parameter, parameters.get(parameter));
-			}
-		}
+	public List<T> getAll(String jpql, Map<String, Object> parameters, int start, int limit) {
+		var entityManager = createManager();
+		var query = entityManager.createQuery(jpql, entityType);
+		appendParameters(query, parameters);
 		if (start > 0) {
 			query.setFirstResult(start - 1);
 		}
@@ -61,14 +58,10 @@ public class Dao<T extends AbstractEntity> {
 		return query.getResultList();
 	}
 
-	public <RT> List<RT> getAttributes(String jpql, Map<String, ? extends Object> parameters, Class<RT> resultClass) {
-		var em = createManager();
-		var query = em.createQuery(jpql, resultClass);
-		if (parameters != null) {
-			for (var parameter : parameters.keySet()) {
-				query.setParameter(parameter, parameters.get(parameter));
-			}
-		}
+	public <RT> List<RT> getAttributes(String jpql, Map<String, Object> parameters, Class<RT> resultClass) {
+		var entityManager = createManager();
+		var query = entityManager.createQuery(jpql, resultClass);
+		appendParameters(query, parameters);
 		return query.getResultList();
 	}
 
@@ -147,12 +140,10 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public long getCount(String jpql, Map<String, Object> parameters) {
-		var em = createManager();
-		var query = em.createQuery(jpql, Long.class);
-		for (var parameter : parameters.keySet()) {
-			query.setParameter(parameter, parameters.get(parameter));
-		}
-		Long count = query.getSingleResult();
+		var entityManager = createManager();
+		var query = entityManager.createQuery(jpql, Long.class);
+		appendParameters(query, parameters);
+		var count = query.getSingleResult();
 		return count == null ? 0 : count;
 	}
 
@@ -261,19 +252,26 @@ public class Dao<T extends AbstractEntity> {
 	}
 
 	public Collection<T> query(String jpql, Map<String, Object> values) {
-		if (jpql == null)
-			return Collections.emptyList();
 		var entityManager = createManager();
 		var query = entityManager.createQuery(jpql, entityType);
+		appendParameters(query, values);
+		return query.getResultList();
+	}
+
+	@Transactional
+	public void update(String jpql, Map<String, Object> values) {
+		var entityManager = createManager();
+		var query = entityManager.createQuery(jpql);
+		appendParameters(query, values);
+		query.executeUpdate();
+	}
+
+	private void appendParameters(Query query, Map<String, Object> values) {
 		if (values != null) {
 			for (var name : values.keySet()) {
 				query.setParameter(name, values.get(name));
 			}
 		}
-		var result = query.getResultList();
-		if (result == null)
-			return Collections.emptyList();
-		return result;
 	}
 
 	private EntityManager createManager() {

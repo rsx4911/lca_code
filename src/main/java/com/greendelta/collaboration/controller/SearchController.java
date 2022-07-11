@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriUtils;
 
+import com.greendelta.collaboration.model.InputOutputData.ProcessDescriptor;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -28,6 +29,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.DsEntry;
+import com.greendelta.collaboration.service.search.InputOutputDataService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
@@ -45,15 +47,17 @@ public class SearchController {
 	private final RepositoryService repoService;
 	private final GroupService groupService;
 	private final UserService userService;
+	private final InputOutputDataService ioDataService;
 	private final SettingsService settings;
 
 	@Autowired
 	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
-			UserService userService, SettingsService settings) {
+			UserService userService, InputOutputDataService ioDataService, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.groupService = groupService;
 		this.userService = userService;
+		this.ioDataService = ioDataService;
 		this.settings = settings;
 	}
 
@@ -135,16 +139,25 @@ public class SearchController {
 	}
 
 	@GetMapping("flowLinks/{flowRefId}")
-	public SearchResult<Object> searchFlowLinks(
+	public SearchResult<ProcessDescriptor> searchFlowLinks(
 			@PathVariable("flowRefId") String flowRefId,
+			@RequestParam(name = "repositoryId") String repositoryId,
+			@RequestParam(name = "direction", required = false) Direction direction,
 			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestParam(name = "repositoryId", required = false) String repositoryId,
-			@RequestParam(name = "direction", required = false) String direction,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-		// TODO
-		return SearchResults.pagedAndFiltered(page, pageSize, filter, new ArrayList<>());
+		var repo = repoService.get(repositoryId);
+		if (commitId == null) {
+			commitId = repo.commits().find().latestId();
+		}
+		var data = ioDataService.get(repositoryId, commitId);
+		if (data == null)
+			return SearchResults.pagedAndFiltered(page, pageSize, filter, new ArrayList<>());
+		var list = direction == Direction.CONSUMERS
+				? data.consumers(flowRefId)
+				: data.producers(flowRefId);
+		return SearchResults.pagedAndFiltered(page, pageSize, filter, list);
 	}
 
 	private String removeStringFilter(String name, Map<String, Set<String>> filters) {
@@ -182,6 +195,12 @@ public class SearchController {
 			}
 		}
 		return filters;
+	}
+
+	private static enum Direction {
+
+		PRODUCERS, CONSUMERS;
+
 	}
 
 }

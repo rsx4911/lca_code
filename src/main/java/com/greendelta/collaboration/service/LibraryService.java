@@ -166,7 +166,7 @@ public class LibraryService {
 		try (var repos = repoService.getAllAccessible()) {
 			var linkedIn = repos.stream()
 					.filter(repo -> repo.linkedLibraries().contains(id))
-					.map(Repository::toId)
+					.map(Repository::path)
 					.distinct().toList();
 			var accesses = getAccessTypes(id);
 			if (!isAdminArea) {

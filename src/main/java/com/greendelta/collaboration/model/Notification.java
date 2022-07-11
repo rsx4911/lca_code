@@ -6,7 +6,7 @@ public enum Notification {
 	REPOSITORY_CREATED,
 	REPOSITORY_MOVED,
 	REPOSITORY_DELETED,
-	DATA_COMMITTED,
+	DATA_PUSHED,
 	ADDED_GROUP_MEMBER,
 	ADDED_TO_GROUP_MEMBERS,
 	REMOVED_GROUP_MEMBER,
@@ -36,14 +36,5 @@ public enum Notification {
 	TASK_CANCELED,
 	TASK_COMPLETED,
 	USER_REGISTERED;
-
-	public boolean isOneOf(Notification... notifications) {
-		if (notifications == null)
-			return false;
-		for (var notification : notifications)
-			if (notification == this)
-				return true;
-		return false;
-	}
 
 }
