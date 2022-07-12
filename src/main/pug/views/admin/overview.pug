@@ -9,12 +9,9 @@ mixin box(label, plural, count)
 	.list-box
 		legend=plural 
 			if label === 'Repository'
-				- var reindexing = reindexingStatus && reindexingStatus.worked < reindexingStatus.total;
-				if reindexing
-					div: small Reindexing: #{reindexingStatus.worked + 1}/#{reindexingStatus.total}
-				else
-					button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repositories') Reindex
-					button.btn.btn-xs.btn-default.pull-right(data-action='clear-index') Clear index
+				button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repositories') Reindex
+				button.btn.btn-xs.btn-default.pull-right(data-action='clear-index') Clear index
+				#indexing-status
 			else if label === 'User'
 				button.btn.btn-xs.btn-default.pull-right(data-action='copy-users-to-clipboard') Copy to clipboard
 			input.form-control.input-sm.filter.pull-right(id=lcLabel + '-filter' type='text' placeholder='filter' aria-label='Filter + ' + label)

@@ -43,7 +43,7 @@ public class InputOutputDataService {
 						"commitId", commit.id));
 	}
 
-	public void delete(Repository repo) {
+	public void remove(Repository repo) {
 		dao.update("DELETE FROM InputOutputData data WHERE data.repositoryPath = :repositoryPath",
 				Maps.of("repositoryPath", repo.path()));
 	}

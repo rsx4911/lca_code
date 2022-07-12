@@ -76,7 +76,7 @@ public class RepositoryController {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.accessService = accessService;
-		this.indexService= indexService;
+		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.restrictionService = restrictionService;
 		this.notificationService = notificationService;
@@ -234,7 +234,7 @@ public class RepositoryController {
 			if (!service.move(repo, newGroup, newName))
 				throw Response.error("Repository could not be moved");
 			try (var newRepo = service.get(newGroup, newName)) {
-				indexService.update(repo, newRepo);
+				indexService.moveIndex(repo, newRepo);
 				notificationService.repositoryMoved(repo, newRepo).send();
 				return Response.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 			}
@@ -338,7 +338,7 @@ public class RepositoryController {
 				}
 			}
 			if (updateSearch) {
-				indexService.update(repo);
+				indexService.updateIndex(repo);
 			}
 		}
 	}
@@ -392,7 +392,17 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
 			var notification = notificationService.repositoryDeleted(repo);
-			indexService.remove(repo);
+			var work = indexService.deleteIndex(repo);
+			new Thread(() -> {
+				while (!work.isDone()) {
+					synchronized (this) {
+						try {
+							wait(100);
+						} catch (InterruptedException e) {
+						}
+					}
+				}
+			}).run();
 			deleteService.delete(repo);
 			notification.send();
 		}

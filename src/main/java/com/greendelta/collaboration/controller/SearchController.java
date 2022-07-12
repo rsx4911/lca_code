@@ -30,6 +30,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.DsEntry;
+import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.search.InputOutputDataService;
 import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -49,16 +50,19 @@ public class SearchController {
 	private final GroupService groupService;
 	private final UserService userService;
 	private final InputOutputDataService ioDataService;
+	private final IndexService indexService;
 	private final SettingsService settings;
 
 	@Autowired
 	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
-			UserService userService, InputOutputDataService ioDataService, SettingsService settings) {
+			UserService userService, InputOutputDataService ioDataService, IndexService indexService,
+			SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.ioDataService = ioDataService;
+		this.indexService = indexService;
 		this.settings = settings;
 	}
 
@@ -83,7 +87,7 @@ public class SearchController {
 			var loggedIn = userService.getCurrentUser().id != 0;
 			var map = Maps.create();
 			var resultInfo = Maps.of(result.resultInfo);
-			resultInfo.put("indexing", service.isReindexing());
+			resultInfo.put("indexing", indexService.getIndexingStatus() != null);
 			map.put("resultInfo", resultInfo);
 			var data = result.data.stream().map(dsEntry -> {
 				var e = Maps.of(dsEntry);
@@ -94,6 +98,8 @@ public class SearchController {
 					dsVersion.repos.forEach(dsRepo -> {
 						var r = Maps.of(dsRepo);
 						var repo = repositories.get(dsRepo.path);
+						if (repo == null)
+							return;
 						r.put("label", repo.getLabel());
 						if (!loggedIn) {
 							Maps.nullify(r, "commitId", "commitMessage");
@@ -122,7 +128,9 @@ public class SearchController {
 					aMap.put("entries", a.entries.stream().map(e -> {
 						Map<String, Object> eMap = Maps.of(e);
 						Repository repo = repositories.get(e.key);
-						eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
+						if (repo != null) {
+							eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
+						}
 						return eMap;
 					}).toList());
 				} else if (a.name.equals(Aggregations.GROUP.name)) {

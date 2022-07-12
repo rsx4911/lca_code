@@ -1,9 +1,7 @@
 include ../mixins/paging.pug
 
-- var reindexing = reindexingStatus && reindexingStatus.worked < reindexingStatus.total;
 each repo in data
 	div
 		a.follow(href=repo.group + '/' + repo.name)=repo.label
-		if !reindexing
-			button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repository' data-group=repo.group data-repository=repo.name disabled=disableReindexing) Reindex
+		button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repository' data-group=repo.group data-repository=repo.name) Reindex
 +paging(resultInfo, null, pageSizeId)
