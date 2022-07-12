@@ -169,7 +169,7 @@ public class SearchController {
 		var list = direction == Direction.CONSUMERS
 				? data.consumers(flowRefId)
 				: data.producers(flowRefId);
-		return SearchResults.pagedAndFiltered(page, pageSize, filter, list);
+		return SearchResults.pagedAndFiltered(page, pageSize, filter, list, p -> p.name);
 	}
 
 	private String removeStringFilter(String name, Map<String, Set<String>> filters) {

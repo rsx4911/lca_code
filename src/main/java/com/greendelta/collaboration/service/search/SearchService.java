@@ -3,6 +3,8 @@ package com.greendelta.collaboration.service.search;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,7 @@ public class SearchService {
 	private final SettingsService settings;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
+	private final EntryBuffer buffer = new EntryBuffer();
 
 	@Autowired
 	public SearchService(SettingsService settings, QueryService queryService) {
@@ -58,13 +61,19 @@ public class SearchService {
 					.forEach(diff -> index(repo, manager, diff.toReference(Side.NEW)));
 			Diff.filter(diffs, DiffType.DELETED)
 					.forEach(diff -> remove(manager, diff.toReference(Side.OLD)));
+			buffer.flush();
 		});
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {
 		var entry = find(ref);
+		boolean insert = entry == null;
 		entry = manager.createOrUpdate(entry, ref);
-		getClient().index(entry.toIndexId(), Maps.of(entry));
+		if (insert) {
+			buffer.putInsert(ref, entry);
+		} else {
+			buffer.putUpdate(ref, entry);
+		}
 	}
 
 	private void remove(DsEntryManager manager, Reference ref) {
@@ -73,15 +82,18 @@ public class SearchService {
 			return;
 		manager.remove(entry, ref);
 		if (entry.versions.isEmpty()) {
-			getClient().remove(entry.toIndexId());
+			buffer.putRemove(entry.toIndexId());
 		} else {
-			getClient().update(entry.toIndexId(), Maps.of(entry));
+			buffer.putUpdate(ref, entry);
 		}
 	}
 
 	private DsEntry find(Reference ref) {
-		var entry = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
-		return parser.parse(entry);
+		var entry = buffer.get(ref);
+		if (entry != null)
+			return entry;
+		var map = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
+		return parser.parse(map);
 	}
 
 	void update(Repository repo) {
@@ -101,6 +113,7 @@ public class SearchService {
 			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 					.forEach(diff -> remove(manager, diff.toReference(Side.NEW)));
+			buffer.flush();
 		});
 	}
 
@@ -128,6 +141,60 @@ public class SearchService {
 
 	private SearchClient getClient() {
 		return settings.searchConfig.getSearchClient();
+	}
+
+	private class EntryBuffer {
+
+		private Set<String> toRemove = new HashSet<>();
+		private Map<String, DsEntry> toUpdate = new HashMap<String, DsEntry>();
+		private Map<String, DsEntry> toInsert = new HashMap<String, DsEntry>();
+
+		public void flush() {
+			if (!toInsert.isEmpty()) {
+				getClient().index(convert(toInsert));
+				toInsert.clear();
+			}
+			if (!toUpdate.isEmpty()) {
+				getClient().update(convert(toUpdate));
+				toUpdate.clear();
+			}
+			if (!toRemove.isEmpty()) {
+				getClient().remove(toRemove);
+				toRemove.clear();
+			}
+		}
+
+		public DsEntry get(Reference ref) {
+			return null;
+		}
+
+		public void putInsert(Reference ref, DsEntry entry) {
+			toInsert.put(DsEntry.toIndexId(ref.type, ref.refId), entry);
+			checkFlush();
+		}
+
+		public void putUpdate(Reference ref, DsEntry entry) {
+			toUpdate.put(DsEntry.toIndexId(ref.type, ref.refId), entry);
+			checkFlush();
+		}
+
+		public void putRemove(String refId) {
+			toRemove.add(refId);
+			checkFlush();
+		}
+
+		private void checkFlush() {
+			if (toInsert.size() + toUpdate.size() + toRemove.size() == 1000) {
+				flush();
+			}
+		}
+
+		private Map<String, Map<String, Object>> convert(Map<String, DsEntry> data) {
+			var entries = new HashMap<String, Map<String, Object>>();
+			data.forEach((refId, entry) -> entries.put(refId, Maps.of(entry)));
+			return entries;
+		}
+
 	}
 
 }

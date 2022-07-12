@@ -19,6 +19,7 @@ define([
 
 			events: 
 				'click a:not([href="#"])': (event) -> Events.followLink event
+				'click [data-action=refresh]': () -> Backbone.history.loadUrl()
 
 			aggregationOrder:
 				group: 1

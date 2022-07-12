@@ -31,10 +31,6 @@ public class InputOutputDataService {
 		this.dao = dao;
 	}
 
-	public InputOutputData insert(InputOutputData data) {
-		return dao.insert(data);
-	}
-
 	public InputOutputData get(Repository repo, Commit commit) {
 		return dao.getFirst("SELECT data FROM InputOutputData data "
 				+ "WHERE data.repositoryPath = :repositoryPath "
@@ -43,12 +39,12 @@ public class InputOutputDataService {
 						"commitId", commit.id));
 	}
 
-	public void remove(Repository repo) {
+	void remove(Repository repo) {
 		dao.update("DELETE FROM InputOutputData data WHERE data.repositoryPath = :repositoryPath",
 				Maps.of("repositoryPath", repo.path()));
 	}
 
-	public void clear() {
+	void clear() {
 		dao.update("DELETE FROM InputOutputData data", Collections.emptyMap());
 	}
 
@@ -77,7 +73,7 @@ public class InputOutputDataService {
 					.filter(Collections.singletonList(ModelType.PROCESS.name()))
 					.withPreviousCommit().stream()
 					.forEach(diff -> put(repo, commit, diff, current));
-			previous = insert(current);
+			previous = dao.insert(current);
 		}
 	}
 
@@ -86,22 +82,22 @@ public class InputOutputDataService {
 		data.inputs.remove(diff.refId);
 		data.outputs.remove(diff.refId);
 		data.descriptors.remove(diff.refId);
-		if (diff.diffType != DiffType.DELETED) {
-			var oid = repo.ids().get(diff.path, commit.id);
-			var d = repo.datasets().parse(oid, "name", "processType", "exchanges.flow.@id",
-					"exchanges.isInput");
-			var name = d.get("name") != null ? d.get("name").toString() : diff.refId;
-			var processType = getProcessType(d.get("processType"));
-			data.descriptors.put(diff.refId, new ProcessDescriptor(diff.refId, name, processType));
-			var flowRefIds = (List<String>) d.get("exchanges.flow.@id");
-			var isInput = (List<String>) d.get("exchanges.isInput");
-			for (var i = 0; i < flowRefIds.size(); i++) {
-				var flowRefId = flowRefIds.get(i);
-				if (Boolean.parseBoolean(isInput.get(i))) {
-					data.inputs.computeIfAbsent(diff.refId, k -> new HashSet<>()).add(flowRefId);
-				} else {
-					data.outputs.computeIfAbsent(diff.refId, k -> new HashSet<>()).add(flowRefId);
-				}
+		if (diff.diffType == DiffType.DELETED)
+			return;
+		var oid = repo.ids().get(diff.path, commit.id);
+		var d = repo.datasets().parse(oid, "name", "processType", "exchanges.flow.@id",
+				"exchanges.isInput");
+		var name = d.get("name") != null ? d.get("name").toString() : diff.refId;
+		var processType = getProcessType(d.get("processType"));
+		data.descriptors.put(diff.refId, new ProcessDescriptor(diff.refId, name, processType));
+		var flowRefIds = (List<String>) d.get("exchanges.flow.@id");
+		var isInput = (List<String>) d.get("exchanges.isInput");
+		for (var i = 0; i < flowRefIds.size(); i++) {
+			var flowRefId = flowRefIds.get(i);
+			if (Boolean.parseBoolean(isInput.get(i))) {
+				data.inputs.computeIfAbsent(diff.refId, k -> new HashSet<>()).add(flowRefId);
+			} else {
+				data.outputs.computeIfAbsent(diff.refId, k -> new HashSet<>()).add(flowRefId);
 			}
 		}
 	}
