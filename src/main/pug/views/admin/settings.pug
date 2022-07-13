@@ -2,28 +2,26 @@ include ../mixins/forms.pug
 
 #settings-form
 	.header-box Basic settings
-		button.btn.btn-primary.pull-right(data-action='test-search') Run test search
-		button.btn.btn-primary.pull-right(data-action='test-glad') Check GLAD url
 	.content-box
 		.two-columns
 			+input('SERVER_SETTING__SERVER_NAME', 'Server name')
-			+input('SERVER_SETTING__SERVER_URL', 'Server base url (e.g. used in email links)')
+			+input('SERVER_SETTING__SERVER_URL', 'Base url (e.g. used in email links)')
 		.clear
 		.two-columns
 			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
 			+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
 		.clear
+	.header-box Opensearch settings
+		button.btn.btn-primary.pull-right(data-action='test-search') Run test search
+	.content-box
 		.three-columns
-			+input('SERVER_SETTING__GLAD_URL', 'Glad service base url')
-			+input('SERVER_SETTING__GLAD_API_KEY_HEADER', 'Glad service api-key header field')
-			+input('SERVER_SETTING__GLAD_API_KEY', 'Glad service api-key header value')
+			+input('SEARCH_SETTING__SCHEMA', 'Schema')
+			+input('SEARCH_SETTING__HOST', 'Url')
+			+input('SEARCH_SETTING__PORT', 'Port')
 		.clear
-		.four-columns
-			+input('SEARCH_SETTING__SCHEMA', 'Opensearch schema')
-			+input('SEARCH_SETTING__HOST', 'Opensearch url')
-			+input('SEARCH_SETTING__PORT', 'Opensearch port')
-			+input('SEARCH_SETTING__INDEX_NAME', 'Opensearch index')
-		.clear
+		.two-columns
+			+input('SEARCH_SETTING__INDEX_NAME', 'Search index')
+			+input('SEARCH_SETTING__IO_DATA_INDEX_NAME', 'Input/output index')
 	.header-box Enabled features
 	.content-box
 		+checkbox('SERVER_SETTING__COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
@@ -31,7 +29,7 @@ include ../mixins/forms.pug
 		+checkbox('SERVER_SETTING__MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
 		+checkbox('SERVER_SETTING__PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
 		+checkbox('SERVER_SETTING__NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
-		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselfes')
+		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselves')
 		.indented-setting
 			+checkbox('SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
 		+checkbox('SERVER_SETTING__CHANGE_LOG_ENABLED', 'Change log</strong>: Users can create change logs from commit histories (local nodejs server for server side rendering must be installed)')
@@ -90,4 +88,12 @@ include ../mixins/forms.pug
 		.two-columns
 			+input('IMPRINT_SETTING__REGISTRATION', 'Registration')
 			+input('IMPRINT_SETTING__VAT', 'Vat')
+		.clear
+	.header-box GLAD settings
+		button.btn.btn-primary.pull-right(data-action='test-glad') Check GLAD url
+	.content-box
+		.three-columns
+			+input('SERVER_SETTING__GLAD_URL', 'Glad service base url')
+			+input('SERVER_SETTING__GLAD_API_KEY_HEADER', 'Glad service api-key header field')
+			+input('SERVER_SETTING__GLAD_API_KEY', 'Glad service api-key header value')
 		.clear

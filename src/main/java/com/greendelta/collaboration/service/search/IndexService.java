@@ -44,10 +44,13 @@ public class IndexService {
 				return;
 		}
 		new Thread(() -> {
-			work.run();
-			synchronized (workQueue) {
-				workQueue.poll();
-				runNext();
+			try {
+				work.run();
+			} finally {
+				synchronized (workQueue) {
+					workQueue.poll();
+					runNext();
+				}
 			}
 		}).start();
 	}
@@ -65,7 +68,7 @@ public class IndexService {
 	public Work clearIndex() {
 		return offer("Clearing index", 1, work -> {
 			searchService.clearIndex();
-			ioDataService.clear();
+			ioDataService.clearIndex();
 			work.worked++;
 		});
 	}
@@ -73,7 +76,7 @@ public class IndexService {
 	public Work index(Repository repo) {
 		return offer("Indexing " + repo.path(), 1, work -> {
 			searchService.index(repo);
-			ioDataService.update(repo);
+			ioDataService.index(repo);
 			work.worked++;
 		});
 	}
@@ -81,7 +84,7 @@ public class IndexService {
 	public Work index(Repository repo, Commit commit) {
 		return offer("Indexing " + repo.path(), 1, work -> {
 			searchService.index(repo, commit);
-			ioDataService.update(repo);
+			ioDataService.index(repo);
 			work.worked++;
 		});
 	}
@@ -106,7 +109,7 @@ public class IndexService {
 			searchService.remove(repo);
 			ioDataService.remove(repo);
 			searchService.index(repo);
-			ioDataService.update(repo);
+			ioDataService.index(repo);
 			work.worked++;
 		});
 	}
@@ -114,10 +117,10 @@ public class IndexService {
 	public Work reindexAll(List<Repository> repositories) {
 		return offer("Reindexing all repositories", repositories.size(), work -> {
 			searchService.clearIndex();
-			ioDataService.clear();
+			ioDataService.clearIndex();
 			repositories.forEach(repo -> {
 				searchService.index(repo);
-				ioDataService.update(repo);
+				ioDataService.index(repo);
 				work.worked++;
 			});
 		});
@@ -147,8 +150,11 @@ public class IndexService {
 
 		@Override
 		public void run() {
-			work.accept(this);
-			done = true;
+			try {
+				work.accept(this);
+			} finally {
+				done = true;
+			}
 		}
 
 		public boolean isDone() {

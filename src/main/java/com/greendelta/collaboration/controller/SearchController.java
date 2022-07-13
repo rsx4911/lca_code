@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.core.model.Direction;
+import org.openlca.core.model.ModelType;
+import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriUtils;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.InputOutputData.ProcessDescriptor;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -36,6 +38,7 @@ import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Maps;
+import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchResult;
@@ -148,7 +151,7 @@ public class SearchController {
 	}
 
 	@GetMapping("flowLinks/{flowRefId}")
-	public SearchResult<ProcessDescriptor> searchFlowLinks(
+	public SearchResult<Map<String, Object>> searchFlowLinks(
 			@PathVariable("flowRefId") String flowRefId,
 			@RequestParam(name = "repositoryId") String repositoryId,
 			@RequestParam(name = "direction", required = false) Direction direction,
@@ -163,13 +166,16 @@ public class SearchController {
 		if (commitId == null)
 			throw Response.notFound();
 		var commit = repo.commits().get(commitId);
-		var data = ioDataService.get(repo, commit);
-		if (data == null)
-			return SearchResults.pagedAndFiltered(page, pageSize, filter, new ArrayList<>());
-		var list = direction == Direction.CONSUMERS
-				? data.consumers(flowRefId)
-				: data.producers(flowRefId);
-		return SearchResults.pagedAndFiltered(page, pageSize, filter, list, p -> p.name);
+		var result = ioDataService.get(repo, commit, flowRefId, direction, page, pageSize, filter);
+		return SearchResults.convert(result, entry -> addProcessInfo(repo, commit, entry));
+	}
+
+	private Map<String, Object> addProcessInfo(Repository repo, Commit commit, Map<String, Object> entry) {
+		var refId = Maps.getString(entry, "refId");
+		var ref = repo.references().get(ModelType.PROCESS, refId, commit.id);
+		var oId = repo.ids().get(ref.path, commit.id);
+		entry.put("type", ModelType.PROCESS.name());
+		return MetaData.forBrowse(ModelType.PROCESS, entry, oId, repo);
 	}
 
 	private String removeStringFilter(String name, Map<String, Set<String>> filters) {
@@ -207,12 +213,6 @@ public class SearchController {
 			}
 		}
 		return filters;
-	}
-
-	private static enum Direction {
-
-		PRODUCERS, CONSUMERS;
-
 	}
 
 }

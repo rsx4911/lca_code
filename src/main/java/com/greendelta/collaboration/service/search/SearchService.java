@@ -3,8 +3,6 @@ package com.greendelta.collaboration.service.search;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,12 +15,12 @@ import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.Diffs;
+import org.openlca.git.util.TypeRefIdPair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.util.Maps;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -33,12 +31,13 @@ public class SearchService {
 	private final SettingsService settings;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
-	private final EntryBuffer buffer = new EntryBuffer();
+	private final EntryBuffer buffer;
 
 	@Autowired
 	public SearchService(SettingsService settings, QueryService queryService) {
 		this.settings = settings;
 		this.queryService = queryService;
+		this.buffer = new EntryBuffer(getClient(), 1000);
 	}
 
 	public SearchResult<DsEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
@@ -70,9 +69,9 @@ public class SearchService {
 		boolean insert = entry == null;
 		entry = manager.createOrUpdate(entry, ref);
 		if (insert) {
-			buffer.putInsert(ref, entry);
+			buffer.putInsert(getIndexId(ref), entry);
 		} else {
-			buffer.putUpdate(ref, entry);
+			buffer.putUpdate(getIndexId(ref), entry);
 		}
 	}
 
@@ -82,17 +81,14 @@ public class SearchService {
 			return;
 		manager.remove(entry, ref);
 		if (entry.versions.isEmpty()) {
-			buffer.putRemove(entry.toIndexId());
+			buffer.putRemove(getIndexId(entry));
 		} else {
-			buffer.putUpdate(ref, entry);
+			buffer.putUpdate(getIndexId(ref), entry);
 		}
 	}
 
 	private DsEntry find(Reference ref) {
-		var entry = buffer.get(ref);
-		if (entry != null)
-			return entry;
-		var map = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
+		var map = getClient().get(getIndexId(ref));
 		return parser.parse(map);
 	}
 
@@ -139,62 +135,12 @@ public class SearchService {
 		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	private SearchClient getClient() {
+	SearchClient getClient() {
 		return settings.searchConfig.getSearchClient();
 	}
 
-	private class EntryBuffer {
-
-		private Set<String> toRemove = new HashSet<>();
-		private Map<String, DsEntry> toUpdate = new HashMap<String, DsEntry>();
-		private Map<String, DsEntry> toInsert = new HashMap<String, DsEntry>();
-
-		public void flush() {
-			if (!toInsert.isEmpty()) {
-				getClient().index(convert(toInsert));
-				toInsert.clear();
-			}
-			if (!toUpdate.isEmpty()) {
-				getClient().update(convert(toUpdate));
-				toUpdate.clear();
-			}
-			if (!toRemove.isEmpty()) {
-				getClient().remove(toRemove);
-				toRemove.clear();
-			}
-		}
-
-		public DsEntry get(Reference ref) {
-			return null;
-		}
-
-		public void putInsert(Reference ref, DsEntry entry) {
-			toInsert.put(DsEntry.toIndexId(ref.type, ref.refId), entry);
-			checkFlush();
-		}
-
-		public void putUpdate(Reference ref, DsEntry entry) {
-			toUpdate.put(DsEntry.toIndexId(ref.type, ref.refId), entry);
-			checkFlush();
-		}
-
-		public void putRemove(String refId) {
-			toRemove.add(refId);
-			checkFlush();
-		}
-
-		private void checkFlush() {
-			if (toInsert.size() + toUpdate.size() + toRemove.size() == 1000) {
-				flush();
-			}
-		}
-
-		private Map<String, Map<String, Object>> convert(Map<String, DsEntry> data) {
-			var entries = new HashMap<String, Map<String, Object>>();
-			data.forEach((refId, entry) -> entries.put(refId, Maps.of(entry)));
-			return entries;
-		}
-
+	private String getIndexId(TypeRefIdPair ref) {
+		return ref.type.name() + "/" + ref.refId;
 	}
 
 }

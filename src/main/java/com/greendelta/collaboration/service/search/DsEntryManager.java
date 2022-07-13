@@ -27,9 +27,7 @@ class DsEntryManager {
 
 	DsEntry createOrUpdate(DsEntry e, Reference ref) {
 		if (e == null) {
-			e = new DsEntry();
-			e.type = ref.type;
-			e.refId = ref.refId;
+			e = new DsEntry(ref.type, ref.refId);
 		}
 		var v = getVersion(e, ref);
 		if (v == null) {
