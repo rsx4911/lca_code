@@ -15,7 +15,7 @@ import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.Diffs;
-import org.openlca.git.util.TypeRefIdPair;
+import org.openlca.git.util.TypedRefId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -139,7 +139,7 @@ public class SearchService {
 		return settings.searchConfig.getSearchClient();
 	}
 
-	private String getIndexId(TypeRefIdPair ref) {
+	private String getIndexId(TypedRefId ref) {
 		return ref.type.name() + "/" + ref.refId;
 	}
 

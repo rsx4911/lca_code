@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
-import org.openlca.git.util.TypeRefIdPair;
+import org.openlca.git.util.TypedRefId;
 
-public class DsEntry extends TypeRefIdPair {
+public class DsEntry extends TypedRefId {
 
 	public DsEntry(ModelType type, String refId) {
 		super(type, refId);
