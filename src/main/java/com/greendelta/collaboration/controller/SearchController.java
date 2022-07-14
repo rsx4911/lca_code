@@ -166,7 +166,7 @@ public class SearchController {
 		if (commitId == null)
 			throw Response.notFound();
 		var commit = repo.commits().get(commitId);
-		var result = ioDataService.get(repo, commit, flowRefId, direction, page, pageSize, filter);
+		var result = ioDataService.query(repo, commit, flowRefId, direction, page, pageSize, filter);
 		return SearchResults.convert(result, entry -> addProcessInfo(repo, commit, entry));
 	}
 

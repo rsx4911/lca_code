@@ -57,9 +57,11 @@ class EntryBuffer {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private Map<String, Map<String, Object>> convert(Map<String, Object> data) {
 		var entries = new HashMap<String, Map<String, Object>>();
-		data.forEach((refId, entry) -> entries.put(refId, Maps.of(entry)));
+		data.forEach((refId, entry) -> entries.put(refId,
+				entry instanceof Map ? (Map<String, Object>) entry : Maps.of(entry)));
 		return entries;
 	}
 

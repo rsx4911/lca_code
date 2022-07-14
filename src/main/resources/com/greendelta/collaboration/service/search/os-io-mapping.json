@@ -6,6 +6,9 @@
 		"refId": {
 			"type": "keyword"
 		},
+		"commitId": {
+			"type": "keyword"
+		},
 		"versions": {
 			"type": "nested",
 			"properties": {

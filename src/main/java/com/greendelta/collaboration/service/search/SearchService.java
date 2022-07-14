@@ -101,7 +101,7 @@ public class SearchService {
 		index(newRepo);
 	}
 
-	public void remove(Repository repo) {
+	void remove(Repository repo) {
 		var commits = repo.commits().find().all();
 		Collections.reverse(commits);
 		commits.forEach(commit -> {
@@ -113,7 +113,7 @@ public class SearchService {
 		});
 	}
 
-	public void clearIndex() {
+	void clearIndex() {
 		getClient().delete();
 		createIndex();
 	}

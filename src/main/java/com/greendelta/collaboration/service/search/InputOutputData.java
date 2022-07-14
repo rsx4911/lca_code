@@ -24,11 +24,6 @@ public class InputOutputData {
 		this.versions.add(new ProcessVersion(name, type, commitId));
 	}
 
-	void addCommitId(String commitId) {
-		var last = versions.get(versions.size() - 1);
-		versions.add(new ProcessVersion(last.name, last.processType, commitId));
-	}
-
 	static class ProcessVersion {
 
 		public String name;

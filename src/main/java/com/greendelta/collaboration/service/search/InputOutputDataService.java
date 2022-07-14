@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +22,6 @@ import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Maps;
@@ -35,6 +33,7 @@ import com.greendelta.search.wrapper.SearchResult;
 @Service
 public class InputOutputDataService {
 
+	private static final int BUFFER_SIZE = 100;
 	private static final Logger log = LogManager.getLogger(InputOutputDataService.class);
 	private final SettingsService settings;
 	private final EntryBuffer buffer;
@@ -42,10 +41,11 @@ public class InputOutputDataService {
 	@Autowired
 	public InputOutputDataService(SettingsService settings) {
 		this.settings = settings;
-		this.buffer = new EntryBuffer(getClient(), 100);
+		this.buffer = new EntryBuffer(getClient(), BUFFER_SIZE);
 	}
 
-	public SearchResult<Map<String, Object>> get(Repository repo, Commit commit, String flowRefId, Direction direction,
+	public SearchResult<Map<String, Object>> query(Repository repo, Commit commit, String flowRefId,
+			Direction direction,
 			int page, int pageSize, String filter) {
 		var query = new SearchQueryBuilder();
 		query.filter("repositoryPath", SearchFilterValue.term(repo.path()));
@@ -83,7 +83,7 @@ public class InputOutputDataService {
 		return getClient().searchIds(query.build());
 	}
 
-	public void clearIndex() {
+	void clearIndex() {
 		getClient().delete();
 		createIndex();
 	}
@@ -120,7 +120,6 @@ public class InputOutputDataService {
 			var diffs = Diffs.of(repo.gitRepo(), commit)
 					.filter(Collections.singletonList(ModelType.PROCESS.name()))
 					.withPreviousCommit();
-			var previous = previousCommit != null ? getIds(repo, previousCommit) : new HashSet<String>();
 			var skip = new HashSet<String>();
 			for (var diff : diffs) {
 				skip.add(diff.refId);
@@ -129,30 +128,44 @@ public class InputOutputDataService {
 				var data = createData(repo, commit, commitIndex, diff);
 				buffer.putInsert(getIndexId(repo.path(), commit.id, diff.refId), data);
 			}
-			updatePrevious(repo, previous, skip, commit);
-			previousCommit = commit;
 			buffer.flush();
+			updatePrevious(repo, skip, previousCommit, commit);
+			previousCommit = commit;
 		}
 	}
 
-	private void updatePrevious(Repository repo, Set<String> ids, Set<String> skipRefIds, Commit commit) {
-		var stack = new Stack<String>();
-		stack.addAll(ids);
-		while (!stack.isEmpty()) {
-			var nextIds = new HashSet<String>();
-			while (nextIds.size() < 100 && !stack.isEmpty()) {
-				nextIds.add(stack.pop());
-			}
-			var nextElements = getClient().get(nextIds);
-			for (var next : nextElements) {
-				var data = new ObjectMapper().convertValue(next, InputOutputData.class);
-				if (skipRefIds.contains(data.refId))
-					continue;
-				data.addCommitId(commit.id);
-				buffer.putUpdate(getIndexId(data.repositoryPath, data.commitId, data.refId), Maps.of(data));
-			}
+	private void updatePrevious(Repository repo, Set<String> skipRefIds, Commit previousCommit, Commit commit) {
+		if (previousCommit == null)
+			return;
+		var previous = getForCommit(repo, previousCommit);
+		while (previous.hasNext()) {
+			var data = previous.next();
+			var refId = Maps.getString(data, "refId");
+			var commitId = Maps.getString(data, "commitId");
+			List<Map<String, Object>> versions = Maps.get(data, "versions");
+			if (skipRefIds.contains(refId))
+				continue;
+			var last = versions.get(versions.size() - 1);
+			var lastName = Maps.getString(last, "name");
+			var lastType = ProcessType.valueOf(Maps.getString(last, "processType"));
+			versions.add(Map.of("name", lastName,
+					"processType", lastType,
+					"commitId", commit.id));
+			data.put("versions", versions);
+			buffer.putUpdate(getIndexId(repo.path(), commitId, refId), data);
 		}
 		buffer.flush();
+	}
+
+	private IndexIterator getForCommit(Repository repo, Commit commit) {
+		var query = new SearchQueryBuilder()
+				.filter("repositoryPath", SearchFilterValue.term(repo.path()));
+		if (commit != null) {
+			query.filter("versions.commitId", SearchFilterValue.term(commit.id));
+		}
+		query.fields("refId", "commitId");
+		query.arrayFields("versions.name", "versions.processType", "versions.commitId");
+		return new IndexIterator(getClient(), query, BUFFER_SIZE);
 	}
 
 	@SuppressWarnings("unchecked")
