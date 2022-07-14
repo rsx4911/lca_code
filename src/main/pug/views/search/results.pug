@@ -10,7 +10,8 @@ mixin badge(key, value)
 	- var keys = Object.keys(selectedAggregations);
 	| #{resultInfo.totalCount} results
 	if resultInfo.indexing
-		div: small datasets are currently being reindexed, more search results might be available in some minutes
+		div: small datasets are currently being reindexed, more search results might be available in some minutes 
+			button.btn.btn-xs.btn-default(data-action='refresh') Refresh
 	div 
 		if query
 			+badge('query', query)

@@ -25,6 +25,11 @@ import com.greendelta.collaboration.service.Repository;
 
 public class MetaData {
 
+	public static Map<String, Object> forBrowse(ModelType type, Map<String, Object> e, ObjectId oId, Repository repo) {
+		putDatasetInfo(type, e, oId, repo, Mode.BROWSE);
+		return e;
+	}
+
 	public static Map<String, Object> forBrowse(Entry e, Repository repo) {
 		return toDatasetInfo(e, repo, Mode.BROWSE);
 	}
@@ -98,12 +103,17 @@ public class MetaData {
 			entry.put("name", info.get("name") + " - " + location);
 			entry.put("location", location);
 		}
-		entry.put("flowType", info.get("flowType"));
-		entry.put("processType", info.get("processType"));
-		entry.put("contact", info.get("processDocumentation.dataSetOwner.name"));
-		entry.put("validFromYear", info.get("processDocumentation.validFrom"));
-		entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
-		entry.put("modellingApproach", info.get("defaultAllocationMethod"));
+		if (type == ModelType.FLOW) {
+			entry.put("flowType", info.get("flowType"));
+		} else if (type == ModelType.PROCESS) {
+			entry.put("processType", info.get("processType"));
+		}
+		if (mode == Mode.SEARCH) {
+			entry.put("contact", info.get("processDocumentation.dataSetOwner.name"));
+			entry.put("validFromYear", info.get("processDocumentation.validFrom"));
+			entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
+			entry.put("modellingApproach", info.get("defaultAllocationMethod"));
+		}
 	}
 
 	public static Stream<Map<String, Object>> sortByName(Stream<Map<String, Object>> data) {

@@ -100,7 +100,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			var generateJson = repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
 			notificationService.dataPushed(repo, commit);
 			if (isPublic && generateJson) {
-				indexService.generateJson(repo);
+				repoService.generateJson(repo);
 			}
 			indexService.index(repo, commit);
 		}

@@ -33,8 +33,6 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.IndexService;
-import com.greendelta.collaboration.service.search.InputOutputDataService;
-import com.greendelta.collaboration.service.search.SearchService;
 import com.greendelta.collaboration.util.Maps;
 
 @RestController
@@ -47,21 +45,16 @@ public class AdminAreaController {
 	// occur)
 	public static final String SERVER_INFO_PATH = "/ws/admin/area/serverInfo";
 	private final RepositoryService repoService;
-	private final SearchService searchService;
-	private final IndexService dataService;
-	private final InputOutputDataService ioDataService;
+	private final IndexService indexService;
 	private final SettingsService settings;
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
 
 	@Autowired
-	public AdminAreaController(RepositoryService repoService, SearchService searchService,
-			IndexService indexingService, InputOutputDataService ioDataService, SettingsService settings,
+	public AdminAreaController(RepositoryService repoService, IndexService indexingService, SettingsService settings,
 			EmailService emailService, AnnouncementService announcementService) {
 		this.repoService = repoService;
-		this.searchService = searchService;
-		this.dataService = indexingService;
-		this.ioDataService = ioDataService;
+		this.indexService = indexingService;
 		this.settings = settings;
 		this.emailService = emailService;
 		this.announcementService = announcementService;
@@ -120,33 +113,19 @@ public class AdminAreaController {
 		var info = settings.serverConfig.toMap(setting -> relevantSettings.contains(setting));
 		info.put("repositoriesOrder", repoService.getPublicRepositoryOrder());
 		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
-		info.put("reindexingStatus", Maps.of(searchService.getReindexingStatus()));
+		info.put("indexingStatus", Maps.of(indexService.getIndexingStatus()));
 		return info;
 	}
 
 	@PutMapping("clearIndex")
 	public void clearIndex() {
-		if (searchService.isReindexing())
-			throw Response.conflict("Reindexing is already running");
-		try {
-			var status = searchService.startReindexing(1);
-			searchService.clearIndex();
-			ioDataService.clear();
-			status.worked++;
-		} finally {
-			searchService.endReindexing();
-		}
+		indexService.clearIndex();
 	}
 
 	@PutMapping("reindex")
 	public void reindex() {
-		if (searchService.isReindexing())
-			throw Response.conflict("Reindexing is already running");
-		try (var all = repoService.getAllAccessible()) {
-			var status = searchService.startReindexing(all.size());
-			searchService.clearIndex();
-			ioDataService.clear();
-			dataService.index(all, status);
+		try (var repos = repoService.getAllAccessible()) {
+			indexService.reindexAll(repos);
 		}
 	}
 
@@ -154,12 +133,8 @@ public class AdminAreaController {
 	public void reindex(
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository) {
-		if (searchService.isReindexing())
-			throw Response.conflict("Reindexing is already running");
 		try (var repo = repoService.get(group, repository)) {
-			var status = searchService.startReindexing(1);
-			ioDataService.delete(repo);
-			dataService.index(Arrays.asList(repo), status);
+			indexService.reindex(repo);
 		}
 	}
 

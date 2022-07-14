@@ -25,12 +25,14 @@ import org.openlca.git.model.Commit;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
 import com.greendelta.collaboration.error.UnsupportedSchemaException;
+import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.io.ZipCommitWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
@@ -278,6 +280,11 @@ public class RepositoryService {
 		}
 	}
 
+	@Async
+	public void generateJson(Repository repo) {
+		RepositoryJsonWriter.writeCurrent(repo);
+	}
+	
 	public int getNoOfRepositories(User user) {
 		if (user.username == null || user.username.isEmpty())
 			return 0;

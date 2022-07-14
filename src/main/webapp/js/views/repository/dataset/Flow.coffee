@@ -14,7 +14,7 @@ define([
 		initReferences: (repository, refId, commitId, type) ->
 			group = repository.get 'group'
 			name = repository.get 'name'
-			direction = if type is 'used-by' then 'CONSUMERS' else 'PRODUCERS' 
+			direction = if type is 'used-by' then 'INPUT' else 'OUTPUT' 
 			commitIdParam = if commitId then "&commitId=#{commitId}" else ''
 			filter = new Filter
 				container: "##{type}-data"

@@ -1,0 +1,33 @@
+{
+	"properties": {
+		"repositoryPath": {
+			"type": "keyword"
+		},
+		"refId": {
+			"type": "keyword"
+		},
+		"commitId": {
+			"type": "keyword"
+		},
+		"versions": {
+			"type": "nested",
+			"properties": {
+				"name": {
+					"type": "keyword"
+				},
+				"processType": {
+					"type": "keyword"
+				},
+				"commitId": {
+					"type": "keyword"
+				}
+			}
+		},
+		"inputs": {
+			"type": "keyword"
+		},
+		"outputs": {
+			"type": "keyword"
+		}		
+	}
+}

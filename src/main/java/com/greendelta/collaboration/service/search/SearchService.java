@@ -2,9 +2,7 @@ package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,12 +15,12 @@ import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.Diffs;
+import org.openlca.git.util.TypedRefId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.util.Maps;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
 
@@ -33,12 +31,13 @@ public class SearchService {
 	private final SettingsService settings;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
-	private ReindexingStatus reindexStatus;
+	private final EntryBuffer buffer;
 
 	@Autowired
 	public SearchService(SettingsService settings, QueryService queryService) {
 		this.settings = settings;
 		this.queryService = queryService;
+		this.buffer = new EntryBuffer(getClient(), 1000);
 	}
 
 	public SearchResult<DsEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
@@ -61,13 +60,19 @@ public class SearchService {
 					.forEach(diff -> index(repo, manager, diff.toReference(Side.NEW)));
 			Diff.filter(diffs, DiffType.DELETED)
 					.forEach(diff -> remove(manager, diff.toReference(Side.OLD)));
+			buffer.flush();
 		});
 	}
 
 	private void index(Repository repo, DsEntryManager manager, Reference ref) {
 		var entry = find(ref);
+		boolean insert = entry == null;
 		entry = manager.createOrUpdate(entry, ref);
-		getClient().index(entry.toIndexId(), Maps.of(entry));
+		if (insert) {
+			buffer.putInsert(getIndexId(ref), entry);
+		} else {
+			buffer.putUpdate(getIndexId(ref), entry);
+		}
 	}
 
 	private void remove(DsEntryManager manager, Reference ref) {
@@ -76,15 +81,15 @@ public class SearchService {
 			return;
 		manager.remove(entry, ref);
 		if (entry.versions.isEmpty()) {
-			getClient().remove(entry.toIndexId());
+			buffer.putRemove(getIndexId(entry));
 		} else {
-			getClient().update(entry.toIndexId(), Maps.of(entry));
+			buffer.putUpdate(getIndexId(ref), entry);
 		}
 	}
 
 	private DsEntry find(Reference ref) {
-		var entry = getClient().get(DsEntry.toIndexId(ref.type, ref.refId));
-		return parser.parse(entry);
+		var map = getClient().get(getIndexId(ref));
+		return parser.parse(map);
 	}
 
 	void update(Repository repo) {
@@ -96,7 +101,7 @@ public class SearchService {
 		index(newRepo);
 	}
 
-	public void remove(Repository repo) {
+	void remove(Repository repo) {
 		var commits = repo.commits().find().all();
 		Collections.reverse(commits);
 		commits.forEach(commit -> {
@@ -104,10 +109,11 @@ public class SearchService {
 			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
 					.forEach(diff -> remove(manager, diff.toReference(Side.NEW)));
+			buffer.flush();
 		});
 	}
 
-	public void clearIndex() {
+	void clearIndex() {
 		getClient().delete();
 		createIndex();
 	}
@@ -129,39 +135,12 @@ public class SearchService {
 		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	private SearchClient getClient() {
+	SearchClient getClient() {
 		return settings.searchConfig.getSearchClient();
 	}
 
-	public boolean isReindexing() {
-		return reindexStatus != null;
+	private String getIndexId(TypedRefId ref) {
+		return ref.type.name() + "/" + ref.refId;
 	}
 
-	public ReindexingStatus startReindexing(int total) {
-		if (reindexStatus != null)
-			throw new IllegalStateException("Already reindexing");
-		reindexStatus = new ReindexingStatus(total);
-		return reindexStatus;
-	}
-
-	public ReindexingStatus getReindexingStatus() {
-		return reindexStatus;
-	}
-
-	public void endReindexing() {
-		reindexStatus = null;
-	}
-
-	public class ReindexingStatus {
-
-		public final Date start;
-		public final int total;
-		public int worked;
-
-		private ReindexingStatus(int total) {
-			this.total = total;
-			this.start = Calendar.getInstance().getTime();
-		}
-
-	}
 }

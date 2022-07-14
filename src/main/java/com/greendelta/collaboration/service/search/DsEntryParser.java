@@ -15,9 +15,9 @@ class DsEntryParser {
 	DsEntry parse(Map<String, Object> entry) {
 		if (entry == null)
 			return null;
-		var e = new DsEntry();
-		e.refId = Maps.get(entry, "refId");
-		e.type = ModelTypes.from(entry);
+		var type = ModelTypes.from(entry);
+		var refId = Maps.getString(entry, "refId");
+		var e = new DsEntry(type, refId);
 		for (var vMap : Maps.getAll(entry, "versions", Map.class)) {
 			var version = (Map<String, Object>) vMap;
 			var v = new DsVersion();

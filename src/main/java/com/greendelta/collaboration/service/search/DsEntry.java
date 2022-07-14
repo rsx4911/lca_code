@@ -4,19 +4,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
+import org.openlca.git.util.TypedRefId;
 
-public class DsEntry {
+public class DsEntry extends TypedRefId {
 
-	public ModelType type;
-	public String refId;
-	public Set<DsVersion> versions = new HashSet<>();
-
-	public String toIndexId() {
-		return toIndexId(type, refId);
-	}
-
-	public static String toIndexId(ModelType type, String refId) {
-		return type.name() + "/" + refId;
+	public DsEntry(ModelType type, String refId) {
+		super(type, refId);
 	}
 	
+	public Set<DsVersion> versions = new HashSet<>();
+
 }

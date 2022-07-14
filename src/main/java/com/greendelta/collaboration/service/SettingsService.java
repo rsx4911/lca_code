@@ -300,6 +300,15 @@ public class SettingsService {
 			}
 		}
 
+		public SearchClient getIoDataSearchClient() {
+			try {
+				return new OsRestClient(getClient(), get(SearchSetting.IO_DATA_INDEX_NAME));
+			} catch (Exception e) {
+				SettingsService.log.error("Error getting search client", e);
+				return null;
+			}
+		}
+
 		public void close() {
 			if (client == null)
 				return;

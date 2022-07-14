@@ -266,5 +266,24 @@ define([
 				@userFilter.init()
 				@groupFilter.init()
 				@teamFilter.init()
+				@renderIndexingStatus(data.indexingStatus)
+
+			renderIndexingStatus: (indexing) ->
+				unless $('#indexing-status').length
+					return
+				unless indexing
+					@$('#indexing-status').html('')
+					return
+				html = "<small><div>Indexing status:</div>"
+				for title, index in indexing.titles
+					if index is 0
+						html += "<div>* #{title} (#{indexing.worked + 1}/#{indexing.total})</div>"
+					else
+						html += "<div>* #{title}</div>"
+				html += '</small>'
+				@$('#indexing-status').html html
+				setTimeout () =>
+					$.get 'ws/admin/area/serverInfo', (serverInfo) => @renderIndexingStatus(serverInfo.indexingStatus)						
+				, 1000
 
 )
