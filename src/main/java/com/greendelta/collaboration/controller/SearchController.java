@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriUtils;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -132,15 +133,23 @@ public class SearchController {
 						Map<String, Object> eMap = Maps.of(e);
 						Repository repo = repositories.get(e.key);
 						if (repo != null) {
-							eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
+							try {
+								eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
+							} catch (ForbiddenAccessException ex) {
+								// ignore
+							}
 						}
 						return eMap;
 					}).toList());
 				} else if (a.name.equals(Aggregations.GROUP.name)) {
 					aMap.put("entries", a.entries.stream().map(e -> {
 						Map<String, Object> eMap = Maps.of(e);
-						String label = groupService.getSettings(e.key).get(GroupSetting.LABEL, e.key);
-						eMap.put("label", label);
+						try {
+							String label = groupService.getSettings(e.key).get(GroupSetting.LABEL, e.key);
+							eMap.put("label", label);
+						} catch (ForbiddenAccessException ex) {
+							// ignore
+						}
 						return eMap;
 					}).toList());
 				}
