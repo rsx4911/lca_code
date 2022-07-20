@@ -9,19 +9,25 @@ import org.openlca.git.model.Commit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.RepositoryList;
+import com.greendelta.collaboration.service.SettingsService;
 
 @Service
 public class IndexService {
 
 	private final SearchService searchService;
 	private final InputOutputDataService ioDataService;
+	private final SettingsService settings;
 	private Queue<Work> workQueue = new LinkedList<>();
 
 	@Autowired
-	public IndexService(SearchService searchService, InputOutputDataService ioDataService) {
+	public IndexService(SearchService searchService, InputOutputDataService ioDataService, SettingsService settings) {
 		this.searchService = searchService;
 		this.ioDataService = ioDataService;
+		this.settings = settings;
 	}
 
 	private Work offer(String title, int total, Consumer<Work> actualWork) {
@@ -65,10 +71,11 @@ public class IndexService {
 		}
 	}
 
-	public Work clearIndex() {
+	public Work clearIndex(RepositoryList repos) {
 		return offer("Clearing index", 1, work -> {
-			searchService.clearIndex();
+			searchService.clearIndex(repos);
 			ioDataService.clearIndex();
+			repos.forEach(repo -> setCommitId(repo, null));
 			work.worked++;
 		});
 	}
@@ -77,29 +84,24 @@ public class IndexService {
 		return offer("Indexing " + repo.path(), 1, work -> {
 			searchService.index(repo);
 			ioDataService.index(repo);
-			work.worked++;
-		});
-	}
-
-	public Work index(Repository repo, Commit commit) {
-		return offer("Indexing " + repo.path(), 1, work -> {
-			searchService.index(repo, commit);
-			ioDataService.index(repo);
+			setCommitId(repo, repo.commits().head());
 			work.worked++;
 		});
 	}
 
 	public Work moveIndex(Repository repo, Repository newRepo) {
 		return offer("Moving index of " + repo.path() + " to " + newRepo.path(), 1, work -> {
-			searchService.update(repo, newRepo);
-			ioDataService.update(repo, newRepo);
+			searchService.move(repo, newRepo);
+			ioDataService.move(repo, newRepo);
+			setCommitId(repo, null);
+			setCommitId(newRepo, newRepo.commits().head());
 			work.worked++;
 		});
 	}
 
-	public Work updateIndex(Repository repo) {
-		return offer("Updating index of " + repo.path(), 1, work -> {
-			searchService.update(repo);
+	public Work updateTags(Repository repo) {
+		return offer("Reindexing " + repo.path(), 1, work -> {
+			searchService.updateTags(repo);
 			work.worked++;
 		});
 	}
@@ -108,19 +110,23 @@ public class IndexService {
 		return offer("Reindexing " + repo.path(), 1, work -> {
 			searchService.remove(repo);
 			ioDataService.remove(repo);
+			setCommitId(repo, null);
 			searchService.index(repo);
 			ioDataService.index(repo);
+			setCommitId(repo, repo.commits().head());
 			work.worked++;
 		});
 	}
 
-	public Work reindexAll(List<Repository> repositories) {
-		return offer("Reindexing all repositories", repositories.size(), work -> {
-			searchService.clearIndex();
+	public Work reindexAll(RepositoryList repos) {
+		return offer("Reindexing all repositories", repos.size(), work -> {
+			searchService.clearIndex(repos);
 			ioDataService.clearIndex();
-			repositories.forEach(repo -> {
+			repos.forEach(repo -> {
+				setCommitId(repo, null);
 				searchService.index(repo);
 				ioDataService.index(repo);
+				setCommitId(repo, repo.commits().head());
 				work.worked++;
 			});
 		});
@@ -130,8 +136,18 @@ public class IndexService {
 		return offer("Deleting index of " + repo.path(), 1, work -> {
 			searchService.remove(repo);
 			ioDataService.remove(repo);
+			setCommitId(repo, null);
 			work.worked++;
 		});
+	}
+
+	private void setCommitId(Repository repo, Commit commit) {
+		var repoSettings = settings.get(SettingType.REPOSITORY_SETTING, repo.path(), null);
+		if (commit == null) {
+			repoSettings.delete(RepositorySetting.SEARCH_COMMIT_ID);
+		} else {
+			repoSettings.set(RepositorySetting.SEARCH_COMMIT_ID, commit.id);
+		}
 	}
 
 	public class Work implements Runnable {
