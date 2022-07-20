@@ -318,7 +318,6 @@ public class RepositoryController {
 			@RequestBody Map<String, Object> data) {
 		var value = data.get("value");
 		try (var repo = service.get(group, name)) {
-			var updateSearch = false;
 			if (setting == RepositorySetting.TAGS) {
 				var tags = parseStringList(value);
 				if (tags != null && tags.isEmpty()) {
@@ -326,7 +325,9 @@ public class RepositoryController {
 				}
 				value = tags;
 				List<String> previous = repo.settings.get(RepositorySetting.TAGS);
-				updateSearch = new HashSet<>(tags).equals(new HashSet<>(previous));
+				if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
+					indexService.updateTags(repo);
+				}
 			}
 			repo.settings.set(setting, value);
 			if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)
@@ -336,9 +337,6 @@ public class RepositoryController {
 				} catch (IOException e) {
 					throw Response.error("Error creating cached json file");
 				}
-			}
-			if (updateSearch) {
-				indexService.updateIndex(repo);
 			}
 		}
 	}

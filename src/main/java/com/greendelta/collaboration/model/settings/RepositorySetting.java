@@ -23,7 +23,8 @@ public enum RepositorySetting implements SettingKey {
 	DQ_ASSESSMENT(String.class),
 	CITATION(String.class),
 	TYPE_OF_DATA(String.class),
-	RESTRICTIONS(JacksonTypes.ROLE_MAP);
+	RESTRICTIONS(JacksonTypes.ROLE_MAP),
+	SEARCH_COMMIT_ID(String.class);
 
 	private final Class<?> type;
 	private final TypeReference<?> subType;

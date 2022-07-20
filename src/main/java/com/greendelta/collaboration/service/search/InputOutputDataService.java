@@ -22,6 +22,7 @@ import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Maps;
@@ -105,7 +106,7 @@ public class InputOutputDataService {
 		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	void update(Repository repo, Repository newRepo) {
+	void move(Repository repo, Repository newRepo) {
 		var ids = getIds(repo, null);
 		Map<String, Object> update = new HashMap<>();
 		update.put("repositoryPath", newRepo.path());
@@ -113,8 +114,9 @@ public class InputOutputDataService {
 	}
 
 	void index(Repository repo) {
-		var commits = repo.commits().find().all();
-		Commit previousCommit = null;
+		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
+		var commits = repo.commits().find().after(previousCommitId).all();
+		Commit previousCommit = previousCommitId != null ? repo.commits().get(previousCommitId) : null;
 		for (var commitIndex = 0; commitIndex < commits.size(); commitIndex++) {
 			var commit = commits.get(commitIndex);
 			var diffs = Diffs.of(repo.gitRepo(), commit)

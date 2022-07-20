@@ -119,7 +119,9 @@ public class AdminAreaController {
 
 	@PutMapping("clearIndex")
 	public void clearIndex() {
-		indexService.clearIndex();
+		try (var repos = repoService.getAllAccessible()) {
+			indexService.clearIndex(repos);
+		}
 	}
 
 	@PutMapping("reindex")

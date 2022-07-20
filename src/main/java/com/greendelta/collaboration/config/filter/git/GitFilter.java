@@ -102,7 +102,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			if (isPublic && generateJson) {
 				repoService.generateJson(repo);
 			}
-			indexService.index(repo, commit);
+			indexService.index(repo);
 		}
 	}
 
