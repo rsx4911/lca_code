@@ -2,7 +2,7 @@ define () ->
 
 	getUsersAndTeams: (module, repositoryPath, callback) ->
 		@getUsers module, repositoryPath, (users) =>
-			@getTeams module, repositoryPath, (teams) =>
+			@getTeams module, (teams) ->
 				callback users, teams
 
 	getUsers: (module, repositoryPath, callback) ->
@@ -11,14 +11,14 @@ define () ->
 		$.ajax
 			type: 'GET'
 			url: "ws/user?module=#{module.toUpperCase()}&repositoryPath=#{repositoryPath}"
-			success: (users) =>
+			success: (users) ->
 				callback users
 
 	getTeams: (module, callback) ->
 		$.ajax
 			type: 'GET'
 			url: "ws/team?module=#{module.toUpperCase()}"
-			success: (teams) =>
+			success: (teams) ->
 				callback teams
 
 	usersToOptions: (users, existing = [], skipExisting = false) ->
