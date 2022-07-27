@@ -192,7 +192,7 @@ public class LibraryService {
 	}
 
 	private List<String> getAccessTypes(String id) {
-		return settings.get(SettingType.LIBRARY_SETTING, id, settings.ACCESS.USER)
+		return settings.get(SettingType.LIBRARY_SETTING, id, null)
 				.get(LibrarySetting.ACCESS, new ArrayList<>());
 	}
 
@@ -239,7 +239,7 @@ public class LibraryService {
 		private boolean canAccess(String library, List<String> teamnames) {
 			var accesses = getAccessTypes(library);
 			if (accesses.isEmpty())
-				return false;
+				return true;
 			if (!teamnames.isEmpty())
 				return teamnames.stream()
 						.filter(accesses::contains)

@@ -17,6 +17,7 @@ define([
 			getAccessTypes = (isAdminArea, callback) ->
 				if isAdminArea
 					callback [['PUBLIC', 'Public'], ['USER', 'Only users'], ['MEMBER', 'Only members of linking repository']]
+					return
 				Data.getTeams 'TEAM_LIBRARIES', (teams) ->
 					options = []
 					for team in teams

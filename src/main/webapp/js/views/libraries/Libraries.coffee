@@ -27,10 +27,11 @@ define([
 			groupLibraries = (libraries) ->
 				groups = {}
 				for library in libraries
-					for access in library.accessTypes
-						group = groups[access] or [] 
-						group.push library
-						groups[access] = group
+					if library and library.accessTypes
+						for access in library.accessTypes
+							group = groups[access] or [] 
+							group.push library
+							groups[access] = group
 				return groups
 
 			deleteLibrary = (event) ->

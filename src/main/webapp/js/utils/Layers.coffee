@@ -159,7 +159,7 @@ define([
 				if value
 					$('#input-data').val value
 
-			handleUserAndTeamData: (options, users, teams) =>
+			handleUserAndTeamData: (options, users, teams) ->
 				existing = options.exclude or []
 				if options.excludeSelf
 					existing.push username: currentUser.get('username')
