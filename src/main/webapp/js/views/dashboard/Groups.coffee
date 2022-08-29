@@ -37,11 +37,14 @@ define([
 							else
 								r.role = undefined
 						setRole r for r in result.data
+						
 
 			render: (renderOptions) ->
 				@$el.html template
 					canCreateGroups: (currentUser.get('settings')?.canCreateGroups or currentUser.isAdmin())
 				Renderer.render @, renderOptions
-				@filter.init()
+				@filter.init (result) =>
+					if result.resultInfo.totalCount is 0
+						@$('#groups').append('<div class="no-content-message">No groups found</div>')
 
 )
