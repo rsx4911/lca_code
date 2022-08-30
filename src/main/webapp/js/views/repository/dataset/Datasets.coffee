@@ -1,7 +1,6 @@
 define([
 				'backbone'
 				'moment'
-				'pace'
 				'cs!app/Router'
 				'cs!utils/Events'
 				'cs!utils/Filter'
@@ -18,7 +17,7 @@ define([
 				'templates/views/repository/datasets-entries'
 			]
 
-	(Backbone, moment, pace, Router, Events, Filter, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Toggle, Download, currentUser, template, entriesTemplate) ->
+	(Backbone, moment, Router, Events, Filter, Format, Icons, Layers, LocalStorage, ModelTypes, Renderer, Toggle, Download, currentUser, template, entriesTemplate) ->
 
 		class RepositoryDatasets extends Backbone.View
 
@@ -148,7 +147,6 @@ define([
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				@pathArray = []
-				# TODO check category paths
 				if @categoryPath and @categoryPath.indexOf('/') isnt -1
 					@pathArray.push @categoryPath.substring 0, @categoryPath.indexOf('/')
 				else if @categoryPath

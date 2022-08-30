@@ -16,7 +16,7 @@ public class Routes {
 	
 	private final static List<String> RESERVED = Arrays.asList(
 			"null", "undefined", "users", "team", "teams", "repositories", "categoryInfo", "count", "public", "ws",
-			"sockets", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
+			"sockets", "stomp", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
 			"settings", "admin", "usermanager", "datamanager", "messaging", "block", "unblock", "login", "search",
 			"imprint", "overlay", "import", "export", "missing");
 

@@ -106,7 +106,9 @@ gulp.task('copyJsModules', function() {
       'node_modules/underscore/underscore.js',
       'external-libs/coffee-script.js',
       'external-libs/cs.js',
-      'external-libs/d3.layout.cloud.js'
+      'external-libs/d3.layout.cloud.js',
+      'external-libs/sockjs.js',
+      'external-libs/stomp.js'
     ])
     .pipe(gulp.dest('./src/main/webapp/js/libs'));
 });

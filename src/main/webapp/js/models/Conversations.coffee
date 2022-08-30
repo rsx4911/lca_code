@@ -1,10 +1,12 @@
 define([
 				'backbone'
+				'sockjs'
+				'stomp'
 				'cs!models/Conversation'
 				'cs!models/CurrentUser'
 			]
 
-	(Backbone, Conversation, currentUser) ->
+	(Backbone, SockJS, Stomp, Conversation, currentUser) ->
 
 		class Conversations extends Backbone.Collection
 
@@ -17,28 +19,28 @@ define([
 				d2 = c2.findNewestMessage()?.date or Number.MAX_VALUE
 				return d1 < d2
 
-			initSocket: () ->
-				unless window.WebSocket
-					return
-				unless currentUser.isLoggedIn()
-					return
-				loc = window.location
-				schema = if loc.protocol is 'https' or loc.protocol is 'https:' then 'wss' else 'ws'
-				base = $('base').attr('href') or '/'
-				@socket = new WebSocket "#{schema}://#{loc.host}#{base}sockets/messaging"
-				window.onbeforeunload = () => @closeSocket()
-				@socket.onmessage = (msg) =>
-					data = JSON.parse msg.data
-					if data.type is 'NEW_MESSAGE'
-						@handleNewMessage data.data
-					else if data.type is 'CONNECTED'
-						@handleConnected data.data
-					else if data.type is 'DISCONNECTED'
-						@handleDisconnected data.data
-					else if data.type is 'MESSAGE_READ'
-						@handleMessageRead data.data
-					else if data.type is 'IS_ONLINE'
-						@handleIsOnline data.data
+			initSocket: (callback) ->
+				sock = new SockJS '/stomp'
+				@client = Stomp.over sock
+				@client.debug = () =>
+				@client.connect {}, (frame) =>
+					session = @getSession()
+					@client.subscribe "/user/#{session}/new-message", (payload) =>
+						@handleNewMessage JSON.parse payload.body
+					@client.subscribe "/user/#{session}/connected", (payload) =>
+						@setOnline payload.body, true
+					@client.subscribe "/user/#{session}/disconnected", (payload) =>
+						@setOnline payload.body, false
+					@client.subscribe "/user/#{session}/mark-as-read", (payload) =>
+						@handleMessageRead payload.body
+					window.onbeforeunload = () => @closeSocket()
+					callback?()
+
+			getSession: () -> 
+				url = @client.ws._transport.url;
+				url = url.substring 0, url.lastIndexOf '/'
+				return url.substring(url.lastIndexOf('/') + 1)
+
 
 			handleNewMessage: (message) ->
 				type = if message.team then 'team' else 'user'
@@ -53,45 +55,34 @@ define([
 					conversation.set 'unreadMessages', parseInt(conversation.get('unreadMessages')) + 1
 				@trigger 'newMessage', conversation, message, true
 
-			handleConnected: (username) ->
+			setOnline: (username, value) ->
 				conversation = @getFor 'user', username
 				if conversation
-					conversation.set 'online', true
-					@trigger 'connected', conversation 
-
-			handleDisconnected: (username) ->
-				conversation = @getFor 'user', username
-				if conversation
-					conversation.set 'online', false
-					@trigger 'disconnected', conversation
+					conversation.set 'online', value
+					if value
+						@trigger 'connected', conversation 
+					else
+						@trigger 'disconnected', conversation 
 
 			handleMessageRead: (username) ->
 				conversation = @getFor 'user', username
 				if conversation
 					for message in conversation.get('messages')
-						if message.read
+						if message.readDate
 							continue
 						# exact time is set on server, this is only for display purposes until page is reloaded
-						message.read = new Date().getTime() 
+						message.readDate = new Date().getTime() 
 					@trigger 'messageRead', conversation
 
-			handleIsOnline: (username) ->
-				conversation = @getFor 'user', username
-				if conversation
-					conversation.set 'online', true
-					@trigger 'connected', conversation 
-
 			closeSocket: (callback) ->
-				unless window.WebSocket
+				unless @client
 					return
-				unless @socket
-					return
-				@socket.onclose = () ->
+				@client.onDisconnect = () ->
 					callback?()
-				@socket.close()
+				@client.disconnect()
 
 			sendMessage: (to, text) ->
-				@socket.send JSON.stringify {type: 'NEW_MESSAGE', data: JSON.stringify(to: to, text: text)}
+				@client.send '/sockets/new-message', {}, JSON.stringify ({ to:  to, text: text })
 
 			getFor: (type, id) ->
 				for conversation in @models
@@ -107,11 +98,11 @@ define([
 				return total
 
 			markAsRead: (conversation) ->
-				conversation.markAsRead()
-				@socket.send JSON.stringify {type: 'MESSAGE_READ', data: JSON.stringify(conversation.get('recipient'))}
+				if conversation.markAsRead()
+					@client.send '/sockets/mark-as-read', {}, JSON.stringify conversation.get('recipient')
 
 			pingUser: (conversation) ->
-				@socket.send JSON.stringify {type: 'IS_ONLINE', data: JSON.stringify(conversation.get('recipient'))}
+				@client.send '/sockets/is-online', {}, JSON.stringify conversation.get('recipient')
 
 		return new Conversations()
 

@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Temporal;
@@ -68,7 +69,7 @@ public class UserSettings implements Serializable {
 	@Temporal(TemporalType.DATE)
 	public Date activeUntil;
 	
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable
 	public List<User> blockedUsers = new ArrayList<>();
 

@@ -101,6 +101,8 @@ public class SinglePageFilter implements Filter {
 		var url = Requests.getRelativePath(request);
 		if (url.startsWith("/ws/"))
 			return false;
+		if (url.startsWith("/stomp/"))
+			return false;
 		url = url.substring(1);
 		if (!url.contains("/"))
 			return true;

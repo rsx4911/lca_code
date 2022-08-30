@@ -109,7 +109,7 @@ public class MessagingService {
 	}
 
 	public void markAsRead(User user, User with) {
-		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.read IS NULL";
+		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.readDate IS NULL";
 		var attributes = new HashMap<String, Object>();
 		attributes.put("user", user);
 		attributes.put("with", with);
@@ -121,7 +121,7 @@ public class MessagingService {
 	}
 
 	public void markAsRead(User user, Team team) {
-		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.read IS NULL";
+		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.readDate IS NULL";
 		var attributes = new HashMap<String, Object>();
 		attributes.put("user", user);
 		attributes.put("team", team);
