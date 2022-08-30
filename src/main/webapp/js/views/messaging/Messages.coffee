@@ -32,10 +32,12 @@ define([
 				Renderer.render @, renderOptions
 				for conversation in conversations.models
 					element = @addConversation conversation, element
+					conversations.pingUser conversation
 				@initResizeListener()
 				@initConversationListener()
 				unless @hasScrollBar()
 					@conversation?.loadPrevious()
+
 
 			renderMessage: (message, prepend) ->
 				messages = @$ '#conversation-messages'
@@ -148,7 +150,6 @@ define([
 					formatTimeOrDate: Format.timeOrDate
 					unreadMessages: conversation.get('unreadMessages')
 					selected: recipient2 and recipient2.type is recipient.type and recipient2.id is recipient.id
-					online: conversation.get('online')
 					isBlocked: currentUser.isBlocked recipient.id
 				container = @$('#conversations .list-container')
 				if afterElement and afterElement.attr 'data-type'

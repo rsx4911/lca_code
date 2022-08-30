@@ -78,8 +78,7 @@ define([
 				Model.fetch settings, success: () ->
 					if currentUser.isLoggedIn() and settings.is('MESSAGING_ENABLED')
 						Model.fetch conversations, success: () ->
-							conversations.initSocket()
-							callback()
+							conversations.initSocket callback
 					else
 						callback()
 				
