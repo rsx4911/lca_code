@@ -47,7 +47,7 @@ define([
 				id = if type is 'team' then message.team.teamname else if message.from.username is currentUser.get('username') then message.to.username else message.from.username
 				conversation = @getFor type, id
 				unless conversation
-					recipient = {type: type, id: id, username: id, name: (if message.type is 'team' then message.team.name else message.to.name)}
+					recipient = {type: type, id: id, username: id, name: (if type is 'team' then message.team.name else message.to.name)}
 					conversation = new Conversation {messages: [], unreadMessages: 0, recipient: recipient, online: true}
 					@add conversation
 				conversation.get('messages').push message
