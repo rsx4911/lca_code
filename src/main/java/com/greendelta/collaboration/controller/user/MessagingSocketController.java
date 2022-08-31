@@ -48,7 +48,7 @@ public class MessagingSocketController {
 
 	@MessageMapping("/new-message")
 	public void newMessage(@Payload NewMessage message, Principal principal) {
-		User from = getUser(principal);
+		var from = getUser(principal);
 		if (from == null)
 			return;
 		if ("team".equals(message.to.type)) {
@@ -93,7 +93,7 @@ public class MessagingSocketController {
 
 	@MessageMapping("/mark-as-read")
 	public void markAsRead(@Payload Recipient recipient, Principal principal) {
-		User user = getUser(principal);
+		var user = getUser(principal);
 		if (user == null)
 			return;
 		if ("team".equals(recipient.type)) {
@@ -112,7 +112,7 @@ public class MessagingSocketController {
 
 	@MessageMapping("/is-online")
 	public void isOnline(@Payload Recipient recipient, Principal principal) {
-		User user = getUser(principal);
+		var user = getUser(principal);
 		if (user == null)
 			return;
 		var isOnline = sessions.containsKey(recipient.id);
