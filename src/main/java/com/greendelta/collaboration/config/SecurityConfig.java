@@ -66,7 +66,11 @@ public class SecurityConfig {
 		if (url.contains("/ws/") || url.contains("/stomp/") || (isGitUrl = gitFilterConfig.isGitUrl(request))) {
 			response.reset();
 			if (e instanceof BadCredentialsException) {
+				if (e.getMessage().equals("tokenRequired")) {
 				response.setStatus(HttpStatus.BAD_REQUEST.value());
+				} else {
+					response.setStatus(HttpStatus.FAILED_DEPENDENCY.value());
+				}
 			} else {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 				if (isGitUrl) {
