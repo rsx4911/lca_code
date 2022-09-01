@@ -51,6 +51,8 @@ public class MessagingService {
 			if (message.readDate == null && !message.from.equals(user)) {
 				conversation.unreadMessages++;
 			}
+			var other = message.from.equals(user) ? message.to : message.from;
+			conversation.blocked = other.settings.blockedUsers.contains(user);
 		});
 		return new ArrayList<>(conversations.values());
 	}
@@ -156,6 +158,7 @@ public class MessagingService {
 
 		public final Message lastMessage;
 		public int unreadMessages;
+		public boolean blocked;
 
 		public ConversationDescriptor(Message lastMessage) {
 			this.lastMessage = lastMessage;

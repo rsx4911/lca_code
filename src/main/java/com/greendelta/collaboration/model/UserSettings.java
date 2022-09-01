@@ -10,6 +10,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.PostLoad;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -62,17 +63,31 @@ public class UserSettings implements Serializable {
 	@Column
 	@Temporal(TemporalType.DATE)
 	public Date activeUntil;
-	
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable
-	public List<User> blockedUsers = new ArrayList<>();
 
 	@Column
 	long notifications;
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable
+	public List<User> blockedUsers = new ArrayList<>();
 
 	@JsonAnySetter
 	public void handleUnknown(String name, Object value) {
 		// do nothing
 	}
+	
+    @PostLoad
+    private void postLoad(){
+    	// avoid recursion issue if two users block each other
+    	var blocked = new ArrayList<User>();
+    	for (var u : blockedUsers) {
+    		var user = new User();
+    		user.id = u.id;
+    		user.username = u.username;
+    		user.name = u.name;
+    		blocked.add(user);
+    	}
+    	blockedUsers = blocked;
+    }
 
 }
