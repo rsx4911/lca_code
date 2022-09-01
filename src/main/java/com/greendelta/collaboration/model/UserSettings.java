@@ -29,17 +29,11 @@ public class UserSettings implements Serializable {
 	@Column
 	public int noOfRepositories;
 
-	// If not 0, the maximum size of all user group repositories in bytes
 	@Column
 	public long maxSize;
 
-	// If true all users can initiate conversations, otherwise admins only
 	@Column
 	public boolean messagingEnabled;
-
-	// If true only team members (and admins) can initiate conversations
-	@Column
-	public boolean messagingRestricted;
 
 	@Column
 	public boolean showOnlineStatus;

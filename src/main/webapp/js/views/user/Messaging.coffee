@@ -59,15 +59,10 @@ define([
 
 			updateSettings: () ->	
 				@$('#messagingEnabled').prop 'disabled', false
-				@$('#messagingRestricted').prop 'disabled', false
 				@$('#showOnlineStatus').prop 'disabled', false
 				@$('#showReadReceipt').prop 'disabled', false
 				if !@$('#messagingEnabled').is(':checked')
-					@$('#messagingRestricted').prop 'disabled', true
-					@$('#messagingRestricted').prop 'checked', false
 					@$('#showOnlineStatus').prop 'disabled', true
-					@$('#showOnlineStatus').prop 'checked', false
 					@$('#showReadReceipt').prop 'disabled', true
-					@$('#showReadReceipt').prop 'checked', false
 
 )

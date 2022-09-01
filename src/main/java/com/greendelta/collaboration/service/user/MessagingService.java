@@ -137,21 +137,19 @@ public class MessagingService {
 		if (currentUser.isUserManager())
 			return users;
 		var teams = teamService.getTeamsFor(currentUser);
-		return users.stream().filter(user -> isNotVisible(user, teams)).toList();
+		return users.stream().filter(user -> isVisible(user, teams)).toList();
 	}
 
-	private boolean isNotVisible(User user, List<Team> teams) {
+	private boolean isVisible(User user, List<Team> teams) {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.settings.blockedUsers.contains(user))
-			return true;
+			return false;
 		if (!user.settings.messagingEnabled)
-			return true;
-		if (!user.settings.messagingRestricted)
 			return false;
 		for (var team : teams)
 			if (team.users.contains(user))
-				return false;
-		return true;
+				return true;
+		return false;
 	}
 
 	public class ConversationDescriptor {
