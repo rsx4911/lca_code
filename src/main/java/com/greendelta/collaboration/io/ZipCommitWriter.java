@@ -57,7 +57,6 @@ public class ZipCommitWriter extends CommitWriter {
 
 	private List<Change> getChanges() {
 		return Arrays.asList(ModelType.values()).stream()
-				.filter(ModelType::isRoot)
 				.sorted((t1, t2) -> Strings.compare(t1.name(), t2.name()))
 				.map(this::getChanges)
 				.flatMap(List::stream)

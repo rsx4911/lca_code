@@ -102,8 +102,6 @@ public class JsonWriter implements DatasetWriter {
 
 	private ModelType getType(String name) {
 		for (var type : ModelType.values()) {
-			if (type == ModelType.UNIT || type == ModelType.UNKNOWN)
-				continue;
 			if (!type.getModelClass().getSimpleName().equals(name))
 				continue;
 			return type;
