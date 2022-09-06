@@ -39,7 +39,6 @@ import com.greendelta.collaboration.util.Routes;
 public class SessionController {
 
 	private final static Logger log = LogManager.getLogger(SessionController.class);
-
 	private final UserService userService;
 	private final GroupService groupService;
 	private final TeamService teamService;

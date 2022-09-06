@@ -24,6 +24,7 @@ public class Conversations {
 		map.put("recipient", getRecipient(conversation.lastMessage, currentUser));
 		map.put("messages", Collections.singleton(Messages.map(conversation.lastMessage, currentUser)));
 		map.put("unreadMessages", conversation.unreadMessages);
+		map.put("blocked", conversation.blocked);
 		return map;
 	}
 

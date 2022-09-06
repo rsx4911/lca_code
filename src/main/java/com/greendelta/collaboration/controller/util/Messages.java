@@ -27,7 +27,7 @@ public class Messages {
 		}
 		map.put("date", message.date.getTime());
 		if (!message.showReadReceipt && message.from.equals(currentUser)) {
-			map.remove("read");
+			map.remove("readDate");
 		}
 		return map;
 	}

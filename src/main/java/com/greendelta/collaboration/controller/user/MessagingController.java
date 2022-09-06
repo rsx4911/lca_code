@@ -95,7 +95,6 @@ public class MessagingController {
 			throw Response.unavailable("Messaging feature not enabled");
 		var currentUser = userService.getCurrentUser();
 		currentUser.settings.messagingEnabled = userSettings.messagingEnabled;
-		currentUser.settings.messagingRestricted = userSettings.messagingRestricted;
 		currentUser.settings.showOnlineStatus = userSettings.showOnlineStatus;
 		currentUser.settings.showReadReceipt = userSettings.showReadReceipt;
 		currentUser = userService.update(currentUser);

@@ -17,7 +17,9 @@ require.config({
 		'requireLib': 'libs/require',
 		'underscore': 'libs/underscore',
 		'd3': 'libs/d3',
-		'd3cloud': 'libs/d3.layout.cloud'
+		'd3cloud': 'libs/d3.layout.cloud',
+		'sockjs': 'libs/sockjs',
+		'stomp': 'libs/stomp'
 	},
 	shim: {
 			'bootstrap': {
@@ -30,6 +32,9 @@ require.config({
 			'qrcode': {
 				exports: 'QRCode'
 			},
+			'stomp': {
+				exports: 'Stomp'
+			},
 			'jstree': {
 				deps: ['jquery'],
 				exports: '$.fn.jstree'
@@ -40,6 +45,6 @@ require.config({
 define(['cs!app/App', 'pace'], function(App, pace) {
 	// pace.on('start', function() {$('body').append('<div id="block-interaction"></div>')});
 	// pace.on('hide', function() {$('#block-interaction').remove()});
-	pace.start();
+	pace.start({ ajax: false });
 	App.initialize();
 });

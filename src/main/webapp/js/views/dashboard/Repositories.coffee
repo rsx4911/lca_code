@@ -55,6 +55,8 @@ define([
 						@$el.html template
 							canCreateRepositories: currentUser.isAdmin() or (settings and (settings.canCreateRepositories and (!settings.noOfRepositories or settings.noOfRepositories > noOfRepositories)))
 						Renderer.render @, renderOptions
-						@filter.init()
+						@filter.init (result) =>
+							if result.resultInfo.totalCount is 0
+								@$('#repositories').append('<div class="no-content-message">No repositories found</div>')
 
 )

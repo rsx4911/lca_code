@@ -48,7 +48,7 @@ define([
 
 			markAsRead: () ->
 				if parseInt(@get('unreadMessages')) is 0
-					return
+					return false
 				recipient = @get 'recipient'
 				subpath = "#{recipient.type}/#{recipient.id}"
 				for message in @get('messages')
@@ -57,5 +57,6 @@ define([
 				total = @get 'unreadMessages'
 				@set 'unreadMessages', 0
 				@trigger 'markedAsRead', @, total
+				return true
 
 )

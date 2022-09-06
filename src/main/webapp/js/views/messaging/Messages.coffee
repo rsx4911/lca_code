@@ -23,19 +23,23 @@ define([
 				'click a[data-action=show-message]': 'onConversationClicked'
 				'click [data-action=start-new-conversation]': 'openSelection'
 				'click .block': 'blockUser'
+				'click .unblock': 'unblockUser'
 				'keypress #conversation-input input': (event) -> @sendMessage event, true
 				'click #conversation-input .glyphicon-send': (event) -> @sendMessage event, false
 
 			render: (renderOptions) ->
 				@$el.html template
 					selected: @conversation?.get('recipient')
+					isBlocked: @isBlocked(@conversation)
 				Renderer.render @, renderOptions
 				for conversation in conversations.models
 					element = @addConversation conversation, element
+					conversations.pingUser conversation
 				@initResizeListener()
 				@initConversationListener()
 				unless @hasScrollBar()
 					@conversation?.loadPrevious()
+
 
 			renderMessage: (message, prepend) ->
 				messages = @$ '#conversation-messages'
@@ -137,6 +141,11 @@ define([
 				$('#conversation-messages').css 'height', height - 41
 				$('#conversations').css 'height', height
 
+			isBlocked: (conversation) ->
+				if !conversation or !conversation.get('recipient') or conversation.get('recipient').type is 'team'
+					return false
+				return currentUser.isBlocked(conversation.get('recipient').id) or conversation.get('blocked')
+
 			addConversation: (conversation, afterElement) ->
 				message = conversation.findNewestMessage()
 				recipient = conversation.get 'recipient'
@@ -148,8 +157,7 @@ define([
 					formatTimeOrDate: Format.timeOrDate
 					unreadMessages: conversation.get('unreadMessages')
 					selected: recipient2 and recipient2.type is recipient.type and recipient2.id is recipient.id
-					online: conversation.get('online')
-					isBlocked: currentUser.isBlocked recipient.id
+					isBlocked: @isBlocked(conversation) 
 				container = @$('#conversations .list-container')
 				if afterElement and afterElement.attr 'data-type'
 					afterElement.after content
@@ -160,15 +168,23 @@ define([
 			activateConversation: (conversation) ->
 				@conversation = conversation
 				recipient = conversation.get 'recipient'
+				sendButton = @$ '#conversation-input .glyphicon-send'
 				if currentUser.isBlocked recipient.id
 					@$('.block').hide()
+					@$('.unblock').show()
 				else
 					@$('.block').show()
+					@$('.unblock').hide()
+				if @isBlocked(conversation)
+					sendButton.hide()
+					@$('#next-message').attr 'placeholder', ''
+				else
+					sendButton.show()
+					@$('#next-message').attr 'placeholder', 'Type your message here...'
 				@$('.list-entry.active').removeClass 'active'
 				@$("[data-type=#{recipient.type}][data-id=#{recipient.id}] .list-entry").addClass 'active'
-				@$('#next-message').prop 'disabled', false
-				@$('#next-message').attr 'placeholder', 'Type your message here...'
-				@$('#conversation-input .glyphicon-send').show()
+				@$('#next-message').prop 'disabled', @isBlocked(conversation)
+				@$('#next-message').val ''
 				@$('.header-box .username').html recipient.name
 				@$('.header-box .avatar').attr 'src', "ws/#{recipient.type}/avatar/#{recipient.id}"
 				@$('#conversation-messages').empty()
@@ -230,6 +246,25 @@ define([
 					success: () =>
 						currentUser.get('settings').blockedUsers.push {name: recipient.name, username: recipient.username}
 						@$('.block').hide()
+						@$('.unblock').show()
 						@rerenderConversation @conversation, true
 						Status.success 'Successfully blocked user'
+
+			unblockUser: () ->
+				unless @conversation
+					return
+				recipient = @conversation.get('recipient')
+				unless currentUser.isBlocked recipient.username
+					return
+				$.ajax
+					type: 'PUT'
+					url: "ws/messaging/unblock/#{recipient.username}"
+					success: () =>
+						currentUser.get('settings').blockedUsers = currentUser.get('settings').blockedUsers.filter (u) ->
+							u.username isnt recipient.username
+						@$('.unblock').hide()
+						@$('.block').show()
+						@rerenderConversation @conversation, true
+						Status.success 'Successfully unblocked user'
+
 )

@@ -53,7 +53,7 @@ public class SecurityConfig {
 				.antMatchers("/ws/admin/**").hasAuthority(Authority.ADMIN.getAuthority())
 				.antMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())
 				.antMatchers("/ws/usermanager/**").hasAuthority(Authority.USER_MANAGER.getAuthority())
-				.antMatchers("/ws/**").authenticated()
+				.antMatchers("/ws/**", "/stomp/**").authenticated()
 				.antMatchers("/**").access("@repoAccessCheck.canAccess(request)").and()
 				.logout().logoutUrl("/ws/public/logout").logoutSuccessHandler(getLogoutSuccessHandler())
 				.and().build();
@@ -63,10 +63,14 @@ public class SecurityConfig {
 			throws IOException {
 		var url = request.getRequestURL().toString();
 		var isGitUrl = false;
-		if (url.contains("/ws/") || url.contains("/sockets/") || (isGitUrl = gitFilterConfig.isGitUrl(request))) {
+		if (url.contains("/ws/") || url.contains("/stomp/") || (isGitUrl = gitFilterConfig.isGitUrl(request))) {
 			response.reset();
 			if (e instanceof BadCredentialsException) {
+				if (e.getMessage().equals("tokenRequired")) {
 				response.setStatus(HttpStatus.BAD_REQUEST.value());
+				} else {
+					response.setStatus(HttpStatus.FAILED_DEPENDENCY.value());
+				}
 			} else {
 				response.setStatus(HttpStatus.UNAUTHORIZED.value());
 				if (isGitUrl) {

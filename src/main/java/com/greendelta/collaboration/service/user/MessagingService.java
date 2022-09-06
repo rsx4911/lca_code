@@ -51,6 +51,8 @@ public class MessagingService {
 			if (message.readDate == null && !message.from.equals(user)) {
 				conversation.unreadMessages++;
 			}
+			var other = message.from.equals(user) ? message.to : message.from;
+			conversation.blocked = other.settings.blockedUsers.contains(user);
 		});
 		return new ArrayList<>(conversations.values());
 	}
@@ -109,7 +111,7 @@ public class MessagingService {
 	}
 
 	public void markAsRead(User user, User with) {
-		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.read IS NULL";
+		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.from = :with AND m.team IS NULL AND m.readDate IS NULL";
 		var attributes = new HashMap<String, Object>();
 		attributes.put("user", user);
 		attributes.put("with", with);
@@ -121,7 +123,7 @@ public class MessagingService {
 	}
 
 	public void markAsRead(User user, Team team) {
-		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.read IS NULL";
+		var jpql = "SELECT m FROM Message m WHERE m.to = :user AND m.team = :team AND m.readDate IS NULL";
 		var attributes = new HashMap<String, Object>();
 		attributes.put("user", user);
 		attributes.put("team", team);
@@ -137,27 +139,26 @@ public class MessagingService {
 		if (currentUser.isUserManager())
 			return users;
 		var teams = teamService.getTeamsFor(currentUser);
-		return users.stream().filter(user -> isNotVisible(user, teams)).toList();
+		return users.stream().filter(user -> isVisible(user, teams)).toList();
 	}
 
-	private boolean isNotVisible(User user, List<Team> teams) {
+	private boolean isVisible(User user, List<Team> teams) {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.settings.blockedUsers.contains(user))
-			return true;
+			return false;
 		if (!user.settings.messagingEnabled)
-			return true;
-		if (!user.settings.messagingRestricted)
 			return false;
 		for (var team : teams)
 			if (team.users.contains(user))
-				return false;
-		return true;
+				return true;
+		return false;
 	}
 
 	public class ConversationDescriptor {
 
 		public final Message lastMessage;
 		public int unreadMessages;
+		public boolean blocked;
 
 		public ConversationDescriptor(Message lastMessage) {
 			this.lastMessage = lastMessage;

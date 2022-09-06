@@ -14,7 +14,6 @@ import javax.persistence.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-
 @Entity
 @Table
 public class User extends AbstractEntity implements UserDetails {
@@ -151,7 +150,7 @@ public class User extends AbstractEntity implements UserDetails {
 	public boolean isEnabled() {
 		return true;
 	}
-	
+
 	public boolean isAnonymous() {
 		return id == 0l;
 	}
