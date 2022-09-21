@@ -74,7 +74,7 @@ public class BrowseController {
 
 	private List<Map<String, Object>> getModelTypeEntries(Repository repo, Commit commit) {
 		var entries = repo.entries().find().commit(commit.id).all();
-		var typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<String>());
+		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<String>());
 		var info = Repositories.infoOf(repo.gitRepo(), commit);
 		if (info != null && !info.libraries().isEmpty()) {
 			var objectId = repo.ids().get(PackageInfo.FILE_NAME, commit.id);
@@ -82,7 +82,7 @@ public class BrowseController {
 		}
 		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
-		var typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<String>());
+		List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<String>());
 		return MetaData.sortByType(mapped, typesOrder).map(map -> {
 			if (map.get("type") == null) {
 				map.put("type", "LIBRARY");

@@ -136,7 +136,7 @@ public class RepositoryController {
 			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
 			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
 			mappedRepo.put("size", repo.getSize());
-			var restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS, new HashMap<String, Role>());
+			Map<String, Role> restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS, new HashMap<String, Role>());
 			restrictionService.getAll().stream()
 					.filter(lib -> !restrictions.containsKey(lib.name))
 					.forEach(lib -> restrictions.put(lib.name, null));

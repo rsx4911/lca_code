@@ -156,7 +156,7 @@ public class SettingsService {
 
 		public ModelType[] getModelTypes() {
 			var value = getFilteredModelTypes();
-			var hidden = new ArrayList<String>();
+			List<String> hidden = new ArrayList<String>();
 			var subject = SecurityContextHolder.getContext().getAuthentication();
 			var isLoggedIn = subject != null && subject.isAuthenticated();
 			if (!isLoggedIn) {

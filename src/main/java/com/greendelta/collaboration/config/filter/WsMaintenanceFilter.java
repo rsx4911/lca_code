@@ -47,7 +47,7 @@ public class WsMaintenanceFilter extends AccessFilter {
 	@Override
 	protected void onAccessDenied(HttpServletResponse response) throws IOException {
 		response.setStatus(406);
-		var message = settings.get(ServerSetting.MAINTENANCE_MESSAGE);
+		String message = settings.get(ServerSetting.MAINTENANCE_MESSAGE);
 		response.getWriter().print(message);
 	}
 
