@@ -27,6 +27,8 @@ define([
 							if newRoute isnt 'search/'
 								newRoute += '&'
 							newRoute += param
+				if newRoute is 'search/'
+					newRoute = 'search'
 				Router.navigate newRoute
 
 			events: 
