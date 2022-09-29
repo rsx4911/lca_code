@@ -112,13 +112,13 @@ public class LibraryService {
 		}
 	}
 
-	public boolean delete(String id, String access) {
-		checkWriteAccess(id, Arrays.asList(access));
-		var file = getLibraryFile(id);
+	public boolean delete(String name, String access) {
+		checkWriteAccess(name, Arrays.asList(access));
+		var file = getLibraryFile(name);
 		if (!file.exists())
 			return false;
 		try {
-			var accessTypes = removeAccessType(id, access);
+			var accessTypes = removeAccessType(name, access);
 			if (accessTypes.isEmpty()) {
 				Files.delete(file.toPath());
 			}
@@ -129,7 +129,7 @@ public class LibraryService {
 		}
 	}
 
-	private void checkWriteAccess(String id, List<String> accessTypes) {
+	private void checkWriteAccess(String name, List<String> accessTypes) {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.isDataManager())
 			return;
@@ -140,7 +140,7 @@ public class LibraryService {
 					return;
 			}
 		}
-		throw new ForbiddenAccessException(id, "WRITE");
+		throw new ForbiddenAccessException(name, "WRITE");
 	}
 
 	private boolean isTeamMember(String teamname, User user) {
@@ -150,25 +150,25 @@ public class LibraryService {
 		return team.users.contains(user);
 	}
 
-	public File get(String id) {
-		if (!new AccessCheck().canAccess(id, new ArrayList<>()))
-			throw new ForbiddenAccessException(id, "READ");
-		var file = getLibraryFile(id);
+	public File get(String name) {
+		if (!new AccessCheck().canAccess(name, new ArrayList<>()))
+			throw new ForbiddenAccessException(name, "READ");
+		var file = getLibraryFile(name);
 		if (!file.exists())
 			return null;
 		return file;
 	}
 
-	public LibraryInfo getInfo(String id, boolean isAdminArea) {
-		var file = getLibraryFile(id);
+	public LibraryInfo getInfo(String name, boolean isAdminArea) {
+		var file = getLibraryFile(name);
 		if (!file.exists())
 			return null;
 		try (var repos = repoService.getAllAccessible()) {
 			var linkedIn = repos.stream()
-					.filter(repo -> repo.linkedLibraries().contains(id))
+					.filter(repo -> repo.linkedLibraries().contains(name))
 					.map(Repository::path)
 					.distinct().toList();
-			var accesses = getAccessTypes(id);
+			var accesses = getAccessTypes(name);
 			if (!isAdminArea) {
 				for (var access : LibraryAccess.values()) {
 					accesses.remove(access.name());
@@ -180,8 +180,8 @@ public class LibraryService {
 		}
 	}
 
-	private File getLibraryFile(String id) {
-		return new File(getLibraryPath(), id + ".zip");
+	private File getLibraryFile(String name) {
+		return new File(getLibraryPath(), name + ".zip");
 	}
 
 	private String getLibraryPath() {
@@ -191,37 +191,37 @@ public class LibraryService {
 		return libraryPath;
 	}
 
-	private List<String> getAccessTypes(String id) {
-		return settings.get(SettingType.LIBRARY_SETTING, id, null)
+	private List<String> getAccessTypes(String name) {
+		return settings.get(SettingType.LIBRARY_SETTING, name, null)
 				.get(LibrarySetting.ACCESS, new ArrayList<>());
 	}
 
-	private List<String> addAccessType(String id, String access) {
+	private List<String> addAccessType(String name, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
 				: settings.ACCESS.DATA_MANAGER;
-		var accessTypes = getAccessTypes(id);
+		var accessTypes = getAccessTypes(name);
 		if (accessTypes.contains(access))
 			return accessTypes;
 		accessTypes.add(access);
-		settings.get(SettingType.LIBRARY_SETTING, id, settingsAccess)
+		settings.get(SettingType.LIBRARY_SETTING, name, settingsAccess)
 				.set(LibrarySetting.ACCESS, accessTypes);
 		return accessTypes;
 	}
 
-	private List<String> removeAccessType(String id, String access) {
+	private List<String> removeAccessType(String name, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
 				: settings.ACCESS.DATA_MANAGER;
-		var accessTypes = getAccessTypes(id);
+		var accessTypes = getAccessTypes(name);
 		if (!accessTypes.contains(access))
 			return accessTypes;
 		accessTypes.remove(access);
 		if (accessTypes.isEmpty()) {
-			settings.get(SettingType.LIBRARY_SETTING, id, settingsAccess)
+			settings.get(SettingType.LIBRARY_SETTING, name, settingsAccess)
 			.set(LibrarySetting.ACCESS, null);
 		} else {
-			settings.get(SettingType.LIBRARY_SETTING, id, settingsAccess)
+			settings.get(SettingType.LIBRARY_SETTING, name, settingsAccess)
 					.set(LibrarySetting.ACCESS, accessTypes);
 		}
 		return accessTypes;
