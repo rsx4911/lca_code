@@ -61,6 +61,7 @@ define([
 					success: (result) =>
 						@correctUrl result
 						@prepareAggregations result
+						repoId = @aggregations.repositoryId or []
 						result.typeFiltered = !!@aggregations['type']
 						result.query = @query
 						result.selectedAggregations = @aggregations
@@ -69,8 +70,16 @@ define([
 						result.getIcon = Icons.get
 						result.getPagingUrl = (page) => return Util.getUrlPart 'search/', @query, page, @pageSize, @aggregations, result.aggregations
 						result.clearUrl = Util.getUrlPart 'search/', null, 1, 10
-						result.getHighlightedVersionIndex = (dataset) => return dataset.versions.length - 1
-						result.getHighlightedRepoIndex = (version) => return version.repos.length - 1
+						result.getHighlightedVersionIndex = (dataset) =>
+						    index = dataset.versions.findIndex((version) => !!version.repos.find((repo) => repoId.indexOf(repo.path) isnt -1))
+						    if index isnt -1
+						        return index
+						    return dataset.versions.length - 1
+						result.getHighlightedRepoIndex = (version) =>
+						    index = version.repos.findIndex((repo) => repoId.indexOf(repo.path) isnt -1) 
+						    if index isnt -1
+						        return index
+						    return version.repos.length - 1
 						result.getAggregationUrl = (type, value, without = false) =>
 							query = @query
 							if type is 'query' and without
