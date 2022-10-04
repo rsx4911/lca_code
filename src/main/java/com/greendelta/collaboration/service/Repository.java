@@ -11,7 +11,6 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.find.Commits;
 import org.openlca.git.find.Datasets;
 import org.openlca.git.find.Entries;
-import org.openlca.git.find.Ids;
 import org.openlca.git.find.References;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.SchemaVersion;
@@ -84,10 +83,6 @@ public class Repository implements AutoCloseable {
 
 	public Entries entries() {
 		return Entries.of(gitRepo());
-	}
-
-	public Ids ids() {
-		return Ids.of(gitRepo());
 	}
 
 	public String path() {

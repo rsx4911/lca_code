@@ -182,9 +182,8 @@ public class SearchController {
 	private Map<String, Object> addProcessInfo(Repository repo, Commit commit, Map<String, Object> entry) {
 		var refId = Maps.getString(entry, "refId");
 		var ref = repo.references().get(ModelType.PROCESS, refId, commit.id);
-		var oId = repo.ids().get(ref.path, commit.id);
 		entry.put("type", ModelType.PROCESS.name());
-		return MetaData.forBrowse(ModelType.PROCESS, entry, oId, repo);
+		return MetaData.forBrowse(entry, ref, repo);
 	}
 
 	private String removeStringFilter(String name, Map<String, Set<String>> filters) {

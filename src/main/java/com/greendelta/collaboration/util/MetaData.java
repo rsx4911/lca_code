@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.eclipse.jgit.diff.DiffEntry.Side;
-import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
@@ -16,8 +15,8 @@ import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Entry;
 import org.openlca.git.model.Entry.EntryType;
-import org.openlca.git.util.FieldDefinition;
 import org.openlca.git.model.Reference;
+import org.openlca.git.util.FieldDefinition;
 import org.openlca.jsonld.Enums;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
@@ -25,8 +24,8 @@ import com.greendelta.collaboration.service.Repository;
 
 public class MetaData {
 
-	public static Map<String, Object> forBrowse(ModelType type, Map<String, Object> e, ObjectId oId, Repository repo) {
-		putDatasetInfo(type, e, oId, repo, Mode.BROWSE);
+	public static Map<String, Object> forBrowse(Map<String, Object> e, Reference ref, Repository repo) {
+		putDatasetInfo(e, ref, repo, Mode.BROWSE);
 		return e;
 	}
 
@@ -39,7 +38,7 @@ public class MetaData {
 		entry.remove("objectId");
 		if (e.typeOfEntry != EntryType.DATASET)
 			return entry;
-		putDatasetInfo(e.type, entry, e.objectId, repo, mode);
+		putDatasetInfo(entry, e, repo, mode);
 		return entry;
 	}
 
@@ -50,7 +49,7 @@ public class MetaData {
 	private static Map<String, Object> toDatasetInfo(Reference r, Repository repo, Mode mode) {
 		var ref = Maps.of(r);
 		ref.remove("objectId");
-		putDatasetInfo(r.type, ref, r.objectId, repo, mode);
+		putDatasetInfo(ref, r, repo, mode);
 		return ref;
 	}
 
@@ -64,8 +63,7 @@ public class MetaData {
 
 	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
 		var ref = repo.references().get(type, refId, commitId);
-		var id = repo.ids().get(ref.path);
-		var info = repo.datasets().parse(id, "name");
+		var info = repo.datasets().parse(ref, "name");
 		var name = info.get("name");
 		return name != null ? name.toString() : "";
 	}
@@ -76,16 +74,16 @@ public class MetaData {
 		return map;
 	}
 
-	private static void putDatasetInfo(ModelType type, Map<String, Object> entry, ObjectId oId, Repository repo,
+	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, Repository repo,
 			Mode mode) {
 		var defs = new ArrayList<FieldDefinition>();
 		defs.add(new FieldDefinition("name"));
-		if (type == ModelType.FLOW || type == ModelType.PROCESS) {
+		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS) {
 			defs.add(new FieldDefinition("location.name"));
 		}
-		if (type == ModelType.FLOW) {
+		if (ref.type == ModelType.FLOW) {
 			defs.add(new FieldDefinition("flowType", FlowType::valueOf));
-		} else if (type == ModelType.PROCESS) {
+		} else if (ref.type == ModelType.PROCESS) {
 			defs.add(new FieldDefinition("location.name"));
 			defs.add(new FieldDefinition("processType", ProcessType::valueOf));
 			if (mode == Mode.SEARCH) {
@@ -95,7 +93,7 @@ public class MetaData {
 				defs.add(new FieldDefinition("defaultAllocationMethod", MetaData::getModellingApproach));
 			}
 		}
-		var info = repo.datasets().parse(oId, defs);
+		var info = repo.datasets().parse(ref, defs);
 		var location = info.get("location.name");
 		if (location == null || location.toString().isEmpty()) {
 			entry.put("name", info.get("name"));
@@ -103,9 +101,9 @@ public class MetaData {
 			entry.put("name", info.get("name") + " - " + location);
 			entry.put("location", location);
 		}
-		if (type == ModelType.FLOW) {
+		if (ref.type == ModelType.FLOW) {
 			entry.put("flowType", info.get("flowType"));
-		} else if (type == ModelType.PROCESS) {
+		} else if (ref.type == ModelType.PROCESS) {
 			entry.put("processType", info.get("processType"));
 		}
 		if (mode == Mode.SEARCH) {

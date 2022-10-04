@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.openlca.core.model.ModelType;
+import org.openlca.git.find.Entries;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Entry;
 import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.PackageInfo;
@@ -77,8 +77,7 @@ public class BrowseController {
 		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<String>());
 		var info = Repositories.infoOf(repo.gitRepo(), commit);
 		if (info != null && !info.libraries().isEmpty()) {
-			var objectId = repo.ids().get(PackageInfo.FILE_NAME, commit.id);
-			entries.add(new Entry(PackageInfo.FILE_NAME, commit.id, objectId));
+			entries.add(Entries.of(repo.gitRepo()).get(PackageInfo.FILE_NAME, commit.id));
 		}
 		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
