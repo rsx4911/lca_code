@@ -136,7 +136,8 @@ public class RepositoryController {
 			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
 			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
 			mappedRepo.put("size", repo.getSize());
-			Map<String, Role> restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS, new HashMap<String, Role>());
+			Map<String, Role> restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS,
+					new HashMap<String, Role>());
 			restrictionService.getAll().stream()
 					.filter(lib -> !restrictions.containsKey(lib.name))
 					.forEach(lib -> restrictions.put(lib.name, null));
@@ -203,9 +204,9 @@ public class RepositoryController {
 	public void doImport(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
-			@RequestParam("commitMessage") String commitMessage,
 			@RequestParam("file") MultipartFile input,
-			@RequestParam("format") String format) {
+			@RequestParam(name = "format", defaultValue = "repository") String format,
+			@RequestParam(name = "commitMessage", required = false) String commitMessage) {
 		try (var repo = service.get(group, name)) {
 			if (format != null && "json-ld".equals(format.toLowerCase())) {
 				if (Strings.nullOrEmpty(commitMessage))
