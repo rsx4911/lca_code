@@ -37,7 +37,7 @@ public class SessionService {
 			SecurityContextHolder.getContext().setAuthentication(auth);
 		} catch (BadCredentialsException e) {
 			var user = userService.getForUsername(username);
-			if (Strings.nullOrEmpty(user.password))
+			if (user != null && Strings.nullOrEmpty(user.password))
 				return new LoginResponse(HttpStatus.BAD_REQUEST,
 						"We have updated our password encryption. Since we only store encrypted passwords, we are not able to migrate your current password. Please use the 'Forgot your password?' link below to request a new password being sent to your email address.");
 			return new LoginResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials");
