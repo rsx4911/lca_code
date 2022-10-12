@@ -63,16 +63,16 @@ public class LibraryController {
 						.map(Repository::path)
 						.toList();
 				var info = new HashMap<String, Object>();
-				info.put("id", lib);
+				info.put("name", lib);
 				info.put("linkedIn", linkedIn);
 				return info;
 			}).toList();
 		}
 	}
 
-	@GetMapping("{id}")
-	public ResponseEntity<StreamingResponseBody> get(@PathVariable("id") String id) {
-		var library = service.get(id);
+	@GetMapping("{name}")
+	public ResponseEntity<StreamingResponseBody> get(@PathVariable("name") String name) {
+		var library = service.get(name);
 		if (library == null)
 			throw Response.notFound();
 		return Response.ok(library.getName(), library);
@@ -94,12 +94,12 @@ public class LibraryController {
 		}
 	}
 
-	@DeleteMapping("{id}/{access}")
-	public void delete(@PathVariable("id") String id, @PathVariable("access") String access) {
-		if (service.get(id) == null)
-			throw Response.notFound("No library " + id + " found");
-		if (!service.delete(id, access))
-			throw Response.error("Error deleting library " + id);
+	@DeleteMapping("{name}/{access}")
+	public void delete(@PathVariable("name") String name, @PathVariable("access") String access) {
+		if (service.get(name) == null)
+			throw Response.notFound("No library " + name + " found");
+		if (!service.delete(name, access))
+			throw Response.error("Error deleting library " + name);
 	}
 
 }

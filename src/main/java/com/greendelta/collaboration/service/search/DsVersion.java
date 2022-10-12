@@ -22,7 +22,7 @@ public class DsVersion {
 	public List<String> tags;
 	public ModellingApproach modellingApproach = ModellingApproach.UNKNOWN;
 
-	// if flow
+	// if process or flow
 	public FlowType flowType;
 
 	// if process

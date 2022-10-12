@@ -12,7 +12,7 @@ mixin access-group(libraries, label, access)
 			tbody
 				each library in libraries
 					tr
-						td: a(href='ws/libraries/' + id target='_blank')=library.name
+						td: a(href='ws/libraries/' + library.name target='_blank')=library.name
 						td=library.description||'-'
 						td
 							if !library.linkedIn || !library.linkedIn.length
@@ -22,7 +22,7 @@ mixin access-group(libraries, label, access)
 									each repo in library.linkedIn
 										span: a.follow(href='/' + repo + '/datasets/Libraries')=repo
 						td
-							button.btn.btn-xs.btn-danger(data-action='delete' data-id=library.name data-access=access) Delete
+							button.btn.btn-xs.btn-danger(data-action='delete' data-name=library.name data-access=access) Delete
 
 mixin missing-libraries(missingLibraries)
 	table.table.table-bordered
@@ -34,7 +34,7 @@ mixin missing-libraries(missingLibraries)
 		tbody
 			each library in missingLibraries
 				tr
-					td=library.id
+					td=library.name
 					td
 						.comma-separated
 							each repo in (library.linkedIn || [])

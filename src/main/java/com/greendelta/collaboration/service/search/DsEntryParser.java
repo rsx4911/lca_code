@@ -55,6 +55,7 @@ class DsEntryParser {
 	private DsVersion parseProcessSpecific(Map<String, Object> version) {
 		var v = new DsVersion();
 		v.processType = ModelTypes.processType(version);
+		v.flowType = ModelTypes.flowType(version);
 		v.validFromYear = Maps.get(version, "validFromYear");
 		v.validUntilYear = Maps.get(version, "validUntilYear");
 		v.location = Maps.get(version, "location");

@@ -36,16 +36,16 @@ define([
 
 			deleteLibrary = (event) ->
 				target = $ Events.target event
-				id = target.attr 'data-id'
+				name = target.attr 'data-name'
 				access = target.attr 'data-access'
-				Layers.askDeleteQuestion "library #{id}", '', () =>
+				Layers.askDeleteQuestion "library #{name}", '', () =>
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
-						url: "ws/libraries/#{id}/#{access}"
+						url: "ws/libraries/#{name}/#{access}"
 						success: () -> 
 							Layers.hideProgressIndicator()
-							Status.success "Successfully deleted library #{id}"
+							Status.success "Successfully deleted library #{name}"
 							Backbone.history.loadUrl()
 						error: (response) ->
 							Layers.hideProgressIndicator()

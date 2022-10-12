@@ -104,10 +104,10 @@ public class DeleteService {
 		if (!currentUser.isUserManager())
 			throw new ForbiddenAccessException("Team " + team.id, "DELETE");
 		memberService.removeMemberships(team);
-		teamService.delete(team);
 		messagingService.getMessages(team).forEach(message -> {
 			messagingService.delete(message);
 		});
+		teamService.delete(team);
 	}
 
 	public void delete(Repository repo) {
