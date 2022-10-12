@@ -13,12 +13,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.openlca.core.model.Direction;
+import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.util.Diffs;
+import org.openlca.git.util.FieldDefinition;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -171,25 +173,26 @@ public class InputOutputDataService {
 		return new IndexIterator(getClient(), query, BUFFER_SIZE);
 	}
 
-	@SuppressWarnings("unchecked")
 	private InputOutputData createData(Repository repo, Commit commit, int commitIndex, Diff diff) {
 		var map = repo.datasets().parse(diff.toReference(Side.NEW),
-				"name", "processType", "exchanges.flow.@id", "exchanges.isInput");
-		var flowRefIds = (List<String>) map.get("exchanges.flow.@id");
-		var isInput = (List<String>) map.get("exchanges.isInput");
+				FieldDefinition.firstOf("name"),
+				FieldDefinition.firstOf("processType", ProcessType::valueOf),
+				FieldDefinition.allOf("exchanges.flow.@id").ifIs("exchanges.isInput").name("inputs"),
+				FieldDefinition.allOf("exchanges.flow.@id").ifIsNot("exchanges.isInput").name("outputs"),
+				FieldDefinition.firstOf("exchanges.flow.flowType", FlowType::valueOf)
+						.ifIs("exchanges.isQuantitativeReference")
+						.name("flowType"));
 		var name = Maps.getString(map, "name");
-		var type = Maps.getString(map, "processType");
-		var processType = ProcessType.LCI_RESULT.name().equals(type)
-				? ProcessType.LCI_RESULT
-				: ProcessType.UNIT_PROCESS;
-		var data = new InputOutputData(repo.path(), commit.id, name, processType, diff.refId);
-		for (var i = 0; i < flowRefIds.size(); i++) {
-			var flowRefId = flowRefIds.get(i);
-			if (Boolean.parseBoolean(isInput.get(i))) {
-				data.inputs.add(flowRefId);
-			} else {
-				data.outputs.add(flowRefId);
-			}
+		ProcessType processType = Maps.get(map, "processType");
+		FlowType flowType = Maps.get(map, "flowType");
+		List<String> inputs = Maps.get(map, "inputs");
+		List<String> outputs = Maps.get(map, "outputs");
+		var data = new InputOutputData(repo.path(), commit.id, name, processType, flowType, diff.refId);
+		if (inputs != null) {
+			data.inputs.addAll(inputs);
+		}
+		if (outputs != null) {
+			data.outputs.addAll(outputs);
 		}
 		return data;
 	}

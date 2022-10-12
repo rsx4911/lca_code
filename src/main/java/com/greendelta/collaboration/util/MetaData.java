@@ -77,20 +77,23 @@ public class MetaData {
 	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, Repository repo,
 			Mode mode) {
 		var defs = new ArrayList<FieldDefinition>();
-		defs.add(new FieldDefinition("name"));
+		defs.add(FieldDefinition.firstOf("name"));
 		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS) {
-			defs.add(new FieldDefinition("location.name"));
+			defs.add(FieldDefinition.firstOf("location.name"));
 		}
 		if (ref.type == ModelType.FLOW) {
-			defs.add(new FieldDefinition("flowType", FlowType::valueOf));
+			defs.add(FieldDefinition.firstOf("flowType", FlowType::valueOf));
 		} else if (ref.type == ModelType.PROCESS) {
-			defs.add(new FieldDefinition("location.name"));
-			defs.add(new FieldDefinition("processType", ProcessType::valueOf));
+			defs.add(FieldDefinition.firstOf("location.name"));
+			defs.add(FieldDefinition.firstOf("processType", ProcessType::valueOf));
+			defs.add(FieldDefinition.firstOf("exchanges.flow.flowType", FlowType::valueOf)
+					.ifIs("exchanges.isQuantitativeReference")
+					.name("flowType"));
 			if (mode == Mode.SEARCH) {
-				defs.add(new FieldDefinition("processDocumentation.dataSetOwner.name"));
-				defs.add(new FieldDefinition("processDocumentation.validFrom", MetaData::getYear));
-				defs.add(new FieldDefinition("processDocumentation.validUntil", MetaData::getYear));
-				defs.add(new FieldDefinition("defaultAllocationMethod", MetaData::getModellingApproach));
+				defs.add(FieldDefinition.firstOf("processDocumentation.dataSetOwner.name"));
+				defs.add(FieldDefinition.firstOf("processDocumentation.validFrom", MetaData::getYear));
+				defs.add(FieldDefinition.firstOf("processDocumentation.validUntil", MetaData::getYear));
+				defs.add(FieldDefinition.firstOf("defaultAllocationMethod", MetaData::getModellingApproach));
 			}
 		}
 		var info = repo.datasets().parse(ref, defs);
@@ -105,6 +108,7 @@ public class MetaData {
 			entry.put("flowType", info.get("flowType"));
 		} else if (ref.type == ModelType.PROCESS) {
 			entry.put("processType", info.get("processType"));
+			entry.put("flowType", info.get("flowType"));
 		}
 		if (mode == Mode.SEARCH) {
 			entry.put("contact", info.get("processDocumentation.dataSetOwner.name"));

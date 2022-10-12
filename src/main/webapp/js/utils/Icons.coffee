@@ -6,7 +6,24 @@ define () ->
 			return false
 		return true
 
-	get: (ref, additionalTypeInfo) ->
+	getFlowAppendix = (ref) ->
+		if !ref.flowType
+			return ''
+		return '_' + ref.flowType.substring(0, ref.flowType.indexOf('_'))
+
+	getProcessAppendix = (ref) ->
+		if ref.processType is 'LCI_RESULT' or ref.processType is 'SYSTEM'
+			processPart = 'system'
+		else if ref.processType is 'UNIT_PROCESS'
+			processPart = 'unit'
+		flowType = ref.flowType or ref.exchanges?.find((e) -> e.isQuantitativeReference)?.flow?.flowType
+		if flowType is 'PRODUCT_FLOW' or flowType is 'WASTE_FLOW'
+			flowPart = flowType.substring(0, flowType.indexOf('_'))
+		if !processPart or !flowPart
+			return ''
+		return '_' + processPart + '_' + flowPart
+
+	get: (ref) ->
 		icon = ''
 		first = true
 		type = if ref.type is 'CATEGORY' or ref.type is 'Category' then ref.categoryType else ref.type
@@ -16,13 +33,9 @@ define () ->
 			first = false
 			icon += char
 		if ref.type is 'Flow' or ref.type is 'FLOW'
-			flowType = ref.flowType || additionalTypeInfo
-			if flowType
-				icon += '_' + flowType.substring(0, flowType.indexOf('_'))
+			icon += getFlowAppendix(ref)
 		if ref.type is 'Process' or ref.type is 'PROCESS'
-			processType = ref.processType || additionalTypeInfo
-			if processType is 'LCI_RESULT' or processType is 'SYSTEM'
-				icon += '_system'
+			icon += getProcessAppendix(ref)
 		if ref.type is 'CATEGORY' or ref.type is 'Category'
 			icon = "category/#{icon}"
 		return "#{icon}.png".toLowerCase()

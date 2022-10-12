@@ -101,6 +101,7 @@ class DsEntryManager {
 		v.modellingApproach = Maps.get(metaData, "modellingApproach");
 		v.validFromYear = Maps.get(metaData, "validFromYear");
 		v.validUntilYear = Maps.get(metaData, "validUntilYear");
+		v.flowType = Maps.get(metaData, "flowType");
 		return v;
 	}
 

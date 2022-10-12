@@ -5,8 +5,11 @@ mixin result(dataset)
 	- var version = dataset.versions[versionIndex];
 	- var repoIndex = getHighlightedRepoIndex(version);
 	- var repo = version.repos[repoIndex];
+	- var iconData = Object.assign({}, dataset);
+	- iconData.processType = version.processType;
+	- iconData.flowType = version.flowType;
 	.result
-		img.model-icon-small(src='images/model/small/' + getIcon(dataset, version.flowType || version.processType), aria-label='Model icon of ' + dataset.type)
+		img.model-icon-small(src='images/model/small/' + getIcon(iconData), aria-label='Model icon of ' + dataset.type)
 		.result-content
 			h4: +link(dataset, repo, version.name)
 			if dataset.type === 'FLOW' && version.flowType === 'ELEMENTARY_FLOW' && version.category && version.category.indexOf('/') !== -1
