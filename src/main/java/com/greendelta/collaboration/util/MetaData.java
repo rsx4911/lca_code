@@ -120,6 +120,10 @@ public class MetaData {
 
 	public static Stream<Map<String, Object>> sortByName(Stream<Map<String, Object>> data) {
 		return data.sorted((m1, m2) -> {
+			var t1 = Maps.getString(m1, "typeOfEntry");
+			var t2 = Maps.getString(m2, "typeOfEntry");
+			if (!t1.equals(t2))
+				return t1.equals("CATEGORY") ? -1 : 1;
 			return Maps.getString(m1, "name").toLowerCase().compareTo(Maps.getString(m2, "name").toLowerCase());
 		});
 	}
