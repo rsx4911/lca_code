@@ -48,8 +48,17 @@ define([
 				@updateUI()
 
 			updateUI: () ->
-				@$('#SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED').prop 'disabled', !@$('#SERVER_SETTING__USER_REGISTRATION_ENABLED').is(':checked')			
-				@$('#SERVER_SETTING__DATASET_TAGS_ON_DASHBOARD_ENABLED, #SERVER_SETTING__DATASET_TAGS_ON_GROUPS_ENABLED, #SERVER_SETTING__DATASET_TAGS_ON_REPOSITORIES_ENABLED').prop 'disabled', !@$('#SERVER_SETTING__DATASET_TAGS_ENABLED').is(':checked')			
+				depending = {
+					'PUBLIC_REPOSITORY_ENABLED': ['HOMEPAGE_ENABLED'],
+					'USER_REGISTRATION_ENABLED': ['USER_REGISTRATION_APPROVAL_ENABLED'],
+					'DATASET_TAGS_ENABLED': ['DATASET_TAGS_ON_DASHBOARD_ENABLED', 'DATASET_TAGS_ON_GROUPS_ENABLED', 'DATASET_TAGS_ON_REPOSITORIES_ENABLED']
+				}
+				for key in Object.keys(depending)
+					disabled = !@$('#SERVER_SETTING__' + key).is(':checked')
+					for dependent in depending[key]
+						@$('#SERVER_SETTING__' + dependent).prop 'disabled', disabled
+						if disabled
+							@$('#SERVER_SETTING__' + dependent).prop 'checked', false
 
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'
