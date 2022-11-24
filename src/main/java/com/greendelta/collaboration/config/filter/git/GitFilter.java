@@ -96,10 +96,9 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	private void runPushPostProcessing(RepositoryPath path) {
 		try (var repo = repoService.get(path.group, path.repo)) {
 			var commit = repo.commits().head();
-			var isPublic = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
 			var generateJson = repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
 			notificationService.dataPushed(repo, commit);
-			if (isPublic && generateJson) {
+			if (generateJson) {
 				repoService.generateJson(repo);
 			}
 			indexService.index(repo);

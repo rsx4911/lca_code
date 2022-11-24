@@ -28,6 +28,8 @@ include ../mixins/forms.pug
 		+checkbox('SERVER_SETTING__TASKS_ENABLED', 'Tasks: Editors can create review tasks')
 		+checkbox('SERVER_SETTING__MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
 		+checkbox('SERVER_SETTING__PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
+		.indented-setting
+			+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page for anonymous users')
 		+checkbox('SERVER_SETTING__NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
 		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselves')
 		.indented-setting
@@ -35,7 +37,6 @@ include ../mixins/forms.pug
 		+checkbox('SERVER_SETTING__CHANGE_LOG_ENABLED', 'Change log</strong>: Users can create change logs from commit histories (local nodejs server for server side rendering must be installed)')
 		+checkbox('SERVER_SETTING__DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
 		+checkbox('SERVER_SETTING__REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
-		+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page for anonymous users')
 		+checkbox('SERVER_SETTING__REPOSITORY_TAGS_ENABLED', 'Repository tags: Enables owners of a repository to tag the repository which add additional filtering in the search')
 		+checkbox('SERVER_SETTING__DATASET_TAGS_ENABLED', 'Data set tags: Enables a search filter for tags on data sets')
 		.indented-setting
