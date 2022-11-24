@@ -331,8 +331,7 @@ public class RepositoryController {
 				}
 			}
 			repo.settings.set(setting, value);
-			if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)
-					&& repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
+			if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)) {
 				try {
 					handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
 				} catch (IOException e) {
