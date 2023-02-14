@@ -1,10 +1,11 @@
 define([				
 				'cs!utils/Filter'
 				'cs!utils/Icons'
+				'cs!models/Settings'
 				'templates/views/repository/dataset/structures/flow-references'
 			]
 
-	(Filter, Icons, template) ->
+	(Filter, Icons, settings, template) ->
 
 		init: (repository, refId, commitId, flowType) ->
 			outType = if flowType is 'ELEMENTARY_FLOW' then 'emitted-by' else 'produced-by'
@@ -12,6 +13,8 @@ define([
 			@initReferences repository, refId, commitId, outType
 
 		initReferences: (repository, refId, commitId, type) ->
+			if !settings.is('SEARCH_LINKS_ENABLED')
+				return
 			group = repository.get 'group'
 			name = repository.get 'name'
 			direction = if type is 'used-by' then 'INPUT' else 'OUTPUT' 

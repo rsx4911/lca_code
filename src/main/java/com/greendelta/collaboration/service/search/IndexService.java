@@ -31,6 +31,8 @@ public class IndexService {
 	}
 
 	private Work offer(String title, int total, Consumer<Work> actualWork) {
+		if (!settings.searchConfig.isAvailable())
+			return null;
 		synchronized (workQueue) {
 			boolean isFirst = workQueue.isEmpty();
 			var work = new Work(title, total, actualWork);

@@ -280,6 +280,10 @@ public class SettingsService {
 			client = null;
 		}
 
+		public boolean isAvailable() {
+			return SettingsService.this.is(ServerSetting.SEARCH_ENABLED) && getSearchClient() != null;
+		}
+
 		public RestHighLevelClient getClient() throws UnknownHostException {
 			if (client != null)
 				return client;

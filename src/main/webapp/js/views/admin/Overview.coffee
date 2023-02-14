@@ -209,6 +209,7 @@ define([
 					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?'
 					beforeRender: (result) =>
+						result.isSearchEnabled = settings.is 'SEARCH_ENABLED'
 						result.reindexingStatus = @serverInfo.reindexingStatus			
 				@userFilter = new Filter
 					container: '#users'
@@ -260,6 +261,7 @@ define([
 				data.groups = counts.groups
 				data.teams =  counts.teams
 				data.isHomepageEnabled = settings.is 'HOMEPAGE_ENABLED'
+				data.isSearchEnabled = settings.is 'SEARCH_ENABLED'
 				@$el.html template data
 				Renderer.render @, renderOptions
 				@repositoryFilter.init()

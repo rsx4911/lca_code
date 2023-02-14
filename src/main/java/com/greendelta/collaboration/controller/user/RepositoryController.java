@@ -391,16 +391,18 @@ public class RepositoryController {
 		try (var repo = service.get(group, name)) {
 			var notification = notificationService.repositoryDeleted(repo);
 			var work = indexService.deleteIndex(repo);
-			new Thread(() -> {
-				while (!work.isDone()) {
-					synchronized (this) {
-						try {
-							wait(100);
-						} catch (InterruptedException e) {
+			if (work != null) {
+				new Thread(() -> {
+					while (!work.isDone()) {
+						synchronized (this) {
+							try {
+								wait(100);
+							} catch (InterruptedException e) {
+							}
 						}
 					}
-				}
-			}).run();
+				}).run();
+			}
 			deleteService.delete(repo);
 			notification.send();
 		}

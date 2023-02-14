@@ -191,6 +191,7 @@ define([
 					otherFactorMap: if @compareTo and @compareTo.type is 'ImpactCategory' then ImpactFactors.map(@compareTo.impactFactors) else null
 					reviewMode: LocalStorage.getValue('reviewMode')
 					isPublic: !currentUser.isLoggedIn()
+					isSearchLinksEnabled: settings.is('SEARCH_LINKS_ENABLED')
 				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo
 				@$el.html template model
 				if renderOptions

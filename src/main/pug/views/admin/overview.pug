@@ -8,7 +8,7 @@ mixin box(label, plural, count)
 		button.btn.btn-lg.btn-full-width.btn-success(data-action='create-' + lcLabel) Create #{lcLabel}
 	.list-box
 		legend=plural 
-			if label === 'Repository'
+			if label === 'Repository' && isSearchEnabled
 				button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repositories') Reindex
 				button.btn.btn-xs.btn-default.pull-right(data-action='clear-index') Clear index
 				#indexing-status
@@ -69,7 +69,7 @@ if isAdmin
 		div
 			strong Build date: 
 			| {{buildDate}}
-	.header-box Search/Browse configuration
+	.header-box Browse configuration
 	.content-box
 		.col-md-6
 			.model-types-order: +ordered-list('Model type order', modelTypesOrder)

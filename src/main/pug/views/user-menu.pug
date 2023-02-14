@@ -1,5 +1,5 @@
 mixin menu-items(searchIcon)
-	if searchIcon
+	if searchIcon && settings['SEARCH_ENABLED']
 		a.search-link-icon(href='search')
 			span.glyphicon.glyphicon-search  
 	a(href='')
