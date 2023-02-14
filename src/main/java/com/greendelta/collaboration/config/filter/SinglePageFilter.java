@@ -45,7 +45,6 @@ public class SinglePageFilter implements Filter {
 		gitFilterConfig = app.getBean(GitFilterConfig.class);
 	}
 
-	
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws ServletException, IOException {
@@ -74,9 +73,12 @@ public class SinglePageFilter implements Filter {
 			return;
 		}
 		var publicRepositoriesEnabled = settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
+		var homepageEnabled = settings.is(ServerSetting.HOMEPAGE_ENABLED);
+		var searchEnabled = settings.searchConfig.isAvailable();
 		var userRegistrationEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
-		if (user.isAnonymous() && (isLoginUrl || !publicRepositoriesEnabled)) {
-			if ((!publicRepositoriesEnabled && !isLoginUrl) || (!userRegistrationEnabled && url.equals("/sign-up"))) {
+		if (user.isAnonymous() && (isLoginUrl || !publicRepositoriesEnabled || (!homepageEnabled && !searchEnabled))) {
+			if ((!publicRepositoriesEnabled && !isLoginUrl) || (!homepageEnabled && !searchEnabled && !isLoginUrl)
+					|| (!userRegistrationEnabled && url.equals("/sign-up"))) {
 				redirect("/login", response);
 				return;
 			}

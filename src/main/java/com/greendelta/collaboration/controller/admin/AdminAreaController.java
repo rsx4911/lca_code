@@ -2,6 +2,7 @@ package com.greendelta.collaboration.controller.admin;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -80,6 +81,8 @@ public class AdminAreaController {
 
 	@GetMapping("testSearchConfig")
 	public void testSearchConfig() {
+		if (!settings.searchConfig.isAvailable())
+			throw Response.error("Search feature not enabled");
 		SearchConfig config = settings.searchConfig;
 		try {
 			var client = config.getClient();
@@ -87,7 +90,7 @@ public class AdminAreaController {
 			var exists = client.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
 			if (!exists)
 				throw Response.error("Index " + indexName + " does not exist");
-		} catch (UnknownHostException e) {
+		} catch (UnknownHostException | ConnectException e) {
 			String host = config.get(SearchSetting.HOST);
 			throw Response.error("Could not connect to host " + host);
 		} catch (Exception e) {
@@ -119,6 +122,8 @@ public class AdminAreaController {
 
 	@PutMapping("clearIndex")
 	public void clearIndex() {
+		if (!settings.searchConfig.isAvailable())
+			throw Response.error("Search feature not enabled");
 		try (var repos = repoService.getAllAccessible()) {
 			indexService.clearIndex(repos);
 		}
@@ -126,6 +131,8 @@ public class AdminAreaController {
 
 	@PutMapping("reindex")
 	public void reindex() {
+		if (!settings.searchConfig.isAvailable())
+			throw Response.error("Search feature not enabled");
 		try (var repos = repoService.getAllAccessible()) {
 			indexService.reindexAll(repos);
 		}
@@ -135,6 +142,8 @@ public class AdminAreaController {
 	public void reindex(
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository) {
+		if (!settings.searchConfig.isAvailable())
+			throw Response.error("Search feature not enabled");
 		try (var repo = repoService.get(group, repository)) {
 			indexService.reindex(repo);
 		}
