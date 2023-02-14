@@ -11,25 +11,17 @@ include ../mixins/forms.pug
 			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
 			+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
 		.clear
-	.header-box Opensearch settings
-		button.btn.btn-primary.pull-right(data-action='test-search') Run test search
-	.content-box
-		.three-columns
-			+input('SEARCH_SETTING__SCHEMA', 'Schema')
-			+input('SEARCH_SETTING__HOST', 'Url')
-			+input('SEARCH_SETTING__PORT', 'Port')
-		.clear
-		.two-columns
-			+input('SEARCH_SETTING__INDEX_NAME', 'Search index')
-			+input('SEARCH_SETTING__IO_DATA_INDEX_NAME', 'Input/output index')
 	.header-box Enabled features
 	.content-box
+		+checkbox('SERVER_SETTING__SEARCH_ENABLED', 'Search</strong>: Users can search for data sets within repositories they have access to')
+		.indented-setting
+			+checkbox('SERVER_SETTING__SEARCH_LINKS_ENABLED', 'Flow usage</strong>: Enables analysis and display of flow usage')
 		+checkbox('SERVER_SETTING__COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
 		+checkbox('SERVER_SETTING__TASKS_ENABLED', 'Tasks: Editors can create review tasks')
 		+checkbox('SERVER_SETTING__MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
 		+checkbox('SERVER_SETTING__PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
 		.indented-setting
-			+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page for anonymous users')
+			+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page or login for anonymous users')
 		+checkbox('SERVER_SETTING__NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
 		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselves')
 		.indented-setting
@@ -43,6 +35,17 @@ include ../mixins/forms.pug
 			+checkbox('SERVER_SETTING__DATASET_TAGS_ON_DASHBOARD_ENABLED', 'Data set tags (Dashboard): Adds a data set tag cloud menu entry to the dashboard')
 			+checkbox('SERVER_SETTING__DATASET_TAGS_ON_GROUPS_ENABLED', 'Data set tags (Group): Adds a data set tag cloud menu entry to each groups menu')
 			+checkbox('SERVER_SETTING__DATASET_TAGS_ON_REPOSITORIES_ENABLED', 'Data set tags (Repository): Adds a data set tag cloud menu entry to each repositories menu')
+	.header-box.search-settings Opensearch settings
+		button.btn.btn-primary.pull-right(data-action='test-search') Run test search
+	.content-box.search-settings
+		.three-columns
+			+input('SEARCH_SETTING__SCHEMA', 'Schema')
+			+input('SEARCH_SETTING__HOST', 'Url')
+			+input('SEARCH_SETTING__PORT', 'Port')
+		.clear
+		.two-columns
+			+input('SEARCH_SETTING__INDEX_NAME', 'Search index')
+			+input('SEARCH_SETTING__IO_DATA_INDEX_NAME', 'Flow  index')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear

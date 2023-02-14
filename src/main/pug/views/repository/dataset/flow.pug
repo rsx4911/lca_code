@@ -10,8 +10,9 @@ include ./structures/flow-property-table.pug
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab(null, true, 'Flow info')
 				+nav-tab('flowProperties')
-				+nav-tab(null, false, 'Used by')
-				+nav-tab(null, false, outLabel)
+				if isSearchLinksEnabled
+					+nav-tab(null, false, 'Used by')
+					+nav-tab(null, false, outLabel)
 			.tab-content
 				+nav-tab-pane('flow-info', true, true)
 					table.table.no-head
@@ -25,13 +26,14 @@ include ./structures/flow-property-table.pug
 							+boolean-field-row('isInfrastructureFlow')
 				+nav-tab-pane('flowProperties')
 					+flow-property-table()
-				+nav-tab-pane('used-by', false, true)
-					.form-group
-						input#used-by-filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
-					#used-by-data
-				+nav-tab-pane(outId, false, true)
-					.form-group
-						input.form-control(id=outId + '-filter' type='text' placeholder='Filter by name' aria-label='Filter by name')
-					div(id=outId + '-data')
+				if isSearchLinksEnabled
+					+nav-tab-pane('used-by', false, true)
+						.form-group
+							input#used-by-filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
+						#used-by-data
+					+nav-tab-pane(outId, false, true)
+						.form-group
+							input.form-control(id=outId + '-filter' type='text' placeholder='Filter by name' aria-label='Filter by name')
+						div(id=outId + '-data')
 	+meta
 	.clear

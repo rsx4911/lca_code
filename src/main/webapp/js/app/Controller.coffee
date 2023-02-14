@@ -126,11 +126,12 @@ define([
 			initializeUserMenu: () ->
 				searchContainer = if $('#global-search-bar').length then '#global-search-bar' else '#user-menu'
 				separateSearch = searchContainer isnt '#user-menu'
-				@globalSearch = new GlobalSearch()
-				@globalSearch.render 
-					container: searchContainer
-					append: true
-					noAnimation: true
+				if settings.is('SEARCH_ENABLED')
+					@globalSearch = new GlobalSearch()
+					@globalSearch.render 
+						container: searchContainer
+						append: true
+						noAnimation: true
 				@userMenu = new UserMenu
 					separateSearch: separateSearch
 				@userMenu.render 
@@ -160,6 +161,11 @@ define([
 
 			registerRouteRewrites: () ->
 				if currentUser.isLoggedIn()
+					if !settings.is('SEARCH_ENABLED')
+						if settings.is('DASHBOARD_ACTIVITIES_ENABLED')
+							@router.registerRouteRewrite 'search', 'dashboard/activities'
+						else
+							@router.registerRouteRewrite 'search', 'dashboard/repositories'
 					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
@@ -168,7 +174,8 @@ define([
 					else
 						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 				else if !settings.is('HOMEPAGE_ENABLED')
-					@router.registerRouteRewrite 'landingPage', 'search'
+					if settings.is('SEARCH_ENABLED')
+						@router.registerRouteRewrite 'landingPage', 'search'					
 
 			registerAdminRoutes: () ->
 				@router.registerAdminRoute 'adminOverview', 'manager', -> @showView 

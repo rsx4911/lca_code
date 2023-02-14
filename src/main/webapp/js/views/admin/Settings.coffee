@@ -25,7 +25,8 @@ define([
 
 			render: (renderOptions) ->
 				@loadSettings (allSettings) =>
-					@$el.html template()
+					@$el.html template
+						settings: allSettings 
 					Renderer.render @, renderOptions
 					flattened = {}
 					for type in Object.keys(allSettings)
@@ -49,6 +50,7 @@ define([
 
 			updateUI: () ->
 				depending = {
+					'SEARCH_ENABLED': ['SEARCH_LINKS_ENABLED']
 					'PUBLIC_REPOSITORY_ENABLED': ['HOMEPAGE_ENABLED'],
 					'USER_REGISTRATION_ENABLED': ['USER_REGISTRATION_APPROVAL_ENABLED'],
 					'DATASET_TAGS_ENABLED': ['DATASET_TAGS_ON_DASHBOARD_ENABLED', 'DATASET_TAGS_ON_GROUPS_ENABLED', 'DATASET_TAGS_ON_REPOSITORIES_ENABLED']
@@ -59,6 +61,11 @@ define([
 						@$('#SERVER_SETTING__' + dependent).prop 'disabled', disabled
 						if disabled
 							@$('#SERVER_SETTING__' + dependent).prop 'checked', false
+				if @$('#SERVER_SETTING__SEARCH_ENABLED').is(':checked')
+					@$('.search-settings').removeClass 'hidden'
+				else
+					@$('.search-settings').addClass 'hidden'
+				@$('#SEARCH_SETTING__IO_DATA_INDEX_NAME').prop 'disabled', !@$('#SERVER_SETTING__SEARCH_LINKS_ENABLED').is(':checked')
 
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'
