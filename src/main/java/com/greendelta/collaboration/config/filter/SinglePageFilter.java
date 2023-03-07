@@ -79,7 +79,7 @@ public class SinglePageFilter implements Filter {
 		if (user.isAnonymous() && (isLoginUrl || !publicRepositoriesEnabled || (!homepageEnabled && !searchEnabled))) {
 			if ((!publicRepositoriesEnabled && !isLoginUrl) || (!homepageEnabled && !searchEnabled && !isLoginUrl)
 					|| (!userRegistrationEnabled && url.equals("/sign-up"))) {
-				redirect("/login", response);
+				redirect(request.getContextPath() + "/login", response);
 				return;
 			}
 			forward("/login.html", request, response);
