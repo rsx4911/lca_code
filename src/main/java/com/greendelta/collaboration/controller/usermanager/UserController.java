@@ -66,7 +66,6 @@ public class UserController {
 			user.enable(notification);
 		}
 		user = service.insert(user);
-		groupService.create(username, true);
 		notificationService.userCreated(user, password).send();
 		return Response.created(Users.mapForSelf(user));
 	}
