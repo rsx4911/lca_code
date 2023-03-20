@@ -242,7 +242,7 @@ define([
 					repository: @repository
 					type: @type
 					refId: @refId
-					commitId: @commitId
+					commitId: @commitId || @commits[@commits.length - 1].id
 					commentPath: @commentPath
 					loadComments: loadComments
 					updateIcon: @updateIcon
