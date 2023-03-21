@@ -57,7 +57,8 @@ mixin download-dropdown()
 				span.text Download 
 				span.caret
 			ul.dropdown-menu
-				li: a(href='#' data-format='json') as JSON-LD
+				li: a(href='#' data-format='json') as JSON-LD (openLCA 2.x)
+				li: a(href='#' data-format='json1') as JSON-LD (openLCA 1.x)
 				if !dsType || $.inArray(getTypeAsEnum(dsType), ['ACTOR', 'SOURCE', 'UNIT_GROUP', 'FLOW_PROPERTY', 'FLOW', 'PROCESS', 'IMPACT_METHOD']) !== -1
 					li: a(href='#' data-format='ilcd') as ILCD
 

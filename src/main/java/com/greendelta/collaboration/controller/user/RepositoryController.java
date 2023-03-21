@@ -196,8 +196,12 @@ public class RepositoryController {
 			throw Response.badRequest("name", "This is a reserved word");
 		if (service.exists(group, name))
 			throw Response.badRequest("name", "Repository " + name + " already exists");
-		if (!groupService.exists(group))
-			throw Response.badRequest("group", "Specified group does not exist");
+		if (!groupService.exists(group)) {
+			var user = userService.getCurrentUser();
+			if (!group.equals(user.username))
+				throw Response.badRequest("group", "Specified group does not exist");
+			groupService.create(user.username, true);
+		}
 	}
 
 	@PostMapping("import/{group}/{name}")

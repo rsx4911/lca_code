@@ -73,9 +73,9 @@ public class GroupService {
 
 	public boolean create(String group, boolean userGroup) {
 		var currentUser = userService.getCurrentUser();
-		if (userGroup && !currentUser.isUserManager())
+		if (userGroup && !currentUser.isUserManager() && !userGroup)
 			throw new ForbiddenAccessException("", "CREATE_GROUP");
-		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups)
+		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups && !userGroup)
 			throw new ForbiddenAccessException("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
@@ -144,6 +144,9 @@ public class GroupService {
 					&& (adminArea || user == null || !group.getName().equals(user.username)))
 				continue;
 			groups.add(group.getName());
+		}
+		if (user != null && !user.isAnonymous() && !groups.contains(user.username)) {
+			groups.add(user.username);
 		}
 		return groups;
 	}
