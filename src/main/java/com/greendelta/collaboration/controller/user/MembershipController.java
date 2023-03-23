@@ -206,7 +206,13 @@ public class MembershipController {
 	public void removeUserRoleFromGroup(
 			@PathVariable("group") String group,
 			@PathVariable("username") String username) {
-		removeUserRole(group, null, username);
+		var path = getAuthorizedPath(group, null);
+		var user = userService.getForUsername(username);
+		var notification = notificationService.memberRemoved(group, user);
+		var removed = service.removeMembership(user, path);
+		if (!removed)
+			throw Response.notFound("User " + username + " is not a member of " + group);
+		notification.send();
 	}
 
 	@DeleteMapping("{group}/{repo}/user/{username}")
@@ -214,19 +220,17 @@ public class MembershipController {
 			@PathVariable("group") String group,
 			@PathVariable("repo") String repo,
 			@PathVariable("username") String username) {
-		removeUserRole(group, repo, username);
-	}
-
-	private void removeUserRole(String group, String repoName, String username) {
-		var path = getAuthorizedPath(group, repoName);
+		if (repo.equals("null")) {
+			removeUserRoleFromGroup(group, username);
+			return;
+		}
+		var path = getAuthorizedPath(group, repo);
 		var user = userService.getForUsername(username);
-		try (var repo = repoService.get(group, repoName)) {
-			var notification = !Strings.nullOrEmpty(repoName) && !repoName.toLowerCase().equals("null")
-					? notificationService.memberRemoved(repo, user)
-					: notificationService.memberRemoved(group, user);
+		try (var repository = repoService.get(group, repo)) {
+			var notification = notificationService.memberRemoved(repo, user);
 			var removed = service.removeMembership(user, path);
 			if (!removed)
-				throw Response.notFound("User " + username + " is not a member of " + group + "/" + repoName);
+				throw Response.notFound("User " + username + " is not a member of " + group + "/" + repo);
 			notification.send();
 		}
 	}
