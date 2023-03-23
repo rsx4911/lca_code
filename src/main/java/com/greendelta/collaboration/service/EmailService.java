@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.MailSetting;
@@ -28,6 +29,7 @@ public class EmailService {
 		this.settings = settings;
 	}
 
+	@Async
 	public void send(EmailJob mail) {
 		var config = settings.mailConfig;
 		var sender = config.getMailSender();
