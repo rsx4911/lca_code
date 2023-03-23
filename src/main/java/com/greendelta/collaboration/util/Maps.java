@@ -15,17 +15,17 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 public class Maps {
 
 	private static final Logger log = LogManager.getLogger(Maps.class);
-	private static final ObjectMapper mapper = new ObjectMapper();
-
-	static {
-		mapper.addMixIn(RevCommit.class, IgnoreMixIn.class);
-	}
+	private static final JsonMapper mapper = JsonMapper.builder()
+			.configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
+			.addMixIn(RevCommit.class, IgnoreMixIn.class)
+			.build();
 
 	private Maps() {
 	}
@@ -278,8 +278,8 @@ public class Maps {
 			stringValue = value.toString().toLowerCase();
 		}
 		return switch (stringValue) {
-		case "true", "on", "yes" -> true;
-		default -> false;
+			case "true", "on", "yes" -> true;
+			default -> false;
 		};
 	}
 

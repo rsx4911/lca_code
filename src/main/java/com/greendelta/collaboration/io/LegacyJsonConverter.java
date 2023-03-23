@@ -269,7 +269,7 @@ class LegacyJsonConverter implements Closeable {
 
 	private boolean renameInArray(JsonObject obj, String arrayProp, String oldProp, String newProp) {
 		var elements = Json.getArray(obj, arrayProp);
-		if (elements.isEmpty())
+		if (elements == null || elements.isEmpty())
 			return false;
 		var renamed = false;
 		for (var e : elements) {
