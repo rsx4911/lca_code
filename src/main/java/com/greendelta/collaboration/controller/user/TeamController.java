@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
@@ -54,12 +57,16 @@ public class TeamController {
 	@PutMapping("avatar/{teamname}")
 	public byte[] setAvatar(
 			@PathVariable("teamname") String teamname,
-			@RequestParam(name = "file", required = false) byte[] file) {
+			@RequestParam(name = "file", required = false) MultipartFile file) {
 		var team = authorizedGetTeam(teamname);
 		if (team == null)
 			throw Response.notFound();
-		team.avatar = file;
-		team = service.update(team);
+		try {
+			team.avatar = file != null ? file.getBytes() : null;
+			team = service.update(team);
+		} catch (IOException e) {
+			throw Response.error("Error reading avatar file");
+		}
 		return getAvatar(teamname);
 	}
 

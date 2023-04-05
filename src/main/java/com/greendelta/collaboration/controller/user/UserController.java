@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
@@ -62,16 +64,16 @@ public class UserController {
 							: Users::mapForOthers));
 		var users = result.data;
 		switch (module) {
-		case MESSAGING:
-			users = messagingService.filterVisible(result.data);
-			break;
-		case REVIEW:
-			if (repositoryPath == null)
-				throw Response.badRequest("No repository specified");
-			users = result.data.stream().filter(user -> accessService.canReviewIn(user, repositoryPath)).toList();
-			break;
-		default:
-			break;
+			case MESSAGING:
+				users = messagingService.filterVisible(result.data);
+				break;
+			case REVIEW:
+				if (repositoryPath == null)
+					throw Response.badRequest("No repository specified");
+				users = result.data.stream().filter(user -> accessService.canReviewIn(user, repositoryPath)).toList();
+				break;
+			default:
+				break;
 		}
 		return Response.ok(users.stream().map(Users::mapForOthers).toList());
 	}
@@ -153,12 +155,16 @@ public class UserController {
 	@PutMapping("avatar/{username}")
 	public byte[] setAvatar(
 			@PathVariable("username") String username,
-			@RequestParam(name = "file", required = false) byte[] file) {
+			@RequestParam(name = "file", required = false) MultipartFile file) {
 		var user = authorizedGetUser(username);
 		if (user == null)
 			throw Response.notFound();
-		user.avatar = file;
-		user = service.update(user);
+		try {
+			user.avatar = file != null ? file.getBytes() : null;
+			user = service.update(user);
+		} catch (IOException e) {
+			throw Response.error("Error reading avatar file");
+		}
 		return getAvatar(username);
 	}
 

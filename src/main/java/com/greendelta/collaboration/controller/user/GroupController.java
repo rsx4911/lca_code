@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
@@ -124,11 +126,15 @@ public class GroupController {
 	@PutMapping("avatar/{name}")
 	public byte[] setAvatar(
 			@PathVariable("name") String name,
-			@RequestParam("file") byte[] file) {
+			@RequestParam(name = "file", required = false) MultipartFile file) {
 		if (!service.exists(name))
 			throw Response.notFound();
-		service.getSettings(name).set(GroupSetting.AVATAR, file);
-		return getAvatar(name);
+		try {
+			service.getSettings(name).set(GroupSetting.AVATAR, file != null ? file.getBytes() : null);
+			return getAvatar(name);
+		} catch (IOException e) {
+			throw Response.error("Error reading avatar file");
+		}
 	}
 
 	@PutMapping("settings/{name}/{setting}")
