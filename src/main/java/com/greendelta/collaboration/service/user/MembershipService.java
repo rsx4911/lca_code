@@ -195,17 +195,20 @@ public class MembershipService {
 		}
 		if (members.isEmpty())
 			return null;
-		// user can be added as part of team or independently, so "highest" role
-		// counts, if is both independent member and member as part of team
-		// return independent membership
 		var member = members.get(0);
+		for (var m : members) {
+			if (m.role == Role.best(m.role, member.role)) {
+				member = m;
+			}
+		}
+		// user can be added as part of team or independently. if the user is
+		// both independent member and member as part of a team, return
+		// the independent membership
 		for (var m : members) {
 			if (m.role == member.role) {
 				if (member.team != null) {
 					member = m;
 				}
-			} else if (m.role == Role.best(m.role, member.role)) {
-				member = m;
 			}
 		}
 		return member;
