@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Users;
-import com.greendelta.collaboration.model.Notification;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
@@ -62,9 +61,7 @@ public class UserController {
 			throw Response.badRequest("email", "Missing input: Email");
 		var password = Password.generate();
 		service.setPassword(user, password);
-		for (var notification : Notification.values()) {
-			user.enable(notification);
-		}
+		user.settings.setDefaults();
 		user = service.insert(user);
 		notificationService.userCreated(user, password).send();
 		return Response.created(Users.mapForSelf(user));

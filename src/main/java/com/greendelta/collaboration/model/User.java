@@ -56,25 +56,6 @@ public class User extends AbstractEntity implements UserDetails {
 		return username.hashCode();
 	}
 
-	public void enable(Notification notification) {
-		if (isEnabled(notification))
-			return;
-		var e = (long) Math.pow(2, notification.ordinal());
-		settings.notifications += e;
-	}
-
-	public void disable(Notification notification) {
-		if (!isEnabled(notification))
-			return;
-		var e = (long) Math.pow(2, notification.ordinal());
-		settings.notifications -= e;
-	}
-
-	public boolean isEnabled(Notification notification) {
-		var e = (long) Math.pow(2, notification.ordinal());
-		return (settings.notifications | e) == settings.notifications;
-	}
-
 	public boolean isAdmin() {
 		if (settings == null)
 			return false;
