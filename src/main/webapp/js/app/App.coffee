@@ -48,6 +48,24 @@ define([
 								replace: true
 						window.inErrorHandling = false
 
+		initializeLongLoading: () ->
+			$.ajaxSetup
+				beforeSend: (xhr) ->
+					time = new Date().getTime()
+					check = () ->
+						setTimeout () ->
+							if xhr.readyState is 4
+								Layers.hideProgressIndicator()
+							else
+								check()
+						, 50
+					setTimeout () ->
+						if xhr.readyState isnt 4
+							Layers.showProgressIndicator()
+							check()
+					, 250
+
+
 		initialize: () ->
 			window.onfocus = () -> 
 				window.isActive = true
@@ -62,6 +80,7 @@ define([
 					$(@).addClass('animated ' + animationName).one animationEnd, () -> 
 						$(@).removeClass 'animated ' + animationName
 			@initializeErrorHandling()
+			@initializeLongLoading()
 			$.ajax
 				type: 'GET'
 				url: 'ws/public/config/userRoutes'
