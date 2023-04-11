@@ -13,6 +13,7 @@ include ../mixins/forms.pug
 		.clear
 	.header-box Enabled features
 	.content-box
+		.alert.alert-warning You need to reindex all repositories, for the search/usage to show correct results.
 		+checkbox('SERVER_SETTING__SEARCH_ENABLED', 'Search</strong>: Users can search for data sets within repositories they have access to')
 		.indented-setting
 			+checkbox('SERVER_SETTING__SEARCH_LINKS_ENABLED', 'Flow usage</strong>: Enables analysis and display of flow usage')
