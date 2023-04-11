@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryList;
@@ -76,7 +77,9 @@ public class IndexService {
 	public Work clearIndex(RepositoryList repos) {
 		return offer("Clearing index", 1, work -> {
 			searchService.clearIndex(repos);
-			ioDataService.clearIndex();
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.clearIndex();
+			}
 			repos.forEach(repo -> setCommitId(repo, null));
 			work.worked++;
 		});
@@ -85,7 +88,9 @@ public class IndexService {
 	public Work index(Repository repo) {
 		return offer("Indexing " + repo.path(), 1, work -> {
 			searchService.index(repo);
-			ioDataService.index(repo);
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.index(repo);
+			}
 			setCommitId(repo, repo.commits().head());
 			work.worked++;
 		});
@@ -94,7 +99,9 @@ public class IndexService {
 	public Work moveIndex(Repository repo, Repository newRepo) {
 		return offer("Moving index of " + repo.path() + " to " + newRepo.path(), 1, work -> {
 			searchService.move(repo, newRepo);
-			ioDataService.move(repo, newRepo);
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.move(repo, newRepo);
+			}
 			setCommitId(repo, null);
 			setCommitId(newRepo, newRepo.commits().head());
 			work.worked++;
@@ -111,10 +118,14 @@ public class IndexService {
 	public Work reindex(Repository repo) {
 		return offer("Reindexing " + repo.path(), 1, work -> {
 			searchService.remove(repo);
-			ioDataService.remove(repo);
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.remove(repo);
+			}
 			setCommitId(repo, null);
 			searchService.index(repo);
-			ioDataService.index(repo);
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.index(repo);
+			}
 			setCommitId(repo, repo.commits().head());
 			work.worked++;
 		});
@@ -123,11 +134,15 @@ public class IndexService {
 	public Work reindexAll(RepositoryList repos) {
 		return offer("Reindexing all repositories", repos.size(), work -> {
 			searchService.clearIndex(repos);
-			ioDataService.clearIndex();
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.clearIndex();
+			}
 			repos.forEach(repo -> {
 				setCommitId(repo, null);
 				searchService.index(repo);
-				ioDataService.index(repo);
+				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+					ioDataService.index(repo);
+				}
 				setCommitId(repo, repo.commits().head());
 				work.worked++;
 			});
@@ -137,7 +152,9 @@ public class IndexService {
 	public Work deleteIndex(Repository repo) {
 		return offer("Deleting index of " + repo.path(), 1, work -> {
 			searchService.remove(repo);
-			ioDataService.remove(repo);
+			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+				ioDataService.remove(repo);
+			}
 			setCommitId(repo, null);
 			work.worked++;
 		});
