@@ -1,7 +1,10 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.openlca.util.Strings;
@@ -20,62 +23,121 @@ import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Users;
+import com.greendelta.collaboration.model.Membership;
+import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Password;
-import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
 @RequestMapping("ws/user")
 public class UserController {
 
 	private final UserService service;
-	private final MessagingService messagingService;
+	private final TeamService teamService;
 	private final AccessService accessService;
+	private final MembershipService membershipService;
+	private final MessagingService messagingService;
 	private final SettingsService settings;
 
 	@Autowired
-	public UserController(UserService service, MessagingService messagingService, AccessService accessService,
-			SettingsService settings) {
+	public UserController(UserService service, TeamService teamService, AccessService accessService,
+			MembershipService membershipService, MessagingService messagingService, SettingsService settings) {
 		this.service = service;
-		this.messagingService = messagingService;
+		this.teamService = teamService;
 		this.accessService = accessService;
+		this.membershipService = membershipService;
+		this.messagingService = messagingService;
 		this.settings = settings;
 	}
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "page", defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "module", required = false) Module module,
-			@RequestParam(name = "repositoryPath", required = false) String repositoryPath) {
-		var result = service.getVisible(page, pageSize, filter);
-		var currentUser = service.getCurrentUser();
-		if (module == null)
-			return Response.ok(SearchResults.convert(result,
-					currentUser.isUserManager()
-							? Users::mapForAdmin
-							: Users::mapForOthers));
-		var users = result.data;
-		switch (module) {
-			case MESSAGING:
-				users = messagingService.filterVisible(result.data);
-				break;
-			case REVIEW:
-				if (repositoryPath == null)
-					throw Response.badRequest("No repository specified");
-				users = result.data.stream().filter(user -> accessService.canReviewIn(user, repositoryPath)).toList();
-				break;
-			default:
-				break;
+			@RequestParam(name = "repositoryPath", required = false) String repositoryPath,
+			@RequestParam(name = "filter", required = false) String filter) {
+		var users = getUsers(module, repositoryPath).stream();
+		if (!Strings.nullOrEmpty(filter)) {
+			users = users.filter(u -> u.name.contains(filter));
 		}
-		return Response.ok(users.stream().map(Users::mapForOthers).toList());
+		return Response.ok(users.map(Users::mapForOthers).toList());
+	}
+
+	private List<User> getVisible(String repositoryPath) {
+		var currentUser = service.getCurrentUser();
+		if (currentUser.isAnonymous())
+			return new ArrayList<>();
+		if (currentUser.isUserManager() || currentUser.isDataManager())
+			return service.getAll(0, 0, null).data;
+		var teams = teamService.getTeamsFor(currentUser);
+		var memberships = getMemberships(currentUser, teams, repositoryPath);
+		if (!Strings.nullOrEmpty(repositoryPath) && repositoryPath.contains("/")) {
+			var group = repositoryPath.substring(0, repositoryPath.indexOf("/"));
+			var groupMembers = getMemberships(currentUser, teams, group);
+			memberships = join(Arrays.asList(memberships, groupMembers));
+		}
+		var fromTeams = join(teams.stream()
+				.map(team -> team.users)
+				.toList());
+		var fromConversations = messagingService.getConversations(currentUser).stream()
+				.map(c -> c.getOtherUser(currentUser))
+				.toList();
+		return join(Arrays.asList(fromTeams, getMembers(memberships), fromConversations)).stream()
+				.distinct().toList();
+	}
+
+	private List<Membership> getMemberships(User user, List<Team> teams, String repoOrGroup) {
+		var memberships = new ArrayList<Membership>();
+		memberships.addAll(membershipService.getMemberships(user, repoOrGroup));
+		for (var team : teams) {
+			memberships.addAll(membershipService.getMemberships(team, repoOrGroup));
+		}
+		return memberships;
+	}
+
+	private List<User> getMembers(List<Membership> memberships) {
+		var members = new ArrayList<User>();
+		for (var membership : memberships) {
+			for (var m : membershipService.getMemberships(membership.memberOf)) {
+				if (m.user != null) {
+					members.add(m.user);
+				}
+				if (m.team != null) {
+					members.addAll(m.team.users);
+				}
+			}
+		}
+		return members;
+	}
+
+	private <T> List<T> join(List<List<T>> lists) {
+		var list = new ArrayList<T>();
+		lists.forEach(list::addAll);
+		return list;
+	}
+
+	private List<User> getUsers(Module module, String repositoryPath) {
+		if (module == Module.REVIEW && Strings.nullOrEmpty(repositoryPath))
+			return new ArrayList<>();
+		var users = getVisible(repositoryPath);
+		if (module == null)
+			return users;
+		return switch (module) {
+			case MESSAGING -> users.stream()
+					.filter(messagingService::canMessage)
+					.toList();
+			case REVIEW -> users.stream()
+					.filter(user -> accessService.canReviewIn(user, repositoryPath))
+					.toList();
+			default -> users;
+		};
 	}
 
 	@GetMapping("{username}")

@@ -74,7 +74,7 @@ public class TeamService {
 		return dao.getCount();
 	}
 
-	public SearchResult<Team> getVisible(int page, int pageSize, String filter, boolean isTeamLibraries) {
+	public SearchResult<Team> getAll(int page, int pageSize, String filter, boolean isTeamLibraries) {
 		var user = userService.getCurrentUser();
 		var parameters = new HashMap<String, Object>();
 		if (isTeamLibraries || !user.isUserManager()) {

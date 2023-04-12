@@ -82,12 +82,15 @@ define([
 					success: () -> Backbone.history.loadUrl()
 
 			showAddMembersLayer: (event) ->
-				Data.getUsers 'teams', null, (users) =>
-					Layers.showTemplateInLayer
-						template: 'team/add-members'
-						title: 'Add team members'
-						model: {users: Data.usersToOptions(users, @team.get('users'))}
-						buttons: [{id: 'add-members', className: 'btn-success', text: 'Add to team', callback: () => @addMembers()}]
+				$.ajax
+					type: 'GET'
+					url: 'ws/usermanager/user'
+					success: (result) =>
+						Layers.showTemplateInLayer
+							template: 'team/add-members'
+							title: 'Add team members'
+							model: {users: Data.usersToOptions(result.data, @team.get('users'))}
+							buttons: [{id: 'add-members', className: 'btn-success', text: 'Add to team', callback: () => @addMembers()}]
 
 			addMembers: () ->
 				users = $('#add-members-form #users').val()

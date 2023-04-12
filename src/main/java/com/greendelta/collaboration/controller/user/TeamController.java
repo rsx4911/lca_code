@@ -1,6 +1,9 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +19,13 @@ import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Teams;
+import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Team;
+import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
 @RequestMapping("ws/team")
@@ -27,23 +33,70 @@ public class TeamController {
 
 	private final TeamService service;
 	private final UserService userService;
+	private final MembershipService membershipService;
+	private final MessagingService messagingService;
 
 	@Autowired
-	public TeamController(TeamService service, UserService userService) {
+	public TeamController(TeamService service, UserService userService, MembershipService membershipService,
+			MessagingService messagingService) {
 		this.service = service;
 		this.userService = userService;
+		this.membershipService = membershipService;
+		this.messagingService = messagingService;
 	}
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "page", defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "module", required = false) Module module) {
-		var result = service.getVisible(page, pageSize, filter, module == Module.TEAM_LIBRARIES);
-		if (module == null)
-			return Response.ok(SearchResults.convert(result, Teams::mapForOthers));
-		return Response.ok(result.data.stream().map(Teams::mapForOthers).toList());
+		var result = getVisible(module);
+		return Response.ok(result.stream().map(Teams::mapForOthers).toList());
+	}
+
+	private List<Team> getVisible(Module module) {
+		var currentUser = userService.getCurrentUser();
+		if (currentUser.isAnonymous())
+			return new ArrayList<>();
+		if (currentUser.isUserManager() || currentUser.isDataManager())
+			return service.getAll(0, 0, null, module == Module.TEAM_LIBRARIES).data.stream()
+					.filter(team -> !team.users.isEmpty())
+					.toList();
+		var teams = service.getTeamsFor(currentUser);
+		var memberships = getMemberships(currentUser, teams);
+		var fromConversations = messagingService.getConversations(currentUser).stream()
+				.filter(c -> c.lastMessage.team != null)
+				.map(c -> c.lastMessage.team)
+				.toList();
+		return join(Arrays.asList(teams, getMembers(memberships), fromConversations)).stream()
+				.filter(team -> !team.users.isEmpty())
+				.distinct().toList();
+	}
+
+	private List<Membership> getMemberships(User user, List<Team> teams) {
+		var memberships = new ArrayList<Membership>();
+		memberships.addAll(membershipService.getMemberships(user));
+		for (var team : teams) {
+			memberships.addAll(membershipService.getMemberships(team));
+		}
+		return memberships;
+	}
+
+	private List<Team> getMembers(List<Membership> memberships) {
+		var members = new ArrayList<Team>();
+		for (var membership : memberships) {
+			for (var m : membershipService.getMemberships(membership.memberOf)) {
+				if (m.team != null) {
+					members.add(m.team);
+				}
+			}
+		}
+		return members;
+	}
+
+	private <T> List<T> join(List<List<T>> lists) {
+		var list = new ArrayList<T>();
+		lists.forEach(list::addAll);
+		return list;
 	}
 
 	@GetMapping("avatar/{teamname}")

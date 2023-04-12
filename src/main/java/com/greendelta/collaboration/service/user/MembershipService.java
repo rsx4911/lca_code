@@ -251,23 +251,27 @@ public class MembershipService {
 		return dao.getForAttributes(Map.of("memberOf", groupOrRepo));
 	}
 
-	private List<Membership> getMemberships(User user) {
+	public List<Membership> getMemberships(User user) {
 		return dao.getForAttributes(Map.of("user", user));
 	}
 
-	private List<Membership> getMemberships(User user, String groupOrRepo) {
+	public List<Membership> getMemberships(User user, String groupOrRepo) {
+		if (Strings.nullOrEmpty(groupOrRepo))
+			return getMemberships(user);
 		return dao.getForAttributes(Map.of("user", user, "memberOf", groupOrRepo));
 	}
 
-	private List<Membership> getMemberships(User user, Team team) {
+	public List<Membership> getMemberships(User user, Team team) {
 		return dao.getForAttributes(Map.of("user", user, "team", team));
 	}
 
-	private List<Membership> getMemberships(Team team) {
+	public List<Membership> getMemberships(Team team) {
 		return dao.getForAttributes(Map.of("team", team));
 	}
 
-	private List<Membership> getMemberships(Team team, String groupOrRepo) {
+	public List<Membership> getMemberships(Team team, String groupOrRepo) {
+		if (Strings.nullOrEmpty(groupOrRepo))
+			return getMemberships(team);
 		return dao.getForAttributes(Map.of("team", team, "memberOf", groupOrRepo));
 	}
 
