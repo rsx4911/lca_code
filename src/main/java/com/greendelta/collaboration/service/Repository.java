@@ -38,8 +38,7 @@ public class Repository implements AutoCloseable {
 
 	Repository(String root, String group, String name, Settings<RepositorySetting> settings,
 			Settings<GroupSetting> groupSettings) {
-		var fsPath = root + File.separator + group + File.separator + name;
-		dir = new File(fsPath);
+		dir = getDir(root, group, name);
 		this.group = group;
 		this.name = name;
 		this.path = new RepositoryPath(group, name);
@@ -50,6 +49,11 @@ public class Repository implements AutoCloseable {
 		this.groupSettings = groupSettings;
 	}
 
+	static File getDir(String root, String group, String name) {
+		var fsPath = root + File.separator + group + File.separator + name;
+		return new File(fsPath);
+	}
+	
 	public FileRepository gitRepo() {
 		if (gitRepo == null) {
 			try {

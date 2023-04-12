@@ -46,7 +46,8 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		return http.servletApi().and()
 				.csrf().disable()
-				.exceptionHandling().authenticationEntryPoint(this::handleUnauthorized).and()
+				.exceptionHandling()
+				.authenticationEntryPoint(this::handleUnauthenticated).and()
 				.authorizeRequests()
 				.antMatchers("/job").permitAll()
 				.antMatchers("/ws/public/**").permitAll()
@@ -59,7 +60,8 @@ public class SecurityConfig {
 				.and().build();
 	}
 
-	private void handleUnauthorized(HttpServletRequest request, HttpServletResponse response, AuthenticationException e)
+	private void handleUnauthenticated(HttpServletRequest request, HttpServletResponse response,
+			AuthenticationException e)
 			throws IOException {
 		var url = request.getRequestURL().toString();
 		var isGitUrl = false;
@@ -67,7 +69,7 @@ public class SecurityConfig {
 			response.reset();
 			if (e instanceof BadCredentialsException) {
 				if (e.getMessage().equals("tokenRequired")) {
-				response.setStatus(HttpStatus.BAD_REQUEST.value());
+					response.setStatus(HttpStatus.BAD_REQUEST.value());
 				} else {
 					response.setStatus(HttpStatus.FAILED_DEPENDENCY.value());
 				}
