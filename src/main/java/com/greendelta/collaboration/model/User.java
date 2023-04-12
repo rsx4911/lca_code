@@ -95,6 +95,8 @@ public class User extends AbstractEntity implements UserDetails {
 	public List<GrantedAuthority> getAuthorities() {
 		if (isAdmin())
 			return Arrays.asList(Authority.ADMIN, Authority.DATA_MANAGER, Authority.USER_MANAGER);
+		if (isDataManager() && isUserManager())
+			return Arrays.asList(Authority.DATA_MANAGER, Authority.USER_MANAGER);
 		if (isDataManager())
 			return Collections.singletonList(Authority.DATA_MANAGER);
 		if (isUserManager())
