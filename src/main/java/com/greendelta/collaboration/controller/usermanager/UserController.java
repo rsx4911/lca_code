@@ -6,15 +6,16 @@ import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Users;
-import com.greendelta.collaboration.model.Notification;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
@@ -22,6 +23,7 @@ import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Routes;
+import com.greendelta.collaboration.util.SearchResults;
 
 @RestController("usermanagerUserController")
 @RequestMapping("ws/usermanager/user")
@@ -39,6 +41,15 @@ public class UserController {
 		this.groupService = groupService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
+	}
+
+	@GetMapping
+	public ResponseEntity<?> getAll(
+			@RequestParam(name = "page", defaultValue = "0") int page,
+			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+			@RequestParam(name = "filter", required = false) String filter) {
+		var result = service.getAll(page, pageSize, filter);
+		return Response.ok(SearchResults.convert(result, Users::mapForAdmin));
 	}
 
 	@PostMapping("{username}")
@@ -62,9 +73,7 @@ public class UserController {
 			throw Response.badRequest("email", "Missing input: Email");
 		var password = Password.generate();
 		service.setPassword(user, password);
-		for (var notification : Notification.values()) {
-			user.enable(notification);
-		}
+		user.settings.setDefaults();
 		user = service.insert(user);
 		notificationService.userCreated(user, password).send();
 		return Response.created(Users.mapForSelf(user));

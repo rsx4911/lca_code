@@ -183,7 +183,7 @@ define([
 					@$('#next-message').attr 'placeholder', 'Type your message here...'
 				@$('.list-entry.active').removeClass 'active'
 				@$("[data-type=#{recipient.type}][data-id=#{recipient.id}] .list-entry").addClass 'active'
-				@$('#next-message').prop 'disabled', @isBlocked(conversation)
+				@$('#next-message').prop 'disabled', !!@isBlocked(conversation)
 				@$('#next-message').val ''
 				@$('.header-box .username').html recipient.name
 				@$('.header-box .avatar').attr 'src', "ws/#{recipient.type}/avatar/#{recipient.id}"

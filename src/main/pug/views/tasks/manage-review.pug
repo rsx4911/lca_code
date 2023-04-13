@@ -1,11 +1,14 @@
 include ../mixins/forms.pug
 include ./mixins.pug
 
+- var selectDatasetsHint = !review.references || !review.references.length ? 'Please select data sets to be reviewed' : null;
+
 mixin assignments(assignments, type, noContentMessage)
 	.content-container
 		.header-box=type
-			if type === 'Active' && !closed && review.references && review.references.length > 0
-				button.btn.btn-lg.btn-success.pull-right(data-action='assign-task') Add
+			if type === 'Active' && !closed
+				- var isDisabled = !review.references || !review.references.length;
+				button.btn.btn-lg.btn-success.pull-right(data-action='assign-task' disabled=!!selectDatasetsHint title=selectDatasetsHint) Add
 		.content-box
 			if !assignments || !assignments.length
 				.no-content-message=noContentMessage
@@ -25,8 +28,8 @@ mixin assignments(assignments, type, noContentMessage)
 
 mixin review-info()
 	.header-box Review info
-		if hasAssignment
-			button.btn.btn-default.pull-right(data-action='open-widget') Open in task widget
+		if review
+			button.btn.btn-default.pull-right(data-action='open-widget' disabled=!!selectDatasetsHint title=selectDatasetsHint) Open in task widget
 			.clear
 	.content-box
 		if !closed && (isInitiator || !review)

@@ -56,25 +56,6 @@ public class User extends AbstractEntity implements UserDetails {
 		return username.hashCode();
 	}
 
-	public void enable(Notification notification) {
-		if (isEnabled(notification))
-			return;
-		var e = (long) Math.pow(2, notification.ordinal());
-		settings.notifications += e;
-	}
-
-	public void disable(Notification notification) {
-		if (!isEnabled(notification))
-			return;
-		var e = (long) Math.pow(2, notification.ordinal());
-		settings.notifications -= e;
-	}
-
-	public boolean isEnabled(Notification notification) {
-		var e = (long) Math.pow(2, notification.ordinal());
-		return (settings.notifications | e) == settings.notifications;
-	}
-
 	public boolean isAdmin() {
 		if (settings == null)
 			return false;
@@ -114,6 +95,8 @@ public class User extends AbstractEntity implements UserDetails {
 	public List<GrantedAuthority> getAuthorities() {
 		if (isAdmin())
 			return Arrays.asList(Authority.ADMIN, Authority.DATA_MANAGER, Authority.USER_MANAGER);
+		if (isDataManager() && isUserManager())
+			return Arrays.asList(Authority.DATA_MANAGER, Authority.USER_MANAGER);
 		if (isDataManager())
 			return Collections.singletonList(Authority.DATA_MANAGER);
 		if (isUserManager())

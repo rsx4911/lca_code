@@ -15,25 +15,20 @@
 		left 0
 		right 0
 		z-index 1100
-		background-color black
 		opacity .5
 
 	.loader
 		z-index	1110
-		background-color white 
 		position fixed
 		margin auto
 		left 0
 		right 0
 		top 0
 		bottom 0
-		border 1px solid rgba(0, 0, 0, 0.2)
-		border-radius 5px
-		box-shadow 0 5px 15px rgba(0, 0, 0, 0.5)
 		width 100px
 		height 100px
 		padding 17px	
-			
+
 		span 
 			line-height 10px
 			font-size 10px
@@ -44,6 +39,17 @@
 			bottom 45px
 			text-align center
 			z-index 1120
+	
+	&:not(.transparent)
+
+		.backdrop
+			background-color black
+
+		.loader
+			background-color white 
+			border 1px solid rgba(0, 0, 0, 0.2)
+			border-radius 5px
+			box-shadow 0 5px 15px rgba(0, 0, 0, 0.5)
 			
 .modal-backdrop
 	position fixed

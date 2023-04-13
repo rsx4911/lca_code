@@ -4,13 +4,14 @@ define([
 				'cs!utils/FeedScroll'
 				'cs!utils/Format'
 				'cs!utils/Forms'
+				'cs!utils/Model'
 				'cs!utils/Renderer'
 				'cs!models/CurrentUser'
 				'templates/views/dashboard/activities'
 				'templates/views/dashboard/activity'
 			]
 
-	(Backbone, Events, FeedScroll, Format, Forms, Renderer, currentUser, template, resultTemplate) ->
+	(Backbone, Events, FeedScroll, Format, Forms, Model, Renderer, currentUser, template, resultTemplate) ->
 
 		class DashboardActivities extends Backbone.View
 
@@ -18,7 +19,7 @@ define([
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
-				'change .abc-checkbox input': 'rerender'
+				'change .abc-checkbox input': 'changeFeedSetting'
 
 			initialize: (options) ->
 				if options
@@ -28,18 +29,40 @@ define([
 				@$el.html template
 					repository: if @repository then @repository.toJSON() else null
 				Renderer.render @, renderOptions
-				Forms.fill 'activities-config', currentUser.get 'settings'
-				@initFeed()
+				settings = currentUser.get 'settings'
+				if !settings.showCommitActivities and !settings.showCommentActivities and !settings.showTaskActivities
+					@updateSettings { showCommitActivities: true, showCommentActivities: true, showTaskActivities: true }, () =>
+						Forms.fill 'activities-config', settings
+						@initFeed()
+				else
+					Forms.fill 'activities-config', settings
+					@initFeed()
 
-			rerender: () ->
-				@feed.destroy()
-				@initFeed()
+
+			changeFeedSetting: () ->
+				@updateSettings Forms.toJson('activities-config'), () =>
+					@feed.destroy()
+					@initFeed()
+
+			updateSettings: (settings, callback) ->
+				if !settings.showCommitActivities and !settings.showCommentActivities and !settings.showTaskActivities
+					settings = { showCommitActivities: true, showCommentActivities: true, showTaskActivities: true }
+					@$('.abc-checkbox input').prop 'checked', true
+				$.ajax
+					type: 'PUT'
+					url: 'ws/activities/settings'
+					data: JSON.stringify settings
+					contentType: 'application/json'
+					success: (settings) =>
+						Model.copyFields settings, currentUser.get('settings')
+						if callback
+							callback()
 
 			initFeed: () ->
+				settings = currentUser.get('settings')
 				@feed = new FeedScroll({
 					url: () => 
-						config = Forms.toJson 'activities-config'
-						url = "ws/activities?&showCommitActivities=#{config.showCommitActivities}&showCommentActivities=#{config.showCommentActivities}&showTaskActivities=#{config.showTaskActivities}&"
+						url = "ws/activities?&showCommitActivities=#{settings.showCommitActivities}&showCommentActivities=#{settings.showCommentActivities}&showTaskActivities=#{settings.showTaskActivities}&"
 						if @repository
 							url += "repositoryPath=#{@repository.get('group')}/#{@repository.get('name')}&"
 						return url

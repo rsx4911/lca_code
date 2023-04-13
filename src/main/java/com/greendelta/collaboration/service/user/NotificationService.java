@@ -145,7 +145,7 @@ public class NotificationService {
 				+ "</a> by the user "
 				+ currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.ADDED_TO_GROUP_MEMBERS))
+		if (member.settings.isEnabled(Notification.ADDED_TO_GROUP_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.ADDED_GROUP_MEMBER, group)));
@@ -165,7 +165,7 @@ public class NotificationService {
 				+ "</a> was changed by the user "
 				+ currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.GROUP_ROLE_CHANGED))
+		if (member.settings.isEnabled(Notification.GROUP_ROLE_CHANGED))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.GROUP_ROLE_OF_MEMBER_CHANGED, group)));
@@ -224,7 +224,7 @@ public class NotificationService {
 		var othersMessage = "The user " + member.name + " was removed from group <a href=\"" + url + "\">" + group
 				+ "</a> by the user " + currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.REMOVED_FROM_GROUP_MEMBERS))
+		if (member.settings.isEnabled(Notification.REMOVED_FROM_GROUP_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REMOVED_GROUP_MEMBER, group)));
@@ -264,7 +264,7 @@ public class NotificationService {
 		var othersMessage = "The user " + member.name + " was added to repository <a href=\"" + url + "\">" + path
 				+ "</a> by the user " + currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.ADDED_TO_REPOSITORY_MEMBERS))
+		if (member.settings.isEnabled(Notification.ADDED_TO_REPOSITORY_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.ADDED_REPOSITORY_MEMBER, path)));
@@ -285,7 +285,7 @@ public class NotificationService {
 				+ "</a> was changed by the user "
 				+ currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.REPOSITORY_ROLE_CHANGED))
+		if (member.settings.isEnabled(Notification.REPOSITORY_ROLE_CHANGED))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REPOSITORY_ROLE_OF_MEMBER_CHANGED, path)));
@@ -347,7 +347,7 @@ public class NotificationService {
 				+ path + "</a> by the user "
 				+ currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.REMOVED_FROM_REPOSITORY_MEMBERS))
+		if (member.settings.isEnabled(Notification.REMOVED_FROM_REPOSITORY_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage,
 				getMemberUsers(Notification.REMOVED_REPOSITORY_MEMBER, path)));
@@ -385,7 +385,7 @@ public class NotificationService {
 				+ " by the user "
 				+ currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
+		if (member.settings.isEnabled(Notification.ADDED_TO_TEAM_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.ADDED_TEAM_MEMBER, team)));
 		emails.addAll(
@@ -403,7 +403,7 @@ public class NotificationService {
 				+ " by the user "
 				+ currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (member.isEnabled(Notification.REMOVED_FROM_TEAM_MEMBERS))
+		if (member.settings.isEnabled(Notification.REMOVED_FROM_TEAM_MEMBERS))
 			emails.add(createEmail(personalSubject, personalMessage, member));
 		emails.addAll(createEmails(othersSubject, othersMessage, getTeamUsers(Notification.REMOVED_TEAM_MEMBER, team)));
 		emails.addAll(createEmails(othersSubject, othersMessage,
@@ -519,7 +519,7 @@ public class NotificationService {
 				+ repoUrl + "\">" + repoId + "</a> was assigned to the user " + assignment.assignedTo.name
 				+ " by the user " + currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (assignment.assignedTo.isEnabled(Notification.TASK_ASSIGNED))
+		if (assignment.assignedTo.settings.isEnabled(Notification.TASK_ASSIGNED))
 			emails.add(createEmail(personalSubject, personalMessage, assignment.assignedTo));
 		emails.addAll(createEmails(otherSubject, otherMessage,
 				getMemberUsers(Notification.TASK_ASSIGNED, repoId, Permission.MANAGE_TASK)));
@@ -556,7 +556,7 @@ public class NotificationService {
 				+ repoUrl + "\">" + repoId + "</a> was revoked from the user " + assignment.assignedTo.name
 				+ " by the user " + currentUser.name;
 		var emails = new HashSet<EmailJob>();
-		if (assignment.assignedTo.isEnabled(Notification.TASK_REVOKED))
+		if (assignment.assignedTo.settings.isEnabled(Notification.TASK_REVOKED))
 			emails.add(createEmail(personalSubject, personalMessage, assignment.assignedTo));
 		emails.addAll(createEmails(otherSubject, otherMessage,
 				getMemberUsers(Notification.TASK_REVOKED, repoId, Permission.MANAGE_TASK)));
@@ -605,7 +605,7 @@ public class NotificationService {
 		for (var member : membershipService.getMemberships(path)) {
 			if (member.user == null)
 				continue;
-			if (!member.user.isEnabled(notification))
+			if (!member.user.settings.isEnabled(notification))
 				continue;
 			if (currentUser.equals(member.user))
 				continue;
@@ -620,7 +620,7 @@ public class NotificationService {
 		var users = new HashSet<User>();
 		var currentUser = userService.getCurrentUser();
 		for (var user : team.users) {
-			if (!user.isEnabled(notification))
+			if (!user.settings.isEnabled(notification))
 				continue;
 			if (currentUser.equals(user))
 				continue;
@@ -636,7 +636,7 @@ public class NotificationService {
 			User user = assignment.assignedTo;
 			if (user == null || currentUser.equals(user))
 				continue;
-			if (!user.isEnabled(notification))
+			if (!user.settings.isEnabled(notification))
 				continue;
 			users.add(user);
 		}
@@ -648,9 +648,9 @@ public class NotificationService {
 		var users = new HashSet<User>();
 		var currentUser = userService.getCurrentUser();
 		for (User manager : managers) {
-			if (!manager.isEnabled(notification))
+			if (!manager.settings.isEnabled(notification))
 				continue;
-			if (!managerMessage && !manager.isEnabled(Notification.NOTIFY_FOR_ALL))
+			if (!managerMessage && !manager.settings.isEnabled(Notification.NOTIFY_FOR_ALL))
 				continue;
 			if (currentUser.equals(manager))
 				continue;

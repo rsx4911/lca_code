@@ -8,6 +8,10 @@ public class RepositoryNotFoundException extends RuntimeException {
 
 	private static final long serialVersionUID = 3597855854783144681L;
 
+	public RepositoryNotFoundException(String group, String name) {
+		this(group + "/" + name);
+	}
+
 	public RepositoryNotFoundException(String repositoryId) {
 		super("No repository '" + repositoryId + "' found");
 	}

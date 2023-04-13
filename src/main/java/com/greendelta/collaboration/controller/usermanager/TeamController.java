@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.greendelta.collaboration.controller.util.Module;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Teams;
 import com.greendelta.collaboration.model.Team;
@@ -28,6 +30,7 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
+import com.greendelta.collaboration.util.SearchResults;
 
 @RestController("usermanagerTeamController")
 @RequestMapping("ws/usermanager/team")
@@ -47,6 +50,16 @@ public class TeamController {
 		this.membershipService = membershipService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
+	}
+
+	@GetMapping
+	public ResponseEntity<?> getAll(
+			@RequestParam(name = "page", defaultValue = "0") int page,
+			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+			@RequestParam(name = "filter", required = false) String filter,
+			@RequestParam(name = "module", required = false) Module module) {
+		var result = service.getAll(page, pageSize, filter, false);
+		return Response.ok(SearchResults.convert(result, Teams::mapForOthers));
 	}
 
 	@GetMapping("{teamname}")

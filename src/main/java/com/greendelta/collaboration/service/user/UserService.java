@@ -78,7 +78,10 @@ public class UserService implements UserDetailsService {
 		if (isAnonymous())
 			return new User();
 		var auth = SecurityContextHolder.getContext().getAuthentication();
-		return getForUsername(auth.getName());
+		var user = getForUsername(auth.getName());
+		if (user == null)
+			return new User();
+		return user;
 	}
 
 	public long getCount() {
@@ -96,17 +99,17 @@ public class UserService implements UserDetailsService {
 		return userGroup.listFiles().length;
 	}
 
-	public SearchResult<User> getVisible(int page, int pageSize, String filter) {
+	public SearchResult<User> getAll(int page, int pageSize, String filter) {
 		var user = getCurrentUser();
-		if (user == null)
+		if (user == null || !user.isUserManager())
 			return SearchResults.from(new ArrayList<>());
+		var jpql = "SELECT u FROM User u";
 		var parameters = new HashMap<String, Object>();
-		if (!user.isUserManager())
-			parameters.put("user", user);
-		if (!Strings.nullOrEmpty(filter))
+		if (!Strings.nullOrEmpty(filter)) {
+			jpql += " WHERE LOWER(u.name) LIKE :name";
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
-		var query = createQuery(user, filter);
-		var data = dao.getAll(query, parameters).stream()
+		}
+		var data = dao.getAll(jpql, parameters).stream()
 				.distinct()
 				.sorted(this::sortUser)
 				.toList();
@@ -127,22 +130,6 @@ public class UserService implements UserDetailsService {
 		return u1.name.toLowerCase().compareTo(u2.name.toLowerCase());
 	}
 
-	private String createQuery(User user, String filter) {
-		var jpql = new StringBuilder();
-		if (user.isUserManager()) {
-			jpql.append("SELECT u FROM User u");
-			if (!Strings.nullOrEmpty(filter)) {
-				jpql.append(" WHERE LOWER(u.name) LIKE :name");
-			}
-		} else {
-			jpql.append("SELECT u FROM Team t JOIN t.users u WHERE :user MEMBER OF t.users AND u != :user");
-			if (!Strings.nullOrEmpty(filter)) {
-				jpql.append(" AND LOWER(u.name) LIKE :name");
-			}
-		}
-		return jpql.toString();
-	}
-
 	public void setPassword(User user, String password) {
 		user.password = passwordEncoder.encode(password);
 	}
@@ -153,7 +140,7 @@ public class UserService implements UserDetailsService {
 		return getTwoFactorUrl(user, servername);
 	}
 
-	private static String createTwoFactorKey() {
+	private String createTwoFactorKey() {
 		var authenticator = new GoogleAuthenticator();
 		var key = authenticator.createCredentials();
 		return key.getKey();

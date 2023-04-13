@@ -155,6 +155,7 @@ public class SessionController {
 			user.settings.activeUntil = cal.getTime();
 		}
 		userService.setPassword(user, password);
+		user.settings.setDefaults();
 		user = userService.insert(user);
 		if (adminApproval) {
 			notificationService.userRegistered(user).send();

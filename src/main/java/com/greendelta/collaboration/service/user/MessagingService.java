@@ -20,13 +20,11 @@ public class MessagingService {
 
 	private final Dao<Message> dao;
 	private final UserService userService;
-	private final TeamService teamService;
 
 	@Autowired
-	public MessagingService(Dao<Message> dao, UserService userService, TeamService teamService) {
+	public MessagingService(Dao<Message> dao, UserService userService) {
 		this.dao = dao;
 		this.userService = userService;
-		this.teamService = teamService;
 	}
 
 	public Message insert(Message message) {
@@ -134,24 +132,13 @@ public class MessagingService {
 		dao.update(messages);
 	}
 
-	public List<User> filterVisible(List<User> users) {
-		var currentUser = userService.getCurrentUser();
-		if (currentUser.isUserManager())
-			return users;
-		var teams = teamService.getTeamsFor(currentUser);
-		return users.stream().filter(user -> isVisible(user, teams)).toList();
-	}
-
-	private boolean isVisible(User user, List<Team> teams) {
+	public boolean canMessage(User user) {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.settings.blockedUsers.contains(user))
 			return false;
 		if (!user.settings.messagingEnabled)
 			return false;
-		for (var team : teams)
-			if (team.users.contains(user))
-				return true;
-		return false;
+		return true;
 	}
 
 	public class ConversationDescriptor {
@@ -162,6 +149,12 @@ public class MessagingService {
 
 		public ConversationDescriptor(Message lastMessage) {
 			this.lastMessage = lastMessage;
+		}
+		
+		public User getOtherUser(User user) {
+			if (user.equals(lastMessage.from))
+				return lastMessage.to;
+			return lastMessage.from;
 		}
 
 	}

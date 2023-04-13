@@ -216,7 +216,7 @@ define([
 					template: usersTemplate
 					filterId: 'user-filter'
 					pageSizeId: 'users-page-size'
-					url: 'ws/user?'
+					url: 'ws/usermanager/user?'
 					beforeRender: (result) ->
 						result.formatDate = Format.date
 				@groupFilter = new Filter
@@ -230,7 +230,7 @@ define([
 					template: teamsTemplate
 					filterId: 'team-filter'
 					pageSizeId: 'teams-page-size'
-					url: 'ws/team?'
+					url: 'ws/usermanager/team?'
 
 			render: (renderOptions) ->
 				$.get 'ws/usermanager/area/count', (counts) =>

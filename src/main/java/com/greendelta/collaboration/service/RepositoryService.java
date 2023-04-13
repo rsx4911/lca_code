@@ -92,7 +92,9 @@ public class RepositoryService {
 		var path = getRootPath();
 		var id = new RepositoryPath(group, name).toString();
 		if (path == null || path.isEmpty())
-			throw new ForbiddenAccessException(id, "READ");
+			throw new RepositoryNotFoundException(id);
+		if (!Repository.getDir(path, group, name).exists())
+			throw new RepositoryNotFoundException(group, name);
 		if (!accessService.canRead(id))
 			throw new ForbiddenAccessException(id, "READ");
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
@@ -284,7 +286,7 @@ public class RepositoryService {
 	public void generateJson(Repository repo) {
 		RepositoryJsonWriter.writeCurrent(repo);
 	}
-	
+
 	public int getNoOfRepositories(User user) {
 		if (user.username == null || user.username.isEmpty())
 			return 0;

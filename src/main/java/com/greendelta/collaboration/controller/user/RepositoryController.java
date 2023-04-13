@@ -308,10 +308,12 @@ public class RepositoryController {
 	public byte[] setAvatar(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
-			@RequestParam("file") byte[] file) {
+			@RequestParam(name = "file", required = false) MultipartFile file) {
 		try (var repo = service.get(group, name)) {
-			repo.settings.set(RepositorySetting.AVATAR, file);
+			repo.settings.set(RepositorySetting.AVATAR, file != null ? file.getBytes() : null);
 			return getAvatar(group, name);
+		} catch (IOException e) {
+			throw Response.error("Error reading avatar file");
 		}
 	}
 

@@ -70,6 +70,8 @@ define([
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'
 					settings.setVal key, value
+					if key is 'SEARCH_ENABLED' or key is 'SEARCH_LINKS_ENABLED'
+						@$('#search-note').show()
 				$.ajax
 					type: 'PUT'
 					url: 'ws/admin/area/settings'

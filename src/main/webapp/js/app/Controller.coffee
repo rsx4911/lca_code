@@ -62,8 +62,6 @@ define([
 					when 'user'
 						userMenu = []
 						userMenu.push {href: @concatUrl(prefix, 'user/profile'), imageSrc: 'images/profile.png', label: 'Profile', id: 'profile'}
-						if settings.is('DASHBOARD_ACTIVITIES_ENABLED') or settings.is('REPOSITORY_ACTIVITIES_ENABLED')
-							userMenu.push {href: @concatUrl(prefix, 'user/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						if settings.is('MESSAGING_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
 						if settings.is('NOTIFICATIONS_ENABLED')
@@ -260,12 +258,6 @@ define([
 					nav: 
 						type: 'user'
 						active: 'profile'
-				@router.registerUserRoute 'userActivities', -> @showView 
-					view: 'user/Activities'
-					title: 'Activities' 
-					nav: 
-						type: 'user'
-						active: 'activities'
 				@router.registerUserRoute 'userMessaging', -> @showView 
 					view: 'user/Messaging'
 					title: 'Messaging' 

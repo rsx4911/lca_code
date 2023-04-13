@@ -35,7 +35,7 @@ public class NotificationsController {
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
 		return Arrays.asList(Notification.values()).stream()
-				.filter(n -> currentUser.isEnabled(n))
+				.filter(n -> currentUser.settings.isEnabled(n))
 				.toList();
 	}
 
@@ -44,7 +44,7 @@ public class NotificationsController {
 		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
-		parse(notifications).forEach(notification -> currentUser.enable(notification));
+		parse(notifications).forEach(notification -> currentUser.settings.enable(notification));
 		userService.update(currentUser);
 	}
 
@@ -53,7 +53,7 @@ public class NotificationsController {
 		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
-		parse(notifications).forEach(notification -> currentUser.disable(notification));
+		parse(notifications).forEach(notification -> currentUser.settings.disable(notification));
 		userService.update(currentUser);
 	}
 

@@ -69,7 +69,7 @@ define([
 					type: 'GET'
 					url: 'ws/task/review/' + @reviewId
 					success: (review) =>
-						if !Util.hasAssignment(review, currentUser)
+						unless review.references?.length
 							@close()
 						else
 							@$el.html template 

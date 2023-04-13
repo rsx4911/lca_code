@@ -12,8 +12,34 @@ define([
 
 	(Backbone, Controller, Router, Layers, Model, currentUser, conversations, settings) ->
 
+		getErrorMessage: (response) ->
+			json = response.responseJSON
+			if json
+				if json.message
+					return json.message
+				if json.error
+					repoPath = @getRepositoryPath json.path
+					if response.status is 404 and repoPath
+						return "No repository '#{repoPath}' found"
+					return json.error
+			if response.responseText
+				return response.responseText
+			return null
+
+		getRepositoryPath: (fullPath) ->
+			unless fullPath
+				return null
+			if fullPath.indexOf('/ws/repository/') isnt 0
+				return null
+			rest = fullPath.substring '/ws/repository/'.length
+			if rest.indexOf('/') is -1
+				return null
+			while rest.indexOf('/') isnt rest.lastIndexOf('/')
+				rest = rest.substring rest.indexOf('/') + 1
+			return rest
+
 		initializeErrorHandling: () ->
-			$(document).ajaxError (event, response, options, error) ->
+			$(document).ajaxError (event, response, options, error) =>
 				switch response.status
 					when 401
 						unless currentUser.get('inLoginProcess')
@@ -27,12 +53,12 @@ define([
 					when 406
 						localStorage?.setItem?('errorMessage', 'Sorry, the repository schema version is not compatible with the current collaboration server version.')
 					else
-						message = if response.responseJSON and response.responseJSON.message then response.responseJSON.message else response.responseText
+						message = @getErrorMessage response
 						localStorage?.setItem?('errorMessage', message)
 				if response.status isnt 400 and response.status isnt 401 and response.status isnt 409
 					Router.navigate "error/#{response.status}",
-						replace: true
-			window.onerror = (msg, url, line, col, error) ->
+						replace: if options?.type is 'GET' then true else false
+			window.onerror = (msg, url, line, col, error) =>
 				if window.inErrorHandling
 					return
 				window.inErrorHandling = true
@@ -48,6 +74,24 @@ define([
 								replace: true
 						window.inErrorHandling = false
 
+		initializeLongLoading: () ->
+			$.ajaxSetup
+				beforeSend: (xhr) ->
+					time = new Date().getTime()
+					check = () ->
+						setTimeout () ->
+							if xhr.readyState is 4
+								Layers.hideProgressIndicator()
+							else
+								check()
+						, 50
+					setTimeout () ->
+						if xhr.readyState isnt 4
+							Layers.showProgressIndicator()
+							check()
+					, 250
+
+
 		initialize: () ->
 			window.onfocus = () -> 
 				window.isActive = true
@@ -62,6 +106,7 @@ define([
 					$(@).addClass('animated ' + animationName).one animationEnd, () -> 
 						$(@).removeClass 'animated ' + animationName
 			@initializeErrorHandling()
+			@initializeLongLoading()
 			$.ajax
 				type: 'GET'
 				url: 'ws/public/config/userRoutes'

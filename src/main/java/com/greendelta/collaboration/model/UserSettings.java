@@ -71,23 +71,52 @@ public class UserSettings implements Serializable {
 	@JoinTable
 	public List<User> blockedUsers = new ArrayList<>();
 
+	public void setDefaults() {
+		messagingEnabled = true;
+		showCommitActivities = true;
+		showCommentActivities = true;
+		showTaskActivities = true;
+		for (var notification : Notification.values()) {
+			enable(notification);
+		}
+	}
+
+	public void enable(Notification notification) {
+		if (isEnabled(notification))
+			return;
+		var e = (long) Math.pow(2, notification.ordinal());
+		notifications += e;
+	}
+
+	public void disable(Notification notification) {
+		if (!isEnabled(notification))
+			return;
+		var e = (long) Math.pow(2, notification.ordinal());
+		notifications -= e;
+	}
+
+	public boolean isEnabled(Notification notification) {
+		var e = (long) Math.pow(2, notification.ordinal());
+		return (notifications | e) == notifications;
+	}
+
 	@JsonAnySetter
 	public void handleUnknown(String name, Object value) {
 		// do nothing
 	}
-	
-    @PostLoad
-    private void postLoad(){
-    	// avoid recursion issue if two users block each other
-    	var blocked = new ArrayList<User>();
-    	for (var u : blockedUsers) {
-    		var user = new User();
-    		user.id = u.id;
-    		user.username = u.username;
-    		user.name = u.name;
-    		blocked.add(user);
-    	}
-    	blockedUsers = blocked;
-    }
+
+	@PostLoad
+	private void postLoad() {
+		// avoid recursion issue if two users block each other
+		var blocked = new ArrayList<User>();
+		for (var u : blockedUsers) {
+			var user = new User();
+			user.id = u.id;
+			user.username = u.username;
+			user.name = u.name;
+			blocked.add(user);
+		}
+		blockedUsers = blocked;
+	}
 
 }

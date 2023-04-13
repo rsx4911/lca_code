@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.config;
+package com.greendelta.collaboration.config.filter.git;
 
 import java.io.IOException;
 
@@ -8,8 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
-import com.greendelta.collaboration.config.filter.git.GitRequest;
 import com.greendelta.collaboration.config.filter.git.GitRequest.GitAction;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.SettingType;
@@ -41,7 +39,7 @@ public class RepoAccessCheck {
 		if (!path.isGroupOrRepo())
 			return true;
 		if (!gitFilterConfig.isGitUrl(request))
-			return accessService.canRead(path.toString());
+			return true; // web access is checked via the controllers
 		return canGitAccess(new GitRequest(request), path.toString());
 	}
 
