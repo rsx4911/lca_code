@@ -121,6 +121,8 @@ public class GroupService {
 		var groupDir = new File(root, group);
 		if (!accessService.canRead(group))
 			return 0;
+		if (!groupDir.exists() || groupDir.listFiles() == null)
+			return 0;
 		return groupDir.listFiles().length;
 	}
 
