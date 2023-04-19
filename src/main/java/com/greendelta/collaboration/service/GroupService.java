@@ -62,13 +62,12 @@ public class GroupService {
 	}
 
 	public boolean isUserNamespace(String group) {
-		return isUserNamespace(group, false);
+		return userService.exists(group);
 	}
 
-	public boolean isUserNamespace(String group, boolean skipAccessCheck) {
-		if (!exists(group, skipAccessCheck))
-			return false;
-		return userService.exists(group);
+	public boolean isOwnNamespace(String group) {
+		var user = userService.getCurrentUser();
+		return isUserNamespace(group) && user != null && group.equals(user.username);
 	}
 
 	public boolean create(String group, boolean userGroup) {
