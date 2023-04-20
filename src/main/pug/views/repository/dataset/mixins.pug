@@ -9,11 +9,11 @@ mixin menubar()
 			.header-box
 				- var currentCommit = null;
 				+select('commitId', 'Commit', null, null, true)
+					option(value='', selected=!commitId) Latest 
 					each commit, i in commits
 						if commit.id === dataset.commitId
 							- currentCommit = commit;
-						option(value=commit.id, selected=commit.id===commitId, class=commit.modelHasChanged?'highlight':null)=i===0?'Latest':commit.id 
-						optgroup.additional-info(label=formatCommitDescription(commit.message))
+						option(value=commit.id, selected=commit.id===commitId)=formatCommitDescription(commit.message)
 				if dataset.deleted
 					.badge.pull-right.deleted Deleted
 				else
@@ -310,7 +310,10 @@ mixin ref(ref, ref2, defaultLabel, noCompareIcon)
 					- path += '/' + ref.name
 				else
 					- path = ref.name;
-				a(href=baseUrl + '/' + getTypeAsEnum(ref.type) + '/' + ref.id + query, title=path)=ref.name
+				if ref.isInRepo
+					a(href=baseUrl + '/' + getTypeAsEnum(ref.type) + '/' + ref.id + query, title=path)=ref.name
+				else
+					span(title=path)=ref.name
 			else if defaultLabel && !(compareTo && ref2)
 				| #{defaultLabel}
 		if changed || changedName
@@ -318,7 +321,10 @@ mixin ref(ref, ref2, defaultLabel, noCompareIcon)
 				img.model-icon-small(src='images/model/small/' + getIcon(ref2), aria-label='Model icon of ' + ref2.type)
 				- var query = comparisonCommitId ? '?commitId=' + comparisonCommitId : ''
 				- var path = ref2.category ? ref2.category + '/' + ref2.name : ref2.name
-				a(href=baseUrl + '/' + getTypeAsEnum(ref2.type) + '/' + ref2.id + query, title=path)=ref2.name
+				if ref2.isInRepo
+					a(href=baseUrl + '/' + getTypeAsEnum(ref2.type) + '/' + ref2.id + query, title=path)=ref2.name
+				else
+					span(title=path)=ref2.name
 
 mixin ref-row(path)
 	- var value = getValue(dataset, path);
@@ -347,7 +353,7 @@ mixin ref-block(path, defaultLabel)
 		+compare-icon(changed)
 		+ref(value, value2, defaultLabel)
 
-mixin category-field(category, category2, inTable, categoryType)
+mixin category-field(category, category2, inTable, categoryType, isCategoryInRepo, isCategory2InRepo)
 	- var value = (category || '').split('/')
 	- var value2 = (category2 || '').split('/')
 	- var depth = inTable ? 2 : null;
@@ -357,13 +363,13 @@ mixin category-field(category, category2, inTable, categoryType)
 		if value
 			- var typeLabel = getTypeLabel(getTypeAsEnum(categoryType ? categoryType : dataset.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
-			+category-breadcrumb(value, url, true, depth)(data-path=!inTable?'category':null, class='original-value')
+			+category-breadcrumb(value, url, true, depth, commitId, !isCategoryInRepo)(data-path=!inTable?'category':null, class='original-value')
 			if value2
 				br
 		if value2 && (!value || categoryCompare)
 			- var typeLabel = getTypeLabel(getTypeAsEnum(compareTo.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
-			+category-breadcrumb(value2, url, true, depth)(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
+			+category-breadcrumb(value2, url, true, depth, comparisonCommitId, !isOtherCategoryInRepo)(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
 
 mixin uncertainty-cell(ref1, ref2, formatter)
 	- var u1 = ref1 ? ref1.uncertainty : null; 

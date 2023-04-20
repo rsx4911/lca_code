@@ -255,7 +255,7 @@ define([
 											if commits?.length
 												for commit, index in commits
 													$('#model-selection #commitId').append '<option value="' + commit.id + '">' + (if index is 0 then 'Latest' else commit.id) + '</option>'
-													$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.formatCommitDescription(commit.message) + '"></optgroup>'
+													$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.commitDescription(commit.message) + '"></optgroup>'
 											@hideProgressIndicator()
 										error: () => 
 											$('#select-model-button').prop 'disabled', true
@@ -268,7 +268,7 @@ define([
 					model:
 						commits: commits
 						commitId: commitId
-						formatCommitDescription: Format.formatCommitDescription
+						formatCommitDescription: Format.commitDescription
 					buttons: [
 						{id: 'close', className: 'btn-default', text: 'Close', callback: () => @closeActive()}
 						{id: 'select', className: 'btn-primary', text: 'Select', callback: () => 

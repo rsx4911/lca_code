@@ -5,6 +5,7 @@ form#clone-form
 	+input('clone-name', 'Name')
 	+select('clone-group', 'Group', groups)
 	+select('clone-commit', 'Version')
+		if commits.length
+			option(value=commits[0].id) Latest 
 		each commit, i in commits
-			option(value=commit.id)=i===0?'Latest':commit.id 
-			optgroup.additional-info(label=formatCommitDescription(commit.message))
+			option(value=commit.id)=formatCommitDescription(commit.message)

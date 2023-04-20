@@ -29,7 +29,8 @@ define([
 				path = "#{group}/#{name}/datasets/"
 				if @categoryPath
 					path += @categoryPath 
-				path += "?commitId=#{commitId}"
+				if commitId
+					path += "?commitId=#{commitId}"
 				Router.navigate path
 
 			downloadData: (event) ->
@@ -155,6 +156,7 @@ define([
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
 					formatDate: Format.dateTime
+					formatCommitDescription: Format.commitDescription
 					pathAsArray: @pathArray
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits

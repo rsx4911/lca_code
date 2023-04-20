@@ -158,7 +158,7 @@ define([
 					Layers.showTemplateInLayer
 						title: "Clone #{repoPath}"
 						template: 'repository/clone'
-						model: {commits: commits, groups: groups, formatCommitDescription: Format.formatCommitDescription}
+						model: {commits: commits, groups: groups, formatCommitDescription: Format.commitDescription}
 						buttons: [{text: 'Clone', className: 'btn-success', callback: () => @cloneRepository()}]
 						callback: () =>
 							$('.modal #clone-name').val repository.name
