@@ -32,6 +32,7 @@ import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
+import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
@@ -104,7 +105,7 @@ public class CommentController {
 			var map = Comments.map(comment);
 			var field = comment.field;
 			var ref = repo.references().get(field.modelType, field.refId, field.commitId);
-			map.put("dsPath", ref.category);
+			map.put("dsPath", ref.category + "/" + MetaData.getName(repo, ref));
 			if (putReplyCount) {
 				map.put("replyCount", service.getRepliesTo(comment.id).size());
 			}

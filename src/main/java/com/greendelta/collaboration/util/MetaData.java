@@ -64,6 +64,10 @@ public class MetaData {
 
 	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
 		var ref = repo.references().get(type, refId, commitId);
+		return getName(repo, ref);
+	}
+	
+	public static String getName(Repository repo, Reference ref) {
 		var info = repo.datasets().parse(ref, "name");
 		var name = info.get("name");
 		return name != null ? name.toString() : "";
