@@ -81,8 +81,8 @@ public class AdminAreaController {
 
 	@GetMapping("testSearchConfig")
 	public void testSearchConfig() {
-		if (!settings.searchConfig.isAvailable())
-			throw Response.error("Search feature not enabled");
+		if (!settings.searchConfig.isSearchAvailable())
+			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		SearchConfig config = settings.searchConfig;
 		try {
 			var client = config.getClient();
@@ -122,8 +122,8 @@ public class AdminAreaController {
 
 	@PutMapping("clearIndex")
 	public void clearIndex() {
-		if (!settings.searchConfig.isAvailable())
-			throw Response.error("Search feature not enabled");
+		if (!settings.searchConfig.isSearchAvailable())
+			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
 			indexService.clearIndex(repos);
 		}
@@ -131,8 +131,8 @@ public class AdminAreaController {
 
 	@PutMapping("reindex")
 	public void reindex() {
-		if (!settings.searchConfig.isAvailable())
-			throw Response.error("Search feature not enabled");
+		if (!settings.searchConfig.isSearchAvailable())
+			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
 			indexService.reindexAll(repos);
 		}
@@ -142,8 +142,8 @@ public class AdminAreaController {
 	public void reindex(
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository) {
-		if (!settings.searchConfig.isAvailable())
-			throw Response.error("Search feature not enabled");
+		if (!settings.searchConfig.isSearchAvailable())
+			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repo = repoService.get(group, repository)) {
 			indexService.reindex(repo);
 		}

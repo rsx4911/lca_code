@@ -13,7 +13,8 @@ define([
 			@initReferences repository, refId, commitId, outType
 
 		initReferences: (repository, refId, commitId, type) ->
-			if !settings.is('SEARCH_LINKS_ENABLED')
+			if !settings.is('SEARCH_LINKS_AVAILABLE')
+				$("[href='##{type}']").parent().hide()
 				return
 			group = repository.get 'group'
 			name = repository.get 'name'

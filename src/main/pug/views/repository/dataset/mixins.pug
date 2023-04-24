@@ -87,7 +87,7 @@ mixin header()
 			h3(data-path='name')
 				+field('name')
 			.category
-				+category-field(dataset.category, getValue(compareTo, 'category'))
+				+category-field(dataset.category, getValue(compareTo, 'category'), null, null, dataset.categoryIsInRepo, getValue(compareTo, 'categoryIsInRepo'))
 			h3: small: span(data-path='description')
 				+field('description', true)
 			.clear

@@ -1,7 +1,6 @@
 package com.greendelta.collaboration.service;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
+import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -280,18 +280,25 @@ public class SettingsService {
 			client = null;
 		}
 
-		public boolean isAvailable() {
+		public boolean isSearchAvailable() {
 			return SettingsService.this.is(ServerSetting.SEARCH_ENABLED) && getSearchClient() != null;
 		}
 
-		public RestHighLevelClient getClient() throws UnknownHostException {
+		public boolean isIoDataAvailable() {
+			return SettingsService.this.is(ServerSetting.SEARCH_LINKS_ENABLED) && getIoDataSearchClient() != null;
+		}
+
+		public RestHighLevelClient getClient() throws IOException {
 			if (client != null)
 				return client;
 			String host = get(SearchSetting.HOST);
 			int port = get(SearchSetting.PORT);
 			String schema = get(SearchSetting.SCHEMA);
-			client = new RestHighLevelClient(
+			var client = new RestHighLevelClient(
 					RestClient.builder(new HttpHost(host, port, schema), new HttpHost(host, port + 1, schema)));
+			if (!client.ping(RequestOptions.DEFAULT))
+				throw new IOException("Could not ping search cluster");
+			this.client = client;
 			return client;
 		}
 
