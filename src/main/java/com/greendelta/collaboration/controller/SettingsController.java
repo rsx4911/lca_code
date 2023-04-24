@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
