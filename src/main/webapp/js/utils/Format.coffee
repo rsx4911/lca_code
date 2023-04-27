@@ -31,7 +31,7 @@ define([
 				catch e2
 					return 'Invalid date'
 
-		formatCommitDescription: (text) ->
+		commitDescription: (text) ->
 			if text.length < 100
 				return text
 			space = -1

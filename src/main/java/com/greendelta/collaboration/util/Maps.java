@@ -13,6 +13,8 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.openlca.core.model.ModelType;
+import org.openlca.util.Strings;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
@@ -38,11 +40,14 @@ public class Maps {
 		return new HashMap<>(Map.of(key, value));
 	}
 
+	@SuppressWarnings("unchecked")
 	public static Map<String, Object> of(Object object) {
 		if (object == null)
 			return null;
 		if (object instanceof String json)
 			return toMap(json);
+		if (object instanceof Map)
+			return (Map<String, Object>) object;
 		return mapper.convertValue(object, new TypeReference<Map<String, Object>>() {
 		});
 	}
@@ -308,6 +313,10 @@ public class Maps {
 
 	public static boolean isObject(Map<String, Object> map, String field) {
 		var value = get(map, field);
+		return is(value);
+	}
+
+	public static boolean is(Object value) {
 		return value instanceof Map;
 	}
 
@@ -316,6 +325,16 @@ public class Maps {
 		var value = get(map, field);
 		if (value instanceof Map)
 			return (Map<String, Object>) value;
+		return null;
+	}
+
+	public static ModelType getModelType(Map<String, Object> map) {
+		var value = getString(map, "@type");
+		if (Strings.nullOrEmpty(value))
+			return null;
+		for (var type : ModelType.values())
+			if (type.getModelClass().getSimpleName().equals(value))
+				return type;
 		return null;
 	}
 

@@ -72,8 +72,8 @@ public class SearchController {
 
 	@GetMapping
 	public Map<String, Object> search(@Autowired HttpServletRequest request) {
-		if (!settings.searchConfig.isAvailable())
-			throw Response.unavailable("Search feature not enabled");
+		if (!settings.searchConfig.isSearchAvailable())
+			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		var parameters = getQueryParameters(request);
 		var query = removeStringFilter("query", parameters);
 		var page = removeIntFilter("page", parameters, 1);
@@ -170,8 +170,8 @@ public class SearchController {
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-		if (!settings.is(ServerSetting.SEARCH_LINKS_ENABLED))
-			throw Response.unavailable("Search links feature not enabled");
+		if (!settings.searchConfig.isIoDataAvailable())
+			throw Response.unavailable("Search links feature not enabled or search cluster not available");
 		var repo = repoService.get(repositoryId);
 		if (commitId == null) {
 			commitId = repo.commits().find().latestId();

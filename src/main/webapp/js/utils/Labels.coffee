@@ -28,6 +28,7 @@ define () ->
 		'targetFlowProperty': 'Flow property'
 		'targetUnit': 'Unit'
 		'refExchange.name': 'Reference product'
+		'refProcess': 'Reference process'
 		'impactMethod': 'LCIA method'
 		'impactCategories.refUnit': 'Reference unit'
 		'socialDqSystem': 'Social data quality scheme'

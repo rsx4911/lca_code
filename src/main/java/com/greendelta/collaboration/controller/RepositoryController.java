@@ -51,8 +51,7 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			var publicAccess = repo.settings.is(RepositorySetting.PUBLIC_ACCESS);
-			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group, publicAccess));
+			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
 			var lastCommit = repo.commits().head();
 			if (lastCommit != null) {
 				Maps.put(mappedRepo, "settings.lastChange", lastCommit.timestamp);

@@ -210,7 +210,8 @@ define([
 					url: 'ws/repository?'
 					beforeRender: (result) =>
 						result.isSearchEnabled = settings.is 'SEARCH_ENABLED'
-						result.reindexingStatus = @serverInfo.reindexingStatus			
+						if @serverInfo
+							result.reindexingStatus = @serverInfo.reindexingStatus
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate

@@ -62,13 +62,12 @@ public class GroupService {
 	}
 
 	public boolean isUserNamespace(String group) {
-		return isUserNamespace(group, false);
+		return userService.exists(group);
 	}
 
-	public boolean isUserNamespace(String group, boolean skipAccessCheck) {
-		if (!exists(group, skipAccessCheck))
-			return false;
-		return userService.exists(group);
+	public boolean isOwnNamespace(String group) {
+		var user = userService.getCurrentUser();
+		return isUserNamespace(group) && user != null && group.equals(user.username);
 	}
 
 	public boolean create(String group, boolean userGroup) {
@@ -120,6 +119,8 @@ public class GroupService {
 			return 0;
 		var groupDir = new File(root, group);
 		if (!accessService.canRead(group))
+			return 0;
+		if (!groupDir.exists() || groupDir.listFiles() == null)
 			return 0;
 		return groupDir.listFiles().length;
 	}

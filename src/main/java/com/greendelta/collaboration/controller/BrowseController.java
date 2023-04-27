@@ -1,8 +1,12 @@
 package com.greendelta.collaboration.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.git.find.Entries;
@@ -174,23 +178,72 @@ public class BrowseController {
 			var commit = repo.commits().find().model(type, refId).until(commitId).latest();
 			if (commit == null)
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
-			var modelCommitId = repo.commits().find().model(type, refId).latestId();
-			if (commitId == null) {
-				commitId = modelCommitId;
-			}
+			var latestCommitId = repo.commits().find().model(type, refId).latestId();
 			var loggedIn = userService.getCurrentUser().id != 0;
-			if (!loggedIn && !commit.id.equals(commitId))
+			if (!loggedIn && !commit.id.equals(latestCommitId))
 				throw Response.unauthorized();
 			var ref = repo.references().get(type, refId, commit.id);
 			var dataset = repo.datasets().get(ref);
 			if (Strings.nullOrEmpty(dataset))
-				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
+				throw Response.notFound(type + " " + refId + " not found for commit " + commit.id);
 			var map = Maps.of(dataset);
 			if (loggedIn) {
-				map.put("commitId", modelCommitId);
+				map.put("commitId", commit.id);
 			}
+			new IsInRepoInfo(repo, commitId).addIn(map);
 			return map;
 		}
+	}
+
+	private class IsInRepoInfo {
+
+		private final EnumMap<ModelType, Set<String>> refs = new EnumMap<>(ModelType.class);
+		private final Set<String> categories = new HashSet<>();
+
+		private IsInRepoInfo(Repository repo, String commitId) {
+			Entries.of(repo.gitRepo()).iterate(commitId, entry -> {
+				if (entry.typeOfEntry == EntryType.DATASET) {
+					refs.computeIfAbsent(entry.type, key -> new HashSet<>()).add(entry.refId);
+				} else if (entry.typeOfEntry == EntryType.CATEGORY) {
+					categories.add(entry.path);
+				}
+			});
+		}
+
+		private void addIn(Map<String, Object> object) {
+			for (var key : new HashSet<>(object.keySet())) {
+				if (key.equals("category")) {
+					var category = Maps.getString(object, "category");
+					var type = Maps.getModelType(object);
+					object.put("categoryIsInRepo", isCategoryInRepo(type, category));
+				}
+				if (Maps.isObject(object, key)) {
+					addTo(Maps.getObject(object, key));
+				} else if (Maps.isArray(object, key)) {
+					for (var child : Maps.getArray(object, key)) {
+						if (Maps.is(child)) {
+							addTo(Maps.of(child));
+						}
+					}
+				}
+			}
+		}
+
+		private void addTo(Map<String, Object> object) {
+			addIn(object);
+			var type = Maps.getModelType(object);
+			var refId = Maps.getString(object, "@id");
+			if (type == null || Strings.nullOrEmpty(refId))
+				return;
+			object.put("isInRepo", refs.getOrDefault(type, Collections.emptySet()).contains(refId));
+		}
+
+		private boolean isCategoryInRepo(ModelType type, String category) {
+			if (type == null || Strings.nullOrEmpty(category))
+				return false;
+			return categories.contains(type.name() + "/" + category);
+		}
+
 	}
 
 }

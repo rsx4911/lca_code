@@ -84,12 +84,13 @@ public class GroupController {
 	@GetMapping("{name}")
 	public Map<String, Object> get(@PathVariable("name") String name) {
 		var user = userService.getCurrentUser();
-		if (!service.exists(name) || (service.isUserNamespace(name) && (user == null || !name.equals(user.username))))
+		var isOwnNamespace = service.isOwnNamespace(name);
+		if (!isOwnNamespace && !service.exists(name))
 			throw Response.notFound("Group " + name + " not found");
 		if (!accessService.canRead(name))
 			throw new ForbiddenAccessException(name, "READ");
 		var group = new HashMap<String, Object>();
-		group.put("userCanDelete", accessService.canDelete(name));
+		group.put("userCanDelete", !isOwnNamespace && accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
 		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
 		group.put("userCanSetSettings", accessService.canSetSettings(name));
@@ -101,8 +102,7 @@ public class GroupController {
 
 	@GetMapping("avatar/{name}")
 	public byte[] getAvatar(@PathVariable("name") String name) {
-		boolean exists = service.exists(name);
-		if (!exists)
+		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
 		return Avatar.get(service.getSettings(name).get(GroupSetting.AVATAR), "avatar-group.png");
 	}
@@ -127,8 +127,8 @@ public class GroupController {
 	public byte[] setAvatar(
 			@PathVariable("name") String name,
 			@RequestParam(name = "file", required = false) MultipartFile file) {
-		if (!service.exists(name))
-			throw Response.notFound();
+		if (!service.isOwnNamespace(name) && !service.exists(name))
+			throw Response.notFound(name);
 		try {
 			service.getSettings(name).set(GroupSetting.AVATAR, file != null ? file.getBytes() : null);
 			return getAvatar(name);
@@ -142,9 +142,9 @@ public class GroupController {
 			@PathVariable("name") String name,
 			@PathVariable("setting") GroupSetting setting,
 			@RequestBody Map<String, Object> data) {
+		if (!service.isOwnNamespace(name) && !service.exists(name))
+			throw Response.notFound(name);
 		var value = data.get("value").toString();
-		if (!service.exists(name))
-			throw Response.notFound();
 		service.getSettings(name).set(setting, value);
 	}
 

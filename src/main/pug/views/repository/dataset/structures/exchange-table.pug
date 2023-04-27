@@ -51,9 +51,11 @@ mixin exchange-row(exchange, other, count, isInput, show)
 	- var unit = getValue(exchange, 'unit');
 	- var otherUnit = getValue(other, 'unit');
 	- var category = getValue(flow, 'category');
+	- var isCategoryInRepo = getValue(flow, 'categoryIsInRepo')
 	if category
 		- category.categoryType = flow.type;
 	- var otherCategory = getValue(otherFlow, 'category');
+	- var isOtherCategoryInRepo = getValue(otherFlow, 'categoryIsInRepo')
 	if otherCategory
 		- otherCategory.categoryType = otherFlow.type;
 	- var changed = compareTo && !other ? 'added' : (compareTo && !exchange ? 'removed' : null);
@@ -62,7 +64,7 @@ mixin exchange-row(exchange, other, count, isInput, show)
 		td
 			+compare-icon(changed)
 			+ref(flow, otherFlow)
-		td: +category-field(category, otherCategory, true, 'Flow')
+		td: +category-field(category, otherCategory, true, 'Flow', isCategoryInRepo, isOtherCategoryInRepo)
 		- var amount = getValue(exchange, 'amount');
 		- amount = amount || amount === 0
 		- var otherAmount = getValue(other, 'amount');

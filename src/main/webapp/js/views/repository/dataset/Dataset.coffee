@@ -117,7 +117,10 @@ define([
 				type = @type
 				refId = @refId
 				commitId = $(Events.target(event)).val()
-				Router.navigate "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}?commitId=#{commitId}"
+				url = "#{repo.group}/#{repo.name}/dataset/#{type}/#{refId}"
+				if commitId
+					url += "?commitId=#{commitId}"
+				Router.navigate url
 
 			maximizeContent: (event) ->
 				pane = @$('.tab-pane.active')

@@ -32,7 +32,7 @@ public class IndexService {
 	}
 
 	private Work offer(String title, int total, Consumer<Work> actualWork) {
-		if (!settings.searchConfig.isAvailable())
+		if (!settings.searchConfig.isSearchAvailable())
 			return null;
 		synchronized (workQueue) {
 			boolean isFirst = workQueue.isEmpty();

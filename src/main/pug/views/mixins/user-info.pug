@@ -4,7 +4,7 @@ mixin user-info(id, name, type)
 	span.user-info&attributes(attributes)
 		.pull-left
 			img.avatar.avatar-small(src='ws/' + lcType + '/avatar/' + id, aria-label=ucType + ' avatar')
-		.pull-left
+		.pull-left.user-info-content-box
 			span.user-info-content
 				span.username=name 
 					if type

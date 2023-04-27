@@ -34,9 +34,11 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 	- var unit = getValue(factor, 'unit');
 	- var otherUnit = getValue(otherFactor, 'unit');
 	- var flowCategory = getValue(flow, 'category');
+	- var isFlowCategoryInRepo = getValue(flow, 'categoryInRepo')
 	if flowCategory
 		- flowCategory.categoryType = flow.type;
 	- var otherFlowCategory = getValue(otherFlow, 'category');
+	- var isOtherFlowCategoryInRepo = getValue(otherFlow, 'categoryInRepo')
 	if otherFlowCategory
 		- otherFlowCategory.categoryType = otherFlow.type;
 	- var changed = compareTo && !otherFactor ? 'added' : (compareTo && !factor ? 'removed' : null);
@@ -46,7 +48,7 @@ mixin impact-factor-row(category, otherCategory, factor, otherFactor, count)
 			if category && otherCategory
 				+compare-icon(changed)
 			+ref(flow, otherFlow)
-		td: +category-field(flowCategory, otherFlowCategory, true, 'Flow')
+		td: +category-field(flowCategory, otherFlowCategory, true, 'Flow', isCategoryInRepo, isOtherCategoryInRepo)
 		+sub-field-ref-cell(factor, otherFactor, 'location')
 		td 
 			+sub-field(factor, otherFactor, 'value', null, formatScientific)

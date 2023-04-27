@@ -74,7 +74,7 @@ public class SinglePageFilter implements Filter {
 		}
 		var publicRepositoriesEnabled = settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
 		var homepageEnabled = settings.is(ServerSetting.HOMEPAGE_ENABLED);
-		var searchEnabled = settings.searchConfig.isAvailable();
+		var searchEnabled = settings.searchConfig.isSearchAvailable();
 		var userRegistrationEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
 		if (user.isAnonymous() && (isLoginUrl || !publicRepositoriesEnabled || (!homepageEnabled && !searchEnabled))) {
 			if ((!publicRepositoriesEnabled && !isLoginUrl) || (!homepageEnabled && !searchEnabled && !isLoginUrl)

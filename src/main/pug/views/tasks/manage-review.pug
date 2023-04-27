@@ -1,7 +1,7 @@
 include ../mixins/forms.pug
 include ./mixins.pug
 
-- var selectDatasetsHint = !review.references || !review.references.length ? 'Please select data sets to be reviewed' : null;
+- var selectDatasetsHint = !review || !review.references || !review.references.length ? 'Please select data sets to be reviewed' : null;
 
 mixin assignments(assignments, type, noContentMessage)
 	.content-container

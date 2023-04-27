@@ -18,6 +18,7 @@ import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.jsonld.Enums;
+import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.service.Repository;
@@ -63,6 +64,10 @@ public class MetaData {
 
 	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
 		var ref = repo.references().get(type, refId, commitId);
+		return getName(repo, ref);
+	}
+	
+	public static String getName(Repository repo, Reference ref) {
 		var info = repo.datasets().parse(ref, "name");
 		var name = info.get("name");
 		return name != null ? name.toString() : "";
@@ -124,7 +129,7 @@ public class MetaData {
 			var t2 = Maps.getString(m2, "typeOfEntry");
 			if (!t1.equals(t2))
 				return t1.equals("CATEGORY") ? -1 : 1;
-			return Maps.getString(m1, "name").toLowerCase().compareTo(Maps.getString(m2, "name").toLowerCase());
+			return Strings.compare(Maps.getString(m1, "name"), Maps.getString(m2, "name"));
 		});
 	}
 
@@ -143,9 +148,9 @@ public class MetaData {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "type");
 			var t2 = Maps.getString(m2, "type");
-			if (!t1.equals(t2))
+			if (!Strings.nullOrEqual(t1, t2))
 				return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
-			return Maps.getString(m1, "name").toLowerCase().compareTo(Maps.getString(m2, "name").toLowerCase());
+			return Strings.compare(Maps.getString(m1, "name"), Maps.getString(m2, "name"));
 		});
 	}
 

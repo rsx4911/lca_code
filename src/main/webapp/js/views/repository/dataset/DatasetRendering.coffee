@@ -177,7 +177,7 @@ define([
 				formatDate: Format.dateTime
 				formatScientific: Format.scientific
 				formatRelative: (value) -> return Format.relative value, 4
-				formatCommitDescription: Format.formatCommitDescription
+				formatCommitDescription: Format.commitDescription
 				getIcon: Icons.get
 				getDQColor: DataQuality.getColor
 				getValue: @getValue

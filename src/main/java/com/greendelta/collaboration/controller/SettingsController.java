@@ -44,7 +44,10 @@ public class SettingsController {
 				cleanup(ServerSetting.MODEL_TYPES_HIDDEN, ModelTypes.DEFAULT_ORDER, false);
 			}
 		}
-		return service.serverConfig.toPreservedMap(setting -> isAdmin || setting.isPublic());
+		var settings = service.serverConfig.toPreservedMap(setting -> isAdmin || setting.isPublic());
+		settings.put("SEARCH_AVAILABLE", service.searchConfig.isSearchAvailable());
+		settings.put("SEARCH_LINKS_AVAILABLE", service.searchConfig.isIoDataAvailable());
+		return settings;
 	}
 
 	private void cleanup(ServerSetting key, List<String> values, boolean appendNew) {
