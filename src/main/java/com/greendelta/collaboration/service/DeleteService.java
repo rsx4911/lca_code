@@ -113,11 +113,11 @@ public class DeleteService {
 	public void delete(Repository repo) {
 		if (!accessService.canDelete(repo.path()))
 			throw new ForbiddenAccessException(repo.path(), "DELETE");
-		memberService.removeMemberships(repo.path());
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
 		repoService.delete(repo);
+		memberService.removeMemberships(repo.path());
 	}
 
 	private void deleteTasksOf(Repository repo) {
@@ -134,9 +134,9 @@ public class DeleteService {
 				delete(repo);
 			}
 		}
-		memberService.removeMemberships(name);
 		settings.get(SettingType.GROUP_SETTING, name, accessService::canSetSettings).delete();
 		groupService.delete(name);
+		memberService.removeMemberships(name);
 	}
 
 	public void deleteRestriction(String name) {
