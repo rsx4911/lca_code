@@ -334,6 +334,9 @@ define([
 				$('body').append progressIndicatorTemplate
 					message: message				
 
+			isProgressShowing: () ->
+				return $('.progress-indicator').length > 0
+
 			hideProgressIndicator: () ->
 				$('.progress-indicator').remove()
 
