@@ -3,6 +3,7 @@ package com.greendelta.collaboration.controller;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,13 @@ abstract class DownloadController {
 			var commit = repo.commits().find().until(commitId).latest();
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
+			var ref = repo.references().get(type, refId, commitId);
+			if (ref == null)
+				throw Response.notFound("ref " + type + " " + refId + " not found");
 			log.info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository,
 					commit.id);
 			var writer = createWriter(repo, commit);
-			writer.write(type, refId);
-			var tmpFile = writer.close();
+			var tmpFile = writer.write(Collections.singleton(ref));
 			var token = put(tmpFile, refId + "_" + commit.id + ".zip");
 			return token;
 		} catch (IOException e) {
@@ -70,10 +73,7 @@ abstract class DownloadController {
 				throw Response.notFound("commit " + commitId + " not found");
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
 			var writer = createWriter(repo, commit);
-			for (var next : requested) {
-				writer.write(next.type, next.refId);
-			}
-			var tmpFile = writer.close();
+			var tmpFile = writer.write(requested);
 			var token = put(tmpFile, repo.toFilename());
 			return token;
 		} catch (IOException e) {

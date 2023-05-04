@@ -2,64 +2,38 @@ package com.greendelta.collaboration.io;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
+import org.openlca.git.find.Datasets;
+import org.openlca.git.find.References;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Maps;
 
-public class JsonWriter implements DatasetWriter {
+public class JsonWriter extends AbstractWriter {
 
-	private final static Logger log = LogManager.getLogger(JsonWriter.class);
-	private final Repository repo;
-	private final Commit commit;
-	private final RepositoryJsonWriter writer;
-	private final File tmpFile;
-	private final Set<String> processed = new HashSet<>();
-	private final Stack<Reference> refStack = new Stack<>();
+	private RepositoryJsonWriter writer;
 
-	public JsonWriter(Repository repo, Commit commit) throws IOException {
-		this.repo = repo;
-		this.commit = commit;
-		var tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
-		this.tmpFile = new File(tmpDir, "temp.zip");
-		this.writer = new RepositoryJsonWriter(repo, tmpFile);
+	public JsonWriter(References references, Datasets datasets, Commit commit) throws IOException {
+		super(references, commit);
+		this.writer = new RepositoryJsonWriter(references, datasets, tmpFile);
 	}
 
 	@Override
-	public void write(ModelType type, String refId) throws IOException {
-		var ref = repo.references().get(type, refId, commit.id);
-		if (ref == null)
-			return;
-		refStack.add(ref);
-		var refs = repo.references().find().type(ModelType.PARAMETER).commit(commit.id).all();
-		refStack.addAll(refs);
-		while (!refStack.isEmpty()) {
-			write(refStack.pop());
-		}
-	}
-
-	private void write(Reference ref) throws IOException {
-		if (processed.contains(ref.refId))
-			return;
-		processed.add(ref.refId);
-		log.trace("Exporting {} {} to json", ref.type, ref.refId);
+	protected void write(Reference ref) throws IOException {
 		var dataset = writer.put(ref);
-		if (dataset == null) {
-			log.trace("No data set found: " + ref.type.name() + " " + ref.refId + " (commit " + commit.id + ")");
+		if (dataset == null || !collectReferences)
 			return;
-		}
 		var json = Maps.of(dataset);
 		collectReferences(json);
+	}
+
+	@Override
+	protected File close() throws IOException {
+		writer.close();
+		return super.close();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -69,7 +43,7 @@ public class JsonWriter implements DatasetWriter {
 		for (var key : object.keySet()) {
 			if (Maps.isArray(object, key)) {
 				for (var arrayElement : Maps.getArray(object, key)) {
-					if (!(arrayElement instanceof Map))
+					if (!Maps.is(arrayElement))
 						continue;
 					collectReference((Map<String, Object>) arrayElement);
 				}
@@ -90,14 +64,9 @@ public class JsonWriter implements DatasetWriter {
 		if (type == null)
 			return;
 		var refId = Maps.getString(object, "@id");
-		var ref = repo.references().get(type, refId, commit.id);
-		if (ref == null) {
-			log.trace("No data set found: " + type.name() + " " + refId);
+		if (refId == null)
 			return;
-		}
-		if (processed.contains(ref.refId))
-			return;
-		refStack.add(ref);
+		queue(type, refId);
 	}
 
 	private ModelType getType(String name) {
@@ -107,12 +76,6 @@ public class JsonWriter implements DatasetWriter {
 			return type;
 		}
 		return null;
-	}
-
-	@Override
-	public File close() throws IOException {
-		writer.close();
-		return tmpFile;
 	}
 
 }
