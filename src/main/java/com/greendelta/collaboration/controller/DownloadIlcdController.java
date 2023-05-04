@@ -79,8 +79,9 @@ public class DownloadIlcdController extends DownloadController {
 	public String prepareRequested(
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository,
+			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestBody List<Reference> requested) {
-		return super.prepare(group, repository, null, requested);
+		return super.prepare(group, repository, commitId, requested);
 	}
 
 	@Override

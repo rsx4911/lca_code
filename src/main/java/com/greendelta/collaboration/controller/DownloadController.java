@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
+import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -38,6 +39,8 @@ abstract class DownloadController {
 	}
 
 	protected String prepare(String group, String repository, String commitId, String path) {
+		if (Strings.nullOrEmpty(path))
+			return prepare(group, repository, commitId);
 		try (var repo = repoService.get(group, repository)) {
 			var refs = repo.references().find().path(path).commit(commitId).all();
 			if (refs == null)
@@ -74,6 +77,21 @@ abstract class DownloadController {
 			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
 			var writer = createWriter(repo, commit);
 			var tmpFile = writer.write(requested);
+			var token = put(tmpFile, repo.toFilename());
+			return token;
+		} catch (IOException e) {
+			throw Response.error("Error writing data sets to tmp file");
+		}
+	}
+
+	private String prepare(String group, String repository, String commitId) {
+		try (var repo = repoService.get(group, repository)) {
+			var commit = repo.commits().find().until(commitId).latest();
+			if (commit == null)
+				throw Response.notFound("commit " + commitId + " not found");
+			log.info("Exporting repository {}/{} (commit id {})", group, repository, commit.id);
+			var writer = createWriter(repo, commit);
+			var tmpFile = writer.writeAll();
 			var token = put(tmpFile, repo.toFilename());
 			return token;
 		} catch (IOException e) {
