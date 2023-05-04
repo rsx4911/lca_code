@@ -104,7 +104,7 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(repo, commit);
+		return new JsonWriter(repo.references(), repo.datasets(), commit);
 	}
 
 }

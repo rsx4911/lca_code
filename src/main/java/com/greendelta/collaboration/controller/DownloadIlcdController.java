@@ -6,6 +6,7 @@ import java.util.List;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
+import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,7 +86,14 @@ public class DownloadIlcdController extends DownloadController {
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
 		String serverUrl = settings.get(ServerSetting.SERVER_URL);
-		return new IlcdWriter(serverUrl, repo, commit);
+		if (Strings.nullOrEmpty(serverUrl)) {
+			serverUrl = "http://openlca.org/ilcd/resource";
+		}
+		if (!serverUrl.endsWith("/")) {
+			serverUrl += "/";
+		}
+		serverUrl += repo.path();
+		return new IlcdWriter(serverUrl, repo.references(), repo.datasets(), commit);
 	}
 
 }

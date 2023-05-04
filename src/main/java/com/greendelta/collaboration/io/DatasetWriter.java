@@ -2,13 +2,13 @@ package com.greendelta.collaboration.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
-import org.openlca.core.model.ModelType;
+import org.openlca.git.model.Reference;
 
 public interface DatasetWriter {
 
-	void write(ModelType type, String refId) throws IOException;
-
-	File close() throws IOException;
-
+	File writeAll() throws IOException;
+	File write(Collection<Reference> refs) throws IOException;
+	
 }

@@ -77,6 +77,8 @@ define([
 		initializeLongLoading: () ->
 			$.ajaxSetup
 				beforeSend: (xhr) ->
+					if Layers.isProgressShowing()
+						return
 					time = new Date().getTime()
 					check = () ->
 						setTimeout () ->
