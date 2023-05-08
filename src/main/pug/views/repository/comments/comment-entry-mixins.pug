@@ -70,7 +70,10 @@ mixin comment-entry(comment, roles, showDatasetInfo)
 				- query += 'commentPath=' + (field.path || 'null');
 				.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + query) 
 					img.model-icon-small(src='images/model/small/' + field.modelType.toLowerCase() + '.png', aria-label='Icon of ' + field.modelType)
-					span=comment.dsPath 
+					- var path = comment.dsPath
+					if path && path[0] === '/'
+						- path = path.substring(1);
+					span=path 
 						if label
 							|  - #{label}
 			.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
