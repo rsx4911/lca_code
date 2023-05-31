@@ -12,7 +12,6 @@ require.config({
 		'jstree': 'libs/jstree',
 		'leaflet': 'libs/leaflet',
 		'moment': 'libs/moment',
-		'pace': 'libs/pace',
 		'qrcode': 'libs/qrcode',
 		'requireLib': 'libs/require',
 		'underscore': 'libs/underscore',
@@ -42,9 +41,6 @@ require.config({
 	} 
 })
 
-define(['cs!app/App', 'pace'], function(App, pace) {
-	// pace.on('start', function() {$('body').append('<div id="block-interaction"></div>')});
-	// pace.on('hide', function() {$('#block-interaction').remove()});
-	pace.start({ ajax: false });
+define(['cs!app/App'], function(App) {
 	App.initialize();
 });
