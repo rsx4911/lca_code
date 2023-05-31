@@ -84,6 +84,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			throws IOException, ServletException {
 		var request = req instanceof GitRequest ? (GitRequest) req : new GitRequest(req);
 		request.basicHttpLogin(sessionService);
+		// TODO if repository is too big, don't allow commit
 		super.doFilter(request, response, new FilterChainWrapper(request, response, chain));
 		if (!config.isGitUrl(request))
 			return;

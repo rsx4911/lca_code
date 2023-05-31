@@ -14,9 +14,13 @@ import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
+import com.greendelta.collaboration.service.SettingsService.Settings;
+import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.SettingsService;
 
 @Service
@@ -24,14 +28,17 @@ public class AccessService {
 
 	private final UserService userService;
 	private final MembershipService membershipService;
+	private final GroupService groupService;
 	private final SettingsService settings;
-
+	
 	@Autowired
 	public AccessService(UserService userService, MembershipService membershipService,
 			SettingsService settings) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		this.settings = settings;
+		// cannot inject group service - would result in a dependency loop
+		this.groupService = new GroupService(this, membershipService, userService, settings);
 	}
 
 	public boolean canRead(String groupOrRepo) {
@@ -108,7 +115,12 @@ public class AccessService {
 			String path = settings.get(ServerSetting.REPOSITORY_PATH);
 			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories(user, path);
 		}
-		return hasPermissionTo(Permission.CREATE, group);
+		if (!hasPermissionTo(Permission.CREATE, group))
+			return false;
+		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group, this::canSetSettings);
+		int noOfRepos = groupSettings.get(GroupSetting.NO_OF_REPOSITORIES, 0);
+		String path = settings.get(ServerSetting.REPOSITORY_PATH);
+		return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(path);		
 	}
 
 	public List<Comment> filterCanRead(List<Comment> comments) {

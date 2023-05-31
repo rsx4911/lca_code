@@ -90,6 +90,7 @@ public class GroupController {
 		if (!accessService.canRead(name))
 			throw new ForbiddenAccessException(name, "READ");
 		var group = new HashMap<String, Object>();
+		group.put("isUserGroup", isOwnNamespace);
 		group.put("userCanDelete", !isOwnNamespace && accessService.canDelete(name));
 		group.put("userCanWrite", accessService.canWrite(name));
 		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
@@ -144,6 +145,9 @@ public class GroupController {
 			@RequestBody Map<String, Object> data) {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
+		var user = userService.getCurrentUser();
+		if (setting.isAdminSetting && !user.isDataManager() && !user.isUserManager())
+			throw new ForbiddenAccessException(name, "SET_SETTING");
 		var value = data.get("value").toString();
 		service.getSettings(name).set(setting, value);
 	}
