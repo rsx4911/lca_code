@@ -17,10 +17,8 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
-import com.greendelta.collaboration.model.settings.SettingType;
-import com.greendelta.collaboration.service.Repository.RepositoryPath;
-import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 
 @Service
@@ -112,13 +110,12 @@ public class AccessService {
 			if (!user.settings.canCreateRepositories)
 				return false;
 			var noOfRepos = user.settings.noOfRepositories;
-			String path = settings.get(ServerSetting.REPOSITORY_PATH);
-			return noOfRepos == 0 || noOfRepos > userService.getNoOfRepositories(user, path);
+			return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(user.username);
 		}
 		if (!hasPermissionTo(Permission.CREATE, group))
 			return false;
-		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group, this::canSetSettings);
-		int noOfRepos = groupSettings.get(GroupSetting.NO_OF_REPOSITORIES, 0);
+		var groupSettings = groupService.getSettings(group);
+		var noOfRepos = groupSettings.get(GroupSetting.NO_OF_REPOSITORIES, 0);
 		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(path);		
 	}

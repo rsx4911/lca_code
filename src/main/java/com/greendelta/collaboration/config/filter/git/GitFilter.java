@@ -19,25 +19,30 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.greendelta.collaboration.config.filter.git.GitRequest.GitAction;
+import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Requests;
 
 @WebFilter(asyncSupported = true)
 @Component
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
+	private GroupService groupService;
 	private RepositoryService repoService;
 	private IndexService indexService;
 	private SettingsService settings;
 	private NotificationService notificationService;
 	private SessionService sessionService;
+	private UserService userService;
 	private GitFilterConfig config;
 
 	@Override
@@ -71,11 +76,13 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		if (settings != null)
 			return;
 		var app = WebApplicationContextUtils.getRequiredWebApplicationContext(config.getServletContext());
+		groupService = app.getBean(GroupService.class);
 		repoService = app.getBean(RepositoryService.class);
 		indexService = app.getBean(IndexService.class);
 		settings = app.getBean(SettingsService.class);
 		notificationService = app.getBean(NotificationService.class);
 		sessionService = app.getBean(SessionService.class);
+		userService = app.getBean(UserService.class);
 		this.config = app.getBean(GitFilterConfig.class);
 	}
 
@@ -83,18 +90,19 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	public void doFilter(ServletRequest req, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		var request = req instanceof GitRequest ? (GitRequest) req : new GitRequest(req);
-		request.basicHttpLogin(sessionService);
-		// TODO if repository is too big, don't allow commit
+		var loggedIn = request.basicHttpLogin(sessionService);
 		super.doFilter(request, response, new FilterChainWrapper(request, response, chain));
 		if (!config.isGitUrl(request))
 			return;
 		if (request.getGitAction() == GitAction.GIT_PUSH) {
-			runPushPostProcessing(new RepositoryPath(Requests.getRelativePath(request)));
+			runPushPostProcessing(new RepositoryPath(Requests.getRelativePath(request)), request.getRemoteUser());
 		}
-		request.basicHttpLogout(sessionService);
+		if (loggedIn) {
+			request.basicHttpLogout(sessionService);
+		}
 	}
 
-	private void runPushPostProcessing(RepositoryPath path) {
+	private void runPushPostProcessing(RepositoryPath path, String username) {
 		try (var repo = repoService.get(path.group, path.repo)) {
 			var commit = repo.commits().head();
 			var generateJson = repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
@@ -102,8 +110,21 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			if (generateJson) {
 				repoService.generateJson(repo);
 			}
+			var groupSettings = groupService.getSettings(repo.group);
+			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE));
+			var user = userService.getForUsername(username);
+			checkGroupSizeLimit(username, user.settings.maxSize);
 			indexService.index(repo);
 		}
 	}
 
+	private void checkGroupSizeLimit(String group, long maxSize) {
+		if (maxSize == 0l)
+			return;
+		var actualSize = groupService.getSize(group);
+		if (maxSize < actualSize) {
+			notificationService.groupSizeLimitExceeded(group, maxSize, actualSize).send();
+		}
+	}
+		
 }
