@@ -31,13 +31,11 @@ public class SearchService {
 	private final SettingsService settings;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
-	private final EntryBuffer buffer;
 
 	@Autowired
 	public SearchService(SettingsService settings, QueryService queryService) {
 		this.settings = settings;
 		this.queryService = queryService;
-		this.buffer = new EntryBuffer(getClient(), 1000);
 	}
 
 	public SearchResult<DsEntry> search(String query, int page, int pageSize, Map<String, Set<String>> filters) {
@@ -56,14 +54,18 @@ public class SearchService {
 		var diffs = Diffs.of(repo.gitRepo(), previous).with(head);
 		if (diffs.isEmpty())
 			return;
+		var client = getClient();
+		if (client == null)
+			return;
+		var buffer = new EntryBuffer(client, 1000);
 		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
-				.forEach(diff -> index(repo, manager, diff.toReference(Side.NEW)));
+				.forEach(diff -> index(buffer, repo, manager, diff.toReference(Side.NEW)));
 		Diff.filter(diffs, DiffType.DELETED)
-				.forEach(diff -> remove(manager, diff.toReference(Side.OLD)));
+				.forEach(diff -> remove(buffer, manager, diff.toReference(Side.OLD)));
 		buffer.flush();
 	}
 
-	private void index(Repository repo, DsEntryManager manager, Reference ref) {
+	private void index(EntryBuffer buffer, Repository repo, DsEntryManager manager, Reference ref) {
 		var entry = find(ref);
 		boolean insert = entry == null;
 		entry = manager.createOrUpdate(entry, ref);
@@ -74,7 +76,7 @@ public class SearchService {
 		}
 	}
 
-	private void remove(DsEntryManager manager, Reference ref) {
+	private void remove(EntryBuffer buffer, DsEntryManager manager, Reference ref) {
 		var entry = find(ref);
 		if (entry == null)
 			return;
@@ -95,35 +97,45 @@ public class SearchService {
 		var head = repo.commits().head();
 		if (head == null)
 			return;
-		update(repo,
+		var client = getClient();
+		if (client == null)
+			return;
+		var buffer = new EntryBuffer(client, 1000);
+		update(buffer, repo,
 				e -> e.versions.forEach(
 						v -> v.repos.forEach(
 								r -> r.tags = repo.settings.get(RepositorySetting.TAGS))));
+		buffer.flush();
 	}
 
 	void move(Repository oldRepo, Repository newRepo) {
 		var head = newRepo.commits().head();
 		if (head == null)
 			return;
-		update(oldRepo,
+		var client = getClient();
+		if (client == null)
+			return;
+		var buffer = new EntryBuffer(client, 1000);
+		update(buffer, oldRepo,
 				e -> e.versions.forEach(
 						v -> v.repos.forEach(
 								r -> {
 									r.group = newRepo.group;
 									r.path = newRepo.path();
 								})));
+		buffer.flush();
 	}
 
-	private void update(Repository repo, Consumer<DsEntry> update) {
+	private void update(EntryBuffer buffer, Repository repo, Consumer<DsEntry> update) {
 		var head = repo.commits().head();
 		if (head == null)
 			return;
 		var refs = repo.references().find().all();
 		var manager = new DsEntryManager(repo, head);
-		refs.forEach(ref -> update(manager, ref, update));
+		refs.forEach(ref -> update(buffer, manager, ref, update));
 	}
 
-	private void update(DsEntryManager manager, Reference ref, Consumer<DsEntry> update) {
+	private void update(EntryBuffer buffer, DsEntryManager manager, Reference ref, Consumer<DsEntry> update) {
 		var entry = find(ref);
 		if (entry == null)
 			return;
@@ -138,8 +150,12 @@ public class SearchService {
 		var refs = repo.references().find().commit(previousCommitId).all();
 		if (refs.isEmpty())
 			return;
+		var client = getClient();
+		if (client == null)
+			return;
+		var buffer = new EntryBuffer(client, 1000);
 		var manager = new DsEntryManager(repo, null);
-		refs.forEach(ref -> remove(manager, ref));
+		refs.forEach(ref -> remove(buffer, manager, ref));
 		buffer.flush();
 	}
 
