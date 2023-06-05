@@ -102,7 +102,6 @@ gulp.task('copyJsModules', function() {
       'node_modules/jstree/dist/jstree.js',
       'node_modules/leaflet/dist/leaflet.js',
       'node_modules/moment/moment.js',
-      'node_modules/pace-js-amd-fix/pace.js',
       'node_modules/qrcode/build/qrcode.js',
       'node_modules/requirejs/require.js',
       'node_modules/underscore/underscore.js',

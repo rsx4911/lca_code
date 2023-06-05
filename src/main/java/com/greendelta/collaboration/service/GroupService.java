@@ -93,6 +93,7 @@ public class GroupService {
 	public boolean delete(String group) {
 		if (!accessService.canDelete(group))
 			throw new ForbiddenAccessException(group, "DELETE");
+		getSettings(group).delete();
 		var path = getPath(group);
 		if (path == null || path.isEmpty())
 			return false;
@@ -111,18 +112,31 @@ public class GroupService {
 	}
 
 	public long getRepositoryCount(String group) {
+		return getRepositoryDirs(group).length;
+	}
+
+	public long getSize(String group) {
+		var repoDirs = getRepositoryDirs(group);
+		var size = 0l;
+		for (var repoDir : repoDirs) {
+			size += Dirs.size(repoDir.toPath());
+		}
+		return size;
+	}
+
+	private File[] getRepositoryDirs(String group) {
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
-			return 0;
+			return new File[0];
 		var root = new File(path);
 		if (!root.exists() || !root.isDirectory())
-			return 0;
+			return new File[0];
 		var groupDir = new File(root, group);
 		if (!accessService.canRead(group))
-			return 0;
+			return new File[0];
 		if (!groupDir.exists() || groupDir.listFiles() == null)
-			return 0;
-		return groupDir.listFiles().length;
+			return new File[0];
+		return groupDir.listFiles();
 	}
 
 	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {

@@ -69,9 +69,8 @@ public class SessionController {
 		var user = userService.getCurrentUser();
 		var isInTeam = !teamService.getTeamsFor(user).isEmpty();
 		var mapped = Users.mapForCurrentUser(user, isInTeam);
-		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(user).size());
-		mapped.put("noOfRepositories", userService.getNoOfRepositories(user, path));
+		mapped.put("noOfRepositories", groupService.getRepositoryCount(user.username));
 		return mapped;
 	}
 

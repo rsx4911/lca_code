@@ -55,6 +55,7 @@ public class RepositoryService {
 
 	private static final Logger log = LogManager.getLogger(RepositoryService.class);
 
+	private final GroupService groupService;
 	private final AccessService accessService;
 	private final MembershipService membershipService;
 	private final UserService userService;
@@ -63,8 +64,9 @@ public class RepositoryService {
 	private final TaskService taskService;
 
 	@Autowired
-	public RepositoryService(AccessService accessService, MembershipService membershipService, UserService userService,
+	public RepositoryService(GroupService groupService, AccessService accessService, MembershipService membershipService, UserService userService,
 			CommentService commentService, SettingsService settings, TaskService taskService) {
+		this.groupService = groupService;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
@@ -99,8 +101,7 @@ public class RepositoryService {
 			throw new ForbiddenAccessException(id, "READ");
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
-		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group,
-				accessService::canSetSettings);
+		Settings<GroupSetting> groupSettings = groupService.getSettings(group);
 		return new Repository(path, group, name, repoSettings, groupSettings);
 	}
 

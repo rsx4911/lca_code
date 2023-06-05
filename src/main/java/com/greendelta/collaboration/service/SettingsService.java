@@ -281,16 +281,31 @@ public class SettingsService {
 		}
 
 		public boolean isSearchAvailable() {
-			return SettingsService.this.is(ServerSetting.SEARCH_ENABLED) && getSearchClient() != null;
+			if (!SettingsService.this.is(ServerSetting.SEARCH_ENABLED))
+				return false;
+			try {
+				return getClient() != null;
+			} catch (IOException e) {
+				return false;
+			}
 		}
 
 		public boolean isIoDataAvailable() {
-			return SettingsService.this.is(ServerSetting.SEARCH_LINKS_ENABLED) && getIoDataSearchClient() != null;
+			if (!SettingsService.this.is(ServerSetting.SEARCH_LINKS_ENABLED))
+				return false;
+			try {
+				return getClient() != null;
+			} catch (IOException e) {
+				return false;
+			}
 		}
 
 		public RestHighLevelClient getClient() throws IOException {
-			if (client != null)
+			if (client != null) {
+				if (!client.ping(RequestOptions.DEFAULT))
+					throw new IOException("Could not ping search cluster");
 				return client;
+			}
 			String host = get(SearchSetting.HOST);
 			int port = get(SearchSetting.PORT);
 			String schema = get(SearchSetting.SCHEMA);

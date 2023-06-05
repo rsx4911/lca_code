@@ -35,7 +35,6 @@
     "jstree": "^3.3.8",
     "leaflet": "^1.5.1",
     "moment": "^2.24.0",
-    "pace-js-amd-fix": "^1.0.5",
     "qrcode": "^1.4.1",
     "tablesorter": "^2.31.1",
     "tag-cloud": "^1.2.1",

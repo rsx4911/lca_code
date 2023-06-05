@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.user;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,17 +85,6 @@ public class UserService implements UserDetailsService {
 
 	public long getCount() {
 		return dao.getCount();
-	}
-
-	public int getNoOfRepositories(User user, String repositoryPath) {
-		if (user.username == null || user.username.isEmpty())
-			return 0;
-		if (repositoryPath == null || repositoryPath.isEmpty())
-			return 0;
-		var userGroup = new File(repositoryPath, user.username);
-		if (!userGroup.exists())
-			return 0;
-		return userGroup.listFiles().length;
 	}
 
 	public SearchResult<User> getAll(int page, int pageSize, String filter) {
