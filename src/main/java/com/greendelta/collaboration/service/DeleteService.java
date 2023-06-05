@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.task.TaskService;
@@ -31,13 +30,12 @@ public class DeleteService {
 	private final AccessService accessService;
 	private final CommentService commentService;
 	private final RestrictionService restrictionService;
-	private final SettingsService settings;
 
 	@Autowired
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, CommentService commentService,
-			RestrictionService restrictionService, SettingsService settings) {
+			RestrictionService restrictionService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -48,7 +46,6 @@ public class DeleteService {
 		this.accessService = accessService;
 		this.commentService = commentService;
 		this.restrictionService = restrictionService;
-		this.settings = settings;
 	}
 
 	public void delete(User user) {
@@ -59,7 +56,6 @@ public class DeleteService {
 			result.data.forEach(this::delete);
 		}
 		groupService.delete(user.username);
-		settings.get(SettingType.GROUP_SETTING, user.username, accessService::canSetSettings).delete();
 		teamService.getTeamsFor(user).forEach(team -> {
 			teamService.removeMember(user, team);
 		});
@@ -134,7 +130,6 @@ public class DeleteService {
 				delete(repo);
 			}
 		}
-		settings.get(SettingType.GROUP_SETTING, name, accessService::canSetSettings).delete();
 		groupService.delete(name);
 		memberService.removeMemberships(name);
 	}

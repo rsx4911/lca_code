@@ -9,9 +9,13 @@ include ../mixins/avatar-box.pug
 		.content-box
 			+static('name', 'Name', group.name)
 			if group.userCanSetSettings
-				+input('label', 'Label')(value=group.settings.label)
-				+textarea('description', 'Description')(rows=3)
+				+input('label', 'Label')(value=group.settings.label, data-setting='LABEL')
+				+textarea('description', 'Description')(rows=3, data-setting='DESCRIPTION')
 					| #{group.settings.description}
+				if isAdmin && !group.isUserGroup
+					+input('noOfRepositories', 'No. of group repositories (0 = unlimited)', 'number')(class='input-sm', value=group.settings.noOfRepositories, size=4, min=0, data-setting='NO_OF_REPOSITORIES')
+					+input('maxSize', 'Maximum group size', 'number', true)(class='input-sm', value=0, size=4, min=0, data-setting='MAX_SIZE')
+						+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm', data-setting='MAX_SIZE')
 			else
 				+static('label', 'Label', group.settings.label||'-')
 				+static('description', 'Description', group.settings.description||'-')

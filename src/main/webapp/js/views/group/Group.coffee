@@ -10,11 +10,12 @@ define([
 				'cs!utils/Roles'
 				'cs!utils/Status'
 				'cs!app/Router'
+				'cs!models/CurrentUser'
 				'templates/views/group/group'
 				'templates/views/group/repositories'
 			]
 
-	(Backbone, Avatar, Events, Filter, Format, Forms, Layers, Renderer, Roles, Status, Router, template, listTemplate) ->
+	(Backbone, Avatar, Events, Filter, Format, Forms, Layers, Renderer, Roles, Status, Router, currentUser, template, listTemplate) ->
 
 		class GroupView extends Backbone.View
 
@@ -25,8 +26,8 @@ define([
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'group', @group.get('name')
-				'change #label': (event) -> @setSetting event, 'LABEL'
-				'change #description': (event) -> @setSetting event, 'DESCRIPTION'
+				'change [data-setting]': 'setSetting'
+				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=create-repository]': () -> Router.navigate 'repository/new/' + @group.get('name')
 				'click [data-action=import-repository]': () -> Router.navigate 'repository/import/' + @group.get('name')
 				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json/' + @group.get('name')
@@ -54,21 +55,43 @@ define([
 						@$('.group-repository-count').html(result.resultInfo.totalCount)
 
 			render: (renderOptions) ->
+				group = @group.toJSON()
 				@$el.html template
-					group: @group.toJSON()
+					group: group
+					isAdmin: currentUser.isUserManager() || currentUser.isDataManager
 				Renderer.render @, renderOptions
-				Avatar.initCropper 'group', @group.get('name')
+				@setMaxSize group.settings.maxSize
+				Avatar.initCropper 'group', group.name 
 				@filter.init()
 
-			setSetting: (event, setting) ->
+			setSetting: (event) ->
 				target = $ Events.target event
-				value = target.val()
 				group = @group.toJSON()
+				setting = target.attr 'data-setting'
+				if setting is 'MAX_SIZE'
+					size = parseInt @$('#maxSize').val()
+					if isNaN(size)
+						value = 0
+					else
+						unit = parseInt @$('#maxSize-group #unit').val()
+						value = size * unit
+				else
+					value = target.val()
 				$.ajax
 					type: 'PUT'
 					url: "ws/group/settings/#{group.name}/#{setting}"
 					contentType: 'application/json'
 					data: JSON.stringify({value: value || ''})
+
+			setMaxSize: (size) ->
+				unless size
+					return
+				if size % 1073741824 is 0
+					@$('#maxSize-group #unit').val('1073741824')
+					@$('#maxSize').val(size / 1073741824)
+				else
+					@$('#maxSize-group #unit').val('1048576')
+					@$('#maxSize').val(parseInt(size / 1048576))
 
 			deleteGroup: (event) ->
 				name = @group.get 'name'

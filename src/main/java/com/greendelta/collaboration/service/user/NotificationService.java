@@ -63,6 +63,23 @@ public class NotificationService {
 		return new NotificationJob(emails);
 	}
 
+	public NotificationJob groupSizeLimitExceeded(String group, long maxSize, long actualSize) {
+		var subject = "A group size limit was exceeded";
+		var start = userService.getForUsername(group) != null
+				? ("The user group of the user " + group)
+				: "The group " + group;
+		var message = start + " has exceeded its size limit of " + toSize(maxSize) + ". The actual size is now " + toSize(actualSize);
+		var emails = new HashSet<EmailJob>();
+		emails.addAll(createEmails(subject, message, getManagerUsers(Notification.GROUP_SIZE_LIMIT_EXCEEDED, true)));
+		return new NotificationJob(emails);
+	}
+	
+	private static String toSize(long size) {
+		if (size < 1073741824l)
+			return (Math.round(size * 100d / 1048576d) / 100d) + " MB";
+		return (Math.round(size  * 100d / 1073741824d) / 100d) + " GB";
+	}	
+	
 	public NotificationJob repositoryCreated(Repository repo) {
 		var currentUser = userService.getCurrentUser();
 		var url = getBaseUrl() + "/" + repo.path();
