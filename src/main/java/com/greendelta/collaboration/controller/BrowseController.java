@@ -174,6 +174,10 @@ public class BrowseController {
 			@PathVariable("type") ModelType type,
 			@PathVariable("refId") String refId,
 			@RequestParam(name = "commitId", required = false) String commitId) {
+		if (commitId != null && commitId.contains("?gladview")) {
+			// TODO this is a quickfix to support broken glad urls
+			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
+		}
 		try (var repo = repoService.get(group, name)) {
 			var commit = repo.commits().find().model(type, refId).until(commitId).latest();
 			if (commit == null)
