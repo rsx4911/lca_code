@@ -1,6 +1,9 @@
 package com.greendelta.collaboration.service;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -511,6 +514,48 @@ public class SettingsService {
 			};
 		}
 
+	}
+
+	public static void main(String[] args) throws IOException {
+		var log = new File("C:/Users/Sebastian/Downloads/logs2/catalina.out");
+		var log2 = new File("C:/Users/Sebastian/Downloads/logs2/catalina.out.short");
+		var skip = false;
+		var remaining = new ArrayList<String>();
+		var oom = false;
+		for (var line : Files.readAllLines(log.toPath())) {
+			if (line.contains("Server version name:   Apache Tomcat/9.0.73")) {
+				oom = false;
+			}
+			if (line.isBlank()) {
+				skip = false;
+			} else if (line.contains("java.net.ConnectException: Connection refused")
+					|| line.equals("java.lang.RuntimeException: I/O reactor has been shut down")
+					|| line.equals("java.lang.RuntimeException: Request execution cancelled")
+					|| line.contains("org.eclipse.jgit.errors.InvalidObjectIdException: Invalid id")
+					|| line.contains("?gladview=true")
+					|| line.contains("Failed to start the native thread for java.lang.Thread \"I/O dispatcher")
+					|| line.contains("pthread_create failed (EAGAIN) for attributes")
+					|| line.contains("Unable to acquire JDBC Connection")
+					|| line.contains("Communications link failure")
+					|| line.contains("Error creating bean with name 'entityManagerFactory'")
+					|| line.contains("HibernateException")
+					|| line.contains("The driver has not received any packets from the server")
+					|| line.contains("java.lang.OutOfMemoryError")) {
+				if (line.contains("java.lang.OutOfMemoryError") && !oom) {
+					oom = true;
+				} else {
+					skip = true;
+				}
+			}
+			if (!skip && !line.contains("Error getting search client")
+					&& !line.contains("o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession")
+					&& !line.contains(
+							"Resolved [org.springframework.web.HttpMediaTypeNotAcceptableException: Could not find acceptable representation]")
+					&& !line.isBlank()) {
+				remaining.add(line);
+			}
+		}
+		Files.write(log2.toPath(), remaining, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 	}
 
 }
