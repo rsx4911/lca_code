@@ -3,10 +3,12 @@ package com.greendelta.collaboration.service.search;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 import org.openlca.git.model.Commit;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -19,13 +21,16 @@ import com.greendelta.collaboration.service.SettingsService;
 @Service
 public class IndexService {
 
+	private final Executor threads;
 	private final SearchService searchService;
 	private final InputOutputDataService ioDataService;
 	private final SettingsService settings;
 	private Queue<Work> workQueue = new LinkedList<>();
 
 	@Autowired
-	public IndexService(SearchService searchService, InputOutputDataService ioDataService, SettingsService settings) {
+	public IndexService(@Qualifier("taskExecutor") Executor threads, SearchService searchService,
+			InputOutputDataService ioDataService, SettingsService settings) {
+		this.threads = threads;
 		this.searchService = searchService;
 		this.ioDataService = ioDataService;
 		this.settings = settings;
@@ -52,7 +57,7 @@ public class IndexService {
 			if (work == null)
 				return;
 		}
-		new Thread(() -> {
+		threads.execute(() -> {
 			try {
 				work.run();
 			} finally {
@@ -61,7 +66,7 @@ public class IndexService {
 					runNext();
 				}
 			}
-		}).start();
+		});
 	}
 
 	public IndexingStatus getIndexingStatus() {
@@ -74,7 +79,7 @@ public class IndexService {
 		}
 	}
 
-	public Work clearIndex(RepositoryList repos) {
+	public Work clearIndexAsync(RepositoryList repos) {
 		return offer("Clearing index", 1, work -> {
 			searchService.clearIndex(repos);
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
@@ -85,7 +90,7 @@ public class IndexService {
 		});
 	}
 
-	public Work index(Repository repo) {
+	public Work indexAsync(Repository repo) {
 		return offer("Indexing " + repo.path(), 1, work -> {
 			searchService.index(repo);
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
@@ -96,7 +101,7 @@ public class IndexService {
 		});
 	}
 
-	public Work moveIndex(Repository repo, Repository newRepo) {
+	public Work moveIndexAsync(Repository repo, Repository newRepo) {
 		return offer("Moving index of " + repo.path() + " to " + newRepo.path(), 1, work -> {
 			searchService.move(repo, newRepo);
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
@@ -108,14 +113,14 @@ public class IndexService {
 		});
 	}
 
-	public Work updateTags(Repository repo) {
+	public Work updateTagsAsync(Repository repo) {
 		return offer("Reindexing " + repo.path(), 1, work -> {
 			searchService.updateTags(repo);
 			work.worked++;
 		});
 	}
 
-	public Work reindex(Repository repo) {
+	public Work reindexAsync(Repository repo) {
 		return offer("Reindexing " + repo.path(), 1, work -> {
 			searchService.remove(repo);
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
@@ -131,7 +136,7 @@ public class IndexService {
 		});
 	}
 
-	public Work reindexAll(RepositoryList repos) {
+	public Work reindexAllAsync(RepositoryList repos) {
 		return offer("Reindexing all repositories", repos.size(), work -> {
 			searchService.clearIndex(repos);
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
@@ -149,15 +154,19 @@ public class IndexService {
 		});
 	}
 
-	public Work deleteIndex(Repository repo) {
+	public Work deleteIndexAsync(Repository repo) {
 		return offer("Deleting index of " + repo.path(), 1, work -> {
-			searchService.remove(repo);
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.remove(repo);
-			}
-			setCommitId(repo, null);
+			deleteIndex(repo);
 			work.worked++;
 		});
+	}
+
+	public void deleteIndex(Repository repo) {
+		searchService.remove(repo);
+		if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+			ioDataService.remove(repo);
+		}
+		setCommitId(repo, null);
 	}
 
 	private void setCommitId(Repository repo, Commit commit) {

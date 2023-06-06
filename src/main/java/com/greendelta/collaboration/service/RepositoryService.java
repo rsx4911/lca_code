@@ -283,7 +283,7 @@ public class RepositoryService {
 		}
 	}
 
-	@Async
+	@Async("taskExecutor")
 	public void generateJson(Repository repo) {
 		RepositoryJsonWriter.writeCurrent(repo);
 	}

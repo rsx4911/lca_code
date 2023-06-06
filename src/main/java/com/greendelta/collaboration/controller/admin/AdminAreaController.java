@@ -125,7 +125,7 @@ public class AdminAreaController {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
-			indexService.clearIndex(repos);
+			indexService.clearIndexAsync(repos);
 		}
 	}
 
@@ -134,7 +134,7 @@ public class AdminAreaController {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
-			indexService.reindexAll(repos);
+			indexService.reindexAllAsync(repos);
 		}
 	}
 
@@ -145,7 +145,7 @@ public class AdminAreaController {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repo = repoService.get(group, repository)) {
-			indexService.reindex(repo);
+			indexService.reindexAsync(repo);
 		}
 	}
 

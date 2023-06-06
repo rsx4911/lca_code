@@ -18,9 +18,11 @@ define () ->
 				$(@container).append('<div id="' + @id + '"></div>')
 				$(@container).append('<div id="' + @id + '-anchor"></div>')
 				@results = $('#' + @id, $(@container))
-				@bottomAnchor = $('#' + @id + '-anchor', $(@container))
 				@loadInitial()
 			
+			bottomAnchor: () ->
+				return $('#' + @id + '-anchor', $(@container))
+
 			loadInitial: () ->
 				@loadNext (result) =>
 					@append result
@@ -28,7 +30,8 @@ define () ->
 						@onEmpty?()
 						return
 					wasLastPage = result.resultInfo.currentPage is result.resultInfo.pageCount
-					if !@bottomAnchor.is(':offscreen') and !wasLastPage
+					bottomAnchor = @bottomAnchor()
+					if bottomAnchor.length and !bottomAnchor.is(':offscreen') and !wasLastPage
 						@loadInitial()
 						return
 					unless wasLastPage
@@ -47,7 +50,8 @@ define () ->
 				if (!$(@container).closest(document.documentElement).length)
 					$(window).off @eventName
 					return
-				if !@bottomAnchor.is(':offscreen')
+				bottomAnchor = @bottomAnchor()
+				if bottomAnchor.length and !bottomAnchor.is(':offscreen')
 					@scrollEventRunning = true
 					@loadNext (result) => 
 						@append result

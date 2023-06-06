@@ -29,7 +29,7 @@ public class EmailService {
 		this.settings = settings;
 	}
 
-	@Async
+	@Async("taskExecutor")
 	public void send(EmailJob mail) {
 		var config = settings.mailConfig;
 		var sender = config.getMailSender();
