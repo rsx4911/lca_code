@@ -6,8 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -518,6 +520,27 @@ public class SettingsService {
 
 	public static void main(String[] args) throws IOException {
 		var log = new File("C:/Users/Sebastian/Downloads/logs2/catalina.out");
+		ArrayList<String>  exceptions = new ArrayList<String>();
+		Set<String> causes = new HashSet<>();
+		var prevLine = "start";
+		for (var line : Files.readAllLines(log.toPath())) {
+			if (prevLine.isBlank() && !line.contains("Error getting search client")) {
+				causes.add(line.substring(0, line.indexOf(":") + 1).trim());
+			}
+			exceptions.add(line);
+			if (line.contains("OutOfMemory")) {
+				for (var l : causes) {
+					System.out.println(l);
+				}
+				System.out.println(line);
+				break;
+			}
+			prevLine = line;
+		}
+	}
+
+	public static void main2(String[] args) throws IOException {
+		var log = new File("C:/Users/Sebastian/Downloads/logs2/catalina.out");
 		var log2 = new File("C:/Users/Sebastian/Downloads/logs2/catalina.out.short");
 		var skip = false;
 		var remaining = new ArrayList<String>();
@@ -531,21 +554,39 @@ public class SettingsService {
 			} else if (line.contains("java.net.ConnectException: Connection refused")
 					|| line.equals("java.lang.RuntimeException: I/O reactor has been shut down")
 					|| line.equals("java.lang.RuntimeException: Request execution cancelled")
+					|| line.trim().equals("java.lang.Throwable:")
+					|| line.contains("c.g.c.controller.SessionController")
 					|| line.contains("org.eclipse.jgit.errors.InvalidObjectIdException: Invalid id")
 					|| line.contains("?gladview=true")
+					|| line.contains(
+							"org.apache.catalina.connector.CoyoteAdapter.checkRecycled Encountered a non-recycled response and recycled it forcedly")
+					|| line.contains("No enum constant com.greendelta.collaboration.model.Notification.DATA_COMMITTED")
 					|| line.contains("Failed to start the native thread for java.lang.Thread \"I/O dispatcher")
 					|| line.contains("pthread_create failed (EAGAIN) for attributes")
 					|| line.contains("Unable to acquire JDBC Connection")
 					|| line.contains("Communications link failure")
+					|| line.contains("Forwarding to error page from request")
 					|| line.contains("Error creating bean with name 'entityManagerFactory'")
 					|| line.contains("HibernateException")
 					|| line.contains("The driver has not received any packets from the server")
+					|| line.contains(
+							"The request was rejected because the URL contained a potentially malicious String")
+					|| line.contains("o.h.engine.jdbc.spi.SqlExceptionHelper")
+					|| line.contains("o.o.convert.jsonld.ilcd.Json2IlcdStore")
+					|| line.contains("c.g.c.controller.DownloadController      : Exporting")
+					|| line.contains("c.g.c.controller.ClientErrorController")
 					|| line.contains("java.lang.OutOfMemoryError")) {
 				if (line.contains("java.lang.OutOfMemoryError") && !oom) {
 					oom = true;
 				} else {
 					skip = true;
 				}
+				// if (!line.contains("Forwarding to error page from request")
+				// && line.contains("The request was rejected because the URL
+				// contained a potentially malicious String")) {
+				// System.out.println(line.substring(line.indexOf("\"",
+				// line.indexOf("malicious String"))).replace('"', ' ').trim());
+				// }
 			}
 			if (!skip && !line.contains("Error getting search client")
 					&& !line.contains("o.s.w.s.c.WebSocketMessageBrokerStats    : WebSocketSession")

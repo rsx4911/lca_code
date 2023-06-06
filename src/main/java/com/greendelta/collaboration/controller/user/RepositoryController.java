@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +32,6 @@ import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.RepositoryClient;
-import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -222,7 +220,7 @@ public class RepositoryController {
 			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 				repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 			}
-			indexService.index(repo);
+			indexService.indexAsync(repo);
 		} catch (IOException e) {
 			log.error("Error getting input stream from multipart file", e);
 		}
@@ -239,7 +237,7 @@ public class RepositoryController {
 			if (!service.move(repo, newGroup, newName))
 				throw Response.error("Repository could not be moved");
 			try (var newRepo = service.get(newGroup, newName)) {
-				indexService.moveIndex(repo, newRepo);
+				indexService.moveIndexAsync(repo, newRepo);
 				notificationService.repositoryMoved(repo, newRepo).send();
 				return Response.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
 			}
@@ -265,7 +263,7 @@ public class RepositoryController {
 				deleteService.delete(to);
 				throw Response.error("Unexpected error during cloning");
 			}
-			indexService.index(to);
+			indexService.indexAsync(to);
 		}
 	}
 
@@ -294,7 +292,7 @@ public class RepositoryController {
 			try (var client = new RepositoryClient(url, username, password)) {
 				client.exportRepository(repoId, stream -> {
 					service.unpack(repo, stream);
-					indexService.index(repo);
+					indexService.indexAsync(repo);
 				});
 			}
 		} catch (WebRequestException e) {
@@ -333,7 +331,7 @@ public class RepositoryController {
 				value = tags;
 				List<String> previous = repo.settings.get(RepositorySetting.TAGS);
 				if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
-					indexService.updateTags(repo);
+					indexService.updateTagsAsync(repo);
 				}
 			}
 			repo.settings.set(setting, value);
@@ -358,7 +356,6 @@ public class RepositoryController {
 		return new ArrayList<>();
 	}
 
-	@Async
 	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
 		var file = repo.getCachedJsonFile();
 		if (file.exists()) {
@@ -366,7 +363,7 @@ public class RepositoryController {
 		}
 		if (!create)
 			return;
-		RepositoryJsonWriter.writeCurrent(repo);
+		service.generateJson(repo);
 	}
 
 	@PutMapping("restriction/{group}/{name}/{restriction}/{role}")
@@ -396,19 +393,7 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
 			var notification = notificationService.repositoryDeleted(repo);
-			var work = indexService.deleteIndex(repo);
-			if (work != null) {
-				new Thread(() -> {
-					while (!work.isDone()) {
-						synchronized (this) {
-							try {
-								wait(100);
-							} catch (InterruptedException e) {
-							}
-						}
-					}
-				}).run();
-			}
+			indexService.deleteIndex(repo);
 			deleteService.delete(repo);
 			notification.send();
 		}
