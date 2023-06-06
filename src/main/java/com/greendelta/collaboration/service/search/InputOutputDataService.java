@@ -40,12 +40,10 @@ public class InputOutputDataService {
 	private static final int BUFFER_SIZE = 100;
 	private static final Logger log = LogManager.getLogger(InputOutputDataService.class);
 	private final SettingsService settings;
-	private final EntryBuffer buffer;
 
 	@Autowired
 	public InputOutputDataService(SettingsService settings) {
 		this.settings = settings;
-		this.buffer = new EntryBuffer(getClient(), BUFFER_SIZE);
 	}
 
 	public SearchResult<Map<String, Object>> query(Repository repo, Commit commit, String flowRefId,
@@ -120,6 +118,10 @@ public class InputOutputDataService {
 		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
 		var commits = repo.commits().find().after(previousCommitId).all();
 		Commit previousCommit = previousCommitId != null ? repo.commits().get(previousCommitId) : null;
+		var client = getClient();
+		if (client == null)
+			return;
+		var buffer = new EntryBuffer(client, 1000);
 		for (var commitIndex = 0; commitIndex < commits.size(); commitIndex++) {
 			var commit = commits.get(commitIndex);
 			var diffs = Diffs.of(repo.gitRepo(), commit)
@@ -134,12 +136,12 @@ public class InputOutputDataService {
 				buffer.putInsert(getIndexId(repo.path(), commit.id, diff.refId), data);
 			}
 			buffer.flush();
-			updatePrevious(repo, skip, previousCommit, commit);
+			updatePrevious(buffer, repo, skip, previousCommit, commit);
 			previousCommit = commit;
 		}
 	}
 
-	private void updatePrevious(Repository repo, Set<String> skipRefIds, Commit previousCommit, Commit commit) {
+	private void updatePrevious(EntryBuffer buffer, Repository repo, Set<String> skipRefIds, Commit previousCommit, Commit commit) {
 		if (previousCommit == null)
 			return;
 		var previous = getForCommit(repo, previousCommit);
