@@ -12,7 +12,6 @@
 	</parent>
 	<packaging>war</packaging>
 	<name>collaboration-server</name>
-	<description>Collaboration Server 2.0.0</description>
 	<properties>
 		<jakarta-activation.version>2.0.1</jakarta-activation.version>
 		<jakarta-xml-bind.version>3.0.1</jakarta-xml-bind.version>
