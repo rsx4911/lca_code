@@ -16,6 +16,7 @@
 		<jakarta-activation.version>2.0.1</jakarta-activation.version>
 		<jakarta-xml-bind.version>3.0.1</jakarta-xml-bind.version>
 		<java.version>17</java.version>
+		<maven.build.timestamp.format>YYYY-MM-dd</maven.build.timestamp.format>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -95,6 +96,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
+					<warName>lca-collaboration-server-${project.version}_${maven.build.timestamp}</warName>
 					<packagingExcludes>
 						js/app.build.js,
 						js/app/,
