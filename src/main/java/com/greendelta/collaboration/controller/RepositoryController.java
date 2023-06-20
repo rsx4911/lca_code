@@ -40,7 +40,7 @@ public class RepositoryController {
 		try (var repositories = service.getPublic()) {
 			return repositories.stream().map(repo -> {
 				var map = Repositories.map(repo);
-				map.put("datasets", repo.references().find().all().size());
+				map.put("datasets", repo.references().find().count());
 				return map;
 			}).toList();
 		}
