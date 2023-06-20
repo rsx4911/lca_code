@@ -64,8 +64,9 @@ public class RepositoryService {
 	private final TaskService taskService;
 
 	@Autowired
-	public RepositoryService(GroupService groupService, AccessService accessService, MembershipService membershipService, UserService userService,
-			CommentService commentService, SettingsService settings, TaskService taskService) {
+	public RepositoryService(GroupService groupService, AccessService accessService,
+			MembershipService membershipService, UserService userService, CommentService commentService,
+			SettingsService settings, TaskService taskService) {
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
@@ -73,6 +74,10 @@ public class RepositoryService {
 		this.commentService = commentService;
 		this.settings = settings;
 		this.taskService = taskService;
+	}
+
+	public Repository get(RepositoryPath path) {
+		return get(path.group, path.repo);
 	}
 
 	public Repository get(String id) {
@@ -92,7 +97,7 @@ public class RepositoryService {
 
 	public Repository get(String group, String name) {
 		var path = getRootPath();
-		var id = new RepositoryPath(group, name).toString();
+		var id = RepositoryPath.of(group, name).toString();
 		if (path == null || path.isEmpty())
 			throw new RepositoryNotFoundException(id);
 		if (!Repository.getDir(path, group, name).exists())
@@ -131,14 +136,13 @@ public class RepositoryService {
 		if (path == null)
 			throw new ForbiddenAccessException(group, "WRITE");
 		init(path);
-		membershipService.addMembership(currentUser, new RepositoryPath(group, name).toString(), Role.OWNER, true);
+		membershipService.addMembership(currentUser, RepositoryPath.of(group, name).toString(), Role.OWNER, true);
 		return get(group, name);
 	}
 
 	private void init(String path) {
 		File dir = new File(path);
-		try {
-			Git.init().setBare(true).setDirectory(dir).call();
+		try (var git = Git.init().setBare(true).setDirectory(dir).call()) {
 		} catch (GitAPIException e) {
 			log.error("Error initializing git repository", e);
 			Dirs.delete(dir);
@@ -285,7 +289,7 @@ public class RepositoryService {
 
 	@Async("taskExecutor")
 	public void generateJson(Repository repo) {
-		RepositoryJsonWriter.writeCurrent(repo);
+		RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile());
 	}
 
 	public int getNoOfRepositories(User user) {
@@ -309,9 +313,14 @@ public class RepositoryService {
 	public RepositorySearchResult getAll(int page, int pageSize, String filter, boolean onlyPublic,
 			boolean adminArea) {
 		var accessible = getAll(onlyPublic, adminArea);
-		accessible.sort();
-		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, Repository::path);
-		return new RepositorySearchResult(result);
+		try {
+			accessible.sort();
+			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, Repository::path);
+			return new RepositorySearchResult(result);
+		} catch (Throwable e) {
+			accessible.close();
+			return new RepositorySearchResult();
+		}
 	}
 
 	public RepositoryList getAllAccessible() {
@@ -337,7 +346,7 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				try {
-					var repoPath = new RepositoryPath(group.getName(), name.getName());
+					var repoPath = RepositoryPath.of(group.getName(), name.getName());
 					if (!accessService.canRead(repoPath.toString(), !adminArea))
 						continue;
 					var repo = get(group.getName(), name.getName());

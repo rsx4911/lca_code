@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryList;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
@@ -159,7 +158,7 @@ public class SearchService {
 		buffer.flush();
 	}
 
-	void clearIndex(RepositoryList repos) {
+	void clearIndex() {
 		getClient().delete();
 		createIndex();
 	}

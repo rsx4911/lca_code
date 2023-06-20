@@ -39,6 +39,7 @@ import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
@@ -220,7 +221,7 @@ public class RepositoryController {
 			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
 				repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 			}
-			indexService.indexAsync(repo);
+			indexService.indexAsync(RepositoryPath.of(group, name));
 		} catch (IOException e) {
 			log.error("Error getting input stream from multipart file", e);
 		}
@@ -236,11 +237,11 @@ public class RepositoryController {
 		try (var repo = service.get(group, name)) {
 			if (!service.move(repo, newGroup, newName))
 				throw Response.error("Repository could not be moved");
-			try (var newRepo = service.get(newGroup, newName)) {
-				indexService.moveIndexAsync(repo, newRepo);
-				notificationService.repositoryMoved(repo, newRepo).send();
-				return Response.ok(Repositories.map(newRepo, groupService.isUserNamespace(newGroup)));
-			}
+			var newRepo = service.get(newGroup, newName);
+			notificationService.repositoryMoved(repo, newRepo).send();
+			var result = Repositories.map(newRepo, groupService.isUserNamespace(newGroup));
+			indexService.moveIndexAsync(RepositoryPath.of(group, name), RepositoryPath.of(newGroup, newName));
+			return Response.ok(result);
 		}
 	}
 
@@ -263,7 +264,7 @@ public class RepositoryController {
 				deleteService.delete(to);
 				throw Response.error("Unexpected error during cloning");
 			}
-			indexService.indexAsync(to);
+			indexService.indexAsync(RepositoryPath.of(newGroup, newName));
 		}
 	}
 
@@ -292,7 +293,7 @@ public class RepositoryController {
 			try (var client = new RepositoryClient(url, username, password)) {
 				client.exportRepository(repoId, stream -> {
 					service.unpack(repo, stream);
-					indexService.indexAsync(repo);
+					indexService.indexAsync(RepositoryPath.of(group, name));
 				});
 			}
 		} catch (WebRequestException e) {
@@ -331,7 +332,7 @@ public class RepositoryController {
 				value = tags;
 				List<String> previous = repo.settings.get(RepositorySetting.TAGS);
 				if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
-					indexService.updateTagsAsync(repo);
+					indexService.updateTagsAsync(RepositoryPath.of(group, name));
 				}
 			}
 			repo.settings.set(setting, value);

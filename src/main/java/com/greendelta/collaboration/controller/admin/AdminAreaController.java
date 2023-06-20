@@ -30,6 +30,8 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.EmailService;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
+import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
@@ -124,9 +126,7 @@ public class AdminAreaController {
 	public void clearIndex() {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
-		try (var repos = repoService.getAllAccessible()) {
-			indexService.clearIndexAsync(repos);
-		}
+		indexService.clearIndexAsync();
 	}
 
 	@PutMapping("reindex")
@@ -134,7 +134,7 @@ public class AdminAreaController {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
-			indexService.reindexAllAsync(repos);
+			indexService.reindexAllAsync(repos.stream().map(Repository::path).map(RepositoryPath::of).toList());
 		}
 	}
 
@@ -144,9 +144,7 @@ public class AdminAreaController {
 			@PathVariable("repository") String repository) {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
-		try (var repo = repoService.get(group, repository)) {
-			indexService.reindexAsync(repo);
-		}
+		indexService.reindexAsync(RepositoryPath.of(group, repository));
 	}
 
 	@PutMapping("announce")

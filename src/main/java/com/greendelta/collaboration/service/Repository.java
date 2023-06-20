@@ -53,7 +53,7 @@ public class Repository implements AutoCloseable {
 		var fsPath = root + File.separator + group + File.separator + name;
 		return new File(fsPath);
 	}
-	
+
 	public FileRepository gitRepo() {
 		if (gitRepo == null) {
 			try {
@@ -157,27 +157,7 @@ public class Repository implements AutoCloseable {
 		public final String group;
 		public final String repo;
 
-		public RepositoryPath(String string) {
-			var split = split(string);
-			this.group = split[0];
-			this.repo = split[1];
-		}
-
-		private String[] split(String string) {
-			if (Strings.nullOrEmpty(string))
-				return new String[] { null, null };
-			if (string.startsWith("/")) {
-				string = string.substring(1);
-			}
-			if (string.endsWith("/")) {
-				string = string.substring(0, string.length() - 1);
-			}
-			if (!string.contains("/"))
-				return new String[] { string, null };
-			return string.split("/");
-		}
-
-		public RepositoryPath(String group, String repo) {
+		private RepositoryPath(String group, String repo) {
 			this.group = group;
 			this.repo = repo;
 		}
@@ -194,6 +174,29 @@ public class Repository implements AutoCloseable {
 			if (Strings.nullOrEmpty(group) || Routes.isReserved(group))
 				return false;
 			return !Strings.nullOrEmpty(repo) && !Routes.isReserved(repo);
+		}
+
+		public static RepositoryPath of(String id) {
+			var split = split(id);
+			return of(split[0], split[1]);
+		}
+
+		public static RepositoryPath of(String group, String name) {
+			return new RepositoryPath(group, name);
+		}
+
+		private static String[] split(String string) {
+			if (Strings.nullOrEmpty(string))
+				return new String[] { null, null };
+			if (string.startsWith("/")) {
+				string = string.substring(1);
+			}
+			if (string.endsWith("/")) {
+				string = string.substring(0, string.length() - 1);
+			}
+			if (!string.contains("/"))
+				return new String[] { string, null };
+			return string.split("/");
 		}
 
 		@Override

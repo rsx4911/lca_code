@@ -7,13 +7,12 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.find.Datasets;
 import org.openlca.git.find.References;
 import org.openlca.git.model.Reference;
 import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
-
-import com.greendelta.collaboration.service.Repository;
 
 public class RepositoryJsonWriter implements Closeable {
 
@@ -22,10 +21,12 @@ public class RepositoryJsonWriter implements Closeable {
 	private final References references;
 	private final Datasets datasets;
 
-	public static void writeCurrent(Repository repo) {
-		var refs = repo.references().find().all();
-		try {
-			var writer = new RepositoryJsonWriter(repo.references(), repo.datasets(), repo.getCachedJsonFile());
+	public static void writeCurrent(File gitDir, File cachedJsonFile) {
+		try (var repo = new FileRepository(gitDir)) {
+			var references = References.of(repo);
+			var datasets = Datasets.of(repo);
+			var refs = references.find().all();
+			var writer = new RepositoryJsonWriter(references, datasets, cachedJsonFile);
 			for (var ref : refs) {
 				writer.put(ref);
 			}
