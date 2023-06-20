@@ -178,7 +178,7 @@ public class CommentService {
 		} else {
 			String repoPath = settings.get(ServerSetting.REPOSITORY_PATH);
 			if (repoPath != null) {
-				var path = new RepositoryPath(comment.repositoryPath).toString();
+				var path = RepositoryPath.of(comment.repositoryPath).toString();
 				if (!settings.is(RepositorySetting.COMMENT_APPROVAL, path)) {
 					comment.approved = true;
 				}

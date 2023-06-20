@@ -230,7 +230,7 @@ public class AccessService {
 			return false;
 		for (var child : dir.listFiles()) {
 			try {
-				var path = new RepositoryPath(groupOrRepo, child.getName()).toString();
+				var path = RepositoryPath.of(groupOrRepo, child.getName()).toString();
 				if (settings.is(RepositorySetting.PUBLIC_ACCESS, path))
 					return true;
 			} catch (RepositoryNotFoundException | UnsupportedSchemaException e) {

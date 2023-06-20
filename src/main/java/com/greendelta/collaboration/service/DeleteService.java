@@ -112,6 +112,7 @@ public class DeleteService {
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
+		// TODO check if index is always updated when this is called
 		repoService.delete(repo);
 		memberService.removeMemberships(repo.path());
 	}

@@ -172,15 +172,16 @@ public class SearchController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
 		if (!settings.searchConfig.isIoDataAvailable())
 			throw Response.unavailable("Search links feature not enabled or search cluster not available");
-		var repo = repoService.get(repositoryId);
-		if (commitId == null) {
-			commitId = repo.commits().find().latestId();
+		try (var repo = repoService.get(repositoryId)) {
+			if (commitId == null) {
+				commitId = repo.commits().find().latestId();
+			}
+			if (commitId == null)
+				throw Response.notFound();
+			var commit = repo.commits().get(commitId);
+			var result = ioDataService.query(repo, commit, flowRefId, direction, page, pageSize, filter);
+			return SearchResults.convert(result, entry -> addProcessInfo(repo, commit, entry));
 		}
-		if (commitId == null)
-			throw Response.notFound();
-		var commit = repo.commits().get(commitId);
-		var result = ioDataService.query(repo, commit, flowRefId, direction, page, pageSize, filter);
-		return SearchResults.convert(result, entry -> addProcessInfo(repo, commit, entry));
 	}
 
 	private Map<String, Object> addProcessInfo(Repository repo, Commit commit, Map<String, Object> entry) {

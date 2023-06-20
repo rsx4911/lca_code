@@ -95,7 +95,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		if (!config.isGitUrl(request))
 			return;
 		if (request.getGitAction() == GitAction.GIT_PUSH) {
-			runPushPostProcessing(new RepositoryPath(Requests.getRelativePath(request)), request.getRemoteUser());
+			runPushPostProcessing(RepositoryPath.of(Requests.getRelativePath(request)), request.getRemoteUser());
 		}
 		if (loggedIn) {
 			request.basicHttpLogout(sessionService);
@@ -114,7 +114,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE));
 			var user = userService.getForUsername(username);
 			checkGroupSizeLimit(username, user.settings.maxSize);
-			indexService.indexAsync(repo);
+			indexService.indexAsync(path);
 		}
 	}
 

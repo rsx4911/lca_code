@@ -4,6 +4,9 @@ import com.greendelta.search.wrapper.SearchResult;
 
 public class RepositorySearchResult extends SearchResult<Repository> implements AutoCloseable {
 
+	RepositorySearchResult() {
+	}
+
 	RepositorySearchResult(SearchResult<Repository> result) {
 		aggregations.addAll(result.aggregations);
 		data.addAll(result.data);

@@ -15,22 +15,27 @@ import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryList;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 
 @Service
 public class IndexService {
 
 	private final Executor threads;
+	private final RepositoryService repoService;
 	private final SearchService searchService;
 	private final InputOutputDataService ioDataService;
 	private final SettingsService settings;
 	private Queue<Work> workQueue = new LinkedList<>();
 
 	@Autowired
-	public IndexService(@Qualifier("taskExecutor") Executor threads, SearchService searchService,
+	public IndexService(@Qualifier("taskExecutor") Executor threads, RepositoryService repoService,
+			SearchService searchService,
 			InputOutputDataService ioDataService, SettingsService settings) {
 		this.threads = threads;
+		this.repoService = repoService;
 		this.searchService = searchService;
 		this.ioDataService = ioDataService;
 		this.settings = settings;
@@ -79,85 +84,117 @@ public class IndexService {
 		}
 	}
 
-	public Work clearIndexAsync(RepositoryList repos) {
+	public Work clearIndexAsync() {
 		return offer("Clearing index", 1, work -> {
-			searchService.clearIndex(repos);
+			searchService.clearIndex();
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 				ioDataService.clearIndex();
 			}
-			repos.forEach(repo -> setCommitId(repo, null));
 			work.worked++;
 		});
 	}
 
-	public Work indexAsync(Repository repo) {
+	public Work indexAsync(RepositoryPath path) {
+		var repo = repoService.get(path);
 		return offer("Indexing " + repo.path(), 1, work -> {
-			searchService.index(repo);
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.index(repo);
+			try {
+				searchService.index(repo);
+				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+					ioDataService.index(repo);
+				}
+				setCommitId(repo, repo.commits().head());
+			} finally {
+				repo.close();
+				work.worked++;
 			}
-			setCommitId(repo, repo.commits().head());
-			work.worked++;
 		});
 	}
 
-	public Work moveIndexAsync(Repository repo, Repository newRepo) {
+	public Work moveIndexAsync(RepositoryPath path, RepositoryPath newPath) {
+		var repo = repoService.get(path);
+		var newRepo = repoService.get(newPath);
 		return offer("Moving index of " + repo.path() + " to " + newRepo.path(), 1, work -> {
-			searchService.move(repo, newRepo);
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.move(repo, newRepo);
+			try {
+				searchService.move(repo, newRepo);
+				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+					ioDataService.move(repo, newRepo);
+				}
+				setCommitId(repo, null);
+				setCommitId(newRepo, newRepo.commits().head());
+			} finally {
+				repo.close();
+				newRepo.close();
+				work.worked++;
 			}
-			setCommitId(repo, null);
-			setCommitId(newRepo, newRepo.commits().head());
-			work.worked++;
 		});
 	}
 
-	public Work updateTagsAsync(Repository repo) {
+	public Work updateTagsAsync(RepositoryPath path) {
+		var repo = repoService.get(path);
 		return offer("Reindexing " + repo.path(), 1, work -> {
-			searchService.updateTags(repo);
-			work.worked++;
+			try {
+				searchService.updateTags(repo);
+			} finally {
+				repo.close();
+				work.worked++;
+			}
 		});
 	}
 
-	public Work reindexAsync(Repository repo) {
+	public Work reindexAsync(RepositoryPath path) {
+		var repo = repoService.get(path);
 		return offer("Reindexing " + repo.path(), 1, work -> {
-			searchService.remove(repo);
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.remove(repo);
-			}
-			setCommitId(repo, null);
-			searchService.index(repo);
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.index(repo);
-			}
-			setCommitId(repo, repo.commits().head());
-			work.worked++;
-		});
-	}
-
-	public Work reindexAllAsync(RepositoryList repos) {
-		return offer("Reindexing all repositories", repos.size(), work -> {
-			searchService.clearIndex(repos);
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.clearIndex();
-			}
-			repos.forEach(repo -> {
+			try {
+				searchService.remove(repo);
+				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+					ioDataService.remove(repo);
+				}
 				setCommitId(repo, null);
 				searchService.index(repo);
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.index(repo);
 				}
 				setCommitId(repo, repo.commits().head());
+			} finally {
+				repo.close();
 				work.worked++;
-			});
+			}
 		});
 	}
 
-	public Work deleteIndexAsync(Repository repo) {
+	public Work reindexAllAsync(List<RepositoryPath> paths) {
+		var repos = new RepositoryList();
+		paths.forEach(path -> repos.add(repoService.get(path)));
+		return offer("Reindexing all repositories", repos.size(), work -> {
+			try {
+				searchService.clearIndex();
+				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+					ioDataService.clearIndex();
+				}
+				repos.forEach(repo -> {
+					setCommitId(repo, null);
+					searchService.index(repo);
+					if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
+						ioDataService.index(repo);
+					}
+					setCommitId(repo, repo.commits().head());
+					work.worked++;
+				});
+			} finally {
+				repos.close();
+			}
+		});
+	}
+
+	public Work deleteIndexAsync(String repoId) {
+		var repo = repoService.get(repoId);
 		return offer("Deleting index of " + repo.path(), 1, work -> {
-			deleteIndex(repo);
-			work.worked++;
+			try {
+				deleteIndex(repo);
+			} finally {
+				repo.close();
+				work.worked++;
+			}
 		});
 	}
 

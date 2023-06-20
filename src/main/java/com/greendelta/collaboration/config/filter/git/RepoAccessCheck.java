@@ -35,7 +35,7 @@ public class RepoAccessCheck {
 	}
 
 	public boolean canAccess(HttpServletRequest request) throws ServletException, IOException {
-		var path = new RepositoryPath(Requests.getRelativePath(request));
+		var path = RepositoryPath.of(Requests.getRelativePath(request));
 		if (!path.isGroupOrRepo())
 			return true;
 		if (!gitFilterConfig.isGitUrl(request))
