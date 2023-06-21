@@ -25,11 +25,8 @@ public class RepositoryJsonWriter implements Closeable {
 		try (var repo = new FileRepository(gitDir)) {
 			var references = References.of(repo);
 			var datasets = Datasets.of(repo);
-			var refs = references.find().all();
 			var writer = new RepositoryJsonWriter(references, datasets, cachedJsonFile);
-			for (var ref : refs) {
-				writer.put(ref);
-			}
+			references.find().iterate(ref -> writer.put(ref));
 			writer.close();
 		} catch (IOException e) {
 			log.error("Error writing json-ld archive", e);

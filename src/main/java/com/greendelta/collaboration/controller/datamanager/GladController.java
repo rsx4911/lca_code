@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.openlca.core.model.AllocationMethod;
@@ -26,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.glad.ProcessType;
@@ -72,30 +72,29 @@ public class GladController {
 		try (var repo = repoService.get(group, name)) {
 			if (repo == null)
 				throw Response.notFound("No repository with id " + group + "/" + name + " found");
-			var refs = FrontendReferences.collect(repo, input);
-			if (refs.isEmpty())
-				throw Response.notFound("No data in repository " + group + "/" + name + " found");
-			refs.forEach(ref -> {
-				var data = loadProcessData(repo, ref);
-				data.put("format", "JSON_LD");
-				data.put("dataprovider", input.dataprovider);
-				String baseUrl = config.get(ServerSetting.SERVER_URL);
-				data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repo.path() + "/PROCESS/"
-						+ ref.refId + "?commitId=" + ref.commitId);
-				data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
-				data.put("free", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
-				for (var key : new ArrayList<>(data.keySet())) {
-					if (!GLAD_FIELDS.contains(key)) {
-						data.remove(key);
+			input.paths.stream().forEach(path -> {
+				repo.references().find().path(path).iterate(ref -> {
+					var data = loadProcessData(repo, ref);
+					data.put("format", "JSON_LD");
+					data.put("dataprovider", input.dataprovider);
+					String baseUrl = config.get(ServerSetting.SERVER_URL);
+					data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repo.path() + "/PROCESS/"
+							+ ref.refId + "?commitId=" + ref.commitId);
+					data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
+					data.put("free", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
+					for (var key : new ArrayList<>(data.keySet())) {
+						if (!GLAD_FIELDS.contains(key)) {
+							data.remove(key);
+						}
 					}
-				}
-				try {
-					var dataString = new ObjectMapper().writeValueAsString(data);
-					send(gladUrl, gladHeaderField, gladHeaderValue, ref.refId, dataString);
-				} catch (Exception e) {
-					LogManager.getLogger(GladController.class).error("Error pushing to GLAD", e);
-					throw Response.error(e.getMessage());
-				}
+					try {
+						var dataString = new ObjectMapper().writeValueAsString(data);
+						send(gladUrl, gladHeaderField, gladHeaderValue, ref.refId, dataString);
+					} catch (Exception e) {
+						LogManager.getLogger(GladController.class).error("Error pushing to GLAD", e);
+						throw Response.error(e.getMessage());
+					}
+				});
 			});
 		}
 	}
@@ -195,9 +194,10 @@ public class GladController {
 		throw new Exception(sb.toString());
 	}
 
-	private static class Input extends FrontendReferences {
+	private static class Input {
 
 		public String dataprovider;
+		public Set<String> paths;
 
 	}
 

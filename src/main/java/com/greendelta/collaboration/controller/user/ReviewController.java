@@ -2,9 +2,8 @@ package com.greendelta.collaboration.controller.user;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
-import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,15 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Reviews;
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.task.Review;
-import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskState;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.ReviewService;
@@ -103,7 +99,7 @@ public class ReviewController {
 	@PutMapping("{id}/references")
 	public Map<String, Object> setReferences(
 			@PathVariable("id") long id,
-			@RequestBody FrontendReferences references) {
+			@RequestBody Set<String> paths) {
 		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
 		var review = service.get(id);
@@ -114,8 +110,7 @@ public class ReviewController {
 		try (var repo = repoService.get(review.repositoryPath)) {
 			if (repo == null)
 				throw Response.notFound("No repository with id " + review.repositoryPath + " found");
-			var refs = FrontendReferences.collect(repo, references);
-			service.setReferences(id, refs.stream().map(ref -> convert(repo, ref)).collect(Collectors.toSet()));
+			service.setReferences(id, paths);
 			return getActiveTasks();
 		}
 	}
@@ -227,14 +222,6 @@ public class ReviewController {
 		var user = userService.getCurrentUser();
 		var activeTasks = taskService.getAllActiveFor(user).size();
 		return Collections.singletonMap("activeTasks", Integer.toString(activeTasks));
-	}
-
-	private ReviewReference convert(Repository repo, Reference ref) {
-		var reference = new ReviewReference();
-		reference.type = ref.type;
-		reference.refId = ref.refId;
-		reference.commitId = ref.commitId;
-		return reference;
 	}
 
 }

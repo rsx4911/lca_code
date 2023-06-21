@@ -129,9 +129,8 @@ public class SearchService {
 		var head = repo.commits().head();
 		if (head == null)
 			return;
-		var refs = repo.references().find().all();
 		var manager = new DsEntryManager(repo, head);
-		refs.forEach(ref -> update(buffer, manager, ref, update));
+		repo.references().find().iterate(ref -> update(buffer, manager, ref, update));
 	}
 
 	private void update(EntryBuffer buffer, DsEntryManager manager, Reference ref, Consumer<DsEntry> update) {
@@ -146,15 +145,12 @@ public class SearchService {
 		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
 		if (previousCommitId == null)
 			return;
-		var refs = repo.references().find().commit(previousCommitId).all();
-		if (refs.isEmpty())
-			return;
 		var client = getClient();
 		if (client == null)
 			return;
 		var buffer = new EntryBuffer(client, 1000);
 		var manager = new DsEntryManager(repo, null);
-		refs.forEach(ref -> remove(buffer, manager, ref));
+		repo.references().find().commit(previousCommitId).iterate(ref -> remove(buffer, manager, ref));
 		buffer.flush();
 	}
 

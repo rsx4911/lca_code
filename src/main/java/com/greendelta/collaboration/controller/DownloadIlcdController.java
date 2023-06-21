@@ -2,7 +2,10 @@ package com.greendelta.collaboration.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
@@ -19,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import com.greendelta.collaboration.controller.util.FrontendReferences;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.IlcdWriter;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -71,8 +73,8 @@ public class DownloadIlcdController extends DownloadController {
 			@PathVariable("group") String group,
 			@PathVariable("repository") String repository,
 			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestBody FrontendReferences references) {
-		return super.prepare(group, repository, commitId, collectRefs(group, repository, references));
+			@RequestBody Set<String> paths) {
+		return super.prepare(group, repository, commitId, paths);
 	}
 
 	@PutMapping("prepare/{group}/{repository}")
@@ -97,4 +99,9 @@ public class DownloadIlcdController extends DownloadController {
 		return new IlcdWriter(serverUrl, repo.references(), repo.datasets(), commit);
 	}
 
+	@Override
+	protected Logger log() {
+		return LogManager.getLogger(DownloadIlcdController.class);
+	}
+	
 }

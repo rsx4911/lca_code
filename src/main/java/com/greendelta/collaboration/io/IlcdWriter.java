@@ -2,7 +2,10 @@ package com.greendelta.collaboration.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openlca.convert.jsonld.ilcd.Config;
 import org.openlca.convert.jsonld.ilcd.Json2IlcdStore;
@@ -25,6 +28,7 @@ public class IlcdWriter extends AbstractWriter {
 	private final JsonStore jsonStore = new JsonStoreImpl();
 	private final DataStore ilcdStore;
 	private final Json2IlcdStore converter;
+	private final Set<String> processed = new HashSet<String>();
 
 	public IlcdWriter(String repoUrl, References references, Datasets datasets, Commit commit) throws IOException {
 		super(references, commit);
@@ -37,7 +41,10 @@ public class IlcdWriter extends AbstractWriter {
 	}
 
 	@Override
-	protected void write(Reference ref) throws IOException {
+	public void write(Reference ref) {
+		if (processed.contains(ref.type.name() + ref.refId))
+			return;
+		processed.add(ref.type.name() + ref.refId);
 		var obj = jsonStore.get(ref.type.getModelClass().getSimpleName(), ref.refId);
 		if (obj == null)
 			return;
@@ -45,12 +52,14 @@ public class IlcdWriter extends AbstractWriter {
 	}
 
 	@Override
-	protected File close() throws IOException {
+	public File close() throws IOException {
 		ilcdStore.close();
 		return super.close();
 	}
 
 	private void collectRef(String type, String refId) {
+		if (!collectReferences || processed.contains(getType(type).name() + refId))
+			return;
 		queue(getType(type), refId);
 	}
 
@@ -109,10 +118,14 @@ public class IlcdWriter extends AbstractWriter {
 
 		@Override
 		public List<String> getGlobalParameters() {
-			return references.find().type(ModelType.PARAMETER).commit(commit.id).all().stream()
-					.map(ref -> datasets.get(ref))
-					.filter(data -> data != null)
-					.toList();
+			var params = new ArrayList<String>();
+			references.find().type(ModelType.PARAMETER).commit(commit.id).iterate(ref -> {
+				var dataset = datasets.get(ref);
+				if (dataset != null) {
+					params.add(dataset);
+				}
+			});
+			return params;
 		}
 
 	}

@@ -112,7 +112,7 @@ define([
 							type: 'PUT'
 							url: "ws/task/review/#{taskId}/references"
 							contentType: 'application/json'
-							data: JSON.stringify({ paths: selection })
+							data: JSON.stringify(selection)
 							success: (response) ->
 								Layers.closeActive()
 								Status.success 'Successfully updated review task'

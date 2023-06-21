@@ -17,7 +17,7 @@ define([
 				type: if selection then 'POST' else 'GET'
 				url: url
 				contentType: if selection then 'application/json' else null
-				data: if selection then JSON.stringify({ paths: selection, commitId: commitId }) else null
+				data: if selection then JSON.stringify(selection) else null
 				success: (token) =>
 					Layers.hideProgressIndicator()
 					$('body').append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
