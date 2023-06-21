@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.task;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,20 +36,26 @@ public class ReviewService extends TaskExecutionService<Review> {
 		this.accessService = accessService;
 	}
 
-	public void setReferences(long reviewId, Set<ReviewReference> references) {
+	public void setReferences(long reviewId, Set<String> paths) {
 		var fromDb = get(reviewId);
 		try (var repo = repoService.get(fromDb.repositoryPath)) {
 			if (!accessService.canManageTaskIn(repo.path()))
 				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+			referenceDao.delete(fromDb.references);
+			fromDb.references.clear();
+			var lastId = new AtomicLong(referenceDao.getLastId());
+			paths.stream().forEach(path -> {
+				repo.references().find().path(path).iterate(ref -> {
+					var reference = new ReviewReference();
+					reference.type = ref.type;
+					reference.refId = ref.refId;
+					reference.commitId = ref.commitId;
+					reference.id = lastId.addAndGet(1);
+					fromDb.references.add(reference);
+				});
+			});
+			dao.update(fromDb);
 		}
-		referenceDao.delete(fromDb.references);
-		fromDb.references.clear();
-		var lastId = referenceDao.getLastId();
-		for (var reference : references) {
-			reference.id = ++lastId;
-			fromDb.references.add(reference);
-		}
-		dao.update(fromDb);
 	}
 
 	public void markAsReviewed(long reviewId, long referenceId, boolean value) {

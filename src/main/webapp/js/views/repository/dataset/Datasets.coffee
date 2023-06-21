@@ -56,28 +56,6 @@ define([
 							return
 						Download.repository group, name, @commitId, @getCategoryPath(), format, selection
 
-			download: (format, selection) ->
-				@$('iframe#download-frame').remove()
-				group = @repository.get 'group'
-				name = @repository.get 'name'
-				url = "ws/public/download/#{format}/prepare/#{group}/#{name}"
-				if @commitId
-					url += '?commitId=' + @commitId
-				if @categoryPath
-					url += if @commitId then '&' else '?'
-					url += 'path=' + @getCategoryPath()
-				Layers.showProgressIndicator ['Collecting', 'data sets']
-				$.ajax
-					type: if selection then 'POST' else 'GET'
-					url: url
-					contentType: if selection then 'application/json' else null
-					data: if selection then JSON.stringify(selection) else null
-					success: (token) =>
-						Layers.hideProgressIndicator()
-						@$el.append '<iframe id="download-frame" class="hidden" border="0" height="0" width="0" src="ws/public/download/' + format + '/' + token + '"></iframe>'
-					error: () =>
-						Layers.hideProgressIndicator()
-
 			className: 'repository-datasets'
 
 			events: 

@@ -2,7 +2,9 @@ package com.greendelta.collaboration.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.git.find.Datasets;
@@ -14,7 +16,8 @@ import com.greendelta.collaboration.util.Maps;
 
 public class JsonWriter extends AbstractWriter {
 
-	private RepositoryJsonWriter writer;
+	private final RepositoryJsonWriter writer;
+	private final Set<String> processed = new HashSet<String>();
 
 	public JsonWriter(References references, Datasets datasets, Commit commit) throws IOException {
 		super(references, commit);
@@ -22,7 +25,10 @@ public class JsonWriter extends AbstractWriter {
 	}
 
 	@Override
-	protected void write(Reference ref) throws IOException {
+	public void write(Reference ref) {
+		if (processed.contains(ref.type.name() + ref.refId))
+			return;
+		processed.add(ref.type.name() + ref.refId);
 		var dataset = writer.put(ref);
 		if (dataset == null || !collectReferences)
 			return;
@@ -31,13 +37,13 @@ public class JsonWriter extends AbstractWriter {
 	}
 
 	@Override
-	protected File close() throws IOException {
+	public File close() throws IOException {
 		writer.close();
 		return super.close();
 	}
 
 	@SuppressWarnings("unchecked")
-	private void collectReferences(Map<String, Object> object) throws IOException {
+	private void collectReferences(Map<String, Object> object) {
 		if (object == null)
 			return;
 		for (var key : object.keySet()) {
@@ -55,7 +61,7 @@ public class JsonWriter extends AbstractWriter {
 		}
 	}
 
-	private void collectReference(Map<String, Object> object) throws IOException {
+	private void collectReference(Map<String, Object> object) {
 		if (!(object.containsKey("@type") && object.containsKey("@id"))) {
 			collectReferences(object);
 			return;
@@ -65,6 +71,8 @@ public class JsonWriter extends AbstractWriter {
 			return;
 		var refId = Maps.getString(object, "@id");
 		if (refId == null)
+			return;
+		if (processed.contains(type.name() + refId))
 			return;
 		queue(type, refId);
 	}
