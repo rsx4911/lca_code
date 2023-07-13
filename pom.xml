@@ -64,11 +64,6 @@
 			<version>2.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.openlca</groupId>
-			<artifactId>olca-jsonld-2-ilcd</artifactId>
-			<version>2.0.0</version>
-		</dependency>
-		<dependency>
 			<groupId>com.greendelta.search</groupId>
 			<artifactId>search-wrapper-os-rest</artifactId>
 			<version>1.1.3</version>

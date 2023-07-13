@@ -14,12 +14,9 @@ mixin download-dropdown()
 			- var type = null;
 			if categoryPath && categoryPath.length
 				- var type = categoryPath[0]
-			- var ilcdAvailable = $.inArray(type, ['Actors', 'Sources', 'Unit groups', 'Flow properties', 'Flows', 'Processes', 'Impact methods']) !== -1;
-				li: a(href='#' data-format='ilcd') as ILCD
 			li.divider(role='separator')
 			li: a(href='#' data-format='json' data-action='select-data') as JSON-LD (openLCA 2.x) (Subselect)...
 			li: a(href='#' data-format='json1' data-action='select-data') as JSON-LD (openLCA 1.x) (Subselect)...
-			li: a(href='#' data-format='ilcd' data-action='select-data') as ILCD (Subselect)...
 
 mixin static-setting(field, label, formatter)
 	if settings[field]

@@ -81,8 +81,6 @@ mixin actions(dataset, version, repo)
 		ul.dropdown-menu
 			li: a(href='#', data-format='json', data-datatype='dataset', data-group=repo.group, data-repo=repoName, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=repo.commitId) Dataset as JSON-LD (openLCA 2.x)
 			li: a(href='#', data-format='json1', data-datatype='dataset', data-group=repo.group, data-repo=repoName, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=repo.commitId) Dataset as JSON-LD (openLCA 1.x)
-			li: a(href='#', data-format='ilcd', data-datatype='dataset', data-group=repo.group, data-repo=repoName, data-type=dataset.type, data-ref-id=dataset.refId, data-commit-id=repo.commitId) Dataset as ILCD
 			li.divider(role='separator')
 			li: a(href='#', data-format='json', data-datatype='repository', data-group=repo.group, data-repo=repoName, data-commit-id=repo.commitId) Repository as JSON-LD (openLCA 2.x)
 			li: a(href='#', data-format='json1', data-datatype='repository', data-group=repo.group, data-repo=repoName, data-commit-id=repo.commitId) Repository as JSON-LD (openLCA 1.x)
-			li: a(href='#', data-format='ilcd', data-datatype='repository', data-group=repo.group, data-repo=repoName, data-commit-id=repo.commitId) Repository as ILCD
