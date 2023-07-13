@@ -5,7 +5,8 @@ info:
   title: 'LCA Collaboration Server Webservice'
   contact:
     email: 'greve@greendelta.com'
-host: 'data.openlca.org'
+host: 'lcacommons.gov'
+basePath: '/lca-collaboration'
 schemes:
 - https
 - http
@@ -705,6 +706,25 @@ paths:
           description: 'Server is in maintenance mode (if not admin)'
         409:
           description: 'Already authenticated'
+  /ws/browse/{group}/{repo}/{type}/{refId}:
+    get:
+      tags:
+      - 'Dataset'
+      summary: 'Download a data set'
+      operationId: 'getDataset'
+      produces:
+      - application/json
+      parameters:
+      - $ref: '#/parameters/group'
+      - $ref: '#/parameters/repo'
+      - $ref: '#/parameters/type'
+      - $ref: '#/parameters/refId'
+      - $ref: '#/parameters/commitId'
+      responses:
+        200:
+          description: 'Returns the data set as JSON-LD'
+        403:
+          $ref: '#/responses/NoReadPerm'
   /ws/group:
     get:
       tags:
