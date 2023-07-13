@@ -706,7 +706,7 @@ paths:
           description: 'Server is in maintenance mode (if not admin)'
         409:
           description: 'Already authenticated'
-  /ws/browse/{group}/{repo}/{type}/{refId}:
+  /ws/public/browse/{group}/{repo}/{type}/{refId}:
     get:
       tags:
       - 'Dataset'
