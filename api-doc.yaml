@@ -5,7 +5,8 @@ info:
   title: 'LCA Collaboration Server Webservice'
   contact:
     email: 'greve@greendelta.com'
-host: 'data.openlca.org'
+host: 'lcacommons.gov'
+basePath: '/lca-collaboration'
 schemes:
 - https
 - http
