@@ -1,7 +1,7 @@
 swagger: '2.0'
 info:
   description: 'Webservice documentation for the LCA Collaboration Server'
-  version: '1.1.1'
+  version: '2.0.2'
   title: 'LCA Collaboration Server Webservice'
   contact:
     email: 'greve@greendelta.com'
@@ -17,20 +17,20 @@ definitions:
       - 'CATEGORY'
       - 'CURRENCY'
       - 'DQ_SYSTEM'
+      - 'EPD'
       - 'FLOW'
       - 'FLOW_PROPERTY'
       - 'IMPACT_CATEGORY'
       - 'IMPACT_METHOD'
       - 'LOCATION'
-      - 'NW_SET'
       - 'PARAMETER'
       - 'PROCESS'
       - 'PRODUCT_SYSTEM'
       - 'PROJECT'
+      - 'RESULT'
       - 'SOURCE'
-      - 'UNIT'
-      - 'UNIT_GROUP'
       - 'SOCIAL_INDICATOR'
+      - 'UNIT_GROUP'
   FlowType:
     type: string
     enum: &FLOW_TYPE
@@ -74,38 +74,6 @@ definitions:
     required:
       - username
       - password
-  Password:
-    type: object
-    properties:
-      password:
-        description: 'The new password'
-        type: string
-        example: 'passw0rd'
-      password2:
-        description: 'The same password, to ensure password was entered correctly'
-        type: string
-        example: 'passw0rd'
-    required:
-      - password
-      - password2
-  TwoFactorInfo:
-    type: object
-    properties:
-      url:
-        description: 'The OtpAuthTotpURL for generating a QR code'
-        type: string
-        example: 'otpauth://totp/openLCA%20Data%20Server:johndoe?secret=6HWCC6HXXN563FXX&issuer=openLCA+Data+Server'
-      key:
-        description: 'The two factor authentification secret'
-        type: string
-        example: '6HWCC6HXXN563FXX'
-      enabled:
-        description: 'True if two factor authentication is enabled'
-        type: boolean
-        default: false
-    required:
-      - url
-      - key
   AggregationResultEntry:
     type: object
     properties: 
@@ -113,6 +81,14 @@ definitions:
         description: 'The key of this aggregation result entry'
         type: string
         example: 'ACTOR'
+      data:
+        description: 'The data of this aggregation result entry'
+        type: string
+        example: 'ACTOR'
+      label:
+        description: 'The label of this aggregation result entry'
+        type: string
+        example: 'Actor'
       count:
         description: 'The amount of entries found for the given key'
         type: integer
@@ -179,6 +155,10 @@ definitions:
         type: integer
         format: int32
         example: '8'
+      indexing:
+       description: 'Indicates if the search engine is currently indexing more datasets and thus the result might be incomplete'
+       type: boolean
+       default: false
     required:
       - pageSize
       - count
@@ -194,7 +174,6 @@ definitions:
         items:
           $ref: '#/definitions/AggregationResult'
       resultInfo:
-        description: 'Search result specific information'
         $ref: '#/definitions/ResultInfo'
     required:
       - resultInfo
@@ -228,14 +207,14 @@ definitions:
           $ref: '#/definitions/Commit'
     required:
       - resultInfo
-  FetchRequestDataSearchResult:
+  CommitReferenceSearchResult:
     allOf:
     - $ref: '#/definitions/SearchResult'
     properties:
       data:
         type: array
         items:
-          $ref: '#/definitions/FetchRequestData'
+          $ref: '#/definitions/CommitReference'
     required:
       - resultInfo
   IndexEntrySearchResult:
@@ -244,8 +223,6 @@ definitions:
     properties:
       data:
         type: array
-        items:
-          $ref: '#/definitions/IndexEntry'
     required:
       - resultInfo
   UserDescriptor:
@@ -262,93 +239,6 @@ definitions:
     required:
       - username
       - name
-  UserSettings:
-    type: object
-    properties:
-      canCreateGroups:
-        description: 'True if the user is allowed to create new groups'
-        type: boolean
-        default: false
-      canCreateRepositories:
-        description: 'True if the user is allowed to create new repositories'
-        type: boolean
-        default: false
-      noOfRepositories:
-        description: '0 for unlimited (if canCreateRepositories is true), otherwise the number of repositories the user is allowed to create'
-        type: integer
-        format: int32
-        default: 0
-      maxSize:
-        description: '0 for unlimited space (if canCreateRepositories is true), otherwise the maximum size of all user group repositories in bytes'
-        type: integer
-        format: int64
-        default: 0
-      messagingEnabled:
-        description: 'If true all users can initiate conversations, otherwise admins only'
-        type: boolean
-        default: true
-      messagingRestricted:
-        description: 'If true only team members (and admins) can initiate conversations'
-        type: boolean
-        default: false
-      showOnlineStatus:
-        description: 'If true the online status is shown in the messanger'
-        type: boolean
-        default: true
-      showReadReceipt:
-        description: 'If true read messages will be marked as read in the messanger'
-        type: boolean
-        default: true
-      admin:
-        description: 'True if the user is administrator'
-        type: boolean
-        default: false
-      userManager:
-        description: 'True if the user is user manager'
-        type: boolean
-        default: false
-      dataManager:
-        description: 'True if the user is data manager'
-        type: boolean
-        default: false
-      blockedUsers:
-        description: 'Users that are not allowed to initiate conversations'
-        type: array
-        items:
-          $ref: '#/definitions/UserDescriptor'
-  User:
-    allOf: 
-    - $ref: '#/definitions/UserDescriptor'
-    properties:
-      id: 
-        type: string
-        example: '15'
-      email:
-        type: string
-        example: 'john.doe@company.com'
-      twoFactorAuth:
-        description: 'True if two factor authentication is enabled for the user'
-        type: boolean
-        default: false
-      settings:
-        $ref: '#/definitions/UserSettings'
-    required:
-      - id
-      - email
-  CurrentUser:
-    allOf: 
-    - $ref: '#/definitions/User'
-    - properties:
-        noOfTasks:
-          description: 'Total number of active tasks'
-          type: integer
-          format: int32
-          default: 0
-        noOfRepositories:
-          description: 'Total number of repositories in this users user group'
-          type: integer
-          format: int32
-          default: 0
   TeamDescriptor:
     type: object
     properties:
@@ -363,17 +253,6 @@ definitions:
     required:
       - teamname
       - name
-  Team:
-    allOf:
-    - $ref: '#/definitions/TeamDescriptor'
-    - properties:
-        id:
-          description: 'The internal id of the team'
-          type: integer
-          format: int64
-          example: 3
-    required:
-      - id
   GroupDescriptor:
     type: object
     properties:
@@ -403,6 +282,25 @@ definitions:
           description: 'True if the current user can edit the members of the group'
           type: boolean
           default: false
+  GroupSettings:
+    type: object
+    properties:
+      label:
+        description: 'The label of the group'
+        type: string
+      description:
+        description: 'The description of the group'
+        type: boolean
+      noOfRepositories:
+        description: 'The allowed number of repositories to be created in this group'
+        type: integer
+        format: int64
+        default: 0
+      maxSize:
+        description: 'The allowed total size of all repositories inside this group'
+        type: integer
+        format: int64
+        default: 0
   RepositorySettings:
     type: object
     properties:
@@ -418,11 +316,41 @@ definitions:
         description: 'True if the a comment needs to be approved before publication'
         type: boolean
         default: false
+      jsonFileGeneration:
+        description: 'True if a json file should be created on commit'
+        type: boolean
+        default: false
       maxSize:
         description: 'The maximum size in bytes if a limitation is set, 0 otherwise'
         type: integer
         format: int64
         default: 0
+      label:
+        type: string
+      version:
+        type: string
+      tags:
+        type: string
+      description:
+        type: string
+      sourceInfo:
+        type: string
+      contactInfo:
+        type: string
+      projetInfo:
+        type: string
+      projectFunding:
+        type: string
+      appropriateUse:
+        type: string
+      dqAssessment:
+        type: string
+      citation:
+        type: string
+      typeOfData:
+        type: string
+      searchCommitId:
+        type: string
   RepositoryDescriptor:
     type: object
     properties:
@@ -434,12 +362,17 @@ definitions:
         description: 'The name of the repository'
         type: string
         example: 'reference_data'
+      label:
+        description: 'The label of the repository'
+        type: string
       groupIsUserNamespace:
         description: 'True if the group is a user namespace'
         type: boolean
         default: false
       settings:
         $ref: '#/definitions/RepositorySettings'
+      groupSettings:
+        $ref: '#/definitions/GroupSettings'
     required:
       - group
       - name
@@ -449,7 +382,7 @@ definitions:
       schemaVersion: 
         description: 'The JSON-LD schema version of this repository'
         type: string
-        example: 'http://openlca.org/schema/v1.1/'
+        example: 'http://openlca.org/schema/v2.0/'
     required:
       - schemaVersion
   Repository:
@@ -622,7 +555,7 @@ definitions:
       - name
       - version
       - lastChange
-  FetchRequestData:
+  CommitReference:
     allOf: 
     - $ref: '#/definitions/Dataset'
     - properties:
@@ -641,112 +574,11 @@ definitions:
         description: 'The name of the data provider of the selected data sets (will be used in GLAD)'
         type: string
         example: 'GreenDelta GmbH'
-      references:
+      paths:
+        description: 'Full dataset or category paths, e.g. "ACTORS" or "FLOWS/Elementary flows" or "PROCESS/example category/0fff6db0-464b-44f3-81af-381d88e7a1c3.json'
         type: array
         items:
-          $ref: '#/definitions/Reference'
-  IndexEntry:
-    allOf:
-    - $ref: '#/definitions/Dataset'
-    - properties: 
-        repositoryId:
-          description: 'The id of the repository of the entry'
           type: string
-          example: 'examples/reference_data'
-        group:
-          description: 'The name of the group of the repository the entry'
-          type: string
-          example: 'examples'
-        action:
-          description: 'The type of change of the entry, "ADD" if the data set was added in this commit, "UPDATE" if the data set existed before and "DELETE" if the data set was deleted in this commit'
-          type: string
-          enum: *INDEX_ACTION
-          example: 'UPDATE'
-        commitId:
-          description: 'The id of the commit of the entry'
-          type: string
-          example: '43a523f2-057d-a05a-694c-2d89078724ed'
-        commitMessage:
-          description: 'The message that was specified when the commit was executed'
-          type: string
-          example: 'Initial commit'
-        commitTimestamp:
-          description: 'The time when the commit was executed'
-          type: integer
-          format: int64
-          example: '1552893525562'
-        mostRecent:
-          description: 'Indicates if this is the most recent entry in the index, if false, newer versions of the data set exist'
-          type: boolean
-          default: false
-        commits:
-          description: 'A list of all commits this data set is referenced in (the initial commit and all commits where the data set did NOT change)'
-          type: array
-          items:
-            type: string
-          example: '[43a523f2-057d-a05a-694c-2d89078724ed]'
-        fullPath:
-          description: 'The full category path including the name of the element at last, concatenated with a slash'
-          type: string
-          example: 'root_category/parent_category/category/dataset_name'
-        category:
-          description: 'The full category path of the element, concatenated with a slash'
-          type: string
-          example: 'root_category/parent_category/category'
-        categoryPaths:
-          description: 'The category (path) as all combinations (used to aggregate by results)'
-          type: array
-          items: 
-            type: string
-          example: '[root_category, root_category/parent_category, root_category/parent_category/category]'
-      required:
-        - repositoryId
-        - group
-        - action
-  FlowEntry:
-    allOf:
-    - $ref: '#/definitions/IndexEntry'
-    - properties:
-        flowType:
-          description: 'The type of flow'
-          type: string
-          enum: *FLOW_TYPE
-          example: 'ELEMENTARY_FLOW'
-      required:
-        - flowType      
-  ProcessEntry:
-    allOf:
-    - $ref: '#/definitions/IndexEntry'
-    - properties:
-        processType:
-          description: 'The type of process'
-          type: string
-          enum: *PROCESS_TYPE
-          example: 'UNIT_PROCESS' 
-        validFromYear:
-          type: integer
-          format: int32
-          description: 'The year of the start of the validity of the data set, will be taken from validFrom if not set'
-          example: '2010'
-        validUntilYear:
-          type: integer
-          format: int32
-          description: 'The year of the end of the validity of the data set, will be taken from validUntil if not set'
-          example: '2019'
-        location:
-          type: string
-          description: 'The name of the location'
-          example: 'Switzerland'
-        modellingApproach:
-          type: string
-          enum: *MODELLING_APPROACH
-          default: 'UNKNOWN'
-        contact:
-          description: 'The name of the contact person'
-          type: string
-          example: 'John Doe'        
-      required:
-        - processType
 parameters:
   group:
     name: 'group'
@@ -830,6 +662,8 @@ responses:
     description: 'No permission to DELETE {group}/{repo}'
   NoChangeRolePerm:
     description: 'No permission to CHANGE_ROLE in {group}/{repo}'
+  NoSetSettingPermGroup:
+    description: 'No permission to SET_SETTING in {group}'
   NoChangeRolePermGroup:
     description: 'No permission to CHANGE_ROLE in {group}'
   RepoNotFound:
@@ -843,20 +677,6 @@ responses:
   NotUserManager:
     description: 'Not a user manager'
 paths:
-  /ws/public:
-    get:
-      tags:
-      - 'Session'
-      summary: 'Get current user'
-      description: 'Get the currently logged in user'
-      operationId: 'getCurrentUser'
-      produces:
-      - application/json
-      responses:
-        200:
-          description: 'Returns the currently logged in user or empty user if not logged in'
-          schema:
-            $ref: '#/definitions/CurrentUser'
   /ws/public/login:
     post:
       tags:
@@ -884,18 +704,6 @@ paths:
           description: 'Server is in maintenance mode (if not admin)'
         409:
           description: 'Already authenticated'
-  /ws/public/logout:
-    post:
-      tags:
-      - 'Session'
-      summary: 'Logout'
-      description: 'Logs out the currently logged in user'
-      operationId: 'logout'
-      responses: 
-        200:
-          description: 'Logout successful'
-        409:
-          description: 'Not logged in'
   /ws/group:
     get:
       tags:
@@ -1024,6 +832,65 @@ paths:
       in: path
       type: string
       required: true
+  /ws/group/settings/{group}/{setting}:
+    put:
+      tags:
+      - 'Group'
+      summary: 'Set group setting'
+      description: 'Set the setting {setting} in group {group}. For this operation the client needs permission to SET_SETTING in {group}'
+      operationId: 'setGroupSetting'
+      responses:
+        200:
+          description: 'Setting was successfully set'
+        401:
+          $ref: '#/responses/NotLoggedIn'
+        403:
+          description: '#/responses/NoSetSettingPermGroup'
+        404:
+          $ref: '#/responses/GroupNotFound'
+    parameters:
+    - name: 'group'
+      description: 'The name of the group'
+      in: path
+      type: string
+      required: true
+    - name: 'setting'
+      description: 'The name of the group setting'
+      in: path
+      type: string
+      required: true
+    - name: 'body'
+      description: 'The elements to export, if this element is a category, all children will be collected and exported'
+      in: body
+      schema:
+        type: object
+        properties:
+          value:
+            type: string
+  /ws/public/repository:
+    get:
+      tags:
+      - 'Repository'
+      summary: 'List public repositories'
+      description: 'Lists all public repositories inlcuding basic settings'
+      operationId: 'getPublicRepositories'
+      produces:
+      - application/json
+      responses:
+        200:
+          description: 'Returns all public repositories'
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/RepositoryDescriptor'
+        401:
+          $ref: '#/responses/NotLoggedIn'
+        403:
+          $ref: '#/responses/NoReadPerm'
+        404:
+          $ref: '#/responses/RepoNotFound'
+        406:
+          $ref: '#/responses/UnsupportedSchema'
   /ws/public/repository/{group}/{repo}:
     get:
       tags:
@@ -1068,12 +935,12 @@ paths:
           $ref: '#/responses/RepoNotFound'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/public/repository/file/{group}/{repo}/{type}/{refId}/{filename}:
+  /ws/public/repository/file/{group}/{repo}/{type}/{refId}/{path}:
     get:
       tags:
       - 'Repository'
       summary: 'Get repository file'
-      description: 'Loads {filename} of data set {type}/{refId} from {group}/{repo}. For this operation the client needs permission to READ in {group}/{repo}'
+      description: 'Loads file with name {path} of data set {type}/{refId} from {group}/{repo}. For this operation the client needs permission to READ in {group}/{repo}'
       operationId: 'getRepositoryFile'
       produces:
       - application/octet-stream
@@ -1083,18 +950,18 @@ paths:
       - $ref: '#/parameters/type'
       - $ref: '#/parameters/refId'
       - $ref: '#/parameters/commitId'
-      - name: 'filename'
-        description: 'The filename of the file to obtain'
+      - name: 'path'
+        description: 'The path/filename of the file to obtain'
         in: path
         type: string
         required: true
       responses:
         200:
-          description: 'Returns {filename} from data set {type}/{refId} for {commitId} in {group}/{repo} as byte array'
+          description: 'Returns {path} from data set {type}/{refId} for {commitId} in {group}/{repo} as byte array'
         403:
           $ref: '#/responses/NoReadPerm'
         404:
-          description: '{group}/{repo}, data set {type}/{refId}, {commitId} or {filename} not found'
+          description: '{group}/{repo}, data set {type}/{refId}, {commitId} or {path} not found'
         406:
           $ref: '#/responses/UnsupportedSchema'
   /ws/repository:
@@ -1786,36 +1653,6 @@ paths:
           description: '{group}/{repo} or data set {refId} not found'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/category/{group}/{repo}/{refId}:
-    get:
-      tags: 
-      - 'History'
-      summary: 'Get commit history for a category'
-      description: 'Loads the commit history for category {refId} from {group}/{repo}. For this operation the client needs permission to READ in {group}/{repo}'
-      operationId: 'getCategoryCommitHistory'
-      produces:
-      - application/json
-      parameters:
-      - $ref: '#/parameters/group'
-      - $ref: '#/parameters/repo'
-      - $ref: '#/parameters/refId'
-      responses:
-        200:
-          description: 'The commit history of category {refId} in {group}/{repo}'
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Commit'
-        204:
-          description: 'No commits found'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NoReadPerm'
-        404:
-          description: '{group}/{repo} or category {refId} not found'
-        406:
-          $ref: '#/responses/UnsupportedSchema'
   /ws/history/search/{group}/{repo}:
     get:
       tags: 
@@ -1874,7 +1711,7 @@ paths:
         200:
           description: 'The data sets that were committed to {group}/{repo} during {commitId}'
           schema:
-            $ref: '#/definitions/FetchRequestDataSearchResult'
+            $ref: '#/definitions/CommitReferenceSearchResult'
         204:
           description: 'No commits found'
         401:
@@ -2013,7 +1850,7 @@ paths:
       - $ref: '#/parameters/pageSize'
       responses:
         200:
-          description: 'Returns all data sets that were found for the given criteria, flow data sets will be returned as FlowIndexEntry, process data sets will be returned as ProcessIndexEntry, other data sets will be returned as (default) IndexEntry'
+          description: 'Returns all data sets that were found for the given criteria'
           schema:
             type: array
             items: 
@@ -2056,7 +1893,7 @@ paths:
   /ws/public/download/json/prepare/{group}/{repo}:
     get:
       tags: 
-      - 'Download (JSON-LD)'
+      - 'Download (JSON-LD 2.0)'
       summary: 'Prepare download of a repository'
       description: 'Collects and compresses data sets in {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
       operationId: 'prepareJsonDownloadMultiPath'
@@ -2081,7 +1918,7 @@ paths:
           $ref: '#/responses/UnsupportedSchema'
     post:
       tags: 
-      - 'Download (JSON-LD)'
+      - 'Download (JSON-LD 2.0)'
       summary: 'Prepare download of a repository (direct selection with category children)'
       description: 'Collects and compresses data sets in {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
       operationId: 'prepareJsonDownloadMultiCategories'
@@ -2109,7 +1946,7 @@ paths:
           $ref: '#/responses/UnsupportedSchema'
     put:
       tags: 
-      - 'Download (JSON-LD)'
+      - 'Download (JSON-LD 2.0)'
       summary: 'Prepare download of a repository (direct selection without category children)'
       description: 'Collects and compresses data sets in {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
       operationId: 'prepareJsonDownloadMultiSelection'
@@ -2138,7 +1975,7 @@ paths:
   /ws/public/download/json/prepare/{group}/{repo}/{type}/{refId}:
     get:
       tags: 
-      - 'Download (JSON-LD)'
+      - 'Download (JSON-LD 2.0)'
       summary: 'Prepare download of a data set (single data set, with references)'
       description: 'Collects and compresses data set {type} {refId} and its references from {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
       operationId: 'prepareJsonDownloadSingle'
@@ -2162,7 +1999,7 @@ paths:
   /ws/public/download/json/{token}:
     get:
       tags: 
-      - 'Download (JSON-LD)'
+      - 'Download (JSON-LD 2.0)'
       summary: 'Download a prepared JSON-LD zip-archive'
       description: 'Looks up the token in the temporary filestorage and returns the prepared JSON-LD zip-archive'
       operationId: 'downloadJson'
@@ -2179,13 +2016,13 @@ paths:
           description: 'Returns the prepared zip-archive'
         404:
           description: 'No prepared zip-archive found for {token}'
-  /ws/public/download/ilcd/prepare/{group}/{repo}:
+  /ws/public/download/json1/prepare/{group}/{repo}:
     get:
       tags: 
-      - 'Download (ILCD)'
+      - 'Download (JSON-LD 1.0)'
       summary: 'Prepare download of a repository'
-      description: 'Collects and compresses data sets in {group}/{repo} into a ILCD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
-      operationId: 'prepareIlcdDownloadMultiPath'
+      description: 'Collects and compresses data sets in {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
+      operationId: 'prepareJson1DownloadMultiPath'
       produces:
       - text/plain
       parameters:
@@ -2198,7 +2035,7 @@ paths:
         type: string
       responses:
         200:
-          description: 'Returns the token to download the prepared zip-archive. see Download (ILCD)'
+          description: 'Returns the token to download the prepared zip-archive. see Download (JSON-LD)'
         403:
           $ref: '#/responses/NoReadPerm'
         404:
@@ -2207,10 +2044,10 @@ paths:
           $ref: '#/responses/UnsupportedSchema'
     post:
       tags: 
-      - 'Download (ILCD)'
+      - 'Download (JSON-LD 1.0)'
       summary: 'Prepare download of a repository (direct selection with category children)'
-      description: 'Collects and compresses data sets in {group}/{repo} into a ILCD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
-      operationId: 'prepareIlcdDownloadMultiCategories'
+      description: 'Collects and compresses data sets in {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
+      operationId: 'prepareJson1DownloadMultiCategories'
       produces:
       - text/plain
       parameters:
@@ -2226,7 +2063,7 @@ paths:
             $ref: '#/definitions/Reference'
       responses:
         200:
-          description: 'Returns the token to download the prepared zip-archive. see Download (ILCD)'
+          description: 'Returns the token to download the prepared zip-archive. see Download (JSON-LD)'
         403:
           $ref: '#/responses/NoReadPerm'
         404:
@@ -2235,10 +2072,10 @@ paths:
           $ref: '#/responses/UnsupportedSchema'
     put:
       tags: 
-      - 'Download (ILCD)'
+      - 'Download (JSON-LD 1.0)'
       summary: 'Prepare download of a repository (direct selection without category children)'
-      description: 'Collects and compresses data sets in {group}/{repo} into a ILCD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
-      operationId: 'prepareIlcdDownloadMultiSelection'
+      description: 'Collects and compresses data sets in {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
+      operationId: 'prepareJson1DownloadMultiSelection'
       produces:
       - text/plain
       parameters:
@@ -2254,20 +2091,20 @@ paths:
             $ref: '#/definitions/FileReference'
       responses:
         200:
-          description: 'Returns the token to download the prepared zip-archive. see Download (ILCD)'
+          description: 'Returns the token to download the prepared zip-archive. see Download (JSON-LD)'
         403:
           $ref: '#/responses/NoReadPerm'
         404:
           description: '{group}/{repo} not found or no data found for {commitId}'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/public/download/ilcd/prepare/{group}/{repo}/{type}/{refId}:
+  /ws/public/download/json1/prepare/{group}/{repo}/{type}/{refId}:
     get:
       tags: 
-      - 'Download (ILCD)'
+      - 'Download (JSON-LD 1.0)'
       summary: 'Prepare download of a data set (single data set, with references)'
-      description: 'Collects and compresses data set {type} {refId} and its references from {group}/{repo} into a ILCD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
-      operationId: 'prepareIlcdDownloadSingle'
+      description: 'Collects and compresses data set {type} {refId} and its references from {group}/{repo} into a JSON-LD zip-archive, which can be downloaded by using the returned download token. For this operation the client needs permission to READ in {group}/{repo}'
+      operationId: 'prepareJson1DownloadSingle'
       produces:
       - text/plain
       parameters:
@@ -2278,20 +2115,20 @@ paths:
       - $ref: '#/parameters/commitId'
       responses:
         200:
-          description: 'The token to download the prepared zip-archive. see Download (ILCD)'
+          description: 'The token to download the prepared zip-archive. see Download (JSON-LD)'
         403:
           $ref: '#/responses/NoReadPerm'
         404:
           description: '{group}/{repo} not found or no data found for {type} {refId} and {commitId}'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/public/download/ilcd/{token}:
+  /ws/public/download/json1/{token}:
     get:
       tags: 
-      - 'Download (ILCD)'
-      summary: 'Download a prepared ILCD zip-archive'
-      description: 'Looks up the token in the temporary filestorage and returns the prepared ILCD zip-archive'
-      operationId: 'downloadIlcd'
+      - 'Download (JSON-LD 1.0)'
+      summary: 'Download a prepared JSON-LD zip-archive'
+      description: 'Looks up the token in the temporary filestorage and returns the prepared JSON-LD zip-archive'
+      operationId: 'downloadJson1'
       produces:
       - application/octet-stream
       parameters:
@@ -2303,251 +2140,8 @@ paths:
       responses:
         200:
           description: 'Returns the prepared zip-archive'
-        403:
-          description: 'If a different user tries to download the prepared zip-archive then the one who created it'
         404:
           description: 'No prepared zip-archive found for {token}'
-  /ws/user:
-    get:
-      tags: 
-      - 'User'
-      summary: 'Get users'
-      description: 'Loads a list of user descriptors'
-      operationId: 'getUsers'
-      parameters:
-      - $ref: '#/parameters/page'
-      - $ref: '#/parameters/pageSize'
-      - $ref: '#/parameters/filter'
-      - name: 'module'
-        description: 'Load a module specific list, MESSAGING loads all users that can be messaged, REVIEW loads all users that have the permission to REVIEW in {repositoryPath}'
-        type: string
-        enum: ['MESSAGING', 'REVIEW']
-        in: query
-      - name: 'repositoryPath'
-        description: 'The repository id to filter users from (only applies if module=REVIEW)'
-        type: string
-        in: query
-      produces:
-      - application/json
-      responses:
-        200:
-          description: 'A list of user descriptors'
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/User'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        404:
-          $ref: '#/responses/UserNotFound'
-  /ws/user/{username}:
-    get:
-      tags: 
-      - 'User'
-      summary: 'Get a user'
-      description: 'Loads {username}'
-      operationId: 'getUser'
-      parameters:
-      - $ref: '#/parameters/username'
-      produces:
-      - application/json
-      responses:
-        200:
-          description: 'If current user is {username}, returns the complete user info, only username and name otherwise'
-          schema:
-            $ref: '#/definitions/User'
-        400:
-          description: 'Missing input, invalid username or name or email already in use'    
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        404:
-          $ref: '#/responses/UserNotFound'
-    put:
-      tags: 
-      - 'User'
-      summary: 'Update a user'
-      description: 'Updates {username}'
-      operationId: 'updateUser'
-      parameters:
-      - $ref: '#/parameters/username'
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        200:
-          description: 'After successful update, returns the changed user'
-          schema:
-            $ref: '#/definitions/User'
-        400:
-          description: 'Missing input or email already in use'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        404:
-          $ref: '#/responses/UserNotFound'
-  /ws/user/avatar/{username}:
-    get:
-      tags: 
-      - 'User'
-      summary: 'Get a users avatar'
-      description: 'Loads the avatar of {username}'
-      operationId: 'getUserAvatar'
-      parameters:
-      - $ref: '#/parameters/username'
-      produces:
-      - application/octet-stream
-      responses:
-        200:
-          description: 'Returns the avatar for {group} as byte array'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        404:
-          $ref: '#/responses/UserNotFound'
-    put:
-      tags: 
-      - 'User'
-      summary: 'Set user avatar'
-      description: 'Sets the avatar of {username}'
-      operationId: 'setUserAvatar'
-      parameters:
-      - $ref: '#/parameters/username'
-      consumes:
-      - multipart/form-data
-      produces:
-      - application/octet-stream
-      responses:
-        200:
-          description: 'After successful update, returns the changed avatar'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        404:
-          $ref: '#/responses/UserNotFound'
-  /ws/user/setpassword/{username}:
-    put:
-      tags: 
-      - 'User'
-      summary: 'Set password'
-      description: 'Sets a new password for {username}'
-      operationId: 'setPassword'
-      parameters:
-      - $ref: '#/parameters/username'
-      - name: 'body'
-        description: 'The repository id to filter users from (only applies if module=REVIEW)'
-        in: body
-        schema:
-          $ref: '#/definitions/Password'
-      consumes:
-      - application/json
-      responses:
-        200:
-          description: 'Successfully updated password of {username} to {password}'
-        400:
-          description: 'Passwords did not match or password was not secure (Password must consist of at least 8 characters and must contain at least 1 digit, 2 different lowercase letters and 2 different uppercase letters)'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        404:
-          $ref: '#/responses/UserNotFound'
-  /ws/user/twoFactorAuth/{username}:
-    get:
-      tags: 
-      - 'User'
-      summary: 'Get two factor authentification info'
-      description: 'Loads the two factor authentification info of {username}'
-      operationId: 'getTwoFactorAuthenticationInfo'
-      parameters:
-      - $ref: '#/parameters/username'
-      produces:
-      - application/json
-      responses:
-        200:
-          description: 'Returns the two factor authentification info'
-          schema:
-            $ref: '#/definitions/TwoFactorInfo'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        404:
-          $ref: '#/responses/UserNotFound'
-  /ws/user/twoFactorAuth/{username}/{enable}:
-    put:
-      tags: 
-      - 'User'
-      summary: 'Toggle two factor authentication'
-      description: 'Enables/disables configuration of two factor authentification for {username}'
-      operationId: 'toggleTwoFactorAuthentication'
-      parameters:
-      - $ref: '#/parameters/username'
-      - name: 'enable'
-        description: 'if true, enable two factor authentication, otherwise disable it'
-        type: boolean
-        in: path
-        required: true
-      produces:
-      - application/json
-      responses:
-        200:
-          description: 'Returns the two factor authentification info if enabled'
-          schema:
-            $ref: '#/definitions/TwoFactorInfo'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        404:
-          $ref: '#/responses/UserNotFound'
-  /ws/usermanager/user/{username}:
-    post:
-      tags: 
-      - 'User'
-      summary: 'Create a new user'
-      description: 'Create a new user {username} with generated password. An email containing the password is sent to the email specified for the new user. For this operation the client needs special permission to manage user'
-      operationId: 'createUser'
-      parameters:
-      - $ref: '#/parameters/username'
-      - name: 'body'
-        description: 'The information of the user to create'
-        in: body
-        schema:
-          $ref: '#/definitions/User'
-      consumes:
-      - application/json
-      produces:
-      - application/json
-      responses:
-        201:
-          description: 'User was successfully created'
-          schema:
-            $ref: '#/definitions/User'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        400:
-          description: 'Missing input, invalid username or name or email already in use'    
-    delete:
-      tags: 
-      - 'User'
-      summary: 'Delete a user'
-      description: 'Deletes {username} with generated password. For this operation the client needs special permission to manage user'
-      operationId: 'deleteUser'
-      parameters:
-      - $ref: '#/parameters/username'
-      responses:
-        200:
-          description: 'User was successfully deleted'
-        401:
-          $ref: '#/responses/NotLoggedIn'
-        403:
-          $ref: '#/responses/NotUserManager'
-        404:
-          description: '{username} not found'
   /ws/datamanager/glad/push/{group}/{repo}:
     post:
       tags: 
