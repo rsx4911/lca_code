@@ -24,7 +24,7 @@ These modules are plain Maven projects and can be installed via `mvn install`. S
 We recommend that to use Git to manage the source code but you can also download the source code as a zip file. Create a development directory (the path should not contain whitespaces):
 
 ```bash
-git clone https://git.greendelta.com/collaboration-server/collaboration-server
+git clone https://git.greendelta.com/collaboration/collaboration-server
 ```
 
 #### Building the HTML pages
