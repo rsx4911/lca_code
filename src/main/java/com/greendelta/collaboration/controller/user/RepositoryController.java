@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,14 +33,15 @@ import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.RepositoryClient;
+import com.greendelta.collaboration.io.ZipCommitWriter;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
-import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
+import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
@@ -212,9 +214,7 @@ public class RepositoryController {
 			@RequestParam(name = "commitMessage", required = false) String commitMessage) {
 		try (var repo = service.get(group, name)) {
 			if (format != null && "json-ld".equals(format.toLowerCase())) {
-				if (Strings.nullOrEmpty(commitMessage))
-					throw Response.badRequest("commitMessage", "Missing input: Commit message");
-				service.importJsonLd(repo, input.getInputStream(), commitMessage);
+				importJsonLd(repo, input.getInputStream(), commitMessage);
 			} else {
 				service.unpack(repo, input.getInputStream());
 			}
@@ -224,6 +224,22 @@ public class RepositoryController {
 			indexService.indexAsync(RepositoryPath.of(group, name));
 		} catch (IOException e) {
 			log.error("Error getting input stream from multipart file", e);
+		}
+	}
+
+	private void importJsonLd(Repository repo, InputStream input, String commitMessage) {
+		if (Strings.nullOrEmpty(commitMessage))
+			throw Response.badRequest("commitMessage", "Missing input: Commit message");
+		var user = userService.getCurrentUser();
+		try {
+			var success = ZipCommitWriter.write(input, repo.gitRepo(), user, commitMessage);
+			if (!success)
+				throw Response.badRequest("data",
+						"Incompatible schema version: Are you trying to import JSON-LD from openLCA 1.x?");
+		} catch (IOException e) {
+			log.error("Error converting json to repository", e);
+			throw Response.badRequest("data",
+					"Incompatible data: The data you provided is not a JSON-LD 2.0 zip file");
 		}
 	}
 

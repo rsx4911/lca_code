@@ -3,7 +3,6 @@ package com.greendelta.collaboration.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.function.Consumer;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
@@ -36,7 +35,7 @@ public class RepositoryClient implements AutoCloseable {
 		this.client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
 	}
 
-	public void exportRepository(String repository, Consumer<InputStream> consumer)
+	public void exportRepository(String repository, InputStreamConsumer consumer)
 			throws IOException, WebRequestException {
 		login();
 		try (var response = Http.execute(client, new HttpGet(baseUrl + "repository/export/" + repository))) {
@@ -89,6 +88,12 @@ public class RepositoryClient implements AutoCloseable {
 	@Override
 	public void close() throws IOException {
 		client.close();
+	}
+	
+	public interface InputStreamConsumer {
+
+		public void accept(InputStream stream) throws IOException;
+		
 	}
 
 }
