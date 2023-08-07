@@ -1,9 +1,10 @@
 package com.greendelta.collaboration.controller;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,7 @@ import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchResult;
+import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
 
 @RestController
 @RequestMapping("ws/public/search")
@@ -90,35 +92,13 @@ public class SearchController {
 		try (var accessible = repoService.getAllAccessible()) {
 			var repositories = accessible.stream()
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
+			var groups = accessible.stream().map(repo -> repo.group).toList();
 			var loggedIn = userService.getCurrentUser().id != 0;
 			var map = Maps.create();
 			var resultInfo = Maps.of(result.resultInfo);
 			resultInfo.put("indexing", indexService.getIndexingStatus() != null);
 			map.put("resultInfo", resultInfo);
-			var data = result.data.stream().map(dsEntry -> {
-				var e = Maps.of(dsEntry);
-				var versions = new ArrayList<Map<String, Object>>();
-				dsEntry.versions.forEach(dsVersion -> {
-					var v = Maps.of(dsVersion);
-					var repos = new ArrayList<Map<String, Object>>();
-					dsVersion.repos.forEach(dsRepo -> {
-						var r = Maps.of(dsRepo);
-						var repo = repositories.get(dsRepo.path);
-						if (repo == null)
-							return;
-						r.put("label", repo.getLabel());
-						if (!loggedIn) {
-							Maps.nullify(r, "commitId", "commitMessage");
-						}
-						repos.add(r);
-					});
-					v.put("repos", repos);
-					versions.add(v);
-				});
-				e.put("versions", versions);
-				return e;
-			}).toList();
-			map.put("data", data);
+			map.put("data", mapData(result, repositories, loggedIn));
 			var aggregations = result.aggregations.stream().filter(a -> {
 				if (!settings.is(ServerSetting.REPOSITORY_TAGS_ENABLED)
 						&& a.name.equals(Aggregations.REPOSITORY_TAGS.name))
@@ -131,34 +111,75 @@ public class SearchController {
 			map.put("aggregations", aggregations.stream().map(a -> {
 				var aMap = Maps.of(a);
 				if (a.name.equals(Aggregations.REPOSITORY.name)) {
-					aMap.put("entries", a.entries.stream().map(e -> {
-						Map<String, Object> eMap = Maps.of(e);
-						Repository repo = repositories.get(e.key);
-						if (repo != null) {
-							try {
-								eMap.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
-							} catch (ForbiddenAccessException ex) {
-								// ignore
-							}
-						}
-						return eMap;
-					}).toList());
+					aMap.put("entries", mapRepositoryAggregationEntries(a, repositories));
 				} else if (a.name.equals(Aggregations.GROUP.name)) {
-					aMap.put("entries", a.entries.stream().map(e -> {
-						Map<String, Object> eMap = Maps.of(e);
-						try {
-							String label = groupService.getSettings(e.key).get(GroupSetting.LABEL, e.key);
-							eMap.put("label", label);
-						} catch (ForbiddenAccessException ex) {
-							// ignore
-						}
-						return eMap;
-					}).toList());
+					aMap.put("entries", mapGroupAggregationEntries(a, groups));
 				}
 				return aMap;
 			}).toList());
 			return map;
 		}
+	}
+
+	private List<Map<String, Object>> mapRepositoryAggregationEntries(AggregationResult aggregationResult,
+			Map<String, Repository> repositories) {
+		return aggregationResult.entries.stream().map(entry -> {
+			Map<String, Object> map = Maps.of(entry);
+			Repository repo = repositories.get(entry.key);
+			if (repo == null)
+				return null;
+			try {
+				map.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
+			} catch (ForbiddenAccessException ex) {
+				// ignore
+			}
+			return map;
+		}).filter(Objects::nonNull).toList();
+	}
+
+	private List<Map<String, Object>> mapGroupAggregationEntries(AggregationResult aggregationResult,
+			List<String> groups) {
+		return aggregationResult.entries.stream().map(entry -> {
+			Map<String, Object> map = Maps.of(entry);
+			if (!groups.contains(entry.key))
+				return null;
+			try {
+				String label = groupService.getSettings(entry.key).get(GroupSetting.LABEL, entry.key);
+				map.put("label", label);
+			} catch (ForbiddenAccessException e) {
+				// ignore
+			}
+			return map;
+		}).filter(Objects::nonNull).toList();
+	}
+
+	private List<Map<String, Object>> mapData(SearchResult<DsEntry> result, Map<String, Repository> repositories,
+			boolean loggedIn) {
+		return result.data.stream().map(dsEntry -> {
+			var entry = Maps.of(dsEntry);
+			var versions = dsEntry.versions.stream().map(dsVersion -> {
+				var version = Maps.of(dsVersion);
+				var repos = dsVersion.repos.stream().map(dsRepo -> {
+					var repo = Maps.of(dsRepo);
+					var repository = repositories.get(dsRepo.path);
+					if (repository == null)
+						return null;
+					repo.put("label", repository.getLabel());
+					if (!loggedIn) {
+						Maps.nullify(repo, "commitId", "commitMessage");
+					}
+					return repo;
+				}).filter(Objects::nonNull).toList();
+				if (repos.isEmpty())
+					return null;
+				version.put("repos", repos);
+				return version;
+			}).filter(Objects::nonNull).toList();
+			if (versions.isEmpty())
+				return null;
+			entry.put("versions", versions);
+			return entry;
+		}).filter(Objects::nonNull).toList();
 	}
 
 	@GetMapping("flowLinks/{flowRefId}")
