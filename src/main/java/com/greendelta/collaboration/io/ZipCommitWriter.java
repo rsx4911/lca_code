@@ -3,6 +3,7 @@ package com.greendelta.collaboration.io;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.openlca.git.util.MetaDataParser;
 import org.openlca.git.util.Repositories;
 import org.openlca.git.writer.CommitWriter;
 import org.openlca.jsonld.ModelPath;
+import org.openlca.jsonld.PackageInfo;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.util.Strings;
 
@@ -34,16 +36,29 @@ public class ZipCommitWriter extends CommitWriter {
 		this.zip = zip;
 	}
 
-	public static void write(InputStream stream, Repository git, User user, String commitMessage)
+	public static boolean write(InputStream stream, Repository git, User user, String commitMessage)
 			throws ZipException, IOException {
-		var tmpFile = Files.createTempFile("cs-json2repository-", ".zip");
-		Files.copy(stream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
-		var zip = ZipStore.open(tmpFile.toFile());
-		var writer = new ZipCommitWriter(zip, git);
-		writer.as(new PersonIdent(user.username, user.email));
-		writer.write(commitMessage);
-		zip.close();
-		Files.delete(tmpFile);
+		Path tmpFile = null;
+		ZipStore zip = null;
+		try {
+			tmpFile = Files.createTempFile("cs-json2repository-", ".zip");
+			Files.copy(stream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+			zip = ZipStore.open(tmpFile.toFile());
+			var info = PackageInfo.readFrom(zip);
+			if (!info.schemaVersion().isCurrent())
+				return false;
+			var writer = new ZipCommitWriter(zip, git);
+			writer.as(new PersonIdent(user.username, user.email));
+			writer.write(commitMessage);
+			return true;
+		} finally {
+			if (zip != null) {
+				zip.close();
+			}
+			if (tmpFile != null) {
+				Files.delete(tmpFile);
+			}
+		}
 	}
 
 	private void write(String message) throws IOException {

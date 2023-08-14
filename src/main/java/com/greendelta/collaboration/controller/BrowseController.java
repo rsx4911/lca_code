@@ -13,6 +13,7 @@ import org.openlca.git.find.Entries;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.util.Repositories;
+import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.PackageInfo;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +100,7 @@ public class BrowseController {
 		if (info == null || info.libraries().isEmpty())
 			return new ArrayList<>();
 		var mapped = info.libraries().stream().map(
-				lib -> createLibraryEntry(lib, commit.id));
+				lib -> createLibraryEntry(lib.id(), commit.id));
 		return MetaData.sortByName(mapped).toList();
 	}
 
@@ -160,7 +161,8 @@ public class BrowseController {
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
 			var info = Repositories.infoOf(repo.gitRepo(), commit);
-			if (info.libraries().contains(library))
+			var libraries = info.libraries().stream().map(LibraryLink::id).toList();
+			if (libraries.contains(library))
 				continue;
 			return commits.get(i + 1);
 		}

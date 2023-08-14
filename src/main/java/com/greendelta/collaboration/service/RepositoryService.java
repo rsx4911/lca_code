@@ -33,7 +33,6 @@ import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
 import com.greendelta.collaboration.error.UnsupportedSchemaException;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
-import com.greendelta.collaboration.io.ZipCommitWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -275,15 +274,6 @@ public class RepositoryService {
 			in.close();
 		} catch (IOException e) {
 			log.error("Error unpacking repository", e);
-		}
-	}
-
-	public void importJsonLd(Repository repo, InputStream input, String commitMessage) {
-		var user = userService.getCurrentUser();
-		try {
-			ZipCommitWriter.write(input, repo.gitRepo(), user, commitMessage);
-		} catch (IOException e) {
-			log.error("Error converting json to repository", e);
 		}
 	}
 
