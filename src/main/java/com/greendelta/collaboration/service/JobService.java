@@ -11,7 +11,6 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.job.Job;
 import com.greendelta.collaboration.model.job.JobResult;
 import com.greendelta.collaboration.model.job.JobType;
-import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Dates;
@@ -70,7 +69,7 @@ public class JobService {
 	}
 
 	private String getPasswordResetRequestEmailText(User user, String token) {
-		String baseUrl = settings.get(ServerSetting.SERVER_URL);
+		String baseUrl = settings.serverConfig.getServerUrl();
 		var resetUrl = baseUrl + "/job?token=" + token + "&type=" + JobType.RESET_PASSWORD;
 		var content = "Dear " + user.name + ",<br><br>";
 		content += "You requested to reset your password. Please click the link below to proceed with the request, a new password will automatically be set and send to you.<br><br>";

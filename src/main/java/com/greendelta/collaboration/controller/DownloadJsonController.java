@@ -27,6 +27,7 @@ import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.JsonWriter;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController
@@ -34,11 +35,14 @@ import com.greendelta.collaboration.service.user.UserService;
 public class DownloadJsonController extends DownloadController {
 
 	private final RepositoryService repoService;
+	private final SettingsService settingsService;
 
 	@Autowired
-	public DownloadJsonController(RepositoryService repoService, UserService userService) {
+	public DownloadJsonController(RepositoryService repoService, UserService userService,
+			SettingsService settingsService) {
 		super(repoService, userService);
 		this.repoService = repoService;
+		this.settingsService = settingsService;
 	}
 
 	@Override
@@ -106,7 +110,8 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(repo.references(), repo.datasets(), commit);
+		String url = settingsService.serverConfig.getServerUrl();
+		return new JsonWriter(repo.references(), repo.datasets(), repo.linkedLibraries(url), commit);
 	}
 
 	@Override

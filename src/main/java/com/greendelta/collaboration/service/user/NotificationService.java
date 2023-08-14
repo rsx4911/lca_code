@@ -603,7 +603,7 @@ public class NotificationService {
 	}
 
 	private String getBaseUrl() {
-		return settings.get(ServerSetting.SERVER_URL);
+		return settings.serverConfig.getServerUrl();
 	}
 
 	private Set<EmailJob> createEmails(String subject, String message, Set<User> recipients) {

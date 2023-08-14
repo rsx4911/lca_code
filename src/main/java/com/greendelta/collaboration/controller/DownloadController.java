@@ -136,7 +136,7 @@ abstract class DownloadController {
 	protected abstract DatasetWriter createWriter(Repository repo, Commit commit) throws IOException;
 
 	protected abstract Logger log();
-	
+
 	private record TokenInfo(String path, String filename, String userId) {
 	}
 

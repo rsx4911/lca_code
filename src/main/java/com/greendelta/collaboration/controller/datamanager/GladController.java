@@ -77,7 +77,7 @@ public class GladController {
 					var data = loadProcessData(repo, ref);
 					data.put("format", "JSON_LD");
 					data.put("dataprovider", input.dataprovider);
-					String baseUrl = config.get(ServerSetting.SERVER_URL);
+					String baseUrl = config.getServerUrl();
 					data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repo.path() + "/PROCESS/"
 							+ ref.refId + "?commitId=" + ref.commitId);
 					data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));

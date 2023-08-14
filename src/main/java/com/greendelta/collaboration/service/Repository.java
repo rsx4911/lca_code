@@ -69,11 +69,17 @@ public class Repository implements AutoCloseable {
 	}
 
 	public List<String> linkedLibraries() {
+		return linkedLibraries(null).stream()
+				.map(LibraryLink::id)
+				.collect(Collectors.toList());
+	}
+
+	public List<LibraryLink> linkedLibraries(String serverUrl) {
 		var info = Repositories.infoOf(gitRepo());
 		if (info == null || info.libraries() == null)
 			return new ArrayList<>();
 		return info.libraries().stream()
-				.map(LibraryLink::id)
+				.map(lib -> new LibraryLink(lib.id(), serverUrl + "/ws/libraries/" + lib.id()))
 				.collect(Collectors.toList());
 	}
 

@@ -13,7 +13,7 @@ public class LegacyJsonWriter implements DatasetWriter {
 	private final JsonWriter jsonWriter;
 
 	public LegacyJsonWriter(References references, Datasets datasets, Commit commit) throws IOException {
-		this.jsonWriter = new JsonWriter(references, datasets, commit);
+		this.jsonWriter = new JsonWriter(references, datasets, null, commit);
 	}
 
 	@Override

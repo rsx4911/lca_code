@@ -3,6 +3,7 @@ package com.greendelta.collaboration.io;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import org.openlca.git.find.Datasets;
 import org.openlca.git.find.References;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
+import org.openlca.jsonld.LibraryLink;
 
 import com.greendelta.collaboration.util.Maps;
 
@@ -19,9 +21,9 @@ public class JsonWriter extends AbstractWriter {
 	private final RepositoryJsonWriter writer;
 	private final Set<String> processed = new HashSet<String>();
 
-	public JsonWriter(References references, Datasets datasets, Commit commit) throws IOException {
+	public JsonWriter(References references, Datasets datasets, List<LibraryLink> libraries, Commit commit) throws IOException {
 		super(references, commit);
-		this.writer = new RepositoryJsonWriter(references, datasets, tmpFile);
+		this.writer = new RepositoryJsonWriter(references, datasets, libraries, tmpFile);
 	}
 
 	@Override

@@ -192,6 +192,16 @@ public class SettingsService {
 			return (V) getFilteredModelTypes();
 		}
 
+		public String getServerUrl() {
+			String url = super.get(ServerSetting.SERVER_URL);
+			if (Strings.nullOrEmpty(url))
+				return "";
+			url = url.strip();
+			if (url.endsWith("/"))
+				return url.substring(0, url.length() - 1);
+			return url;
+		}
+
 	}
 
 	public class Imprint extends Settings<ImprintSetting> {
