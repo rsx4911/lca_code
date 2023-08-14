@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +14,7 @@ import org.openlca.git.find.Datasets;
 import org.openlca.git.find.Entries;
 import org.openlca.git.find.References;
 import org.openlca.git.util.Repositories;
+import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
@@ -70,7 +72,9 @@ public class Repository implements AutoCloseable {
 		var info = Repositories.infoOf(gitRepo());
 		if (info == null || info.libraries() == null)
 			return new ArrayList<>();
-		return info.libraries();
+		return info.libraries().stream()
+				.map(LibraryLink::id)
+				.collect(Collectors.toList());
 	}
 
 	public Commits commits() {

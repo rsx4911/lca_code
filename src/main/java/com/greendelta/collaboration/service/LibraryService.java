@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
 import org.openlca.git.util.Repositories;
+import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.PackageInfo;
 import org.openlca.util.Dirs;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -270,6 +271,7 @@ public class LibraryService {
 						.filter(Objects::nonNull)
 						.map(PackageInfo::libraries)
 						.flatMap(List::stream)
+						.map(LibraryLink::id)
 						.distinct()
 						.collect(Collectors.toSet());
 			}
