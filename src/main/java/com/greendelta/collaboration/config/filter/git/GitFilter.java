@@ -111,7 +111,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 				repoService.generateJson(repo);
 			}
 			var groupSettings = groupService.getSettings(repo.group);
-			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE));
+			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE, 0));
 			var user = userService.getForUsername(username);
 			checkGroupSizeLimit(username, user.settings.maxSize);
 			indexService.indexAsync(path);
