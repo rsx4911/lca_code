@@ -13,7 +13,7 @@ include ../../mixins/user-info.pug
 	if !standalone
 		+user-info(commit.user, commit.userDisplayName)(class='concealed')
 			|  on #{formatDate(commit.timestamp)}
-		.pull-right: +select('type', 'Model type', [], '', true)
+		.pull-right(style='margin-top:5px;'): +select('type', 'Model type', [], '', true)
 	.clear
 	if !standalone
 		.form-group

@@ -12,10 +12,12 @@ each dataset in data
 					- var action = 'overlay/' + (dataset.diffType === 'ADDED' ? 'add/' : 'delete/');
 				- var type = dataset.type.toLowerCase();
 				if dataset.type === 'PROCESS' && dataset.processType
-					- type = dataset.processType === 'LCI_RESULT' ? 'process_system' : 'process_unit';
+					- type += '_' + (dataset.processType === 'LCI_RESULT' ? 'system' : 'unit');
+					if dataset.flowType
+						- type += '_' + (dataset.flowType === 'PRODUCT_FLOW' ? 'product' : 'waste');
 				else if dataset.type === 'FLOW' && dataset.flowType
-					- type = dataset.flowType === 'PRODUCT_FLOW' ? 'flow_product' : dataset.flowType === 'WASTE_FLOW' ? 'flow_waste' : 'flow_elementary';
-				img.model-icon-small(src='images/model/small/' + action + type + '.png')
+					- type += '_' + (dataset.flowType === 'PRODUCT_FLOW' ? 'product' : dataset.flowType === 'WASTE_FLOW' ? 'waste' : 'elementary');
+				img.model-icon-small(src='images/model/small/' + action + getIcon(dataset))
 				if dataset.diffType === 'DELETED'
 					del=dataset.name
 				else
