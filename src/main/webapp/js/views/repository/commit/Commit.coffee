@@ -83,7 +83,6 @@ define([
 					if $.inArray(dataset.type, selected) is -1
 						selected.push dataset.type
 						modelFilters.push [dataset.type, ModelTypes[dataset.type]]
-						console.log(dataset.type)
 				modelFilters.sort (a, b) ->
 					return ModelTypes.ordinal(a[0]) - ModelTypes.ordinal(b[0])
 				select = @$ '#type'
