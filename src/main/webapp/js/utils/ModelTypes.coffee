@@ -34,4 +34,4 @@ define () ->
 		return text
 
 	plural: (type) ->
-		return @[type]		
+		return @[type]

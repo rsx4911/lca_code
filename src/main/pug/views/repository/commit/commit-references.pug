@@ -1,27 +1,31 @@
 include ../../mixins/category-breadcrumb.pug
 include ../../mixins/paging.pug
 
+mixin dataset-label(dataset)
+	- var action = '';
+	if dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED'
+		- var action = 'overlay/' + (dataset.diffType === 'ADDED' ? 'add/' : 'delete/');
+	img.model-icon-small(src='images/model/small/' + action + getIcon(dataset))
+	if dataset.diffType === 'DELETED'
+		del=dataset.name
+	else
+		span=dataset.name
+
+
 each dataset in data
+	- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;
+	- var linkDataset = !standalone || (dataset.diffType !== 'ADDED' && dataset.diffType !== 'DELETED');
 	.file-reference(id=dataset.id)
-		- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;				
 		.header
-			a(data-type=dataset.added?'added':dataset.deleted?'deleted':'changed' href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
-				- var iconUrl = 'images/model/small/';
-				- var action = '';
-				if dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED'
-					- var action = 'overlay/' + (dataset.diffType === 'ADDED' ? 'add/' : 'delete/');
-				- var type = dataset.type.toLowerCase();
-				if dataset.type === 'PROCESS' && dataset.processType
-					- type = dataset.processType === 'LCI_RESULT' ? 'process_system' : 'process_unit';
-				else if dataset.type === 'FLOW' && dataset.flowType
-					- type = dataset.flowType === 'PRODUCT_FLOW' ? 'flow_product' : dataset.flowType === 'WASTE_FLOW' ? 'flow_waste' : 'flow_elementary';
-				img.model-icon-small(src='images/model/small/' + action + type + '.png')
-				if dataset.diffType === 'DELETED'
-					del=dataset.name
-				else
-					span=dataset.name
+			if linkDataset
+				a(data-type=dataset.diffType==='MODIFIED'?'changed':dataset.diffType.toLowerCase() href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
+					+dataset-label(dataset)
+			else
+				span: +dataset-label(dataset)
 			if dataset.category && dataset.category.length
-				- var catUrl = baseUrl + 's/' + getTypeLabel(dataset.type);
+				- var catUrl = null;
+				if linkDataset
+					- catUrl = baseUrl + 's/' + getTypeLabel(dataset.type);
 				+category-breadcrumb(dataset.category.split('/'), catUrl, true)
 if !standalone
 	+paging(resultInfo)

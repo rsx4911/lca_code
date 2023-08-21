@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,7 +12,9 @@ import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.find.Datasets;
 import org.openlca.git.find.References;
 import org.openlca.git.model.Reference;
+import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.ModelPath;
+import org.openlca.jsonld.PackageInfo;
 import org.openlca.jsonld.ZipStore;
 
 public class RepositoryJsonWriter implements Closeable {
@@ -21,11 +24,11 @@ public class RepositoryJsonWriter implements Closeable {
 	private final References references;
 	private final Datasets datasets;
 
-	public static void writeCurrent(File gitDir, File cachedJsonFile) {
+	public static void writeCurrent(File gitDir, File cachedJsonFile, List<LibraryLink> libraries) {
 		try (var repo = new FileRepository(gitDir)) {
 			var references = References.of(repo);
 			var datasets = Datasets.of(repo);
-			var writer = new RepositoryJsonWriter(references, datasets, cachedJsonFile);
+			var writer = new RepositoryJsonWriter(references, datasets, libraries, cachedJsonFile);
 			references.find().iterate(ref -> writer.put(ref));
 			writer.close();
 		} catch (IOException e) {
@@ -33,8 +36,9 @@ public class RepositoryJsonWriter implements Closeable {
 		}
 	}
 
-	public RepositoryJsonWriter(References references, Datasets datasets, File file) throws IOException {
+	public RepositoryJsonWriter(References references, Datasets datasets, List<LibraryLink> libraries, File file) throws IOException {
 		this.zipStore = ZipStore.open(file);
+		PackageInfo.create().withLibraries(libraries).writeTo(zipStore);
 		this.references = references;
 		this.datasets = datasets;
 	}

@@ -279,7 +279,7 @@ public class RepositoryService {
 
 	@Async("taskExecutor")
 	public void generateJson(Repository repo) {
-		RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile());
+		RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(settings.serverConfig.getServerUrl()));
 	}
 
 	public int getNoOfRepositories(User user) {

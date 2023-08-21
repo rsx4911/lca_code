@@ -43,7 +43,7 @@ public class ChangeLogWriter {
 					if (diff.diffType != DiffType.MODIFIED)
 						continue;
 					data = renderDiff(request, repo, diff);
-					packResource(zos, diff.refId + ".html", data);
+					packResource(zos, commit.id + "-" + diff.refId + ".html", data);
 				}
 			}
 		});
@@ -58,7 +58,7 @@ public class ChangeLogWriter {
 				if (diff.diffType != DiffType.MODIFIED)
 					continue;
 				data = renderDiff(request, repo, diff);
-				packResource(zos, diff.refId + ".html", data);
+				packResource(zos, commit.id + "-" + diff.refId + ".html", data);
 			}
 		});
 	}

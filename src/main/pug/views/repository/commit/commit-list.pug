@@ -28,7 +28,8 @@ else
 							.pull-right: +commit-info(commit.additions, commit.updates, commit.deletions)
 							.clear
 							if standalone
-								div: a.pull-right(href=commit.id + '.html') Details »
+								div: a.pull-right(href=commit.id + '.html') Details
+									small >>
 							else
 								div: a.pull-right(href=repository.group + '/' + repository.name + '/commit/' + commit.id) Details &raquo;
 						.clear

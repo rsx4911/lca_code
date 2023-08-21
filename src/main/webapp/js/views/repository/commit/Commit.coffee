@@ -37,6 +37,7 @@ define([
 						result.commitId = commitId
 						result.standalone = @standalone
 						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
+						result.getIcon = Icons.get
 						result.getTypeLabel = (type) -> return ModelTypes[type]
 					afterRender: () =>
 						if @standalone
@@ -63,9 +64,8 @@ define([
 						commit: commit
 						changeLogEnabled: settings.is('CHANGE_LOG_ENABLED')
 						formatDate: Format.dateTime
-						getIcon: Icons.get
 						standalone: @standalone
-					@filter.init (result) => @setModelFilters result.aggregations
+					@filter.init (result) => @setModelFilters result.data
 				Renderer.render @, renderOptions
 
 			loadCommit: (callback) ->
@@ -76,12 +76,13 @@ define([
 					url: "ws/history/commit/#{repo.group}/#{repo.name}/#{commitId}"
 					success: callback
 
-			setModelFilters: (aggregations) ->
+			setModelFilters: (data) ->
 				modelFilters = []
-				for aggregation in aggregations
-					if aggregation.name is 'type'
-						for entry in aggregation.entries
-							modelFilters.push [entry.key, ModelTypes[entry.key]]
+				selected = []
+				for dataset in data
+					if $.inArray(dataset.type, selected) is -1
+						selected.push dataset.type
+						modelFilters.push [dataset.type, ModelTypes[dataset.type]]
 				modelFilters.sort (a, b) ->
 					return ModelTypes.ordinal(a[0]) - ModelTypes.ordinal(b[0])
 				select = @$ '#type'
