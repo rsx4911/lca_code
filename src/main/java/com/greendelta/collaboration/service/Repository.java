@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -74,12 +75,12 @@ public class Repository implements AutoCloseable {
 				.collect(Collectors.toList());
 	}
 
-	public List<LibraryLink> linkedLibraries(String serverUrl) {
+	public List<LibraryLink> linkedLibraries(Function<LibraryLink, String> libToUrl) {
 		var info = Repositories.infoOf(gitRepo());
 		if (info == null || info.libraries() == null)
 			return new ArrayList<>();
 		return info.libraries().stream()
-				.map(lib -> new LibraryLink(lib.id(), serverUrl + "/ws/libraries/" + lib.id()))
+				.map(lib -> new LibraryLink(lib.id(), libToUrl != null ? libToUrl.apply(lib) : null))
 				.collect(Collectors.toList());
 	}
 

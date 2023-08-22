@@ -39,6 +39,7 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -66,12 +67,13 @@ public class RepositoryController {
 	private final DeleteService deleteService;
 	private final RestrictionService restrictionService;
 	private final NotificationService notificationService;
+	private final LibraryService libraryService;
 
 	@Autowired
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
 			IndexService indexService, DeleteService deleteService, RestrictionService restrictionService,
-			NotificationService notificationService) {
+			NotificationService notificationService, LibraryService libraryService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -81,6 +83,7 @@ public class RepositoryController {
 		this.deleteService = deleteService;
 		this.restrictionService = restrictionService;
 		this.notificationService = notificationService;
+		this.libraryService = libraryService;
 	}
 
 	@GetMapping
@@ -380,7 +383,7 @@ public class RepositoryController {
 		}
 		if (!create)
 			return;
-		service.generateJson(repo);
+		service.generateJson(repo, libraryService.getLibraryUrlResolver());
 	}
 
 	@PutMapping("restriction/{group}/{name}/{restriction}/{role}")

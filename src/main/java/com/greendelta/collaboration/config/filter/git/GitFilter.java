@@ -23,6 +23,7 @@ import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SessionService;
@@ -43,6 +44,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	private NotificationService notificationService;
 	private SessionService sessionService;
 	private UserService userService;
+	private LibraryService libraryService;
 	private GitFilterConfig config;
 
 	@Override
@@ -83,6 +85,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		notificationService = app.getBean(NotificationService.class);
 		sessionService = app.getBean(SessionService.class);
 		userService = app.getBean(UserService.class);
+		libraryService = app.getBean(LibraryService.class);
 		this.config = app.getBean(GitFilterConfig.class);
 	}
 
@@ -108,7 +111,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			var generateJson = repo.settings.is(RepositorySetting.JSON_FILE_GENERATION);
 			notificationService.dataPushed(repo, commit);
 			if (generateJson) {
-				repoService.generateJson(repo);
+				repoService.generateJson(repo, libraryService.getLibraryUrlResolver());
 			}
 			var groupSettings = groupService.getSettings(repo.group);
 			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE, 0));

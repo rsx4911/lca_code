@@ -25,9 +25,9 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.JsonWriter;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController
@@ -35,14 +35,14 @@ import com.greendelta.collaboration.service.user.UserService;
 public class DownloadJsonController extends DownloadController {
 
 	private final RepositoryService repoService;
-	private final SettingsService settingsService;
+	private final LibraryService libraryService;
 
 	@Autowired
 	public DownloadJsonController(RepositoryService repoService, UserService userService,
-			SettingsService settingsService) {
+			LibraryService libraryService) {
 		super(repoService, userService);
 		this.repoService = repoService;
-		this.settingsService = settingsService;
+		this.libraryService = libraryService;
 	}
 
 	@Override
@@ -110,8 +110,8 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		String url = settingsService.serverConfig.getServerUrl();
-		return new JsonWriter(repo.references(), repo.datasets(), repo.linkedLibraries(url), commit);
+		return new JsonWriter(repo.references(), repo.datasets(),
+				repo.linkedLibraries(libraryService.getLibraryUrlResolver()), commit);
 	}
 
 	@Override
