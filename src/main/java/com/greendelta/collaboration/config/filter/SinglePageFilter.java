@@ -56,14 +56,17 @@ public class SinglePageFilter implements Filter {
 		}
 		var url = Requests.getRelativePath(request);
 		var isMaintenanceMode = settings.is(ServerSetting.MAINTENANCE_MODE);
-		var isLoginUrl = url.equals("/login") || url.equals("/reset-password") || url.equals("/sign-up");
+		var isHomeUrl = url.equals("/");
+		var isSignUpUrl = url.equals("/sign-up");
+		var isLoginUrl = url.equals("/login") || url.equals("/reset-password") || isSignUpUrl;
 		var isMaintenanceUrl = url.equals("/maintenance");
+		var isSearchUrl = url.equals("/search");
 		var user = userService.getCurrentUser();
 		if (isMaintenanceMode && !isLoginUrl && !isMaintenanceUrl && !user.isAdmin()) {
 			redirect(request.getContextPath() + "/maintenance", response);
 			return;
 		}
-		if ((isLoginUrl && user.id != 0) || (isMaintenanceUrl && !isMaintenanceMode)) {
+		if ((isLoginUrl && !user.isAnonymous()) || (isMaintenanceUrl && !isMaintenanceMode)) {
 			redirect(request.getContextPath() + "/", response);
 			return;
 		}
@@ -75,14 +78,18 @@ public class SinglePageFilter implements Filter {
 		var publicRepositoriesEnabled = settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
 		var homepageEnabled = settings.is(ServerSetting.HOMEPAGE_ENABLED);
 		var searchEnabled = settings.searchConfig.isSearchAvailable();
-		var userRegistrationEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
-		if (user.isAnonymous() && (isLoginUrl || !publicRepositoriesEnabled || (!homepageEnabled && !searchEnabled))) {
-			if ((!publicRepositoriesEnabled && !isLoginUrl) || (!homepageEnabled && !searchEnabled && !isLoginUrl)
-					|| (!userRegistrationEnabled && url.equals("/sign-up"))) {
+		var signUpEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
+		var redirectToLogin = isLoginUrl
+				|| (isHomeUrl && !homepageEnabled)
+				|| (isSearchUrl && !searchEnabled)
+				|| (isSignUpUrl && !signUpEnabled)
+				|| !publicRepositoriesEnabled;
+		if (user.isAnonymous() && redirectToLogin) {
+			if (!isLoginUrl) {
 				redirect(request.getContextPath() + "/login", response);
-				return;
+			} else {
+				forward("/login.html", request, response);
 			}
-			forward("/login.html", request, response);
 			return;
 		}
 		// String redirectUrl = sessionProvider.get().redirectUrl;
