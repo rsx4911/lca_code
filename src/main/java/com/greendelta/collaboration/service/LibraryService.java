@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -180,6 +181,14 @@ public class LibraryService {
 			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn, accesses);
 		}
 	}
+	
+	public boolean isPublic(String name) {
+		var file = getLibraryFile(name);
+		if (!file.exists())
+			return false;
+		var accesses = getAccessTypes(name);
+		return accesses.contains(LibraryAccess.PUBLIC.name());
+	}
 
 	private File getLibraryFile(String name) {
 		return new File(getLibraryPath(), name + ".zip");
@@ -280,6 +289,11 @@ public class LibraryService {
 
 	}
 
+	public Function<LibraryLink, String> getLibraryUrlResolver() {
+		var serverUrl = settings.serverConfig.getServerUrl();
+		return lib -> serverUrl + "/ws/" + (isPublic(lib.id()) ? "public/libraries/" : "libraries/") + lib.id();
+	}
+	
 	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn,
 			List<String> accessTypes) {
 

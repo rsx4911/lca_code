@@ -112,6 +112,7 @@ public class BrowseController {
 		map.put("name", lib);
 		map.put("commitId", commitId);
 		map.put("available", libraryService.get(lib) != null);
+		map.put("public", libraryService.isPublic(lib));
 		return map;
 	}
 

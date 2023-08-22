@@ -30,7 +30,7 @@ each entry in data
 	else if entry.typeOfEntry === 'CATEGORY'
 		- url += '/datasets/' + categoryPath + '/' + entry.name; 
 	else if entry.type === 'LIBRARY'
-		- url = '/ws/libraries/' + entry.name;
+		- url = '/ws/' + (entry.public ? 'public/' : '') + 'libraries/' + entry.name;
 		- target = '_blank';
 	else
 		- url += '/dataset/' + entry.type + '/' + entry.refId; 

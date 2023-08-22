@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -22,6 +23,7 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.model.Commit;
+import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -278,8 +280,8 @@ public class RepositoryService {
 	}
 
 	@Async("taskExecutor")
-	public void generateJson(Repository repo) {
-		RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(settings.serverConfig.getServerUrl()));
+	public void generateJson(Repository repo, Function<LibraryLink, String> urlResolver) {
+		RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(urlResolver));
 	}
 
 	public int getNoOfRepositories(User user) {

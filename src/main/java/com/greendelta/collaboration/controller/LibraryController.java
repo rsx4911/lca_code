@@ -1,0 +1,33 @@
+package com.greendelta.collaboration.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.service.LibraryService;
+
+@RestController("publicLibraryController")
+@RequestMapping("ws/public/libraries")
+public class LibraryController {
+
+	private final LibraryService service;
+
+	@Autowired
+	public LibraryController(LibraryService service) {
+		this.service = service;
+	}
+
+	@GetMapping("{name}")
+	public ResponseEntity<StreamingResponseBody> get(@PathVariable("name") String name) {
+		var library = service.get(name);
+		if (library == null)
+			throw Response.notFound();
+		return Response.ok(library.getName(), library);
+	}
+
+}
