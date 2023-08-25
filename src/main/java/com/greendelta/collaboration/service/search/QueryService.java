@@ -71,7 +71,7 @@ class QueryService {
 			} else {
 				token = token.replace("@", " ");
 				for (String word : token.trim().split("\\s+")) {
-					values.add(word + "*");
+					values.add("*" + word + "*");
 				}
 			}
 		}
