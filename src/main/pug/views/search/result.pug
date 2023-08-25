@@ -11,7 +11,7 @@ mixin result(dataset)
 	.result
 		img.model-icon-small(src='images/model/small/' + getIcon(iconData), aria-label='Model icon of ' + dataset.type)
 		.result-content
-			h4: +link(dataset, repo, version.name)
+			h4.result-text: +link(dataset, repo, version.name)
 			if dataset.type === 'FLOW' && version.flowType === 'ELEMENTARY_FLOW' && version.category && version.category.indexOf('/') !== -1
 				- var categories = version.category.split('/')
 				.category=categories[categories.length - 2] + ' / ' + categories[categories.length - 1]

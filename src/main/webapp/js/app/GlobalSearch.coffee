@@ -23,7 +23,8 @@ define([
 						newRoute += "query=#{query}"
 				if route.indexOf('search/') is 0
 					for param in route.substring(7).split('&')
-						if param.split('=')[0] isnt 'query'
+						key = param.split('=')[0]
+						if key isnt 'query' && key isnt 'page'
 							if newRoute isnt 'search/'
 								newRoute += '&'
 							newRoute += param

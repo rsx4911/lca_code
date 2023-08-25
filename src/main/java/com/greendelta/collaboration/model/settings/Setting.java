@@ -108,7 +108,7 @@ public class Setting extends AbstractEntity {
 			}
 		} else if (type == Long.class) {
 			if (value.getClass() == Long.class) {
-				this.value = Long.toString((int) value);
+				this.value = Long.toString((long) value);
 			} else {
 				var s = value.toString();
 				try {
