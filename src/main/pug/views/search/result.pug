@@ -11,7 +11,7 @@ mixin result(dataset)
 	.result
 		img.model-icon-small(src='images/model/small/' + getIcon(iconData), aria-label='Model icon of ' + dataset.type)
 		.result-content
-			h4.result-text: +link(dataset, repo, version.name)
+			h4: +link(dataset, repo, version.name, null, true)
 			if dataset.type === 'FLOW' && version.flowType === 'ELEMENTARY_FLOW' && version.category && version.category.indexOf('/') !== -1
 				- var categories = version.category.split('/')
 				.category=categories[categories.length - 2] + ' / ' + categories[categories.length - 1]
@@ -23,9 +23,12 @@ mixin result(dataset)
 			+tags(version, repo)
 		+actions(dataset, version, repo)
 
-mixin link(dataset, repo, title, defaultLink)
-	- var url = repo.path + '/dataset/' + dataset.type + '/' + dataset.refId + '?commitId=' + repo.commitId;
-	a(href=url class=defaultLink?'default-link':null)=title
+mixin link(dataset, repo, title, defaultLink, highlight)
+	- var url = repo.path + '/dataset/' + dataset.type + '/' + dataset.refId;
+	if repo.commitId
+		- url += '?commitId=' + repo.commitId;
+	a(href=url class=defaultLink?'default-link':null)
+		span(class=highlight?'result-text':null)=title
 
 mixin repositories(dataset, versionIndex)
 	- var version = dataset.versions[versionIndex];
