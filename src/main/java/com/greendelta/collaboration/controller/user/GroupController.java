@@ -119,7 +119,8 @@ public class GroupController {
 			throw Response.badRequest("name", "This is a reserved word");
 		if (service.exists(name))
 			throw Response.badRequest("name", "Group " + name + " already exists");
-		service.create(name, false);
+		if (!service.create(name, false))
+			throw Response.error("Could not create group, does the configured 'Repositories root directory' exist and can be write-accessed?");
 		notificationService.groupCreated(name).send();
 		return Response.created(Collections.singletonMap("name", name));
 	}

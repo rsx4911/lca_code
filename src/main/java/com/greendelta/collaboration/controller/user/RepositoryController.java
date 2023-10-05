@@ -183,6 +183,8 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		checkValid(group, name);
 		try (var repo = service.create(group, name)) {
+			if (repo == null)
+				throw Response.error("Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			notificationService.repositoryCreated(repo).send();
 			return Response.created(Repositories.map(repo, groupService.isUserNamespace(group)));
 		}
@@ -274,6 +276,8 @@ public class RepositoryController {
 		checkValid(newGroup, newName);
 		try (var from = service.get(group, name);
 				var to = service.create(newGroup, newName)) {
+			if (to == null)
+				throw Response.error("Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			var head = from.commits().head();
 			Commit commit = null;
 			if (head != null && !head.id.equals(commitId)) {
