@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -36,7 +35,6 @@ public class SecurityConfig {
 	private final SettingsService settings;
 	private final GitFilterConfig gitFilterConfig;
 
-	@Autowired
 	public SecurityConfig(SettingsService settings, GitFilterConfig gitFilterConfig) {
 		this.settings = settings;
 		this.gitFilterConfig = gitFilterConfig;
@@ -44,20 +42,24 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		return http.servletApi().and()
-				.csrf().disable()
-				.exceptionHandling()
-				.authenticationEntryPoint(this::handleUnauthenticated).and()
-				.authorizeRequests()
-				.antMatchers("/job").permitAll()
-				.antMatchers("/ws/public/**").permitAll()
-				.antMatchers("/ws/admin/**").hasAuthority(Authority.ADMIN.getAuthority())
-				.antMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())
-				.antMatchers("/ws/usermanager/**").hasAuthority(Authority.USER_MANAGER.getAuthority())
-				.antMatchers("/ws/**", "/stomp/**").authenticated()
-				.antMatchers("/**").access("@repoAccessCheck.canAccess(request)").and()
-				.logout().logoutUrl("/ws/public/logout").logoutSuccessHandler(getLogoutSuccessHandler())
-				.and().build();
+		return http
+				.csrf(config -> config
+						.disable())
+				.exceptionHandling(config -> config
+						.authenticationEntryPoint(this::handleUnauthenticated))
+				.authorizeRequests(config -> config
+						.antMatchers("/job").permitAll()
+						.antMatchers("/ws/public/**").permitAll()
+						.antMatchers("/ws/admin/**").hasAuthority(Authority.ADMIN.getAuthority())
+						.antMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())
+						.antMatchers("/ws/usermanager/**").hasAuthority(Authority.USER_MANAGER.getAuthority())
+						.antMatchers("/ws/**", "/stomp/**").authenticated()
+						.antMatchers("/**").access("@repoAccessCheck.canAccess(request)")
+				)
+				.logout(config -> config
+						.logoutUrl("/ws/public/logout")
+						.logoutSuccessHandler(getLogoutSuccessHandler()))
+				.build();
 	}
 
 	private void handleUnauthenticated(HttpServletRequest request, HttpServletResponse response,

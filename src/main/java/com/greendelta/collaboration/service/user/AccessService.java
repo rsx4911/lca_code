@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
@@ -29,7 +28,7 @@ public class AccessService {
 	private final GroupService groupService;
 	private final SettingsService settings;
 	
-	@Autowired
+	
 	public AccessService(UserService userService, MembershipService membershipService,
 			SettingsService settings) {
 		this.userService = userService;

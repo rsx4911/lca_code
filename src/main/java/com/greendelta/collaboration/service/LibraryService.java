@@ -21,7 +21,6 @@ import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.PackageInfo;
 import org.openlca.util.Dirs;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -43,7 +42,6 @@ public class LibraryService {
 	private final TeamService teamService;
 	private final SettingsService settings;
 
-	@Autowired
 	public LibraryService(UserService userService, RepositoryService repoService, TeamService teamService,
 			SettingsService settings) {
 		this.userService = userService;

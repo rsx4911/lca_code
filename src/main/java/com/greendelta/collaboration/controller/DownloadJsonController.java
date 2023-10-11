@@ -10,7 +10,6 @@ import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +36,6 @@ public class DownloadJsonController extends DownloadController {
 	private final RepositoryService repoService;
 	private final LibraryService libraryService;
 
-	@Autowired
 	public DownloadJsonController(RepositoryService repoService, UserService userService,
 			LibraryService libraryService) {
 		super(repoService, userService);

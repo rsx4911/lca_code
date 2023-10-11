@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +28,6 @@ public class RepositoryController {
 	private final RepositoryService service;
 	private final GroupService groupService;
 
-	@Autowired
 	public RepositoryController(RepositoryService service, GroupService groupService) {
 		this.service = service;
 		this.groupService = groupService;

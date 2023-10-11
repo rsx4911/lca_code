@@ -10,7 +10,6 @@ import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 
-
 public class DsVersion {
 
 	public String objectId;

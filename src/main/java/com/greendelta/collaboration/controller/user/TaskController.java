@@ -3,7 +3,6 @@ package com.greendelta.collaboration.controller.user;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +28,6 @@ public class TaskController {
 	private final AccessService accessService;
 	private final SettingsService settings;
 
-	@Autowired
 	public TaskController(TaskService service, UserService userService, RepositoryService repoService,
 			AccessService accessService, SettingsService settings) {
 		this.service = service;

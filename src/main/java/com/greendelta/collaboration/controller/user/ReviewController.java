@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,7 +39,6 @@ public class ReviewController {
 	private final RepositoryService repoService;
 	private final SettingsService settings;
 
-	@Autowired
 	public ReviewController(ReviewService service, TaskService taskService, UserService userService,
 			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
 			SettingsService settings) {

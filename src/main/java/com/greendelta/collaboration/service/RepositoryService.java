@@ -25,7 +25,6 @@ import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -64,7 +63,6 @@ public class RepositoryService {
 	private final SettingsService settings;
 	private final TaskService taskService;
 
-	@Autowired
 	public RepositoryService(GroupService groupService, AccessService accessService,
 			MembershipService membershipService, UserService userService, CommentService commentService,
 			SettingsService settings, TaskService taskService) {

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +35,6 @@ public class TeamController {
 	private final MembershipService membershipService;
 	private final MessagingService messagingService;
 
-	@Autowired
 	public TeamController(TeamService service, UserService userService, MembershipService membershipService,
 			MessagingService messagingService) {
 		this.service = service;

@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service;
 import java.util.UUID;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -13,7 +12,6 @@ public class AnnouncementService {
 
 	private final SettingsService settings;
 
-	@Autowired
 	public AnnouncementService(SettingsService settings) {
 		this.settings = settings;
 	}

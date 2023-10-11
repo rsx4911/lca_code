@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service;
 import javax.servlet.http.HttpServletRequest;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,7 +23,6 @@ public class SessionService {
 	private final SettingsService settings;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
-	@Autowired
 	public SessionService(AuthenticationManager authManager, UserService userService, SettingsService settings) {
 		this.authManager = authManager;
 		this.userService = userService;

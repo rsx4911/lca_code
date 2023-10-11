@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,7 +41,6 @@ public class TeamController {
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
-	@Autowired
 	public TeamController(TeamService service, UserService userService, MembershipService membershipService,
 			DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;

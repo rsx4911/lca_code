@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.openlca.util.Dirs;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -28,7 +27,6 @@ public class GroupService {
 	private final UserService userService;
 	private final SettingsService settings;
 
-	@Autowired
 	public GroupService(AccessService accessService, MembershipService membershipService, UserService userService,
 			SettingsService settings) {
 		this.accessService = accessService;

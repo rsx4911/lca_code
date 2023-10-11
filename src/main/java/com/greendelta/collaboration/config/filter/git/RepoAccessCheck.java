@@ -5,7 +5,6 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.greendelta.collaboration.config.filter.git.GitRequest.GitAction;
@@ -25,7 +24,6 @@ public class RepoAccessCheck {
 	private final SessionService sessionService;
 	private final GitFilterConfig gitFilterConfig;
 
-	@Autowired
 	public RepoAccessCheck(AccessService accessService, SettingsService settings, SessionService sessionService,
 			GitFilterConfig gitFilterConfig) {
 		this.accessService = accessService;

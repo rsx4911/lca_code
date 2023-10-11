@@ -13,7 +13,6 @@ import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,7 +68,6 @@ public class RepositoryController {
 	private final NotificationService notificationService;
 	private final LibraryService libraryService;
 
-	@Autowired
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
 			IndexService indexService, DeleteService deleteService, RestrictionService restrictionService,

@@ -19,7 +19,6 @@ import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -50,7 +49,6 @@ public class SettingsService {
 	private final Dao<Setting> dao;
 	private final UserService userService;
 
-	@Autowired
 	public SettingsService(Dao<Setting> dao, UserService userService) {
 		this.dao = dao;
 		this.userService = userService;

@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +16,6 @@ public class LibraryController {
 
 	private final LibraryService service;
 
-	@Autowired
 	public LibraryController(LibraryService service) {
 		this.service = service;
 	}

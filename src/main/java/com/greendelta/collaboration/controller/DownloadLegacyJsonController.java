@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +30,6 @@ import com.greendelta.collaboration.service.user.UserService;
 @RequestMapping("ws/public/download/json1")
 public class DownloadLegacyJsonController extends DownloadController {
 
-	@Autowired
 	public DownloadLegacyJsonController(RepositoryService repoService, UserService userService) {
 		super(repoService, userService);
 	}
@@ -83,7 +81,7 @@ public class DownloadLegacyJsonController extends DownloadController {
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
 		return new LegacyJsonWriter(repo.references(), repo.datasets(), commit);
 	}
-	
+
 	@Override
 	protected Logger log() {
 		return LogManager.getLogger(DownloadLegacyJsonController.class);

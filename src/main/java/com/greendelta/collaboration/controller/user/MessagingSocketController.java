@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -37,7 +36,6 @@ public class MessagingSocketController {
 	private final UserService userService;
 	private final TeamService teamService;
 
-	@Autowired
 	public MessagingSocketController(SimpMessagingTemplate messaging, MessagingService service, UserService userService,
 			TeamService teamService) {
 		this.messaging = messaging;

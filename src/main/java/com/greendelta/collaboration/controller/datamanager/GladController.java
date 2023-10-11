@@ -18,7 +18,6 @@ import org.openlca.core.model.AllocationMethod;
 import org.openlca.git.model.Reference;
 import org.openlca.jsonld.Enums;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -52,7 +51,6 @@ public class GladController {
 	private final RepositoryService repoService;
 	private final SettingsService settings;
 
-	@Autowired
 	public GladController(RepositoryService repoService, SettingsService settings) {
 		this.repoService = repoService;
 		this.settings = settings;

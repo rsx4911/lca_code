@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.User;
@@ -24,7 +23,6 @@ public class JobService {
 	private final EmailService emailService;
 	private final SettingsService settings;
 
-	@Autowired
 	public JobService(Dao<Job> dao, UserService userService, EmailService emailService,
 			SettingsService settings) {
 		this.dao = dao;

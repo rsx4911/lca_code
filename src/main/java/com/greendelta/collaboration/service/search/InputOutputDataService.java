@@ -22,7 +22,6 @@ import org.openlca.git.model.DiffType;
 import org.openlca.git.util.Diffs;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -41,7 +40,6 @@ public class InputOutputDataService {
 	private static final Logger log = LogManager.getLogger(InputOutputDataService.class);
 	private final SettingsService settings;
 
-	@Autowired
 	public InputOutputDataService(SettingsService settings) {
 		this.settings = settings;
 	}

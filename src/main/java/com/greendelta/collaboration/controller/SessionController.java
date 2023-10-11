@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,7 +47,6 @@ public class SessionController {
 	private final NotificationService notificationService;
 	private final SessionService sessionService;
 
-	@Autowired
 	public SessionController(UserService userService, GroupService groupService, TeamService teamService, TaskService taskService,
 			SettingsService settings, JobService jobService, NotificationService notificationService,
 			SessionService sessionService) {
@@ -77,7 +75,7 @@ public class SessionController {
 	@PostMapping("login")
 	public String login(
 			@RequestBody Map<String, Object> form,
-			@Autowired HttpServletRequest request) {
+		 HttpServletRequest request) {
 		var username = Maps.getString(form, "username");
 		var password = Maps.getString(form, "password");
 		log.info("User {} attempts to login", username);
@@ -101,7 +99,7 @@ public class SessionController {
 	@PostMapping("register")
 	public void register(
 			@RequestBody Map<String, Object> form,
-			@Autowired HttpServletRequest request) {
+		 HttpServletRequest request) {
 		if (!settings.is(ServerSetting.USER_REGISTRATION_ENABLED))
 			throw Response.unavailable("User registration feature not enabled");
 		var username = Maps.getString(form, "username");

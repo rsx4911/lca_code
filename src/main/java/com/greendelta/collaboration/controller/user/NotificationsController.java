@@ -3,7 +3,6 @@ package com.greendelta.collaboration.controller.user;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,7 +22,6 @@ public class NotificationsController {
 	private final UserService userService;
 	private final SettingsService settings;
 
-	@Autowired
 	public NotificationsController(UserService userService, SettingsService settings) {
 		this.userService = userService;
 		this.settings = settings;

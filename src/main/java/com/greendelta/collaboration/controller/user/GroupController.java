@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +45,6 @@ public class GroupController {
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
-	@Autowired
 	public GroupController(GroupService service, UserService userService, AccessService accessService,
 			MembershipService membershipService, DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;

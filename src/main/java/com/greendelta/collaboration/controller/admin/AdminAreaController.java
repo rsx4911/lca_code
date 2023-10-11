@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,7 +52,6 @@ public class AdminAreaController {
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
 
-	@Autowired
 	public AdminAreaController(RepositoryService repoService, IndexService indexingService, SettingsService settings,
 			EmailService emailService, AnnouncementService announcementService) {
 		this.repoService = repoService;

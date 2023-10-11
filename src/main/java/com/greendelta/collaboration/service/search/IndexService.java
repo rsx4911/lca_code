@@ -7,7 +7,6 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 import org.openlca.git.model.Commit;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +29,6 @@ public class IndexService {
 	private final SettingsService settings;
 	private Queue<Work> workQueue = new LinkedList<>();
 
-	@Autowired
 	public IndexService(@Qualifier("taskExecutor") Executor threads, RepositoryService repoService,
 			SearchService searchService,
 			InputOutputDataService ioDataService, SettingsService settings) {

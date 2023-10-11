@@ -16,7 +16,6 @@ import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.PackageInfo;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,7 +43,6 @@ public class BrowseController {
 	private final LibraryService libraryService;
 	private final SettingsService settings;
 
-	@Autowired
 	public BrowseController(RepositoryService repoService, UserService userService, LibraryService libraryService,
 			SettingsService settings) {
 		this.repoService = repoService;
@@ -79,14 +77,14 @@ public class BrowseController {
 
 	private List<Map<String, Object>> getModelTypeEntries(Repository repo, Commit commit) {
 		var entries = repo.entries().find().commit(commit.id).all();
-		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<String>());
+		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 		var info = Repositories.infoOf(repo.gitRepo(), commit);
 		if (info != null && !info.libraries().isEmpty()) {
 			entries.add(Entries.of(repo.gitRepo()).get(PackageInfo.FILE_NAME, commit.id));
 		}
 		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
-		List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<String>());
+		List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 		return MetaData.sortByType(mapped, typesOrder).map(map -> {
 			if (map.get("type") == null) {
 				map.put("type", "LIBRARY");

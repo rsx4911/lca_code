@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -26,7 +25,6 @@ public class MembershipService {
 	private final Dao<Membership> dao;
 	private final AccessService accessService;
 
-	@Autowired
 	public MembershipService(Dao<Membership> dao, UserService userService, SettingsService settings) {
 		this.dao = dao;
 		// cannot inject access service - would result in a dependency loop

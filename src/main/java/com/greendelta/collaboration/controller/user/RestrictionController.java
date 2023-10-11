@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,7 +31,6 @@ public class RestrictionController {
 	private final UserService userService;
 	private final MembershipService membershipService;
 
-	@Autowired
 	public RestrictionController(RestrictionService service, RepositoryService repoService, UserService userService,
 			MembershipService membershipService) {
 		this.service = service;

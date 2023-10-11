@@ -3,7 +3,6 @@ package com.greendelta.collaboration.service.task;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -24,7 +23,6 @@ public class ReviewService extends TaskExecutionService<Review> {
 	private final RepositoryService repoService;
 	private final UserService userService;
 
-	@Autowired
 	public ReviewService(Dao<Review> dao, Dao<ReviewReference> referenceDao, Dao<TaskAssignment> assignmentDao,
 			UserService userService, RepositoryService repoService,
 			AccessService accessService) {

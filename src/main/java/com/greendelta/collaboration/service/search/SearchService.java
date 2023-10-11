@@ -14,7 +14,6 @@ import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.Diffs;
 import org.openlca.git.util.TypedRefId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -31,7 +30,6 @@ public class SearchService {
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
 
-	@Autowired
 	public SearchService(SettingsService settings, QueryService queryService) {
 		this.settings = settings;
 		this.queryService = queryService;

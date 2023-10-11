@@ -3,7 +3,6 @@ package com.greendelta.collaboration.controller.user;
 import java.util.Map;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,7 +37,6 @@ public class MembershipController {
 	private final AccessService accessService;
 	private final NotificationService notificationService;
 
-	@Autowired
 	public MembershipController(MembershipService service, RepositoryService repoService, UserService userService,
 			TeamService teamService, AccessService accessService, NotificationService notificationService) {
 		this.service = service;
