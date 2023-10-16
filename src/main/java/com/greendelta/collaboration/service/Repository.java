@@ -132,6 +132,8 @@ public class Repository implements AutoCloseable {
 			if (version == null || !version.isCurrent())
 				throw new UnsupportedSchemaException(version);
 		} catch (Exception e) {
+			if (e instanceof UnsupportedSchemaException)
+				throw e;
 			log.error("Could not read context.json", e);
 			throw new UnsupportedSchemaException(null);
 		}
