@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
+import org.openlca.git.RepositoryInfo;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
-import org.openlca.jsonld.PackageInfo;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
 
@@ -227,7 +227,7 @@ public class LibraryService {
 		accessTypes.remove(access);
 		if (accessTypes.isEmpty()) {
 			settings.get(SettingType.LIBRARY_SETTING, name, settingsAccess)
-			.set(LibrarySetting.ACCESS, null);
+					.set(LibrarySetting.ACCESS, null);
 		} else {
 			settings.get(SettingType.LIBRARY_SETTING, name, settingsAccess)
 					.set(LibrarySetting.ACCESS, accessTypes);
@@ -276,7 +276,7 @@ public class LibraryService {
 						.map(Repository::gitRepo)
 						.map(Repositories::infoOf)
 						.filter(Objects::nonNull)
-						.map(PackageInfo::libraries)
+						.map(RepositoryInfo::libraries)
 						.flatMap(List::stream)
 						.map(LibraryLink::id)
 						.distinct()

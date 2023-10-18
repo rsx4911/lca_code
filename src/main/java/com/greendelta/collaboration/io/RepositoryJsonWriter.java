@@ -9,12 +9,12 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.git.RepositoryInfo;
 import org.openlca.git.find.Datasets;
 import org.openlca.git.find.References;
 import org.openlca.git.model.Reference;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.ModelPath;
-import org.openlca.jsonld.PackageInfo;
 import org.openlca.jsonld.ZipStore;
 
 public class RepositoryJsonWriter implements Closeable {
@@ -38,7 +38,7 @@ public class RepositoryJsonWriter implements Closeable {
 
 	public RepositoryJsonWriter(References references, Datasets datasets, List<LibraryLink> libraries, File file) throws IOException {
 		this.zipStore = ZipStore.open(file);
-		PackageInfo.create().withLibraries(libraries).writeTo(zipStore);
+		RepositoryInfo.create().withLibraries(libraries).writeTo(zipStore);
 		this.references = references;
 		this.datasets = datasets;
 	}
