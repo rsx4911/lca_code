@@ -10,18 +10,19 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.git.Compatibility;
+import org.openlca.git.Compatibility.UnsupportedServerVersionException;
 import org.openlca.git.find.Commits;
 import org.openlca.git.find.Datasets;
 import org.openlca.git.find.Entries;
 import org.openlca.git.find.References;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
-import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedSchemaException;
+import com.greendelta.collaboration.error.UnsupportedRepositoryException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
@@ -108,13 +109,6 @@ public class Repository implements AutoCloseable {
 		return group + '-' + name + ".zip";
 	}
 
-	public SchemaVersion getSchemaVersion() {
-		var info = Repositories.infoOf(gitRepo());
-		if (info == null)
-			return null;
-		return info.schemaVersion();
-	}
-
 	public long getSize() {
 		return Dirs.size(dir.toPath());
 	}
@@ -125,17 +119,12 @@ public class Repository implements AutoCloseable {
 	}
 
 	private void checkVersion() {
+		if (commits().find().all().isEmpty())
+			return;
 		try {
-			if (commits().find().all().isEmpty())
-				return;
-			var version = getSchemaVersion();
-			if (version == null || !version.isCurrent())
-				throw new UnsupportedSchemaException(version);
-		} catch (Exception e) {
-			if (e instanceof UnsupportedSchemaException)
-				throw e;
-			log.error("Could not read context.json", e);
-			throw new UnsupportedSchemaException(null);
+			Compatibility.checkServer(gitRepo);
+		} catch (UnsupportedServerVersionException e) {
+			throw new UnsupportedRepositoryException(e);
 		}
 	}
 

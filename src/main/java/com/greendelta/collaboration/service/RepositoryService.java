@@ -32,7 +32,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedSchemaException;
+import com.greendelta.collaboration.error.UnsupportedRepositoryException;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
@@ -351,7 +351,7 @@ public class RepositoryService {
 						continue;
 					}
 					repos.add(repo);
-				} catch (UnsupportedSchemaException e) {
+				} catch (UnsupportedRepositoryException e) {
 					// ignore, just don't add to list
 				}
 			}

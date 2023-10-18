@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.PostLoad;
@@ -67,7 +66,7 @@ public class UserSettings implements Serializable {
 	@Column
 	long notifications;
 
-	@ManyToMany(fetch = FetchType.EAGER)
+	@ManyToMany
 	@JoinTable
 	public List<User> blockedUsers = new ArrayList<>();
 

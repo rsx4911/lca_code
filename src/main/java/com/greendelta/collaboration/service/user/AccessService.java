@@ -8,7 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedSchemaException;
+import com.greendelta.collaboration.error.UnsupportedRepositoryException;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
@@ -221,7 +221,7 @@ public class AccessService {
 		if (!isGroup(groupOrRepo)) {
 			try {
 				return settings.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
-			} catch (UnsupportedSchemaException e) {
+			} catch (UnsupportedRepositoryException e) {
 				return false;
 			}
 		}
@@ -232,7 +232,7 @@ public class AccessService {
 				var path = RepositoryPath.of(groupOrRepo, child.getName()).toString();
 				if (settings.is(RepositorySetting.PUBLIC_ACCESS, path))
 					return true;
-			} catch (RepositoryNotFoundException | UnsupportedSchemaException e) {
+			} catch (RepositoryNotFoundException | UnsupportedRepositoryException e) {
 				// ignore
 			}
 		}
