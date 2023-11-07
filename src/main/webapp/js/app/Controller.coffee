@@ -628,9 +628,11 @@ define([
 				unless options.viewOptions?.repository
 					return
 				version = options.viewOptions.repository.get 'version'
-				if version.repository < version.server or version.repositorySchema < version.serverSchema
+				if version.isSupported
+					return
+				if version.repository < version.server
 					Status.warning 'Repository was pushed from an older openLCA client and might not be fully compatible with this version of the Collaboration Server. Consider using the newest openLCA version', { sticky: true }
-				if version.repository > version.server or version.repositorySchema > version.serverSchema
+				if version.repository > version.server
 					Status.warning 'Repository was pushed from a newer openLCA client and might not be fully compatible with this version of the Collaboration Server. Consider contacting your administrator to update the Collaboration Server', { sticky: true }
 
 			isStandalone: () ->
