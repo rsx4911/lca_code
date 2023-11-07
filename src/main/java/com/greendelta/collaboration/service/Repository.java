@@ -11,18 +11,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.Compatibility;
-import org.openlca.git.Compatibility.UnsupportedServerVersionException;
 import org.openlca.git.find.Commits;
 import org.openlca.git.find.Datasets;
 import org.openlca.git.find.Entries;
 import org.openlca.git.find.References;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
+import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedRepositoryException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
@@ -48,7 +47,6 @@ public class Repository implements AutoCloseable {
 		this.path = new RepositoryPath(group, name);
 		if (!dir.exists())
 			throw new RepositoryNotFoundException(path.toString());
-		checkVersion();
 		this.settings = settings;
 		this.groupSettings = groupSettings;
 	}
@@ -85,6 +83,20 @@ public class Repository implements AutoCloseable {
 				.collect(Collectors.toList());
 	}
 
+	public int getServerVersion() {
+		return Compatibility.getRepositoryServerVersion(gitRepo());
+	}
+
+	public int getSchemaVersion() {
+		var head = Repositories.headCommitOf(gitRepo());
+		if (head == null)
+			return SchemaVersion.current().value();
+		var info = Repositories.infoOf(gitRepo());
+		if (info == null)
+			return SchemaVersion.fallback().value();
+		return info.schemaVersion().value();
+	}
+
 	public Commits commits() {
 		return Commits.of(gitRepo());
 	}
@@ -116,16 +128,6 @@ public class Repository implements AutoCloseable {
 	public String getLabel() {
 		return groupSettings.get(GroupSetting.LABEL, this.group) + "/"
 				+ settings.get(RepositorySetting.LABEL, this.name);
-	}
-
-	private void checkVersion() {
-		if (commits().find().all().isEmpty())
-			return;
-		try {
-			Compatibility.checkServer(gitRepo);
-		} catch (UnsupportedServerVersionException e) {
-			throw new UnsupportedRepositoryException(e);
-		}
 	}
 
 	File getAvatarFile() {

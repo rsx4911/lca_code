@@ -32,7 +32,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedRepositoryException;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
@@ -341,19 +340,15 @@ public class RepositoryService {
 			for (var name : group.listFiles()) {
 				if (!name.isDirectory())
 					continue;
-				try {
-					var repoPath = RepositoryPath.of(group.getName(), name.getName());
-					if (!accessService.canRead(repoPath.toString(), !adminArea))
-						continue;
-					var repo = get(group.getName(), name.getName());
-					if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-						repo.close();
-						continue;
-					}
-					repos.add(repo);
-				} catch (UnsupportedRepositoryException e) {
-					// ignore, just don't add to list
+				var repoPath = RepositoryPath.of(group.getName(), name.getName());
+				if (!accessService.canRead(repoPath.toString(), !adminArea))
+					continue;
+				var repo = get(group.getName(), name.getName());
+				if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
+					repo.close();
+					continue;
 				}
+				repos.add(repo);
 			}
 		}
 		return repos;

@@ -7,8 +7,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedRepositoryException;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
@@ -27,8 +25,7 @@ public class AccessService {
 	private final MembershipService membershipService;
 	private final GroupService groupService;
 	private final SettingsService settings;
-	
-	
+
 	public AccessService(UserService userService, MembershipService membershipService,
 			SettingsService settings) {
 		this.userService = userService;
@@ -116,7 +113,7 @@ public class AccessService {
 		var groupSettings = groupService.getSettings(group);
 		var noOfRepos = groupSettings.get(GroupSetting.NO_OF_REPOSITORIES, 0);
 		String path = settings.get(ServerSetting.REPOSITORY_PATH);
-		return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(path);		
+		return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(path);
 	}
 
 	public List<Comment> filterCanRead(List<Comment> comments) {
@@ -218,23 +215,14 @@ public class AccessService {
 		if (repositoryPath == null)
 			return false;
 		var dir = new File(repositoryPath, groupOrRepo);
-		if (!isGroup(groupOrRepo)) {
-			try {
-				return settings.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
-			} catch (UnsupportedRepositoryException e) {
-				return false;
-			}
-		}
+		if (!isGroup(groupOrRepo))
+			return settings.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
 		if (!dir.isDirectory() || dir.listFiles() == null)
 			return false;
 		for (var child : dir.listFiles()) {
-			try {
-				var path = RepositoryPath.of(groupOrRepo, child.getName()).toString();
-				if (settings.is(RepositorySetting.PUBLIC_ACCESS, path))
-					return true;
-			} catch (RepositoryNotFoundException | UnsupportedRepositoryException e) {
-				// ignore
-			}
+			var path = RepositoryPath.of(groupOrRepo, child.getName()).toString();
+			if (settings.is(RepositorySetting.PUBLIC_ACCESS, path))
+				return true;
 		}
 		return false;
 	}

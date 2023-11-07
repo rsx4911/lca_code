@@ -12,6 +12,8 @@ mixin repository-entry(repo, inGroupView)
             strong=inGroupView ? repo.settings.label||repo.name : repo.label
         if repo.role
             span.pull-right.role.badge.badge-warning(title=repo.role.description)=repo.role.name
+        if repo.version.repository !== repo.version.server || repo.version.repositorySchema !== repo.version.serverSchema
+            span.pull-right.role.badge.badge-warning Incompatible version
         div: i
             +count-info(repo.commits, 'commit', 'commits', false)
             +count-info(repo.datasets, 'data set', 'data sets', false)

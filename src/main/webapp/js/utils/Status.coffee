@@ -4,18 +4,21 @@ define([
 
 	(Layers) ->
 
-		hide = (statusBar) ->
+		hide = (statusBar, options) ->
 			if statusBar.prop('data-removed')
 				return
 			statusBar.prop 'data-removed', true	
-			statusBar.animate
-				top: statusBar.outerHeight() * -1
-			, 500
+			animateTime = if options?.sticky then 0 else 500
+			statusBar.animate { top: -40 }, animateTime
+			if options?.sticky
+				$('#cs-header').animate { top: 0 }, 0
+				$('#main-navigation').animate { marginTop: 65 }, 0
+				$('#main').animate { paddingTop: 65 }, 0
 			setTimeout () ->
 				statusBar.remove()
-			, 500
+			, animateTime
 
-		message: (message, type, details, time = 5000) ->
+		message: (message, type, options) ->
 			if type is 'error'
 				type = 'danger'
 			if $.inArray(type, ['success', 'warning', 'info', 'danger']) is -1
@@ -23,31 +26,35 @@ define([
 			statusBarHtml = "<div class=\"status-bar alert-#{type}\">#{message}"
 			statusBarHtml += "</div>"
 			statusBar = $ statusBarHtml
-			$('body').append statusBar
-			$('body').on 'click.statusbar', () =>
-				hide statusBar
-				$('body').off 'click.statusbar'
-			statusBar.animate
-				top: 0
-			, 500 
-			setTimeout () =>
-				hide statusBar
-			, time
+			$('body').prepend statusBar
+			animateTime = if options?.sticky then 0 else 500
+			statusBar.animate { top: 0 }, animateTime
+			if options?.sticky
+				$('#cs-header').animate { top: 40 }, 0
+				$('#main-navigation').animate { marginTop: 105 }, 0
+				$('#main').animate { paddingTop: 105 }, 0
+			else
+				$('body').on 'click.statusbar', () =>
+					hide statusBar, options
+					$('body').off 'click.statusbar'
+				setTimeout () =>
+					hide statusBar, options
+				, 5000
 
-		ajaxError: (response, time = 5000) ->
-			errorText = "#{response.status} #{response.statusText}"			
-			@message errorText, 'error', response.responseText, time
+		ajaxError: (response, options) ->
+			errorText = "#{response.status} #{response.statusText}"
+			@message errorText, 'error', options
 
-		error: (message, time = 5000) ->
-			@message message, 'error', null, time
+		error: (message, options) ->
+			@message message, 'error', options
 
-		success: (message, time = 5000) ->
-			@message message, 'success', null, time
+		success: (message, options) ->
+			@message message, 'success', options
 
-		warning: (message, time = 5000) ->
-			@message message, 'warning', null, time
+		warning: (message, options) ->
+			@message message, 'warning', options
 
-		info: (message, time = 5000) ->
-			@message message, 'info', null, time
+		info: (message, options) ->
+			@message message, 'info', options
 
 )
