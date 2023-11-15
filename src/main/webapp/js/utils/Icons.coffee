@@ -26,7 +26,7 @@ define () ->
 	get: (ref) ->
 		icon = ''
 		first = true
-		type = if ref.type is 'CATEGORY' or ref.type is 'Category' then ref.categoryType else ref.type
+		type = ref.type
 		for char, index in type
 			if char isnt '_' and !first and isCapital(char) and type.length > (index + 1) and type[index + 1] isnt '_' and !isCapital(type[index + 1])
 				icon += '_'
@@ -36,6 +36,6 @@ define () ->
 			icon += getFlowAppendix(ref)
 		if ref.type is 'Process' or ref.type is 'PROCESS'
 			icon += getProcessAppendix(ref)
-		if ref.type is 'CATEGORY' or ref.type is 'Category'
+		if ref.isCategory
 			icon = "category/#{icon}"
 		return "#{icon}.png".toLowerCase()

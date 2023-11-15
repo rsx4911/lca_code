@@ -81,6 +81,10 @@ public class MetaData {
 
 	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, Repository repo,
 			Mode mode) {
+		if (ref.isCategory) {
+			entry.put("name", ref.path.substring(ref.path.lastIndexOf("/") + 1));
+			return;
+		}
 		var defs = new ArrayList<FieldDefinition>();
 		defs.add(FieldDefinition.firstOf("name"));
 		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS) {

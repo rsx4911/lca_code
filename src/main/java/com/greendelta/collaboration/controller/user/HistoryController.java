@@ -4,14 +4,16 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.openlca.core.model.ModelType;
+import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
-import org.openlca.git.util.Diffs;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -148,7 +150,7 @@ public class HistoryController {
 	}
 
 	@GetMapping("references/{group}/{name}/{commitId}")
-	public SearchResult<Map<String, Object>> getReferences(
+	public Map<String, Object> getReferences(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
@@ -160,15 +162,36 @@ public class HistoryController {
 			var commit = repo.commits().get(commitId);
 			if (commit == null)
 				throw Response.notFound();
-			var typeFilter = type != null ? Collections.singletonList(type.name()) : null;
-			var diffs = Diffs.of(repo.gitRepo(), commit).filter(typeFilter).withPreviousCommit();
+			var diff = Diffs.of(repo.gitRepo(), commit);
+			if (type != null) {
+				if (type == ModelType.CATEGORY) {					
+					diff = diff.onlyCategories();					
+				} else {
+					diff = diff.filter(type.name()).excludeCategories();					
+				}
+			}
+			var diffs = diff.withPreviousCommit();
 			var mapped = diffs.stream().map(d -> MetaData.forBrowse(d, repo));
 			List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
-			return SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());
+			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());
+			var map = Maps.of(result);
+			map.put("modelTypes", getModelTypes(diffs));
+			return map;
 		}
 	}
 
+	private Set<ModelType> getModelTypes(List<Diff> diffs) {
+		var types = new HashSet<ModelType>();
+		diffs.forEach(d -> {
+			types.add(d.type);
+			if (d.isCategory) {
+				types.add(ModelType.CATEGORY);
+			}
+		});
+		return types;
+	}
+	
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
 		return commits.stream().map(c -> putUserName(c)).toList();
 	}

@@ -9,10 +9,10 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry.Side;
+import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
-import org.openlca.git.util.Diffs;
 import org.openlca.git.util.TypedRefId;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +48,7 @@ public class SearchService {
 		if (previous != null && previous.equals(head))
 			return;
 		var manager = new DsEntryManager(repo, head);
-		var diffs = Diffs.of(repo.gitRepo(), previous).with(head);
+		var diffs = Diffs.of(repo.gitRepo(), previous).excludeCategories().with(head);
 		if (diffs.isEmpty())
 			return;
 		var client = getClient();

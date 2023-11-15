@@ -2,7 +2,6 @@ package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,10 +15,10 @@ import org.openlca.core.model.Direction;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
+import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
-import org.openlca.git.util.Diffs;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
@@ -123,7 +122,8 @@ public class InputOutputDataService {
 		for (var commitIndex = 0; commitIndex < commits.size(); commitIndex++) {
 			var commit = commits.get(commitIndex);
 			var diffs = Diffs.of(repo.gitRepo(), commit)
-					.filter(Collections.singletonList(ModelType.PROCESS.name()))
+					.filter(ModelType.PROCESS.name())
+					.excludeCategories()
 					.withPreviousCommit();
 			var skip = new HashSet<String>();
 			for (var diff : diffs) {
