@@ -113,11 +113,11 @@ public class RepositoryController {
 
 	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.path()));
-		map.put("datasets", repo.references().find().count());
-		map.put("commits", repo.commits().find().all().size());
+		map.put("datasets", repo.references.find().count());
+		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.path()).size());
 		if (user.isDataManager()) {
-			var lastCommit = repo.commits().find().latest();
+			var lastCommit = repo.commits.find().latest();
 			map.put("lastCommit", lastCommit != null ? lastCommit.timestamp : null);
 		}
 		return map;
@@ -227,7 +227,7 @@ public class RepositoryController {
 			throw Response.badRequest("commitMessage", "Missing input: Commit message");
 		var user = userService.getCurrentUser();
 		try {
-			var success = ZipCommitWriter.write(input, repo.gitRepo(), user, commitMessage);
+			var success = ZipCommitWriter.write(input, repo, user, commitMessage);
 			if (!success)
 				throw Response.badRequest("data",
 						"Incompatible schema version: Are you trying to import JSON-LD from openLCA 1.x?");
@@ -269,10 +269,10 @@ public class RepositoryController {
 			if (to == null)
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
-			var head = from.commits().head();
+			var head = from.commits.head();
 			Commit commit = null;
 			if (head != null && !head.id.equals(commitId)) {
-				commit = from.commits().get(commitId);
+				commit = from.commits.get(commitId);
 			}
 			if (!service.clone(from, to, commit)) {
 				deleteService.delete(to);

@@ -72,7 +72,7 @@ public class DownloadJsonController extends DownloadController {
 				return false; // is not cached
 			if (!Strings.nullOrEmpty(path))
 				return false; // is not complete repo
-			if (commitId != null && !commitId.equals(repo.commits().resolve("HEAD")))
+			if (commitId != null && !commitId.equals(repo.commits.resolve("HEAD")))
 				return false; // is not current state (last commit)
 			return true;
 		}
@@ -108,8 +108,7 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(repo.references(), repo.datasets(),
-				repo.linkedLibraries(libraryService.getLibraryUrlResolver()), commit);
+		return new JsonWriter(repo, repo.linkedLibraries(libraryService.getLibraryUrlResolver()), commit);
 	}
 
 	@Override

@@ -7,15 +7,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.Compatibility;
-import org.openlca.git.find.Commits;
-import org.openlca.git.find.Datasets;
-import org.openlca.git.find.Entries;
-import org.openlca.git.find.References;
-import org.openlca.git.util.Repositories;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
@@ -27,21 +20,17 @@ import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.util.Routes;
 
-public class Repository implements AutoCloseable {
+public class Repository extends OlcaRepository implements AutoCloseable {
 
-	private static final Logger log = LogManager.getLogger(Repository.class);
 	public final String group;
 	public final String name;
 	public final Settings<RepositorySetting> settings;
 	public final Settings<GroupSetting> groupSettings;
 	private final RepositoryPath path;
-	final File dir;
-	// is only initialized when helpers are initialized, released on close()
-	private FileRepository gitRepo;
 
 	Repository(String root, String group, String name, Settings<RepositorySetting> settings,
-			Settings<GroupSetting> groupSettings) {
-		dir = getDir(root, group, name);
+			Settings<GroupSetting> groupSettings) throws IOException {
+		super(getDir(root, group, name));
 		this.group = group;
 		this.name = name;
 		this.path = new RepositoryPath(group, name);
@@ -56,18 +45,6 @@ public class Repository implements AutoCloseable {
 		return new File(fsPath);
 	}
 
-	public FileRepository gitRepo() {
-		if (gitRepo == null) {
-			try {
-				gitRepo = new FileRepository(dir);
-			} catch (IOException e) {
-				log.error("Error accessing file repository", e);
-				return null;
-			}
-		}
-		return gitRepo;
-	}
-
 	public List<String> linkedLibraries() {
 		return linkedLibraries(null).stream()
 				.map(LibraryLink::id)
@@ -75,7 +52,7 @@ public class Repository implements AutoCloseable {
 	}
 
 	public List<LibraryLink> linkedLibraries(Function<LibraryLink, String> libToUrl) {
-		var info = Repositories.infoOf(gitRepo());
+		var info = getInfo();
 		if (info == null || info.libraries() == null)
 			return new ArrayList<>();
 		return info.libraries().stream()
@@ -84,33 +61,17 @@ public class Repository implements AutoCloseable {
 	}
 
 	public int getServerVersion() {
-		return Compatibility.getRepositoryServerVersion(gitRepo());
+		return Compatibility.getRepositoryServerVersion(this);
 	}
 
 	public int getSchemaVersion() {
-		var head = Repositories.headCommitOf(gitRepo());
+		var head = getHeadCommit();
 		if (head == null)
 			return SchemaVersion.current().value();
-		var info = Repositories.infoOf(gitRepo());
+		var info = getInfo();
 		if (info == null)
 			return SchemaVersion.fallback().value();
 		return info.schemaVersion().value();
-	}
-
-	public Commits commits() {
-		return Commits.of(gitRepo());
-	}
-
-	public Datasets datasets() {
-		return Datasets.of(gitRepo());
-	}
-
-	public References references() {
-		return References.of(gitRepo());
-	}
-
-	public Entries entries() {
-		return Entries.of(gitRepo());
 	}
 
 	public String path() {
@@ -136,14 +97,6 @@ public class Repository implements AutoCloseable {
 
 	public File getCachedJsonFile() {
 		return new File(dir, "cached-json.zip");
-	}
-
-	@Override
-	public void close() {
-		if (gitRepo != null) {
-			gitRepo.close();
-		}
-		gitRepo = null;
 	}
 
 	public static class InsufficientStorageException extends RuntimeException {

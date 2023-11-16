@@ -8,12 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
-import org.openlca.git.find.Datasets;
-import org.openlca.git.find.References;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 import org.openlca.jsonld.LibraryLink;
 
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Maps;
 
 public class JsonWriter extends AbstractWriter {
@@ -21,9 +20,9 @@ public class JsonWriter extends AbstractWriter {
 	private final RepositoryJsonWriter writer;
 	private final Set<String> processed = new HashSet<String>();
 
-	public JsonWriter(References references, Datasets datasets, List<LibraryLink> libraries, Commit commit) throws IOException {
-		super(references, commit);
-		this.writer = new RepositoryJsonWriter(references, datasets, libraries, tmpFile);
+	public JsonWriter(Repository repo, List<LibraryLink> libraries, Commit commit) throws IOException {
+		super(repo, commit);
+		this.writer = new RepositoryJsonWriter(repo, libraries, tmpFile);
 	}
 
 	@Override

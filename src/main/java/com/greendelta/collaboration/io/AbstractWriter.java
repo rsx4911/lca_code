@@ -7,11 +7,12 @@ import java.nio.file.Files;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
-import org.openlca.git.find.References;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.TypedRefIdMap;
 import org.openlca.util.Strings;
+
+import com.greendelta.collaboration.service.Repository;
 
 abstract class AbstractWriter implements DatasetWriter {
 
@@ -20,11 +21,11 @@ abstract class AbstractWriter implements DatasetWriter {
 	protected final File tmpFile;
 	protected boolean collectReferences;
 
-	protected AbstractWriter(References refs, Commit commit) throws IOException {
+	protected AbstractWriter(Repository repo, Commit commit) throws IOException {
 		var tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
 		this.tmpFile = new File(tmpDir, "temp.zip");
 		this.references = new TypedRefIdMap<Reference>();
-		refs.find().commit(commit.id).iterate(ref -> references.put(ref, ref));
+		repo.references.find().commit(commit.id).iterate(ref -> references.put(ref, ref));
 	}
 
 	protected final Reference getRef(ModelType type, String refId) {

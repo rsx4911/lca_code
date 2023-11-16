@@ -63,12 +63,12 @@ public class MetaData {
 	}
 
 	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
-		var ref = repo.references().get(type, refId, commitId);
+		var ref = repo.references.get(type, refId, commitId);
 		return getName(repo, ref);
 	}
 	
 	public static String getName(Repository repo, Reference ref) {
-		var info = repo.datasets().parse(ref, "name");
+		var info = repo.datasets.parse(ref, "name");
 		var name = info.get("name");
 		return name != null ? name.toString() : "";
 	}
@@ -105,7 +105,7 @@ public class MetaData {
 				defs.add(FieldDefinition.firstOf("defaultAllocationMethod", MetaData::getModellingApproach));
 			}
 		}
-		var info = repo.datasets().parse(ref, defs);
+		var info = repo.datasets.parse(ref, defs);
 		var location = info.get("location.name");
 		if (location == null || location.toString().isEmpty()) {
 			entry.put("name", info.get("name"));

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
-import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
@@ -57,7 +56,7 @@ public class HistoryController {
 			@PathVariable("type") ModelType type,
 			@PathVariable("refId") String refId) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = repo.commits().find().model(type, refId).all();
+			var commits = repo.commits.find().model(type, refId).all();
 			if (commits.size() == 0)
 				return Response.noContent();
 			Collections.reverse(commits);
@@ -73,11 +72,11 @@ public class HistoryController {
 			@RequestParam(name = "lastCommitId", required = false) String lastCommitId) {
 		try (var repo = repoService.get(group, name)) {
 			if (lastCommitId != null && !lastCommitId.isEmpty()) {
-				var commit = repo.commits().get(lastCommitId);
+				var commit = repo.commits.get(lastCommitId);
 				if (commit == null)
 					throw Response.notFound("Commit " + lastCommitId + " not found");
 			}
-			var commits = repo.commits().find().after(lastCommitId).path(path).all();
+			var commits = repo.commits.find().after(lastCommitId).path(path).all();
 			Collections.reverse(commits);
 			return Response.ok(putUserName(commits));
 		}
@@ -91,7 +90,7 @@ public class HistoryController {
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = repo.commits().find().all();
+			var commits = repo.commits.find().all();
 			Collections.reverse(commits);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, c -> c.message);
 			var converted = SearchResults.convert(result, c -> Maps.of(c));
@@ -109,8 +108,8 @@ public class HistoryController {
 					.toList().size();
 			var commitId = Maps.getString(commitData, "id");
 			groupCount.put(commitId, count);
-			var commit = repo.commits().get(commitId);
-			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
+			var commit = repo.commits.get(commitId);
+			var diffs = repo.diffs.find().commit(commit).withPreviousCommit();
 			commitData.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 			commitData.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			commitData.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
@@ -136,11 +135,11 @@ public class HistoryController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits().get(commitId);
+			var commit = repo.commits.get(commitId);
 			if (commit == null)
 				throw Response.notFound();
 			var map = putUserName(commit);
-			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
+			var diffs = repo.diffs.find().commit(commit).withPreviousCommit();
 			map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 			map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
 			map.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
@@ -159,10 +158,10 @@ public class HistoryController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits().get(commitId);
+			var commit = repo.commits.get(commitId);
 			if (commit == null)
 				throw Response.notFound();
-			var diff = Diffs.of(repo.gitRepo(), commit);
+			var diff = repo.diffs.find().commit(commit);
 			if (type != null) {
 				if (type == ModelType.CATEGORY) {					
 					diff = diff.onlyCategories();					
@@ -214,7 +213,7 @@ public class HistoryController {
 			@PathVariable("refId") String refId,
 			@PathVariable("commitId") String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var lastCommit = repo.commits().find().model(type, refId).before(commitId).latest();
+			var lastCommit = repo.commits.find().model(type, refId).before(commitId).latest();
 			if (lastCommit == null || lastCommit.id.equals(commitId))
 				throw Response.notFound("No previous commit found for " + type.name() + " " + refId);
 			return lastCommit.id;

@@ -15,7 +15,6 @@ import org.openlca.core.model.Direction;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
-import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
@@ -113,15 +112,15 @@ public class InputOutputDataService {
 
 	void index(Repository repo) {
 		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
-		var commits = repo.commits().find().after(previousCommitId).all();
-		Commit previousCommit = previousCommitId != null ? repo.commits().get(previousCommitId) : null;
+		var commits = repo.commits.find().after(previousCommitId).all();
+		Commit previousCommit = previousCommitId != null ? repo.commits.get(previousCommitId) : null;
 		var client = getClient();
 		if (client == null)
 			return;
 		var buffer = new EntryBuffer(client, 1000);
 		for (var commitIndex = 0; commitIndex < commits.size(); commitIndex++) {
 			var commit = commits.get(commitIndex);
-			var diffs = Diffs.of(repo.gitRepo(), commit)
+			var diffs = repo.diffs.find().commit(commit)
 					.filter(ModelType.PROCESS.name())
 					.excludeCategories()
 					.withPreviousCommit();
@@ -174,7 +173,7 @@ public class InputOutputDataService {
 	}
 
 	private InputOutputData createData(Repository repo, Commit commit, int commitIndex, Diff diff) {
-		var map = repo.datasets().parse(diff.toReference(Side.NEW),
+		var map = repo.datasets.parse(diff.toReference(Side.NEW),
 				FieldDefinition.firstOf("name"),
 				FieldDefinition.firstOf("processType", ProcessType::valueOf),
 				FieldDefinition.allOf("exchanges.flow.@id").ifIs("exchanges.isInput").name("inputs"),

@@ -79,7 +79,7 @@ public class DownloadLegacyJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new LegacyJsonWriter(repo.references(), repo.datasets(), commit);
+		return new LegacyJsonWriter(repo, commit);
 	}
 
 	@Override

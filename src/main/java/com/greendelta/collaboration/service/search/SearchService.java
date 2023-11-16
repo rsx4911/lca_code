@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.diff.DiffEntry.Side;
-import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
@@ -40,15 +39,15 @@ public class SearchService {
 	}
 
 	void index(Repository repo) {
-		var head = repo.commits().head();
+		var head = repo.commits.head();
 		if (head == null)
 			return;
 		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
-		var previous = previousCommitId != null ? repo.commits().get(previousCommitId) : null;
+		var previous = previousCommitId != null ? repo.commits.get(previousCommitId) : null;
 		if (previous != null && previous.equals(head))
 			return;
 		var manager = new DsEntryManager(repo, head);
-		var diffs = Diffs.of(repo.gitRepo(), previous).excludeCategories().with(head);
+		var diffs = repo.diffs.find().commit(previous).excludeCategories().with(head);
 		if (diffs.isEmpty())
 			return;
 		var client = getClient();
@@ -91,7 +90,7 @@ public class SearchService {
 	}
 
 	void updateTags(Repository repo) {
-		var head = repo.commits().head();
+		var head = repo.commits.head();
 		if (head == null)
 			return;
 		var client = getClient();
@@ -106,7 +105,7 @@ public class SearchService {
 	}
 
 	void move(Repository oldRepo, Repository newRepo) {
-		var head = newRepo.commits().head();
+		var head = newRepo.commits.head();
 		if (head == null)
 			return;
 		var client = getClient();
@@ -124,11 +123,11 @@ public class SearchService {
 	}
 
 	private void update(EntryBuffer buffer, Repository repo, Consumer<DsEntry> update) {
-		var head = repo.commits().head();
+		var head = repo.commits.head();
 		if (head == null)
 			return;
 		var manager = new DsEntryManager(repo, head);
-		repo.references().find().iterate(ref -> update(buffer, manager, ref, update));
+		repo.references.find().iterate(ref -> update(buffer, manager, ref, update));
 	}
 
 	private void update(EntryBuffer buffer, DsEntryManager manager, Reference ref, Consumer<DsEntry> update) {
@@ -148,7 +147,7 @@ public class SearchService {
 			return;
 		var buffer = new EntryBuffer(client, 1000);
 		var manager = new DsEntryManager(repo, null);
-		repo.references().find().commit(previousCommitId).iterate(ref -> remove(buffer, manager, ref));
+		repo.references.find().commit(previousCommitId).iterate(ref -> remove(buffer, manager, ref));
 		buffer.flush();
 	}
 

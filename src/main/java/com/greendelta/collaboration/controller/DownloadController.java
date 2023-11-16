@@ -40,7 +40,7 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{}/{} (commit id {})", group, repository, path, commitId);
 			var writer = prepareWriter(repo, commitId, true);
-			repo.references().find().path(path).commit(commitId).iterate(writer::write);
+			repo.references.find().path(path).commit(commitId).iterate(writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -49,7 +49,7 @@ abstract class DownloadController {
 
 	protected String prepare(String group, String repository, ModelType type, String refId, String commitId) {
 		try (var repo = repoService.get(group, repository)) {
-			var ref = repo.references().get(type, refId, commitId);
+			var ref = repo.references.get(type, refId, commitId);
 			if (ref == null)
 				throw Response.notFound("ref " + type + " " + refId + " not found");
 			log().info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
@@ -79,7 +79,7 @@ abstract class DownloadController {
 					commitId);
 			var writer = prepareWriter(repo, commitId, true);
 			paths.stream().forEach(path -> {
-				repo.references().find().path(path).commit(commitId).iterate(writer::write);
+				repo.references.find().path(path).commit(commitId).iterate(writer::write);
 			});
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
@@ -91,7 +91,7 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{} (commit id {})", group, repository, commitId);
 			var writer = prepareWriter(repo, commitId, false);
-			repo.references().find().commit(commitId).iterate(writer::write);
+			repo.references.find().commit(commitId).iterate(writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -99,7 +99,7 @@ abstract class DownloadController {
 	}
 
 	private DatasetWriter prepareWriter(Repository repo, String commitId, boolean withReferences) throws IOException {
-		var commit = repo.commits().find().until(commitId).latest();
+		var commit = repo.commits.find().until(commitId).latest();
 		if (commit == null)
 			throw Response.notFound("commit " + commitId + " not found");
 		var writer = createWriter(repo, commit);

@@ -100,7 +100,7 @@ public class IndexService {
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.index(repo);
 				}
-				setCommitId(repo, repo.commits().head());
+				setCommitId(repo, repo.commits.head());
 			} finally {
 				repo.close();
 				work.worked++;
@@ -118,7 +118,7 @@ public class IndexService {
 					ioDataService.move(repo, newRepo);
 				}
 				setCommitId(repo, null);
-				setCommitId(newRepo, newRepo.commits().head());
+				setCommitId(newRepo, newRepo.commits.head());
 			} finally {
 				repo.close();
 				newRepo.close();
@@ -152,7 +152,7 @@ public class IndexService {
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.index(repo);
 				}
-				setCommitId(repo, repo.commits().head());
+				setCommitId(repo, repo.commits.head());
 			} finally {
 				repo.close();
 				work.worked++;
@@ -175,7 +175,7 @@ public class IndexService {
 					if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 						ioDataService.index(repo);
 					}
-					setCommitId(repo, repo.commits().head());
+					setCommitId(repo, repo.commits.head());
 					work.worked++;
 				});
 			} finally {

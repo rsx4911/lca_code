@@ -194,11 +194,11 @@ public class SearchController {
 			throw Response.unavailable("Search links feature not enabled or search cluster not available");
 		try (var repo = repoService.get(repositoryId)) {
 			if (commitId == null) {
-				commitId = repo.commits().find().latestId();
+				commitId = repo.commits.find().latestId();
 			}
 			if (commitId == null)
 				throw Response.notFound();
-			var commit = repo.commits().get(commitId);
+			var commit = repo.commits.get(commitId);
 			var result = ioDataService.query(repo, commit, flowRefId, direction, page, pageSize, filter);
 			return SearchResults.convert(result, entry -> addProcessInfo(repo, commit, entry));
 		}
@@ -206,7 +206,7 @@ public class SearchController {
 
 	private Map<String, Object> addProcessInfo(Repository repo, Commit commit, Map<String, Object> entry) {
 		var refId = Maps.getString(entry, "refId");
-		var ref = repo.references().get(ModelType.PROCESS, refId, commit.id);
+		var ref = repo.references.get(ModelType.PROCESS, refId, commit.id);
 		entry.put("type", ModelType.PROCESS.name());
 		return MetaData.forBrowse(entry, ref, repo);
 	}

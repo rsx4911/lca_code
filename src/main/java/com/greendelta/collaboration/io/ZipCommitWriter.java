@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.zip.ZipException;
 
 import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Repository;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Change;
@@ -19,13 +18,13 @@ import org.openlca.git.model.ModelRef;
 import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.util.GitUtil;
 import org.openlca.git.util.MetaDataParser;
-import org.openlca.git.util.Repositories;
 import org.openlca.git.writer.CommitWriter;
 import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Repository;
 
 public class ZipCommitWriter extends CommitWriter {
 
@@ -62,7 +61,7 @@ public class ZipCommitWriter extends CommitWriter {
 	}
 
 	private void write(String message) throws IOException {
-		var previousCommit = Repositories.headCommitOf(repo);
+		var previousCommit = repo.getHeadCommit();
 		if (previousCommit == null) {
 			write(message, getChanges());
 		} else {

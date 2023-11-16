@@ -16,7 +16,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.git.find.Diffs;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
@@ -34,11 +33,11 @@ public class ChangeLogWriter {
 		return generate(zos -> {
 			var data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
-			var commits = repo.commits().find().all();
+			var commits = repo.commits.find().all();
 			for (var commit : commits) {
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				var diffs = Diffs.of(repo.gitRepo(), commit).excludeCategories().withPreviousCommit();
+				var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
 				for (var diff : diffs) {
 					if (diff.diffType != DiffType.MODIFIED)
 						continue;
@@ -51,7 +50,7 @@ public class ChangeLogWriter {
 
 	public File generate(HttpServletRequest request, Repository repo, Commit commit) throws WebRequestException {
 		return generate(zos -> {
-			var diffs = Diffs.of(repo.gitRepo(), commit).excludeCategories().withPreviousCommit();
+			var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {

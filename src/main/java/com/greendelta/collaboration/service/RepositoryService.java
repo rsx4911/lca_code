@@ -105,7 +105,12 @@ public class RepositoryService {
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
 		Settings<GroupSetting> groupSettings = groupService.getSettings(group);
-		return new Repository(path, group, name, repoSettings, groupSettings);
+		try {
+			return new Repository(path, group, name, repoSettings, groupSettings);
+		} catch (IOException e) {
+			log.error("Error opening repository", e);
+			return null;
+		}
 	}
 
 	public boolean exists(String group, String name) {

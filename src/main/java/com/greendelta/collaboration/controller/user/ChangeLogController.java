@@ -63,7 +63,7 @@ public class ChangeLogController {
 					file = writer.generate(request, repo);
 					filename = "changelog_" + repo.path() + ".zip";
 				} else {
-					var commit = repo.commits().get(commitId);
+					var commit = repo.commits.get(commitId);
 					if (commit == null)
 						throw Response.notFound("Could not find commit with id " + commitId);
 					file = writer.generate(request, repo, commit);

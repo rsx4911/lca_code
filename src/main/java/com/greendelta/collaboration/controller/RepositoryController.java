@@ -38,7 +38,7 @@ public class RepositoryController {
 		try (var repositories = service.getPublic()) {
 			return repositories.stream().map(repo -> {
 				var map = Repositories.map(repo);
-				map.put("datasets", repo.references().find().count());
+				map.put("datasets", repo.references.find().count());
 				return map;
 			}).toList();
 		}
@@ -50,7 +50,7 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
 			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
-			var lastCommit = repo.commits().head();
+			var lastCommit = repo.commits.head();
 			if (lastCommit != null) {
 				Maps.put(mappedRepo, "settings.lastChange", lastCommit.timestamp);
 			}
@@ -76,10 +76,10 @@ public class RepositoryController {
 			@PathVariable("path") String path,
 			@RequestParam(name = "commitId", required = false) String commitId) throws IOException {
 		try (var repo = service.get(group, name)) {
-			var ref = repo.references().get(type, refId, commitId);
+			var ref = repo.references.get(type, refId, commitId);
 			if (ref == null)
 				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
-			var binary = repo.datasets().getBinary(ref, path);
+			var binary = repo.datasets.getBinary(ref, path);
 			if (binary == null)
 				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
 			var filename = path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
