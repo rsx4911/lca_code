@@ -2,7 +2,6 @@ package com.greendelta.collaboration.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -11,7 +10,7 @@ import java.util.UUID;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -40,7 +39,7 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{}/{} (commit id {})", group, repository, path, commitId);
 			var writer = prepareWriter(repo, commitId, true);
-			repo.references.find().path(path).commit(commitId).iterate(writer::write);
+			repo.entries.iterate(commitId, path, writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -52,22 +51,13 @@ abstract class DownloadController {
 			var ref = repo.references.get(type, refId, commitId);
 			if (ref == null)
 				throw Response.notFound("ref " + type + " " + refId + " not found");
+			var entry = repo.entries.get(ref.path, commitId);
+			if (entry == null)
+				throw Response.notFound("entry " + ref.path + " not found");
 			log().info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
 			var writer = prepareWriter(repo, commitId, true);
-			writer.write(ref);
+			writer.write(entry);
 			return put(writer, refId + "_" + commitId + ".zip");
-		} catch (IOException e) {
-			throw Response.error("Error writing data sets to tmp file");
-		}
-	}
-
-	protected String prepare(String group, String repository, String commitId, Collection<Reference> requested) {
-		try (var repo = repoService.get(group, repository)) {
-			log().info("Exporting {} requested data sets of repository {}/{} (commit id {})", requested.size(), group,
-					repository, commitId);
-			var writer = prepareWriter(repo, commitId, true);
-			requested.forEach(writer::write);
-			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
 		}
@@ -79,7 +69,7 @@ abstract class DownloadController {
 					commitId);
 			var writer = prepareWriter(repo, commitId, true);
 			paths.stream().forEach(path -> {
-				repo.references.find().path(path).commit(commitId).iterate(writer::write);
+				repo.entries.iterate(commitId, path, writer::write);
 			});
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
@@ -91,7 +81,7 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{} (commit id {})", group, repository, commitId);
 			var writer = prepareWriter(repo, commitId, false);
-			repo.references.find().commit(commitId).iterate(writer::write);
+			repo.entries.iterate(commitId, writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -138,6 +128,13 @@ abstract class DownloadController {
 	protected abstract Logger log();
 
 	private record TokenInfo(String path, String filename, String userId) {
+	}
+
+	public static void main(String[] args) throws IOException {
+		var repo = new OlcaRepository(new File("C:\\Users\\greve\\opt\\collab\\git\\greve\\empty_cat"));
+		var entries = repo.entries.find().path("FLOW").recursive().all();
+		for (var e : entries)
+			System.out.println(e.path);
 	}
 
 }

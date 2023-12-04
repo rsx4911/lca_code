@@ -1,20 +1,17 @@
 package com.greendelta.collaboration.controller;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -95,15 +92,6 @@ public class DownloadJsonController extends DownloadController {
 			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestBody Set<String> paths) {
 		return super.prepare(group, repository, commitId, paths);
-	}
-
-	@PutMapping("prepare/{group}/{repository}")
-	public String prepareRequested(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository,
-			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestBody List<Reference> requested) {
-		return super.prepare(group, repository, commitId, requested);
 	}
 
 	@Override

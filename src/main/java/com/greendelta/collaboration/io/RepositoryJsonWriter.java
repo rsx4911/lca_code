@@ -14,13 +14,17 @@ import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
+import org.openlca.jsonld.input.CategoryImport;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 
 public class RepositoryJsonWriter implements Closeable {
 
 	private final static Logger log = LogManager.getLogger(RepositoryJsonWriter.class);
 	private final ZipStore zipStore;
 	private final OlcaRepository repo;
-
+	
 	public static void writeCurrent(File gitDir, File cachedJsonFile, List<LibraryLink> libraries) {
 		try (var repo = new OlcaRepository(gitDir)) {
 			var writer = new RepositoryJsonWriter(repo, libraries, cachedJsonFile);
@@ -53,4 +57,12 @@ public class RepositoryJsonWriter implements Closeable {
 		zipStore.close();
 	}
 
+	void writeCategoriesJson(JsonArray categories) {
+		if (categories.isEmpty())
+			return;
+		var json = new Gson().toJson(categories);
+		var data = json.getBytes(StandardCharsets.UTF_8);
+		zipStore.put(CategoryImport.FILE_NAME, data);
+	}
+	
 }

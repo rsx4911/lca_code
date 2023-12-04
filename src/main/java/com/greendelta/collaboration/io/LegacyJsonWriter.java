@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
+import org.openlca.git.model.Entry;
 
 import com.greendelta.collaboration.service.Repository;
 
@@ -17,15 +17,15 @@ public class LegacyJsonWriter implements DatasetWriter {
 	}
 
 	@Override
-	public void write(Reference ref) {
-		jsonWriter.write(ref);
+	public void write(Entry entry) {
+		jsonWriter.write(entry);
 	}
 	
 	@Override
 	public void withReferences() {
 		jsonWriter.withReferences();
 	}
-	
+
 	@Override
 	public File close() throws IOException {
 		var file = jsonWriter.close();
