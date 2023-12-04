@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.search.wrapper.SearchClient;
@@ -66,15 +67,15 @@ public class InputOutputDataService {
 	}
 
 	void remove(Repository repo) {
-		var ids = getIds(repo, null);
+		var ids = getIds(repo.path(), null);
 		if (ids.isEmpty())
 			return;
 		getClient().remove(ids);
 	}
 
-	private Set<String> getIds(Repository repo, Commit commit) {
+	private Set<String> getIds(String path, Commit commit) {
 		var query = new SearchQueryBuilder()
-				.filter("repositoryPath", SearchFilterValue.term(repo.path()));
+				.filter("repositoryPath", SearchFilterValue.term(path));
 		if (commit != null) {
 			query.filter("versions.commitId", SearchFilterValue.term(commit.id));
 		}
@@ -103,8 +104,8 @@ public class InputOutputDataService {
 		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	void move(Repository repo, Repository newRepo) {
-		var ids = getIds(repo, null);
+	void move(RepositoryPath path, Repository newRepo) {
+		var ids = getIds(path.toString(), null);
 		Map<String, Object> update = new HashMap<>();
 		update.put("repositoryPath", newRepo.path());
 		getClient().update(ids, update);

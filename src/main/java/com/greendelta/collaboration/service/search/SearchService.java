@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
@@ -104,7 +105,7 @@ public class SearchService {
 		buffer.flush();
 	}
 
-	void move(Repository oldRepo, Repository newRepo) {
+	void move(RepositoryPath oldPath, Repository newRepo) {
 		var head = newRepo.commits.head();
 		if (head == null)
 			return;
@@ -112,7 +113,7 @@ public class SearchService {
 		if (client == null)
 			return;
 		var buffer = new EntryBuffer(client, 1000);
-		update(buffer, oldRepo,
+		update(buffer, newRepo,
 				e -> e.versions.forEach(
 						v -> v.repos.forEach(
 								r -> {
