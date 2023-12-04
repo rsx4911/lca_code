@@ -50,12 +50,6 @@ define([
 										icon: "images/model/small/#{if e.typeOfEntry isnt 'DATASET' then 'category/' else ''}#{e.type.toLowerCase()}.png"
 								callback data
 
-		# returns elements in three different types:
-		# 1) ModelType elements, e.g. {path: 'FLOW'}
-		# 2) Category elements, e.g. {path: $categoryType/$path}
-		# 3) Model elements, e.g. {refId: '4321-...', type: 'FLOW'}
-		# if a parent is already in the elements to be returned, child elements will not be added
-		# because the tree is lazy loaded, the calling code must add missing (not selected in UI) elements anyway
 		getSelection: (container, firstOnly) ->
 			selected = $('#model-tree').jstree 'get_selected', true
 			if firstOnly
