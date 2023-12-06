@@ -3,7 +3,7 @@ define () ->
 		class FeedScroll
 
 			constructor: (options) ->
-				{@url, @container, @template, @extendModel, @page, @pageSize, @onEmpty} = options
+				{@url, @container, @template, @extendModel, @page, @pageSize, @afterRender, @onEmpty} = options
 				@id = 'feed-scroll-' + (Math.random() * Math.pow(100, 8)).toString().replace('.', '') 
 				@eventName = 'scroll.' + @id
 				@page = @page or 1
@@ -86,6 +86,7 @@ define () ->
 				for entry in result.data
 					@extendModel entry
 					@results.append @template entry 
+					@afterRender?(entry)
 
 			destroy: () ->
 				$(@container).empty()

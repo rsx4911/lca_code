@@ -30,7 +30,6 @@ import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.search.wrapper.SearchResult;
 
 @RestController
 @RequestMapping("ws/history")
@@ -94,30 +93,21 @@ public class HistoryController {
 			Collections.reverse(commits);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, c -> c.message);
 			var converted = SearchResults.convert(result, c -> Maps.of(c));
-			return Response.ok(putAdditionalInfo(converted, repo, commits));
+			var groupCount = new HashMap<String, Integer>();
+			converted = SearchResults.convert(converted, this::putUserName);
+			converted.data.forEach(commitData -> {
+				var count = commits.stream()
+						.filter(c -> isSameDay(Maps.getLong(commitData, "timestamp"), c.timestamp))
+						.toList().size();
+				var commitId = Maps.getString(commitData, "id");
+				groupCount.put(commitId, count);
+			});
+			var map = Maps.of(converted);
+			Maps.put(map, "resultInfo.groupCount", groupCount);
+			return Response.ok(map);
 		}
 	}
 
-	private Map<String, Object> putAdditionalInfo(SearchResult<Map<String, Object>> result, Repository repo,
-			List<Commit> commits) {
-		var groupCount = new HashMap<String, Integer>();
-		result = SearchResults.convert(result, this::putUserName);
-		result.data.forEach(commitData -> {
-			var count = commits.stream()
-					.filter(c -> isSameDay(Maps.getLong(commitData, "timestamp"), c.timestamp))
-					.toList().size();
-			var commitId = Maps.getString(commitData, "id");
-			groupCount.put(commitId, count);
-			var commit = repo.commits.get(commitId);
-			var diffs = repo.diffs.find().commit(commit).withPreviousCommit();
-			commitData.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
-			commitData.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
-			commitData.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
-		});
-		var map = Maps.of(result);
-		Maps.put(map, "resultInfo.groupCount", groupCount);
-		return map;
-	}
 
 	private boolean isSameDay(long d1, long d2) {
 		var c1 = Calendar.getInstance();
@@ -139,13 +129,33 @@ public class HistoryController {
 			if (commit == null)
 				throw Response.notFound();
 			var map = putUserName(commit);
-			var diffs = repo.diffs.find().commit(commit).withPreviousCommit();
-			map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
-			map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
-			map.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
 			map.put("canCreateChangeLog", accessService.canCreateChangeLog(repo.path()));
+			putCount(map, repo, commit);
 			return map;
 		}
+	}
+
+	@GetMapping("count/{group}/{name}/{commitId}")
+	public Map<String, Object> getCount(
+			@PathVariable("group") String group,
+			@PathVariable("name") String name,
+			@PathVariable("commitId") String commitId) {
+		try (var repo = repoService.get(group, name)) {
+			var commit = repo.commits.get(commitId);
+			if (commit == null)
+				throw Response.notFound();
+			var map = new HashMap<String, Object>();
+			putCount(map, repo, commit);
+			return map;
+		}
+	}
+	
+	private void putCount(Map<String, Object> map, Repository repo, Commit commit) {
+		var diffs = repo.diffs.find().commit(commit).withPreviousCommit();		
+		map.put("id", commit.id);
+		map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
+		map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
+		map.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
 	}
 
 	@GetMapping("references/{group}/{name}/{commitId}")
@@ -163,10 +173,10 @@ public class HistoryController {
 				throw Response.notFound();
 			var diff = repo.diffs.find().commit(commit);
 			if (type != null) {
-				if (type == ModelType.CATEGORY) {					
-					diff = diff.onlyCategories();					
+				if (type == ModelType.CATEGORY) {
+					diff = diff.onlyCategories();
 				} else {
-					diff = diff.filter(type.name()).excludeCategories();					
+					diff = diff.filter(type.name()).excludeCategories();
 				}
 			}
 			var diffs = diff.withPreviousCommit();
@@ -190,7 +200,7 @@ public class HistoryController {
 		});
 		return types;
 	}
-	
+
 	private List<Map<String, Object>> putUserName(List<Commit> commits) {
 		return commits.stream().map(c -> putUserName(c)).toList();
 	}

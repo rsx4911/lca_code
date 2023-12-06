@@ -25,7 +25,8 @@ else
 						.commit-link.pull-right
 							.commit-id.pull-right=commit.id
 							.clear
-							.pull-right: +commit-info(commit.additions, commit.updates, commit.deletions)
+							.pull-right.commit-info-container(data-commit-id=commit.id)
+								img(src='images/loader.gif' width=16 height=16)
 							.clear
 							if standalone
 								div: a.pull-right(href=commit.id + '.html') Details
