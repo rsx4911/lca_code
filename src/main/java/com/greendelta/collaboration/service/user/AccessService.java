@@ -112,8 +112,7 @@ public class AccessService {
 			return false;
 		var groupSettings = groupService.getSettings(group);
 		var noOfRepos = groupSettings.get(GroupSetting.NO_OF_REPOSITORIES, 0);
-		String path = settings.get(ServerSetting.REPOSITORY_PATH);
-		return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(path);
+		return noOfRepos == 0 || noOfRepos > groupService.getRepositoryCount(group);
 	}
 
 	public List<Comment> filterCanRead(List<Comment> comments) {
