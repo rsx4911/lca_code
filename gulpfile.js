@@ -198,9 +198,9 @@ gulp.task('copySprites', function() {
 
 gulp.task('collectDependencies', function() {
   // (most) views and templates are loaded dynamically, App.coffee references DynamicDependencies so the build includes the files
-  fs.writeFileSync('src/main/webapp/js/app/DynamicDependencies.coffee');
+  fs.writeFileSync('src/main/webapp/js/app/DynamicDependencies.coffee', '');
   return gulp.src('./src/main/webapp/js/app/DynamicDependencies.coffee')
-    .pipe(insert.transform(function(contents) {
+    .pipe(insert.transform(function() {
       var content = 'define([';
       var views = collect('./src/main/webapp/js/views');
       for (var i = 0; i < views.length; i++) {
