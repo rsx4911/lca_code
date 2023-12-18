@@ -21,6 +21,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.git.actions.GitInit;
 import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
@@ -146,7 +147,8 @@ public class RepositoryService {
 
 	private boolean init(String path) {
 		File dir = new File(path);
-		try (var git = Git.init().setBare(true).setDirectory(dir).call()) {
+		try {
+			GitInit.in(dir).run();
 			return true;
 		} catch (Exception e) {
 			log.error("Error initializing git repository", e);
