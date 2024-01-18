@@ -8,6 +8,7 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/Model'
+				'cs!utils/Status'
 				'cs!views/tasks/ReviewWidget'
 				'cs!models/Repository'
 				'cs!models/User'
@@ -19,7 +20,7 @@ define([
 				'templates/views/error'
 			]
 	
-	(Navigation, GlobalSearch, UserMenu, Announcements, Events, Format, Layers, LocalStorage, Model, ReviewWidget, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
+	(Navigation, GlobalSearch, UserMenu, Announcements, Events, Format, Layers, LocalStorage, Model, Status, ReviewWidget, Repository, User, Group, Team, conversations, currentUser, settings, errorTemplate) ->
 
 		Controller = () ->
 
@@ -558,7 +559,7 @@ define([
 						result[param[0]] = param[1]
 				return result
 
-			checkGroupOrRepositoryExists: (options, callback) ->
+			loadGroupOrRepository: (options, callback) ->
 				if !options.search
 					if options.viewOptions?.repository
 						Model.fetch options.viewOptions.repository,
@@ -590,24 +591,49 @@ define([
 						else
 							Backbone.history.history.back()
 
-			getDocumentTitle: (value) ->
-				unless value
-					return 'LCA Collaboration Server'
-				unread = 0
-				if window.WebSocket and currentUser.isLoggedIn()
-					unread = conversations.getUnreadMessages()
-				if value.indexOf('|') is -1 
-					if unread
-						return "(#{unread}) #{value} | LCA Collaboration Server"
+			setDocumentTitle: (options) ->
+				value = options.title or ''
+				if options.title and options.subTitle and currentUser.isLoggedIn()
+					value += ' | ' + options.subTitle
+				title = 'LCA Collaboration Server'
+				if value
+					unread = 0
+					if window.WebSocket and currentUser.isLoggedIn()
+						unread = conversations.getUnreadMessages()
+					if value.indexOf('|') is -1 
+						if unread
+							title = "(#{unread}) #{value} | #{title}"
+						else
+							title = "#{value} | #{title}"
 					else
-						return "#{value} | LCA Collaboration Server"
-				split = value.split '|'
-				reversed = 'LCA Collaboration Server'
-				for v in split
-					reversed = "#{v} | #{reversed}"
-				if unread
-					return "(#{unread}) #{reversed}"
-				return reversed
+						split = value.split '|'
+						for v in split
+							title = "#{v} | #{title}"
+						if unread
+							title = "(#{unread}) #{title}"
+				document.title = title
+
+			setHeaderTitle: (options) ->
+				title = options.title or ''
+				if options.title and options.subTitle and currentUser.isLoggedIn()
+					title += ' - ' + options.subTitle
+				if !options.href
+					$('#header-title').html title
+				else
+					$('#header-title').html '<a href="' + (options.href || title) + '">' + title + '</a>'
+					$('#header-title a').on 'click', (event) -> Events.followLink event
+				$('#header-title').attr 'title', title
+
+			checkRepositoryVersion: (options) ->
+				unless options.viewOptions?.repository
+					return
+				version = options.viewOptions.repository.get 'version'
+				if version.isSupported
+					return
+				if version.repository < version.server
+					Status.warning 'Repository was pushed from an older openLCA client and might not be fully compatible with this version of the Collaboration Server. Consider using the newest openLCA version', { sticky: true }
+				if version.repository > version.server
+					Status.warning 'Repository was pushed from a newer openLCA client and might not be fully compatible with this version of the Collaboration Server. Consider contacting your administrator to update the Collaboration Server', { sticky: true }
 
 			isStandalone: () ->
 				query = Backbone.history.location.search
@@ -644,25 +670,16 @@ define([
 					$('#global-search-group').hide()
 				$('#global-search').val options?.viewOptions?.query	
 				container = if $('#main .center').length then '#main .center' else if $('#main .full-size').length then '#main .full-size' else '#main'
-				@checkGroupOrRepositoryExists options, () =>
+				@loadGroupOrRepository options, () =>
 					$(container).empty()
 					if $('#main .full-size').length
 						if options.fullWidth
 							$('#main .full-size').addClass 'full-width'
 						else
 							$('#main .full-size').removeClass 'full-width'
-					title1 = options.title or ''
-					title2 = options.title or ''
-					if options.title and options.subTitle and currentUser.isLoggedIn()
-						title1 += ' - ' + options.subTitle
-						title2 += ' | ' + options.subTitle
-					if !options.href
-						$('#header-title').html title1
-					else
-						$('#header-title').html '<a href="' + (options.href||title1) + '">' + title1 + '</a>'
-						$('#header-title a').on 'click', (event) -> Events.followLink event
-					$('#header-title').attr 'title', title1
-					document.title = @getDocumentTitle title2
+					@setHeaderTitle options
+					@setDocumentTitle options
+					@checkRepositoryVersion options
 					if currentUser.isLoggedIn()
 						if typeof options.nav is 'string'
 							options.nav = {type: options.nav}

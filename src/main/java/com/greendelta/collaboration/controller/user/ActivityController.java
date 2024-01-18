@@ -9,7 +9,6 @@ import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.util.Diffs;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +42,6 @@ public class ActivityController {
 	private final TaskService taskService;
 	private final SettingsService settings;
 
-	@Autowired
 	public ActivityController(UserService userService, RepositoryService repoService, CommentService commentService,
 			TaskService taskService, SettingsService settings) {
 		this.userService = userService;

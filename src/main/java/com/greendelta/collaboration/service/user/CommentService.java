@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -28,7 +27,6 @@ public class CommentService {
 	private final UserService userService;
 	private final SettingsService settings;
 
-	@Autowired
 	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
 			SettingsService settings) {
 		this.dao = dao;

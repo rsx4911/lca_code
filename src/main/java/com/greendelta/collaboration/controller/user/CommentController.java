@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openlca.core.model.ModelType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,7 +45,6 @@ public class CommentController {
 	private final NotificationService notificationService;
 	private final SettingsService settings;
 
-	@Autowired
 	public CommentController(CommentService service, RepositoryService repoService, UserService userService,
 			AccessService accessService, NotificationService notificationService, SettingsService settings) {
 		this.service = service;

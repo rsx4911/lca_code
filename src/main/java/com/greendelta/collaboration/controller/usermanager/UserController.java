@@ -3,7 +3,6 @@ package com.greendelta.collaboration.controller.usermanager;
 import java.util.Map;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +33,6 @@ public class UserController {
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
-	@Autowired
 	public UserController(UserService service, GroupService groupService, DeleteService deleteService,
 			NotificationService notificationService) {
 		this.service = service;

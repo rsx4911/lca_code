@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +15,6 @@ public class AnnouncementController {
 
 	private final AnnouncementService service;
 
-	@Autowired
 	public AnnouncementController(AnnouncementService service) {
 		this.service = service;
 	}

@@ -59,7 +59,6 @@ public class SearchController {
 	private final IndexService indexService;
 	private final SettingsService settings;
 
-	@Autowired
 	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
 			UserService userService, InputOutputDataService ioDataService, IndexService indexService,
 			SettingsService settings) {

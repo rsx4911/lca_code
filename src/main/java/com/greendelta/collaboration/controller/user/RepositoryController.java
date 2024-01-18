@@ -13,7 +13,6 @@ import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,7 +68,6 @@ public class RepositoryController {
 	private final NotificationService notificationService;
 	private final LibraryService libraryService;
 
-	@Autowired
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
 			IndexService indexService, DeleteService deleteService, RestrictionService restrictionService,
@@ -99,16 +97,16 @@ public class RepositoryController {
 				return Response.ok(SearchResults.convert(all, Repositories::map));
 			var user = userService.getCurrentUser();
 			switch (module) {
-				case DASHBOARD, GROUP:
-					return Response.ok(SearchResults.convert(all,
-							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
-				case REVIEW:
-					return Response.ok(all.data.stream()
-							.filter(repo -> accessService.canManageTaskIn(repo.path()))
-							.map(Repositories::map)
-							.toList());
-				default:
-					return Response.ok(all.data.stream().map(Repositories::map).toList());
+			case DASHBOARD, GROUP:
+				return Response.ok(SearchResults.convert(all,
+						repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
+			case REVIEW:
+				return Response.ok(all.data.stream()
+						.filter(repo -> accessService.canManageTaskIn(repo.path()))
+						.map(Repositories::map)
+						.toList());
+			default:
+				return Response.ok(all.data.stream().map(Repositories::map).toList());
 			}
 		}
 	}
@@ -159,15 +157,6 @@ public class RepositoryController {
 		}
 	}
 
-	@GetMapping("meta/{group}/{name}")
-	public Map<String, Object> getMeta(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
-		try (var repo = service.get(group, name)) {
-			return Maps.of("schemaVersion", repo.getSchemaVersion().value());
-		}
-	}
-
 	@GetMapping("export/{group}/{name}")
 	public ResponseEntity<StreamingResponseBody> doExport(
 			@PathVariable("group") String group,
@@ -183,6 +172,9 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		checkValid(group, name);
 		try (var repo = service.create(group, name)) {
+			if (repo == null)
+				throw Response.error(
+						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			notificationService.repositoryCreated(repo).send();
 			return Response.created(Repositories.map(repo, groupService.isUserNamespace(group)));
 		}
@@ -274,6 +266,9 @@ public class RepositoryController {
 		checkValid(newGroup, newName);
 		try (var from = service.get(group, name);
 				var to = service.create(newGroup, newName)) {
+			if (to == null)
+				throw Response.error(
+						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			var head = from.commits().head();
 			Commit commit = null;
 			if (head != null && !head.id.equals(commitId)) {

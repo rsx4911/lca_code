@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +30,6 @@ public class LibraryController {
 	private final LibraryService service;
 	private final RepositoryService repoService;
 
-	@Autowired
 	public LibraryController(LibraryService service, RepositoryService repoService) {
 		this.service = service;
 		this.repoService = repoService;

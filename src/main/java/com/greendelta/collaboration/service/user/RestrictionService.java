@@ -2,7 +2,6 @@ package com.greendelta.collaboration.service.user;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.RestrictionSet;
@@ -13,7 +12,6 @@ public class RestrictionService {
 
 	private final Dao<RestrictionSet> dao;
 
-	@Autowired
 	public RestrictionService(Dao<RestrictionSet> dao) {
 		this.dao = dao;
 	}

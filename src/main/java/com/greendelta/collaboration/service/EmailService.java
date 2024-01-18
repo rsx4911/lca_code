@@ -12,7 +12,6 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +23,6 @@ public class EmailService {
 	private static final Logger log = LogManager.getLogger(EmailService.class);
 	private final SettingsService settings;
 
-	@Autowired
 	public EmailService(SettingsService settings) {
 		this.settings = settings;
 	}

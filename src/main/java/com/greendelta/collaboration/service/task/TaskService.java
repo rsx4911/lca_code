@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.User;
@@ -19,7 +18,6 @@ public class TaskService {
 
 	private Dao<Task> dao;
 
-	@Autowired
 	public TaskService(Dao<Task> dao) {
 		this.dao = dao;
 	}

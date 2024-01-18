@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openlca.git.model.Commit;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.Comment;
@@ -33,7 +32,6 @@ public class NotificationService {
 	private final EmailService emailService;
 	private final SettingsService settings;
 
-	@Autowired
 	public NotificationService(UserService userService, MembershipService membershipService, EmailService emailService,
 			SettingsService settings) {
 		this.userService = userService;

@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -31,7 +30,6 @@ public class DeleteService {
 	private final CommentService commentService;
 	private final RestrictionService restrictionService;
 
-	@Autowired
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
 			MessagingService messagingService, AccessService accessService, CommentService commentService,

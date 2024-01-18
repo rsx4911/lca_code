@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.service.Repository;
@@ -31,7 +30,6 @@ class QueryService {
 	private final ScoreService scoreService;
 	private final DsEntryParser parser = new DsEntryParser();
 
-	@Autowired
 	QueryService(SettingsService settings, RepositoryService repoService, ScoreService scoreService) {
 		this.settings = settings;
 		this.repoService = repoService;

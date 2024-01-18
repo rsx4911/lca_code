@@ -12,6 +12,7 @@ import java.util.zip.ZipException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.openlca.core.model.ModelType;
+import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Change;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.ModelRef;
@@ -21,7 +22,6 @@ import org.openlca.git.util.MetaDataParser;
 import org.openlca.git.util.Repositories;
 import org.openlca.git.writer.CommitWriter;
 import org.openlca.jsonld.ModelPath;
-import org.openlca.jsonld.PackageInfo;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.util.Strings;
 
@@ -44,7 +44,7 @@ public class ZipCommitWriter extends CommitWriter {
 			tmpFile = Files.createTempFile("cs-json2repository-", ".zip");
 			Files.copy(stream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
 			zip = ZipStore.open(tmpFile.toFile());
-			var info = PackageInfo.readFrom(zip);
+			var info = RepositoryInfo.readFrom(zip);
 			if (!info.schemaVersion().isCurrent())
 				return false;
 			var writer = new ZipCommitWriter(zip, git);

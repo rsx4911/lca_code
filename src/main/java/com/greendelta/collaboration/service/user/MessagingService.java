@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.Message;
@@ -21,7 +20,6 @@ public class MessagingService {
 	private final Dao<Message> dao;
 	private final UserService userService;
 
-	@Autowired
 	public MessagingService(Dao<Message> dao, UserService userService) {
 		this.dao = dao;
 		this.userService = userService;

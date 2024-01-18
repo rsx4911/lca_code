@@ -4,7 +4,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +32,6 @@ public class MessagingController {
 	private final TeamService teamService;
 	private final SettingsService settings;
 
-	@Autowired
 	public MessagingController(MessagingService service, UserService userService, TeamService teamService,
 			SettingsService settings) {
 		this.service = service;

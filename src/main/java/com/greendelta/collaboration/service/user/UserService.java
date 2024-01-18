@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +28,6 @@ public class UserService implements UserDetailsService {
 	private final Dao<User> dao;
 	private final PasswordEncoder passwordEncoder;
 
-	@Autowired
 	public UserService(Dao<User> dao, PasswordEncoder passwordEncoder) {
 		this.dao = dao;
 		this.passwordEncoder = passwordEncoder;

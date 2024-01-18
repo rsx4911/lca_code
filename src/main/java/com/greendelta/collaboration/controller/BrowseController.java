@@ -9,14 +9,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
+import org.openlca.git.RepositoryInfo;
 import org.openlca.git.find.Entries;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
-import org.openlca.jsonld.PackageInfo;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,7 +43,6 @@ public class BrowseController {
 	private final LibraryService libraryService;
 	private final SettingsService settings;
 
-	@Autowired
 	public BrowseController(RepositoryService repoService, UserService userService, LibraryService libraryService,
 			SettingsService settings) {
 		this.repoService = repoService;
@@ -79,14 +77,14 @@ public class BrowseController {
 
 	private List<Map<String, Object>> getModelTypeEntries(Repository repo, Commit commit) {
 		var entries = repo.entries().find().commit(commit.id).all();
-		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<String>());
+		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 		var info = Repositories.infoOf(repo.gitRepo(), commit);
 		if (info != null && !info.libraries().isEmpty()) {
-			entries.add(Entries.of(repo.gitRepo()).get(PackageInfo.FILE_NAME, commit.id));
+			entries.add(Entries.of(repo.gitRepo()).get(RepositoryInfo.FILE_NAME, commit.id));
 		}
 		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
-		List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<String>());
+		List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 		return MetaData.sortByType(mapped, typesOrder).map(map -> {
 			if (map.get("type") == null) {
 				map.put("type", "LIBRARY");
@@ -105,7 +103,7 @@ public class BrowseController {
 	}
 
 	private Map<String, Object> createLibraryEntry(String lib, String commitId) {
-		var map = Maps.of("path", PackageInfo.FILE_NAME + "/" + lib);
+		var map = Maps.of("path", RepositoryInfo.FILE_NAME + "/" + lib);
 		map.put("refId", lib);
 		map.put("type", "LIBRARY");
 		map.put("typeOfEntry", "LIBRARY");
@@ -132,7 +130,7 @@ public class BrowseController {
 			}
 			if (entry.get("typeOfEntry").equals(EntryType.DATASET.name()))
 				continue;
-			boolean isPackageInfo = entry.get("path").equals(PackageInfo.FILE_NAME);
+			boolean isPackageInfo = entry.get("path").equals(RepositoryInfo.FILE_NAME);
 			if (isPackageInfo) {
 				if (categoryPath.isEmpty()) {
 					var info = Repositories.infoOf(repo.gitRepo(), commit);
@@ -155,10 +153,10 @@ public class BrowseController {
 	private Commit getCommit(Map<String, Object> entry, Repository repo) {
 		var path = Maps.getString(entry, "path");
 		var commitId = Maps.getString(entry, "commitId");
-		if (!path.startsWith(PackageInfo.FILE_NAME + "/"))
+		if (!path.startsWith(RepositoryInfo.FILE_NAME + "/"))
 			return repo.commits().find().path(path).until(commitId).latest();
 		var library = Maps.getString(entry, "refId");
-		var commits = repo.commits().find().path(PackageInfo.FILE_NAME).until(commitId).all();
+		var commits = repo.commits().find().path(RepositoryInfo.FILE_NAME).until(commitId).all();
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
 			var info = Repositories.infoOf(repo.gitRepo(), commit);

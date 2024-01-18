@@ -20,20 +20,18 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.error.RepositoryNotFoundException;
-import com.greendelta.collaboration.error.UnsupportedSchemaException;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
@@ -64,7 +62,6 @@ public class RepositoryService {
 	private final SettingsService settings;
 	private final TaskService taskService;
 
-	@Autowired
 	public RepositoryService(GroupService groupService, AccessService accessService,
 			MembershipService membershipService, UserService userService, CommentService commentService,
 			SettingsService settings, TaskService taskService) {
@@ -135,19 +132,21 @@ public class RepositoryService {
 			throw new ForbiddenAccessException(group, "WRITE");
 		var path = getPath(group, name);
 		if (path == null)
-			throw new ForbiddenAccessException(group, "WRITE");
-		init(path);
+			return null;
+		if (!init(path))
+			return null;
 		membershipService.addMembership(currentUser, RepositoryPath.of(group, name).toString(), Role.OWNER, true);
 		return get(group, name);
 	}
 
-	private void init(String path) {
+	private boolean init(String path) {
 		File dir = new File(path);
 		try (var git = Git.init().setBare(true).setDirectory(dir).call()) {
-		} catch (GitAPIException e) {
+			return true;
+		} catch (Exception e) {
 			log.error("Error initializing git repository", e);
 			Dirs.delete(dir);
-			throw new Error(e);
+			return false;
 		}
 	}
 
@@ -161,6 +160,8 @@ public class RepositoryService {
 		if (exists(group, name))
 			return false;
 		try (var newRepo = create(group, name)) {
+			if (newRepo == null)
+				throw Response.error("Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			Dirs.move(repo.dir.toPath(), newRepo.dir.toPath());
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
@@ -254,6 +255,8 @@ public class RepositoryService {
 
 	public void unpack(Repository repo, InputStream input) {
 		try {
+			if (!repo.dir.exists())
+				return;
 			Dirs.delete(repo.dir);
 			create(repo.group, repo.name).close();
 			var repoPath = repo.dir.toPath();
@@ -337,19 +340,15 @@ public class RepositoryService {
 			for (var name : group.listFiles()) {
 				if (!name.isDirectory())
 					continue;
-				try {
-					var repoPath = RepositoryPath.of(group.getName(), name.getName());
-					if (!accessService.canRead(repoPath.toString(), !adminArea))
-						continue;
-					var repo = get(group.getName(), name.getName());
-					if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-						repo.close();
-						continue;
-					}
-					repos.add(repo);
-				} catch (UnsupportedSchemaException e) {
-					// ignore, just don't add to list
+				var repoPath = RepositoryPath.of(group.getName(), name.getName());
+				if (!accessService.canRead(repoPath.toString(), !adminArea))
+					continue;
+				var repo = get(group.getName(), name.getName());
+				if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
+					repo.close();
+					continue;
 				}
+				repos.add(repo);
 			}
 		}
 		return repos;

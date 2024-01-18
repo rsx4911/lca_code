@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.search;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.service.SettingsService;
@@ -14,7 +13,6 @@ class ScoreService {
 
 	private final SettingsService settings;
 
-	@Autowired
 	ScoreService(SettingsService settings) {
 		this.settings = settings;
 	}
@@ -22,7 +20,6 @@ class ScoreService {
 	void applyTo(SearchQueryBuilder builder) {
 		applyTypeOrder(builder);
 	}
-
 
 	private void applyTypeOrder(SearchQueryBuilder builder) {
 		var score = new Score(Aggregations.MODEL_TYPE.field);

@@ -8,7 +8,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,7 +32,6 @@ public class ChangeLogController {
 	private final UserService userService;
 	private final SettingsService settings;
 
-	@Autowired
 	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
@@ -42,7 +40,7 @@ public class ChangeLogController {
 
 	@GetMapping("{group}/{name}")
 	public String request(
-			@Autowired HttpServletRequest request,
+		 HttpServletRequest request,
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		return request(request, group, name, null);
@@ -50,7 +48,7 @@ public class ChangeLogController {
 
 	@GetMapping("{group}/{name}/{commitId}")
 	public String request(
-			@Autowired HttpServletRequest request,
+		 HttpServletRequest request,
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {

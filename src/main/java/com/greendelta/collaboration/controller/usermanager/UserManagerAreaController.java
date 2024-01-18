@@ -24,7 +24,6 @@ public class UserManagerAreaController {
 	private final GroupService groupService;
 	private final TeamService teamService;
 
-	@Autowired
 	public UserManagerAreaController(RepositoryService repoService, UserService service, GroupService groupService,
 			TeamService teamService) {
 		this.repoService = repoService;

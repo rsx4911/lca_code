@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.openlca.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +46,6 @@ public class UserController {
 	private final MessagingService messagingService;
 	private final SettingsService settings;
 
-	@Autowired
 	public UserController(UserService service, TeamService teamService, AccessService accessService,
 			MembershipService membershipService, MessagingService messagingService, SettingsService settings) {
 		this.service = service;
