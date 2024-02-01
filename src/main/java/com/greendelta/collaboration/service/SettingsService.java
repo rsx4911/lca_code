@@ -394,7 +394,7 @@ public class SettingsService {
 					value = setting.getValue();
 				}
 			}
-			if (value == null)
+			if (value == null || (defaultValue != null && value instanceof String s && s.trim().isEmpty()))
 				return defaultValue;
 			return value;
 		}
