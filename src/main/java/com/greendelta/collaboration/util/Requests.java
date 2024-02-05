@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.util;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class Requests {
 

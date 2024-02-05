@@ -2,12 +2,12 @@ package com.greendelta.collaboration.model.settings;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +17,7 @@ import com.greendelta.collaboration.model.AbstractEntity;
 @Table
 public class Setting extends AbstractEntity {
 
-	@Column
+	@Column(columnDefinition = "VARCHAR(255)")
 	@Enumerated(EnumType.STRING)
 	private SettingType type;
 
@@ -31,7 +31,7 @@ public class Setting extends AbstractEntity {
 	private String value;
 
 	@Lob
-	@Column
+	@Column(columnDefinition = "LONGBLOB")
 	private byte[] data;
 
 	private Setting() {

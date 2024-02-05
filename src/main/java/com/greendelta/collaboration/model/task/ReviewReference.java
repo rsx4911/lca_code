@@ -2,13 +2,13 @@ package com.greendelta.collaboration.model.task;
 
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
@@ -20,7 +20,7 @@ import com.greendelta.collaboration.model.User;
 @Table
 public class ReviewReference extends AbstractEntity {
 
-	@Column
+	@Column(columnDefinition = "VARCHAR(255)")
 	@Enumerated(EnumType.STRING)
 	public ModelType type;
 

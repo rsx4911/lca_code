@@ -11,7 +11,7 @@ public class StatusExceptionHandler {
 
 	@ExceptionHandler(ResponseStatusException.class)
 	public ResponseEntity<?> handleException(ResponseStatusException e) {
-		return ResponseEntity.status(e.getStatus()).contentType(MediaType.APPLICATION_JSON).body(e.getReason());
+		return ResponseEntity.status(e.getStatusCode()).contentType(MediaType.APPLICATION_JSON).body(e.getReason());
 	}
 
 }

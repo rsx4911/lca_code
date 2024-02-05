@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.util.function.Supplier;
 
 import org.openlca.util.Strings;
 import org.springframework.context.annotation.Bean;
@@ -14,28 +12,43 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
+import com.greendelta.collaboration.config.filter.git.GitRequest;
+import com.greendelta.collaboration.config.filter.git.GitRequest.GitAction;
 import com.greendelta.collaboration.model.Authority;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.util.Requests;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+	private final AccessService accessService;
 	private final SettingsService settings;
 	private final GitFilterConfig gitFilterConfig;
 
-	public SecurityConfig(SettingsService settings, GitFilterConfig gitFilterConfig) {
+	public SecurityConfig(AccessService accessService, SettingsService settings, GitFilterConfig gitFilterConfig) {
+		this.accessService = accessService;
 		this.settings = settings;
 		this.gitFilterConfig = gitFilterConfig;
 	}
@@ -43,19 +56,21 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		return http
+				.sessionManagement(config -> config
+						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+				.securityContext(config -> config
+						.requireExplicitSave(false))
 				.csrf(config -> config
 						.disable())
 				.exceptionHandling(config -> config
 						.authenticationEntryPoint(this::handleUnauthenticated))
-				.authorizeRequests(config -> config
-						.antMatchers("/job").permitAll()
-						.antMatchers("/ws/public/**").permitAll()
-						.antMatchers("/ws/admin/**").hasAuthority(Authority.ADMIN.getAuthority())
-						.antMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())
-						.antMatchers("/ws/usermanager/**").hasAuthority(Authority.USER_MANAGER.getAuthority())
-						.antMatchers("/ws/**", "/stomp/**").authenticated()
-						.antMatchers("/**").access("@repoAccessCheck.canAccess(request)")
-				)
+				.securityMatcher("/**").authorizeHttpRequests(config -> config
+						.requestMatchers("/job", "/ws/public/**").permitAll()
+						.requestMatchers("/ws/admin/**").hasAuthority(Authority.ADMIN.getAuthority())
+						.requestMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())
+						.requestMatchers("/ws/usermanager/**").hasAuthority(Authority.USER_MANAGER.getAuthority())
+						.requestMatchers("/ws/**", "/stomp/**").authenticated()
+						.requestMatchers("/**").access(this::canAccessRepo))
 				.logout(config -> config
 						.logoutUrl("/ws/public/logout")
 						.logoutSuccessHandler(getLogoutSuccessHandler()))
@@ -94,6 +109,30 @@ public class SecurityConfig {
 				response.sendRedirect(request.getServletContext().getContextPath() + "/login?redirectUrl=" + route);
 			}
 		}
+	}
+
+	private AuthorizationDecision canAccessRepo(Supplier<Authentication> authentication,
+			RequestAuthorizationContext context) {
+		var request = context.getRequest();
+		var path = RepositoryPath.of(Requests.getRelativePath(request));
+		if (!path.isGroupOrRepo())
+			return new AuthorizationDecision(true);
+		// web access is checked via the controllers
+		if (!gitFilterConfig.isGitUrl(request))
+			return new AuthorizationDecision(true);
+		var canGitAccess = canGitAccess(new GitRequest(request), path.toString());
+		return new AuthorizationDecision(canGitAccess);
+	}
+
+	private boolean canGitAccess(GitRequest request, String repoId) {
+		if (request.getGitAction() == GitAction.GIT_PUSH || request.getGitAction() == GitAction.GIT_PUSH_SERVICE)
+			return accessService.canWrite(repoId) && !areCommitsProhibited(repoId);
+		return accessService.canRead(repoId);
+	}
+
+	private boolean areCommitsProhibited(String repoId) {
+		return settings.get(SettingType.REPOSITORY_SETTING, repoId, accessService::canSetSettings)
+				.is(RepositorySetting.PROHIBIT_COMMITS);
 	}
 
 	private LogoutSuccessHandler getLogoutSuccessHandler() {

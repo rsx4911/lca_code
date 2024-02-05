@@ -3,12 +3,12 @@ package com.greendelta.collaboration.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table
@@ -20,7 +20,7 @@ public class Team extends AbstractEntity {
 	@Column
 	public String name;
 
-	@Column
+	@Column(columnDefinition = "LONGBLOB")
 	@Lob
 	public byte[] avatar;
 

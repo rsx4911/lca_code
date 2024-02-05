@@ -3,10 +3,10 @@ package com.greendelta.collaboration.model;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 @Entity
 @Table
@@ -15,7 +15,7 @@ public class RestrictionSet extends AbstractEntity {
 	@Column
 	public String name;
 
-	@Column
+	@Column(columnDefinition = "LONGTEXT")
 	@Lob
 	private String refIds;
 

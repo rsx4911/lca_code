@@ -2,15 +2,15 @@ package com.greendelta.collaboration.model;
 
 import org.openlca.core.model.ModelType;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Embeddable
 public class DatasetField {
 
-	@Column
+	@Column(columnDefinition = "VARCHAR(255)")
 	@Enumerated(EnumType.STRING)
 	public ModelType modelType;
 

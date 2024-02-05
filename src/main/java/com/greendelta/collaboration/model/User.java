@@ -5,11 +5,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,7 +32,7 @@ public class User extends AbstractEntity implements UserDetails {
 	@Column
 	public String password;
 
-	@Column
+	@Column(columnDefinition = "LONGBLOB")
 	@Lob
 	public byte[] avatar;
 
