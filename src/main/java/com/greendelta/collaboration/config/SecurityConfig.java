@@ -43,6 +43,9 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		return http
+				.headers(config -> config
+						.frameOptions(options -> options
+								.sameOrigin()))
 				.csrf(config -> config
 						.disable())
 				.exceptionHandling(config -> config
@@ -54,8 +57,7 @@ public class SecurityConfig {
 						.antMatchers("/ws/datamanager/**").hasAuthority(Authority.DATA_MANAGER.getAuthority())
 						.antMatchers("/ws/usermanager/**").hasAuthority(Authority.USER_MANAGER.getAuthority())
 						.antMatchers("/ws/**", "/stomp/**").authenticated()
-						.antMatchers("/**").access("@repoAccessCheck.canAccess(request)")
-				)
+						.antMatchers("/**").access("@repoAccessCheck.canAccess(request)"))
 				.logout(config -> config
 						.logoutUrl("/ws/public/logout")
 						.logoutSuccessHandler(getLogoutSuccessHandler()))
