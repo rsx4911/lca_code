@@ -3,7 +3,6 @@ package com.greendelta.collaboration.config;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 import org.openlca.util.Strings;
@@ -35,6 +34,7 @@ import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.util.Requests;
+import com.greendelta.collaboration.util.Routes;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -80,9 +80,9 @@ public class SecurityConfig {
 	private void handleUnauthenticated(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException e)
 			throws IOException {
-		var url = request.getRequestURL().toString();
+		var route = Requests.getRoute(request);
 		var isGitUrl = false;
-		if (url.contains("/ws/") || url.contains("/stomp/") || (isGitUrl = gitFilterConfig.isGitUrl(request))) {
+		if (route.startsWith("ws/") || route.startsWith("stomp/") || (isGitUrl = gitFilterConfig.isGitUrl(request))) {
 			response.reset();
 			if (e instanceof BadCredentialsException) {
 				if (e.getMessage().equals("tokenRequired")) {
@@ -97,30 +97,27 @@ public class SecurityConfig {
 					response.setHeader("WWW-Authenticate", "Basic realm=\"" + serverName + "\"");
 				}
 			}
-		} else {
-			var part = url.substring(url.lastIndexOf("/") + 1);
-			if (!Arrays.asList("login", "reset-password", "sign-up").contains(part)) {
-				var route = Requests.getRelativePath(request);
-				var query = request.getQueryString();
-				if (!Strings.nullOrEmpty(query)) {
-					route += "?" + query;
-				}
-				route = URLEncoder.encode(route, StandardCharsets.UTF_8.toString());
-				response.sendRedirect(request.getServletContext().getContextPath() + "/login?redirectUrl=" + route);
+		} else if (!Routes.isLoginUrl(route)) {
+			var redirectUrl = Requests.getRoute(request);
+			var query = request.getQueryString();
+			if (!Strings.nullOrEmpty(query)) {
+				redirectUrl += "?" + query;
 			}
+			redirectUrl = URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8.toString());
+			response.sendRedirect(request.getServletContext().getContextPath() + "/login?redirectUrl=" + redirectUrl);
 		}
 	}
 
 	private AuthorizationDecision canAccessRepo(Supplier<Authentication> authentication,
 			RequestAuthorizationContext context) {
 		var request = context.getRequest();
-		var path = RepositoryPath.of(Requests.getRelativePath(request));
-		if (!path.isGroupOrRepo())
+		var route = RepositoryPath.of(Requests.getRoute(request));
+		if (!route.isGroupOrRepo())
 			return new AuthorizationDecision(true);
 		// web access is checked via the controllers
 		if (!gitFilterConfig.isGitUrl(request))
 			return new AuthorizationDecision(true);
-		var canGitAccess = canGitAccess(new GitRequest(request), path.toString());
+		var canGitAccess = canGitAccess(new GitRequest(request), route.toString());
 		return new AuthorizationDecision(canGitAccess);
 	}
 

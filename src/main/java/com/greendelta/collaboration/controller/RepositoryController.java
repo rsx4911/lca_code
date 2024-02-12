@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,7 +69,7 @@ public class RepositoryController {
 	}
 
 	@GetMapping("file/{group}/{name}/{type}/{refId}/{path}")
-	public ResponseEntity<byte[]> getFile(
+	public ResponseEntity<Resource> getFile(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("type") ModelType type,

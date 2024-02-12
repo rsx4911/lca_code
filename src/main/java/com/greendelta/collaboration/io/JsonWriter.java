@@ -2,7 +2,6 @@ package com.greendelta.collaboration.io;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +32,8 @@ public class JsonWriter implements DatasetWriter {
 	private final Set<String> processed = new HashSet<String>();
 	private final JsonArray categories = new JsonArray();
 
-	public JsonWriter(Repository repo, List<LibraryLink> libraries, Commit commit) throws IOException {
-		var tmpDir = Files.createTempDirectory("lca-collaboration-writer").toFile();
-		this.tmpFile = new File(tmpDir, "temp.zip");
+	public JsonWriter(File file, Repository repo, List<LibraryLink> libraries, Commit commit) throws IOException {
+		this.tmpFile = file;
 		this.references = new TypedRefIdMap<Reference>();
 		repo.references.find().commit(commit.id).iterate(ref -> references.put(ref, ref));
 		this.writer = new RepositoryJsonWriter(repo, libraries, tmpFile);

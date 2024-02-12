@@ -12,8 +12,8 @@ public class LegacyJsonWriter implements DatasetWriter {
 
 	private final JsonWriter jsonWriter;
 
-	public LegacyJsonWriter(Repository repo, Commit commit) throws IOException {
-		this.jsonWriter = new JsonWriter(repo, null, commit);
+	public LegacyJsonWriter(File file, Repository repo, Commit commit) throws IOException {
+		this.jsonWriter = new JsonWriter(file, repo, null, commit);
 	}
 
 	@Override

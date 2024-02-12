@@ -7,13 +7,16 @@ public class Routes {
 
 	private final static List<String> USER_ROUTES = Arrays.asList(
 			"repository", "user", "dashboard", "administration", "messages", "tasks", "group", "groups", "error");
-	
+
 	private final static List<String> PUBLIC_RESOURCES = Arrays.asList(
 			"css", "fonts", "images", "js", "graph");
 
-	public final static List<String> PUBLIC_URLS = Arrays.asList(
-			"login", "reset-password", "sign-up", "imprint", "job", "maintenance");
-	
+	private final static List<String> LOGIN_URLS = Arrays.asList(
+			"login", "reset-password", "sign-up");
+
+	private final static List<String> OTHER_PUBLIC_URLS = Arrays.asList(
+			"imprint", "job", "maintenance");
+
 	private final static List<String> RESERVED = Arrays.asList(
 			"null", "undefined", "users", "team", "teams", "repositories", "categoryInfo", "count", "public", "ws",
 			"sockets", "stomp", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
@@ -28,12 +31,19 @@ public class Routes {
 		return USER_ROUTES.toArray(new String[USER_ROUTES.size()]);
 	}
 
-	public static boolean isPublicResource(String name) {
-		return PUBLIC_RESOURCES.contains(name);
+	public static boolean isPublicResource(String path) {
+		if (path.contains("/")) {
+			path = path.substring(0, path.indexOf("/"));
+		}
+		return PUBLIC_RESOURCES.contains(path);
 	}
-	
+
+	public static boolean isLoginUrl(String name) {
+		return LOGIN_URLS.contains(name);
+	}
+
 	public static boolean isPublicUrl(String name) {
-		return PUBLIC_URLS.contains(name);
+		return isLoginUrl(name) || OTHER_PUBLIC_URLS.contains(name);
 	}
 
 	public static boolean isReserved(String name) {

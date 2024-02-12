@@ -10,10 +10,9 @@ import java.util.UUID;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.repo.OlcaRepository;
 import org.openlca.util.Strings;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
@@ -112,15 +111,14 @@ abstract class DownloadController {
 		return user.username;
 	}
 
-	protected ResponseEntity<StreamingResponseBody> download(String token) {
-		TokenInfo info = tokens.get(token);
+	protected ResponseEntity<Resource> download(String token) {
+		var info = tokens.get(token);
 		if (info == null)
 			throw Response.notFound();
 		var user = userService.getCurrentUser();
 		if (!getUserId(user).equals(info.userId))
 			throw Response.forbidden();
-		var tmpFile = new File(info.path);
-		return Response.ok(info.filename, tmpFile, () -> tmpFile.delete());
+		return Response.ok(info.filename, new File(info.path));
 	}
 
 	protected abstract DatasetWriter createWriter(Repository repo, Commit commit) throws IOException;
@@ -128,13 +126,6 @@ abstract class DownloadController {
 	protected abstract Logger log();
 
 	private record TokenInfo(String path, String filename, String userId) {
-	}
-
-	public static void main(String[] args) throws IOException {
-		var repo = new OlcaRepository(new File("C:\\Users\\greve\\opt\\collab\\git\\greve\\empty_cat"));
-		var entries = repo.entries.find().path("FLOW").recursive().all();
-		for (var e : entries)
-			System.out.println(e.path);
 	}
 
 }

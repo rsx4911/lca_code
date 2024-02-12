@@ -30,7 +30,7 @@ public class GitRequest extends HttpServletRequestWrapper {
 	@Override
 	public String getPathInfo() {
 		// default servlet returns incorrect pathinfo
-		return Requests.getRelativePath(this);
+		return Requests.getRoute(this);
 	}
 
 	@Override

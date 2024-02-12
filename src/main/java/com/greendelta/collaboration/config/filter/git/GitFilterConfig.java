@@ -17,10 +17,10 @@ public class GitFilterConfig {
 	public boolean isGitUrl(HttpServletRequest request) {
 		var gitRequest = request instanceof GitRequest ? (GitRequest) request : new GitRequest(request);
 		var pathInfo = gitRequest.getPathInfo();
-		for (String pattern : stringPatterns)
+		for (var pattern : stringPatterns)
 			if (pathInfo.endsWith(pattern))
 				return true;
-		for (Pattern pattern : regexPatterns)
+		for (var pattern : regexPatterns)
 			if (pattern.matcher(pathInfo).matches())
 				return true;
 		return false;

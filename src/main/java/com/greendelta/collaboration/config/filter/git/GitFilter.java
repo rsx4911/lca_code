@@ -33,7 +33,7 @@ import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Requests;
 
-@WebFilter(asyncSupported = true)
+@WebFilter
 @Component
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
@@ -98,7 +98,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		if (!config.isGitUrl(request))
 			return;
 		if (request.getGitAction() == GitAction.GIT_PUSH) {
-			runPushPostProcessing(RepositoryPath.of(Requests.getRelativePath(request)), request.getRemoteUser());
+			runPushPostProcessing(RepositoryPath.of(Requests.getRoute(request)), request.getRemoteUser());
 		}
 		if (loggedIn) {
 			request.basicHttpLogout(sessionService);
