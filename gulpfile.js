@@ -149,26 +149,48 @@ gulp.task('stylus', function() {
 });
 
 gulp.task('cssBuild', function() {
-  return gulp.src(['./src/main/webapp/css/styles', params.customDir + '/styles.css'], { allowEmpty: true })
+  return gulp.src(['./src/main/webapp/css/styles.css', params.customDir + '/styles.css'], { allowEmpty: true })
     .pipe(cssConcat('styles.css', { rebaseUrls: false, allowEmpty: true }))
     .pipe(minifyCss({ keepSpecialComments: false, allowEmpty: true }))
     .pipe(gulp.dest('./src/main/resources/static/css'));
 });
 
-gulp.task('fontBuild', function() {
+gulp.task('copyFonts', function() {
   return gulp.src([
       './src/main/webapp/css/fonts/**/*.*',
-      params.customDir + '/fonts/**/*.*'
+      params.customDir + '/fonts/**/*.*',
     ])
     .pipe(gulp.dest('./src/main/resources/static/css/fonts'));
 });
+
 
 gulp.task('copySprites', function() {
   return gulp.src([
       './src/main/webapp/css/libs/*.png',
       './src/main/webapp/css/libs/*.gif'
     ])
+    .pipe(gulp.dest('./src/main/resources/static/css/fonts'));
+});
+
+gulp.task('copyCssLibs', function() {
+  return gulp.src([
+      './src/main/webapp/css/libs/**/*.*'
+    ])
     .pipe(gulp.dest('./src/main/resources/static/css/libs'));
+});
+
+gulp.task('copyImages', function() {
+  return gulp.src([
+      './src/main/webapp/images/**/*.*',
+    ])
+    .pipe(gulp.dest('./src/main/resources/static/images'));
+});
+
+gulp.task('copyGraph', function() {
+  return gulp.src([
+      './src/main/webapp/graph/**/*.*',
+    ])
+    .pipe(gulp.dest('./src/main/resources/static/graph'));
 });
 
 gulp.task('collectDependencies', function() {
@@ -251,6 +273,11 @@ gulp.task('copyJQueryForLogin', function() {
     .pipe(gulp.dest('./src/main/resources/static/js'));
 });
 
+gulp.task('copyRobots', function() {
+  return gulp.src('./src/main/webapp/robots.txt')
+    .pipe(gulp.dest('./src/main/resources/static'));
+});
+
 gulp.task('jsBuild', function() {
   return gulp.src('src/main/webapp/js/main.js')
     .pipe(requirejsOptimize({
@@ -323,8 +350,6 @@ gulp.task('default', gulp.series(
   'pugIndex',
   'pugViews',
   'stylus',
-  'cssBuild',
-  'fontBuild',
   'collectDependencies',
   'setBuildInfo'
 ));
@@ -335,12 +360,18 @@ gulp.task('dev', gulp.series(
 
 gulp.task('build', gulp.series(
   'default',
+  'cssBuild',
+  'copyFonts',
+  'copyCssLibs',
   'copySprites',
+  'copyImages',
+  'copyGraph',
   'modifyIndexHtml',
   'modifyOtherHtml',
   'modifyCustomHtmlPages',
   'copyCustomImages',
   'copyJQueryForLogin',
+  'copyRobots',
   'jsBuild',
   'buildSsrPack'
 ));

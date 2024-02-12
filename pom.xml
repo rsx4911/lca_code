@@ -101,24 +101,12 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<packagingExcludes>
-						js/app.build.js,
-						js/app/,
-						js/collections/,
-						js/libs/,
-						js/models/,
-						js/templates/,
-						js/utils/,
-						js/views/,
-						js/main.js/,
-						css/libs/*.css,
-						css/main.css/,
-						css/styles.css
+						*.*,
+						js/,
+						css/,
+						graph/,
+						images/
 					</packagingExcludes>
-					<webResources>
-						<resource>
-							<directory>target/require-build</directory>
-						</resource>
-					</webResources>
 				</configuration>
 			</plugin>
 		</plugins>
