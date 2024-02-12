@@ -17,24 +17,33 @@ import org.springframework.stereotype.Service;
 public class FileService {
 
 	private static final Logger log = LogManager.getLogger(FileService.class);
-	private final Map<String, Long> files = new HashMap<>();
+	private final Map<String, Long> directories = new HashMap<>();
 
 	public File createTempFile() throws IOException {
-		var file = Files.createTempFile("lca-cs", ".zip");
-		files.put(file.toFile().getAbsolutePath(), Calendar.getInstance().getTimeInMillis());
-		return file.toFile();
+		var dir = Files.createTempDirectory("lca-cs");
+		var file = new File(dir.toFile(), dir.getFileName() + ".zip");
+		file.deleteOnExit();
+		directories.put(file.getAbsolutePath(), Calendar.getInstance().getTimeInMillis());
+		return file;
 	}
 
 	@Scheduled(fixedRate = 3, timeUnit = TimeUnit.HOURS)
 	public void cleanupTempFiles() {
-		for (var file : files.keySet()) {
+		for (var d : directories.keySet()) {
 			var cal = Calendar.getInstance();
-			cal.setTimeInMillis(files.get(file));
+			cal.setTimeInMillis(directories.get(d));
 			var before = Calendar.getInstance();
 			before.add(Calendar.HOUR_OF_DAY, -3);
 			if (cal.before(before)) {
 				try {
-					Files.delete(new File(file).toPath());
+					var dir = new File(d);
+					var files = dir.listFiles();
+					if (files != null) {
+						for (var file : files) {
+							Files.delete(file.toPath());
+						}
+					}
+					Files.delete(dir.toPath());
 				} catch (IOException e) {
 					log.error("Could not delete temp file", e);
 				}
