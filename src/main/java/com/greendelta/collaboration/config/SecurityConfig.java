@@ -31,8 +31,10 @@ import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
+import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Requests;
 import com.greendelta.collaboration.util.Routes;
 
@@ -44,11 +46,15 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 
 	private final AccessService accessService;
+	private final UserService userService;
 	private final SettingsService settings;
 	private final GitFilterConfig gitFilterConfig;
+	private AuthenticationManager authManager;
 
-	public SecurityConfig(AccessService accessService, SettingsService settings, GitFilterConfig gitFilterConfig) {
+	public SecurityConfig(AccessService accessService, UserService userService, SettingsService settings,
+			GitFilterConfig gitFilterConfig) {
 		this.accessService = accessService;
+		this.userService = userService;
 		this.settings = settings;
 		this.gitFilterConfig = gitFilterConfig;
 	}
@@ -122,9 +128,17 @@ public class SecurityConfig {
 	}
 
 	private boolean canGitAccess(GitRequest request, String repoId) {
-		if (request.getGitAction() == GitAction.GIT_PUSH || request.getGitAction() == GitAction.GIT_PUSH_SERVICE)
-			return accessService.canWrite(repoId) && !areCommitsProhibited(repoId);
-		return accessService.canRead(repoId);
+		var sessionService = new SessionService(authManager, userService, settings);
+		var loggedIn = request.basicHttpLogin(sessionService);
+		try {
+			if (request.getGitAction() == GitAction.GIT_PUSH || request.getGitAction() == GitAction.GIT_PUSH_SERVICE)
+				return accessService.canWrite(repoId) && !areCommitsProhibited(repoId);
+			return accessService.canRead(repoId);
+		} finally {
+			if (loggedIn) {
+				request.basicHttpLogout(sessionService);
+			}
+		}
 	}
 
 	private boolean areCommitsProhibited(String repoId) {
@@ -139,7 +153,8 @@ public class SecurityConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
 			throws Exception {
-		return authenticationConfiguration.getAuthenticationManager();
+		this.authManager = authenticationConfiguration.getAuthenticationManager();
+		return this.authManager;
 	}
 
 }
