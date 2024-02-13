@@ -161,23 +161,15 @@ gulp.task('copyFonts', function() {
       './src/main/webapp/css/fonts/**/*.*',
       params.customDir + '/fonts/**/*.*',
     ])
-    .pipe(gulp.dest('./src/main/resources/static/css/fonts'));
+    .pipe(gulp.dest('./src/main/resources/static/fonts'));
 });
-
 
 gulp.task('copySprites', function() {
   return gulp.src([
       './src/main/webapp/css/libs/*.png',
-      './src/main/webapp/css/libs/*.gif'
+      './src/main/webapp/css/libs/*.gif',
     ])
-    .pipe(gulp.dest('./src/main/resources/static/css/fonts'));
-});
-
-gulp.task('copyCssLibs', function() {
-  return gulp.src([
-      './src/main/webapp/css/libs/**/*.*'
-    ])
-    .pipe(gulp.dest('./src/main/resources/static/css/libs'));
+    .pipe(gulp.dest('./src/main/resources/static/css'));
 });
 
 gulp.task('copyImages', function() {
@@ -363,7 +355,6 @@ gulp.task('build', gulp.series(
   'default',
   'cssBuild',
   'copyFonts',
-  'copyCssLibs',
   'copySprites',
   'copyImages',
   'copyGraph',
