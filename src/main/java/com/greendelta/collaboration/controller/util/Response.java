@@ -1,15 +1,14 @@
 package com.greendelta.collaboration.controller.util;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 
-import org.openlca.util.Strings;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.PathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.error.WebRequestException;
 
@@ -19,48 +18,24 @@ public class Response {
 		return ResponseEntity.ok(entity);
 	}
 
-	public static ResponseEntity<StreamingResponseBody> ok(String filename, File file) {
-		return ok(filename, file, null);
+	public static ResponseEntity<Resource> ok(File file) {
+		return ok(file.getName(), file);
 	}
 
-	public static ResponseEntity<StreamingResponseBody> ok(String filename, File file, Runnable callback) {
-		if (!file.exists())
-			throw Response.notFound();
-		var filesize = 0l;
-		try {
-			filesize = Files.size(file.toPath());
-		} catch (IOException e) {
-			// ignore, not relevant
-		}
-		return ok(filename, filesize, output -> {
-			Files.copy(file.toPath(), output);
-			if (callback != null) {
-				callback.run();
-			}
-		});
+	public static ResponseEntity<Resource> ok(String filename, File file) {
+		return resourceBuilder(filename, new PathResource(file.toPath()));
 	}
 
-	public static ResponseEntity<byte[]> ok(String filename, byte[] data) {
-		var builder = ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM);
-		if (!Strings.nullOrEmpty(filename)) {
-			builder = builder.header("Content-Disposition", "attachment; filename=" + filename);
-		}
-		if (data.length > 0) {
-			builder = builder.header("Content-Length", Long.toString(data.length));
-		}
-		return builder.body(data);
+	public static ResponseEntity<Resource> ok(String filename, byte[] data) {
+		return resourceBuilder(filename, new ByteArrayResource(data));
 	}
 
-	public static ResponseEntity<StreamingResponseBody> ok(String filename, long filesize,
-			StreamingResponseBody stream) {
-		var builder = ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM);
-		if (!Strings.nullOrEmpty(filename)) {
-			builder = builder.header("Content-Disposition", "attachment; filename=" + filename);
-		}
-		if (filesize > 0) {
-			builder = builder.header("Content-Length", Long.toString(filesize));
-		}
-		return builder.body(stream);
+	private static ResponseEntity<Resource> resourceBuilder(String name, Resource resource) {
+		var contentDisposition = "attachment; filename=" + name;
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.header("Content-Disposition", contentDisposition)
+				.body(resource);
 	}
 
 	public static <T> ResponseEntity<T> noContent() {

@@ -4,13 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.eclipse.jgit.http.server.glue.ServletBinder;
 import org.eclipse.jgit.transport.resolver.FileResolver;
@@ -33,7 +33,7 @@ import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Requests;
 
-@WebFilter(asyncSupported = true)
+@WebFilter
 @Component
 public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 
@@ -98,7 +98,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		if (!config.isGitUrl(request))
 			return;
 		if (request.getGitAction() == GitAction.GIT_PUSH) {
-			runPushPostProcessing(RepositoryPath.of(Requests.getRelativePath(request)), request.getRemoteUser());
+			runPushPostProcessing(RepositoryPath.of(Requests.getRoute(request)), request.getRemoteUser());
 		}
 		if (loggedIn) {
 			request.basicHttpLogout(sessionService);

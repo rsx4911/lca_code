@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.LegacyJsonWriter;
+import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -27,13 +28,17 @@ import com.greendelta.collaboration.service.user.UserService;
 @RequestMapping("ws/public/download/json1")
 public class DownloadLegacyJsonController extends DownloadController {
 
-	public DownloadLegacyJsonController(RepositoryService repoService, UserService userService) {
+	private final FileService fileService;
+
+	public DownloadLegacyJsonController(RepositoryService repoService, UserService userService,
+			FileService fileService) {
 		super(repoService, userService);
+		this.fileService = fileService;
 	}
 
 	@Override
 	@GetMapping("{token}")
-	public ResponseEntity<StreamingResponseBody> download(@PathVariable("token") String token) {
+	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
 		return super.download(token);
 	}
 
@@ -67,7 +72,7 @@ public class DownloadLegacyJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new LegacyJsonWriter(repo, commit);
+		return new LegacyJsonWriter(fileService.createTempFile(), repo, commit);
 	}
 
 	@Override

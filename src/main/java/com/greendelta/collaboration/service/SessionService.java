@@ -1,6 +1,6 @@
 package com.greendelta.collaboration.service;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.openlca.util.Strings;
 import org.springframework.http.HttpStatus;

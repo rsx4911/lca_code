@@ -20,16 +20,6 @@ if (!params.customDir) {
   params.customDir = './custom';
 }
 
-var getCustomHtmlFiles = function(excludePublicIndex) {
-  try {
-    var files = fs.readdirSync(params.customDir)
-    var result = files.filter(function(file) { return file.indexOf('.html') !== -1 && (!excludePublicIndex || file !== 'index_public.html'); });
-    return result;
-  } catch (e) {
-    return []
-  }
-}
-
 var getPomVersion = function() {
   try {
     var pom = fs.readFileSync('pom.xml', 'utf8')
@@ -84,7 +74,8 @@ gulp.task('clear', function() {
       './src/main/webapp/login.html',
       './src/main/webapp/imprint.html',
       './src/main/resources/ssr/*',
-      './target/require-build'
+      './src/main/resources/static/*',
+      './target/lca-collaboration-server*/*'
     ], { read: false, allowEmpty: true })
     .pipe(clean());
 });
@@ -158,42 +149,49 @@ gulp.task('stylus', function() {
     .pipe(gulp.dest('./src/main/webapp/css/'));
 });
 
-gulp.task('internalCssBuild', function() {
-  return gulp.src('./src/main/webapp/css/styles.css')
-    .pipe(cssConcat('internal-styles' + timestamp + '.css'))
-    .pipe(gulp.dest('./target/css-build'));
-});
-
-gulp.task('customCssBuild', function() {
-  return gulp.src(params.customDir + '/styles.css', { allowEmpty: true })
-    .pipe(cssConcat('custom-styles' + timestamp + '.css', { rebaseUrls: false, allowEmpty: true }))
-    .pipe(gulp.dest('./target/css-build'));
-});
-
 gulp.task('cssBuild', function() {
-  return gulp.src([
-      './target/css-build/internal-styles' + timestamp + '.css',
-      './target/css-build/custom-styles' + timestamp + '.css'
-    ], {allowEmpty: true})
-    .pipe(cssConcat('styles' + timestamp + '.css', { rebaseUrls: false, allowEmpty: true }))
+  return gulp.src(['./src/main/webapp/css/styles.css', params.customDir + '/styles.css'], { allowEmpty: true })
+    .pipe(cssConcat('styles.css', { rebaseUrls: false, allowEmpty: true }))
     .pipe(minifyCss({ keepSpecialComments: false, allowEmpty: true }))
-    .pipe(gulp.dest('./target/require-build/css'));
+    .pipe(gulp.dest('./src/main/resources/static/css'));
 });
 
-gulp.task('fontBuild', function() {
+gulp.task('copyFonts', function() {
   return gulp.src([
       './src/main/webapp/css/fonts/**/*.*',
-      params.customDir + '/fonts/**/*.*'
+      params.customDir + '/fonts/**/*.*',
     ])
-    .pipe(gulp.dest('./target/require-build/css/fonts'));
+    .pipe(gulp.dest('./src/main/resources/static/css/fonts'));
 });
+
 
 gulp.task('copySprites', function() {
   return gulp.src([
       './src/main/webapp/css/libs/*.png',
       './src/main/webapp/css/libs/*.gif'
     ])
-    .pipe(gulp.dest('./target/require-build/css/libs'));
+    .pipe(gulp.dest('./src/main/resources/static/css/fonts'));
+});
+
+gulp.task('copyCssLibs', function() {
+  return gulp.src([
+      './src/main/webapp/css/libs/**/*.*'
+    ])
+    .pipe(gulp.dest('./src/main/resources/static/css/libs'));
+});
+
+gulp.task('copyImages', function() {
+  return gulp.src([
+      './src/main/webapp/images/**/*.*',
+    ])
+    .pipe(gulp.dest('./src/main/resources/static/images'));
+});
+
+gulp.task('copyGraph', function() {
+  return gulp.src([
+      './src/main/webapp/graph/**/*.*',
+    ])
+    .pipe(gulp.dest('./src/main/resources/static/graph'));
 });
 
 gulp.task('collectDependencies', function() {
@@ -229,71 +227,56 @@ gulp.task('setBuildInfo', function() {
     .pipe(gulp.dest('./src/main/webapp/js/templates/views/admin'));
 });
 
-gulp.task('setCustomPublicResources', function() {
-  return gulp.src('./src/main/java/com/greendelta/collaboration/config/filter/SinglePageFilter.java')
-    .pipe(insert.transform(function(contents) {
-      var member = 'public static final List<String> CUSTOM_PUBLIC_RESOURCES = Arrays.asList('
-      var resources = member;
-      var customFiles = getCustomHtmlFiles(true)
-      for (var i = 0; i < customFiles.length; i++) {
-        resources += i === 0 ? '' : ', ';
-        resources += '"/' + customFiles[i].substring(0, customFiles[i].lastIndexOf('.html')) + '"';
-      }
-      resources += ');'
-      var result = contents.substring(0, contents.indexOf(member));
-      return result + resources + contents.substring(contents.indexOf('\n', contents.indexOf(member)));
-    }))
-    .pipe(gulp.dest('./src/main/java/com/greendelta/collaboration/config/filter'));
-});
-
 gulp.task('modifyIndexHtml', function() {
-  // replace styles.css and main.js with timestamp filename
   var path = fs.existsSync(params.customDir + '/index.html') ? params.customDir + '/index.html' : './src/main/webapp/index.html';
   return gulp.src(path)
     .pipe(insert.transform(function(contents) {
-      var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
+      var content = contents.replace('href="css/styles.css"', 'href="css/styles.css?timestamp=' + timestamp + '"');
       content = content.replace(' data-main="js/main"', '');
-      content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"');
+      content = content.replace('src="js/libs/require.js"', 'src="js/main.js?timestamp=' + timestamp + '"');
       content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
       return content;
     }))
-    .pipe(gulp.dest('./target/require-build'));
+    .pipe(gulp.dest('./src/main/resources/static'));
 });
 
 gulp.task('modifyOtherHtml', function() {
-  // replace styles-login.css with timestamp filename
   return gulp.src(['./src/main/webapp/login.html', './src/main/webapp/imprint.html', './src/main/webapp/maintenance.html', './src/main/webapp/job.html'])
     .pipe(insert.transform(function(contents) {
-      var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
+      var content = contents.replace('href="css/styles.css"', 'href="css/styles.css?timestamp=' + timestamp + '"');
       content = content.replace('js/libs/jquery', 'js/jquery');
       content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
       return content;
     }))
-    .pipe(gulp.dest('./target/require-build'));
+    .pipe(gulp.dest('./src/main/resources/static'));
 });
 
 gulp.task('modifyCustomHtmlPages', function() {
-  // replace styles-login.css with timestamp filename
   return gulp.src(params.customDir + '/*.html')
     .pipe(insert.transform(function(contents) {
-      var content = contents.replace('href="css/styles.css"', 'href="css/styles' + timestamp + '.css"');
+      var content = contents.replace('href="css/styles.css"', 'href="css/styles.css?timestamp=' + timestamp + '"');
       content = content.replace(' data-main="js/main"', '');
-      content = content.replace('src="js/libs/require.js"', 'src="js/main' + timestamp + '.js"');
+      content = content.replace('src="js/libs/require.js"', 'src="js/main.js?timestamp=' + timestamp + '"');
       content = content.replace('js/libs/jquery', 'js/jquery');
       content = content.replace('<base href="/"/>', '<base href="' + params.contextPath + '"/>');
       return content;
     }))
-    .pipe(gulp.dest('./target/require-build'));
+    .pipe(gulp.dest('./src/main/resources/static'));
 });
 
 gulp.task('copyCustomImages', function() {
   return gulp.src(params.customDir + '/images/**/*.*')
-    .pipe(gulp.dest('./target/require-build/images'));
+    .pipe(gulp.dest('./src/main/resources/static/images'));
 });
 
 gulp.task('copyJQueryForLogin', function() {
   return gulp.src('./src/main/webapp/js/libs/jquery.js')
-    .pipe(gulp.dest('./target/require-build/js'));
+    .pipe(gulp.dest('./src/main/resources/static/js'));
+});
+
+gulp.task('copyRobots', function() {
+  return gulp.src('./src/main/webapp/robots.txt')
+    .pipe(gulp.dest('./src/main/resources/static'));
 });
 
 gulp.task('jsBuild', function() {
@@ -301,14 +284,14 @@ gulp.task('jsBuild', function() {
     .pipe(requirejsOptimize({
         baseUrl: 'src/main/webapp/js',
         mainConfigFile: 'src/main/webapp/js/main.js',
-        out: 'main' + timestamp + '.js',
+        out: 'main.js',
         name: 'main',
         findNestedDependencies: false,
         include: ['requireLib'],
         stubModules: ['cs', 'coffee-script'],
         insertRequire: ['main']
     }))
-    .pipe(gulp.dest('./target/require-build/js'));
+    .pipe(gulp.dest('./src/main/resources/static/js'));
 });
 
 gulp.task('copySsrImages', function() {
@@ -317,12 +300,12 @@ gulp.task('copySsrImages', function() {
 });
 
 gulp.task('copySsrCss', function() {
-  return gulp.src(['target/require-build/css/styles' + timestamp + '.css'])
+  return gulp.src(['src/main/resources/static/css/styles.css'])
   .pipe(gulp.dest('./src/main/resources/ssr/files/css'));
 });
 
 gulp.task('copySsrFonts', function() {
-  return gulp.src(['target/require-build/css/fonts/*'])
+  return gulp.src(['src/main/resources/static/css/fonts/*'])
   .pipe(gulp.dest('./src/main/resources/ssr/files/css/fonts'));
 });
 
@@ -368,23 +351,28 @@ gulp.task('default', gulp.series(
   'pugIndex',
   'pugViews',
   'stylus',
-  'internalCssBuild',
-  'customCssBuild',
-  'cssBuild',
-  'fontBuild',
   'collectDependencies',
-  'setBuildInfo',
-  'setCustomPublicResources'
+  'setBuildInfo'
 ));
+
+gulp.task('dev', gulp.series(
+  'default'
+))
 
 gulp.task('build', gulp.series(
   'default',
+  'cssBuild',
+  'copyFonts',
+  'copyCssLibs',
   'copySprites',
+  'copyImages',
+  'copyGraph',
   'modifyIndexHtml',
   'modifyOtherHtml',
   'modifyCustomHtmlPages',
   'copyCustomImages',
   'copyJQueryForLogin',
+  'copyRobots',
   'jsBuild',
   'buildSsrPack'
 ));

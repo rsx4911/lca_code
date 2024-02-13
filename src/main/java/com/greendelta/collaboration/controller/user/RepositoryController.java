@@ -13,6 +13,7 @@ import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
@@ -97,16 +97,16 @@ public class RepositoryController {
 				return Response.ok(SearchResults.convert(all, Repositories::map));
 			var user = userService.getCurrentUser();
 			switch (module) {
-			case DASHBOARD, GROUP:
-				return Response.ok(SearchResults.convert(all,
-						repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
-			case REVIEW:
-				return Response.ok(all.data.stream()
-						.filter(repo -> accessService.canManageTaskIn(repo.path()))
-						.map(Repositories::map)
-						.toList());
-			default:
-				return Response.ok(all.data.stream().map(Repositories::map).toList());
+				case DASHBOARD, GROUP:
+					return Response.ok(SearchResults.convert(all,
+							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
+				case REVIEW:
+					return Response.ok(all.data.stream()
+							.filter(repo -> accessService.canManageTaskIn(repo.path()))
+							.map(Repositories::map)
+							.toList());
+				default:
+					return Response.ok(all.data.stream().map(Repositories::map).toList());
 			}
 		}
 	}
@@ -158,11 +158,13 @@ public class RepositoryController {
 	}
 
 	@GetMapping("export/{group}/{name}")
-	public ResponseEntity<StreamingResponseBody> doExport(
+	public ResponseEntity<Resource> doExport(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			return Response.ok(repo.toFilename(), 0, service.pack(repo));
+			return Response.ok(repo.toFilename(), service.pack(repo));
+		} catch (IOException e) {
+			throw Response.error("Could not export repository, an unexpected error occured");
 		}
 	}
 
