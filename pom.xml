@@ -14,6 +14,7 @@
 	</parent>
 	<packaging>war</packaging>
 	<name>collaboration-server</name>
+
 	<properties>
 		<jackson-bom.version>2.15.3</jackson-bom.version>
 		<jakarta-activation.version>2.0.1</jakarta-activation.version>
@@ -89,19 +90,20 @@
 
 	<build>
 		<finalName>
-			lca-collaboration-server-${project.version}_${maven.build.timestamp}</finalName>
+			lca-collaboration-server-${project.version}_${maven.build.timestamp}
+		</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<packagingExcludes>
-						*.*,
+						*.html,
+						robots.txt,
 						js/,
 						css/,
 						graph/,

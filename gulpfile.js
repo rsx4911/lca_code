@@ -127,6 +127,11 @@ gulp.task('copyFontModules', function() {
     .pipe(gulp.dest('./src/main/webapp/css/fonts'));
 });
 
+gulp.task('copyLicense', function() {
+  return gulp.src(['./THIRD-PARTY.txt'])
+    .pipe(gulp.dest('./src/main/webapp/'));	
+});
+
 gulp.task('pugIndex', function() {
   return gulp.src('./src/main/pug/*.pug')
     .pipe(pug({ locals: {} }))
@@ -364,6 +369,7 @@ gulp.task('build', gulp.series(
   'copyCustomImages',
   'copyJQueryForLogin',
   'copyRobots',
+  'copyLicense',
   'jsBuild',
   'buildSsrPack'
 ));
