@@ -23,7 +23,7 @@ public class FileService {
 		var dir = Files.createTempDirectory("lca-cs");
 		var file = new File(dir.toFile(), dir.getFileName() + ".zip");
 		file.deleteOnExit();
-		directories.put(file.getAbsolutePath(), Calendar.getInstance().getTimeInMillis());
+		directories.put(file.getParentFile().getAbsolutePath(), Calendar.getInstance().getTimeInMillis());
 		return file;
 	}
 
@@ -34,19 +34,23 @@ public class FileService {
 			cal.setTimeInMillis(directories.get(d));
 			var before = Calendar.getInstance();
 			before.add(Calendar.HOUR_OF_DAY, -3);
-			if (cal.before(before)) {
-				try {
-					var dir = new File(d);
-					var files = dir.listFiles();
-					if (files != null) {
-						for (var file : files) {
-							Files.delete(file.toPath());
-						}
+			if (!cal.before(before))
+				continue;
+			try {
+				var dir = new File(d);
+				if (!dir.exists())
+					continue;
+				var files = dir.listFiles();
+				if (files != null) {
+					for (var file : files) {
+						if (!file.exists())
+							continue;
+						Files.delete(file.toPath());
 					}
-					Files.delete(dir.toPath());
-				} catch (IOException e) {
-					log.error("Could not delete temp file", e);
 				}
+				Files.delete(dir.toPath());
+			} catch (IOException e) {
+				log.error("Could not delete temp file", e);
 			}
 		}
 	}
