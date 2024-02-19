@@ -1,29 +1,27 @@
 package com.greendelta.collaboration.controller;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.JsonWriter;
+import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -35,17 +33,19 @@ public class DownloadJsonController extends DownloadController {
 
 	private final RepositoryService repoService;
 	private final LibraryService libraryService;
+	private final FileService fileService;
 
 	public DownloadJsonController(RepositoryService repoService, UserService userService,
-			LibraryService libraryService) {
+			LibraryService libraryService, FileService fileService) {
 		super(repoService, userService);
 		this.repoService = repoService;
 		this.libraryService = libraryService;
+		this.fileService = fileService;
 	}
 
 	@Override
 	@GetMapping("{token}")
-	public ResponseEntity<StreamingResponseBody> download(@PathVariable("token") String token) {
+	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
 		if (token.startsWith("repository_")) {
 			try (var repo = repoService.get(token.substring(11).replace("@", "/"))) {
 				if (repo.getCachedJsonFile().exists())
@@ -72,7 +72,7 @@ public class DownloadJsonController extends DownloadController {
 				return false; // is not cached
 			if (!Strings.nullOrEmpty(path))
 				return false; // is not complete repo
-			if (commitId != null && !commitId.equals(repo.commits().resolve("HEAD")))
+			if (commitId != null && !commitId.equals(repo.commits.resolve("HEAD")))
 				return false; // is not current state (last commit)
 			return true;
 		}
@@ -97,18 +97,9 @@ public class DownloadJsonController extends DownloadController {
 		return super.prepare(group, repository, commitId, paths);
 	}
 
-	@PutMapping("prepare/{group}/{repository}")
-	public String prepareRequested(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository,
-			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestBody List<Reference> requested) {
-		return super.prepare(group, repository, commitId, requested);
-	}
-
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(repo.references(), repo.datasets(),
+		return new JsonWriter(fileService.createTempFile(), repo,
 				repo.linkedLibraries(libraryService.getLibraryUrlResolver()), commit);
 	}
 

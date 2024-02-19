@@ -71,7 +71,7 @@ public class GladController {
 			if (repo == null)
 				throw Response.notFound("No repository with id " + group + "/" + name + " found");
 			input.paths.stream().forEach(path -> {
-				repo.references().find().path(path).iterate(ref -> {
+				repo.references.find().path(path).iterate(ref -> {
 					var data = loadProcessData(repo, ref);
 					data.put("format", "JSON_LD");
 					data.put("dataprovider", input.dataprovider);
@@ -98,7 +98,7 @@ public class GladController {
 	}
 
 	private Map<String, Object> loadProcessData(Repository repo, Reference ref) {
-		var json = repo.datasets().get(ref);
+		var json = repo.datasets.get(ref);
 		var data = Maps.of(json);
 		data.put("catgeories", ref.category.split("/"));
 		data.put("contact", Maps.getString(data, "processDocumentation.dataSetOwner.name"));

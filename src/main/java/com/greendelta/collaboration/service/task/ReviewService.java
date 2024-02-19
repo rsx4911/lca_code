@@ -43,7 +43,7 @@ public class ReviewService extends TaskExecutionService<Review> {
 			fromDb.references.clear();
 			var lastId = new AtomicLong(referenceDao.getLastId());
 			paths.stream().forEach(path -> {
-				repo.references().find().path(path).iterate(ref -> {
+				repo.references.find().path(path).iterate(ref -> {
 					var reference = new ReviewReference();
 					reference.type = ref.type;
 					reference.refId = ref.refId;

@@ -10,10 +10,8 @@ import java.util.Set;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
-import org.openlca.git.find.Entries;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Entry.EntryType;
-import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,7 +59,7 @@ public class BrowseController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "commitId", required = false) String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits().find().until(commitId).latest();
+			var commit = repo.commits.find().until(commitId).latest();
 			if (commit == null)
 				return SearchResults.from(new ArrayList<>(), page, pageSize, 0);
 			var data = switch (categoryPath) {
@@ -76,11 +74,11 @@ public class BrowseController {
 	}
 
 	private List<Map<String, Object>> getModelTypeEntries(Repository repo, Commit commit) {
-		var entries = repo.entries().find().commit(commit.id).all();
+		var entries = repo.entries.find().commit(commit.id).all();
 		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
-		var info = Repositories.infoOf(repo.gitRepo(), commit);
+		var info = repo.getInfo(commit);
 		if (info != null && !info.libraries().isEmpty()) {
-			entries.add(Entries.of(repo.gitRepo()).get(RepositoryInfo.FILE_NAME, commit.id));
+			entries.add(repo.entries.get(RepositoryInfo.FILE_NAME, commit.id));
 		}
 		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
@@ -94,7 +92,7 @@ public class BrowseController {
 	}
 
 	private List<Map<String, Object>> getLibraryEntries(Repository repo, Commit commit) {
-		var info = Repositories.infoOf(repo.gitRepo(), commit);
+		var info = repo.getInfo(commit);
 		if (info == null || info.libraries().isEmpty())
 			return new ArrayList<>();
 		var mapped = info.libraries().stream().map(
@@ -115,7 +113,7 @@ public class BrowseController {
 	}
 
 	private List<Map<String, Object>> getEntries(Repository repo, Commit commit, String categoryPath) {
-		var entries = repo.entries().find().commit(commit.id).path(categoryPath).all();
+		var entries = repo.entries.find().commit(commit.id).path(categoryPath).all();
 		var mapped = entries.stream().map(e -> MetaData.forBrowse(e, repo));
 		return MetaData.sortByName(mapped).toList();
 	}
@@ -133,12 +131,12 @@ public class BrowseController {
 			boolean isPackageInfo = entry.get("path").equals(RepositoryInfo.FILE_NAME);
 			if (isPackageInfo) {
 				if (categoryPath.isEmpty()) {
-					var info = Repositories.infoOf(repo.gitRepo(), commit);
+					var info = repo.getInfo(commit);
 					entry.put("count", info.libraries().size());
 				}
 			} else {
 				var entryPath = Strings.nullOrEmpty(categoryPath) ? name : categoryPath + "/" + name;
-				entry.put("count", repo.references().find().commit(commit.id).path(entryPath).count());
+				entry.put("count", repo.references.find().commit(commit.id).path(entryPath).count());
 			}
 		}
 	}
@@ -154,12 +152,12 @@ public class BrowseController {
 		var path = Maps.getString(entry, "path");
 		var commitId = Maps.getString(entry, "commitId");
 		if (!path.startsWith(RepositoryInfo.FILE_NAME + "/"))
-			return repo.commits().find().path(path).until(commitId).latest();
+			return repo.commits.find().path(path).until(commitId).latest();
 		var library = Maps.getString(entry, "refId");
-		var commits = repo.commits().find().path(RepositoryInfo.FILE_NAME).until(commitId).all();
+		var commits = repo.commits.find().path(RepositoryInfo.FILE_NAME).until(commitId).all();
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
-			var info = Repositories.infoOf(repo.gitRepo(), commit);
+			var info = repo.getInfo(commit);
 			var libraries = info.libraries().stream().map(LibraryLink::id).toList();
 			if (libraries.contains(library))
 				continue;
@@ -180,15 +178,15 @@ public class BrowseController {
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits().find().model(type, refId).until(commitId).latest();
+			var commit = repo.commits.find().model(type, refId).until(commitId).latest();
 			if (commit == null)
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
-			var latestCommitId = repo.commits().find().model(type, refId).latestId();
+			var latestCommitId = repo.commits.find().model(type, refId).latestId();
 			var loggedIn = userService.getCurrentUser().id != 0;
 			if (!loggedIn && !commit.id.equals(latestCommitId))
 				throw Response.unauthorized();
-			var ref = repo.references().get(type, refId, commit.id);
-			var dataset = repo.datasets().get(ref);
+			var ref = repo.references.get(type, refId, commit.id);
+			var dataset = repo.datasets.get(ref);
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commit.id);
 			var map = Maps.of(dataset);
@@ -206,7 +204,7 @@ public class BrowseController {
 		private final Set<String> categories = new HashSet<>();
 
 		private IsInRepoInfo(Repository repo, String commitId) {
-			Entries.of(repo.gitRepo()).iterate(commitId, entry -> {
+			repo.entries.iterate(commitId, entry -> {
 				if (entry.typeOfEntry == EntryType.DATASET) {
 					refs.computeIfAbsent(entry.type, key -> new HashSet<>()).add(entry.refId);
 				} else if (entry.typeOfEntry == EntryType.CATEGORY) {

@@ -18,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
 import org.openlca.git.RepositoryInfo;
-import org.openlca.git.util.Repositories;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
@@ -273,8 +272,7 @@ public class LibraryService {
 				return linkedLibraries;
 			try (var accessible = repoService.getAllAccessible()) {
 				linkedLibraries = accessible.stream()
-						.map(Repository::gitRepo)
-						.map(Repositories::infoOf)
+						.map(Repository::getInfo)
 						.filter(Objects::nonNull)
 						.map(RepositoryInfo::libraries)
 						.flatMap(List::stream)

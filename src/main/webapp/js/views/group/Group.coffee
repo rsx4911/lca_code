@@ -58,7 +58,7 @@ define([
 				group = @group.toJSON()
 				@$el.html template
 					group: group
-					isAdmin: currentUser.isUserManager() || currentUser.isDataManager
+					isAdmin: currentUser.isUserManager() || currentUser.isDataManager()
 				Renderer.render @, renderOptions
 				@setMaxSize group.settings.maxSize
 				Avatar.initCropper 'group', group.name 

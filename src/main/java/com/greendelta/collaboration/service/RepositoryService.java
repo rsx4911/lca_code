@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -21,13 +22,12 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.git.actions.GitInit;
 import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.ForbiddenAccessException;
@@ -60,17 +60,19 @@ public class RepositoryService {
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settings;
+	private final FileService fileService;
 	private final TaskService taskService;
 
 	public RepositoryService(GroupService groupService, AccessService accessService,
 			MembershipService membershipService, UserService userService, CommentService commentService,
-			SettingsService settings, TaskService taskService) {
+			SettingsService settings, FileService fileService, TaskService taskService) {
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settings = settings;
+		this.fileService = fileService;
 		this.taskService = taskService;
 	}
 
@@ -105,7 +107,12 @@ public class RepositoryService {
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
 		Settings<GroupSetting> groupSettings = groupService.getSettings(group);
-		return new Repository(path, group, name, repoSettings, groupSettings);
+		try {
+			return new Repository(path, group, name, repoSettings, groupSettings);
+		} catch (IOException e) {
+			log.error("Error opening repository", e);
+			return null;
+		}
 	}
 
 	public boolean exists(String group, String name) {
@@ -141,7 +148,8 @@ public class RepositoryService {
 
 	private boolean init(String path) {
 		File dir = new File(path);
-		try (var git = Git.init().setBare(true).setDirectory(dir).call()) {
+		try {
+			GitInit.in(dir).run();
 			return true;
 		} catch (Exception e) {
 			log.error("Error initializing git repository", e);
@@ -161,7 +169,8 @@ public class RepositoryService {
 			return false;
 		try (var newRepo = create(group, name)) {
 			if (newRepo == null)
-				throw Response.error("Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
+				throw Response.error(
+						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			Dirs.move(repo.dir.toPath(), newRepo.dir.toPath());
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
@@ -229,12 +238,12 @@ public class RepositoryService {
 		return true;
 	}
 
-	public StreamingResponseBody pack(Repository repo) {
-		return output -> {
-			var out = new ZipOutputStream(output);
-			write(repo.dir.toPath(), repo.dir, out);
-			out.close();
-		};
+	public File pack(Repository repo) throws IOException {
+		var file = fileService.createTempFile();
+		var out = new ZipOutputStream(new FileOutputStream(file));
+		write(repo.dir.toPath(), repo.dir, out);
+		out.close();
+		return file;
 	}
 
 	private void write(Path repoPath, File file, ZipOutputStream out) throws IOException {
@@ -282,9 +291,10 @@ public class RepositoryService {
 		}
 	}
 
-	@Async("taskExecutor")
 	public void generateJson(Repository repo, Function<LibraryLink, String> urlResolver) {
-		RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(urlResolver));
+		new Thread(() -> {
+			RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(urlResolver));
+		}).start();
 	}
 
 	public int getNoOfRepositories(User user) {

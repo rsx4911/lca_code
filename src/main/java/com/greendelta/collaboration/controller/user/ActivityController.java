@@ -6,9 +6,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Diff;
-import org.openlca.git.model.DiffType;
-import org.openlca.git.util.Diffs;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -69,7 +66,7 @@ public class ActivityController {
 			var repos = new HashMap<String, Repository>();
 			repositories.forEach(repo -> {
 				if (showCommitActivities) {
-					var nextCommits = repo.commits().find().all();
+					var nextCommits = repo.commits.find().all();
 					commits.putAll(
 							nextCommits.stream().collect(Collectors.toMap(commit -> commit.id, commit -> commit)));
 					activities.addAll(nextCommits.stream()
@@ -96,7 +93,9 @@ public class ActivityController {
 					.filter(entry -> entry.get("type") == ActivityType.COMMIT)
 					.forEach(entry -> {
 						String id = Maps.getString(entry, "id");
-						putAdditionalInfo(entry, repos.get(id), commits.get(id));
+						var commit = commits.get(id);
+						var user = userService.getForUsername(commit.user);
+						entry.put("userDisplayName", user != null ? user.name : commit.user);
 					});
 			return result;
 		}
@@ -108,15 +107,6 @@ public class ActivityController {
 		RepositoryList list = new RepositoryList();
 		list.add(repoService.get(repositoryPath));
 		return list;
-	}
-
-	private void putAdditionalInfo(Map<String, Object> entry, Repository repo, Commit commit) {
-		var user = userService.getForUsername(commit.user);
-		entry.put("userDisplayName", user != null ? user.name : commit.user);
-		var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
-		entry.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
-		entry.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
-		entry.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
 	}
 
 	@PutMapping("settings")

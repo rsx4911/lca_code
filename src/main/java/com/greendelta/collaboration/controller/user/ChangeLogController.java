@@ -1,27 +1,29 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.openlca.util.Strings;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.ChangeLogWriter;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("ws/changelog")
@@ -31,16 +33,19 @@ public class ChangeLogController {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final SettingsService settings;
+	private final FileService fileService;
 
-	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settings) {
+	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settings,
+			FileService fileService) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.settings = settings;
+		this.fileService = fileService;
 	}
 
 	@GetMapping("{group}/{name}")
 	public String request(
-		 HttpServletRequest request,
+			HttpServletRequest request,
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		return request(request, group, name, null);
@@ -48,39 +53,41 @@ public class ChangeLogController {
 
 	@GetMapping("{group}/{name}/{commitId}")
 	public String request(
-		 HttpServletRequest request,
+			HttpServletRequest request,
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {
 		if (!settings.is(ServerSetting.CHANGE_LOG_ENABLED))
 			throw Response.unavailable("Change log feature not enabled");
 		try (var repo = repoService.get(group, name)) {
-			File file = null;
-			String filename = null;
+			var file = fileService.createTempFile();
 			var writer = new ChangeLogWriter();
 			try {
 				if (Strings.nullOrEmpty(commitId)) {
-					file = writer.generate(request, repo);
-					filename = "changelog_" + repo.path() + ".zip";
+					writer.generate(file, request, repo);
 				} else {
-					var commit = repo.commits().get(commitId);
+					var commit = repo.commits.get(commitId);
 					if (commit == null)
 						throw Response.notFound("Could not find commit with id " + commitId);
-					file = writer.generate(request, repo, commit);
-					filename = "changelog_" + repo.path() + "-" + commitId + ".zip";
+					writer.generate(file, request, repo, commit);
 				}
 			} catch (WebRequestException e) {
 				throw Response.status(e);
 			}
 			if (file == null)
 				throw Response.badRequest("Could not render changelog");
+			var filename = Strings.nullOrEmpty(commitId)
+					? "changelog_" + repo.path() + ".zip"
+					: "changelog_" + repo.path() + "-" + commitId + ".zip";
 			var token = put(file, filename);
 			return token;
+		} catch (IOException e) {
+			throw Response.error("Error creating change log");
 		}
 	}
 
 	@GetMapping("{token}")
-	public ResponseEntity<StreamingResponseBody> download(@PathVariable("token") String token) {
+	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
 		var info = tokens.get(token);
 		if (info == null)
 			throw Response.notFound();
@@ -90,7 +97,7 @@ public class ChangeLogController {
 		if (!user.username.equals(info.userId))
 			throw Response.forbidden();
 		var tmpFile = new File(info.path);
-		return Response.ok(info.filename, tmpFile, () -> tmpFile.delete());
+		return Response.ok(info.filename, tmpFile);
 	}
 
 	private String put(File file, String filename) {

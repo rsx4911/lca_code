@@ -2,7 +2,6 @@ package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,13 +18,13 @@ import org.openlca.core.model.ProcessType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
-import org.openlca.git.util.Diffs;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.search.wrapper.SearchClient;
@@ -68,15 +67,15 @@ public class InputOutputDataService {
 	}
 
 	void remove(Repository repo) {
-		var ids = getIds(repo, null);
+		var ids = getIds(repo.path(), null);
 		if (ids.isEmpty())
 			return;
 		getClient().remove(ids);
 	}
 
-	private Set<String> getIds(Repository repo, Commit commit) {
+	private Set<String> getIds(String path, Commit commit) {
 		var query = new SearchQueryBuilder()
-				.filter("repositoryPath", SearchFilterValue.term(repo.path()));
+				.filter("repositoryPath", SearchFilterValue.term(path));
 		if (commit != null) {
 			query.filter("versions.commitId", SearchFilterValue.term(commit.id));
 		}
@@ -105,8 +104,8 @@ public class InputOutputDataService {
 		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	void move(Repository repo, Repository newRepo) {
-		var ids = getIds(repo, null);
+	void move(RepositoryPath path, Repository newRepo) {
+		var ids = getIds(path.toString(), null);
 		Map<String, Object> update = new HashMap<>();
 		update.put("repositoryPath", newRepo.path());
 		getClient().update(ids, update);
@@ -114,16 +113,17 @@ public class InputOutputDataService {
 
 	void index(Repository repo) {
 		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
-		var commits = repo.commits().find().after(previousCommitId).all();
-		Commit previousCommit = previousCommitId != null ? repo.commits().get(previousCommitId) : null;
+		var commits = repo.commits.find().after(previousCommitId).all();
+		Commit previousCommit = previousCommitId != null ? repo.commits.get(previousCommitId) : null;
 		var client = getClient();
 		if (client == null)
 			return;
 		var buffer = new EntryBuffer(client, 1000);
 		for (var commitIndex = 0; commitIndex < commits.size(); commitIndex++) {
 			var commit = commits.get(commitIndex);
-			var diffs = Diffs.of(repo.gitRepo(), commit)
-					.filter(Collections.singletonList(ModelType.PROCESS.name()))
+			var diffs = repo.diffs.find().commit(commit)
+					.filter(ModelType.PROCESS.name())
+					.excludeCategories()
 					.withPreviousCommit();
 			var skip = new HashSet<String>();
 			for (var diff : diffs) {
@@ -174,7 +174,7 @@ public class InputOutputDataService {
 	}
 
 	private InputOutputData createData(Repository repo, Commit commit, int commitIndex, Diff diff) {
-		var map = repo.datasets().parse(diff.toReference(Side.NEW),
+		var map = repo.datasets.parse(diff.toReference(Side.NEW),
 				FieldDefinition.firstOf("name"),
 				FieldDefinition.firstOf("processType", ProcessType::valueOf),
 				FieldDefinition.allOf("exchanges.flow.@id").ifIs("exchanges.isInput").name("inputs"),

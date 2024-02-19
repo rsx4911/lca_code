@@ -3,19 +3,18 @@ package com.greendelta.collaboration.service;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.MailSetting;
+
+import jakarta.mail.Message.RecipientType;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMultipart;
 
 @Service
 public class EmailService {
@@ -27,7 +26,6 @@ public class EmailService {
 		this.settings = settings;
 	}
 
-	@Async("taskExecutor")
 	public void send(EmailJob mail) {
 		var config = settings.mailConfig;
 		var sender = config.getMailSender();
@@ -47,7 +45,9 @@ public class EmailService {
 				message.setReplyTo(new InternetAddress[] { new InternetAddress(defaultReplyTo) });
 			}
 			message.saveChanges();
-			sender.send(message);
+			new Thread(() -> {
+				sender.send(message);	
+			}).start();
 		} catch (MessagingException e) {
 			log.error("Error sending mail", e);
 		}

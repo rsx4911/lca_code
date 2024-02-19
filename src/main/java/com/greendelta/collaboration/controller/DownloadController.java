@@ -2,7 +2,6 @@ package com.greendelta.collaboration.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -11,10 +10,9 @@ import java.util.UUID;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
@@ -40,7 +38,7 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{}/{} (commit id {})", group, repository, path, commitId);
 			var writer = prepareWriter(repo, commitId, true);
-			repo.references().find().path(path).commit(commitId).iterate(writer::write);
+			repo.entries.iterate(commitId, path, writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -49,25 +47,16 @@ abstract class DownloadController {
 
 	protected String prepare(String group, String repository, ModelType type, String refId, String commitId) {
 		try (var repo = repoService.get(group, repository)) {
-			var ref = repo.references().get(type, refId, commitId);
+			var ref = repo.references.get(type, refId, commitId);
 			if (ref == null)
 				throw Response.notFound("ref " + type + " " + refId + " not found");
+			var entry = repo.entries.get(ref.path, commitId);
+			if (entry == null)
+				throw Response.notFound("entry " + ref.path + " not found");
 			log().info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
 			var writer = prepareWriter(repo, commitId, true);
-			writer.write(ref);
+			writer.write(entry);
 			return put(writer, refId + "_" + commitId + ".zip");
-		} catch (IOException e) {
-			throw Response.error("Error writing data sets to tmp file");
-		}
-	}
-
-	protected String prepare(String group, String repository, String commitId, Collection<Reference> requested) {
-		try (var repo = repoService.get(group, repository)) {
-			log().info("Exporting {} requested data sets of repository {}/{} (commit id {})", requested.size(), group,
-					repository, commitId);
-			var writer = prepareWriter(repo, commitId, true);
-			requested.forEach(writer::write);
-			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
 		}
@@ -79,7 +68,7 @@ abstract class DownloadController {
 					commitId);
 			var writer = prepareWriter(repo, commitId, true);
 			paths.stream().forEach(path -> {
-				repo.references().find().path(path).commit(commitId).iterate(writer::write);
+				repo.entries.iterate(commitId, path, writer::write);
 			});
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
@@ -91,7 +80,7 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{} (commit id {})", group, repository, commitId);
 			var writer = prepareWriter(repo, commitId, false);
-			repo.references().find().commit(commitId).iterate(writer::write);
+			repo.entries.iterate(commitId, writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -99,7 +88,7 @@ abstract class DownloadController {
 	}
 
 	private DatasetWriter prepareWriter(Repository repo, String commitId, boolean withReferences) throws IOException {
-		var commit = repo.commits().find().until(commitId).latest();
+		var commit = repo.commits.find().until(commitId).latest();
 		if (commit == null)
 			throw Response.notFound("commit " + commitId + " not found");
 		var writer = createWriter(repo, commit);
@@ -122,15 +111,14 @@ abstract class DownloadController {
 		return user.username;
 	}
 
-	protected ResponseEntity<StreamingResponseBody> download(String token) {
-		TokenInfo info = tokens.get(token);
+	protected ResponseEntity<Resource> download(String token) {
+		var info = tokens.get(token);
 		if (info == null)
 			throw Response.notFound();
 		var user = userService.getCurrentUser();
 		if (!getUserId(user).equals(info.userId))
 			throw Response.forbidden();
-		var tmpFile = new File(info.path);
-		return Response.ok(info.filename, tmpFile, () -> tmpFile.delete());
+		return Response.ok(info.filename, new File(info.path));
 	}
 
 	protected abstract DatasetWriter createWriter(Repository repo, Commit commit) throws IOException;

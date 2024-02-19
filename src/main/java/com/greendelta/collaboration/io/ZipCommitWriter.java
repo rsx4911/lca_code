@@ -7,25 +7,25 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 
 import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.Repository;
 import org.openlca.core.model.ModelType;
-import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Change;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.ModelRef;
 import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.util.GitUtil;
 import org.openlca.git.util.MetaDataParser;
-import org.openlca.git.util.Repositories;
 import org.openlca.git.writer.CommitWriter;
 import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.ZipStore;
+import org.openlca.jsonld.input.CategoryImport;
 import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.Repository;
 
 public class ZipCommitWriter extends CommitWriter {
 
@@ -44,9 +44,6 @@ public class ZipCommitWriter extends CommitWriter {
 			tmpFile = Files.createTempFile("cs-json2repository-", ".zip");
 			Files.copy(stream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
 			zip = ZipStore.open(tmpFile.toFile());
-			var info = RepositoryInfo.readFrom(zip);
-			if (!info.schemaVersion().isCurrent())
-				return false;
 			var writer = new ZipCommitWriter(zip, git);
 			writer.as(new PersonIdent(user.username, user.email));
 			writer.write(commitMessage);
@@ -62,7 +59,7 @@ public class ZipCommitWriter extends CommitWriter {
 	}
 
 	private void write(String message) throws IOException {
-		var previousCommit = Repositories.headCommitOf(repo);
+		var previousCommit = repo.getHeadCommit();
 		if (previousCommit == null) {
 			write(message, getChanges());
 		} else {
@@ -79,10 +76,24 @@ public class ZipCommitWriter extends CommitWriter {
 	}
 
 	private List<Change> getChanges(ModelType type) {
-		return zip.getRefIds(type).stream()
+		var changes = zip.getRefIds(type).stream()
 				.map(refId -> getPath(type, refId))
 				.map(path -> new Change(DiffType.ADDED, new ModelRef(path)))
-				.toList();
+				.collect(Collectors.toList());
+		var categories = zip.getJson(CategoryImport.FILE_NAME);
+		if (categories == null || !categories.isJsonArray())
+			return changes;
+		var allCategories = changes.stream()
+				.map(c -> c.type.name() + "/" + c.getCategoryPath())
+				.collect(Collectors.toSet());
+		for (var category : categories.getAsJsonArray()) {
+			var path = category.getAsString();
+			if (!allCategories.contains(path)) {
+				allCategories.add(path);
+				changes.add(new Change(DiffType.ADDED, new ModelRef(path)));
+			}
+		}
+		return changes;
 	}
 
 	private String getPath(ModelType type, String refId) {

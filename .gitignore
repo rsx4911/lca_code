@@ -5,10 +5,13 @@ node_modules/
 !**/src/main/**/target/
 !**/src/test/**/target/
 /src/main/resources/ssr
+/src/main/resources/static
 /src/main/webapp/js/libs
 /src/main/webapp/js/templates
 /src/main/webapp/js/app/DynamicDependencies.coffee
 /src/main/webapp/*.html
+/src/main/webapp/LICENSE.txt
+/src/main/webapp/THIRD-PARTY.txt
 /src/main/webapp/css/main.css
 /custom/
 

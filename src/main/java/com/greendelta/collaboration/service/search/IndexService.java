@@ -3,11 +3,9 @@ package com.greendelta.collaboration.service.search;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 import org.openlca.git.model.Commit;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -22,17 +20,14 @@ import com.greendelta.collaboration.service.SettingsService;
 @Service
 public class IndexService {
 
-	private final Executor threads;
 	private final RepositoryService repoService;
 	private final SearchService searchService;
 	private final InputOutputDataService ioDataService;
 	private final SettingsService settings;
-	private Queue<Work> workQueue = new LinkedList<>();
+	private final Queue<Work> workQueue = new LinkedList<>();
 
-	public IndexService(@Qualifier("taskExecutor") Executor threads, RepositoryService repoService,
-			SearchService searchService,
+	public IndexService(RepositoryService repoService, SearchService searchService,
 			InputOutputDataService ioDataService, SettingsService settings) {
-		this.threads = threads;
 		this.repoService = repoService;
 		this.searchService = searchService;
 		this.ioDataService = ioDataService;
@@ -60,7 +55,7 @@ public class IndexService {
 			if (work == null)
 				return;
 		}
-		threads.execute(() -> {
+		new Thread(() -> {
 			try {
 				work.run();
 			} finally {
@@ -69,7 +64,7 @@ public class IndexService {
 					runNext();
 				}
 			}
-		});
+		}).start();
 	}
 
 	public IndexingStatus getIndexingStatus() {
@@ -100,7 +95,7 @@ public class IndexService {
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.index(repo);
 				}
-				setCommitId(repo, repo.commits().head());
+				setCommitId(repo.path(), repo.commits.head());
 			} finally {
 				repo.close();
 				work.worked++;
@@ -109,18 +104,16 @@ public class IndexService {
 	}
 
 	public Work moveIndexAsync(RepositoryPath path, RepositoryPath newPath) {
-		var repo = repoService.get(path);
 		var newRepo = repoService.get(newPath);
-		return offer("Moving index of " + repo.path() + " to " + newRepo.path(), 1, work -> {
+		return offer("Moving index of " + path.toString() + " to " + newRepo.path(), 1, work -> {
 			try {
-				searchService.move(repo, newRepo);
+				searchService.move(path, newRepo);
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-					ioDataService.move(repo, newRepo);
+					ioDataService.move(path, newRepo);
 				}
-				setCommitId(repo, null);
-				setCommitId(newRepo, newRepo.commits().head());
+				setCommitId(path.toString(), null);
+				setCommitId(newRepo.path(), newRepo.commits.head());
 			} finally {
-				repo.close();
 				newRepo.close();
 				work.worked++;
 			}
@@ -147,12 +140,12 @@ public class IndexService {
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.remove(repo);
 				}
-				setCommitId(repo, null);
+				setCommitId(repo.path(), null);
 				searchService.index(repo);
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.index(repo);
 				}
-				setCommitId(repo, repo.commits().head());
+				setCommitId(repo.path(), repo.commits.head());
 			} finally {
 				repo.close();
 				work.worked++;
@@ -170,12 +163,12 @@ public class IndexService {
 					ioDataService.clearIndex();
 				}
 				repos.forEach(repo -> {
-					setCommitId(repo, null);
+					setCommitId(repo.path(), null);
 					searchService.index(repo);
 					if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 						ioDataService.index(repo);
 					}
-					setCommitId(repo, repo.commits().head());
+					setCommitId(repo.path(), repo.commits.head());
 					work.worked++;
 				});
 			} finally {
@@ -201,11 +194,11 @@ public class IndexService {
 		if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 			ioDataService.remove(repo);
 		}
-		setCommitId(repo, null);
+		setCommitId(repo.path(), null);
 	}
 
-	private void setCommitId(Repository repo, Commit commit) {
-		var repoSettings = settings.get(SettingType.REPOSITORY_SETTING, repo.path(), null);
+	private void setCommitId(String path, Commit commit) {
+		var repoSettings = settings.get(SettingType.REPOSITORY_SETTING, path, null);
 		if (commit == null) {
 			repoSettings.delete(RepositorySetting.SEARCH_COMMIT_ID);
 		} else {

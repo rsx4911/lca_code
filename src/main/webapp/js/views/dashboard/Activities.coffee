@@ -9,9 +9,10 @@ define([
 				'cs!models/CurrentUser'
 				'templates/views/dashboard/activities'
 				'templates/views/dashboard/activity'
+				'templates/views/repository/commit/commit-info'
 			]
 
-	(Backbone, Events, FeedScroll, Format, Forms, Model, Renderer, currentUser, template, resultTemplate) ->
+	(Backbone, Events, FeedScroll, Format, Forms, Model, Renderer, currentUser, template, resultTemplate, infoTemplate) ->
 
 		class DashboardActivities extends Backbone.View
 
@@ -73,6 +74,12 @@ define([
 						model.formatDate = Format.date
 						model.formatTime = Format.time
 						model.showRepositoryPath = !@repository
+					afterRender: (entry) =>
+						if entry.type is 'COMMIT'
+							setTimeout () =>
+								$.get "ws/history/count/#{entry.repositoryPath}/#{entry.id}", (count) =>
+									$(".commit-info-container[data-commit-id=#{count.id}]").html infoTemplate count
+							, 10
 					onEmpty: () =>
 						@$('#activity-feed').append('<div class="no-content-message">No activities found</div>')
 				})

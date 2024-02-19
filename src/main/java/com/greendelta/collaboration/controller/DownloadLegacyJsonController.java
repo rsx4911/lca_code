@@ -1,27 +1,25 @@
 package com.greendelta.collaboration.controller;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.LegacyJsonWriter;
+import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -30,13 +28,17 @@ import com.greendelta.collaboration.service.user.UserService;
 @RequestMapping("ws/public/download/json1")
 public class DownloadLegacyJsonController extends DownloadController {
 
-	public DownloadLegacyJsonController(RepositoryService repoService, UserService userService) {
+	private final FileService fileService;
+
+	public DownloadLegacyJsonController(RepositoryService repoService, UserService userService,
+			FileService fileService) {
 		super(repoService, userService);
+		this.fileService = fileService;
 	}
 
 	@Override
 	@GetMapping("{token}")
-	public ResponseEntity<StreamingResponseBody> download(@PathVariable("token") String token) {
+	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
 		return super.download(token);
 	}
 
@@ -68,18 +70,9 @@ public class DownloadLegacyJsonController extends DownloadController {
 		return super.prepare(group, repository, commitId, paths);
 	}
 
-	@PutMapping("prepare/{group}/{repository}")
-	public String prepareRequested(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository,
-			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestBody List<Reference> requested) {
-		return super.prepare(group, repository, commitId, requested);
-	}
-
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new LegacyJsonWriter(repo.references(), repo.datasets(), commit);
+		return new LegacyJsonWriter(fileService.createTempFile(), repo, commit);
 	}
 
 	@Override

@@ -2,10 +2,10 @@ include ../../mixins/category-breadcrumb.pug
 include ../../mixins/paging.pug
 
 mixin dataset-label(dataset)
-	- var action = '';
+	- var imgSrc = 'images/model/small/' + getIcon(dataset);
 	if dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED'
-		- var action = 'overlay/' + (dataset.diffType === 'ADDED' ? 'add/' : 'delete/');
-	img.model-icon-small(src='images/model/small/' + action + getIcon(dataset))
+		- imgSrc = 'ws/public/overlay?image=' + imgSrc + '&overlay=images/model/' + (dataset.diffType === 'ADDED' ? 'add' : 'delete') + '.png';
+	img.model-icon-small(src=imgSrc)
 	if dataset.diffType === 'DELETED'
 		del=dataset.name
 	else
@@ -13,8 +13,13 @@ mixin dataset-label(dataset)
 
 
 each dataset in data
-	- var url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;
-	- var linkDataset = !standalone || (dataset.diffType !== 'ADDED' && dataset.diffType !== 'DELETED');
+	- var url = baseUrl;
+	if dataset.isCategory
+		- url += 's/' + getTypeLabel(dataset.type) + '/' + (dataset.category ? dataset.category + '/' : '') + dataset.name;
+	else
+		- url += '/' + dataset.type + '/' + dataset.refId;
+	- url += '?commitId=' + commitId;
+	- var linkDataset = dataset.diffType !== 'DELETED' || (standalone && dataset.diffType !== 'ADDED');
 	.file-reference(id=dataset.id)
 		.header
 			if linkDataset

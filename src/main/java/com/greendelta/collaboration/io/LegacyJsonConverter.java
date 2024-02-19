@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Json;
 import org.openlca.jsonld.ZipStore;
+import org.openlca.jsonld.input.CategoryImport;
 import org.openlca.util.KeyGen;
+import org.openlca.util.Strings;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -58,6 +60,13 @@ class LegacyJsonConverter implements Closeable {
 				convert(type, obj);
 			}
 		}
+		var categories = zip.getJson(CategoryImport.FILE_NAME);
+		if (categories == null || !categories.isJsonArray())
+			return file;
+		for (var category : categories.getAsJsonArray()) {
+			putCategory(category.getAsString());
+		}
+		zip.remove(CategoryImport.FILE_NAME);
 		return file;
 	}
 
@@ -74,7 +83,7 @@ class LegacyJsonConverter implements Closeable {
 			case IMPACT_METHOD -> convertImpactMethod(obj);
 			default -> false;
 		};
-		var category = getCategory(obj);
+		var category = putCategory(obj);
 		if (category != null) {
 			Json.put(obj, "category", category.toJson());
 			wasConverted = true;
@@ -229,17 +238,33 @@ class LegacyJsonConverter implements Closeable {
 		return true;
 	}
 
-	private Category getCategory(JsonObject obj) {
-		var path = Json.getString(obj, "category");
-		if (path == null || path.strip().isEmpty())
+	private Category putCategory(JsonObject obj) {
+		var type = Json.getString(obj, "@type");
+		var modelType = getModelType(type);
+		var categoryPath = Json.getString(obj, "category");
+		return putCategory(modelType, categoryPath);
+	}
+
+	private void putCategory(String path) {
+		if (Strings.nullOrEmpty(path) || !path.contains("/"))
+			return;
+		var firstSlash = path.indexOf("/");
+		var type = path.substring(0, firstSlash);
+		var modelType = ModelType.parse(type);
+		var categoryPath = path.substring(firstSlash + 1);
+		putCategory(modelType, categoryPath);
+	}
+
+	private Category putCategory(ModelType modelType, String categoryPath) {
+		if (modelType == null || categoryPath == null || categoryPath.strip().isEmpty())
 			return null;
-		var modelType = getModelType(obj);
 		var pool = categories.get(modelType);
 		if (pool == null) {
 			pool = new HashMap<>();
 			categories.put(modelType, pool);
 		}
-		var segments = Arrays.asList(path.split("/")).stream().map(String::strip).collect(Collectors.toList());
+		var segments = Arrays.asList(categoryPath.split("/")).stream()
+				.map(String::strip).collect(Collectors.toList());
 		Category category = null;
 		var walked = "";
 		for (var seg : segments) {
@@ -257,8 +282,7 @@ class LegacyJsonConverter implements Closeable {
 		return category;
 	}
 
-	private ModelType getModelType(JsonObject obj) {
-		var type = Json.getString(obj, "@type");
+	private ModelType getModelType(String type) {
 		if (type == null || type.strip().isEmpty())
 			return null;
 		for (var t : types)
@@ -323,7 +347,7 @@ class LegacyJsonConverter implements Closeable {
 		zip.close();
 		String uriStr = file.toURI().toASCIIString();
 		URI uri = URI.create("jar:" + uriStr);
-		var	fs = FileSystems.newFileSystem(uri, Map.of());
+		var fs = FileSystems.newFileSystem(uri, Map.of());
 		var path = fs.getPath("openlca.json");
 		Files.delete(path);
 		fs.close();

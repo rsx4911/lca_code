@@ -5,12 +5,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -19,26 +16,27 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
-import org.openlca.git.util.Diffs;
 import org.springframework.http.HttpStatus;
 
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Http;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 public class ChangeLogWriter {
 
 	private final static Logger log = LogManager.getLogger(ChangeLogWriter.class);
 
-	public File generate(HttpServletRequest request, Repository repo) throws WebRequestException {
-		return generate(zos -> {
+	public void generate(File file, HttpServletRequest request, Repository repo) throws WebRequestException {
+		generate(file, zos -> {
 			var data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
-			var commits = repo.commits().find().all();
+			var commits = repo.commits.find().all();
 			for (var commit : commits) {
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
+				var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
 				for (var diff : diffs) {
 					if (diff.diffType != DiffType.MODIFIED)
 						continue;
@@ -49,9 +47,9 @@ public class ChangeLogWriter {
 		});
 	}
 
-	public File generate(HttpServletRequest request, Repository repo, Commit commit) throws WebRequestException {
-		return generate(zos -> {
-			var diffs = Diffs.of(repo.gitRepo(), commit).withPreviousCommit();
+	public void generate(File file, HttpServletRequest request, Repository repo, Commit commit) throws WebRequestException {
+		generate(file, zos -> {
+			var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {
@@ -63,18 +61,14 @@ public class ChangeLogWriter {
 		});
 	}
 
-	private File generate(Renderer renderer) throws WebRequestException {
+	private void generate(File file, Renderer renderer) throws WebRequestException {
 		try {
-			var tmpDir = Files.createTempDirectory("lca-collaboration-changelog").toFile();
-			var file = new File(tmpDir, "temp.zip");
 			var zos = new ZipOutputStream(new FileOutputStream(file));
 			packResources(zos);
 			renderer.render(zos);
 			zos.close();
-			return file;
 		} catch (IOException e) {
 			log.error("Error during changelog creation", e);
-			return null;
 		}
 	}
 

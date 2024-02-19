@@ -102,7 +102,7 @@ public class CommentController {
 		comments.forEach(comment -> {
 			var map = Comments.map(comment);
 			var field = comment.field;
-			var ref = repo.references().get(field.modelType, field.refId, field.commitId);
+			var ref = repo.references.get(field.modelType, field.refId, field.commitId);
 			map.put("dsPath", ref.category + "/" + MetaData.getName(repo, ref));
 			if (putReplyCount) {
 				map.put("replyCount", service.getRepliesTo(comment.id).size());
@@ -212,7 +212,7 @@ public class CommentController {
 	private Map<String, Object> map(Comment comment, Repository repo) {
 		var map = Comments.map(comment);
 		var field = comment.field;
-		var ref = repo.references().get(field.modelType, field.refId, field.commitId);
+		var ref = repo.references.get(field.modelType, field.refId, field.commitId);
 		map.put("dsPath", ref.category);
 		return map;
 	}

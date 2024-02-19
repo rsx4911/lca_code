@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-
 import org.apache.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,6 +33,9 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.os.OsRestClient;
+
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
 
 @Service
 public class SettingsService {
@@ -394,7 +394,7 @@ public class SettingsService {
 					value = setting.getValue();
 				}
 			}
-			if (value == null)
+			if (value == null || (defaultValue != null && value instanceof String s && s.trim().isEmpty()))
 				return defaultValue;
 			return value;
 		}

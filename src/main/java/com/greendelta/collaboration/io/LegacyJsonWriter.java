@@ -3,29 +3,29 @@ package com.greendelta.collaboration.io;
 import java.io.File;
 import java.io.IOException;
 
-import org.openlca.git.find.Datasets;
-import org.openlca.git.find.References;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Reference;
+import org.openlca.git.model.Entry;
+
+import com.greendelta.collaboration.service.Repository;
 
 public class LegacyJsonWriter implements DatasetWriter {
 
 	private final JsonWriter jsonWriter;
 
-	public LegacyJsonWriter(References references, Datasets datasets, Commit commit) throws IOException {
-		this.jsonWriter = new JsonWriter(references, datasets, null, commit);
+	public LegacyJsonWriter(File file, Repository repo, Commit commit) throws IOException {
+		this.jsonWriter = new JsonWriter(file, repo, null, commit);
 	}
 
 	@Override
-	public void write(Reference ref) {
-		jsonWriter.write(ref);
+	public void write(Entry entry) {
+		jsonWriter.write(entry);
 	}
 	
 	@Override
 	public void withReferences() {
 		jsonWriter.withReferences();
 	}
-	
+
 	@Override
 	public File close() throws IOException {
 		var file = jsonWriter.close();

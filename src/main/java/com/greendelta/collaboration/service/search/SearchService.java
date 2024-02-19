@@ -12,12 +12,12 @@ import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
-import org.openlca.git.util.Diffs;
 import org.openlca.git.util.TypedRefId;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;
@@ -40,15 +40,15 @@ public class SearchService {
 	}
 
 	void index(Repository repo) {
-		var head = repo.commits().head();
+		var head = repo.commits.head();
 		if (head == null)
 			return;
 		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
-		var previous = previousCommitId != null ? repo.commits().get(previousCommitId) : null;
+		var previous = previousCommitId != null ? repo.commits.get(previousCommitId) : null;
 		if (previous != null && previous.equals(head))
 			return;
 		var manager = new DsEntryManager(repo, head);
-		var diffs = Diffs.of(repo.gitRepo(), previous).with(head);
+		var diffs = repo.diffs.find().commit(previous).excludeCategories().with(head);
 		if (diffs.isEmpty())
 			return;
 		var client = getClient();
@@ -91,7 +91,7 @@ public class SearchService {
 	}
 
 	void updateTags(Repository repo) {
-		var head = repo.commits().head();
+		var head = repo.commits.head();
 		if (head == null)
 			return;
 		var client = getClient();
@@ -105,15 +105,15 @@ public class SearchService {
 		buffer.flush();
 	}
 
-	void move(Repository oldRepo, Repository newRepo) {
-		var head = newRepo.commits().head();
+	void move(RepositoryPath oldPath, Repository newRepo) {
+		var head = newRepo.commits.head();
 		if (head == null)
 			return;
 		var client = getClient();
 		if (client == null)
 			return;
 		var buffer = new EntryBuffer(client, 1000);
-		update(buffer, oldRepo,
+		update(buffer, newRepo,
 				e -> e.versions.forEach(
 						v -> v.repos.forEach(
 								r -> {
@@ -124,11 +124,11 @@ public class SearchService {
 	}
 
 	private void update(EntryBuffer buffer, Repository repo, Consumer<DsEntry> update) {
-		var head = repo.commits().head();
+		var head = repo.commits.head();
 		if (head == null)
 			return;
 		var manager = new DsEntryManager(repo, head);
-		repo.references().find().iterate(ref -> update(buffer, manager, ref, update));
+		repo.references.find().iterate(ref -> update(buffer, manager, ref, update));
 	}
 
 	private void update(EntryBuffer buffer, DsEntryManager manager, Reference ref, Consumer<DsEntry> update) {
@@ -148,7 +148,7 @@ public class SearchService {
 			return;
 		var buffer = new EntryBuffer(client, 1000);
 		var manager = new DsEntryManager(repo, null);
-		repo.references().find().commit(previousCommitId).iterate(ref -> remove(buffer, manager, ref));
+		repo.references.find().commit(previousCommitId).iterate(ref -> remove(buffer, manager, ref));
 		buffer.flush();
 	}
 

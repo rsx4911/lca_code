@@ -9,9 +9,10 @@ define([
 				'cs!models/Settings'
 				'templates/views/repository/commit/commits'
 				'templates/views/repository/commit/commit-list'
+				'templates/views/repository/commit/commit-info'
 			]
 
-	(Backbone, moment, Events, Filter, Format, Renderer, Download, settings, template, listTemplate) ->
+	(Backbone, moment, Events, Filter, Format, Renderer, Download, settings, template, listTemplate, infoTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
 
@@ -40,6 +41,14 @@ define([
 						result.standalone = @standalone
 						@prepareModel result
 						result.formatDate = Format.date
+					afterRender: (result) =>
+						unless result
+							return
+						setTimeout () =>
+							for commit in result.data
+								$.get "ws/history/count/#{group}/#{name}/#{commit.id}", (count) =>
+									$(".commit-info-container[data-commit-id=#{count.id}]").html infoTemplate count
+						, 10
 
 			render: (renderOptions) ->
 				@$el.html template

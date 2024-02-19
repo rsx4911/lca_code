@@ -13,6 +13,7 @@ import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
@@ -97,27 +97,27 @@ public class RepositoryController {
 				return Response.ok(SearchResults.convert(all, Repositories::map));
 			var user = userService.getCurrentUser();
 			switch (module) {
-			case DASHBOARD, GROUP:
-				return Response.ok(SearchResults.convert(all,
-						repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
-			case REVIEW:
-				return Response.ok(all.data.stream()
-						.filter(repo -> accessService.canManageTaskIn(repo.path()))
-						.map(Repositories::map)
-						.toList());
-			default:
-				return Response.ok(all.data.stream().map(Repositories::map).toList());
+				case DASHBOARD, GROUP:
+					return Response.ok(SearchResults.convert(all,
+							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
+				case REVIEW:
+					return Response.ok(all.data.stream()
+							.filter(repo -> accessService.canManageTaskIn(repo.path()))
+							.map(Repositories::map)
+							.toList());
+				default:
+					return Response.ok(all.data.stream().map(Repositories::map).toList());
 			}
 		}
 	}
 
 	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.path()));
-		map.put("datasets", repo.references().find().count());
-		map.put("commits", repo.commits().find().all().size());
+		map.put("datasets", repo.references.find().count());
+		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.path()).size());
 		if (user.isDataManager()) {
-			var lastCommit = repo.commits().find().latest();
+			var lastCommit = repo.commits.find().latest();
 			map.put("lastCommit", lastCommit != null ? lastCommit.timestamp : null);
 		}
 		return map;
@@ -158,11 +158,13 @@ public class RepositoryController {
 	}
 
 	@GetMapping("export/{group}/{name}")
-	public ResponseEntity<StreamingResponseBody> doExport(
+	public ResponseEntity<Resource> doExport(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			return Response.ok(repo.toFilename(), 0, service.pack(repo));
+			return Response.ok(repo.toFilename(), service.pack(repo));
+		} catch (IOException e) {
+			throw Response.error("Could not export repository, an unexpected error occured");
 		}
 	}
 
@@ -227,7 +229,7 @@ public class RepositoryController {
 			throw Response.badRequest("commitMessage", "Missing input: Commit message");
 		var user = userService.getCurrentUser();
 		try {
-			var success = ZipCommitWriter.write(input, repo.gitRepo(), user, commitMessage);
+			var success = ZipCommitWriter.write(input, repo, user, commitMessage);
 			if (!success)
 				throw Response.badRequest("data",
 						"Incompatible schema version: Are you trying to import JSON-LD from openLCA 1.x?");
@@ -269,10 +271,10 @@ public class RepositoryController {
 			if (to == null)
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
-			var head = from.commits().head();
+			var head = from.commits.head();
 			Commit commit = null;
 			if (head != null && !head.id.equals(commitId)) {
-				commit = from.commits().get(commitId);
+				commit = from.commits.get(commitId);
 			}
 			if (!service.clone(from, to, commit)) {
 				deleteService.delete(to);

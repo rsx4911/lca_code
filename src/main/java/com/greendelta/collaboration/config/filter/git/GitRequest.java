@@ -2,9 +2,9 @@ package com.greendelta.collaboration.config.filter.git;
 
 import java.util.Base64;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import org.eclipse.jgit.http.server.GitSmartHttpTools;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class GitRequest extends HttpServletRequestWrapper {
 	@Override
 	public String getPathInfo() {
 		// default servlet returns incorrect pathinfo
-		return Requests.getRelativePath(this);
+		return Requests.getRoute(this);
 	}
 
 	@Override

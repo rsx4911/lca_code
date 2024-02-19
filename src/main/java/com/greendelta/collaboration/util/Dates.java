@@ -3,7 +3,7 @@ package com.greendelta.collaboration.util;
 import java.util.Calendar;
 import java.util.Date;
 
-import javax.xml.bind.DatatypeConverter;
+import org.openlca.jsonld.Json;
 
 public class Dates {
 
@@ -48,9 +48,7 @@ public class Dates {
 	public static Date fromString(String date) {
 		if (date == null || date.isEmpty())
 			return null;
-		var cal = DatatypeConverter.parseDateTime(date);
-		return cal == null ? null : cal.getTime();
-
+		return Json.parseDate(date);
 	}
 
 	public static long getTime(String date) {
