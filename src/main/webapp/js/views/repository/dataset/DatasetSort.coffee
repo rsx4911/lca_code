@@ -45,8 +45,8 @@ define () ->
 				return -1
 			if type1 isnt 'WASTE_FLOW' and type2 is 'WASTE_FLOW'
 				return 1
-			name1 = e1.flow.name ? e1.flow.name : ''
-			name2 = e2.flow.name ? e2.flow.name : ''
+			name1 = if e1.flow.name then e1.flow.name else ''
+			name2 = if e2.flow.name then e2.flow.name else ''
 			if name1.toLowerCase() < name2.toLowerCase()
 				return -1
 			if name2.toLowerCase() < name1.toLowerCase()

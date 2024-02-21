@@ -62,6 +62,8 @@ define([
 			flowMap = {}
 			if dataset.exchanges
 				for e in dataset.exchanges
+					unless e.flow
+						continue
 					exchangeMap[e.internalId] = e
 					flowMap[e.flow.id] = e.flow
 			if dataset.allocationFactors?.length
