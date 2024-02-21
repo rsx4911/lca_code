@@ -155,7 +155,7 @@ public class HistoryController {
 		map.put("id", commit.id);
 		map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 		map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
-		map.put("updates", Diff.filter(diffs, DiffType.MODIFIED).size());
+		map.put("updates", Diff.filter(diffs, DiffType.MODIFIED, DiffType.MOVED).size());
 	}
 
 	@GetMapping("references/{group}/{name}/{commitId}")

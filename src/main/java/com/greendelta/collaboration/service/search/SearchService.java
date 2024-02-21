@@ -55,7 +55,7 @@ public class SearchService {
 		if (client == null)
 			return;
 		var buffer = new EntryBuffer(client, 1000);
-		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED)
+		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED, DiffType.MOVED)
 				.forEach(diff -> index(buffer, repo, manager, diff.toReference(Side.NEW)));
 		Diff.filter(diffs, DiffType.DELETED)
 				.forEach(diff -> remove(buffer, manager, diff.toReference(Side.OLD)));

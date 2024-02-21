@@ -23,7 +23,7 @@ each dataset in data
 	.file-reference(id=dataset.id)
 		.header
 			if linkDataset
-				a(data-type=dataset.diffType==='MODIFIED'?'changed':dataset.diffType.toLowerCase() href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
+				a(data-type=dataset.diffType==='MODIFIED'||dataset.diffType==='MOVED'?'changed':dataset.diffType.toLowerCase() href=standalone?commitId+'-'+dataset.refId+'.html':url class=standalone?'standalone':null)
 					+dataset-label(dataset)
 			else
 				span: +dataset-label(dataset)
