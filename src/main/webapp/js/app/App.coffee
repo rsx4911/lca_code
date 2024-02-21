@@ -58,9 +58,6 @@ define([
 				if response.status isnt 400 and response.status isnt 401 and response.status isnt 409
 					Router.navigate "error/#{response.status}",
 						replace: if options?.type is 'GET' then true else false
-				for error in ignoreErrors
-					if msg.indexOf(error) isnt -1
-						return
 			window.onerror = (msg, url, line, col, error) =>
 				if window.inErrorHandling
 					return
