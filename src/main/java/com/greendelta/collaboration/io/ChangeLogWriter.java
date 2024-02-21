@@ -38,7 +38,7 @@ public class ChangeLogWriter {
 				packResource(zos, commit.id + ".html", data);
 				var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
 				for (var diff : diffs) {
-					if (diff.diffType != DiffType.MODIFIED)
+					if (diff.diffType != DiffType.MODIFIED && diff.diffType != DiffType.MOVED)
 						continue;
 					data = renderDiff(request, repo, diff);
 					packResource(zos, commit.id + "-" + diff.refId + ".html", data);
@@ -53,7 +53,7 @@ public class ChangeLogWriter {
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {
-				if (diff.diffType != DiffType.MODIFIED)
+				if (diff.diffType != DiffType.MODIFIED && diff.diffType != DiffType.MOVED)
 					continue;
 				data = renderDiff(request, repo, diff);
 				packResource(zos, commit.id + "-" + diff.refId + ".html", data);

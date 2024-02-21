@@ -13,7 +13,6 @@ import java.util.zip.ZipException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Change;
-import org.openlca.git.model.DiffType;
 import org.openlca.git.model.ModelRef;
 import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.util.GitUtil;
@@ -78,7 +77,8 @@ public class ZipCommitWriter extends CommitWriter {
 	private List<Change> getChanges(ModelType type) {
 		var changes = zip.getRefIds(type).stream()
 				.map(refId -> getPath(type, refId))
-				.map(path -> new Change(DiffType.ADDED, new ModelRef(path)))
+				.map(ModelRef::new)
+				.map(Change::add)
 				.collect(Collectors.toList());
 		var categories = zip.getJson(CategoryImport.FILE_NAME);
 		if (categories == null || !categories.isJsonArray())
@@ -90,7 +90,7 @@ public class ZipCommitWriter extends CommitWriter {
 			var path = category.getAsString();
 			if (!allCategories.contains(path)) {
 				allCategories.add(path);
-				changes.add(new Change(DiffType.ADDED, new ModelRef(path)));
+				changes.add(Change.add(new ModelRef(path)));
 			}
 		}
 		return changes;
