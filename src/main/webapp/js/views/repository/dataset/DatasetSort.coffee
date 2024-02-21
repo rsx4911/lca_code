@@ -35,17 +35,21 @@ define () ->
 		unless exchanges
 			return
 		exchanges.sort (e1, e2) ->
-			if e1.flow.flowType is 'PRODUCT_FLOW' and e2.flow.flowType isnt 'PRODUCT_FLOW'
+			type1 = if e1.flow then e1.flow.flowType else null
+			type2 = if e2.flow then e2.flow.flowType else null
+			if type1 is 'PRODUCT_FLOW' and type2 isnt 'PRODUCT_FLOW'
 				return -1
-			if e1.flow.flowType isnt 'PRODUCT_FLOW' and e2.flow.flowType is 'PRODUCT_FLOW'
+			if type1 isnt 'PRODUCT_FLOW' and type2 is 'PRODUCT_FLOW'
 				return 1
-			if e1.flow.flowType is 'WASTE_FLOW' and e2.flow.flowType isnt 'WASTE_FLOW'
+			if type1 is 'WASTE_FLOW' and type2 isnt 'WASTE_FLOW'
 				return -1
-			if e1.flow.flowType isnt 'WASTE_FLOW' and e2.flow.flowType is 'WASTE_FLOW'
+			if type1 isnt 'WASTE_FLOW' and type2 is 'WASTE_FLOW'
 				return 1
-			if e1.flow.name.toLowerCase() < e2.flow.name.toLowerCase()
+			name1 = e1.flow.name ? e1.flow.name : ''
+			name2 = e2.flow.name ? e2.flow.name : ''
+			if name1.toLowerCase() < name2.toLowerCase()
 				return -1
-			if e2.flow.name.toLowerCase() < e1.flow.name.toLowerCase()
+			if name2.toLowerCase() < name1.toLowerCase()
 				return 1
 			return 0
 
