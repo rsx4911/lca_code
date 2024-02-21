@@ -58,6 +58,9 @@ define([
 				if response.status isnt 400 and response.status isnt 401 and response.status isnt 409
 					Router.navigate "error/#{response.status}",
 						replace: if options?.type is 'GET' then true else false
+				for error in ignoreErrors
+					if msg.indexOf(error) isnt -1
+						return
 			window.onerror = (msg, url, line, col, error) =>
 				if window.inErrorHandling
 					return
@@ -66,7 +69,7 @@ define([
 					type: 'POST'
 					url: 'ws/public/error'
 					contentType: 'application/json'
-					data: JSON.stringify({ stacktrace: error.responseJSON?.trace, path: Backbone.history.fragment })
+					data: JSON.stringify({ message: msg, stacktrace: error.stack, path: Backbone.history.fragment })
 					complete: () -> 
 						if localStorage?.getItem?('debugMode') is 'true' or window.debugMode is 'true'
 							localStorage?.setItem?('errorMessage', error.responseJSON?.trace or error)
