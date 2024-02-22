@@ -264,14 +264,14 @@ gulp.task('modifyCustomHtmlPages', function() {
 });
 
 gulp.task('modifyCustomPublicHtml', function() {
-    return  gulp.src('./target/require-build/index_public.html')
+    return  gulp.src('./src/main/resources/static/index_public.html')
 		.pipe(gulpif(params.appserver == 'stage',htmlreplace( {
 			'google':{
 				src: null,
 				tpl: ''
 			 }
 		})))
-		.pipe(gulp.dest('./target/require-build'));
+		.pipe(gulp.dest('./src/main/resources/static'));
 });
 gulp.task('copyCustomImages', function() {
   return gulp.src(params.customDir + '/images/**/*.*')
