@@ -12,7 +12,6 @@ import java.util.zip.ZipException;
 
 import org.eclipse.jgit.lib.PersonIdent;
 import org.openlca.core.model.ModelType;
-import org.openlca.git.iterator.ChangeIterator;
 import org.openlca.git.model.Change;
 import org.openlca.git.model.ModelRef;
 import org.openlca.git.util.BinaryResolver;
@@ -61,9 +60,9 @@ public class ZipCommitWriter extends CommitWriter {
 	private void write(String message) throws IOException {
 		var previousCommit = repo.getHeadCommit();
 		if (previousCommit == null) {
-			write(message, new ChangeIterator(repo, this.binaryResolver, getChanges()));
+			write(message, getChanges());
 		} else {
-			write(message, new ChangeIterator(repo, this.binaryResolver, getChanges()), previousCommit.getId());
+			write(message, getChanges(), previousCommit.getId());
 		}
 	}
 
