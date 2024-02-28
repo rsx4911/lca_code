@@ -263,7 +263,7 @@ define([
 				data.teams =  counts.teams
 				data.isHomepageEnabled = settings.is 'HOMEPAGE_ENABLED'
 				data.isSearchEnabled = settings.is 'SEARCH_ENABLED'
-				data.maintenanceModeActive = @serverInfo.maintenanceMode
+				data.maintenanceModeActive = @serverInfo?.maintenanceMode
 
 				@$el.html template data
 				Renderer.render @, renderOptions
