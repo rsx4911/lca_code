@@ -2,7 +2,7 @@ package com.greendelta.collaboration.service;
 
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -49,7 +49,7 @@ public class DeleteService {
 	public void delete(User user) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw new ForbiddenAccessException("User " + user.id, "DELETE");
+			throw Response.forbidden("User " + user.id, "DELETE");
 		try (var result = repoService.getAll(0, 0, user.username + "/", false, false)) {
 			result.data.forEach(this::delete);
 		}
@@ -96,7 +96,7 @@ public class DeleteService {
 	public void delete(Team team) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw new ForbiddenAccessException("Team " + team.id, "DELETE");
+			throw Response.forbidden("Team " + team.id, "DELETE");
 		memberService.removeMemberships(team);
 		messagingService.getMessages(team).forEach(message -> {
 			messagingService.delete(message);
@@ -106,7 +106,7 @@ public class DeleteService {
 
 	public void delete(Repository repo) {
 		if (!accessService.canDelete(repo.path()))
-			throw new ForbiddenAccessException(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), "DELETE");
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
@@ -123,7 +123,7 @@ public class DeleteService {
 
 	public void deleteGroup(String name) {
 		if (!accessService.canDelete(name))
-			throw new ForbiddenAccessException(name, "DELETE");
+			throw Response.forbidden(name, "DELETE");
 		try (var result = repoService.getAll(0, 0, name + "/", false, false)) {
 			for (Repository repo : result.data) {
 				delete(repo);

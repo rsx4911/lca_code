@@ -10,17 +10,16 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.springframework.http.HttpStatus;
 
-import com.greendelta.collaboration.error.WebRequestException;
+import com.greendelta.collaboration.controller.util.Response;
 
 public class Http {
 
-	public static CloseableHttpResponse execute(CloseableHttpClient client, HttpUriRequest request)
-			throws IOException, WebRequestException {
+	public static CloseableHttpResponse execute(CloseableHttpClient client, HttpUriRequest request) throws IOException {
 		var response = client.execute(request);
 		var code = response.getStatusLine().getStatusCode();
 		if (code >= 400) {
 			var message = getString(response);
-			throw new WebRequestException(HttpStatus.valueOf(code), message);
+			throw Response.status(HttpStatus.valueOf(code), message);
 		}
 		return response;
 	}

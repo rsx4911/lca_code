@@ -8,8 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.Direction;
@@ -17,15 +15,16 @@ import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriUtils;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -45,6 +44,8 @@ import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("ws/public/search")
@@ -129,8 +130,9 @@ public class SearchController {
 				return null;
 			try {
 				map.put("label", repo.settings.get(RepositorySetting.LABEL, repo.name));
-			} catch (ForbiddenAccessException ex) {
-				// ignore
+			} catch (ResponseStatusException ex) {
+				if (ex.getStatusCode() != HttpStatus.FORBIDDEN)
+					throw ex;
 			}
 			return map;
 		}).filter(Objects::nonNull).toList();
@@ -145,8 +147,9 @@ public class SearchController {
 			try {
 				String label = groupService.getSettings(entry.key).get(GroupSetting.LABEL, entry.key);
 				map.put("label", label);
-			} catch (ForbiddenAccessException e) {
-				// ignore
+			} catch (ResponseStatusException ex) {
+				if (ex.getStatusCode() != HttpStatus.FORBIDDEN)
+					throw ex;
 			}
 			return map;
 		}).filter(Objects::nonNull).toList();

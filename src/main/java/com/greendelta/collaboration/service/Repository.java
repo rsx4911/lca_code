@@ -14,7 +14,7 @@ import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 
-import com.greendelta.collaboration.error.RepositoryNotFoundException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.SettingsService.Settings;
@@ -35,7 +35,7 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		this.name = name;
 		this.path = new RepositoryPath(group, name);
 		if (!dir.exists())
-			throw new RepositoryNotFoundException(path.toString());
+			throw Response.notFound("No repository '" + path.toString() + "' found");
 		this.settings = settings;
 		this.groupSettings = groupSettings;
 	}

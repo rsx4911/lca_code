@@ -30,13 +30,10 @@ import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.error.ForbiddenAccessException;
-import com.greendelta.collaboration.error.RepositoryNotFoundException;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
-import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
@@ -81,13 +78,11 @@ public class RepositoryService {
 	}
 
 	public Repository get(String id) {
-		if (Strings.nullOrEmpty(id))
-			throw new RepositoryNotFoundException("");
-		if (!id.contains("/"))
-			throw new RepositoryNotFoundException(id);
+		if (Strings.nullOrEmpty(id) || !id.contains("/"))
+			throw Response.notFound("No repository '" + id + "' found");
 		var path = id.split("/");
 		if (path.length != 2)
-			throw new RepositoryNotFoundException(id);
+			throw Response.notFound("No repository '" + id + "' found");
 		return get(path[0], path[1]);
 	}
 
@@ -99,14 +94,14 @@ public class RepositoryService {
 		var path = getRootPath();
 		var id = RepositoryPath.of(group, name).toString();
 		if (path == null || path.isEmpty())
-			throw new RepositoryNotFoundException(id);
+			throw Response.notFound("No repository '" + id + "' found");
 		if (!Repository.getDir(path, group, name).exists())
-			throw new RepositoryNotFoundException(group, name);
+			throw Response.notFound("No repository '" + group + "/" + name + "' found");
 		if (!accessService.canRead(id))
-			throw new ForbiddenAccessException(id, "READ");
+			throw Response.forbidden(id, "READ");
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
-		Settings<GroupSetting> groupSettings = groupService.getSettings(group);
+		var groupSettings = groupService.getSettings(group);
 		try {
 			return new Repository(path, group, name, repoSettings, groupSettings);
 		} catch (IOException e) {
@@ -136,7 +131,7 @@ public class RepositoryService {
 	public Repository create(String group, String name) {
 		var currentUser = userService.getCurrentUser();
 		if (!accessService.canCreateRepositoryIn(group))
-			throw new ForbiddenAccessException(group, "WRITE");
+			throw Response.forbidden(group, "WRITE");
 		var path = getPath(group, name);
 		if (path == null)
 			return null;
@@ -160,11 +155,11 @@ public class RepositoryService {
 
 	public boolean move(Repository repo, String group, String name) {
 		if (!accessService.canMove(repo.path()))
-			throw new ForbiddenAccessException(repo.path(), "MOVE");
+			throw Response.forbidden(repo.path(), "MOVE");
 		if (!accessService.canCreateRepositoryIn(group))
-			throw new ForbiddenAccessException(group, "WRITE");
+			throw Response.forbidden(group, "WRITE");
 		if (!accessService.canDelete(repo.path()))
-			throw new ForbiddenAccessException(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), "DELETE");
 		if (exists(group, name))
 			return false;
 		try (var newRepo = create(group, name)) {
@@ -194,7 +189,7 @@ public class RepositoryService {
 
 	public boolean clone(Repository from, Repository to, Commit resetTo) {
 		if (!accessService.canWrite(to.group))
-			throw new ForbiddenAccessException(to.group, "WRITE");
+			throw Response.forbidden(to.group, "WRITE");
 		try {
 			Dirs.copy(from.dir.toPath(), to.dir.toPath());
 			if (resetTo != null) {
@@ -229,7 +224,7 @@ public class RepositoryService {
 
 	public boolean delete(Repository repo) {
 		if (!accessService.canDelete(repo.path()))
-			throw new ForbiddenAccessException(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), "DELETE");
 		var path = getPath(repo.group, repo.name);
 		if (path == null)
 			return false;

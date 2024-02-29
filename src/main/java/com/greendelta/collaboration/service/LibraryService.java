@@ -22,8 +22,7 @@ import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
-import com.greendelta.collaboration.error.ServiceUnavailableException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.LibraryAccess;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.LibrarySetting;
@@ -84,7 +83,7 @@ public class LibraryService {
 			return null;
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isDataManager() && (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
-			throw new ForbiddenAccessException("LIBRARIES", "WRITE");
+			throw Response.forbidden("LIBRARIES", "WRITE");
 		Path tmpFile = null;
 		try {
 			tmpFile = Files.createTempFile("cs-lib-", ".zip");
@@ -139,7 +138,7 @@ public class LibraryService {
 					return;
 			}
 		}
-		throw new ForbiddenAccessException(name, "WRITE");
+		throw Response.forbidden(name, "WRITE");
 	}
 
 	private boolean isTeamMember(String teamname, User user) {
@@ -151,7 +150,7 @@ public class LibraryService {
 
 	public File get(String name) {
 		if (!new AccessCheck().canAccess(name, new ArrayList<>()))
-			throw new ForbiddenAccessException(name, "READ");
+			throw Response.forbidden(name, "READ");
 		var file = getLibraryFile(name);
 		if (!file.exists())
 			return null;
@@ -178,7 +177,7 @@ public class LibraryService {
 			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn, accesses);
 		}
 	}
-	
+
 	public boolean isPublic(String name) {
 		var file = getLibraryFile(name);
 		if (!file.exists())
@@ -194,7 +193,7 @@ public class LibraryService {
 	private String getLibraryPath() {
 		String libraryPath = settings.get(ServerSetting.LIBRARY_PATH);
 		if (libraryPath == null)
-			throw new ServiceUnavailableException("Library service unavailable because library path is not set");
+			throw Response.unavailable("Library service unavailable because library path is not set");
 		return libraryPath;
 	}
 
@@ -289,7 +288,7 @@ public class LibraryService {
 		var serverUrl = settings.serverConfig.getServerUrl();
 		return lib -> serverUrl + "/ws/" + (isPublic(lib.id()) ? "public/libraries/" : "libraries/") + lib.id();
 	}
-	
+
 	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn,
 			List<String> accessTypes) {
 

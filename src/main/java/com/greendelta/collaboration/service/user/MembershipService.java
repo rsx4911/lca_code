@@ -9,7 +9,7 @@ import java.util.Map;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
@@ -281,7 +281,7 @@ public class MembershipService {
 
 	private void checkCanEdit(String path) {
 		if (!accessService.canEditMembersOf(path))
-			throw new ForbiddenAccessException(path, "CHANGE_ROLE");
+			throw Response.forbidden(path, "CHANGE_ROLE");
 	}
 
 }

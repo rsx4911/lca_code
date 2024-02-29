@@ -30,7 +30,6 @@ import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
 import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.RepositoryClient;
 import com.greendelta.collaboration.io.ZipCommitWriter;
 import com.greendelta.collaboration.model.Role;
@@ -312,8 +311,8 @@ public class RepositoryController {
 					indexService.indexAsync(RepositoryPath.of(group, name));
 				});
 			}
-		} catch (WebRequestException e) {
-			throw Response.status(e);
+		} catch (IOException e) {
+			throw Response.error(e.getMessage());			
 		} catch (Exception e) {
 			throw Response.badRequest("url", "Cannot connect to " + Maps.getString(map, "url"));
 		}

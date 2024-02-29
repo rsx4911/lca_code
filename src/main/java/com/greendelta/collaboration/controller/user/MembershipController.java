@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Memberships;
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.error.ForbiddenAccessException;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.AccessService;
@@ -271,9 +270,9 @@ public class MembershipController {
 			}
 		}
 		if (userService.exists(group))
-			throw new ForbiddenAccessException(group, "EDIT_MEMBERS");
+			throw Response.forbidden(group, "EDIT_MEMBERS");
 		if (!accessService.canRead(group))
-			throw new ForbiddenAccessException(group, "READ");
+			throw Response.forbidden(group, "READ");
 		return path;
 	}
 
