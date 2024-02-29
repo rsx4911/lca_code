@@ -2,10 +2,7 @@ package com.greendelta.collaboration.service.task;
 
 import java.util.Calendar;
 
-import org.springframework.http.HttpStatus;
-
-import com.greendelta.collaboration.error.ForbiddenAccessException;
-import com.greendelta.collaboration.error.WebRequestException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.Task;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -36,7 +33,7 @@ public abstract class TaskExecutionService<T extends Task> {
 	public void start(T task) {
 		try (var repo = repoService.get(task.repositoryPath)) {
 			if (!accessService.canManageTaskIn(repo.path()))
-				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+				throw Response.forbidden(repo.path(), "MANAGE_TASK");
 		}
 		var user = userService.getCurrentUser();
 		task.initiator = user;
@@ -49,21 +46,20 @@ public abstract class TaskExecutionService<T extends Task> {
 		var fromDb = get(task.id);
 		try (var repo = repoService.get(fromDb.repositoryPath)) {
 			if (!accessService.canManageTaskIn(repo.path()))
-				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+				throw Response.forbidden(repo.path(), "MANAGE_TASK");
 		}
 		fromDb.name = task.name;
 		fromDb.comment = task.comment;
 		update(fromDb);
 	}
 
-	public TaskAssignment startAssignment(T task, String username, TaskAssignmentCheck accessCheck)
-			throws WebRequestException {
+	public TaskAssignment startAssignment(T task, String username, TaskAssignmentCheck accessCheck) {
 		var user = userService.getForUsername(username);
 		try (var repo = repoService.get(task.repositoryPath)) {
 			if (!accessCheck.canBeAssigned(user, repo))
-				throw new ForbiddenAccessException(repo.path(), task.getClass().getSimpleName().toUpperCase());
+				throw Response.forbidden(repo.path(), task.getClass().getSimpleName().toUpperCase());
 			if (!accessService.canManageTaskIn(repo.path()))
-				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+				throw Response.forbidden(repo.path(), "MANAGE_TASK");
 		}
 		var assignment = new TaskAssignment();
 		assignment.assignedTo = user;
@@ -73,8 +69,7 @@ public abstract class TaskExecutionService<T extends Task> {
 			if (!a.assignedTo.equals(user))
 				continue;
 			if (a.endDate == null)
-				throw new WebRequestException(HttpStatus.CONFLICT,
-						"User " + user.username + " already has an active assignment");
+				throw Response.conflict("User " + user.username + " already has an active assignment");
 			assignment.iteration++;
 		}
 		task.assignments.add(assignment);
@@ -88,7 +83,7 @@ public abstract class TaskExecutionService<T extends Task> {
 		var currentUser = userService.getCurrentUser();
 		try (var repo = repoService.get(task.repositoryPath)) {
 			if (!user.equals(currentUser) && !accessService.canManageTaskIn(repo.path()))
-				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+				throw Response.forbidden(repo.path(), "MANAGE_TASK");
 		}
 		TaskAssignment assignment = null;
 		var isLastOpen = true;
@@ -116,7 +111,7 @@ public abstract class TaskExecutionService<T extends Task> {
 	public void end(T task, TaskState state) {
 		try (var repo = repoService.get(task.repositoryPath)) {
 			if (!accessService.canManageTaskIn(repo.path()))
-				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+				throw Response.forbidden(repo.path(), "MANAGE_TASK");
 		}
 		task.state = state;
 		task.endDate = Calendar.getInstance().getTime();

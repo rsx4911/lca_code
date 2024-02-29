@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -38,7 +38,7 @@ public class ReviewService extends TaskExecutionService<Review> {
 		var fromDb = get(reviewId);
 		try (var repo = repoService.get(fromDb.repositoryPath)) {
 			if (!accessService.canManageTaskIn(repo.path()))
-				throw new ForbiddenAccessException(repo.path(), "MANAGE_TASK");
+				throw Response.forbidden(repo.path(), "MANAGE_TASK");
 			referenceDao.delete(fromDb.references);
 			fromDb.references.clear();
 			var lastId = new AtomicLong(referenceDao.getLastId());

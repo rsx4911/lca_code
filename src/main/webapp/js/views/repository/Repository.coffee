@@ -29,7 +29,6 @@ define([
 				'change #unit': 'updateMaxSize'
 				'change #tags': 'setTags'
 				'change [data-setting]:not([type=checkbox])': 'setSetting'
-				'change .restrictions select': 'updateRestriction'
 				'keydown #maxSize': (event) -> Events.validateNumber event
 				'click [data-action=delete-repository]': 'deleteRepository'
 				'click [data-action=clone-repository]': 'openCloneLayer'

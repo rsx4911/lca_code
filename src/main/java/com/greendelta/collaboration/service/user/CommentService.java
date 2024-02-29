@@ -7,7 +7,7 @@ import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
 import com.greendelta.collaboration.model.Role;
@@ -92,7 +92,7 @@ public class CommentService {
 
 	public Comment insert(Comment comment) {
 		if (!accessService.canCommentIn(comment.repositoryPath))
-			throw new ForbiddenAccessException(comment.repositoryPath, "COMMENT");
+			throw Response.forbidden(comment.repositoryPath, "COMMENT");
 		return dao.insert(comment);
 	}
 
@@ -154,7 +154,7 @@ public class CommentService {
 		if (comment == null)
 			return null;
 		if (!accessService.canManage(comment))
-			throw new ForbiddenAccessException(comment.repositoryPath, "MANAGE_COMMENT");
+			throw Response.forbidden(comment.repositoryPath, "MANAGE_COMMENT");
 		comment.restrictedToRole = role;
 		dao.update(comment);
 		return comment;

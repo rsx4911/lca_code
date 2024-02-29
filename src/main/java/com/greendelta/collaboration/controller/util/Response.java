@@ -2,6 +2,7 @@ package com.greendelta.collaboration.controller.util;
 
 import java.io.File;
 
+import org.openlca.util.Strings;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
@@ -9,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.greendelta.collaboration.error.WebRequestException;
 
 public class Response {
 
@@ -98,6 +97,12 @@ public class Response {
 		return status(HttpStatus.FORBIDDEN, message);
 	}
 
+	public static ResponseStatusException forbidden(String path, String action) {
+		if (Strings.nullOrEmpty(path))
+			return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action + "'");
+		return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action + "' on '" + path + "'");
+	}
+
 	public static ResponseStatusException error() {
 		return status(HttpStatus.INTERNAL_SERVER_ERROR);
 	}
@@ -120,10 +125,6 @@ public class Response {
 		return """
 				{"field": "%s", "message": "%s"}
 				""".formatted(field, message);
-	}
-
-	public static ResponseStatusException status(WebRequestException e) {
-		return status(e.status, e.message);
 	}
 
 	public static ResponseStatusException status(HttpStatus status, String message) {

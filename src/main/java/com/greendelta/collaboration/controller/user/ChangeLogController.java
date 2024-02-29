@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.ChangeLogWriter;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.FileService;
@@ -62,17 +61,13 @@ public class ChangeLogController {
 		try (var repo = repoService.get(group, name)) {
 			var file = fileService.createTempFile();
 			var writer = new ChangeLogWriter();
-			try {
-				if (Strings.nullOrEmpty(commitId)) {
-					writer.generate(file, request, repo);
-				} else {
-					var commit = repo.commits.get(commitId);
-					if (commit == null)
-						throw Response.notFound("Could not find commit with id " + commitId);
-					writer.generate(file, request, repo, commit);
-				}
-			} catch (WebRequestException e) {
-				throw Response.status(e);
+			if (Strings.nullOrEmpty(commitId)) {
+				writer.generate(file, request, repo);
+			} else {
+				var commit = repo.commits.get(commitId);
+				if (commit == null)
+					throw Response.notFound("Could not find commit with id " + commitId);
+				writer.generate(file, request, repo, commit);
 			}
 			if (file == null)
 				throw Response.badRequest("Could not render changelog");

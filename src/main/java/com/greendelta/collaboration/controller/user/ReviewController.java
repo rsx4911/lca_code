@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Reviews;
-import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.task.Review;
 import com.greendelta.collaboration.model.task.TaskState;
@@ -157,8 +156,6 @@ public class ReviewController {
 					(user, r) -> accessService.canReviewIn(user, r.path()));
 			notificationService.taskAssigned(repo, review, assignment).send();
 			return getActiveTasks();
-		} catch (WebRequestException e) {
-			throw Response.status(e);
 		}
 	}
 

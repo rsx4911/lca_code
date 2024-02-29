@@ -7,7 +7,7 @@ import java.util.List;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -53,7 +53,7 @@ public class GroupService {
 		for (var child : root.list())
 			if (child.equalsIgnoreCase(group))
 				if (!skipAccessCheck && !accessService.canRead(group))
-					throw new ForbiddenAccessException(group, "READ");
+					throw Response.forbidden(group, "READ");
 				else
 					return true;
 		return false;
@@ -71,9 +71,9 @@ public class GroupService {
 	public boolean create(String group, boolean userGroup) {
 		var currentUser = userService.getCurrentUser();
 		if (userGroup && !currentUser.isUserManager() && !userGroup)
-			throw new ForbiddenAccessException("", "CREATE_GROUP");
+			throw Response.forbidden("", "CREATE_GROUP");
 		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups && !userGroup)
-			throw new ForbiddenAccessException("", "CREATE_GROUP");
+			throw Response.forbidden("", "CREATE_GROUP");
 		if (exists(group))
 			return false;
 		var path = getPath(group);
@@ -90,7 +90,7 @@ public class GroupService {
 
 	public boolean delete(String group) {
 		if (!accessService.canDelete(group))
-			throw new ForbiddenAccessException(group, "DELETE");
+			throw Response.forbidden(group, "DELETE");
 		getSettings(group).delete();
 		var path = getPath(group);
 		if (path == null || path.isEmpty())
@@ -173,7 +173,7 @@ public class GroupService {
 
 	public Settings<GroupSetting> getSettings(String group) {
 		if (!accessService.canRead(group))
-			throw new ForbiddenAccessException(group, "READ");
+			throw Response.forbidden(group, "READ");
 		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group,
 				accessService::canSetSettings);
 		var user = userService.getForUsername(group);

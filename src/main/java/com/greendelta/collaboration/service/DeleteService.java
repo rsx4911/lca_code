@@ -2,7 +2,7 @@ package com.greendelta.collaboration.service;
 
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.error.ForbiddenAccessException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -12,7 +12,6 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
-import com.greendelta.collaboration.service.user.RestrictionService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -28,12 +27,10 @@ public class DeleteService {
 	private final MessagingService messagingService;
 	private final AccessService accessService;
 	private final CommentService commentService;
-	private final RestrictionService restrictionService;
 
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
-			MessagingService messagingService, AccessService accessService, CommentService commentService,
-			RestrictionService restrictionService) {
+			MessagingService messagingService, AccessService accessService, CommentService commentService) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -43,13 +40,12 @@ public class DeleteService {
 		this.messagingService = messagingService;
 		this.accessService = accessService;
 		this.commentService = commentService;
-		this.restrictionService = restrictionService;
 	}
 
 	public void delete(User user) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw new ForbiddenAccessException("User " + user.id, "DELETE");
+			throw Response.forbidden("User " + user.id, "DELETE");
 		try (var result = repoService.getAll(0, 0, user.username + "/", false, false)) {
 			result.data.forEach(this::delete);
 		}
@@ -96,7 +92,7 @@ public class DeleteService {
 	public void delete(Team team) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw new ForbiddenAccessException("Team " + team.id, "DELETE");
+			throw Response.forbidden("Team " + team.id, "DELETE");
 		memberService.removeMemberships(team);
 		messagingService.getMessages(team).forEach(message -> {
 			messagingService.delete(message);
@@ -106,7 +102,7 @@ public class DeleteService {
 
 	public void delete(Repository repo) {
 		if (!accessService.canDelete(repo.path()))
-			throw new ForbiddenAccessException(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), "DELETE");
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
@@ -123,7 +119,7 @@ public class DeleteService {
 
 	public void deleteGroup(String name) {
 		if (!accessService.canDelete(name))
-			throw new ForbiddenAccessException(name, "DELETE");
+			throw Response.forbidden(name, "DELETE");
 		try (var result = repoService.getAll(0, 0, name + "/", false, false)) {
 			for (Repository repo : result.data) {
 				delete(repo);
@@ -131,13 +127,6 @@ public class DeleteService {
 		}
 		groupService.delete(name);
 		memberService.removeMemberships(name);
-	}
-
-	public void deleteRestriction(String name) {
-		try (var accessible = repoService.getAllAccessible()) {
-			accessible.forEach(repo -> repoService.setRestriction(repo, name, null));
-			restrictionService.delete(restrictionService.getForName(name));
-		}
 	}
 
 }

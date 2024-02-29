@@ -14,9 +14,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.openlca.util.Strings;
-import org.springframework.http.HttpStatus;
 
-import com.greendelta.collaboration.error.WebRequestException;
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.util.Http;
 
 public class RepositoryClient implements AutoCloseable {
@@ -35,8 +34,7 @@ public class RepositoryClient implements AutoCloseable {
 		this.client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build();
 	}
 
-	public void exportRepository(String repository, InputStreamConsumer consumer)
-			throws IOException, WebRequestException {
+	public void exportRepository(String repository, InputStreamConsumer consumer) throws IOException {
 		login();
 		try (var response = Http.execute(client, new HttpGet(baseUrl + "repository/export/" + repository))) {
 			consumer.accept(response.getEntity().getContent());
@@ -44,7 +42,7 @@ public class RepositoryClient implements AutoCloseable {
 		logout();
 	}
 
-	private void login() throws IOException, WebRequestException {
+	private void login() throws IOException {
 		if (Strings.nullOrEmpty(username) || Strings.nullOrEmpty(password))
 			return;
 		var post = new HttpPost(baseUrl + "public/login");
@@ -58,7 +56,7 @@ public class RepositoryClient implements AutoCloseable {
 				var message = """
 						{"field": "%s", "message": "%s"}
 						""".formatted("token", "Token required");
-				throw new WebRequestException(HttpStatus.BAD_REQUEST, message);
+				throw Response.badRequest(message);
 			}
 			var header = response.getFirstHeader("Set-Cookie");
 			if (header == null)
@@ -77,7 +75,7 @@ public class RepositoryClient implements AutoCloseable {
 		}
 	}
 
-	private void logout() throws IOException, WebRequestException {
+	private void logout() throws IOException {
 		if (cookieStore.getCookies().isEmpty())
 			return;
 		try (var response = Http.execute(client, new HttpPost(baseUrl + "public/logout"))) {
@@ -89,11 +87,11 @@ public class RepositoryClient implements AutoCloseable {
 	public void close() throws IOException {
 		client.close();
 	}
-	
+
 	public interface InputStreamConsumer {
 
 		public void accept(InputStream stream) throws IOException;
-		
+
 	}
 
 }
