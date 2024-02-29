@@ -7,9 +7,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -210,16 +208,6 @@ public class RepositoryService {
 		}
 		commentService.copy(from, to);
 		return true;
-	}
-
-	public void setRestriction(Repository repo, String restriction, Role restrictedTo) {
-		Map<String, Role> restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS, new HashMap<>());
-		if (restrictedTo == null) {
-			restrictions.remove(restriction);
-		} else {
-			restrictions.put(restriction, restrictedTo);
-		}
-		repo.settings.set(RepositorySetting.RESTRICTIONS, restrictions);
 	}
 
 	public boolean delete(Repository repo) {

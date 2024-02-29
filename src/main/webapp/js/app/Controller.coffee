@@ -100,7 +100,6 @@ define([
 							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
 						if currentUser.isDataManager()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id:'libraries'}
-							adminMenu.push {href: @concatUrl(prefix, 'administration/restrictions'), imageSrc: 'images/restrictions.png', label: 'Restricted data sets', id:'restrictions'}
 						return adminMenu
 
 			initializeNavigation: () ->
@@ -168,10 +167,7 @@ define([
 					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
-					if currentUser.isDataManager() and !currentUser.isAdmin() and !currentUser.isUserManager()
-						@router.registerRouteRewrite 'adminOverview', 'administration/restrictions'
-					else
-						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 				else if !settings.is('HOMEPAGE_ENABLED')
 					if settings.is('SEARCH_ENABLED')
 						@router.registerRouteRewrite 'landingPage', 'search'					
@@ -221,12 +217,6 @@ define([
 					nav:
 						type: 'admin'
 						active: 'libraries'
-				@router.registerAdminRoute 'adminRestrictions', 'dataManager', -> @showView 
-					view: 'admin/Restrictions'
-					title: 'Admin area - Restricted data sets'
-					nav:
-						type: 'admin'
-						active: 'restrictions'
 				@router.registerAdminRoute 'adminSettings', 'admin', -> @showView 
 					view: 'admin/Settings'
 					title: 'Admin area - Settings'
