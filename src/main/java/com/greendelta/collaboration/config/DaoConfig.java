@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Message;
-import com.greendelta.collaboration.model.RestrictionSet;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.job.Job;
@@ -53,11 +52,6 @@ public class DaoConfig {
 	@Bean
 	public Dao<Comment> commentDao() {
 		return new Dao<>(Comment.class);
-	}
-
-	@Bean
-	public Dao<RestrictionSet> restrictionSetDao() {
-		return new Dao<>(RestrictionSet.class);
 	}
 
 	@Bean

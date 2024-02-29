@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,6 @@ import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.error.WebRequestException;
 import com.greendelta.collaboration.io.RepositoryClient;
 import com.greendelta.collaboration.io.ZipCommitWriter;
-import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
@@ -46,7 +44,6 @@ import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
-import com.greendelta.collaboration.service.user.RestrictionService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
@@ -64,14 +61,13 @@ public class RepositoryController {
 	private final AccessService accessService;
 	private final IndexService indexService;
 	private final DeleteService deleteService;
-	private final RestrictionService restrictionService;
 	private final NotificationService notificationService;
 	private final LibraryService libraryService;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
-			IndexService indexService, DeleteService deleteService, RestrictionService restrictionService,
-			NotificationService notificationService, LibraryService libraryService) {
+			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
+			LibraryService libraryService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -79,7 +75,6 @@ public class RepositoryController {
 		this.accessService = accessService;
 		this.indexService = indexService;
 		this.deleteService = deleteService;
-		this.restrictionService = restrictionService;
 		this.notificationService = notificationService;
 		this.libraryService = libraryService;
 	}
@@ -138,12 +133,6 @@ public class RepositoryController {
 			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
 			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
 			mappedRepo.put("size", repo.getSize());
-			Map<String, Role> restrictions = repo.settings.get(RepositorySetting.RESTRICTIONS,
-					new HashMap<String, Role>());
-			restrictionService.getAll().stream()
-					.filter(lib -> !restrictions.containsKey(lib.name))
-					.forEach(lib -> restrictions.put(lib.name, null));
-			mappedRepo.put("restrictions", restrictions);
 			return mappedRepo;
 		}
 	}
@@ -381,27 +370,6 @@ public class RepositoryController {
 		if (!create)
 			return;
 		service.generateJson(repo, libraryService.getLibraryUrlResolver());
-	}
-
-	@PutMapping("restriction/{group}/{name}/{restriction}/{role}")
-	public void setRestriction(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("restriction") String restriction,
-			@PathVariable("role") Role role) {
-		try (var repo = service.get(group, name)) {
-			service.setRestriction(repo, restriction, role);
-		}
-	}
-
-	@DeleteMapping("restriction/{group}/{name}/{restriction}")
-	public void removeRestriction(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("restriction") String restriction) {
-		try (var repo = service.get(group, name)) {
-			service.setRestriction(repo, restriction, null);
-		}
 	}
 
 	@DeleteMapping("{group}/{name}")
