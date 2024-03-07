@@ -84,7 +84,7 @@ public class ChangeLogWriter {
 
 	private String renderDiff(HttpServletRequest request, Repository repo, Diff diff) {
 		var route = "/" + repo.path() + "/dataset/" + diff.type.name() + "/" + diff.refId + "?commitId="
-				+ diff.newCommitId + "&compareToCommitId=" + diff.oldCommitId;
+				+ diff.newRef.commitId + "&compareToCommitId=" + diff.oldRef.commitId;
 		return renderSsr(request, route);
 	}
 
