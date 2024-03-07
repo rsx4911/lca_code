@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.openlca.core.model.Direction;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
@@ -174,7 +173,7 @@ public class InputOutputDataService {
 	}
 
 	private InputOutputData createData(Repository repo, Commit commit, int commitIndex, Diff diff) {
-		var map = repo.datasets.parse(diff.toReference(Side.NEW),
+		var map = repo.datasets.parse(diff.newRef,
 				FieldDefinition.firstOf("name"),
 				FieldDefinition.firstOf("processType", ProcessType::valueOf),
 				FieldDefinition.allOf("exchanges.flow.@id").ifIs("exchanges.isInput").name("inputs"),

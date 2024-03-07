@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.diff.DiffEntry.Side;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
@@ -56,13 +55,15 @@ public class SearchService {
 			return;
 		var buffer = new EntryBuffer(client, 1000);
 		Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED, DiffType.MOVED)
-				.forEach(diff -> index(buffer, repo, manager, diff.toReference(Side.NEW)));
+				.forEach(diff -> index(buffer, repo, manager, diff.newRef));
 		Diff.filter(diffs, DiffType.DELETED)
-				.forEach(diff -> remove(buffer, manager, diff.toReference(Side.OLD)));
+				.forEach(diff -> remove(buffer, manager, diff.oldRef));
 		buffer.flush();
 	}
 
 	private void index(EntryBuffer buffer, Repository repo, DsEntryManager manager, Reference ref) {
+		if (ref == null)
+			return;
 		var entry = find(ref);
 		boolean insert = entry == null;
 		entry = manager.createOrUpdate(entry, ref);
@@ -74,6 +75,8 @@ public class SearchService {
 	}
 
 	private void remove(EntryBuffer buffer, DsEntryManager manager, Reference ref) {
+		if (ref == null)
+			return;
 		var entry = find(ref);
 		if (entry == null)
 			return;
@@ -86,6 +89,8 @@ public class SearchService {
 	}
 
 	private DsEntry find(Reference ref) {
+		if (ref == null)
+			return null;
 		var map = getClient().get(getIndexId(ref));
 		return parser.parse(map);
 	}
@@ -132,6 +137,8 @@ public class SearchService {
 	}
 
 	private void update(EntryBuffer buffer, DsEntryManager manager, Reference ref, Consumer<DsEntry> update) {
+		if (ref == null)
+			return;
 		var entry = find(ref);
 		if (entry == null)
 			return;
