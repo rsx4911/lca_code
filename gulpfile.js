@@ -75,7 +75,8 @@ gulp.task('clear', function() {
       './src/main/webapp/imprint.html',
       './src/main/resources/ssr/*',
       './src/main/resources/static/*',
-      './target/lca-collaboration-server*/*'
+      './target/lca-collaboration-server*/*',
+      './target/classes/static/*'
     ], { read: false, allowEmpty: true })
     .pipe(clean());
 });
