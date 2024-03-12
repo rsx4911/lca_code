@@ -1,7 +1,6 @@
 include ../mixins.pug
 
-mixin review-tab(dataset)
-	- var reviews = dataset.processDocumentation.reviews
+mixin review-tab(reviews)
 	each review in reviews
 		p
 			strong='Review'
@@ -40,10 +39,36 @@ mixin review-tab(dataset)
 		table.table
 			thead
 				tr
-					th='Review aspect'
+					th='Review aspects'
 					th='Quality assessment'
 			tbody
 				each aspect in review.assessment
 					tr
 						td=aspect.aspect
 						td=aspect.value
+
+mixin compliance-tab(declarations)
+	each dec in declarations
+		p
+			strong='Compliance declaration'
+		table.table.no-head
+			tbody
+				tr
+					td='Compliance system'
+					td
+						+ref(dec.system)
+				tr
+					td='Comment'
+					td=dec.comment
+
+		if dec.aspects
+			table.table
+				thead
+					tr
+						th='Compliance aspects'
+						th='Compliance value'
+				tbody
+					each aspect in dec.aspects
+						tr
+							td=aspect.aspect
+							td=aspect.value

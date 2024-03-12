@@ -4,7 +4,7 @@ include ./structures/non-causal-allocation-factor-table.pug
 include ./structures/causal-allocation-factor-table.pug
 include ./structures/social-aspect-table.pug
 include ./structures/parameter-table.pug
-include ./structures/doc-review-tab.pug
+include ./structures/doc-tabs.pug
 
 - var doc = dataset.processDocumentation;
 - var doc2 = getValue(compareTo, 'processDocumentation');
@@ -20,6 +20,7 @@ include ./structures/doc-review-tab.pug
 				+nav-tab('socialAspects')
 				+nav-tab('parameters')
 				+nav-tab(null, false, 'Reviews')
+				+nav-tab(null, false, 'Compliance')
 			.tab-content
 				+nav-tab-pane('exchanges', true)
 					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
@@ -55,6 +56,20 @@ include ./structures/doc-review-tab.pug
 							+boolean-field-row('processDocumentation.isCopyrightProtected')
 							- var getSourceId = function(source) {return source.id};
 							+array-field-row('processDocumentation.sources', 'SOURCE', getSourceId)
+
+					- var completeness = getValue(dataset, 'processDocumentation.flowCompleteness');
+					if completeness
+						table.table
+							thead
+								tr
+									th='Completeness aspects'
+									th='Completeness value'
+							tbody
+								each aspect in completeness
+									tr
+										td=aspect.aspect
+										td=aspect.value
+
 				+nav-tab-pane('allocationFactors')
 					if hasAtLeastOne(dataset, compareTo, 'nonCausalAllocationFactors')
 						+non-causal-allocation-factor-table()
@@ -66,7 +81,18 @@ include ./structures/doc-review-tab.pug
 					+parameter-table(true)
 					+parameter-table(false)
 				+nav-tab-pane('reviews', false, true)
-					+review-tab(dataset)
+					- var reviews = getValue(dataset, 'processDocumentation.reviews')
+					if reviews
+						+review-tab(reviews)
+					else
+						p='No reviews available.'
+				+nav-tab-pane('compliance', false, true)
+					- var decs = getValue(dataset, 'processDocumentation.complianceDeclarations')
+					if decs
+						+compliance-tab(decs)
+					else
+						p='No compliance declarations available.'
+
 
 	+meta
 		hr
