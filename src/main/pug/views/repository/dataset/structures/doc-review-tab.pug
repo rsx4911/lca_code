@@ -1,0 +1,49 @@
+include ../mixins.pug
+
+mixin review-tab(dataset)
+	- var reviews = dataset.processDocumentation.reviews
+	each review in reviews
+		p
+			strong='Review'
+		table.table.no-head
+			tbody
+				tr
+					td='Review type'
+					td=review.reviewType
+				tr
+					td='Review report'
+					td
+						+ref(review.report)
+				tr
+					td='Review details'
+					td=review.details
+				each reviewer in review.reviewers
+					tr
+						td='Reviewer'
+						td
+							+ref(reviewer)
+
+		table.table
+			thead
+				tr
+					th='Review scope'
+					th='Review method(s)'
+			tbody
+				each scope in review.scopes
+					tr
+						td=scope.name
+						td
+							ul
+								each method in scope.methods
+									li=method
+
+		table.table
+			thead
+				tr
+					th='Review aspect'
+					th='Quality assessment'
+			tbody
+				each aspect in review.assessment
+					tr
+						td=aspect.aspect
+						td=aspect.value

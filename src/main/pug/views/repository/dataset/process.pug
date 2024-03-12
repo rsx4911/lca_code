@@ -4,6 +4,7 @@ include ./structures/non-causal-allocation-factor-table.pug
 include ./structures/causal-allocation-factor-table.pug
 include ./structures/social-aspect-table.pug
 include ./structures/parameter-table.pug
+include ./structures/doc-review-tab.pug
 
 - var doc = dataset.processDocumentation;
 - var doc2 = getValue(compareTo, 'processDocumentation');
@@ -18,6 +19,7 @@ include ./structures/parameter-table.pug
 				+nav-tab('allocationFactors')
 				+nav-tab('socialAspects')
 				+nav-tab('parameters')
+				+nav-tab(null, false, 'Reviews')
 			.tab-content
 				+nav-tab-pane('exchanges', true)
 					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
@@ -63,6 +65,9 @@ include ./structures/parameter-table.pug
 				+nav-tab-pane('parameters')
 					+parameter-table(true)
 					+parameter-table(false)
+				+nav-tab-pane('processDocumentation.reviews')
+					+review-tab(dataset)
+
 	+meta
 		hr
 		strong=getLabel('isQuantitativeReference')
