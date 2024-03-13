@@ -151,7 +151,7 @@ public class HistoryController {
 	}
 	
 	private void putCount(Map<String, Object> map, Repository repo, Commit commit) {
-		var diffs = repo.diffs.find().commit(commit).withPreviousCommit();		
+		var diffs = repo.diffs.find().unsorted().commit(commit).withPreviousCommit();		
 		map.put("id", commit.id);
 		map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 		map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());

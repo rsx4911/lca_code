@@ -37,11 +37,16 @@ public class RepositoryController {
 	@GetMapping
 	public List<Map<String, Object>> getPublic() {
 		try (var repositories = service.getPublic()) {
-			return repositories.stream().map(repo -> {
-				var map = Repositories.map(repo);
-				map.put("datasets", repo.references.find().count());
-				return map;
-			}).toList();
+			return repositories.stream().map(Repositories::map).toList();
+		}
+	}
+
+	@GetMapping("count/{group}/{name}")
+	public ResponseEntity<?> getReferenceCount(
+			@PathVariable("group") String group,
+			@PathVariable("name") String name) {
+		try (var repo = service.get(group, name)) {
+			return Response.ok(Map.of("datasets", repo.references.find().count()));
 		}
 	}
 
