@@ -289,6 +289,6 @@ define([
 				@$('#indexing-status').html html
 				setTimeout () =>
 					$.get 'ws/admin/area/serverInfo', (serverInfo) => @renderIndexingStatus(serverInfo.indexingStatus)						
-				, 1000
+				, 5000
 
 )
