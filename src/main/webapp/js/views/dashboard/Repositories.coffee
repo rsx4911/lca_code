@@ -30,6 +30,11 @@ define([
 				@filter.url = 'ws/repository?module=DASHBOARD&onlyPublic=' + @$('#only-public').is(':checked') + '&'
 				@filter.applyFilter()
 
+			updateCount: (repo) ->
+				repoId = "#{repo.group}/#{repo.name}"
+				$.get "ws/repository/count/#{repoId}", (count) =>
+					$('.dataset-count-container[data-repo-id="' + repoId + '"]').html "#{count.datasets} #{if count.datasets is 1 then 'data set' else 'data sets' }"
+
 			initialize: () ->
 				@filter = new Filter
 					container: '#repositories'
@@ -45,6 +50,12 @@ define([
 							else
 								r.role = undefined
 						setRole r for r in result.data
+					afterRender: (result) =>
+						setTimeout () =>
+							for repo in result.data
+								@updateCount repo
+						, 10
+			
 
 			render: (renderOptions) ->
 				Model.fetch currentUser, 

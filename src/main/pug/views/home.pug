@@ -12,7 +12,10 @@
 		.pinned-repository(data-group=repo.group data-repo=repo.name)
 			.header-box
 				h4=repo.label
-				.dataset-count #{repo.datasets} data sets 
+				.dataset-count
+					span.dataset-count-container
+						img(src='images/loader.gif' width=16 height=16)
+						|  data sets 
 					button.btn.btn-default.btn-xs(data-action='download' title='Download ' + repo.label + ' as JSON-LD'): span.glyphicon.glyphicon-download
 				.repo-description
 					if repo.settings.description

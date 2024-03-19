@@ -33,6 +33,11 @@ define([
 				'click [data-action=import-json]': () -> Router.navigate 'repository/import-json/' + @group.get('name')
 				'click [data-action=delete-group]': 'deleteGroup'
 
+			updateCount: (repo) ->
+				repoId = "#{repo.group}/#{repo.name}"
+				$.get "ws/repository/count/#{repoId}", (count) =>
+					$('.dataset-count-container[data-repo-id="' + repoId + '"]').html "#{count.datasets} #{if count.datasets is 1 then 'data set' else 'data sets' }"
+
 			initialize: (options) ->
 				{@group} = options
 				name = @group.get 'name'
@@ -53,6 +58,10 @@ define([
 						setRole r for r in result.data
 					afterRender: (result) =>
 						@$('.group-repository-count').html(result.resultInfo.totalCount)
+						setTimeout () =>
+							for repo in result.data
+								@updateCount repo
+						, 10
 
 			render: (renderOptions) ->
 				group = @group.toJSON()

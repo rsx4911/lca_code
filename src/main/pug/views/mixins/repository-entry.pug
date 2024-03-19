@@ -16,7 +16,10 @@ mixin repository-entry(repo, inGroupView)
             span.pull-right.role.badge.badge-warning Incompatible version
         div: i
             +count-info(repo.commits, 'commit', 'commits', false)
-            +count-info(repo.datasets, 'data set', 'data sets', false)
+            span.dataset-count-container(data-repo-id=repoId)
+                img(src='images/loader.gif' width=16 height=16)
+                |  data sets
+            | , 
             +count-info(repo.members, 'member', 'members', true)
             if repo.lastCommit && !inGroupView
                 | , last commit on #{formatDate(repo.lastCommit)}

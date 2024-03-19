@@ -37,6 +37,10 @@ define([
 				repo = target.attr 'data-repo'
 				Download.repository group, repo
 
+			updateCount: (repo) ->
+				$.get "ws/public/repository/count/#{repo.group}/#{repo.name}", (count) =>
+					$(".pinned-repository[data-group=#{repo.group}][data-repo=#{repo.name}] .dataset-count-container").html "#{count.datasets} #{if count.datasets is 1 then 'data set' else 'data sets' }"
+
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
 				'submit #search-form': 'search'
@@ -64,6 +68,10 @@ define([
 							welcomeText: settings.getVal('HOME_TEXT')
 							repositories: visible
 						Renderer.render @, renderOptions
+						setTimeout () =>
+							for repo in repositories
+								@updateCount repo
+						, 10
 
 
 )

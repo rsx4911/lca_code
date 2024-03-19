@@ -107,7 +107,6 @@ public class RepositoryController {
 
 	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.path()));
-		map.put("datasets", repo.references.find().count());
 		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.path()).size());
 		if (user.isDataManager()) {
@@ -115,6 +114,15 @@ public class RepositoryController {
 			map.put("lastCommit", lastCommit != null ? lastCommit.timestamp : null);
 		}
 		return map;
+	}
+
+	@GetMapping("count/{group}/{name}")
+	public ResponseEntity<?> getReferenceCount(
+			@PathVariable("group") String group,
+			@PathVariable("name") String name) {
+		try (var repo = service.get(group, name)) {
+			return Response.ok(Map.of("datasets", repo.references.find().count()));
+		}
 	}
 
 	@GetMapping("{group}/{name}")
@@ -301,7 +309,7 @@ public class RepositoryController {
 				});
 			}
 		} catch (IOException e) {
-			throw Response.error(e.getMessage());			
+			throw Response.error(e.getMessage());
 		} catch (Exception e) {
 			throw Response.badRequest("url", "Cannot connect to " + Maps.getString(map, "url"));
 		}

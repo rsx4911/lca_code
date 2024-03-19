@@ -47,7 +47,7 @@ public class SearchService {
 		if (previous != null && previous.equals(head))
 			return;
 		var manager = new DsEntryManager(repo, head);
-		var diffs = repo.diffs.find().commit(previous).excludeCategories().with(head);
+		var diffs = repo.diffs.find().unsorted().commit(previous).excludeCategories().with(head);
 		if (diffs.isEmpty())
 			return;
 		var client = getClient();
