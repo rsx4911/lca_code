@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openlca.core.model.AllocationMethod;
@@ -65,7 +66,7 @@ public class MetaData {
 		var ref = repo.references.get(type, refId, commitId);
 		return getName(repo, ref);
 	}
-	
+
 	public static String getName(Repository repo, Reference ref) {
 		var info = repo.datasets.parse(ref, "name");
 		var name = info.get("name");
@@ -102,6 +103,9 @@ public class MetaData {
 				defs.add(FieldDefinition.firstOf("processDocumentation.validFrom", MetaData::getYear));
 				defs.add(FieldDefinition.firstOf("processDocumentation.validUntil", MetaData::getYear));
 				defs.add(FieldDefinition.firstOf("defaultAllocationMethod", MetaData::getModellingApproach));
+				defs.add(FieldDefinition.allOf("processDocumentation.reviews.reviewType"));
+				defs.add(FieldDefinition.allOf("processDocumentation.complianceDeclarations.system.name"));
+				defs.add(FieldDefinition.firstOf("processDocumentation.intendedApplication"));
 			}
 		}
 		var info = repo.datasets.parse(ref, defs);
@@ -123,6 +127,15 @@ public class MetaData {
 			entry.put("validFromYear", info.get("processDocumentation.validFrom"));
 			entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
 			entry.put("modellingApproach", info.get("defaultAllocationMethod"));
+			var reviewTypes = Maps.getAll(info, "processDocumentation.reviews.reviewType", String.class).stream()
+					.map(type -> Strings.nullOrEmpty(type) ? "unspecified" : type)
+					.collect(Collectors.toSet());
+			if (reviewTypes.isEmpty()) {
+				reviewTypes.add("unreviewed");
+			}
+			entry.put("reviewTypes", reviewTypes);
+			entry.put("complianceDeclarations", info.get("processDocumentation.complianceDeclarations.system.name"));
+			entry.put("intendedApplication", info.get("processDocumentation.intendedApplication"));
 		}
 	}
 

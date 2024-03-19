@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.search;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import org.openlca.core.model.ModelType;
@@ -29,19 +28,13 @@ class DsEntryParser {
 			v.objectId = Maps.get(version, "objectId");
 			v.category = Maps.get(version, "category");
 			v.categoryPaths = Maps.getAll(version, "categoryPaths", String.class);
-			v.name = Maps.get(version, "name");
+			v.setName(Maps.get(version, "name"));
 			v.tags = Maps.getAll(version, "tags", String.class);
-			if (v.tags == null) {
-				v.tags = new ArrayList<>();
-			}
 			for (var cMap : Maps.getAll(version, "repos", Map.class)) {
 				var commit = (Map<String, Object>) cMap;
 				var r = new DsRepo();
 				r.path = Maps.get(commit, "path");
 				r.group = Maps.get(commit, "group");
-				if (r.tags == null) {
-					r.tags = new ArrayList<>();
-				}
 				r.tags = Maps.getAll(commit, "tags", String.class);
 				r.commitId = Maps.get(commit, "commitId");
 				r.commitMessage = Maps.get(commit, "commitMessage");
@@ -61,6 +54,9 @@ class DsEntryParser {
 		v.location = Maps.get(version, "location");
 		v.modellingApproach = ModellingApproach.from(version);
 		v.contact = Maps.get(version, "contact");
+		v.reviewTypes = Maps.getAll(version, "reviewTypes", String.class);
+		v.complianceDeclarations = Maps.getAll(version, "complianceDeclarations", String.class);
+		v.setIntendedApplication(Maps.get(version, "intendedApplication"));
 		return v;
 	}
 
