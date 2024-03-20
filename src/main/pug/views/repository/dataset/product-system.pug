@@ -16,10 +16,10 @@ mixin target-amount-row()
 		.content
 			- var hasLinks = hasAtLeastOne(dataset, null, 'processLinks');
 			ul.nav.nav-tabs(role='tablist')
-				+nav-tab(null, true, 'Overview')
+				+nav-tab('overview', true, true)
 				if hasLinks && !standalone
-					+nav-tab(null, false, 'Supply chain')
-					+nav-tab(null, false, 'Graph')
+					+nav-tab('supplyChain', false, hasLinks)
+					+nav-tab('graph', false, hasLinks)
 				+nav-tab('parameterSets')
 				if !standalone
 					+maximize-icon
@@ -39,7 +39,7 @@ mixin target-amount-row()
 							+ref-row('targetFlowProperty')
 							+target-amount-row()
 				if !standalone
-					+nav-tab-pane('supply-chain', false, hasLinks)
+					+nav-tab-pane('supplyChain', false, hasLinks)
 						#process-tree-container
 					+nav-tab-pane('graph', false, hasLinks)
 						iframe(src='graph/graph.html' width='100%' height='500px')

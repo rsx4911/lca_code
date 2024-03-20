@@ -1,0 +1,26 @@
+include ../mixins.pug
+include ./aspect-table.pug
+
+mixin compliance-tables()
+	- var doc = dataset ? dataset.processDocumentation : null;
+	- var otherDoc = compareTo ? compareTo.processDocumentation : null;
+	- var declarations = getArrayValues(doc, otherDoc, 'COMPLIANCE_DECLARATION', 'complianceDeclarations');
+	each values, index in declarations
+		- var changed = compareTo && !values[1] ? 'added' : (compareTo && !values[0] ? 'removed' : null);
+		div(data-compare=changed)
+			p
+				+compare-icon(changed)
+				strong=getLabel('processDocumentation.complianceDeclaration')
+			table.table.no-head
+				tbody
+					tr
+						td=getLabel('processDocumentation.complianceDeclarations.system')
+						+sub-field-ref-cell(values[0], values[1], 'system')
+					tr
+						td=getLabel('processDocumentation.complianceDeclarations.comment')
+						+sub-field-cell(values[0], values[1], 'comment')
+
+			- var aspects = getArrayValues(values[0], values[1], 'ASPECT', 'aspects')
+			+aspect-table(aspects, 'processDocumentation.complianceDeclarations.aspects')
+		if index !== declarations.length - 1
+			hr

@@ -123,7 +123,7 @@ define([
 					return 'Product'
 			if type is 'reviewType'
 				if value is 'unreviewed'
-					return 'Not reviewed'
+					return 'No reviews'
 				if value is 'unspecified'
 					return 'Not specified'
 			return value

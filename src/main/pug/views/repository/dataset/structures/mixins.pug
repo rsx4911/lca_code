@@ -51,3 +51,11 @@ mixin boolean-sub-field(ref, ref2, path)
 		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png' aria-label=value?'Checked icon':'Unchecked icon')
 		if changed
 			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png' aria-label=value?'Checked icon':'Unchecked icon')
+
+mixin sub-field-li(value, value2)
+	- var changed = compareTo && !value2 ? 'added' : (compareTo && !value ? 'removed' : compareTo && value != value2 ? 'changed' : null);
+	li(data-compare=changed)
+		+compare-icon(changed)
+		span.original-value=value
+		if changed
+			span.comparison-value=value2

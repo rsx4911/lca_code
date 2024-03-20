@@ -1,0 +1,16 @@
+include ../mixins.pug
+
+mixin aspect-table(aspects, pathPrefix)
+	table.table
+		thead
+			tr
+				th=getLabel(pathPrefix + '.aspect')
+				th=getLabel(pathPrefix + '.value')
+		tbody
+			each values in aspects
+				- var changed = compareTo && !values[1] ? 'added' : (compareTo && !values[0] ? 'removed' : null);
+				tr(data-compare=changed)
+					td 
+						+compare-icon(changed)
+						+sub-field(values[0], values[1], 'aspect')
+					+sub-field-cell(values[0], values[1], 'value')

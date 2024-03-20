@@ -118,16 +118,16 @@ mixin meta()
 mixin maximize-icon()
 	li.maximize-content: a(href='#'): span.glyphicon.glyphicon-fullscreen
 
-mixin nav-tab(path, active, label)
-	if !path || reviewMode || hasAtLeastOne(dataset, compareTo, path)
+mixin nav-tab(path, active, renderEmpty)
+	if renderEmpty || reviewMode || hasAtLeastOne(dataset, compareTo, path)
 		li(role='presentation' class=active?'active':null)
-			- var id = path || label.replace(' ', '-').toLowerCase();
-			a(href=('#' + id) aria-controls=id role='tab' data-toggle='tab' data-path=path)=label||getLabel(path)
+			- var id = path.replace('.', '-');
+			a(href=('#' + id) aria-controls=id role='tab' data-toggle='tab' data-path=path)=getLabel(path)
 				|  
 				span.badge.change-count
 
 mixin nav-tab-pane(path, active, renderEmpty)
-	.tab-pane(id=path role='tabpanel' class=active?'active':null)
+	.tab-pane(id=path.replace('.', '-') role='tabpanel' class=active?'active':null)
 		if renderEmpty || hasAtLeastOne(dataset, compareTo, path)
 			block
 
@@ -194,7 +194,7 @@ mixin labeled-field-block(path, formatter, defaultLabel, cropLongText)
 		if changed || !cropLongText
 			+compare-value(value, value2, defaultLabel)
 		else
-			+long-text(value)
+			+long-text(value || defaultLabel)
 
 mixin labeled-boolean-field-block(path)
 	strong=getLabel(path)
@@ -251,9 +251,7 @@ mixin boolean-field-row(path)
 	+field-row-frame(path)
 		+boolean-field(path)
 
-mixin array-field-row(path, type, getSpecificId)
-	- var value = getValue(dataset, path);
-	- var value2 = getValue(compareTo, path);
+mixin array-field-row(value, value2, path, type, getSpecificId)
 	if (value && value.length) || (value2 && value2.length) || reviewMode
 		+field-row-frame(path)
 			if value
