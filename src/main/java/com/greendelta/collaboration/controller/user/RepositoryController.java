@@ -338,14 +338,11 @@ public class RepositoryController {
 		try (var repo = service.get(group, name)) {
 			if (setting == RepositorySetting.TAGS) {
 				var tags = parseStringList(value);
-				if (tags != null && tags.isEmpty()) {
-					tags = null;
-				}
-				value = tags;
 				List<String> previous = repo.settings.get(RepositorySetting.TAGS);
 				if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
 					indexService.updateTagsAsync(RepositoryPath.of(group, name));
 				}
+				value = tags == null || !tags.isEmpty() ? tags : null;
 			}
 			repo.settings.set(setting, value);
 			if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)) {
