@@ -328,6 +328,7 @@ public class RepositoryController {
 		}
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	@PutMapping("settings/{group}/{name}/{setting}")
 	public void setSetting(
 			@PathVariable("group") String group,
@@ -336,21 +337,22 @@ public class RepositoryController {
 			@RequestBody Map<String, Object> data) {
 		var value = data.get("value");
 		try (var repo = service.get(group, name)) {
-			if (setting == RepositorySetting.TAGS) {
-				var tags = parseStringList(value);
-				List<String> previous = repo.settings.get(RepositorySetting.TAGS);
-				if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
-					indexService.updateTagsAsync(RepositoryPath.of(group, name));
-				}
-				value = tags == null || !tags.isEmpty() ? tags : null;
-			}
 			repo.settings.set(setting, value);
-			if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)) {
-				try {
-					handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
-				} catch (IOException e) {
-					throw Response.error("Error creating cached json file");
-				}
+			switch (setting) {
+				case TAGS:
+					var tags = parseStringList(value);
+					var previous = repo.settings.get(RepositorySetting.TAGS, new ArrayList<String>());
+					if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
+						indexService.updateTagsAsync(RepositoryPath.of(group, name));
+					}
+					break;
+				case JSON_FILE_GENERATION:
+					try {
+						handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
+					} catch (IOException e) {
+						throw Response.error("Error creating cached json file");
+					}
+					break;
 			}
 		}
 	}
