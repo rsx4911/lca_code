@@ -18,6 +18,24 @@ mixin sub-field-header(ref, ref2, path, alternativePath)
 		+compare-value(value, value2)
 		block
 
+mixin sub-field-row(ref, ref2, path)
+	- var field = path && path.indexOf('.') !== -1 ? path.substring(path.lastIndexOf('.') + 1) : path;
+	- var value = getValue(ref, field);
+	- var value2 = getValue(ref2, field); 
+	if value || value2
+		tr
+			td=getLabel(path)
+			+sub-field-cell(ref, ref2, field)
+
+mixin sub-field-ref-row(ref, ref2, path)
+	- var field = path && path.indexOf('.') !== -1 ? path.substring(path.lastIndexOf('.') + 1) : path;
+	- var value = getValue(ref, field);
+	- var value2 = getValue(ref2, field); 
+	if value || value2
+		tr
+			td=getLabel(path)
+			+sub-field-ref-cell(ref, ref2, field)
+
 mixin sub-field-cell(ref, ref2, path, alternativePath, formatter, ignoreNull, collapseLongText)
 	- var value = getValue(ref, path, alternativePath, formatter);
 	- var value2 = getValue(ref2, path, alternativePath, formatter); 

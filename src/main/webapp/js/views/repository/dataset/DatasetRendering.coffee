@@ -191,6 +191,7 @@ define([
 				formatRelative: (value) -> return Format.relative value, 4
 				formatCommitDescription: Format.commitDescription
 				getIcon: Icons.get
+				getIconByType: Icons.getByType
 				getDQColor: DataQuality.getColor
 				getValue: @getValue
 				getArrayValues: getArrayValues

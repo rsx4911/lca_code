@@ -100,7 +100,10 @@
 		.table > tbody > tr
 
 			& > td:first-child
-				min-width 25%
+				width 25%
+	
+				@media(min-width 1400px)
+					width 20%
 
 			&.reference > td 
 				font-weight bold
@@ -201,9 +204,6 @@
 
 			@media(max-width 479px)
 				display none
-
-		.table.units > thead > tr > th, .table.units > tbody > tr > td, .table.flow-properties > thead > tr > th, .table.flow-properties > tbody > tr > td
-			text-align center
 
 		.table.units > thead > tr > th, .table.units > tbody > tr > td
 				

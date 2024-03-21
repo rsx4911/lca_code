@@ -28,6 +28,7 @@ define([
 				when 'Process'
 					Sort.exchanges dataset, 'exchanges'
 					Sort.socialAspects dataset
+					Sort.documentation dataset
 					Sort.parameters dataset
 					@prepareAllocationFactors dataset
 					if dataset.socialAspects

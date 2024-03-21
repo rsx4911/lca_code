@@ -29,15 +29,9 @@ mixin review-tables()
 			strong=getLabel('processDocumentation.review')
 			table.table.no-head
 				tbody
-					tr
-						td=getLabel('processDocumentation.reviews.reviewType')
-						+sub-field-cell(values[0], values[1], 'reviewType')
-					tr
-						td=getLabel('processDocumentation.reviews.report')
-						+sub-field-ref-cell(values[0], values[1], 'report')
-					tr
-						td=getLabel('processDocumentation.reviews.details')
-						+sub-field-cell(values[0], values[1], 'details')
+					+sub-field-row(values[0], values[1], 'processDocumentation.reviews.reviewType')
+					+sub-field-ref-row(values[0], values[1], 'processDocumentation.reviews.report')
+					+sub-field-row(values[0], values[1], 'processDocumentation.reviews.details')
 					- var getReviewerId = function(reviewer) {return reviewer.id};
 					- var reviewers = getValue(values[0], 'reviewers') 
 					- var otherReviewers = getValue(values[1], 'reviewers') 

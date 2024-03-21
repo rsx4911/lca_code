@@ -1,17 +1,23 @@
 define () ->
 
 	sortByName: (list, subfield) ->
+		@sortByField list, 'name', subfield
+
+	sortByField: (list, field, subfield) ->
 		unless list
 			return
 		list.sort (e1, e2) ->
 			if subfield
-				e1 = e1[subfield]
-				e2 = e2[subfield]
-			name1 = e1.name
-			name2 = e2.name
-			if name1.toLowerCase() < name2.toLowerCase()
+				e1 = e1?[subfield]
+				e2 = e2?[subfield]
+			if field
+				e1 = e1?[field]
+				e2 = es?[field]
+			value1 = e1?.toLowerCase() or ''
+			value2 = e2?.toLowerCase() or ''
+			if value1 < value2
 				return -1
-			if name2.toLowerCase() < name1.toLowerCase()
+			if value2 < value1
 				return 1
 			return 0
 
@@ -45,11 +51,11 @@ define () ->
 				return -1
 			if type1 isnt 'WASTE_FLOW' and type2 is 'WASTE_FLOW'
 				return 1
-			name1 = if e1.flow.name then e1.flow.name else ''
-			name2 = if e2.flow.name then e2.flow.name else ''
-			if name1.toLowerCase() < name2.toLowerCase()
+			name1 = e1.flow?.name?.toLowerCase() or ''
+			name2 = e2.flow?.name?.toLowerCase() or ''
+			if name1 < name2
 				return -1
-			if name2.toLowerCase() < name1.toLowerCase()
+			if name2 < name1
 				return 1
 			return 0
 
@@ -58,9 +64,11 @@ define () ->
 			return
 		if dataset.nonCausalAllocationFactors
 			dataset.nonCausalAllocationFactors.sort (f1, f2) ->
-				if f1.product.name.toLowerCase() < f2.product.name.toLowerCase()
+				p1 = f1.product?.name?.toLowerCase() || '' 
+				p2 = f2.product?.name?.toLowerCase() || '' 
+				if p1 < p2
 					return -1
-				if f1.product.name.toLowerCase() > f2.product.name.toLowerCase()
+				if p2 < p1
 					return 1
 				return 0
 		if dataset.causalAllocationFactors
@@ -78,6 +86,35 @@ define () ->
 
 	socialAspects: (dataset) ->
 		@sortByName dataset.socialAspects, 'socialIndicator'
+
+	documentation: (dataset) ->
+		unless dataset.processDocumentation
+			return
+		@flowCompleteness dataset
+		if dataset.processDocumentation?.reviews
+			for review in dataset.processDocumentation.reviews
+				@sortByField review.assessment, 'aspect'
+				@sortByName review.scopes
+				if review.scopes
+					for scope in review.scopes
+						@sortByField scope.methods
+		if dataset.processDocumentation.complianceDeclarations
+			for complianceDeclaration in dataset.processDocumentation.complianceDeclarations
+				@sortByField complianceDeclaration.aspects, 'aspect'
+
+	flowCompleteness: (dataset) ->
+		unless dataset.processDocumentation.flowCompleteness
+			return
+		dataset.processDocumentation.flowCompleteness.sort (e1, e2) ->
+			name1 = e1?.aspect?.toLowerCase() or ''
+			name2 = e2?.aspect?.toLowerCase() or ''
+			name1 = if name1 is 'product model' then ' product model' else name1 
+			name2 = if name2 is 'product model' then ' product model' else name2
+			if name1 < name2
+				return -1
+			if name2 < name1
+				return 1
+			return 0
 
 	parameters: (dataset) ->
 		@sortByName dataset.parameters

@@ -13,12 +13,8 @@ mixin compliance-tables()
 				strong=getLabel('processDocumentation.complianceDeclaration')
 			table.table.no-head
 				tbody
-					tr
-						td=getLabel('processDocumentation.complianceDeclarations.system')
-						+sub-field-ref-cell(values[0], values[1], 'system')
-					tr
-						td=getLabel('processDocumentation.complianceDeclarations.comment')
-						+sub-field-cell(values[0], values[1], 'comment')
+					+sub-field-ref-row(values[0], values[1], 'processDocumentation.complianceDeclarations.system')
+					+sub-field-row(values[0], values[1], 'processDocumentation.complianceDeclarations.comment')
 
 			- var aspects = getArrayValues(values[0], values[1], 'ASPECT', 'aspects')
 			+aspect-table(aspects, 'processDocumentation.complianceDeclarations.aspects')
