@@ -99,11 +99,12 @@
 
 		.table > tbody > tr
 
-			& > td:first-child
-				width 25%
-	
-				@media(min-width 1400px)
-					width 20%
+			@media(min-width 1200px)
+
+				& > td:first-child
+					width 1%
+					white-space nowrap
+					padding-right 25px
 
 			&.reference > td 
 				font-weight bold
