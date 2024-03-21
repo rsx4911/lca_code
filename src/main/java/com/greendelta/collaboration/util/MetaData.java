@@ -105,7 +105,6 @@ public class MetaData {
 				defs.add(FieldDefinition.firstOf("defaultAllocationMethod", MetaData::getModellingApproach));
 				defs.add(FieldDefinition.allOf("processDocumentation.reviews.reviewType"));
 				defs.add(FieldDefinition.allOf("processDocumentation.complianceDeclarations.system.name"));
-				defs.add(FieldDefinition.firstOf("processDocumentation.intendedApplication"));
 			}
 		}
 		var info = repo.datasets.parse(ref, defs);
@@ -135,7 +134,6 @@ public class MetaData {
 			}
 			entry.put("reviewTypes", reviewTypes);
 			entry.put("complianceDeclarations", info.get("processDocumentation.complianceDeclarations.system.name"));
-			entry.put("intendedApplication", info.get("processDocumentation.intendedApplication"));
 		}
 	}
 

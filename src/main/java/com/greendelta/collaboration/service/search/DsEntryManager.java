@@ -78,7 +78,7 @@ class DsEntryManager {
 
 	private void fillGenericVersion(DsVersion v, Reference ref, Map<String, Object> metaData) {
 		v.objectId = ref.objectId.name();
-		v.setName(Maps.getString(metaData, "name"));
+		v.name = Maps.getString(metaData, "name");
 		var tags = Maps.getString(metaData, "tags");
 		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
 		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
@@ -104,7 +104,6 @@ class DsEntryManager {
 		v.flowType = Maps.get(metaData, "flowType");
 		v.reviewTypes = Maps.getAll(metaData, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(metaData, "complianceDeclarations", String.class);
-		v.setIntendedApplication(Maps.get(metaData, "intendedApplication"));
 		return v;
 	}
 

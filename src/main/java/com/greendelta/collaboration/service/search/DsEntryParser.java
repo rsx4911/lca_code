@@ -28,7 +28,7 @@ class DsEntryParser {
 			v.objectId = Maps.get(version, "objectId");
 			v.category = Maps.get(version, "category");
 			v.categoryPaths = Maps.getAll(version, "categoryPaths", String.class);
-			v.setName(Maps.get(version, "name"));
+			v.name = Maps.get(version, "name");
 			v.tags = Maps.getAll(version, "tags", String.class);
 			for (var cMap : Maps.getAll(version, "repos", Map.class)) {
 				var commit = (Map<String, Object>) cMap;
@@ -56,7 +56,6 @@ class DsEntryParser {
 		v.contact = Maps.get(version, "contact");
 		v.reviewTypes = Maps.getAll(version, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(version, "complianceDeclarations", String.class);
-		v.setIntendedApplication(Maps.get(version, "intendedApplication"));
 		return v;
 	}
 

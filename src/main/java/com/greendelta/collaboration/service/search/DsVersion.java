@@ -16,7 +16,6 @@ public class DsVersion {
 	public List<DsRepo> repos = new ArrayList<>();
 
 	public String name;
-//	public String name_lc;
 	public String category;
 	public List<String> categoryPaths;
 	public List<String> tags;
@@ -33,18 +32,6 @@ public class DsVersion {
 	public Integer validUntilYear;
 	public List<String> complianceDeclarations;
 	public List<String> reviewTypes;
-	public String intendedApplication;
-//	public String intendedApplication_lc;
-	
-	public void setName(String name) {
-		this.name = name;
-//		this.name_lc = name != null ? name.toLowerCase() : null;
-	}
-	
-	public void setIntendedApplication(String intendedApplication) {
-		this.intendedApplication = intendedApplication;
-//		this.intendedApplication_lc = intendedApplication != null ? intendedApplication.toLowerCase() : null;
-	}
 	
 	void completeData() {
 		if (Strings.nullOrEmpty(category))

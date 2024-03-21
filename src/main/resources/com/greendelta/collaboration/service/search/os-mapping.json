@@ -12,9 +12,6 @@
 				"name": {
 					"type": "text"
 				},
-				"intendedApplication": {
-					"type": "text"
-				},
 				"objectId": {
 					"type": "keyword"
 				},
