@@ -35,9 +35,10 @@ define([
 			events: 
 				'click a[href]:not([target=_blank]):not(.login):not(.logout):not([data-action])': (event) -> Events.followLink event
 				'keyup #global-search': (event) -> @onSearchKeyUp event
+				'click .glyphicon-search': () -> Router.navigate 'search'
 
 			render: (renderOptions) ->
-				@$el.html template()
+				@$el.html template()				
 				Renderer.render @, renderOptions
 
 )
