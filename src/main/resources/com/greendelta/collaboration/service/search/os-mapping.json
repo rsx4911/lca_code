@@ -51,6 +51,9 @@
 				"complianceDeclarations": {
 					"type": "keyword"
 				},
+				"flowCompleteness": {
+					"type": "keyword"
+				},
 				"repos": {
 					"type": "nested",
 					"properties": {

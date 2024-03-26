@@ -30,8 +30,9 @@ public class DsVersion {
 	public String location;
 	public Integer validFromYear;
 	public Integer validUntilYear;
-	public List<String> complianceDeclarations;
 	public List<String> reviewTypes;
+	public List<String> complianceDeclarations;
+	public List<String> flowCompleteness;
 	
 	void completeData() {
 		if (Strings.nullOrEmpty(category))

@@ -28,13 +28,14 @@ public class Aggregations {
 	public static final TermsAggregation CATEGORY = new TermsAggregation("categoryPaths", "versions.categoryPaths");
 	public static final TermsAggregation REVIEW_TYPE = new TermsAggregation("reviewType", "versions.reviewTypes");
 	public static final TermsAggregation COMPLIANCE_DECLARATION = new TermsAggregation("complianceDeclaration", "versions.complianceDeclarations");
+	public static final TermsAggregation FLOW_COMPLETENESS = new TermsAggregation("flowCompleteness", "versions.flowCompleteness");
 	// flow specific aggregations
 	public static final TermsAggregation FLOW_TYPE = new TermsAggregation("flowType", "versions.flowType");
 
 	public static final SearchAggregation[] DEFAULT_FILTERS = new SearchAggregation[] {
 			GROUP, REPOSITORY, MODEL_TYPE, REPOSITORY_TAGS, DATASET_TAGS };
 	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] {
-			PROCESS_TYPE, MODELLING_APPROACH, LOCATION, START_YEAR, END_YEAR, CONTACT, REVIEW_TYPE, COMPLIANCE_DECLARATION };
+			PROCESS_TYPE, MODELLING_APPROACH, LOCATION, START_YEAR, END_YEAR, CONTACT, REVIEW_TYPE, COMPLIANCE_DECLARATION, FLOW_COMPLETENESS };
 	public static final SearchAggregation[] FLOW_FILTERS = new SearchAggregation[] {
 			FLOW_TYPE };
 

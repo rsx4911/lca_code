@@ -104,6 +104,7 @@ class DsEntryManager {
 		v.flowType = Maps.get(metaData, "flowType");
 		v.reviewTypes = Maps.getAll(metaData, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(metaData, "complianceDeclarations", String.class);
+		v.flowCompleteness = Maps.getAll(metaData, "flowCompleteness", String.class);
 		return v;
 	}
 

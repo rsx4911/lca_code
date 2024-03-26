@@ -31,12 +31,13 @@ define([
 				location: 7
 				reviewType: 8
 				complianceDeclaration: 9
-				categoryPaths: 10
-				validFromYear: 11
-				validUntilYear: 12
-				contact: 13
-				repositoryTags: 14
-				datasetTags: 15
+				flowCompleteness: 10
+				categoryPaths: 11
+				validFromYear: 12
+				validUntilYear: 13
+				contact: 14
+				repositoryTags: 15
+				datasetTags: 16
 
 			initialize: (options) ->
 				@aggregations = {}

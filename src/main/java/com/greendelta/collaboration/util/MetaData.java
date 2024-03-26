@@ -2,6 +2,7 @@ package com.greendelta.collaboration.util;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,11 +20,15 @@ import org.openlca.git.model.Reference;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.jsonld.Enums;
 import org.openlca.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.service.Repository;
 
 public class MetaData {
+	
+	private static final Logger log = LoggerFactory.getLogger(MetaData.class);
 
 	public static Map<String, Object> forBrowse(Map<String, Object> e, Reference ref, Repository repo) {
 		putDatasetInfo(e, ref, repo, Mode.BROWSE);
@@ -105,6 +110,10 @@ public class MetaData {
 				defs.add(FieldDefinition.firstOf("defaultAllocationMethod", MetaData::getModellingApproach));
 				defs.add(FieldDefinition.allOf("processDocumentation.reviews.reviewType"));
 				defs.add(FieldDefinition.allOf("processDocumentation.complianceDeclarations.system.name"));
+				defs.add(FieldDefinition.allOf("processDocumentation.flowCompleteness.aspect")
+						.ifHas("processDocumentation.flowCompleteness.value"));
+				defs.add(FieldDefinition.allOf("processDocumentation.flowCompleteness.value")
+						.ifHas("processDocumentation.flowCompleteness.aspect"));
 			}
 		}
 		var info = repo.datasets.parse(ref, defs);
@@ -134,6 +143,18 @@ public class MetaData {
 			}
 			entry.put("reviewTypes", reviewTypes);
 			entry.put("complianceDeclarations", info.get("processDocumentation.complianceDeclarations.system.name"));
+			var flowCompleteness = new HashSet<String>();
+			var aspects = Maps.getAll(info, "processDocumentation.flowCompleteness.aspect", String.class);
+			var values = Maps.getAll(info, "processDocumentation.flowCompleteness.value", String.class);
+			if (aspects.size() != values.size()) {
+				log.warn("Aspect count doesnt match value count");
+				return;
+			}
+			for (var i = 0; i < aspects.size(); i++) {
+				flowCompleteness.add(values.get(i));
+				flowCompleteness.add(values.get(i) + "/" + aspects.get(i));
+			}
+			entry.put("flowCompleteness", flowCompleteness);
 		}
 	}
 

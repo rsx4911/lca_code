@@ -149,6 +149,8 @@ define([
 				return 'Review type'
 			if type is 'complianceDeclaration'
 				return 'Compliance declaration'
+			if type is 'flowCompleteness'
+				return 'Flow completeness'
 			if type is 'categoryPaths'
 				return 'Category'
 			if type is 'validFromYear'

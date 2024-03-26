@@ -56,6 +56,7 @@ class DsEntryParser {
 		v.contact = Maps.get(version, "contact");
 		v.reviewTypes = Maps.getAll(version, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(version, "complianceDeclarations", String.class);
+		v.flowCompleteness= Maps.getAll(version, "flowCompleteness", String.class);
 		return v;
 	}
 
