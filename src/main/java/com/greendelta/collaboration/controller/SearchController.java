@@ -83,7 +83,7 @@ public class SearchController {
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
 		var result = service.search(query, page, pageSize, parameters);
 		result.aggregations.stream()
-				.filter(r -> r.name.equals(Aggregations.CATEGORY.name))
+				.filter(r -> r.name.equals(Aggregations.CATEGORY.name) || r.name.equals(Aggregations.FLOW_COMPLETENESS.name))
 				.forEach(r -> r.group("/"));
 		return map(result);
 	}

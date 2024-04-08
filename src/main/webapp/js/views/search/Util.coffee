@@ -121,6 +121,11 @@ define([
 					return 'Waste'
 				else if value is 'PRODUCT_FLOW'
 					return 'Product'
+			if type is 'reviewType'
+				if value is 'unreviewed'
+					return 'No reviews'
+				if value is 'unspecified'
+					return 'Not specified'
 			return value
 
 		getAggregationLabel: (type) ->
@@ -140,6 +145,12 @@ define([
 				return 'Process type'
 			if type is 'location'
 				return 'Location'
+			if type is 'reviewType'
+				return 'Review type'
+			if type is 'complianceDeclaration'
+				return 'Compliance declaration'
+			if type is 'flowCompleteness'
+				return 'Flow completeness'
 			if type is 'categoryPaths'
 				return 'Category'
 			if type is 'validFromYear'

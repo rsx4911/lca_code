@@ -5,16 +5,15 @@ include ./structures/flow-property-table.pug
 	.model-left-content
 		+header
 		.content
-			- var outLabel = dataset.flowType==='ELEMENTARY_FLOW'?'Emitted by':'Produced by';
-			- var outId = dataset.flowType==='ELEMENTARY_FLOW'?'emitted-by':'produced-by';
+			- var outId = dataset.flowType==='ELEMENTARY_FLOW'?'emittedBy':'producedBy';
 			ul.nav.nav-tabs(role='tablist')
-				+nav-tab(null, true, 'Flow info')
+				+nav-tab('flowInfo', true, true)
 				+nav-tab('flowProperties')
 				if isSearchLinksEnabled
-					+nav-tab(null, false, 'Used by')
-					+nav-tab(null, false, outLabel)
+					+nav-tab('usedBy', false, true)
+					+nav-tab(outId, false, true)
 			.tab-content
-				+nav-tab-pane('flow-info', true, true)
+				+nav-tab-pane('flowInfo', true, true)
 					table.table.no-head
 						tbody
 							- var getFlowTypeLabel = function (flowType) { return getSpecificTypeLabel('FlowType', flowType); };
@@ -27,7 +26,7 @@ include ./structures/flow-property-table.pug
 				+nav-tab-pane('flowProperties')
 					+flow-property-table()
 				if isSearchLinksEnabled
-					+nav-tab-pane('used-by', false, true)
+					+nav-tab-pane('usedBy', false, true)
 						.form-group
 							input#used-by-filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
 						#used-by-data

@@ -81,7 +81,7 @@ public class Maps {
 	public static void remove(Map<String, Object> map, String... fields) {
 		if (fields == null)
 			return;
-		for (String field : fields) {
+		for (var field : fields) {
 			remove(map, field);
 		}
 	}
@@ -89,7 +89,7 @@ public class Maps {
 	private static Object remove(Map<String, Object> map, String field) {
 		if (map == null)
 			return null;
-		if (field.contains(".")) {
+		if (field.contains(".") && !map.containsKey(field)) {
 			var prefix = field.substring(0, field.lastIndexOf('.'));
 			field = field.substring(field.lastIndexOf('.') + 1);
 			var allNext = getAll(map, prefix);
@@ -166,7 +166,7 @@ public class Maps {
 	@SuppressWarnings("unchecked")
 	private static Collection<Object> getAll(Map<String, Object> map, String field) {
 		Collection<Object> all = new ArrayList<>();
-		if (!field.contains("."))
+		if (!field.contains(".") || map.containsKey(field))
 			return toArray(map.get(field));
 		var prefix = field.substring(0, field.lastIndexOf('.'));
 		field = field.substring(field.lastIndexOf('.') + 1);
@@ -183,7 +183,7 @@ public class Maps {
 	// call, createMissing only applies to recursive calls
 	@SuppressWarnings("unchecked")
 	private static <T> T get(Map<String, Object> map, String field, boolean createMissing, boolean initialCall) {
-		if (field.contains(".")) {
+		if (field.contains(".") && !map.containsKey(field)) {
 			var prefix = field.substring(0, field.lastIndexOf('.'));
 			field = field.substring(field.lastIndexOf('.') + 1);
 			map = get(map, prefix, createMissing, false);
@@ -196,16 +196,6 @@ public class Maps {
 			value = new HashMap<String, Object>();
 		}
 		return (T) value;
-	}
-
-	public static int getArrayLength(Map<String, Object> map, String field) {
-		var array = get(map, field, false, true);
-		if (array == null) {
-			array = 0;
-		}
-		if (array instanceof Collection)
-			return ((Collection<?>) array).size();
-		return 0;
 	}
 
 	public static String[] getStringArray(Map<String, Object> map, String field) {

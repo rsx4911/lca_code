@@ -102,6 +102,9 @@ class DsEntryManager {
 		v.validFromYear = Maps.get(metaData, "validFromYear");
 		v.validUntilYear = Maps.get(metaData, "validUntilYear");
 		v.flowType = Maps.get(metaData, "flowType");
+		v.reviewTypes = Maps.getAll(metaData, "reviewTypes", String.class);
+		v.complianceDeclarations = Maps.getAll(metaData, "complianceDeclarations", String.class);
+		v.flowCompleteness = Maps.getAll(metaData, "flowCompleteness", String.class);
 		return v;
 	}
 

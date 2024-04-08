@@ -9,10 +9,10 @@
 		"versions": {
 			"type": "nested",
 			"properties": {
-				"objectId": {
-					"type": "keyword"
-				},
 				"name": {
+					"type": "text"
+				},
+				"objectId": {
 					"type": "keyword"
 				},
 				"category": {
@@ -43,6 +43,15 @@
 					"type": "keyword"
 				},
 				"validUntilYear": {
+					"type": "keyword"
+				},
+				"reviewTypes": {
+					"type": "keyword"
+				},
+				"complianceDeclarations": {
+					"type": "keyword"
+				},
+				"flowCompleteness": {
 					"type": "keyword"
 				},
 				"repos": {

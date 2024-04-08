@@ -59,6 +59,7 @@ define([
 					when 'UNIT' then if v.name is value.name then return v
 					when 'FLOW_PROPERTY_FACTOR' then if v.flowProperty?.id is value.flowProperty?.id then return v
 					when 'SOURCE' then if v.id is value.id then return v
+					when 'ACTOR' then if v.id is value.id then return v
 					when 'DQ_INDICATOR' then if v.position is value.position then return v
 					when 'DQ_SCORE' then if v.position is value.position then return v
 					when 'SOCIAL_ASPECT' then if v.socialIndicator?.id is value.socialIndicator?.id then return v
@@ -82,7 +83,18 @@ define([
 					when 'EPD_MODULE' then if v.name is value.name and v.result?.id is value.result?.id then return v
 					when 'IMPACT_RESULT' then if v.indicator?.id is value.indicator?.id then return v
 					when 'FLOW_RESULT' then if v.flow?.id is value.flow?.id then return v
+					when 'REVIEW' then if v.report?.id is value.report?.id then return v
+					when 'ASPECT' then if v.aspect is value.aspect then return v
+					when 'SCOPE' then if v.name is value.name then return v
+					when 'SCOPE_METHOD' then if v is value then return v
+					when 'COMPLIANCE_DECLARATION' then if v.system?.id is value.system?.id then return v
 			return null
+
+		hasOneOf = (obj1, obj2, fields) ->
+			for field in fields
+				if (obj1 and obj1[field]) or (obj2 and obj2[field])
+					return true
+			return false
 
 		hasAtLeastOne = (ref, ref2, arrayPath, elementPath, filter) ->
 			return _hasAtLeastOne(ref, arrayPath, elementPath, filter) or _hasAtLeastOne(ref2, arrayPath, elementPath, filter)
@@ -179,11 +191,13 @@ define([
 				formatRelative: (value) -> return Format.relative value, 4
 				formatCommitDescription: Format.commitDescription
 				getIcon: Icons.get
+				getIconByType: Icons.getByType
 				getDQColor: DataQuality.getColor
 				getValue: @getValue
 				getArrayValues: getArrayValues
 				findValue: findValue
 				hasAtLeastOne: hasAtLeastOne
+				hasOneOf: hasOneOf
 				compare: (value, value2) -> return if compareTo then compare(value, value2) else null
 				compareUncertainty: compareUncertainty
 				getTypeAsEnum: @getTypeAsEnum

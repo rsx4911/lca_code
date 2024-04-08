@@ -25,6 +25,7 @@ import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuild
 @Service
 class QueryService {
 
+	private static final String[] SEARCH_FIELDS = { "versions.name" };
 	private final SettingsService settings;
 	private final RepositoryService repoService;
 	private final ScoreService scoreService;
@@ -44,7 +45,7 @@ class QueryService {
 			var filteredTypes = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
 			putAggregations(builder, accessibleRepos, filteredTypes, filters);
 			if (!Strings.nullOrEmpty(query)) {
-				builder.query(toWildcardQuery(query.toLowerCase()), "versions.name");
+				builder.query(toWildcardQuery(query.toLowerCase()), SEARCH_FIELDS);
 			}
 			builder.page(page);
 			builder.pageSize(pageSize);

@@ -18,7 +18,9 @@ import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.util.GitUtil;
 import org.openlca.git.util.MetaDataParser;
 import org.openlca.git.writer.CommitWriter;
+import org.openlca.git.writer.UsedFeatures;
 import org.openlca.jsonld.ModelPath;
+import org.openlca.jsonld.PackageInfo;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.jsonld.input.CategoryImport;
 import org.openlca.util.Strings;
@@ -30,7 +32,7 @@ public class ZipCommitWriter extends CommitWriter {
 
 	private final ZipStore zip;
 
-	public ZipCommitWriter(ZipStore zip, Repository repo) {
+	private ZipCommitWriter(ZipStore zip, Repository repo) {
 		super(repo, new ZipBinaryResolver(zip));
 		this.zip = zip;
 	}
@@ -44,6 +46,7 @@ public class ZipCommitWriter extends CommitWriter {
 			Files.copy(stream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
 			zip = ZipStore.open(tmpFile.toFile());
 			var writer = new ZipCommitWriter(zip, git);
+			writer.usedFeatures = UsedFeatures.of(PackageInfo.readFrom(zip));
 			writer.as(new PersonIdent(user.username, user.email));
 			writer.write(commitMessage);
 			return true;
