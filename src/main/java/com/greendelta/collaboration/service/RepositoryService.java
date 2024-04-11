@@ -27,6 +27,7 @@ import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
+import com.google.common.io.Files;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
@@ -276,7 +277,13 @@ public class RepositoryService {
 
 	public void generateJson(Repository repo, Function<LibraryLink, String> urlResolver) {
 		new Thread(() -> {
-			RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(urlResolver));
+			try {
+				var tmpFile = fileService.createTempFile();
+				RepositoryJsonWriter.writeCurrent(repo.dir, tmpFile, repo.linkedLibraries(urlResolver));
+				Files.copy(tmpFile, repo.getCachedJsonFile());
+			} catch (IOException e) {
+				log.error("Error generating json file", e);
+			}
 		}).start();
 	}
 
