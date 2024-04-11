@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.git.RepositoryInfo;
+import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
@@ -29,14 +30,22 @@ public class RepositoryJsonWriter implements Closeable {
 	public static void writeCurrent(File gitDir, File cachedJsonFile, List<LibraryLink> libraries) {
 		try (var repo = new OlcaRepository(gitDir)) {
 			var writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo().schemaVersion(), cachedJsonFile);
-			repo.references.find().iterate(ref -> writer.put(ref));
+			var categories = new JsonArray();
+			repo.entries.iterate(entry -> {
+				if (entry.typeOfEntry == EntryType.CATEGORY) {
+					categories.add(entry.path);
+				} else if (entry.typeOfEntry == EntryType.DATASET) {
+					writer.put(entry);
+				}
+			});
+			writer.writeCategoriesJson(categories);
 			writer.close();
 		} catch (IOException e) {
 			log.error("Error writing json-ld archive", e);
 		}
 	}
 
-	public RepositoryJsonWriter(OlcaRepository repo, List<LibraryLink> libraries, SchemaVersion schemaVersion,
+	RepositoryJsonWriter(OlcaRepository repo, List<LibraryLink> libraries, SchemaVersion schemaVersion,
 			File file) throws IOException {
 		this.zipStore = ZipStore.open(file);
 		this.repo = repo;
@@ -46,7 +55,7 @@ public class RepositoryJsonWriter implements Closeable {
 				.writeTo(zipStore);
 	}
 
-	public String put(Reference ref) {
+	String put(Reference ref) {
 		var data = repo.datasets.get(ref);
 		if (data == null)
 			return null;
