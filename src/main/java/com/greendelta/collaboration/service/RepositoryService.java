@@ -281,6 +281,7 @@ public class RepositoryService {
 				var tmpFile = fileService.createTempFile();
 				RepositoryJsonWriter.writeCurrent(repo.dir, tmpFile, repo.linkedLibraries(urlResolver));
 				Files.copy(tmpFile, repo.getCachedJsonFile());
+				tmpFile.delete();
 			} catch (IOException e) {
 				log.error("Error generating json file", e);
 			}
