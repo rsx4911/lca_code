@@ -5,7 +5,7 @@ mixin box(label, plural, count)
 		h4=plural
 		.count=count
 		hr
-		button.btn.btn-lg.btn-full-width.btn-success(data-action='create-' + lcLabel) Create #{lcLabel}
+		button.btn.btn-lg.btn-block.btn-success(data-action='create-' + lcLabel) Create #{lcLabel}
 	.list-box
 		legend=plural 
 			if label === 'Repository' && isSearchEnabled
