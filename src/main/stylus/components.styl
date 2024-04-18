@@ -122,7 +122,22 @@ table > thead > tr > th.header:not(:empty)
 .status-bar:not(.alert-danger):not(.alert-success):not(.alert-warning):not(.alert-info)
 	display none
 
+.separator
+	margin 10px 0
+	display flex
+	align-items center
+	text-align center
 
+.separator::before, .separator::after
+	content ''
+	flex 1
+	border-bottom 1px solid rgb(208, 208, 208)
+
+.separator:not(:empty)::before
+	margin-right .25em
+
+.separator:not(:empty)::after
+	margin-left .25em
 
 .header-box, .subheader-box
 	background-color rgb(248, 250, 252)

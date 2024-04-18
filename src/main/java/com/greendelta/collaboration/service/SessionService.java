@@ -1,19 +1,25 @@
 package com.greendelta.collaboration.service;
 
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.user.UserService;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class SessionService {
@@ -23,12 +29,35 @@ public class SessionService {
 	private final SettingsService settings;
 	private final GoogleAuthenticator authenticator = new GoogleAuthenticator();
 
+	@Autowired(required = false)
+	private ClientRegistrationRepository authProviderRepository;
+	private List<AuthProvider> authProviders;
+
 	public SessionService(AuthenticationManager authManager, UserService userService, SettingsService settings) {
 		this.authManager = authManager;
 		this.userService = userService;
 		this.settings = settings;
 	}
 	
+	public List<AuthProvider> getAuthProviders() {
+		if (authProviders == null) {
+			authProviders = getAuthProviders(authProviderRepository);
+		}
+		return authProviders;
+	}
+
+	private List<AuthProvider> getAuthProviders(ClientRegistrationRepository authProviderRepository) {
+		if (!(authProviderRepository instanceof InMemoryClientRegistrationRepository providers))
+			return new ArrayList<>();
+		var it = providers.iterator();
+		var authProviders = new ArrayList<AuthProvider>();
+		while (it.hasNext()) {
+			var p = it.next();
+			authProviders.add(new AuthProvider(p.getRegistrationId(), p.getClientName()));
+		}
+		return authProviders;
+	}
+
 	public LoginResponse login(HttpServletRequest request, String username, String password, Integer token) {
 		try {
 			var auth = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
@@ -40,9 +69,9 @@ public class SessionService {
 						"We have updated our password encryption. Since we only store encrypted passwords, we are not able to migrate your current password. Please use the 'Forgot your password?' link below to request a new password being sent to your email address.");
 			return new LoginResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials");
 		}
-		if (userService.isAnonymous())
-			return new LoginResponse(HttpStatus.UNAUTHORIZED, "Unknown error");
 		var user = userService.getCurrentUser();
+		if (user.isAnonymous())
+			return new LoginResponse(HttpStatus.UNAUTHORIZED, "Unknown error");
 		if (user.isDeactivated()) {
 			logout(request);
 			return new LoginResponse(HttpStatus.UNAUTHORIZED, "User is deactivated or approval is pending");
@@ -71,6 +100,15 @@ public class SessionService {
 	}
 
 	public record LoginResponse(HttpStatus status, String message) {
+	}
+
+	public record AuthProvider(String id, String name) {
+		
+		public AuthProvider(String id, String name) {
+			this.id = id;
+			this.name = name != null ? name : id;
+		}
+		
 	}
 
 }

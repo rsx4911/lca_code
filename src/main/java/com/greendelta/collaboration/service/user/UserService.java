@@ -8,11 +8,15 @@ import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 import org.openlca.util.Strings;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.User;
@@ -72,13 +76,75 @@ public class UserService implements UserDetailsService {
 	}
 
 	public User getCurrentUser() {
-		if (isAnonymous())
-			return new User();
 		var auth = SecurityContextHolder.getContext().getAuthentication();
-		var user = getForUsername(auth.getName());
-		if (user == null)
-			return new User();
-		return user;
+		var user = getUser(auth);
+		if (user != null)
+			return user;
+		return new User();
+	}
+
+	private User getUser(Authentication auth) {
+		if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
+			return null;
+		if (auth instanceof UsernamePasswordAuthenticationToken)
+			return getForUsername(auth.getName());
+		if (auth instanceof OAuth2AuthenticationToken token) {
+			var principal = token.getPrincipal();
+			String email = principal.getAttribute("email");
+			if (Strings.nullOrEmpty(email))
+				return null;
+			var user = getForEmail(email);
+			if (user != null)
+				return user;
+			return createUser(principal);
+		}
+		return null;
+	}
+
+	private User createUser(OAuth2User principal) {
+		String email = principal.getAttribute("email");
+		String preferredUsername = principal.getAttribute("preferred_username");
+		var user = new User();
+		user.email = email;
+		user.name = principal.getAttribute("name");
+		var emailUser = email.substring(0, email.indexOf("@"));
+		if (Strings.nullOrEmpty(user.name)) {
+			user.name = emailUser;
+		}
+		var username = toUsername(preferredUsername);
+		if (exists(username)) {
+			username = toUsername(user.name);
+		}
+		if (exists(username)) {
+			username = toUsername(emailUser);
+		}
+		var emailProvider = email.substring(email.indexOf("@") + 1, email.lastIndexOf("."));
+		var count = 0;
+		while (exists(username)) {
+			var suffix = count != 0 ? Integer.toString(count) : "";
+			username = toUsername(emailUser, emailProvider, suffix);
+			count++;
+		}
+		user.username = username;
+		user.settings.setDefaults();
+		return insert(user);
+	}
+	
+	private String toUsername(String... values) {
+		var username = "";
+		for (var value : values) {
+			if (!username.isEmpty()) {
+				username += "_";
+			}
+			for (var c : value.toCharArray()) {
+				if (Character.isLetterOrDigit(c) || c == '_') {
+					username += c;
+				} else {
+					username += "_";
+				}
+			}
+		}
+		return username.toLowerCase();
 	}
 
 	public long getCount() {
@@ -169,11 +235,6 @@ public class UserService implements UserDetailsService {
 
 	public User update(User user) {
 		return dao.update(user);
-	}
-
-	public boolean isAnonymous() {
-		var auth = SecurityContextHolder.getContext().getAuthentication();
-		return auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken;
 	}
 
 }

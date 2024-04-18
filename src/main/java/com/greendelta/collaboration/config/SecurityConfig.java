@@ -6,18 +6,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
 import org.openlca.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
@@ -50,6 +53,8 @@ public class SecurityConfig {
 	private final SettingsService settings;
 	private final GitFilterConfig gitFilterConfig;
 	private AuthenticationManager authManager;
+	@Autowired(required = false)
+	private ClientRegistrationRepository authProviderRepository;
 
 	public SecurityConfig(AccessService accessService, UserService userService, SettingsService settings,
 			GitFilterConfig gitFilterConfig) {
@@ -61,7 +66,7 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-		return http
+		http = http
 				.headers(config -> config
 						.frameOptions(options -> options
 								.sameOrigin()))
@@ -82,8 +87,11 @@ public class SecurityConfig {
 						.requestMatchers("/**").access(this::canAccessRepo))
 				.logout(config -> config
 						.logoutUrl("/ws/public/logout")
-						.logoutSuccessHandler(getLogoutSuccessHandler()))
-				.build();
+						.logoutSuccessHandler(getLogoutSuccessHandler()));
+		if (authProviderRepository != null) {
+			http = http.oauth2Login(Customizer.withDefaults());
+		}
+		return http.build();
 	}
 
 	private void handleUnauthenticated(HttpServletRequest request, HttpServletResponse response,
