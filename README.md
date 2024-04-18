@@ -62,7 +62,10 @@ After this, open Eclipse and select the created workspace directory. Import the 
 (select the collaboration-server directory). You should now see the project in your Eclipse workspace.
 
 #### Configuring OAuth 2.0 providers
-The LCA Collaboration Server includes support for OAuth 2.0 providers via Spring. The application scans for providers configured via the Spring application.properties and will add buttons - labeled "Continue with [client-name]" - in the login page, to redirect to the authentication provider automatically (client-name will be read from the spring.security.oauth2.client.registration.[registration-id].client-name parameter). Here are some example configurations, note that for GitHub, Google and Facebook, the client-name - and all other required properties - are already provided by Spring's default configuration:
+The LCA Collaboration Server includes support for OAuth 2.0 providers via Spring. The application scans for providers configured via the Spring application.properties and will add buttons - labeled "Continue with [client-name]" - in the login page, to redirect to the authentication provider automatically. The client-name will be read from the spring.security.oauth2.client.registration.[registration-id].client-name parameter. Note that for GitHub, Google and Facebook, the client-name - and all other required properties - are already provided by Spring's default configuration. If a user does not exist in the collaboration server, it will be added automatically, using the email and name from the provider, if the preferred_username attribute is not available, a username will be generated from the name and/or the email address. If no email address is specified, the login fails.
+
+Below you can find some example configurations:
+
 
 Github:
 
