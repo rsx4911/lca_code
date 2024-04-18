@@ -61,6 +61,42 @@ mvn eclipse:eclipse
 After this, open Eclipse and select the created workspace directory. Import the project into Eclipse via `Import/General/Existing Projects into Workspace`
 (select the collaboration-server directory). You should now see the project in your Eclipse workspace.
 
+#### Configuring OAuth 2.0 providers
+The LCA Collaboration Server includes support for OAuth 2.0 providers via Spring. The application scans for providers configured via the Spring application.properties and will add buttons - labeled "Continue with [client-name]" - in the login page, to redirect to the authentication provider automatically (client-name will be read from the spring.security.oauth2.client.registration.[registration-id].client-name parameter). Here are some example configurations, note that for GitHub, Google and Facebook, the client-name - and all other required properties - are already provided by Spring's default configuration:
+
+Github:
+
+```
+spring.security.oauth2.client.registration.github.client-id=your-github-client-id
+spring.security.oauth2.client.registration.github.client-secret=your-github-client-secret
+```
+
+Google:
+
+```
+spring.security.oauth2.client.registration.google.client-id=your-google-client-id
+spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
+```
+
+Facebook:
+
+```
+spring.security.oauth2.client.registration.facebook.client-id=your-facebook-client-id
+spring.security.oauth2.client.registration.facebook.client-secret=your-facebook-client-secret
+```
+
+Keycloak:
+
+```
+spring.security.oauth2.client.registration.keycloak.client-id=your-keycloak-client-app-id
+spring.security.oauth2.client.registration.keycloak.client-name=Keycloak
+spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.keycloak.scope=openid
+spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://[keycloak-host-or-ip]:[keycloak-port]/realms/[KeyCloakRealmName]
+# Example: http://localhost:8081/realms/SpringBootKeycloakRealm
+```
+
 #### Build the web application for deployment
 To build the web application to be deployed on a web server (e.g. tomcat) run:
 
