@@ -3,7 +3,7 @@ include ../mixins/avatar-box.pug
 
 .header-box Account
 	if user.id && adminArea
-		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactive'
+		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactivate'
 		if !user.lastAdmin
 			button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 	span.badge.pull-right.user-status(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated ? 'Inactive': 'Active'

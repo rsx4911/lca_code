@@ -75,6 +75,11 @@ html(lang='en')
 			$('#reset-password #email').on('keyup', function() {
 				$('#reset').attr('disabled', !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($('#email').val()))
 			})
+			var params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
+			if (params.error) {
+				$('#login-general-message').show()
+				$('#login-general-message .message').html(params.error)
+			}
 			$('#login').on('submit', function(event) {
 				$('#login-general-message').hide()
 				var data = {username: $('#login #username').val(), password: $('#login #password').val()}
@@ -90,7 +95,6 @@ html(lang='en')
 							$('#login-general-message').hide()
 							$('#login #token').focus()
 						} else {
-							var params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
 							window.location.href = params.redirectUrl || ''
 						}
 					}, error: function(response) {

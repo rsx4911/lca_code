@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.user;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +34,7 @@ import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService implements UserDetailsService, OAuth2UserService<OidcUserRequest, OidcUser> {
 
 	private final Dao<User> dao;
 	private final PasswordEncoder passwordEncoder;
@@ -237,6 +243,18 @@ public class UserService implements UserDetailsService {
 
 	public User update(User user) {
 		return dao.update(user);
+	}
+
+	@Override
+	public OidcUser loadUser(OidcUserRequest request) throws OAuth2AuthenticationException {
+		var email = request.getIdToken().getEmail();
+		if (Strings.nullOrEmpty(email))
+			return new DefaultOidcUser(Collections.emptyList(), request.getIdToken());
+		var user = getForEmail(email);
+		if (user == null)
+			return new DefaultOidcUser(Collections.emptyList(), request.getIdToken());
+		user.idToken = request.getIdToken();
+		return user;
 	}
 
 }

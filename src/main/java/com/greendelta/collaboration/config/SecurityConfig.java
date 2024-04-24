@@ -91,7 +91,11 @@ public class SecurityConfig {
 						.logoutUrl("/ws/public/logout")
 						.logoutSuccessHandler(getLogoutSuccessHandler()));
 		if (authProviderRepository != null) {
-			http = http.oauth2Login(config -> config.successHandler(this::onOauthSuccess));
+			http = http.oauth2Login(config -> config
+					.successHandler(this::onOauthSuccess)
+					.userInfoEndpoint(endpoint -> endpoint
+							.oidcUserService(userService))
+					);
 		}
 		return http.build();
 	}

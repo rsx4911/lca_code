@@ -3,22 +3,28 @@ package com.greendelta.collaboration.model;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+
+import com.greendelta.collaboration.util.Dates;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import com.greendelta.collaboration.util.Dates;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "user")
-public class User extends AbstractEntity implements UserDetails {
+public class User extends AbstractEntity implements UserDetails, OidcUser {
 
 	private static final long serialVersionUID = -4989312202559805583L;
 
@@ -43,6 +49,9 @@ public class User extends AbstractEntity implements UserDetails {
 
 	@Embedded
 	public UserSettings settings = new UserSettings();
+
+	@Transient
+	public OidcIdToken idToken;
 
 	@Override
 	public boolean equals(Object obj) {
@@ -99,7 +108,7 @@ public class User extends AbstractEntity implements UserDetails {
 		Dates.removeTimeInformation(cal);
 		settings.activeUntil = cal.getTime();
 	}
-	
+
 	@Override
 	public List<GrantedAuthority> getAuthorities() {
 		if (isAdmin())
@@ -145,6 +154,40 @@ public class User extends AbstractEntity implements UserDetails {
 
 	public boolean isAnonymous() {
 		return id == 0l;
+	}
+
+	@Override
+	public Map<String, Object> getAttributes() {
+		return getClaims();
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+	
+	@Override
+	public String getEmail() {
+		return email;
+	}
+
+	@Override
+	public Map<String, Object> getClaims() {
+		if (idToken == null)
+			return new HashMap<>();
+		return idToken.getClaims();
+	}
+
+	@Override
+	public OidcUserInfo getUserInfo() {
+		if (idToken == null)
+			return null;
+		return new OidcUserInfo(getClaims());
+	}
+
+	@Override
+	public OidcIdToken getIdToken() {
+		return idToken;
 	}
 
 }

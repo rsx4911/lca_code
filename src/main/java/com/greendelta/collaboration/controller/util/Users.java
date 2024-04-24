@@ -18,14 +18,12 @@ public class Users {
 	}
 
 	public static Map<String, Object> mapForCurrentUser(User user, boolean isInTeam) {
-		return mapForSelf(user, isInTeam);		
+		return mapForSelf(user, isInTeam);
 	}
 
 	private static Map<String, Object> mapForSelf(User user, Boolean isInTeam) {
 		var map = Maps.of(user);
-		Maps.remove(map, "password", "avatar", "twoFactorSecret", "authorities", "accountNonExpired",
-				"accountNonLocked",
-				"credentialsNonExpired", "enabled");
+		Maps.removeAllBut(map, "id", "username", "name", "email", "settings", "deactivated");
 		if (!Strings.nullOrEmpty(user.twoFactorSecret)) {
 			map.put("twoFactorAuth", true);
 		}

@@ -25,8 +25,7 @@ include ../mixins/forms.pug
 			+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page or login for anonymous users')
 		+checkbox('SERVER_SETTING__NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
 		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselves')
-		.indented-setting
-			+checkbox('SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
+		+checkbox('SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
 		+checkbox('SERVER_SETTING__CHANGE_LOG_ENABLED', 'Change log</strong>: Users can create change logs from commit histories (local nodejs server for server side rendering must be installed)')
 		+checkbox('SERVER_SETTING__DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
 		+checkbox('SERVER_SETTING__REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
