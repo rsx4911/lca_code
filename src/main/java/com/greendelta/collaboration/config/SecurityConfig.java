@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -76,6 +77,7 @@ public class SecurityConfig {
 						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.securityContext(config -> config
 						.requireExplicitSave(false))
+				.httpBasic(Customizer.withDefaults())
 				.csrf(config -> config
 						.disable())
 				.exceptionHandling(config -> config
