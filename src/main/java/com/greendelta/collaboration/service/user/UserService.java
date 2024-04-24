@@ -112,10 +112,10 @@ public class UserService implements UserDetailsService {
 			user.name = emailUser;
 		}
 		var username = toUsername(preferredUsername);
-		if (exists(username)) {
+		if (Strings.nullOrEmpty(username) || exists(username)) {
 			username = toUsername(user.name);
 		}
-		if (exists(username)) {
+		if (Strings.nullOrEmpty(username) || exists(username)) {
 			username = toUsername(emailUser);
 		}
 		var emailProvider = email.substring(email.indexOf("@") + 1, email.lastIndexOf("."));
@@ -133,6 +133,8 @@ public class UserService implements UserDetailsService {
 	private String toUsername(String... values) {
 		var username = "";
 		for (var value : values) {
+			if (Strings.nullOrEmpty(value))
+				continue;
 			if (!username.isEmpty()) {
 				username += "_";
 			}
