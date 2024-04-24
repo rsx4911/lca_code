@@ -14,6 +14,8 @@ import jakarta.persistence.Table;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.greendelta.collaboration.util.Dates;
+
 @Entity
 @Table(name = "user")
 public class User extends AbstractEntity implements UserDetails {
@@ -91,6 +93,13 @@ public class User extends AbstractEntity implements UserDetails {
 		return now.after(activeUntil);
 	}
 
+	public void deactivate() {
+		var cal = Calendar.getInstance();
+		cal.add(Calendar.DAY_OF_MONTH, -1);
+		Dates.removeTimeInformation(cal);
+		settings.activeUntil = cal.getTime();
+	}
+	
 	@Override
 	public List<GrantedAuthority> getAuthorities() {
 		if (isAdmin())

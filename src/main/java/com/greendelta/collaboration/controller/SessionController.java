@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.controller;
 
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -8,12 +7,12 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Users;
@@ -28,7 +27,6 @@ import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Routes;
@@ -100,7 +98,14 @@ public class SessionController {
 		}
 		password = Password.getPasswordWithoutToken(password);
 		var token = Password.getToken(password, (int) Maps.getLong(form, "token"));
-		return login(request, username, password, token);
+		try {
+			sessionService.login(request, username, password, token);
+			return "";
+		} catch (ResponseStatusException e) {
+			if (e.getMessage().equals("tokenRequired"))
+				return "tokenRequired";
+			throw e;
+		}
 	}
 
 	@PostMapping("register")
@@ -153,10 +158,7 @@ public class SessionController {
 		user.email = email;
 		var adminApproval = settings.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED);
 		if (adminApproval) {
-			var cal = Calendar.getInstance();
-			cal.add(Calendar.DAY_OF_MONTH, -1);
-			Dates.removeTimeInformation(cal);
-			user.settings.activeUntil = cal.getTime();
+			user.deactivate();
 		}
 		userService.setPassword(user, password);
 		user.settings.setDefaults();
@@ -164,19 +166,9 @@ public class SessionController {
 		if (adminApproval) {
 			notificationService.userRegistered(user).send();
 		} else {
-			login(request, username, password, null);
+			sessionService.login(request, username, password, null);
 		}
 		log.info("User {} successfully registered", username);
-	}
-
-	private String login(HttpServletRequest request, String username, String password, Integer token) {
-		var response = sessionService.login(request, username, password, token);
-		if (response.status() == HttpStatus.BAD_REQUEST && response.message().equals("tokenRequired"))
-			return response.message();
-		if (response.status() != HttpStatus.OK)
-			throw Response.status(response.status(), response.message());
-		log.info("User {} successfully logged in", username);
-		return "";
 	}
 
 	@PostMapping("request-password-reset")

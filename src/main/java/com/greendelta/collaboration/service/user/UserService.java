@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.util.Dates;
@@ -78,14 +79,16 @@ public class UserService implements UserDetailsService {
 	public User getCurrentUser() {
 		var auth = SecurityContextHolder.getContext().getAuthentication();
 		var user = getUser(auth);
-		if (user != null)
-			return user;
-		return new User();
+		if (user == null)
+			throw Response.unauthorized("Could not find a matching user");
+		if (user.isDeactivated())
+			throw Response.unauthorized("User is deactivated or approval is pending");
+		return user;
 	}
 
-	private User getUser(Authentication auth) {
+	public User getUser(Authentication auth) {
 		if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
-			return null;
+			return new User();
 		if (auth instanceof UsernamePasswordAuthenticationToken)
 			return getForUsername(auth.getName());
 		if (auth instanceof OAuth2AuthenticationToken token) {
@@ -93,15 +96,12 @@ public class UserService implements UserDetailsService {
 			String email = principal.getAttribute("email");
 			if (Strings.nullOrEmpty(email))
 				return null;
-			var user = getForEmail(email);
-			if (user != null)
-				return user;
-			return createUser(principal);
+			return getForEmail(email);
 		}
 		return null;
 	}
 
-	private User createUser(OAuth2User principal) {
+	public User createUser(OAuth2User principal) {
 		String email = principal.getAttribute("email");
 		String preferredUsername = principal.getAttribute("preferred_username");
 		var user = new User();
@@ -127,9 +127,9 @@ public class UserService implements UserDetailsService {
 		}
 		user.username = username;
 		user.settings.setDefaults();
-		return insert(user);
+		return user;
 	}
-	
+
 	private String toUsername(String... values) {
 		var username = "";
 		for (var value : values) {
