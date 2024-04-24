@@ -34,7 +34,7 @@ define([
 				'click [data-action=toggle-active]': 'toggleActive'
 				'click [data-action=generate-password]': 'generatePassword'
 				'click [data-action=show-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication ''
-				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication true
+				'click [data-action=enable-two-factor-auth]': (event) -> @toggleTwoFactorAuthentication 'true'
 				'submit #avatar-form': (event) -> 
 					Events.preventDefault event
 					Avatar.save 'user', @user.get('username')
@@ -120,9 +120,12 @@ define([
 
 			toggleTwoFactorAuthentication: (value) ->
 				username = @user.get 'username'
+				url = "ws/user/twoFactorAuth/#{username}"
+				if value
+					url += "/#{value}"
 				$.ajax
-					type: if value is true or value is false then 'PUT' else 'GET'
-					url: "ws/user/twoFactorAuth/#{username}/#{value}"
+					type: if value is 'true' or value is 'false' then 'PUT' else 'GET'
+					url: url
 					success: (response) => 
 						if response.enabled
 							@showTwoFactorAuthentication response
@@ -141,7 +144,7 @@ define([
 								 <div style="text-align:center"><a class="default-link" href="#" id="show-secret">Show secret key</a></div>
 								 <div id="two-auth-key" class="well well-sm" style="display:none; text-align:center; margin-top:20px">' + response.key + '</div>'
 					buttons: [
-						{text: 'Disable', className: 'btn-warning', callback: () => @toggleTwoFactorAuthentication(false)},
+						{text: 'Disable', className: 'btn-warning', callback: () => @toggleTwoFactorAuthentication('false')},
 						{text: 'Close', className: 'btn-default', callback: Layers.closeActive}
 					]
 				QRCode.toCanvas($('#two-auth-link')[0], response.url)
