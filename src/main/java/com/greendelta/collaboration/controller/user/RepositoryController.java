@@ -337,21 +337,25 @@ public class RepositoryController {
 			@RequestBody Map<String, Object> data) {
 		var value = data.get("value");
 		try (var repo = service.get(group, name)) {
-			repo.settings.set(setting, value);
 			switch (setting) {
 				case TAGS:
 					var tags = parseStringList(value);
 					var previous = repo.settings.get(RepositorySetting.TAGS, new ArrayList<String>());
+					repo.settings.set(setting, value);
 					if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
 						indexService.updateTagsAsync(RepositoryPath.of(group, name));
 					}
 					break;
 				case JSON_FILE_GENERATION:
 					try {
+						repo.settings.set(setting, value);
 						handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
 					} catch (IOException e) {
 						throw Response.error("Error creating cached json file");
 					}
+					break;
+				default:
+					repo.settings.set(setting, value);
 					break;
 			}
 		}
