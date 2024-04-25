@@ -100,19 +100,10 @@ mixin meta()
 		.meta-info
 			if isPublic && !standalone
 				+download-dropdown
-			div
-				strong=getLabel('version')
-				div=dataset.version?dataset.version:'-'
-			div
-				strong=getLabel('lastChange')
-				div
-					if dataset.lastChange
-						| #{formatDate(dataset.lastChange)}
-					else
-						| -
-			div
-				strong=getLabel('id')
-				div=dataset.id
+			+labeled-field-block('version')
+			+labeled-field-block('lastChange', formatDate, '-')
+			+labeled-field-block('id')
+			+labeled-array-field-block('tags')(class='badge')
 			block
 
 mixin maximize-icon()
@@ -203,6 +194,26 @@ mixin labeled-boolean-field-block(path)
 mixin labeled-ref-block(path)
 	strong=getLabel(path)
 	+ref-block(path, '-')
+
+mixin labeled-array-field-block(path)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path);
+	strong=getLabel(path)
+		div(data-path=path)
+			if value
+				each v in value
+					- var other = value2 ? findValue(null, v, value2) : null;
+					span(data-compare=compareTo&&!other?'added':null)
+						if !other
+							+compare-icon('added')
+						span&attributes(attributes)=v
+			if value2
+				each other in value2
+					- var v = findValue(null, other, value);
+					if !v
+						span(data-compare='removed')
+							+compare-icon('removed')
+							span&attributes(attributes)=other
 
 mixin boolean-field(path)
 	- var value = getValue(dataset, path);

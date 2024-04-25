@@ -253,11 +253,8 @@ define([
 			initComparison: (event) ->
 				target = $ Events.target event
 				type = target.attr 'data-compare-to'
-				if type is 'previous'
-					for commit, index in @commits
-						if commit.id is @commitId
-							commitId = @commits[index + 1].id
-							break
+				if type is 'previous' and @commits.length > 1
+					commitId = @commits[@commits.length - 2].id
 					if commitId
 						@applyComparison @refId, commitId
 				else if type is 'other-version'

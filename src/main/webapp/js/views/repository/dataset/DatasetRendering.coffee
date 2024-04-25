@@ -55,6 +55,8 @@ define([
 			if !array or !array.length or !value
 				return null
 			for v in array
+				if !type and v is value
+					return v
 				switch type
 					when 'UNIT' then if v.name is value.name then return v
 					when 'FLOW_PROPERTY_FACTOR' then if v.flowProperty?.id is value.flowProperty?.id then return v
