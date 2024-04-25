@@ -135,7 +135,7 @@ define([
 				return 'Repository tag'
 			if type is 'mostRecent'
 				return 'Most recent'
-			if type is 'datasetTags'
+			if type is 'tags'
 				return 'Data set tag'
 			if type is 'type'
 				return 'Model type'

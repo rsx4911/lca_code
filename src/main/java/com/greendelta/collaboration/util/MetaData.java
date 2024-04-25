@@ -92,6 +92,9 @@ public class MetaData {
 		}
 		var defs = new ArrayList<FieldDefinition>();
 		defs.add(FieldDefinition.firstOf("name"));
+		if (mode == Mode.SEARCH) {
+			defs.add(FieldDefinition.allOf("tags"));
+		}
 		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS) {
 			defs.add(FieldDefinition.firstOf("location.name"));
 		}
@@ -131,6 +134,7 @@ public class MetaData {
 			entry.put("flowType", info.get("flowType"));
 		}
 		if (mode == Mode.SEARCH) {
+			entry.put("tags", info.get("tags"));
 			entry.put("contact", info.get("processDocumentation.dataSetOwner.name"));
 			entry.put("validFromYear", info.get("processDocumentation.validFrom"));
 			entry.put("validUntilYear", info.get("processDocumentation.validUntil"));

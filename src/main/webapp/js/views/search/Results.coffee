@@ -37,7 +37,7 @@ define([
 				validUntilYear: 13
 				contact: 14
 				repositoryTags: 15
-				datasetTags: 16
+				tags: 16
 
 			initialize: (options) ->
 				@aggregations = {}

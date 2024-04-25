@@ -79,8 +79,8 @@ class DsEntryManager {
 	private void fillGenericVersion(DsVersion v, Reference ref, Map<String, Object> metaData) {
 		v.objectId = ref.objectId.name();
 		v.name = Maps.getString(metaData, "name");
-		var tags = Maps.getString(metaData, "tags");
-		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
+		var tags = Maps.getStringArray(metaData, "tags");
+		v.tags = tags != null ? Arrays.asList(tags) : new ArrayList<>();
 		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
