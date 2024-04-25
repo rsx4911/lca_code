@@ -37,8 +37,8 @@ public class UserManagerAreaController {
 		var result = new HashMap<String, Object>();
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.isDataManager()) {
-			result.put("repositories", repoService.getCount(true));
-			result.put("groups", groupService.getCount(true));
+			result.put("repositories", repoService.getCount());
+			result.put("groups", groupService.getCount());
 		}
 		if (currentUser.isUserManager()) {
 			result.put("users", userService.getCount());

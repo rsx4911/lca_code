@@ -27,11 +27,11 @@ public class RepositoryJsonWriter implements Closeable {
 	private final ZipStore zipStore;
 	private final OlcaRepository repo;
 
-	public static void writeCurrent(File gitDir, File cachedJsonFile, List<LibraryLink> libraries) {
+	public static void write(File gitDir, String commitId, File cachedJsonFile, List<LibraryLink> libraries) {
 		try (var repo = new OlcaRepository(gitDir)) {
 			var writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo().schemaVersion(), cachedJsonFile);
 			var categories = new JsonArray();
-			repo.entries.iterate(entry -> {
+			repo.entries.iterate(commitId, entry -> {
 				if (entry.typeOfEntry == EntryType.CATEGORY) {
 					categories.add(entry.path);
 				} else if (entry.typeOfEntry == EntryType.DATASET) {

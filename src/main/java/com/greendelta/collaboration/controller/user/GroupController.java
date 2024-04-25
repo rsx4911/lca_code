@@ -62,7 +62,8 @@ public class GroupController {
 			@RequestParam(name = "module", required = false) Module module,
 			@RequestParam(name = "onlyIfCanWrite", defaultValue = "false") boolean onlyIfCanWrite,
 			@RequestParam(name = "adminArea", defaultValue = "false") boolean adminArea) {
-		var result = service.getAll(page, pageSize, filter, adminArea, onlyIfCanWrite);
+		var all = service.getAll(adminArea, onlyIfCanWrite);
+		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all);
 		var user = userService.getCurrentUser();
 		return SearchResults.convert(result, group -> {
 			var map = Maps.of("name", (Object) group);

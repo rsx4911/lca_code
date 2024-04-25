@@ -95,8 +95,8 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		return new File(dir, "avatar");
 	}
 
-	public File getCachedJsonFile() {
-		return new File(dir, "cached-json.zip");
+	public File getCachedJsonFile(String commitId) {
+		return new File(dir, "cached-json-" + commitId + ".zip");
 	}
 
 	public static class InsufficientStorageException extends RuntimeException {

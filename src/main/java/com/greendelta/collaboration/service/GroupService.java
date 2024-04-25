@@ -16,8 +16,6 @@ import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.SearchResults;
-import com.greendelta.search.wrapper.SearchResult;
 
 @Service
 public class GroupService {
@@ -99,14 +97,8 @@ public class GroupService {
 		return true;
 	}
 
-	public long getCount(boolean adminArea) {
-		return getAll(adminArea, false).size();
-	}
-
-	public SearchResult<String> getAll(int page, int pageSize, String filter, boolean adminArea,
-			boolean onlyIfCanWrite) {
-		var accessible = getAll(adminArea, onlyIfCanWrite);
-		return SearchResults.pagedAndFiltered(page, pageSize, filter, accessible);
+	public long getCount() {
+		return getAll(true, false).size();
 	}
 
 	public long getRepositoryCount(String group) {
@@ -137,7 +129,7 @@ public class GroupService {
 		return groupDir.listFiles();
 	}
 
-	private List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
+	public List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();

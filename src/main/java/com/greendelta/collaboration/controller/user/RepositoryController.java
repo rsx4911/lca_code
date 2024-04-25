@@ -35,7 +35,6 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -61,12 +60,10 @@ public class RepositoryController {
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-	private final LibraryService libraryService;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
-			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
-			LibraryService libraryService) {
+			IndexService indexService, DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -75,7 +72,6 @@ public class RepositoryController {
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
-		this.libraryService = libraryService;
 	}
 
 	@GetMapping
@@ -84,23 +80,24 @@ public class RepositoryController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "group", required = false) String group,
-			@RequestParam(name = "onlyPublic", defaultValue = "false") boolean onlyPublic,
 			@RequestParam(name = "module", required = false) Module module) {
-		try (var all = service.getAll(page, pageSize, filter, onlyPublic, true)) {
+		try (var all = service.getAllAccessible()) {
+			all.sort();
+			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all, Repository::path);
 			if (module == null)
-				return Response.ok(SearchResults.convert(all, Repositories::map));
+				return Response.ok(SearchResults.convert(result, Repositories::map));
 			var user = userService.getCurrentUser();
 			switch (module) {
 				case DASHBOARD, GROUP:
-					return Response.ok(SearchResults.convert(all,
+					return Response.ok(SearchResults.convert(result,
 							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
 				case REVIEW:
-					return Response.ok(all.data.stream()
+					return Response.ok(all.stream()
 							.filter(repo -> accessService.canManageTaskIn(repo.path()))
 							.map(Repositories::map)
 							.toList());
 				default:
-					return Response.ok(all.data.stream().map(Repositories::map).toList());
+					return Response.ok(all.stream().map(Repositories::map).toList());
 			}
 		}
 	}
@@ -210,9 +207,6 @@ public class RepositoryController {
 				importJsonLd(repo, input.getInputStream(), commitMessage);
 			} else {
 				service.unpack(repo, input.getInputStream());
-			}
-			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-				repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
 			}
 			indexService.indexAsync(RepositoryPath.of(group, name));
 		} catch (IOException e) {
@@ -346,14 +340,6 @@ public class RepositoryController {
 						indexService.updateTagsAsync(RepositoryPath.of(group, name));
 					}
 					break;
-				case JSON_FILE_GENERATION:
-					try {
-						repo.settings.set(setting, value);
-						handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
-					} catch (IOException e) {
-						throw Response.error("Error creating cached json file");
-					}
-					break;
 				default:
 					repo.settings.set(setting, value);
 					break;
@@ -370,16 +356,6 @@ public class RepositoryController {
 		if (value instanceof List)
 			return (List<String>) value;
 		return new ArrayList<>();
-	}
-
-	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
-		var file = repo.getCachedJsonFile();
-		if (file.exists()) {
-			file.delete();
-		}
-		if (!create)
-			return;
-		service.generateJson(repo, libraryService.getLibraryUrlResolver());
 	}
 
 	@DeleteMapping("{group}/{name}")

@@ -35,8 +35,8 @@ public class RepositoryController {
 	}
 
 	@GetMapping
-	public List<Map<String, Object>> getPublic() {
-		try (var repositories = service.getPublic()) {
+	public List<Map<String, Object>> getReleased() {
+		try (var repositories = service.getReleased()) {
 			return repositories.stream().map(Repositories::map).toList();
 		}
 	}

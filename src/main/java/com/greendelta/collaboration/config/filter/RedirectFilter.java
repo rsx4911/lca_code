@@ -58,14 +58,14 @@ public class RedirectFilter implements Filter {
 			try {
 				var user = userService.getCurrentUser();
 				var publicIndex = request.getServletContext().getRealPath("index_public.html");
-				var publicRepositoriesEnabled = settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED);
+				var releasesEnabled = settings.is(ServerSetting.RELEASES_ENABLED);
 				var homepageEnabled = settings.is(ServerSetting.HOMEPAGE_ENABLED);
 				var searchEnabled = settings.searchConfig.isSearchAvailable();
 				var signUpEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
 				var redirectToLogin = (route.equals("") && !homepageEnabled)
 						|| (route.equals("search") && !searchEnabled)
 						|| (route.equals("sign-up") && !signUpEnabled)
-						|| !publicRepositoriesEnabled;
+						|| !releasesEnabled;
 				if (Routes.isLoginUrl(route) && !user.isAnonymous()) {
 					response.sendRedirect(request.getContextPath() + "/");
 				} else if (user.isAnonymous() && redirectToLogin && !route.equals("login")) {

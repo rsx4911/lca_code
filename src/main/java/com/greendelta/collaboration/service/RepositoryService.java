@@ -43,7 +43,6 @@ import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.SearchResults;
 
 @Service
 public class RepositoryService {
@@ -58,10 +57,11 @@ public class RepositoryService {
 	private final SettingsService settings;
 	private final FileService fileService;
 	private final TaskService taskService;
+	private final ReleaseService releaseService;
 
 	public RepositoryService(GroupService groupService, AccessService accessService,
 			MembershipService membershipService, UserService userService, CommentService commentService,
-			SettingsService settings, FileService fileService, TaskService taskService) {
+			SettingsService settings, FileService fileService, TaskService taskService, ReleaseService releaseService) {
 		this.groupService = groupService;
 		this.accessService = accessService;
 		this.membershipService = membershipService;
@@ -70,6 +70,7 @@ public class RepositoryService {
 		this.settings = settings;
 		this.fileService = fileService;
 		this.taskService = taskService;
+		this.releaseService = releaseService;
 	}
 
 	public Repository get(RepositoryPath path) {
@@ -275,12 +276,12 @@ public class RepositoryService {
 		}
 	}
 
-	public void generateJson(Repository repo, Function<LibraryLink, String> urlResolver) {
+	public void generateJson(Repository repo, String commitId, Function<LibraryLink, String> urlResolver) {
 		new Thread(() -> {
 			try {
 				var tmpFile = fileService.createTempFile();
-				RepositoryJsonWriter.writeCurrent(repo.dir, tmpFile, repo.linkedLibraries(urlResolver));
-				Files.copy(tmpFile, repo.getCachedJsonFile());
+				RepositoryJsonWriter.write(repo.dir, commitId, tmpFile, repo.linkedLibraries(urlResolver));
+				Files.copy(tmpFile, repo.getCachedJsonFile(commitId));
 				tmpFile.delete();
 			} catch (IOException e) {
 				log.error("Error generating json file", e);
@@ -300,34 +301,21 @@ public class RepositoryService {
 		return userGroup.listFiles().length;
 	}
 
-	public long getCount(boolean adminArea) {
-		try (var repos = getAll(false, adminArea)) {
+	public long getCount() {
+		try (var repos = getAll(true)) {
 			return repos.size();
 		}
 	}
 
-	public RepositorySearchResult getAll(int page, int pageSize, String filter, boolean onlyPublic,
-			boolean adminArea) {
-		var accessible = getAll(onlyPublic, adminArea);
-		try {
-			accessible.sort();
-			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, Repository::path);
-			return new RepositorySearchResult(result);
-		} catch (Throwable e) {
-			accessible.close();
-			return new RepositorySearchResult();
-		}
+	public RepositoryList getAll() {
+		return getAll(false);
 	}
 
 	public RepositoryList getAllAccessible() {
-		return getAll(false, true);
+		return getAll(true);
 	}
 
-	public RepositoryList getPublic() {
-		return getAll(true, false);
-	}
-
-	private RepositoryList getAll(boolean onlyPublic, boolean adminArea) {
+	private RepositoryList getAll(boolean adminArea) {
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new RepositoryList();
@@ -345,27 +333,36 @@ public class RepositoryService {
 				if (!accessService.canRead(repoPath.toString(), !adminArea))
 					continue;
 				var repo = get(group.getName(), name.getName());
-				if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-					repo.close();
-					continue;
-				}
 				repos.add(repo);
 			}
 		}
 		return repos;
 	}
 
-	public List<String> getPublicRepositoryOrder() {
+	public RepositoryList getReleased() {
+		var all = getAll();
+		var released = new RepositoryList();
+		for (var repo : all) {
+			if (!releaseService.hasReleases(repo.path())) {
+				repo.close();
+				continue;
+			}
+			released.add(repo);
+		}
+		return released;
+	}
+
+	public List<String> getRepositoryOrder() {
 		return getRepositoryList(ServerSetting.REPOSITORIES_ORDER, true);
 	}
 
-	public List<String> getPublicHiddenRepositories() {
+	public List<String> getHiddenRepositories() {
 		return getRepositoryList(ServerSetting.REPOSITORIES_HIDDEN, false);
 	}
 
 	private List<String> getRepositoryList(ServerSetting key, boolean addMissing) {
 		List<String> repositoryArray = settings.get(key, new ArrayList<>());
-		try (var repos = getPublic()) {
+		try (var repos = getReleased()) {
 			var repoMap = repos.stream()
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
 			var repoIds = new ArrayList<String>();

@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.service.user;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,10 +11,8 @@ import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.GroupSetting;
-import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.Repository.RepositoryPath;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.SettingsService;
 
 @Service
@@ -23,14 +20,14 @@ public class AccessService {
 
 	private final UserService userService;
 	private final MembershipService membershipService;
+	private final ReleaseService releaseService;
 	private final GroupService groupService;
-	private final SettingsService settings;
 
-	public AccessService(UserService userService, MembershipService membershipService,
+	public AccessService(UserService userService, MembershipService membershipService, ReleaseService releaseService,
 			SettingsService settings) {
 		this.userService = userService;
 		this.membershipService = membershipService;
-		this.settings = settings;
+		this.releaseService = releaseService;
 		// cannot inject group service - would result in a dependency loop
 		this.groupService = new GroupService(this, membershipService, userService, settings);
 	}
@@ -40,7 +37,7 @@ public class AccessService {
 	}
 
 	public boolean canRead(String groupOrRepo, boolean ignoreDataManager) {
-		if (isPublic(groupOrRepo))
+		if (releaseService.hasReleases(groupOrRepo))
 			return true;
 		var user = userService.getCurrentUser();
 		if (!ignoreDataManager && user.isDataManager())
@@ -205,25 +202,6 @@ public class AccessService {
 
 	private boolean isGroup(String groupOrRepo) {
 		return !groupOrRepo.contains("/");
-	}
-
-	private boolean isPublic(String groupOrRepo) {
-		if (!settings.is(ServerSetting.PUBLIC_REPOSITORY_ENABLED))
-			return false;
-		String repositoryPath = settings.get(ServerSetting.REPOSITORY_PATH);
-		if (repositoryPath == null)
-			return false;
-		var dir = new File(repositoryPath, groupOrRepo);
-		if (!isGroup(groupOrRepo))
-			return settings.is(RepositorySetting.PUBLIC_ACCESS, groupOrRepo);
-		if (!dir.isDirectory() || dir.listFiles() == null)
-			return false;
-		for (var child : dir.listFiles()) {
-			var path = RepositoryPath.of(groupOrRepo, child.getName()).toString();
-			if (settings.is(RepositorySetting.PUBLIC_ACCESS, path))
-				return true;
-		}
-		return false;
 	}
 
 }

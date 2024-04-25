@@ -13,7 +13,7 @@ public enum ServerSetting implements SettingKey {
 	MESSAGING_ENABLED(Boolean.class, false),
 	TASKS_ENABLED(Boolean.class, true),
 	COMMENTS_ENABLED(Boolean.class, true),
-	PUBLIC_REPOSITORY_ENABLED(Boolean.class, false),
+	RELEASES_ENABLED(Boolean.class, false),
 	NOTIFICATIONS_ENABLED(Boolean.class, false),
 	USER_REGISTRATION_ENABLED(Boolean.class, false),
 	USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, false),

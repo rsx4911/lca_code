@@ -46,8 +46,10 @@ public class DeleteService {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
 			throw Response.forbidden("User " + user.id, "DELETE");
-		try (var result = repoService.getAll(0, 0, user.username + "/", false, false)) {
-			result.data.forEach(this::delete);
+		for (var repo : repoService.getAll()) {
+			if (repo.group.equals(user.username)) {
+				delete(repo);
+			}
 		}
 		groupService.delete(user.username);
 		teamService.getTeamsFor(user).forEach(team -> {
@@ -120,8 +122,8 @@ public class DeleteService {
 	public void deleteGroup(String name) {
 		if (!accessService.canDelete(name))
 			throw Response.forbidden(name, "DELETE");
-		try (var result = repoService.getAll(0, 0, name + "/", false, false)) {
-			for (Repository repo : result.data) {
+		for (var repo : repoService.getAll()) {
+			if (repo.group.equals(name)) {
 				delete(repo);
 			}
 		}

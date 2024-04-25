@@ -6,14 +6,12 @@ import com.greendelta.collaboration.util.JacksonTypes;
 public enum RepositorySetting implements SettingKey {
 
 	AVATAR(byte[].class),
-	PUBLIC_ACCESS(Boolean.class, false),
 	PROHIBIT_COMMITS(Boolean.class, false),
 	COMMENT_APPROVAL(Boolean.class, false),
-	JSON_FILE_GENERATION(Boolean.class, false),
 	MAX_SIZE(Long.class, 0l),
+	TAGS(JacksonTypes.STRING_LIST),
 	LABEL(String.class),
 	VERSION(String.class),
-	TAGS(JacksonTypes.STRING_LIST),
 	DESCRIPTION(String.class),
 	SOURCE_INFO(String.class),
 	CONTACT_INFO(String.class),

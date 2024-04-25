@@ -29,8 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.glad.ProcessType;
-import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -49,10 +49,12 @@ public class GladController {
 			"publiclyAccessible"));
 
 	private final RepositoryService repoService;
+	private final ReleaseService releaseService;
 	private final SettingsService settings;
 
-	public GladController(RepositoryService repoService, SettingsService settings) {
+	public GladController(RepositoryService repoService, ReleaseService releaseService, SettingsService settings) {
 		this.repoService = repoService;
+		this.releaseService = releaseService;
 		this.settings = settings;
 	}
 
@@ -72,14 +74,15 @@ public class GladController {
 				throw Response.notFound("No repository with id " + group + "/" + name + " found");
 			input.paths.stream().forEach(path -> {
 				repo.references.find().path(path).iterate(ref -> {
+					var isReleased = releaseService.isReleased(repo.path(), ref.commitId);
 					var data = loadProcessData(repo, ref);
 					data.put("format", "JSON_LD");
 					data.put("dataprovider", input.dataprovider);
 					String baseUrl = config.getServerUrl();
 					data.put("dataSetUrl", baseUrl + "/ws/public/browse/" + repo.path() + "/PROCESS/"
 							+ ref.refId + "?commitId=" + ref.commitId);
-					data.put("publiclyAccessible", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
-					data.put("free", repo.settings.is(RepositorySetting.PUBLIC_ACCESS));
+					data.put("publiclyAccessible", isReleased);
+					data.put("free", isReleased);
 					for (var key : new ArrayList<>(data.keySet())) {
 						if (!GLAD_FIELDS.contains(key)) {
 							data.remove(key);

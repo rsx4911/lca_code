@@ -34,7 +34,7 @@ public class SettingsController {
 		var user = userService.getCurrentUser();
 		var isAdmin = user != null && user.isAdmin();
 		if (isAdmin) {
-			try (var repos = repoService.getPublic()) {
+			try (var repos = repoService.getReleased()) {
 				var paths = repos.stream().map(repo -> repo.path()).toList();
 				cleanup(ServerSetting.REPOSITORIES_ORDER, paths, true);
 				cleanup(ServerSetting.REPOSITORIES_HIDDEN, paths, false);

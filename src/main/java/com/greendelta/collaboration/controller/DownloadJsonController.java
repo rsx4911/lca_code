@@ -23,6 +23,7 @@ import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.JsonWriter;
 import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -33,13 +34,15 @@ public class DownloadJsonController extends DownloadController {
 
 	private final RepositoryService repoService;
 	private final LibraryService libraryService;
+	private final ReleaseService releaseService;
 	private final FileService fileService;
 
 	public DownloadJsonController(RepositoryService repoService, UserService userService,
-			LibraryService libraryService, FileService fileService) {
+			LibraryService libraryService, ReleaseService releaseService, FileService fileService) {
 		super(repoService, userService);
 		this.repoService = repoService;
 		this.libraryService = libraryService;
+		this.releaseService = releaseService;
 		this.fileService = fileService;
 	}
 
@@ -48,8 +51,11 @@ public class DownloadJsonController extends DownloadController {
 	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
 		if (token.startsWith("repository_")) {
 			try (var repo = repoService.get(token.substring(11).replace("@", "/"))) {
-				if (repo.getCachedJsonFile().exists())
-					return Response.ok(repo.toFilename(), repo.getCachedJsonFile());
+				// TODO offer all cached json files, not just the latest
+				var latestRelease = releaseService.getLatest(repo.path());
+				var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
+				if (cachedJsonFile.exists())
+					return Response.ok(repo.toFilename(), cachedJsonFile);
 			}
 		}
 		return super.download(token);
@@ -61,6 +67,7 @@ public class DownloadJsonController extends DownloadController {
 			@PathVariable("repository") String repository,
 			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestParam(name = "path", required = false) String path) {
+		// TODO offer all cached json files, not just the latest
 		if (isCompleteCurrentRepo(group, repository, commitId, path))
 			return "repository_" + group + "@" + repository;
 		return super.prepare(group, repository, commitId, path);
@@ -68,7 +75,10 @@ public class DownloadJsonController extends DownloadController {
 
 	private boolean isCompleteCurrentRepo(String group, String repository, String commitId, String path) {
 		try (var repo = repoService.get(group, repository)) {
-			if (!repo.getCachedJsonFile().exists())
+			// TODO offer all cached json files, not just the latest
+			var latestRelease = releaseService.getLatest(repo.path());
+			var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
+			if (!cachedJsonFile.exists())
 				return false; // is not cached
 			if (!Strings.nullOrEmpty(path))
 				return false; // is not complete repo
