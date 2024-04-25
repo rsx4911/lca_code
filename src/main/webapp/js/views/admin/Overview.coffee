@@ -124,7 +124,8 @@ define([
 				Layers.promptInput 'Announcement', 'textarea', @serverInfo.announcementMessage, (value) =>
 					$.ajax
 						type: 'PUT'
-						url: 'ws/admin/area/announce'
+						url: if value then 'ws/admin/area/announce' else 'ws/admin/area/clearAnnouncement'
+						contentType: if value then 'text/plain' else null
 						data: value
 						success: () => 
 							Backbone.history.loadUrl()
