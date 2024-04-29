@@ -1,19 +1,18 @@
 package com.greendelta.collaboration.config.database;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.openlca.util.Strings;
 
 class Updates {
 
 	private static final int CURRENT_SCHEMA_VERSION = 2;
 	private final Statement s;
 
-	static void run(Connection con) throws SQLException, IOException {
-		try (var s = con.createStatement()) {
-			new Updates(s).run();
-		}
+	static void checkAndRun(Statement s) throws SQLException, IOException {
+		new Updates(s).run();
 	}
 
 	private Updates(Statement s) {
@@ -59,7 +58,10 @@ class Updates {
 		try (var rs = s.executeQuery("SELECT max(id) FROM setting")) {
 			if (!rs.next())
 				return 1;
-			return Long.parseLong(rs.getString(1)) + 1;
+			var value = rs.getString(1);
+			if (Strings.nullOrEmpty(value))
+				return 1;
+			return Long.parseLong(value) + 1;
 		}
 	}
 

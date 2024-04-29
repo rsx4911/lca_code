@@ -27,11 +27,12 @@ class Update1 {
 		createReleaseTable();
 		createReleases();
 		s.executeUpdate("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
+		s.executeUpdate("DROP TABLE IF EXISTS restriction_set");
 		return UPDATE_TO;
 	}
 
 	private void createReleaseTable() throws SQLException {
-		s.executeUpdate("CREATE TABLE release_info ("
+		s.executeUpdate("CREATE TABLE IF NOT EXISTS release_info ("
 				+ " id BIGINT NOT NULL,"
 				+ " repository_path VARCHAR(255),"
 				+ " commit_id VARCHAR(255),"
