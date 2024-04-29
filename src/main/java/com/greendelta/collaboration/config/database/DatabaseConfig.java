@@ -1,11 +1,8 @@
 package com.greendelta.collaboration.config.database;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +30,7 @@ public class DatabaseConfig implements HibernatePropertiesCustomizer {
 		try (var con = dataSource.getConnection();
 				var s = con.createStatement()) {
 			if (!databaseInitialized(con)) {
-				initializeDatabase(s);
+				Updates.runScript(s, "schema.sql");
 			}
 			Updates.checkAndRun(s);
 		} catch (SQLException | IOException e) {
@@ -56,21 +53,6 @@ public class DatabaseConfig implements HibernatePropertiesCustomizer {
 				}
 			}
 			return true;
-		}
-	}
-
-	private void initializeDatabase(Statement s) throws SQLException, IOException {
-		try (var reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("schema.sql")))) {
-			var next = "";
-			for (var line : reader.lines().toList()) {
-				next += line;
-				while (next.contains(";")) {
-					var semicolon = next.indexOf(";");
-					var update = next.substring(0, semicolon + 1);
-					next = semicolon == next.length() - 1 ? "" : next.substring(semicolon + 1);
-					s.executeUpdate(update);
-				}
-			}
 		}
 	}
 

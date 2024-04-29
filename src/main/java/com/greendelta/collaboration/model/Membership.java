@@ -27,7 +27,7 @@ public class Membership extends AbstractEntity {
 	@Column
 	public String memberOf;
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public Role role;
 

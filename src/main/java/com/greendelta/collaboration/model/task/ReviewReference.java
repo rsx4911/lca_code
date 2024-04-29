@@ -20,7 +20,7 @@ import com.greendelta.collaboration.model.User;
 @Table
 public class ReviewReference extends AbstractEntity {
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public ModelType type;
 

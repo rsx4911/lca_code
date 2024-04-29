@@ -17,7 +17,7 @@ import com.greendelta.collaboration.model.AbstractEntity;
 @Table
 public class Setting extends AbstractEntity {
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	private SettingType type;
 

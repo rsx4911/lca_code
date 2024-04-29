@@ -1,7 +1,10 @@
 package com.greendelta.collaboration.model;
 
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,9 +23,10 @@ public class Team extends AbstractEntity {
 	@Column
 	public String name;
 
-	@Column(columnDefinition = "LONGBLOB")
+	@Column
 	@Lob
-	public byte[] avatar;
+	@JsonIgnore
+	public Blob avatar;
 
 	/**
 	 * Don't add/remove users directly, use teamService.addMember/removeMember

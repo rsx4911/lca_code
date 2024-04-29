@@ -38,7 +38,7 @@ public class Comment extends AbstractEntity {
 	@JoinColumn
 	public Comment replyTo;
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public Role restrictedToRole;
 

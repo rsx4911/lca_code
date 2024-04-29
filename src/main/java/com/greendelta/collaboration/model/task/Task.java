@@ -43,7 +43,7 @@ public abstract class Task extends AbstractEntity {
 	@Temporal(TemporalType.TIMESTAMP)
 	public Date endDate;
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public TaskState state;
 

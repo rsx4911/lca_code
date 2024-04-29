@@ -1,6 +1,8 @@
 package com.greendelta.collaboration.config.database;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -10,6 +12,21 @@ class Updates {
 
 	private static final int CURRENT_SCHEMA_VERSION = 2;
 	private final Statement s;
+
+	static void runScript(Statement s, String script) throws IOException, SQLException {
+		try (var reader = new BufferedReader(new InputStreamReader(Updates.class.getResourceAsStream(script)))) {
+			var next = "";
+			for (var line : reader.lines().toList()) {
+				next += line;
+				while (next.contains(";")) {
+					var semicolon = next.indexOf(";");
+					var update = next.substring(0, semicolon + 1);
+					next = semicolon == next.length() - 1 ? "" : next.substring(semicolon + 1);
+					s.executeUpdate(update);
+				}
+			}
+		}
+	}
 
 	static void checkAndRun(Statement s) throws SQLException, IOException {
 		new Updates(s).run();

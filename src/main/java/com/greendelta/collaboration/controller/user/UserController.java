@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.BlobProxy;
 import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -220,7 +221,7 @@ public class UserController {
 		if (user == null)
 			throw Response.notFound();
 		try {
-			user.avatar = file != null ? file.getBytes() : null;
+			user.avatar = file != null ? BlobProxy.generateProxy(file.getBytes()) : null;
 			user = service.update(user);
 		} catch (IOException e) {
 			throw Response.error("Error reading avatar file");

@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.model;
 
+import java.sql.Blob;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.greendelta.collaboration.util.Dates;
 
 import jakarta.persistence.Column;
@@ -40,9 +42,10 @@ public class User extends AbstractEntity implements UserDetails, OidcUser {
 	@Column
 	public String password;
 
-	@Column(columnDefinition = "LONGBLOB")
+	@Column
 	@Lob
-	public byte[] avatar;
+	@JsonIgnore
+	public Blob avatar;
 
 	@Column
 	public String twoFactorSecret;

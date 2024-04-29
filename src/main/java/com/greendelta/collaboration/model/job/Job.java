@@ -16,7 +16,7 @@ import jakarta.persistence.TemporalType;
 @Table
 public class Job extends AbstractEntity {
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public JobType type;
 

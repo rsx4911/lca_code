@@ -1,43 +1,39 @@
-DROP TABLE IF EXISTS comment;
-CREATE TABLE comment (
+CREATE TABLE IF NOT EXISTS comment (
   id BIGINT NOT NULL, 
   approved BIT, 
   date DATETIME(6), 
   commit_id VARCHAR(255), 
-  model_type VARCHAR(255), 
+  model_type ENUM('PROJECT', 'IMPACT_METHOD', 'IMPACT_CATEGORY', 'PRODUCT_SYSTEM', 'PROCESS', 'FLOW', 'FLOW_PROPERTY', 'UNIT_GROUP', 'ACTOR', 'SOURCE', 'CATEGORY', 'LOCATION', 'SOCIAL_INDICATOR', 'CURRENCY', 'PARAMETER', 'DQ_SYSTEM', 'RESULT', 'EPD'), 
   path VARCHAR(4000), 
   ref_id VARCHAR(255), 
   released BIT, 
   repository_path VARCHAR(255), 
-  restricted_to_role VARCHAR(255), 
+  restricted_to_role ENUM('NONE', 'READER', 'CONTRIBUTOR', 'REVIEWER', 'EDITOR', 'OWNER'), 
   text VARCHAR(4000), 
   reply_to_id BIGINT, 
   user_id BIGINT, 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS job;
-CREATE TABLE job (
+CREATE TABLE IF NOT EXISTS job (
   id BIGINT NOT NULL, 
   data VARCHAR(255), 
   token VARCHAR(255), 
-  type VARCHAR(255), 
+  type ENUM('RESET_PASSWORD'), 
   valid_until DATE, 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS membership;
-CREATE TABLE membership (
+CREATE TABLE IF NOT EXISTS membership (
   id BIGINT NOT NULL, 
   member_of VARCHAR(255), 
-  role VARCHAR(255), 
+  role ENUM('NONE', 'READER', 'CONTRIBUTOR', 'REVIEWER', 'EDITOR', 'OWNER'), 
   team_id BIGINT, 
   user_id BIGINT, 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS message;
-CREATE TABLE message (
+CREATE TABLE IF NOT EXISTS message (
   id BIGINT NOT NULL, 
   date DATETIME(6), 
   read_date DATETIME(6), 
@@ -49,19 +45,17 @@ CREATE TABLE message (
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS review_reference;
-CREATE TABLE review_reference (
+CREATE TABLE IF NOT EXISTS review_reference (
   id BIGINT NOT NULL, 
   commit_id VARCHAR(255), 
   ref_id VARCHAR(255), 
-  type VARCHAR(255), 
+  type ENUM('PROJECT', 'IMPACT_METHOD', 'IMPACT_CATEGORY', 'PRODUCT_SYSTEM', 'PROCESS', 'FLOW', 'FLOW_PROPERTY', 'UNIT_GROUP', 'ACTOR', 'SOURCE', 'CATEGORY', 'LOCATION', 'SOCIAL_INDICATOR', 'CURRENCY', 'PARAMETER', 'DQ_SYSTEM', 'RESULT', 'EPD'), 
   reviewer_id BIGINT, 
   references_id BIGINT, 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS task_assignment;
-CREATE TABLE task_assignment (
+CREATE TABLE IF NOT EXISTS task_assignment (
   id BIGINT NOT NULL, 
   canceled BIT, 
   end_date DATETIME(6), 
@@ -73,56 +67,49 @@ CREATE TABLE task_assignment (
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-
-DROP TABLE IF EXISTS review;
-CREATE TABLE review (
+CREATE TABLE IF NOT EXISTS review (
   id BIGINT NOT NULL, 
   comment VARCHAR(4000), 
   end_date DATETIME(6), 
   name VARCHAR(255), 
   repository_path VARCHAR(255), 
   start_date DATETIME(6), 
-  state VARCHAR(255), 
+  state ENUM('CREATED', 'PROCESSING', 'VERIFYING', 'CANCELED', 'COMPLETED'), 
   initiator_id BIGINT, 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS setting;
-CREATE TABLE setting (
+CREATE TABLE IF NOT EXISTS setting (
   id BIGINT NOT NULL, 
   data LONGBLOB, 
   name VARCHAR(255), 
   owner VARCHAR(255), 
-  type VARCHAR(255), 
+  type ENUM('SERVER_SETTING', 'IMPRINT_SETTING', 'MAIL_SETTING', 'SEARCH_SETTING', 'REPOSITORY_SETTING', 'GROUP_SETTING', 'LIBRARY_SETTING'), 
   value VARCHAR(4000), 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS team_users;
-CREATE TABLE team_users (
+CREATE TABLE IF NOT EXISTS team_users (
   team_id BIGINT NOT NULL,
   users_id BIGINT NOT NULL
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS team;
-CREATE TABLE team (
+CREATE TABLE IF NOT EXISTS team (
   id BIGINT NOT NULL, 
-  avatar LONGBLOB, 
+  avatar MEDIUMBLOB, 
   name VARCHAR(255), 
   teamname VARCHAR(255), 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS user_blocked_users;
-CREATE TABLE user_blocked_users (
+CREATE TABLE IF NOT EXISTS user_blocked_users (
   user_id BIGINT NOT NULL,
   blocked_users_id BIGINT NOT NULL
 ) engine = InnoDB;
 
-DROP TABLE IF EXISTS user;
-CREATE TABLE user (
+CREATE TABLE IF NOT EXISTS user (
   id BIGINT NOT NULL, 
-  avatar LONGBLOB, 
+  avatar MEDIUMBLOB, 
   email VARCHAR(255), 
   name VARCHAR(255), 
   password VARCHAR(255), 
@@ -143,6 +130,24 @@ CREATE TABLE user (
   user_manager BIT, 
   two_factor_secret VARCHAR(255), 
   username VARCHAR(255), 
+  PRIMARY KEY (id)
+) engine = InnoDB;
+
+CREATE TABLE IF NOT EXISTS release_info (
+  id BIGINT NOT NULL,
+  repository_path VARCHAR(255),
+  commit_id VARCHAR(255),
+  label VARCHAR(255),
+  version VARCHAR(255),
+  description VARCHAR(1000),
+  source_info VARCHAR(1000),
+  contact_info VARCHAR(1000),
+  project_info VARCHAR(1000),
+  project_funding VARCHAR(1000),
+  appropriate_use VARCHAR(1000),
+  dq_assessment VARCHAR(1000),
+  citation VARCHAR(1000),
+  type_of_data VARCHAR(1000),
   PRIMARY KEY (id)
 ) engine = InnoDB;
 

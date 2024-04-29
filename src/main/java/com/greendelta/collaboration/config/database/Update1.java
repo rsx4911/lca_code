@@ -24,32 +24,12 @@ class Update1 {
 	}
 
 	int run() throws SQLException, IOException {
-		createReleaseTable();
+		Updates.runScript(s, "update1.sql");
 		createReleases();
 		s.executeUpdate("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
-		s.executeUpdate("DROP TABLE IF EXISTS restriction_set");
 		return UPDATE_TO;
 	}
 
-	private void createReleaseTable() throws SQLException {
-		s.executeUpdate("CREATE TABLE IF NOT EXISTS release_info ("
-				+ " id BIGINT NOT NULL,"
-				+ " repository_path VARCHAR(255),"
-				+ " commit_id VARCHAR(255),"
-				+ " label VARCHAR(255),"
-				+ " version VARCHAR(255),"
-				+ " description VARCHAR(1000),"
-				+ " source_info VARCHAR(1000),"
-				+ " contact_info VARCHAR(1000),"
-				+ " project_info VARCHAR(1000),"
-				+ " project_funding VARCHAR(1000),"
-				+ " appropriate_use VARCHAR(1000),"
-				+ " dq_assessment VARCHAR(1000),"
-				+ " citation VARCHAR(1000),"
-				+ " type_of_data VARCHAR(1000),"
-				+ " PRIMARY KEY (id)"
-				+ " ) engine = InnoDB;");
-	}
 
 	private void createReleases() throws SQLException, IOException {
 		var gitDir = getGitDir();
