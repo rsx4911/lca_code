@@ -40,7 +40,9 @@ define([
 		changelog: (group, repo, commitId) ->
 			$('iframe#download-frame').remove()
 			Layers.showProgressIndicator ['Preparing', 'change log']
-			url = "ws/changelog/#{group}/#{repo}/#{commitId||''}"
+			url = "ws/changelog/#{group}/#{repo}"
+			if commitId
+				url += "/#{commitId}"
 			$.ajax
 				type: 'GET'
 				url: url
