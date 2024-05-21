@@ -322,7 +322,6 @@ public class RepositoryController {
 		}
 	}
 
-	@SuppressWarnings("incomplete-switch")
 	@PutMapping("settings/{group}/{name}/{setting}")
 	public void setSetting(
 			@PathVariable("group") String group,
