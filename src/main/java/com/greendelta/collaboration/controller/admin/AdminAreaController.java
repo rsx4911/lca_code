@@ -41,11 +41,6 @@ import com.greendelta.collaboration.util.Maps;
 @RequestMapping("ws/admin/area")
 public class AdminAreaController {
 
-	// request listener is not counting calls to the server info, to avoid
-	// counting itself. To avoid hiding this information in the RequestListener
-	// task, the path is specified here (avoid error if changes on the path
-	// occur)
-	public static final String SERVER_INFO_PATH = "/ws/admin/area/serverInfo";
 	private final RepositoryService repoService;
 	private final IndexService indexService;
 	private final SettingsService settings;
