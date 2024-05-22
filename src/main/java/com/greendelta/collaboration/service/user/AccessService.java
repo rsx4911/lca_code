@@ -12,7 +12,6 @@ import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.SettingsService;
 
 @Service
@@ -20,27 +19,18 @@ public class AccessService {
 
 	private final UserService userService;
 	private final MembershipService membershipService;
-	private final ReleaseService releaseService;
 	private final GroupService groupService;
 
-	public AccessService(UserService userService, MembershipService membershipService, ReleaseService releaseService,
-			SettingsService settings) {
+	public AccessService(UserService userService, MembershipService membershipService, SettingsService settings) {
 		this.userService = userService;
 		this.membershipService = membershipService;
-		this.releaseService = releaseService;
 		// cannot inject group service - would result in a dependency loop
 		this.groupService = new GroupService(this, membershipService, userService, settings);
 	}
 
 	public boolean canRead(String groupOrRepo) {
-		return canRead(groupOrRepo, false);
-	}
-
-	public boolean canRead(String groupOrRepo, boolean ignoreDataManager) {
-		if (releaseService.hasReleases(groupOrRepo))
-			return true;
 		var user = userService.getCurrentUser();
-		if (!ignoreDataManager && user.isDataManager())
+		if (user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;
@@ -49,7 +39,7 @@ public class AccessService {
 				return true;
 		if (!repositoryIsActive(groupOrRepo))
 			return false;
-		return hasPermissionTo(user, Permission.READ, groupOrRepo, ignoreDataManager);
+		return hasPermissionTo(user, Permission.READ, groupOrRepo);
 	}
 
 	private boolean repositoryIsActive(String repository) {
@@ -154,8 +144,6 @@ public class AccessService {
 		var user = userService.getCurrentUser();
 		if (user.isDataManager())
 			return true;
-		if (!canRead(repositoryPath))
-			return false;
 		return hasPermissionTo(user, Permission.MANAGE_COMMENTS, repositoryPath);
 	}
 
@@ -164,7 +152,7 @@ public class AccessService {
 	}
 
 	public boolean canReviewIn(User user, String repositoryPath) {
-		return hasPermissionTo(user, Permission.REVIEW, repositoryPath, true);
+		return hasPermissionTo(user, Permission.REVIEW, repositoryPath);
 	}
 
 	public boolean canManageTaskIn(String repositoryPath) {
@@ -181,11 +169,7 @@ public class AccessService {
 	}
 
 	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo) {
-		return hasPermissionTo(user, permission, groupOrRepo, false);
-	}
-
-	private boolean hasPermissionTo(User user, Permission permission, String groupOrRepo, boolean ignoreDataManager) {
-		if (!ignoreDataManager && user.isDataManager())
+		if (permission != Permission.REVIEW && user.isDataManager())
 			return true;
 		if (isOwnNamespace(user, groupOrRepo))
 			return true;

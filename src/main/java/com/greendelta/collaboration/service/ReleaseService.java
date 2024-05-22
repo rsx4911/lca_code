@@ -15,6 +15,10 @@ public class ReleaseService {
 	public ReleaseService(Dao<ReleaseInfo> dao) {
 		this.dao = dao;
 	}
+	
+	public List<ReleaseInfo> getAll() {
+		return dao.getAll();
+	}
 
 	public boolean hasReleases(String groupOrRepository) {
 		var releases = dao.query(

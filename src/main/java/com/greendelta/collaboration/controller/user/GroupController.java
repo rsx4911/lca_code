@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +64,17 @@ public class GroupController {
 			@RequestParam(name = "module", required = false) Module module,
 			@RequestParam(name = "onlyIfCanWrite", defaultValue = "false") boolean onlyIfCanWrite,
 			@RequestParam(name = "adminArea", defaultValue = "false") boolean adminArea) {
-		var all = service.getAll(adminArea, onlyIfCanWrite);
+		var all = service.getAllAccessible();
+		if (onlyIfCanWrite) {
+			all = all.stream()
+					.filter(Predicate.not(accessService::canWrite))
+					.collect(Collectors.toList());
+		}
+		if (adminArea) {
+			all = all.stream()
+					.filter(Predicate.not(service::isUserNamespace))
+					.collect(Collectors.toList());
+		}
 		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all);
 		var user = userService.getCurrentUser();
 		return SearchResults.convert(result, group -> {
@@ -118,7 +130,8 @@ public class GroupController {
 		if (service.exists(name))
 			throw Response.badRequest("name", "Group " + name + " already exists");
 		if (!service.create(name, false))
-			throw Response.error("Could not create group, does the configured 'Repositories root directory' exist and can be write-accessed?");
+			throw Response.error(
+					"Could not create group, does the configured 'Repositories root directory' exist and can be write-accessed?");
 		notificationService.groupCreated(name).send();
 		return Response.created(Collections.singletonMap("name", name));
 	}
@@ -145,7 +158,7 @@ public class GroupController {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
 		var user = userService.getCurrentUser();
-		if (setting.isAdminSetting && !user.isDataManager() && !user.isUserManager())
+		if (setting.isAdminSetting() && !user.isDataManager() && !user.isUserManager())
 			throw Response.forbidden(name, "SET_SETTING");
 		var value = data.get("value").toString();
 		service.getSettings(name).set(setting, value);

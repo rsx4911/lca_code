@@ -99,8 +99,17 @@ public enum ServerSetting implements SettingKey {
 		return (TypeReference<V>) subType;
 	}
 
-	public boolean isPublic() {
-		return this != GLAD_API_KEY && this != REPOSITORY_PATH;
+	@Override
+	public boolean isPublicSetting() {
+		return !this.name().startsWith("GLAD_") 
+				&& !this.name().endsWith("_ENABLED")
+				&& this != LIBRARY_PATH
+				&& this != REPOSITORY_PATH;
+	}
+	
+	@Override
+	public boolean isAdminSetting() {
+		return !isPublicSetting();
 	}
 
 }

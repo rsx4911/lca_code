@@ -454,13 +454,14 @@ public class SettingsService {
 			return toMap(filter, false);
 		}
 
-		public Map<String, Object> toPreservedMap(Function<T, Boolean> filter) {
-			return toMap(filter, true);
+		public Map<String, Object> toPreservedMap() {
+			return toMap(null, true);
 		}
 
 		@SuppressWarnings("unchecked")
 		private Map<String, Object> toMap(Function<T, Boolean> filter, boolean preserveKeys) {
 			var map = new HashMap<String, Object>();
+			var user = userService.getCurrentUser();
 			if (local != null) {
 				local.forEach((k, v) -> map.put(preserveKeys ? k.name() : toFieldName(k), v));
 				return map;
@@ -469,6 +470,10 @@ public class SettingsService {
 				if (filter != null)
 					if (!filter.apply(key))
 						continue;
+				if (key.isAdminSetting() && !user.isAdmin())
+					continue;
+				if (user.isAnonymous() && !key.isPublicSetting())
+					continue;
 				var field = key.name();
 				if (!preserveKeys) {
 					field = toFieldName(key);

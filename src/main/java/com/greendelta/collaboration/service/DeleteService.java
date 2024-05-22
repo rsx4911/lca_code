@@ -46,7 +46,7 @@ public class DeleteService {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
 			throw Response.forbidden("User " + user.id, "DELETE");
-		for (var repo : repoService.getAll()) {
+		for (var repo : repoService.getAllAccessible()) {
 			if (repo.group.equals(user.username)) {
 				delete(repo);
 			}
@@ -122,7 +122,7 @@ public class DeleteService {
 	public void deleteGroup(String name) {
 		if (!accessService.canDelete(name))
 			throw Response.forbidden(name, "DELETE");
-		for (var repo : repoService.getAll()) {
+		for (var repo : repoService.getAllAccessible()) {
 			if (repo.group.equals(name)) {
 				delete(repo);
 			}

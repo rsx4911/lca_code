@@ -97,7 +97,7 @@ public class RepositoryService {
 			throw Response.notFound("No repository '" + id + "' found");
 		if (!Repository.getDir(path, group, name).exists())
 			throw Response.notFound("No repository '" + group + "/" + name + "' found");
-		if (!accessService.canRead(id))
+		if (!accessService.canRead(id) && !releaseService.hasReleases(id))
 			throw Response.forbidden(id, "READ");
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
@@ -302,20 +302,12 @@ public class RepositoryService {
 	}
 
 	public long getCount() {
-		try (var repos = getAll(true)) {
+		try (var repos = getAllAccessible()) {
 			return repos.size();
 		}
 	}
 
-	public RepositoryList getAll() {
-		return getAll(false);
-	}
-
 	public RepositoryList getAllAccessible() {
-		return getAll(true);
-	}
-
-	private RepositoryList getAll(boolean adminArea) {
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new RepositoryList();
@@ -330,7 +322,7 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				var repoPath = RepositoryPath.of(group.getName(), name.getName());
-				if (!accessService.canRead(repoPath.toString(), !adminArea))
+				if (!accessService.canRead(repoPath.toString()))
 					continue;
 				var repo = get(group.getName(), name.getName());
 				repos.add(repo);
@@ -340,16 +332,11 @@ public class RepositoryService {
 	}
 
 	public RepositoryList getReleased() {
-		var all = getAll();
-		var released = new RepositoryList();
-		for (var repo : all) {
-			if (!releaseService.hasReleases(repo.path())) {
-				repo.close();
-				continue;
-			}
-			released.add(repo);
-		}
-		return released;
+		return new RepositoryList(
+				releaseService.getAll().stream()
+						.map(info -> info.repositoryPath)
+						.distinct()
+						.map(this::get));
 	}
 
 	public List<String> getRepositoryOrder() {

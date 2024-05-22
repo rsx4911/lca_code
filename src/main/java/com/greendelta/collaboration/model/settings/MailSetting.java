@@ -34,5 +34,15 @@ public enum MailSetting implements SettingKey {
 	public Class<?> getType() {
 		return type;
 	}
+	
+	@Override
+	public boolean isPublicSetting() {
+		return false;
+	}
 
+	@Override
+	public boolean isAdminSetting() {
+		return true;
+	}
+	
 }

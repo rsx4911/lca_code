@@ -1,7 +1,7 @@
 package com.greendelta.collaboration.service;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Stream;
 
 import org.openlca.util.Strings;
 
@@ -12,10 +12,10 @@ public class RepositoryList extends ArrayList<Repository> implements AutoCloseab
 	public RepositoryList() {
 	}
 
-	public RepositoryList(List<Repository> repos) {
-		if (repos == null || repos.isEmpty())
+	public RepositoryList(Stream<Repository> repos) {
+		if (repos == null)
 			return;
-		addAll(repos);
+		repos.forEach(this::add);
 	}
 	
 	public void sort() {

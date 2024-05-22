@@ -60,4 +60,17 @@ public enum RepositorySetting implements SettingKey {
 		return (TypeReference<V>) subType;
 	}
 
+	@Override
+	public boolean isPublicSetting() {
+		return this != PROHIBIT_COMMITS
+				&& this != COMMENT_APPROVAL
+				&& !isAdminSetting();
+	}
+
+	@Override
+	public boolean isAdminSetting() {
+		return this == MAX_SIZE
+				|| this == SEARCH_COMMIT_ID;
+	}
+
 }

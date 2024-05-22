@@ -97,10 +97,6 @@ public class GroupService {
 		return true;
 	}
 
-	public long getCount() {
-		return getAll(true, false).size();
-	}
-
 	public long getRepositoryCount(String group) {
 		return getRepositoryDirs(group).length;
 	}
@@ -129,7 +125,7 @@ public class GroupService {
 		return groupDir.listFiles();
 	}
 
-	public List<String> getAll(boolean adminArea, boolean onlyIfCanWrite) {
+	public List<String> getAllAccessible() {
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new ArrayList<>();
@@ -141,12 +137,9 @@ public class GroupService {
 		for (var group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
-			if (!accessService.canRead(group.getName(), !adminArea))
+			if (!accessService.canRead(group.getName()))
 				continue;
-			if (onlyIfCanWrite && !accessService.canWrite(group.getName()))
-				continue;
-			if (isUserNamespace(group.getName())
-					&& (adminArea || user == null || !group.getName().equals(user.username)))
+			if (isUserNamespace(group.getName()) && (user == null || !group.getName().equals(user.username)))
 				continue;
 			groups.add(group.getName());
 		}
@@ -164,8 +157,6 @@ public class GroupService {
 	}
 
 	public Settings<GroupSetting> getSettings(String group) {
-		if (!accessService.canRead(group))
-			throw Response.forbidden(group, "READ");
 		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group,
 				accessService::canSetSettings);
 		var user = userService.getForUsername(group);
