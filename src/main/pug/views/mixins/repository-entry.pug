@@ -10,10 +10,14 @@ mixin repository-entry(repo, inGroupView)
     .pull-left.repository-entry-content
         a.follow(href=repoId)
             strong=inGroupView ? repo.settings.label||repo.name : repo.label
-        if repo.role
-            span.pull-right.role.badge.badge-warning(title=repo.role.description)=repo.role.name
-        if !repo.version.isSupported
-            span.pull-right.role.badge.badge-warning Incompatible version
+        .pull-right
+            if repo.role
+                span.pull-right.role.badge.badge-warning(title=repo.role.description)=repo.role.name
+            if !repo.version.isSupported
+                span.pull-right.role.badge.badge-warning Incompatible version
+            if repo.hasReleases
+                .clear
+                span.pull-right.badge.badge-success Released
         div: i
             +count-info(repo.commits, 'commit', 'commits', false)
             span.dataset-count-container(data-repo-id=repoId)
@@ -25,8 +29,6 @@ mixin repository-entry(repo, inGroupView)
                 | , last commit on #{formatDate(repo.lastCommit)}
         .description: i=repo.settings.description
         .tags
-            if repo.settings.publicAccess
-                span.badge.badge-success.public-access-badge Public
             if repo.settings.tags
                 each tag in repo.settings.tags
                     span.badge=tag

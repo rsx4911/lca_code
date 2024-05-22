@@ -37,7 +37,9 @@ public class RepositoryController {
 	@GetMapping
 	public List<Map<String, Object>> getReleased() {
 		try (var repositories = service.getReleased()) {
-			return repositories.stream().map(Repositories::map).toList();
+			return repositories.stream()
+					.map(repo -> Repositories.mapForList(repo, true))
+					.toList();
 		}
 	}
 
@@ -55,7 +57,7 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
+			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
 			var lastCommit = repo.commits.head();
 			if (lastCommit != null) {
 				Maps.put(mappedRepo, "settings.lastChange", lastCommit.timestamp);

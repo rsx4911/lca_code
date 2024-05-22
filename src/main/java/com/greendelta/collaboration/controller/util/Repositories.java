@@ -14,11 +14,23 @@ public class Repositories {
 		// only static access
 	}
 
-	public static Map<String, Object> map(Repository repo) {
-		return map(repo, null);
+	public static Map<String, Object> mapForList(Repository repo, Boolean hasReleases) {
+		var map = map(repo);
+		if (hasReleases != null) {
+			map.put("hasReleases", hasReleases);
+		}		
+		return map;
 	}
 
-	public static Map<String, Object> map(Repository repo, Boolean groupIsUserNamespace) {
+	public static Map<String, Object> mapForUser(Repository repo, Boolean groupIsUserNamespace) {
+		var map = map(repo);
+		if (groupIsUserNamespace != null) {
+			map.put("groupIsUserNamespace", groupIsUserNamespace);
+		}
+		return map;
+}
+
+	private static Map<String, Object> map(Repository repo) {
 		var map = Maps.create();
 		map.put("group", repo.group);
 		map.put("name", repo.name);
@@ -31,10 +43,8 @@ public class Repositories {
 		map.put("version", version);
 		map.put("settings", repo.settings.toMap());
 		map.put("groupSettings", repo.groupSettings.toMap());
-		if (groupIsUserNamespace != null) {
-			map.put("groupIsUserNamespace", groupIsUserNamespace);
-		}
 		return map;
 	}
+
 
 }

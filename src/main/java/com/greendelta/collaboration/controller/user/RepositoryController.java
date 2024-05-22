@@ -35,6 +35,7 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -60,10 +61,12 @@ public class RepositoryController {
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
+	private final ReleaseService releaseService;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, AccessService accessService,
-			IndexService indexService, DeleteService deleteService, NotificationService notificationService) {
+			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
+			ReleaseService releaseService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -72,6 +75,7 @@ public class RepositoryController {
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
+		this.releaseService = releaseService;
 	}
 
 	@GetMapping
@@ -85,21 +89,28 @@ public class RepositoryController {
 			all.sort();
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all, Repository::path);
 			if (module == null)
-				return Response.ok(SearchResults.convert(result, Repositories::map));
+				return Response.ok(SearchResults.convert(result,
+						repo -> Repositories.mapForList(repo, releaseService.hasReleases(repo.path()))));
 			var user = userService.getCurrentUser();
 			switch (module) {
 				case DASHBOARD, GROUP:
 					return Response.ok(SearchResults.convert(result,
-							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
+							repo -> putRepositoryInfo(this.map(repo), repo, user)));
 				case REVIEW:
 					return Response.ok(all.stream()
 							.filter(repo -> accessService.canManageTaskIn(repo.path()))
-							.map(Repositories::map)
+							.map(this::map)
 							.toList());
 				default:
-					return Response.ok(all.stream().map(Repositories::map).toList());
+					return Response.ok(all.stream()
+							.map(this::map)
+							.toList());
 			}
 		}
+	}
+
+	private Map<String, Object> map(Repository repo) {
+		return Repositories.mapForList(repo, releaseService.hasReleases(repo.path()));
 	}
 
 	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {
@@ -127,7 +138,7 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
+			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
 			var path = repo.path();
 			mappedRepo.put("userCanDelete", accessService.canDelete(path));
 			mappedRepo.put("userCanWrite", accessService.canWrite(path));
@@ -171,7 +182,7 @@ public class RepositoryController {
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			notificationService.repositoryCreated(repo).send();
-			return Response.created(Repositories.map(repo, groupService.isUserNamespace(group)));
+			return Response.created(Repositories.mapForUser(repo, groupService.isUserNamespace(group)));
 		}
 	}
 
@@ -242,7 +253,7 @@ public class RepositoryController {
 				throw Response.error("Repository could not be moved");
 			var newRepo = service.get(newGroup, newName);
 			notificationService.repositoryMoved(repo, newRepo).send();
-			var result = Repositories.map(newRepo, groupService.isUserNamespace(newGroup));
+			var result = Repositories.mapForUser(newRepo, groupService.isUserNamespace(newGroup));
 			indexService.moveIndexAsync(RepositoryPath.of(group, name), RepositoryPath.of(newGroup, newName));
 			return Response.ok(result);
 		}
