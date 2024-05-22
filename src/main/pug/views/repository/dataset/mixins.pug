@@ -49,16 +49,14 @@ mixin menubar()
 			.clear
 
 mixin download-dropdown()
-	- var dsType = dataset ? dataset.type : compareTo ? compareTo.type : null;
-	if getTypeAsEnum(dsType) !== 'IMPACT_CATEGORY' 
-		.dropdown.btn-group
-			button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
-				span.glyphicon.glyphicon-download
-				span.text Download 
-				span.caret
-			ul.dropdown-menu
-				li: a(href='#' data-format='json') as JSON-LD (openLCA 2.x)
-				li: a(href='#' data-format='json1') as JSON-LD (openLCA 1.x)
+	.dropdown.btn-group
+		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+			span.glyphicon.glyphicon-download
+			span.text Download 
+			span.caret
+		ul.dropdown-menu
+			li: a(href='#' data-format='json') as JSON-LD (openLCA 2.x)
+			li: a(href='#' data-format='json1') as JSON-LD (openLCA 1.x)
 
 mixin comparison-dropdown()
 	.dropdown.btn-group
