@@ -162,11 +162,6 @@ define([
 			render: (renderOptions) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				if !currentUser.isLoggedIn() and @commitId
-					@commitId = null
-					Router.navigate "#{group}/#{name}/dataset/" + @type + "/" + @refId, 
-						trigger: false
-						replace: true	
 				@loadDataset @refId, @commitId, (dataset) =>
 					@dataset = dataset
 					@loadCommitHistory (commits) =>
