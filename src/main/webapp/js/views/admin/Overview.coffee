@@ -210,7 +210,7 @@ define([
 					pageSizeId: 'repositories-page-size'
 					url: 'ws/repository?'
 					beforeRender: (result) =>
-						result.isSearchEnabled = settings.is 'SEARCH_ENABLED'
+						result.isSearchEnabled = settings.is 'SEARCH_AVAILABLE'
 						if @serverInfo
 							result.reindexingStatus = @serverInfo.reindexingStatus
 				@userFilter = new Filter
@@ -263,7 +263,7 @@ define([
 				data.groups = counts.groups
 				data.teams =  counts.teams
 				data.isHomepageEnabled = settings.is 'HOMEPAGE_ENABLED'
-				data.isSearchEnabled = settings.is 'SEARCH_ENABLED'
+				data.isSearchEnabled = settings.is 'SEARCH_AVAILABLE'
 				data.maintenanceModeActive = @serverInfo?.maintenanceMode
 
 				@$el.html template data

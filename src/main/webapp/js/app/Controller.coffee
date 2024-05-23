@@ -124,7 +124,7 @@ define([
 			initializeUserMenu: () ->
 				searchContainer = if $('#global-search-bar').length then '#global-search-bar' else '#user-menu'
 				separateSearch = searchContainer isnt '#user-menu'
-				if settings.is('SEARCH_ENABLED')
+				if settings.is('SEARCH_AVAILABLE')
 					@globalSearch = new GlobalSearch()
 					@globalSearch.render 
 						container: searchContainer
@@ -159,7 +159,7 @@ define([
 
 			registerRouteRewrites: () ->
 				if currentUser.isLoggedIn()
-					if !settings.is('SEARCH_ENABLED')
+					if !settings.is('SEARCH_AVAILABLE')
 						if settings.is('DASHBOARD_ACTIVITIES_ENABLED')
 							@router.registerRouteRewrite 'search', 'dashboard/activities'
 						else
@@ -169,7 +169,7 @@ define([
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
 					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 				else if !settings.is('HOMEPAGE_ENABLED')
-					if settings.is('SEARCH_ENABLED')
+					if settings.is('SEARCH_AVAILABLE')
 						@router.registerRouteRewrite 'landingPage', 'search'					
 
 			registerAdminRoutes: () ->
