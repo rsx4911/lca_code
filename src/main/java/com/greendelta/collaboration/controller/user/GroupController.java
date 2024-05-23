@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
@@ -98,7 +99,7 @@ public class GroupController {
 		if (!isOwnNamespace && !service.exists(name))
 			throw Response.notFound("Group " + name + " not found");
 		if (!accessService.canRead(name))
-			throw Response.forbidden(name, "READ");
+			throw Response.forbidden(name, Permission.READ);
 		var group = new HashMap<String, Object>();
 		group.put("isUserGroup", isOwnNamespace);
 		group.put("userCanDelete", !isOwnNamespace && accessService.canDelete(name));
@@ -159,7 +160,7 @@ public class GroupController {
 			throw Response.notFound(name);
 		var user = userService.getCurrentUser();
 		if (setting.isAdminSetting() && !user.isDataManager() && !user.isUserManager())
-			throw Response.forbidden(name, "SET_SETTING");
+			throw Response.forbidden(name, Permission.SET_SETTINGS);
 		var value = data.get("value").toString();
 		service.getSettings(name).set(setting, value);
 	}

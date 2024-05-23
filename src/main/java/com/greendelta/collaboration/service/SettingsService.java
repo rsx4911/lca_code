@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.settings.ImprintSetting;
 import com.greendelta.collaboration.model.settings.MailSetting;
@@ -443,7 +444,7 @@ public class SettingsService {
 		private void checkAccess(String owner) {
 			if (type == null || access == null || access.allowed(owner))
 				return;
-			throw Response.forbidden(owner, "SET_SETTING");
+			throw Response.forbidden(owner, Permission.SET_SETTINGS);
 		}
 
 		public Map<String, Object> toMap() {

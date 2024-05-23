@@ -4,6 +4,7 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Filter'
 				'cs!utils/Format'
+				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!views/repository/Download'
 				'cs!models/Settings'
@@ -12,14 +13,28 @@ define([
 				'templates/views/repository/commit/commit-info'
 			]
 
-	(Backbone, moment, Events, Filter, Format, Renderer, Download, settings, template, listTemplate, infoTemplate) ->
+	(Backbone, moment, Events, Filter, Format, Layers, Renderer, Download, settings, template, listTemplate, infoTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
+
+			release: (event) ->
+				target = $ Events.target event
+				commitId = target.attr 'data-commit-id'
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				Layers.showProgressIndicator 'Releasing'
+				$.ajax
+					type: 'POST'
+					url: "ws/release/#{group}/#{name}/#{commitId}"
+					success: () ->
+						Layers.hideProgressIndicator()
+						Backbone.history.loadUrl()
 
 			className: 'repository-commits'
 
 			events: 
 				'click a': (event) -> Events.followLink event
+				'click .release': 'release'
 				'click [data-action=download-changelog]': (event) -> 
 					Events.preventDefault(event)
 					Download.changelog @repository.get('group'), @repository.get('name')
@@ -39,6 +54,7 @@ define([
 							return
 						result.repository = {group: group, name: name}
 						result.standalone = @standalone
+						result.canCreateReleases = @repository.get 'userCanCreateReleases'
 						@prepareModel result
 						result.formatDate = Format.date
 					afterRender: (result) =>

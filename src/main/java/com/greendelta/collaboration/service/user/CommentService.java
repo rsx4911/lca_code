@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -92,7 +93,7 @@ public class CommentService {
 
 	public Comment insert(Comment comment) {
 		if (!accessService.canCommentIn(comment.repositoryPath))
-			throw Response.forbidden(comment.repositoryPath, "COMMENT");
+			throw Response.forbidden(comment.repositoryPath, Permission.COMMENT);
 		return dao.insert(comment);
 	}
 
@@ -154,7 +155,7 @@ public class CommentService {
 		if (comment == null)
 			return null;
 		if (!accessService.canManage(comment))
-			throw Response.forbidden(comment.repositoryPath, "MANAGE_COMMENT");
+			throw Response.forbidden(comment.repositoryPath, Permission.MANAGE_COMMENTS);
 		comment.restrictedToRole = role;
 		dao.update(comment);
 		return comment;

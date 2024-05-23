@@ -355,10 +355,17 @@ table.data-quality
 	.commit-id-rest
 		display initial
 
+.vertical-list > *:not(:last-child)
+	margin-bottom 5px
+
 .badge
 	font-size 14px
-	margin-right 5px
-	margin-bottom 5px
+
+	&:not(:first-child):not(.pull-right)
+		margin-left 5px
+
+	&:not(:first-child).pull-right
+		margin-right 5px
 
 	&.badge-primary
 		background-color rgb(51, 122, 183)

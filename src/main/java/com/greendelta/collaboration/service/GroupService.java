@@ -8,6 +8,7 @@ import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -51,7 +52,7 @@ public class GroupService {
 		for (var child : root.list())
 			if (child.equalsIgnoreCase(group))
 				if (!skipAccessCheck && !accessService.canRead(group))
-					throw Response.forbidden(group, "READ");
+					throw Response.forbidden(group, Permission.READ);
 				else
 					return true;
 		return false;
@@ -69,9 +70,9 @@ public class GroupService {
 	public boolean create(String group, boolean userGroup) {
 		var currentUser = userService.getCurrentUser();
 		if (userGroup && !currentUser.isUserManager() && !userGroup)
-			throw Response.forbidden("", "CREATE_GROUP");
+			throw Response.forbidden(null, Permission.CREATE);
 		if (!currentUser.isDataManager() && !currentUser.settings.canCreateGroups && !userGroup)
-			throw Response.forbidden("", "CREATE_GROUP");
+			throw Response.forbidden(null, Permission.CREATE);
 		if (exists(group))
 			return false;
 		var path = getPath(group);
@@ -88,7 +89,7 @@ public class GroupService {
 
 	public boolean delete(String group) {
 		if (!accessService.canDelete(group))
-			throw Response.forbidden(group, "DELETE");
+			throw Response.forbidden(group, Permission.DELETE);
 		getSettings(group).delete();
 		var path = getPath(group);
 		if (path == null || path.isEmpty())

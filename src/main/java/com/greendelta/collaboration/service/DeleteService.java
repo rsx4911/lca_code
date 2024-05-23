@@ -3,6 +3,7 @@ package com.greendelta.collaboration.service;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.TaskAssignment;
@@ -45,7 +46,7 @@ public class DeleteService {
 	public void delete(User user) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw Response.forbidden("User " + user.id, "DELETE");
+			throw Response.forbidden("User " + user.id, Permission.DELETE);
 		for (var repo : repoService.getAllAccessible()) {
 			if (repo.group.equals(user.username)) {
 				delete(repo);
@@ -94,7 +95,7 @@ public class DeleteService {
 	public void delete(Team team) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw Response.forbidden("Team " + team.id, "DELETE");
+			throw Response.forbidden("Team " + team.id, Permission.DELETE);
 		memberService.removeMemberships(team);
 		messagingService.getMessages(team).forEach(message -> {
 			messagingService.delete(message);
@@ -104,7 +105,7 @@ public class DeleteService {
 
 	public void delete(Repository repo) {
 		if (!accessService.canDelete(repo.path()))
-			throw Response.forbidden(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), Permission.DELETE);
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
@@ -121,7 +122,7 @@ public class DeleteService {
 
 	public void deleteGroup(String name) {
 		if (!accessService.canDelete(name))
-			throw Response.forbidden(name, "DELETE");
+			throw Response.forbidden(name, Permission.DELETE);
 		for (var repo : repoService.getAllAccessible()) {
 			if (repo.group.equals(name)) {
 				delete(repo);

@@ -18,7 +18,10 @@ else
 				each commit in group.commits
 					.commit
 						.commit-details.pull-left
-							.commit-message=commit.message
+							.commit-message
+								span=commit.message
+								if !standalone && commit.isReleased
+									span.badge.badge-success Released
 							if !standalone
 								+user-info(commit.user, commit.userDisplayName)(class='concealed')
 									|  on #{formatDate(commit.timestamp)}
@@ -33,5 +36,8 @@ else
 									small >>
 							else
 								div: a.pull-right(href=repository.group + '/' + repository.name + '/commit/' + commit.id) Details &raquo;
+								.clear
+								if !commit.isReleased && canCreateReleases
+									button.pull-right.btn.btn-success.release(data-commit-id=commit.id) Release
 						.clear
 	+paging(resultInfo)

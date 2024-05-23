@@ -10,14 +10,15 @@ mixin repository-entry(repo, inGroupView)
     .pull-left.repository-entry-content
         a.follow(href=repoId)
             strong=inGroupView ? repo.settings.label||repo.name : repo.label
-        .pull-right
-            if repo.role
-                span.pull-right.role.badge.badge-warning(title=repo.role.description)=repo.role.name
-            if !repo.version.isSupported
-                span.pull-right.role.badge.badge-warning Incompatible version
-            if repo.hasReleases
+        .pull-right.vertical-list
+            div
+                if repo.role
+                    span.pull-right.badge.badge-warning(title=repo.role.description)=repo.role.name
+                if !repo.version.isSupported
+                    span.pull-right.badge.badge-warning Incompatible version
                 .clear
-                span.pull-right.badge.badge-success Released
+            if repo.hasReleases
+                div: span.pull-right.badge.badge-success Released
         div: i
             +count-info(repo.commits, 'commit', 'commits', false)
             span.dataset-count-container(data-repo-id=repoId)

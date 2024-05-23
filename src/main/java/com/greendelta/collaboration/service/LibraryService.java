@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.LibraryAccess;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.LibrarySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -83,7 +84,7 @@ public class LibraryService {
 			return null;
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isDataManager() && (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
-			throw Response.forbidden("LIBRARIES", "WRITE");
+			throw Response.forbidden("LIBRARIES", Permission.WRITE);
 		Path tmpFile = null;
 		try {
 			tmpFile = Files.createTempFile("cs-lib-", ".zip");
@@ -138,7 +139,7 @@ public class LibraryService {
 					return;
 			}
 		}
-		throw Response.forbidden(name, "WRITE");
+		throw Response.forbidden(name, Permission.WRITE);
 	}
 
 	private boolean isTeamMember(String teamname, User user) {
@@ -150,7 +151,7 @@ public class LibraryService {
 
 	public File get(String name) {
 		if (!new AccessCheck().canAccess(name, new ArrayList<>()))
-			throw Response.forbidden(name, "READ");
+			throw Response.forbidden(name, Permission.READ);
 		var file = getLibraryFile(name);
 		if (!file.exists())
 			return null;

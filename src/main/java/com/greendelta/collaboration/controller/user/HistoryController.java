@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -40,14 +41,16 @@ public class HistoryController {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final AccessService accessService;
+	private final ReleaseService releaseService;
 	private final SettingsService settings;
 
 	public HistoryController(HistoryService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, SettingsService settings) {
+			AccessService accessService, ReleaseService releaseService, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
+		this.releaseService = releaseService;
 		this.settings = settings;
 	}
 
@@ -62,7 +65,7 @@ public class HistoryController {
 			if (commits.size() == 0)
 				return Response.noContent();
 			Collections.reverse(commits);
-			return Response.ok(putUserName(commits));
+			return Response.ok(putAdditionalInfo(repo, commits));
 		}
 	}
 
@@ -74,7 +77,7 @@ public class HistoryController {
 		try (var repo = repoService.get(group, name)) {
 			var commits = service.getAccessibleCommits(repo, path);
 			Collections.reverse(commits);
-			return Response.ok(putUserName(commits));
+			return Response.ok(putAdditionalInfo(repo, commits));
 		}
 	}
 
@@ -89,9 +92,9 @@ public class HistoryController {
 			var commits = service.getAccessibleCommits(repo);
 			Collections.reverse(commits);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, c -> c.message);
-			var converted = SearchResults.convert(result, c -> Maps.of(c));
+			var converted = SearchResults.convert(result, Maps::of);
 			var groupCount = new HashMap<String, Integer>();
-			converted = SearchResults.convert(converted, this::putUserName);
+			converted = SearchResults.convert(converted, mapped -> putAdditionalInfo(repo, mapped));
 			converted.data.forEach(commitData -> {
 				var count = commits.stream()
 						.filter(c -> isSameDay(Maps.getLong(commitData, "timestamp"), c.timestamp))
@@ -124,8 +127,8 @@ public class HistoryController {
 			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound();
-			var map = putUserName(commit);
-			map.put("canCreateChangeLog", accessService.canCreateChangeLog(repo.path()));
+			var map = putAdditionalInfo(repo, commit);
+			map.put("canCreateChangeLog", accessService.canCreateChangeLogOf(repo.path()));
 			putCount(map, repo, commit);
 			return map;
 		}
@@ -199,17 +202,19 @@ public class HistoryController {
 		return types;
 	}
 
-	private List<Map<String, Object>> putUserName(List<Commit> commits) {
-		return commits.stream().map(c -> putUserName(c)).toList();
+	private List<Map<String, Object>> putAdditionalInfo(Repository repo, List<Commit> commits) {
+		return commits.stream().map(c -> putAdditionalInfo(repo, c)).toList();
 	}
 
-	private Map<String, Object> putUserName(Commit commit) {
-		return putUserName(Maps.of(commit));
+	private Map<String, Object> putAdditionalInfo(Repository repo, Commit commit) {
+		return putAdditionalInfo(repo, Maps.of(commit));
 	}
 
-	private Map<String, Object> putUserName(Map<String, Object> map) {
+	private Map<String, Object> putAdditionalInfo(Repository repo, Map<String, Object> map) {
 		var user = userService.getForUsername(Maps.getString(map, "user"));
+		var id = Maps.getString(map, "id");
 		map.put("userDisplayName", user != null ? user.name : Maps.getString(map, "user"));
+		map.put("isReleased", releaseService.isReleased(repo.path(), id));
 		return map;
 	}
 

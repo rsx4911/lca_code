@@ -146,7 +146,8 @@ public class RepositoryController {
 			mappedRepo.put("userCanClone", accessService.canMove(path));
 			mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(path));
 			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
-			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
+			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLogOf(path));
+			mappedRepo.put("userCanCreateReleases", accessService.canCreateReleasesIn(path));
 			mappedRepo.put("size", repo.getSize());
 			return mappedRepo;
 		}

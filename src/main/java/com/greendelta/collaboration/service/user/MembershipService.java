@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Membership;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
@@ -281,7 +282,7 @@ public class MembershipService {
 
 	private void checkCanEdit(String path) {
 		if (!accessService.canEditMembersOf(path))
-			throw Response.forbidden(path, "CHANGE_ROLE");
+			throw Response.forbidden(path, Permission.EDIT_MEMBERS);
 	}
 
 }

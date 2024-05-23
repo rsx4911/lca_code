@@ -31,6 +31,7 @@ import com.google.common.io.Files;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -98,7 +99,7 @@ public class RepositoryService {
 		if (!Repository.getDir(path, group, name).exists())
 			throw Response.notFound("No repository '" + group + "/" + name + "' found");
 		if (!accessService.canRead(id) && !releaseService.hasReleases(id))
-			throw Response.forbidden(id, "READ");
+			throw Response.forbidden(id, Permission.READ);
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				accessService::canSetSettings);
 		var groupSettings = groupService.getSettings(group);
@@ -131,7 +132,7 @@ public class RepositoryService {
 	public Repository create(String group, String name) {
 		var currentUser = userService.getCurrentUser();
 		if (!accessService.canCreateRepositoryIn(group))
-			throw Response.forbidden(group, "WRITE");
+			throw Response.forbidden(group, Permission.WRITE);
 		var path = getPath(group, name);
 		if (path == null)
 			return null;
@@ -155,11 +156,11 @@ public class RepositoryService {
 
 	public boolean move(Repository repo, String group, String name) {
 		if (!accessService.canMove(repo.path()))
-			throw Response.forbidden(repo.path(), "MOVE");
+			throw Response.forbidden(repo.path(), Permission.MOVE);
 		if (!accessService.canCreateRepositoryIn(group))
-			throw Response.forbidden(group, "WRITE");
+			throw Response.forbidden(group, Permission.WRITE);
 		if (!accessService.canDelete(repo.path()))
-			throw Response.forbidden(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), Permission.DELETE);
 		if (exists(group, name))
 			return false;
 		try (var newRepo = create(group, name)) {
@@ -189,7 +190,7 @@ public class RepositoryService {
 
 	public boolean clone(Repository from, Repository to, Commit resetTo) {
 		if (!accessService.canWrite(to.group))
-			throw Response.forbidden(to.group, "WRITE");
+			throw Response.forbidden(to.group, Permission.WRITE);
 		try {
 			Dirs.copy(from.dir.toPath(), to.dir.toPath());
 			if (resetTo != null) {
@@ -214,7 +215,7 @@ public class RepositoryService {
 
 	public boolean delete(Repository repo) {
 		if (!accessService.canDelete(repo.path()))
-			throw Response.forbidden(repo.path(), "DELETE");
+			throw Response.forbidden(repo.path(), Permission.DELETE);
 		var path = getPath(repo.group, repo.name);
 		if (path == null)
 			return false;

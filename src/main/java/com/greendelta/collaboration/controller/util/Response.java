@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.greendelta.collaboration.model.Permission;
+
 public class Response {
 
 	public static <T> ResponseEntity<T> ok(T entity) {
@@ -97,10 +99,10 @@ public class Response {
 		return status(HttpStatus.FORBIDDEN, message);
 	}
 
-	public static ResponseStatusException forbidden(String path, String action) {
+	public static ResponseStatusException forbidden(String path, Permission action) {
 		if (Strings.nullOrEmpty(path))
-			return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action + "'");
-		return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action + "' on '" + path + "'");
+			return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action.name() + "'");
+		return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action.name() + "' on '" + path + "'");
 	}
 
 	public static ResponseStatusException error() {
