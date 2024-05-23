@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.io.ChangeLogWriter;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.ChangeLogService;
 import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -31,15 +31,17 @@ public class ChangeLogController {
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
 	private final RepositoryService repoService;
 	private final UserService userService;
-	private final SettingsService settings;
+	private final ChangeLogService changeLogService;
 	private final FileService fileService;
+	private final SettingsService settings;
 
-	public ChangeLogController(RepositoryService repoService, UserService userService, SettingsService settings,
-			FileService fileService) {
+	public ChangeLogController(RepositoryService repoService, UserService userService,
+			ChangeLogService changeLogService, FileService fileService, SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
-		this.settings = settings;
+		this.changeLogService = changeLogService;
 		this.fileService = fileService;
+		this.settings = settings;
 	}
 
 	@GetMapping("{group}/{name}")
@@ -60,14 +62,10 @@ public class ChangeLogController {
 			throw Response.unavailable("Change log feature not enabled");
 		try (var repo = repoService.get(group, name)) {
 			var file = fileService.createTempFile();
-			var writer = new ChangeLogWriter();
 			if (Strings.nullOrEmpty(commitId)) {
-				writer.generate(file, request, repo);
+				changeLogService.generate(file, request, repo);
 			} else {
-				var commit = repo.commits.get(commitId);
-				if (commit == null)
-					throw Response.notFound("Could not find commit with id " + commitId);
-				writer.generate(file, request, repo, commit);
+				changeLogService.generate(file, request, repo, commitId);
 			}
 			if (file == null)
 				throw Response.badRequest("Could not render changelog");

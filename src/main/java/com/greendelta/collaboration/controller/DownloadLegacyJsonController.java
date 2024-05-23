@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.LegacyJsonWriter;
 import com.greendelta.collaboration.service.FileService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -31,8 +32,8 @@ public class DownloadLegacyJsonController extends DownloadController {
 	private final FileService fileService;
 
 	public DownloadLegacyJsonController(RepositoryService repoService, UserService userService,
-			FileService fileService) {
-		super(repoService, userService);
+			HistoryService historyService, FileService fileService) {
+		super(repoService, userService, historyService);
 		this.fileService = fileService;
 	}
 

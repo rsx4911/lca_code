@@ -22,6 +22,7 @@ import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.JsonWriter;
 import com.greendelta.collaboration.service.FileService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
@@ -37,9 +38,9 @@ public class DownloadJsonController extends DownloadController {
 	private final ReleaseService releaseService;
 	private final FileService fileService;
 
-	public DownloadJsonController(RepositoryService repoService, UserService userService,
+	public DownloadJsonController(RepositoryService repoService, UserService userService, HistoryService historyService,
 			LibraryService libraryService, ReleaseService releaseService, FileService fileService) {
-		super(repoService, userService);
+		super(repoService, userService, historyService);
 		this.repoService = repoService;
 		this.libraryService = libraryService;
 		this.releaseService = releaseService;

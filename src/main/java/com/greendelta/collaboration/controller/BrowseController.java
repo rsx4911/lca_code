@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
@@ -22,10 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -42,15 +40,15 @@ public class BrowseController {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final LibraryService libraryService;
-	private final ReleaseService releaseService;
+	private final HistoryService historyService;
 	private final SettingsService settings;
 
 	public BrowseController(RepositoryService repoService, UserService userService, LibraryService libraryService,
-			ReleaseService releaseService, SettingsService settings) {
+			HistoryService historyService, SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.libraryService = libraryService;
-		this.releaseService = releaseService;
+		this.historyService = historyService;
 		this.settings = settings;
 	}
 
@@ -64,7 +62,7 @@ public class BrowseController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "commitId", required = false) String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits.find().until(commitId).latest();
+			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				return SearchResults.from(new ArrayList<>(), page, pageSize, 0);
 			var data = switch (categoryPath) {
@@ -157,9 +155,9 @@ public class BrowseController {
 		var path = Maps.getString(entry, "path");
 		var commitId = Maps.getString(entry, "commitId");
 		if (!path.startsWith(RepositoryInfo.FILE_NAME + "/"))
-			return repo.commits.find().path(path).until(commitId).latest();
+			return historyService.getLatestAccessibleCommitUntil(repo, path, commitId);
 		var library = Maps.getString(entry, "refId");
-		var commits = repo.commits.find().path(RepositoryInfo.FILE_NAME).until(commitId).all();
+		var commits = historyService.getAccessibleCommitsUntil(repo, RepositoryInfo.FILE_NAME, commitId);
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
 			var info = repo.getInfo(commit);
@@ -182,9 +180,8 @@ public class BrowseController {
 			// TODO this is a quickfix to support broken glad urls
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
-		var currentUser = userService.getCurrentUser();
 		try (var repo = repoService.get(group, name)) {
-			var commit = getAccessibleCommit(currentUser, repo, type, refId, commitId);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 			var ref = repo.references.get(type, refId, commit.id);
@@ -192,43 +189,13 @@ public class BrowseController {
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commit.id);
 			var map = Maps.of(dataset);
+			var currentUser = userService.getCurrentUser();
 			if (!currentUser.isAnonymous()) {
 				map.put("commitId", commit.id);
 			}
 			new IsInRepoInfo(repo, commitId).addIn(map);
 			return map;
 		}
-	}
-
-	private Commit getAccessibleCommit(User currentUser, Repository repo, ModelType type, String refId,
-			String commitId) {
-		if (commitId == null)
-			return getLatestAccessibleCommit(currentUser, repo, type, refId);
-		var commit = repo.commits.get(commitId);
-		if (commit == null)
-			return null;
-		var releases = getReleaseCommitIds(repo);
-		if (currentUser.isAnonymous() && !releases.contains(commit.id))
-			throw Response.unauthorized();
-		return commit;
-	}
-
-	private Commit getLatestAccessibleCommit(User currentUser, Repository repo, ModelType type, String refId) {
-		if (!currentUser.isAnonymous())
-			return repo.commits.find().latest();
-		var releases = getReleaseCommitIds(repo);
-		var commits = repo.commits.find().all();
-		Collections.reverse(commits);
-		for (var commit : commits)
-			if (releases.contains(commit.id))
-				return commit;
-		throw Response.unauthorized();
-	}
-
-	private Set<String> getReleaseCommitIds(Repository repo) {
-		return releaseService.getFor(repo.path()).stream()
-				.map(r -> r.commitId)
-				.collect(Collectors.toSet());
 	}
 
 	private class IsInRepoInfo {

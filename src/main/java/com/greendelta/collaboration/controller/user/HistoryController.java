@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -35,13 +36,15 @@ import com.greendelta.collaboration.util.SearchResults;
 @RequestMapping("ws/history")
 public class HistoryController {
 
+	private final HistoryService service;
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final AccessService accessService;
 	private final SettingsService settings;
 
-	public HistoryController(RepositoryService repoService, UserService userService, AccessService accessService,
-			SettingsService settings) {
+	public HistoryController(HistoryService service, RepositoryService repoService, UserService userService,
+			AccessService accessService, SettingsService settings) {
+		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.accessService = accessService;
@@ -55,7 +58,7 @@ public class HistoryController {
 			@PathVariable("type") ModelType type,
 			@PathVariable("refId") String refId) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = repo.commits.find().model(type, refId).all();
+			var commits = service.getAccessibleCommits(repo, type, refId);
 			if (commits.size() == 0)
 				return Response.noContent();
 			Collections.reverse(commits);
@@ -67,15 +70,9 @@ public class HistoryController {
 	public ResponseEntity<List<Map<String, Object>>> getCommitHistory(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
-			@RequestParam(name = "path", required = false) String path,
-			@RequestParam(name = "lastCommitId", required = false) String lastCommitId) {
+			@RequestParam(name = "path", required = false) String path) {
 		try (var repo = repoService.get(group, name)) {
-			if (lastCommitId != null && !lastCommitId.isEmpty()) {
-				var commit = repo.commits.get(lastCommitId);
-				if (commit == null)
-					throw Response.notFound("Commit " + lastCommitId + " not found");
-			}
-			var commits = repo.commits.find().after(lastCommitId).path(path).all();
+			var commits = service.getAccessibleCommits(repo, path);
 			Collections.reverse(commits);
 			return Response.ok(putUserName(commits));
 		}
@@ -89,7 +86,7 @@ public class HistoryController {
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = repo.commits.find().all();
+			var commits = service.getAccessibleCommits(repo);
 			Collections.reverse(commits);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, commits, c -> c.message);
 			var converted = SearchResults.convert(result, c -> Maps.of(c));
@@ -108,7 +105,6 @@ public class HistoryController {
 		}
 	}
 
-
 	private boolean isSameDay(long d1, long d2) {
 		var c1 = Calendar.getInstance();
 		c1.setTimeInMillis(d1);
@@ -125,7 +121,7 @@ public class HistoryController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits.get(commitId);
+			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound();
 			var map = putUserName(commit);
@@ -141,7 +137,7 @@ public class HistoryController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits.get(commitId);
+			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound();
 			var map = new HashMap<String, Object>();
@@ -149,9 +145,10 @@ public class HistoryController {
 			return map;
 		}
 	}
-	
+
 	private void putCount(Map<String, Object> map, Repository repo, Commit commit) {
-		var diffs = repo.diffs.find().unsorted().commit(commit).withPreviousCommit();		
+		var previousCommit = service.getPreviouslyAccessibleCommit(repo, commit.id);
+		var diffs = repo.diffs.find().unsorted().commit(previousCommit).with(commit);
 		map.put("id", commit.id);
 		map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
 		map.put("deletions", Diff.filter(diffs, DiffType.DELETED).size());
@@ -168,10 +165,11 @@ public class HistoryController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits.get(commitId);
+			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound();
-			var diff = repo.diffs.find().commit(commit);
+			var previousCommit = service.getPreviouslyAccessibleCommit(repo, commit.id);
+			var diff = repo.diffs.find().commit(previousCommit);
 			if (type != null) {
 				if (type == ModelType.CATEGORY) {
 					diff = diff.onlyCategories();
@@ -179,7 +177,7 @@ public class HistoryController {
 					diff = diff.filter(type.name()).excludeCategories();
 				}
 			}
-			var diffs = diff.withPreviousCommit();
+			var diffs = diff.with(commit);
 			var mapped = diffs.stream().map(d -> MetaData.forBrowse(d, repo));
 			List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
@@ -213,21 +211,6 @@ public class HistoryController {
 		var user = userService.getForUsername(Maps.getString(map, "user"));
 		map.put("userDisplayName", user != null ? user.name : Maps.getString(map, "user"));
 		return map;
-	}
-
-	@GetMapping("previousCommitId/{group}/{name}/{type}/{refId}/{commitId}")
-	public String getPreviousCommitId(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId,
-			@PathVariable("commitId") String commitId) {
-		try (var repo = repoService.get(group, name)) {
-			var lastCommit = repo.commits.find().model(type, refId).before(commitId).latest();
-			if (lastCommit == null || lastCommit.id.equals(commitId))
-				throw Response.notFound("No previous commit found for " + type.name() + " " + refId);
-			return lastCommit.id;
-		}
 	}
 
 }

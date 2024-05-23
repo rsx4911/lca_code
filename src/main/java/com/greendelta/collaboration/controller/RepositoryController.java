@@ -19,6 +19,7 @@ import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.util.Maps;
 
@@ -28,10 +29,12 @@ public class RepositoryController {
 
 	private final RepositoryService service;
 	private final GroupService groupService;
+	private final HistoryService historyService;
 
-	public RepositoryController(RepositoryService service, GroupService groupService) {
+	public RepositoryController(RepositoryService service, GroupService groupService, HistoryService historyService) {
 		this.service = service;
 		this.groupService = groupService;
+		this.historyService = historyService;
 	}
 
 	@GetMapping
@@ -48,7 +51,10 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			return Response.ok(Map.of("datasets", repo.references.find().count()));
+			var commit = historyService.getLatestAccessibleCommit(repo);
+			if (commit == null)
+				return Response.ok(Map.of("datasets", 0));
+			return Response.ok(Map.of("datasets", repo.references.find().commit(commit.id).count()));
 		}
 	}
 
@@ -58,9 +64,9 @@ public class RepositoryController {
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
 			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
-			var lastCommit = repo.commits.head();
-			if (lastCommit != null) {
-				Maps.put(mappedRepo, "settings.lastChange", lastCommit.timestamp);
+			var lastRelease = historyService.getLatestAccessibleCommit(repo);
+			if (lastRelease != null) {
+				Maps.put(mappedRepo, "settings.lastChange", lastRelease.timestamp);
 			}
 			return mappedRepo;
 		}
@@ -84,6 +90,9 @@ public class RepositoryController {
 			@PathVariable("path") String path,
 			@RequestParam(name = "commitId", required = false) String commitId) throws IOException {
 		try (var repo = service.get(group, name)) {
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
 			var ref = repo.references.get(type, refId, commitId);
 			if (ref == null)
 				throw Response.notFound(notFoundMessage(type, refId, commitId, path));
