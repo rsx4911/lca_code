@@ -24,12 +24,12 @@ import com.greendelta.search.wrapper.SearchResult;
 public class MembershipService {
 
 	private final Dao<Membership> dao;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 
 	public MembershipService(Dao<Membership> dao, UserService userService, SettingsService settings) {
 		this.dao = dao;
 		// cannot inject access service - would result in a dependency loop
-		this.accessService = new AccessService(userService, this, settings);
+		this.permissions = new PermissionsService(userService, this, settings);
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {
@@ -281,7 +281,7 @@ public class MembershipService {
 	}
 
 	private void checkCanEdit(String path) {
-		if (!accessService.canEditMembersOf(path))
+		if (!permissions.canEditMembersOf(path))
 			throw Response.forbidden(path, Permission.EDIT_MEMBERS);
 	}
 

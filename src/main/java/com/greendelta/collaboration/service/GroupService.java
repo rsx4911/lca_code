@@ -14,21 +14,21 @@ import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.SettingsService.Settings;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @Service
 public class GroupService {
 
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final SettingsService settings;
 
-	public GroupService(AccessService accessService, MembershipService membershipService, UserService userService,
+	public GroupService(PermissionsService permissions, MembershipService membershipService, UserService userService,
 			SettingsService settings) {
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.settings = settings;
@@ -51,7 +51,7 @@ public class GroupService {
 			return false;
 		for (var child : root.list())
 			if (child.equalsIgnoreCase(group))
-				if (!skipAccessCheck && !accessService.canRead(group))
+				if (!skipAccessCheck && !permissions.canRead(group))
 					throw Response.forbidden(group, Permission.READ);
 				else
 					return true;
@@ -88,7 +88,7 @@ public class GroupService {
 	}
 
 	public boolean delete(String group) {
-		if (!accessService.canDelete(group))
+		if (!permissions.canDelete(group))
 			throw Response.forbidden(group, Permission.DELETE);
 		getSettings(group).delete();
 		var path = getPath(group);
@@ -119,7 +119,7 @@ public class GroupService {
 		if (!root.exists() || !root.isDirectory())
 			return new File[0];
 		var groupDir = new File(root, group);
-		if (!accessService.canRead(group))
+		if (!permissions.canRead(group))
 			return new File[0];
 		if (!groupDir.exists() || groupDir.listFiles() == null)
 			return new File[0];
@@ -138,7 +138,7 @@ public class GroupService {
 		for (var group : root.listFiles()) {
 			if (!group.isDirectory())
 				continue;
-			if (!accessService.canRead(group.getName()))
+			if (!permissions.canRead(group.getName()))
 				continue;
 			if (isUserNamespace(group.getName()) && (user == null || !group.getName().equals(user.username)))
 				continue;
@@ -159,7 +159,7 @@ public class GroupService {
 
 	public Settings<GroupSetting> getSettings(String group) {
 		Settings<GroupSetting> groupSettings = settings.get(SettingType.GROUP_SETTING, group,
-				accessService::canSetSettings);
+				permissions::canSetSettingsOf);
 		var user = userService.getForUsername(group);
 		if (user == null)
 			return groupSettings;

@@ -28,7 +28,7 @@ import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
@@ -42,16 +42,16 @@ public class UserController {
 
 	private final UserService service;
 	private final TeamService teamService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final MessagingService messagingService;
 	private final SettingsService settings;
 
-	public UserController(UserService service, TeamService teamService, AccessService accessService,
+	public UserController(UserService service, TeamService teamService, PermissionsService permissions,
 			MembershipService membershipService, MessagingService messagingService, SettingsService settings) {
 		this.service = service;
 		this.teamService = teamService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.messagingService = messagingService;
 		this.settings = settings;
@@ -133,7 +133,7 @@ public class UserController {
 					.filter(messagingService::canMessage)
 					.toList();
 			case REVIEW -> users.stream()
-					.filter(user -> accessService.canReviewIn(user, repositoryPath))
+					.filter(user -> permissions.canReviewIn(user, repositoryPath))
 					.toList();
 			default -> users;
 		};

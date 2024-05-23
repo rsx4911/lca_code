@@ -27,7 +27,7 @@ import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
@@ -40,16 +40,16 @@ public class HistoryController {
 	private final HistoryService service;
 	private final RepositoryService repoService;
 	private final UserService userService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final ReleaseService releaseService;
 	private final SettingsService settings;
 
 	public HistoryController(HistoryService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, ReleaseService releaseService, SettingsService settings) {
+			PermissionsService permissions, ReleaseService releaseService, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.releaseService = releaseService;
 		this.settings = settings;
 	}
@@ -128,7 +128,7 @@ public class HistoryController {
 			if (commit == null)
 				throw Response.notFound();
 			var map = putAdditionalInfo(repo, commit);
-			map.put("canCreateChangeLog", accessService.canCreateChangeLogOf(repo.path()));
+			map.put("canCreateChangeLog", permissions.canCreateChangeLogOf(repo.path()));
 			putCount(map, repo, commit);
 			return map;
 		}

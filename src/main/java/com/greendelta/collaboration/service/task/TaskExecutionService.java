@@ -11,7 +11,7 @@ import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 public abstract class TaskExecutionService<T extends Task> {
@@ -20,20 +20,20 @@ public abstract class TaskExecutionService<T extends Task> {
 	private final Dao<TaskAssignment> assignmentDao;
 	private final UserService userService;
 	private final RepositoryService repoService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 
 	protected TaskExecutionService(Dao<T> dao, Dao<TaskAssignment> assignmentDao, UserService userService, RepositoryService repoService,
-			AccessService accessService) {
+			PermissionsService permissions) {
 		this.dao = dao;
 		this.assignmentDao = assignmentDao;
 		this.userService = userService;
 		this.repoService = repoService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 	}
 
 	public void start(T task) {
 		try (var repo = repoService.get(task.repositoryPath)) {
-			if (!accessService.canManageTaskIn(repo.path()))
+			if (!permissions.canManageTaskIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
 		}
 		var user = userService.getCurrentUser();
@@ -46,7 +46,7 @@ public abstract class TaskExecutionService<T extends Task> {
 	public void merge(T task) {
 		var fromDb = get(task.id);
 		try (var repo = repoService.get(fromDb.repositoryPath)) {
-			if (!accessService.canManageTaskIn(repo.path()))
+			if (!permissions.canManageTaskIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
 		}
 		fromDb.name = task.name;
@@ -59,7 +59,7 @@ public abstract class TaskExecutionService<T extends Task> {
 		try (var repo = repoService.get(task.repositoryPath)) {
 			if (!accessCheck.canBeAssigned(user, repo))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
-			if (!accessService.canManageTaskIn(repo.path()))
+			if (!permissions.canManageTaskIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
 		}
 		var assignment = new TaskAssignment();
@@ -83,7 +83,7 @@ public abstract class TaskExecutionService<T extends Task> {
 		var user = userService.getForUsername(username);
 		var currentUser = userService.getCurrentUser();
 		try (var repo = repoService.get(task.repositoryPath)) {
-			if (!user.equals(currentUser) && !accessService.canManageTaskIn(repo.path()))
+			if (!user.equals(currentUser) && !permissions.canManageTaskIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
 		}
 		TaskAssignment assignment = null;
@@ -111,7 +111,7 @@ public abstract class TaskExecutionService<T extends Task> {
 
 	public void end(T task, TaskState state) {
 		try (var repo = repoService.get(task.repositoryPath)) {
-			if (!accessService.canManageTaskIn(repo.path()))
+			if (!permissions.canManageTaskIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
 		}
 		task.state = state;

@@ -40,7 +40,7 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.IndexService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -57,21 +57,21 @@ public class RepositoryController {
 	private final GroupService groupService;
 	private final UserService userService;
 	private final MembershipService membershipService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 	private final ReleaseService releaseService;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
-			MembershipService membershipService, UserService userService, AccessService accessService,
+			MembershipService membershipService, UserService userService, PermissionsService permissions,
 			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
 			ReleaseService releaseService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.membershipService = membershipService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
@@ -98,7 +98,7 @@ public class RepositoryController {
 							repo -> putRepositoryInfo(this.map(repo), repo, user)));
 				case REVIEW:
 					return Response.ok(all.stream()
-							.filter(repo -> accessService.canManageTaskIn(repo.path()))
+							.filter(repo -> permissions.canManageTaskIn(repo.path()))
 							.map(this::map)
 							.toList());
 				default:
@@ -140,14 +140,14 @@ public class RepositoryController {
 		try (var repo = service.get(group, name)) {
 			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
 			var path = repo.path();
-			mappedRepo.put("userCanDelete", accessService.canDelete(path));
-			mappedRepo.put("userCanWrite", accessService.canWrite(path));
-			mappedRepo.put("userCanMove", accessService.canMove(path));
-			mappedRepo.put("userCanClone", accessService.canMove(path));
-			mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(path));
-			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
-			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLogOf(path));
-			mappedRepo.put("userCanCreateReleases", accessService.canCreateReleasesIn(path));
+			mappedRepo.put("userCanDelete", permissions.canDelete(path));
+			mappedRepo.put("userCanWrite", permissions.canWriteTo(path));
+			mappedRepo.put("userCanMove", permissions.canMove(path));
+			mappedRepo.put("userCanClone", permissions.canMove(path));
+			mappedRepo.put("userCanEditMembers", permissions.canEditMembersOf(path));
+			mappedRepo.put("userCanSetSettings", permissions.canSetSettingsOf(path));
+			mappedRepo.put("userCanCreateChangeLog", permissions.canCreateChangeLogOf(path));
+			mappedRepo.put("userCanCreateReleases", permissions.canCreateReleasesIn(path));
 			mappedRepo.put("size", repo.getSize());
 			return mappedRepo;
 		}

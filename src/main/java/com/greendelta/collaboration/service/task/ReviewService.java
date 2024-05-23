@@ -12,7 +12,7 @@ import com.greendelta.collaboration.model.task.ReviewReference;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @Service
@@ -20,25 +20,25 @@ public class ReviewService extends TaskExecutionService<Review> {
 
 	private final Dao<Review> dao;
 	private final Dao<ReviewReference> referenceDao;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final RepositoryService repoService;
 	private final UserService userService;
 
 	public ReviewService(Dao<Review> dao, Dao<ReviewReference> referenceDao, Dao<TaskAssignment> assignmentDao,
 			UserService userService, RepositoryService repoService,
-			AccessService accessService) {
-		super(dao, assignmentDao, userService, repoService, accessService);
+			PermissionsService permissions) {
+		super(dao, assignmentDao, userService, repoService, permissions);
 		this.dao = dao;
 		this.referenceDao = referenceDao;
 		this.userService = userService;
 		this.repoService = repoService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 	}
 
 	public void setReferences(long reviewId, Set<String> paths) {
 		var fromDb = get(reviewId);
 		try (var repo = repoService.get(fromDb.repositoryPath)) {
-			if (!accessService.canManageTaskIn(repo.path()))
+			if (!permissions.canManageTaskIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.MANAGE_TASK);
 			referenceDao.delete(fromDb.references);
 			fromDb.references.clear();

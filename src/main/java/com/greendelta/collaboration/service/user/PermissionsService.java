@@ -15,13 +15,13 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.SettingsService;
 
 @Service
-public class AccessService {
+public class PermissionsService {
 
 	private final UserService userService;
 	private final MembershipService membershipService;
 	private final GroupService groupService;
 
-	public AccessService(UserService userService, MembershipService membershipService, SettingsService settings) {
+	public PermissionsService(UserService userService, MembershipService membershipService, SettingsService settings) {
 		this.userService = userService;
 		this.membershipService = membershipService;
 		// cannot inject group service - would result in a dependency loop
@@ -65,11 +65,11 @@ public class AccessService {
 		return false;
 	}
 
-	public boolean canWrite(String groupOrRepo) {
+	public boolean canWriteTo(String groupOrRepo) {
 		return hasPermissionTo(Permission.WRITE, groupOrRepo);
 	}
 
-	public boolean canSetSettings(String groupOrRepo) {
+	public boolean canSetSettingsOf(String groupOrRepo) {
 		return hasPermissionTo(Permission.SET_SETTINGS, groupOrRepo);
 	}
 

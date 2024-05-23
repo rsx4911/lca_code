@@ -12,7 +12,7 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 
 @RestController
 @RequestMapping("ws/release")
@@ -20,13 +20,13 @@ public class ReleaseController {
 
 	private final ReleaseService service;
 	private final RepositoryService repoService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final SettingsService settings;
 
-	public ReleaseController(ReleaseService service, RepositoryService repoService, AccessService accessService, SettingsService settings) {
+	public ReleaseController(ReleaseService service, RepositoryService repoService, PermissionsService permissions, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.settings = settings;
 	}
 
@@ -39,7 +39,7 @@ public class ReleaseController {
 		try (var repo = repoService.get(group, name)) {
 			if (service.isReleased(repo.path(), commitId))
 				throw Response.conflict("Commit " + commitId + " is already released");
-			if (!accessService.canCreateReleasesIn(repo.path()))
+			if (!permissions.canCreateReleasesIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.CREATE_RELEASES);
 			var release = new ReleaseInfo();
 			release.repositoryPath = repo.path();

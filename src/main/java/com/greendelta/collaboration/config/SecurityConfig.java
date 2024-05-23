@@ -38,7 +38,7 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Requests;
 import com.greendelta.collaboration.util.Routes;
@@ -51,7 +51,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @EnableWebSecurity
 public class SecurityConfig {
 
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final UserService userService;
 	private final SettingsService settings;
 	private final GitFilterConfig gitFilterConfig;
@@ -59,9 +59,9 @@ public class SecurityConfig {
 	@Autowired(required = false)
 	private ClientRegistrationRepository authProviderRepository;
 
-	public SecurityConfig(AccessService accessService, UserService userService, SettingsService settings,
+	public SecurityConfig(PermissionsService permissions, UserService userService, SettingsService settings,
 			GitFilterConfig gitFilterConfig) {
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.userService = userService;
 		this.settings = settings;
 		this.gitFilterConfig = gitFilterConfig;
@@ -164,8 +164,8 @@ public class SecurityConfig {
 		var loggedIn = request.basicHttpLogin(sessionService);
 		try {
 			if (request.getGitAction() == GitAction.GIT_PUSH || request.getGitAction() == GitAction.GIT_PUSH_SERVICE)
-				return accessService.canWrite(repoId) && !areCommitsProhibited(repoId);
-			return accessService.canRead(repoId);
+				return permissions.canWriteTo(repoId) && !areCommitsProhibited(repoId);
+			return permissions.canRead(repoId);
 		} finally {
 			if (loggedIn) {
 				request.basicHttpLogout(sessionService);
@@ -174,7 +174,7 @@ public class SecurityConfig {
 	}
 
 	private boolean areCommitsProhibited(String repoId) {
-		return settings.get(SettingType.REPOSITORY_SETTING, repoId, accessService::canSetSettings)
+		return settings.get(SettingType.REPOSITORY_SETTING, repoId, permissions::canSetSettingsOf)
 				.is(RepositorySetting.PROHIBIT_COMMITS);
 	}
 

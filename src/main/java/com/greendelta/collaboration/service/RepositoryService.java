@@ -40,7 +40,7 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -51,7 +51,7 @@ public class RepositoryService {
 	private static final Logger log = LogManager.getLogger(RepositoryService.class);
 
 	private final GroupService groupService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final CommentService commentService;
@@ -60,11 +60,11 @@ public class RepositoryService {
 	private final TaskService taskService;
 	private final ReleaseService releaseService;
 
-	public RepositoryService(GroupService groupService, AccessService accessService,
+	public RepositoryService(GroupService groupService, PermissionsService permissions,
 			MembershipService membershipService, UserService userService, CommentService commentService,
 			SettingsService settings, FileService fileService, TaskService taskService, ReleaseService releaseService) {
 		this.groupService = groupService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
@@ -98,10 +98,10 @@ public class RepositoryService {
 			throw Response.notFound("No repository '" + id + "' found");
 		if (!Repository.getDir(path, group, name).exists())
 			throw Response.notFound("No repository '" + group + "/" + name + "' found");
-		if (!accessService.canRead(id) && !releaseService.hasReleases(id))
+		if (!permissions.canRead(id) && !releaseService.hasReleases(id))
 			throw Response.forbidden(id, Permission.READ);
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
-				accessService::canSetSettings);
+				permissions::canSetSettingsOf);
 		var groupSettings = groupService.getSettings(group);
 		try {
 			return new Repository(path, group, name, repoSettings, groupSettings);
@@ -131,7 +131,7 @@ public class RepositoryService {
 
 	public Repository create(String group, String name) {
 		var currentUser = userService.getCurrentUser();
-		if (!accessService.canCreateRepositoryIn(group))
+		if (!permissions.canCreateRepositoryIn(group))
 			throw Response.forbidden(group, Permission.WRITE);
 		var path = getPath(group, name);
 		if (path == null)
@@ -155,11 +155,11 @@ public class RepositoryService {
 	}
 
 	public boolean move(Repository repo, String group, String name) {
-		if (!accessService.canMove(repo.path()))
+		if (!permissions.canMove(repo.path()))
 			throw Response.forbidden(repo.path(), Permission.MOVE);
-		if (!accessService.canCreateRepositoryIn(group))
+		if (!permissions.canCreateRepositoryIn(group))
 			throw Response.forbidden(group, Permission.WRITE);
-		if (!accessService.canDelete(repo.path()))
+		if (!permissions.canDelete(repo.path()))
 			throw Response.forbidden(repo.path(), Permission.DELETE);
 		if (exists(group, name))
 			return false;
@@ -189,7 +189,7 @@ public class RepositoryService {
 	}
 
 	public boolean clone(Repository from, Repository to, Commit resetTo) {
-		if (!accessService.canWrite(to.group))
+		if (!permissions.canWriteTo(to.group))
 			throw Response.forbidden(to.group, Permission.WRITE);
 		try {
 			Dirs.copy(from.dir.toPath(), to.dir.toPath());
@@ -214,7 +214,7 @@ public class RepositoryService {
 	}
 
 	public boolean delete(Repository repo) {
-		if (!accessService.canDelete(repo.path()))
+		if (!permissions.canDelete(repo.path()))
 			throw Response.forbidden(repo.path(), Permission.DELETE);
 		var path = getPath(repo.group, repo.name);
 		if (path == null)
@@ -323,7 +323,7 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				var repoPath = RepositoryPath.of(group.getName(), name.getName());
-				if (!accessService.canRead(repoPath.toString()))
+				if (!permissions.canRead(repoPath.toString()))
 					continue;
 				var repo = get(group.getName(), name.getName());
 				repos.add(repo);

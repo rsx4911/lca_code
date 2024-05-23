@@ -27,7 +27,7 @@ import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -42,16 +42,16 @@ public class GroupController {
 
 	private final GroupService service;
 	private final UserService userService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
-	public GroupController(GroupService service, UserService userService, AccessService accessService,
+	public GroupController(GroupService service, UserService userService, PermissionsService permissions,
 			MembershipService membershipService, DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;
 		this.userService = userService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
@@ -68,7 +68,7 @@ public class GroupController {
 		var all = service.getAllAccessible();
 		if (onlyIfCanWrite) {
 			all = all.stream()
-					.filter(Predicate.not(accessService::canWrite))
+					.filter(Predicate.not(permissions::canWriteTo))
 					.collect(Collectors.toList());
 		}
 		if (adminArea) {
@@ -98,17 +98,17 @@ public class GroupController {
 		var isOwnNamespace = service.isOwnNamespace(name);
 		if (!isOwnNamespace && !service.exists(name))
 			throw Response.notFound("Group " + name + " not found");
-		if (!accessService.canRead(name))
+		if (!permissions.canRead(name))
 			throw Response.forbidden(name, Permission.READ);
 		var group = new HashMap<String, Object>();
 		group.put("isUserGroup", isOwnNamespace);
-		group.put("userCanDelete", !isOwnNamespace && accessService.canDelete(name));
-		group.put("userCanWrite", accessService.canWrite(name));
-		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
-		group.put("userCanSetSettings", accessService.canSetSettings(name));
+		group.put("userCanDelete", !isOwnNamespace && permissions.canDelete(name));
+		group.put("userCanWrite", permissions.canWriteTo(name));
+		group.put("userCanCreate", permissions.canCreateRepositoryIn(name));
+		group.put("userCanSetSettings", permissions.canSetSettingsOf(name));
 		group.put("settings", service.getSettings(name).toMap());
 		var isUserspace = user != null && name.equals(user.username);
-		group.put("userCanEditMembers", !isUserspace && accessService.canEditMembersOf(name));
+		group.put("userCanEditMembers", !isUserspace && permissions.canEditMembersOf(name));
 		return group;
 	}
 

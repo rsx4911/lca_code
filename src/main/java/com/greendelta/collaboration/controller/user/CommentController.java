@@ -26,7 +26,7 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -41,16 +41,16 @@ public class CommentController {
 	private final CommentService service;
 	private final RepositoryService repoService;
 	private final UserService userService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final NotificationService notificationService;
 	private final SettingsService settings;
 
 	public CommentController(CommentService service, RepositoryService repoService, UserService userService,
-			AccessService accessService, NotificationService notificationService, SettingsService settings) {
+			PermissionsService permissions, NotificationService notificationService, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.notificationService = notificationService;
 		this.settings = settings;
 	}
@@ -70,7 +70,7 @@ public class CommentController {
 			var result = SearchResults.paged(page, pageSize, comments);
 			var mapped = SearchResults.listConvert(result, list -> map(repo, list, true));
 			var map = Maps.of(mapped);
-			var canApprove = accessService.canManageCommentsIn(repo.path());
+			var canApprove = permissions.canManageCommentsIn(repo.path());
 			Maps.put(map, "resultInfo.canApprove", canApprove);
 			return map;
 		}
@@ -89,8 +89,8 @@ public class CommentController {
 			var comments = service.getAllFor(repo, type, refId, commitId);
 			var result = new HashMap<String, Object>();
 			result.put("comments", map(repo, comments, false));
-			result.put("canComment", accessService.canCommentIn(repo.path()));
-			result.put("canApprove", accessService.canManageCommentsIn(repo.path()));
+			result.put("canComment", permissions.canCommentIn(repo.path()));
+			result.put("canApprove", permissions.canManageCommentsIn(repo.path()));
 			return result;
 		}
 	}
