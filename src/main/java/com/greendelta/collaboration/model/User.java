@@ -1,9 +1,8 @@
 package com.greendelta.collaboration.model;
 
 import java.sql.Blob;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +87,12 @@ public class User extends AbstractEntity implements UserDetails, OidcUser {
 		return settings.admin || settings.dataManager;
 	}
 
+	public boolean isLibraryManager() {
+		if (settings == null)
+			return false;
+		return settings.admin || settings.libraryManager;
+	}
+
 	public boolean isDeactivated() {
 		if (settings == null)
 			return false;
@@ -114,15 +119,20 @@ public class User extends AbstractEntity implements UserDetails, OidcUser {
 
 	@Override
 	public List<GrantedAuthority> getAuthorities() {
-		if (isAdmin())
-			return Arrays.asList(Authority.ADMIN, Authority.DATA_MANAGER, Authority.USER_MANAGER);
-		if (isDataManager() && isUserManager())
-			return Arrays.asList(Authority.DATA_MANAGER, Authority.USER_MANAGER);
-		if (isDataManager())
-			return Collections.singletonList(Authority.DATA_MANAGER);
-		if (isUserManager())
-			return Collections.singletonList(Authority.USER_MANAGER);
-		return Collections.emptyList();
+		var authorities = new ArrayList<GrantedAuthority>();
+		if (isAdmin()) {
+			authorities.add(Authority.ADMIN);
+		}
+		if (isUserManager()) {
+			authorities.add(Authority.USER_MANAGER);
+		}
+		if (isDataManager()) {
+			authorities.add(Authority.DATA_MANAGER);
+		}
+		if (isLibraryManager()) {
+			authorities.add(Authority.LIBRARY_MANAGER);
+		}
+		return authorities;
 	}
 
 	@Override
@@ -168,7 +178,7 @@ public class User extends AbstractEntity implements UserDetails, OidcUser {
 	public String getName() {
 		return name;
 	}
-	
+
 	@Override
 	public String getEmail() {
 		return email;

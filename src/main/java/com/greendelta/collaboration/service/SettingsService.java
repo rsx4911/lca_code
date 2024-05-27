@@ -513,11 +513,12 @@ public class SettingsService {
 
 		public Access ADMIN = owner -> userService.getCurrentUser().isAdmin();
 		public Access DATA_MANAGER = owner -> userService.getCurrentUser().isDataManager();
+		public Access LIBRARY_MANAGER = owner -> userService.getCurrentUser().isLibraryManager();
 		public Access USER = owner -> userService.getCurrentUser().id != 0;
 
 		public Access TEAM_DATA(Team team) {
 			return owner -> {
-				if (userService.getCurrentUser().isDataManager())
+				if (userService.getCurrentUser().isLibraryManager())
 					return true;
 				if (team == null)
 					return false;

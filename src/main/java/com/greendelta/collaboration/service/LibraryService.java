@@ -83,7 +83,7 @@ public class LibraryService {
 		if (stream == null)
 			return null;
 		var currentUser = userService.getCurrentUser();
-		if (!currentUser.isDataManager() && (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
+		if (!currentUser.isLibraryManager() && (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
 			throw Response.forbidden("LIBRARIES", Permission.WRITE);
 		Path tmpFile = null;
 		try {
@@ -130,7 +130,7 @@ public class LibraryService {
 
 	private void checkWriteAccess(String name, List<String> accessTypes) {
 		var currentUser = userService.getCurrentUser();
-		if (currentUser.isDataManager())
+		if (currentUser.isLibraryManager())
 			return;
 		for (var access : accessTypes) {
 			if (LibraryAccess.isTeamAccess(access)) {
@@ -206,7 +206,7 @@ public class LibraryService {
 	private List<String> addAccessType(String name, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
-				: settings.ACCESS.DATA_MANAGER;
+				: settings.ACCESS.LIBRARY_MANAGER;
 		var accessTypes = getAccessTypes(name);
 		if (accessTypes.contains(access))
 			return accessTypes;
@@ -219,7 +219,7 @@ public class LibraryService {
 	private List<String> removeAccessType(String name, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
-				: settings.ACCESS.DATA_MANAGER;
+				: settings.ACCESS.LIBRARY_MANAGER;
 		var accessTypes = getAccessTypes(name);
 		if (!accessTypes.contains(access))
 			return accessTypes;
@@ -252,7 +252,7 @@ public class LibraryService {
 						.filter(accesses::contains)
 						.filter(access -> isTeamMember(access, user))
 						.count() > 0;
-			if (user.isDataManager())
+			if (user.isLibraryManager())
 				return true;
 			for (var access : accesses) {
 				var hasAccess = switch (access) {

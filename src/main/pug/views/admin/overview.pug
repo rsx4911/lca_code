@@ -45,12 +45,14 @@ mixin ordered-list(title, elements)
 			
 .content-box.overview
 	.two-columns
-		if isAdmin
+		if isDataManager
 			div: +box('Repository', 'Repositories', repositories)
-		div: +box('User', 'Users', users)
-		if isAdmin
+		if isUserManager
+			div: +box('User', 'Users', users)
+		if isDataManager
 			div: +box('Group', 'Groups', groups)
-		div: +box('Team', 'Teams', teams)
+		if isUserManager
+			div: +box('Team', 'Teams', teams)
 	.clear
 if isAdmin
 	.header-box Server info

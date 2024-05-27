@@ -56,7 +56,8 @@ public class TeamController {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.isAnonymous())
 			return new ArrayList<>();
-		if (currentUser.isUserManager() || currentUser.isDataManager())
+		if ((currentUser.isLibraryManager() && module == Module.TEAM_LIBRARIES) || currentUser.isUserManager()
+				|| currentUser.isDataManager())
 			return service.getAll(0, 0, null, module == Module.TEAM_LIBRARIES).data.stream()
 					.filter(team -> !team.users.isEmpty())
 					.toList();

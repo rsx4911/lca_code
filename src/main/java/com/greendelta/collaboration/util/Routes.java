@@ -20,7 +20,7 @@ public class Routes {
 	private final static List<String> RESERVED = Arrays.asList(
 			"null", "undefined", "users", "team", "teams", "repositories", "categoryInfo", "count", "public", "ws",
 			"sockets", "stomp", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
-			"settings", "admin", "usermanager", "datamanager", "messaging", "block", "unblock", "login", "search",
+			"settings", "admin", "usermanager", "datamanager", "librarymanager", "messaging", "block", "unblock", "login", "search",
 			"imprint", "overlay", "import", "export", "missing");
 
 	public static boolean isUserRoute(String name) {

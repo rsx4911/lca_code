@@ -21,7 +21,10 @@ define([
 				if restrictedTo is 'dataManager' and !currentUser.isDataManager()
 					alert 'This is a restricted area, you do not have permission to enter it'
 					return @navigate ''
-				if restrictedTo is 'manager' and !currentUser.isDataManager() and !currentUser.isUserManager()
+				if restrictedTo is 'libraryManager' and !currentUser.isLibraryManager()
+					alert 'This is a restricted area, you do not have permission to enter it'
+					return @navigate ''
+				if restrictedTo is 'manager' and !currentUser.isDataManager() and !currentUser.isUserManager() and !currentUser.isLibraryManager()
 					alert 'This is a restricted area, you do not have permission to enter it'
 					return @navigate ''
 				callback.apply context, args

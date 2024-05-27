@@ -60,6 +60,9 @@ define([
 				@$el.html template
 					user: user
 					isAdmin: currentUser.isAdmin()
+					isUserManager: currentUser.isUserManager()
+					isDataManager: currentUser.isDataManager()
+					isLibraryManager: currentUser.isLibraryManager()
 					adminArea: @adminArea
 					formatDate: Format.date
 				Renderer.render @, renderOptions
@@ -192,13 +195,14 @@ define([
 				@$('#settings-canCreateRepositories').prop 'disabled', false
 				@$('#settings-userManager').prop 'disabled', false
 				@$('#settings-dataManager').prop 'disabled', false
+				@$('#settings-libraryManager').prop 'disabled', false
 				if @$('#settings-admin').is(':checked')
 					@$('#settings-canCreateGroups').prop 'checked', true
 					@$('#settings-canCreateGroups').prop 'disabled', true
 					@$('#settings-userManager').prop 'checked', true
 					@$('#settings-userManager').prop 'disabled', true
 					@$('#settings-dataManager').prop 'checked', true
-					@$('#settings-dataManager').prop 'disabled', true
+					@$('#settings-libraryManager').prop 'disabled', true
 				if @$('#settings-canCreateGroups').is(':checked')
 					@$('#settings-canCreateRepositories').prop 'checked', true
 					@$('#settings-canCreateRepositories').prop 'disabled', true

@@ -202,7 +202,12 @@ public class UserController {
 		}
 		if (currentUser.isUserManager()) {
 			fromDb.settings.userManager = user.settings.userManager;
-			fromDb.settings.dataManager = user.settings.dataManager;
+			if (currentUser.isDataManager()) {
+				fromDb.settings.dataManager = user.settings.dataManager;
+			}
+			if (currentUser.isLibraryManager()) {
+				fromDb.settings.libraryManager = user.settings.libraryManager;
+			}
 			fromDb.settings.canCreateGroups = user.settings.canCreateGroups;
 			fromDb.settings.canCreateRepositories = user.settings.canCreateRepositories;
 			fromDb.settings.noOfRepositories = user.settings.noOfRepositories;

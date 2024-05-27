@@ -1,8 +1,9 @@
 define([
+				'cs!models/CurrentUser'
 				'cs!models/Settings'
 			]
 	
-	(settings) ->
+	(currentUser, settings) ->
 
 		init: () ->
 			return {
@@ -23,7 +24,7 @@ define([
 				'dashboard/repositories': 'dashboardRepositories'
 				'dashboard/groups': 'dashboardGroups'
 				'dashboard/tags': 'dashboardTags'
-				'administration': 'adminOverview'
+				'administration': if currentUser.isLibraryManager() then 'adminLibraries' else 'adminOverview'
 				'administration/overview': 'adminOverview'
 				'administration/user/new': 'adminUserNew'
 				'administration/user/profile/:username': 'adminUserEdit'

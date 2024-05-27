@@ -8,12 +8,15 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,31 +32,55 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.EmailService;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
+import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.IndexService;
+import com.greendelta.collaboration.service.user.TeamService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("ws/admin/area")
 public class AdminAreaController {
 
 	private final RepositoryService repoService;
+	private final GroupService groupService;
+	private final UserService userService;
+	private final TeamService teamService;
 	private final IndexService indexService;
 	private final SettingsService settings;
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
 
-	public AdminAreaController(RepositoryService repoService, IndexService indexingService, SettingsService settings,
+	public AdminAreaController(RepositoryService repoService, GroupService groupService, UserService userService,
+			TeamService teamService, IndexService indexingService, SettingsService settings,
 			EmailService emailService, AnnouncementService announcementService) {
 		this.repoService = repoService;
+		this.groupService = groupService;
+		this.userService = userService;
+		this.teamService = teamService;
 		this.indexService = indexingService;
 		this.settings = settings;
 		this.emailService = emailService;
 		this.announcementService = announcementService;
+	}
+
+	@GetMapping("count")
+	public Map<String, Object> getCounts(@Autowired HttpServletRequest request) {
+		var result = new HashMap<String, Object>();
+		result.put("repositories", repoService.getCount());
+		result.put("groups", groupService.getAllAccessible().stream()
+				.filter(Predicate.not(groupService::isUserNamespace))
+				.count());
+		result.put("users", userService.getCount());
+		result.put("teams", teamService.getCount());
+		return result;
 	}
 
 	@GetMapping("testGladConfig")

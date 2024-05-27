@@ -117,7 +117,7 @@ public class RepositoryController {
 		map.put("role", membershipService.getRole(user, repo.path()));
 		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.path()).size());
-		if (user.isDataManager()) {
+		if (!user.isAnonymous()) {
 			var lastCommit = repo.commits.find().latest();
 			map.put("lastCommit", lastCommit != null ? lastCommit.timestamp : null);
 		}

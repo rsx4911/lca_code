@@ -213,6 +213,12 @@ define([
 						result.isSearchEnabled = settings.is 'SEARCH_AVAILABLE'
 						if @serverInfo
 							result.reindexingStatus = @serverInfo.reindexingStatus
+				@groupFilter = new Filter
+					container: '#groups'
+					template: groupsTemplate
+					filterId: 'group-filter'
+					pageSizeId: 'groups-page-size'
+					url: 'ws/group?adminArea=true&'
 				@userFilter = new Filter
 					container: '#users'
 					template: usersTemplate
@@ -221,12 +227,6 @@ define([
 					url: 'ws/usermanager/user?'
 					beforeRender: (result) ->
 						result.formatDate = Format.date
-				@groupFilter = new Filter
-					container: '#groups'
-					template: groupsTemplate
-					filterId: 'group-filter'
-					pageSizeId: 'groups-page-size'
-					url: 'ws/group?adminArea=true&'
 				@teamFilter = new Filter
 					container: '#teams'
 					template: teamsTemplate
@@ -235,7 +235,8 @@ define([
 					url: 'ws/usermanager/team?'
 
 			render: (renderOptions) ->
-				$.get 'ws/usermanager/area/count', (counts) =>
+				managerType = if currentUser.isAdmin() then 'admin' else if currentUser.isDataManager() then 'datamanager' else 'usermanager'
+				$.get "ws/#{managerType}/area/count", (counts) =>
 					if currentUser.isAdmin()
 						$.get 'ws/admin/area/serverInfo', (serverInfo) =>
 							@serverInfo = serverInfo
@@ -259,20 +260,23 @@ define([
 					data.modelTypesOrder = modelTypesOrder
 				data.repositories = counts.repositories
 				data.isAdmin = currentUser.isAdmin()
+				data.isDataManager = currentUser.isDataManager()
+				data.isUserManager = currentUser.isUserManager()
 				data.users = counts.users
 				data.groups = counts.groups
 				data.teams =  counts.teams
 				data.isHomepageEnabled = settings.is 'HOMEPAGE_ENABLED'
 				data.isSearchEnabled = settings.is 'SEARCH_AVAILABLE'
 				data.maintenanceModeActive = @serverInfo?.maintenanceMode
-
 				@$el.html template data
 				Renderer.render @, renderOptions
-				@repositoryFilter.init()
-				@userFilter.init()
-				@groupFilter.init()
-				@teamFilter.init()
-				@renderIndexingStatus(data.indexingStatus)
+				if currentUser.isUserManager()
+					@userFilter.init()
+					@teamFilter.init()
+				if currentUser.isDataManager()
+					@repositoryFilter.init()
+					@groupFilter.init()
+					@renderIndexingStatus(data.indexingStatus)
 
 			renderIndexingStatus: (indexing) ->
 				unless $('#indexing-status').length

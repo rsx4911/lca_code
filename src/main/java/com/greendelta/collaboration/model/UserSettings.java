@@ -60,6 +60,9 @@ public class UserSettings implements Serializable {
 	public boolean dataManager;
 
 	@Column
+	public boolean libraryManager;
+
+	@Column
 	@Temporal(TemporalType.DATE)
 	public Date activeUntil;
 
