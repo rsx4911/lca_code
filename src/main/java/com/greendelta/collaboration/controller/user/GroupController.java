@@ -68,7 +68,7 @@ public class GroupController {
 		var all = service.getAllAccessible();
 		if (onlyIfCanWrite) {
 			all = all.stream()
-					.filter(Predicate.not(permissions::canWriteTo))
+					.filter(permissions::canWriteTo)
 					.collect(Collectors.toList());
 		}
 		if (adminArea) {
