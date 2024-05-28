@@ -31,9 +31,6 @@ mixin static-setting(field, label, formatter)
 				li: a(href='#' data-format='json' data-action='select-data') as JSON-LD (openLCA 2.x) (Subselect)...
 				li: a(href='#' data-format='json1' data-action='select-data') as JSON-LD (openLCA 1.x) (Subselect)...
 	.clear
-	if categoryPath
-		.form-group
-			input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
 if info && (info.description || info.version || info.lastChange || info.typeOfData || info.sourceInfo || info.contactInfo || info.projectInfo || info.projectFunding || info.appropriateUse || info.dqAssessment)
 	.header-box
 		.repository-description
@@ -52,6 +49,9 @@ if info && (info.description || info.version || info.lastChange || info.typeOfDa
 				+static-setting('dqAssessment', 'Data quality assessment')
 				+static-setting('citation', 'Citation')
 if categoryPath
+	.header-box
+		.form-group
+			input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
 	.header-box
 		+category-breadcrumb(categoryPath.split('/'), baseUrl, false, false, commitId)
 
