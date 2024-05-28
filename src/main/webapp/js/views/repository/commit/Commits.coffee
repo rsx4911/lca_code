@@ -48,7 +48,7 @@ define([
 					template: listTemplate
 					filterId: 'filter'
 					delayedFilter: true
-					url: "ws/history/search/#{group}/#{name}?"
+					url: "ws/public/history/search/#{group}/#{name}?"
 					beforeRender: (result) =>
 						unless result
 							return
@@ -62,7 +62,7 @@ define([
 							return
 						setTimeout () =>
 							for commit in result.data
-								$.get "ws/history/count/#{group}/#{name}/#{commit.id}", (count) =>
+								$.get "ws/public/history/count/#{group}/#{name}/#{commit.id}", (count) =>
 									$(".commit-info-container[data-commit-id=#{count.id}]").html infoTemplate count
 						, 10
 

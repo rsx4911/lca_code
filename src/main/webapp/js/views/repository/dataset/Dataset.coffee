@@ -74,13 +74,10 @@ define([
 					success: callback
 
 			loadCommitHistory: (callback) ->
-				unless currentUser.isLoggedIn()
-					callback()
-					return
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'
-					url: "ws/history/#{urlPart}"
+					url: "ws/public/history/#{urlPart}"
 					success: callback
 
 			getFileBaseUrl: () ->
@@ -180,6 +177,7 @@ define([
 					commits: @commits
 					commitId: @commitId
 					compareTo: @compareTo
+					releases: @repository.get('releases')
 					comparisonCommitId: comparisonCommitId
 					baseUrl: "#{group}/#{name}/dataset"
 					fileBaseUrl: @getFileBaseUrl()
@@ -248,18 +246,20 @@ define([
 			initComparison: (event) ->
 				target = $ Events.target event
 				type = target.attr 'data-compare-to'
-				if type is 'previous' and @commits.length > 1
-					commitId = @commits[@commits.length - 2].id
+				selectFrom = if !currentUser.isLoggedIn() then @repository.get('releases') else @commits
+				if type is 'previous' and selectFrom.length > 1
+					commitId = selectFrom[1].id
 					if commitId
 						@applyComparison @refId, commitId
 				else if type is 'other-version'
-					Layers.selectCommit @commits, @commitId, (commitId) =>
+					Layers.selectCommit selectFrom.filter((c) => c.id isnt @commitId), @commitId, (commitId) =>
 						@applyComparison @refId, commitId
 				else if type is 'other-dataset'
 					repositoryPath = @repository.get('group') + '/' + @repository.get('name')
 					Layers.selectModel
 						repositoryPath: repositoryPath
 						type: @type
+						releases: @repository.get('releases')
 						selectVersion: true
 						callback: (refId, commitId) =>
 							@applyComparison refId, commitId

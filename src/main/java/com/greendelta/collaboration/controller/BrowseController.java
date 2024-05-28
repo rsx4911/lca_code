@@ -181,18 +181,15 @@ public class BrowseController {
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
 		try (var repo = repoService.get(group, name)) {
-			var commit = historyService.getAccessibleCommit(repo, commitId);
+			var commit = historyService.getAccessibleCommit(repo, type, refId, commitId);
 			if (commit == null)
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 			var ref = repo.references.get(type, refId, commit.id);
 			var dataset = repo.datasets.get(ref);
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commit.id);
-			var map = Maps.of(dataset);
-			var currentUser = userService.getCurrentUser();
-			if (!currentUser.isAnonymous()) {
-				map.put("commitId", commit.id);
-			}
+			var map = Maps.of(dataset);			
+			map.put("commitId", commit.id);
 			new IsInRepoInfo(repo, commitId).addIn(map);
 			return map;
 		}

@@ -54,8 +54,8 @@ define([
 			selected = $('#model-tree').jstree 'get_selected', true
 			if firstOnly
 				for e in selected
-					if e.refId
-						return refId
+					if e.original.refId
+						return e.original.refId
 				return null
 			paths = []
 			for e in selected

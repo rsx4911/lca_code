@@ -15,7 +15,7 @@ public class ReleaseService {
 	public ReleaseService(Dao<ReleaseInfo> dao) {
 		this.dao = dao;
 	}
-	
+
 	public List<ReleaseInfo> getAll() {
 		return dao.getAll();
 	}
@@ -38,13 +38,6 @@ public class ReleaseService {
 		return dao.getForAttribute("repositoryPath", repositoryPath);
 	}
 
-
-	public ReleaseInfo getLatest(String repositoryPath) {
-		var releases = dao.getForAttribute("repositoryPath", repositoryPath);
-		if (releases.isEmpty())
-			return null;
-		return releases.get(releases.size() - 1);
-	}
 	public ReleaseInfo insert(ReleaseInfo release) {
 		return dao.insert(release);
 	}

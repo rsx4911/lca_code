@@ -50,7 +50,7 @@ define([
 			getUrl: () ->
 				repo = @repository.toJSON()
 				commitId = @commitId
-				url = "ws/history/references/#{repo.group}/#{repo.name}/#{commitId}?"
+				url = "ws/public/history/references/#{repo.group}/#{repo.name}/#{commitId}?"
 				if @type
 					url += 'type=' + @type + '&'
 				return url
@@ -73,7 +73,7 @@ define([
 				commitId = @commitId
 				$.ajax
 					type: 'GET'
-					url: "ws/history/commit/#{repo.group}/#{repo.name}/#{commitId}"
+					url: "ws/public/history/commit/#{repo.group}/#{repo.name}/#{commitId}"
 					success: callback
 
 			setModelFilters: (modelTypes) ->

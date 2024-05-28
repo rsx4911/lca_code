@@ -217,6 +217,7 @@ define([
 					model: 
 						label: if options.type then ModelTypes.singular(options.type) else 'Data set'
 						selectVersion: options.selectVersion
+						releases: options.releases
 					buttons: [
 						{text: 'Cancel', callback: () => @closeActive()}
 						{id: 'select-model-button', text: 'Select', className: 'btn-primary', callback: () => 
@@ -225,7 +226,7 @@ define([
 								@closeActive()
 								options.callback selection
 							else
-								refId = ModelTree.getSelection('#model-tree', true).refId
+								refId = ModelTree.getSelection('#model-tree', true)
 								commitId = null
 								if options.selectVersion
 									commitId = $('#model-selection #commitId').val()
@@ -238,28 +239,26 @@ define([
 						ModelTree.init '#model-tree', options.repositoryPath, 
 							multipleSelection: options.multipleSelection
 							defaultPath: options.path || options.type
-						$('#select-model-button').prop 'disabled', !options.multipleSelection
+						$('#select-model-button').prop 'disabled', true
 						$('#model-tree').on 'activate_node.jstree', (event, data) =>
-							if options.type && !options.multipleSelection
-								isType = data?.node?.original?.type is options.type
-								$('#select-model-button').prop 'disabled', !isType
-								if isType and options.selectVersion
-									refId = data.node.original.id
-									@showProgressIndicator ['Loading', 'versions']
-									$.ajax
-										type: 'GET'
-										url: "ws/history/#{options.repositoryPath}/#{options.type}/#{refId}"
-										success: (commits) =>
-											$('#select-model-button').prop 'disabled', (!commits || !commits.length)
-											$('#model-selection #commitId').empty()
-											if commits?.length
-												for commit, index in commits
-													$('#model-selection #commitId').append '<option value="' + commit.id + '">' + (if index is 0 then 'Latest' else commit.id) + '</option>'
-													$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.commitDescription(commit.message) + '"></optgroup>'
-											@hideProgressIndicator()
-										error: () => 
-											$('#select-model-button').prop 'disabled', true
-											@hideProgressIndicator()
+							$('#select-model-button').prop 'disabled', !options.releases
+							if options.type and !options.multipleSelection and options.selectVersion and !options.releases
+								refId = data.node.original.refId
+								@showProgressIndicator ['Loading', 'versions']
+								$.ajax
+									type: 'GET'
+									url: "ws/public/history/#{options.repositoryPath}/#{options.type}/#{refId}"
+									success: (commits) =>
+										$('#select-model-button').prop 'disabled', (!commits || !commits.length)
+										$('#model-selection #commitId').empty()
+										if commits?.length
+											for commit, index in commits
+												$('#model-selection #commitId').append '<option value="' + commit.id + '">' + (if index is 0 then 'Latest' else commit.id) + '</option>'
+												$('#model-selection #commitId').append '<optgroup class="additional-info" label="&nbsp; &nbsp;' + Format.commitDescription(commit.message) + '"></optgroup>'
+										@hideProgressIndicator()
+									error: () => 
+										$('#select-model-button').prop 'disabled', true
+										@hideProgressIndicator()
 
 			selectCommit: (commits, commitId, callback) ->
 				@showTemplateInLayer

@@ -5,4 +5,7 @@ form#model-selection
 	#model-tree
 	if selectVersion
 		br
-		+select('commitId', 'Version')
+		if releases
+			+release-selection('commitId', 'Version', releases)
+		else
+			+select('commitId', 'Version')

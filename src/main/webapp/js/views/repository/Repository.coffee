@@ -183,7 +183,7 @@ define([
 				repoPath = "#{repository.group}/#{repository.name}"
 				$.ajax
 					type: 'GET'
-					url: "ws/history/#{repoPath}"
+					url: "ws/public/history/#{repoPath}"
 					success: (commits) =>
 						@loadGroups (groups) =>
 							callback commits, groups

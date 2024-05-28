@@ -50,15 +50,15 @@ public class DownloadJsonController extends DownloadController {
 	@Override
 	@GetMapping("{token}")
 	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
-		if (token.startsWith("repository_")) {
-			try (var repo = repoService.get(token.substring(11).replace("@", "/"))) {
-				// TODO offer all cached json files, not just the latest
-				var latestRelease = releaseService.getLatest(repo.path());
-				var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
-				if (cachedJsonFile.exists())
-					return Response.ok(repo.toFilename(), cachedJsonFile);
-			}
-		}
+//		if (token.startsWith("repository_")) {
+//			try (var repo = repoService.get(token.substring(11).replace("@", "/"))) {
+//				// TODO offer all cached json files, not just the latest
+//				var latestRelease = releaseService.getLatest(repo.path());
+//				var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
+//				if (cachedJsonFile.exists())
+//					return Response.ok(repo.toFilename(), cachedJsonFile);
+//			}
+//		}
 		return super.download(token);
 	}
 
@@ -69,24 +69,25 @@ public class DownloadJsonController extends DownloadController {
 			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestParam(name = "path", required = false) String path) {
 		// TODO offer all cached json files, not just the latest
-		if (isCompleteCurrentRepo(group, repository, commitId, path))
-			return "repository_" + group + "@" + repository;
+//		if (isCompleteCurrentRepo(group, repository, commitId, path))
+//			return "repository_" + group + "@" + repository;
 		return super.prepare(group, repository, commitId, path);
 	}
 
 	private boolean isCompleteCurrentRepo(String group, String repository, String commitId, String path) {
-		try (var repo = repoService.get(group, repository)) {
-			// TODO offer all cached json files, not just the latest
-			var latestRelease = releaseService.getLatest(repo.path());
-			var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
-			if (!cachedJsonFile.exists())
-				return false; // is not cached
-			if (!Strings.nullOrEmpty(path))
-				return false; // is not complete repo
-			if (commitId != null && !commitId.equals(repo.commits.resolve("HEAD")))
-				return false; // is not current state (last commit)
-			return true;
-		}
+		return false;
+//		try (var repo = repoService.get(group, repository)) {
+//			// TODO offer all cached json files, not just the latest
+//			var latestRelease = releaseService.getLatest(repo.path());
+//			var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
+//			if (!cachedJsonFile.exists())
+//				return false; // is not cached
+//			if (!Strings.nullOrEmpty(path))
+//				return false; // is not complete repo
+//			if (commitId != null && !commitId.equals(repo.commits.resolve("HEAD")))
+//				return false; // is not current state (last commit)
+//			return true;
+//		}
 	}
 
 	@GetMapping("prepare/{group}/{repository}/{type}/{refId}")

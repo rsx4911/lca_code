@@ -15,13 +15,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Avatar;
+import com.greendelta.collaboration.controller.util.Releases;
 import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.ReleaseInfo;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.util.Maps;
 
 @RestController
 @RequestMapping("ws/public/repository")
@@ -30,11 +32,14 @@ public class RepositoryController {
 	private final RepositoryService service;
 	private final GroupService groupService;
 	private final HistoryService historyService;
+	private final ReleaseService releaseService;
 
-	public RepositoryController(RepositoryService service, GroupService groupService, HistoryService historyService) {
+	public RepositoryController(RepositoryService service, GroupService groupService, HistoryService historyService,
+			ReleaseService releaseService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.historyService = historyService;
+		this.releaseService = releaseService;
 	}
 
 	@GetMapping
@@ -46,6 +51,28 @@ public class RepositoryController {
 		}
 	}
 
+	@GetMapping("{group}/{name}")
+	public Map<String, Object> get(
+			@PathVariable("group") String group,
+			@PathVariable("name") String name) {
+		try (var repo = service.get(group, name)) {
+			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
+			var sortedCommitIds = historyService.getAccessibleCommits(repo).stream()
+					.map(c -> c.id)
+					.toList();
+			var releases = releaseService.getFor(repo.path()).stream()
+					.sorted((r1, r2) -> compare(r1, r2, sortedCommitIds))
+					.map(Releases::map)
+					.toList();
+			mappedRepo.put("releases", releases);
+			return mappedRepo;
+		}
+	}
+
+	private int compare(ReleaseInfo r1, ReleaseInfo r2, List<String> sortedCommitIds) {
+		return Integer.compare(sortedCommitIds.indexOf(r1.commitId), sortedCommitIds.indexOf(r2.commitId));
+	}
+
 	@GetMapping("count/{group}/{name}")
 	public ResponseEntity<?> getReferenceCount(
 			@PathVariable("group") String group,
@@ -55,20 +82,6 @@ public class RepositoryController {
 			if (commit == null)
 				return Response.ok(Map.of("datasets", 0));
 			return Response.ok(Map.of("datasets", repo.references.find().commit(commit.id).count()));
-		}
-	}
-
-	@GetMapping("{group}/{name}")
-	public Map<String, Object> get(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
-		try (var repo = service.get(group, name)) {
-			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
-			var lastRelease = historyService.getLatestAccessibleCommit(repo);
-			if (lastRelease != null) {
-				Maps.put(mappedRepo, "settings.lastChange", lastRelease.timestamp);
-			}
-			return mappedRepo;
 		}
 	}
 

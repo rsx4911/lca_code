@@ -26,9 +26,9 @@ define([
 				commitId = target.val()
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				path = "#{group}/#{name}/datasets/"
+				path = "#{group}/#{name}/datasets"
 				if @categoryPath
-					path += @categoryPath 
+					path += "/#{@categoryPath}"
 				if commitId
 					path += "?commitId=#{commitId}"
 				Router.navigate path
@@ -68,11 +68,6 @@ define([
 				{@repository, @categoryPath, @commitId} = options
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				if !currentUser.isLoggedIn() and @commitId
-					@commitId = null
-					Router.navigate "#{group}/#{name}/datasets/" + @categoryPath, 
-						trigger: false
-						replace: true
 				@filter = new Filter
 					container: '.table-browse > tbody'
 					template: entriesTemplate
@@ -112,7 +107,7 @@ define([
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				if currentUser.isLoggedIn()
-					historyUrl = "ws/history/#{group}/#{name}"
+					historyUrl = "ws/public/history/#{group}/#{name}"
 					if @categoryPath
 						historyUrl += "?path=#{@getCategoryPath()}"
 					$.ajax
@@ -125,19 +120,14 @@ define([
 			doRender: (renderOptions, commits) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				@pathArray = []
-				if @categoryPath and @categoryPath.indexOf('/') isnt -1
-					@pathArray.push @categoryPath.substring 0, @categoryPath.indexOf('/')
-				else if @categoryPath
-					@pathArray.push @categoryPath
 				@$el.html template
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
 					formatDate: Format.dateTime
 					formatCommitDescription: Format.commitDescription
-					pathAsArray: @pathArray
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits
+					releases: @repository.get('releases')
 					commitId: @commitId
 					settings: @repository.get('settings')
 					getRootLabel: (type) -> return ModelTypes[type]

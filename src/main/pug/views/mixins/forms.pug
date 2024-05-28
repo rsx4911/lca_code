@@ -136,3 +136,18 @@ mixin member-selection(multiple)
 			+options(teams, null, 'team')
 	else
 		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')
+
+mixin commit-selection(id, label, commits, selected, inline)
+	if commits && commits.length
+		+select(id, label, null, null, inline)
+			each commit, index in commits
+				if index === 0
+					option(value='', selected=!selected||commit.id===commitId) Latest
+					optgroup.additional-info(label=commit.message)
+				else
+					option(value=commit.id selected=commit.id===selected)=formatCommitDescription(commit.message)
+
+mixin release-selection(id, label, releases, selected, inline)
+	+select(id, label, null, null, inline)
+		each release in releases
+			option(value=release.id selected=release.id===commitId)=release.version

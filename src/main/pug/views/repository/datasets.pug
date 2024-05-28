@@ -2,72 +2,58 @@ include ../mixins/category-breadcrumb.pug
 include ../mixins/forms.pug
 include ../mixins/long-text.pug
 
-mixin download-dropdown()
-	.dropdown.btn-group
-		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
-			span.glyphicon.glyphicon-download
-			span.text Download 
-			span.caret
-		ul.dropdown-menu
-			li: a(href='#' data-format='json') as JSON-LD (openLCA 2.x)
-			li: a(href='#' data-format='json1') as JSON-LD (openLCA 1.x)
-			- var type = null;
-			if categoryPath && categoryPath.length
-				- var type = categoryPath[0]
-			li.divider(role='separator')
-			li: a(href='#' data-format='json' data-action='select-data') as JSON-LD (openLCA 2.x) (Subselect)...
-			li: a(href='#' data-format='json1' data-action='select-data') as JSON-LD (openLCA 1.x) (Subselect)...
+- var info = releases && releases.length ? commitId ? releases.find(function(r) { return r.id === commitId; }) : releases[0] : settings;
 
 mixin static-setting(field, label, formatter)
-	if settings[field]
-		- var value = formatter ? formatter(settings[field]) : settings[field];
+	if info[field]
+		- var value = formatter ? formatter(info[field]) : info[field];
 		+static(field, label, value)
 
-mixin category-or-description()
-	if !pathAsArray.length && settings.description
-		.repository-description 
-			p=settings.description
-			if settings.version || settings.typeOfData || settings.sourceInfo || settings.contactInfo || settings.projectInfo || settings.projectFunding || settings.appropriateUse || settings.dqAssessment
-				+toggleable
-					+static-setting('version', 'Version')
-					+static-setting('lastChange', 'Last change', formatDate)
-					+static-setting('typeOfData', 'Type of data')
-					+static-setting('sourceInfo', 'Source information')
-					+static-setting('contactInfo', 'Contact information')
-					+static-setting('projectInfo', 'Project information')
-					+static-setting('projectFunding', 'Project funding')
-					+static-setting('appropriateUse', 'Appropriate use')
-					+static-setting('dqAssessment', 'Data quality assessment')
-					+static-setting('citation', 'Citation')
-	else
-		+category-breadcrumb(pathAsArray, baseUrl, false, false, commitId)
-
-- var showCommitSelection = !isPublic && commits && commits.length;
-if showCommitSelection || categoryPath
+.header-box(class=isPublic?'only-box':null)
+	.pull-left
+		if isPublic
+			+release-selection('commit', 'Version', releases, commitId, true)
+		else if !isPublic
+			+commit-selection('commit', 'Commit', commits, commitId, true)
+	.pull-right
+		.dropdown.btn-group
+			button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+				span.glyphicon.glyphicon-download
+				span.text Download 
+				span.caret
+			ul.dropdown-menu
+				li: a(href='#' data-format='json') as JSON-LD (openLCA 2.x)
+				li: a(href='#' data-format='json1') as JSON-LD (openLCA 1.x)
+				- var type = null;
+				if categoryPath && categoryPath.length
+					- var type = categoryPath[0]
+				li.divider(role='separator')
+				li: a(href='#' data-format='json' data-action='select-data') as JSON-LD (openLCA 2.x) (Subselect)...
+				li: a(href='#' data-format='json1' data-action='select-data') as JSON-LD (openLCA 1.x) (Subselect)...
+	.clear
+	if categoryPath
+		.form-group
+			input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
+if info && (info.description || info.version || info.lastChange || info.typeOfData || info.sourceInfo || info.contactInfo || info.projectInfo || info.projectFunding || info.appropriateUse || info.dqAssessment)
 	.header-box
-		if showCommitSelection
-			.pull-left
-				+select('commit', 'Commit', null, null, true)
-					option(value='', selected=!commitId) Latest 
-					each commit, index in commits
-						option(value=commit.id selected=commit.id===commitId)=formatCommitDescription(commit.message)
-			.pull-right
-				+download-dropdown()
-		.clear
-		if categoryPath
-			.form-group
-				input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
-			.clear
-if !isPublic || pathAsArray
-	.header-box(class=!showCommitSelection&&!categoryPath?'only-box':null)
-		if !showCommitSelection
-			.pull-left
-				+category-or-description()
-			.pull-right
-				+download-dropdown()
-		else
-			+category-or-description()
-		.clear
+		.repository-description
+			if info.description
+				p=info.description
+			+toggleable
+				if !isPublic
+					+static-setting('version', 'Version')
+				+static-setting('lastChange', 'Last change', formatDate)
+				+static-setting('typeOfData', 'Type of data')
+				+static-setting('sourceInfo', 'Source information')
+				+static-setting('contactInfo', 'Contact information')
+				+static-setting('projectInfo', 'Project information')
+				+static-setting('projectFunding', 'Project funding')
+				+static-setting('appropriateUse', 'Appropriate use')
+				+static-setting('dqAssessment', 'Data quality assessment')
+				+static-setting('citation', 'Citation')
+if categoryPath
+	.header-box
+		+category-breadcrumb(categoryPath.split('/'), baseUrl, false, false, commitId)
 
 .content-box
 	table.table.table-browse

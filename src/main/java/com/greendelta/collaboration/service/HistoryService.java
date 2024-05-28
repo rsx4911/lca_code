@@ -54,9 +54,13 @@ public class HistoryService {
 	}
 
 	public Commit getAccessibleCommit(Repository repo, String commitId) {
+		return getAccessibleCommit(repo, null, null, commitId);
+	}
+
+	public Commit getAccessibleCommit(Repository repo, ModelType type, String refId, String commitId) {
 		var currentUser = userService.getCurrentUser();
 		if (commitId == null)
-			return getLatestAccessibleCommit(repo);
+			return getLatestAccessibleCommitUntil(repo, null, type, refId, null);
 		var commit = repo.commits.get(commitId);
 		if (commit == null)
 			return null;
@@ -67,15 +71,20 @@ public class HistoryService {
 	}
 
 	public Commit getLatestAccessibleCommit(Repository repo) {
-		return getLatestAccessibleCommitUntil(repo, null, null);
+		return getLatestAccessibleCommitUntil(repo, null, null, null, null);
 	}
 
 	public Commit getLatestAccessibleCommitUntil(Repository repo, String path, String commitId) {
-		var accessibleCommits = getAccessibleCommits(repo, path, null, null, commitId);
+		return getLatestAccessibleCommitUntil(repo, path, null, null, commitId);
+	}
+
+	private Commit getLatestAccessibleCommitUntil(Repository repo, String path, ModelType type, String refId, String commitId) {
+		var accessibleCommits = getAccessibleCommits(repo, path, type, refId, commitId);
 		if (!accessibleCommits.isEmpty())
 			return accessibleCommits.get(accessibleCommits.size() - 1);
 		return null;
 	}
+
 
 	public Commit getPreviouslyAccessibleCommit(Repository repo, String commitId) {
 		var accessibleCommits = getAccessibleCommits(repo, null, null, null, commitId);

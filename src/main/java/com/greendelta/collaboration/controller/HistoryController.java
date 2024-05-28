@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.controller.user;
+package com.greendelta.collaboration.controller;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,7 +34,7 @@ import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
-@RequestMapping("ws/history")
+@RequestMapping("ws/public/history")
 public class HistoryController {
 
 	private final HistoryService service;
