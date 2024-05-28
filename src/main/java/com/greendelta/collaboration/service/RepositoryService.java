@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -40,9 +39,9 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @Service
@@ -277,17 +276,34 @@ public class RepositoryService {
 		}
 	}
 
-	public void generateJson(Repository repo, String commitId, Function<LibraryLink, String> urlResolver) {
+	public void generateCachedJson(Repository repo, String commitId, List<LibraryLink> linkedLibraries) {
+		generateJson(repo.dir, repo.getCachedJsonFile(commitId), commitId, linkedLibraries);
+	}
+
+	private void generateJson(File repoDir, File jsonFile, String commitId, List<LibraryLink> linkedLibraries) {
+		// Don't use git repo in thread, since it might be closed by calling code
+		var lockFile = new File(repoDir, ".lock_" + commitId);
+		if (lockFile.exists())
+			return;
 		new Thread(() -> {
 			try {
+				Files.write(new byte[0], lockFile);
 				var tmpFile = fileService.createTempFile();
-				RepositoryJsonWriter.write(repo.dir, commitId, tmpFile, repo.linkedLibraries(urlResolver));
-				Files.copy(tmpFile, repo.getCachedJsonFile(commitId));
+				RepositoryJsonWriter.write(repoDir, commitId, tmpFile, linkedLibraries);
+				Files.copy(tmpFile, jsonFile);
 				tmpFile.delete();
 			} catch (IOException e) {
 				log.error("Error generating json file", e);
+			} finally {
+				if (lockFile.exists()) {
+					Dirs.delete(lockFile);
+				}
 			}
 		}).start();
+	}
+	
+	public static void main(String[] args) throws IOException {
+		Files.write(new byte[0], new File("C:/Users/greve/test_lock_file.txt"));
 	}
 
 	public int getNoOfRepositories(User user) {

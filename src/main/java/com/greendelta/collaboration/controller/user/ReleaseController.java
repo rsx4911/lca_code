@@ -9,6 +9,8 @@ import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.ReleaseInfo;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -20,12 +22,17 @@ public class ReleaseController {
 
 	private final ReleaseService service;
 	private final RepositoryService repoService;
+	private final LibraryService libraryService;
+	private final HistoryService historyService;
 	private final PermissionsService permissions;
 	private final SettingsService settings;
 
-	public ReleaseController(ReleaseService service, RepositoryService repoService, PermissionsService permissions, SettingsService settings) {
+	public ReleaseController(ReleaseService service, RepositoryService repoService, LibraryService libraryService,
+			HistoryService historyService, PermissionsService permissions, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
+		this.libraryService = libraryService;
+		this.historyService = historyService;
 		this.permissions = permissions;
 		this.settings = settings;
 	}
@@ -37,15 +44,19 @@ public class ReleaseController {
 		if (!settings.is(ServerSetting.RELEASES_ENABLED))
 			throw Response.unavailable("Release feature not enabled");
 		try (var repo = repoService.get(group, name)) {
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound("Commit " + commitId + " not found");
 			if (service.isReleased(repo.path(), commitId))
 				throw Response.conflict("Commit " + commitId + " is already released");
 			if (!permissions.canCreateReleasesIn(repo.path()))
 				throw Response.forbidden(repo.path(), Permission.CREATE_RELEASES);
 			var release = new ReleaseInfo();
 			release.repositoryPath = repo.path();
-			release.commitId = commitId;
+			release.commitId = commit.id;
 			// TODO add other info
 			service.insert(release);
+			repoService.generateCachedJson(repo, commitId, libraryService.getLinkedLibraries(repo, commit));
 		}
 	}
 }

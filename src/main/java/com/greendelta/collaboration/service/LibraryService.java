@@ -11,13 +11,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
 import org.openlca.git.RepositoryInfo;
+import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
@@ -83,7 +83,8 @@ public class LibraryService {
 		if (stream == null)
 			return null;
 		var currentUser = userService.getCurrentUser();
-		if (!currentUser.isLibraryManager() && (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
+		if (!currentUser.isLibraryManager()
+				&& (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
 			throw Response.forbidden("LIBRARIES", Permission.WRITE);
 		Path tmpFile = null;
 		try {
@@ -164,7 +165,7 @@ public class LibraryService {
 			return null;
 		try (var repos = repoService.getAllAccessible()) {
 			var linkedIn = repos.stream()
-					.filter(repo -> repo.linkedLibraries().contains(name))
+					.filter(repo -> repo.getLibraries().contains(name))
 					.map(Repository::path)
 					.distinct().toList();
 			var accesses = getAccessTypes(name);
@@ -185,6 +186,17 @@ public class LibraryService {
 			return false;
 		var accesses = getAccessTypes(name);
 		return accesses.contains(LibraryAccess.PUBLIC.name());
+	}
+
+	public List<LibraryLink> getLinkedLibraries(Repository repo, Commit commit) {
+		return repo.getLibraries(commit).stream()
+				.map(lib -> new LibraryLink(lib, getLibraryUrl(lib)))
+				.collect(Collectors.toList());
+	}
+
+	private String getLibraryUrl(String libId) {
+		var serverUrl = settings.serverConfig.getServerUrl();
+		return serverUrl + "/ws/" + (isPublic(libId) ? "public/libraries/" : "libraries/") + libId;
 	}
 
 	private File getLibraryFile(String name) {
@@ -283,11 +295,6 @@ public class LibraryService {
 			return linkedLibraries;
 		}
 
-	}
-
-	public Function<LibraryLink, String> getLibraryUrlResolver() {
-		var serverUrl = settings.serverConfig.getServerUrl();
-		return lib -> serverUrl + "/ws/" + (isPublic(lib.id()) ? "public/libraries/" : "libraries/") + lib.id();
 	}
 
 	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn,

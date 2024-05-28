@@ -24,7 +24,6 @@ import com.greendelta.collaboration.io.JsonWriter;
 import com.greendelta.collaboration.service.FileService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
-import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -33,32 +32,34 @@ import com.greendelta.collaboration.service.user.UserService;
 @RequestMapping("ws/public/download/json")
 public class DownloadJsonController extends DownloadController {
 
-	private final RepositoryService repoService;
 	private final LibraryService libraryService;
-	private final ReleaseService releaseService;
 	private final FileService fileService;
 
 	public DownloadJsonController(RepositoryService repoService, UserService userService, HistoryService historyService,
-			LibraryService libraryService, ReleaseService releaseService, FileService fileService) {
+			LibraryService libraryService, FileService fileService) {
 		super(repoService, userService, historyService);
-		this.repoService = repoService;
 		this.libraryService = libraryService;
-		this.releaseService = releaseService;
 		this.fileService = fileService;
 	}
 
 	@Override
 	@GetMapping("{token}")
 	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
-//		if (token.startsWith("repository_")) {
-//			try (var repo = repoService.get(token.substring(11).replace("@", "/"))) {
-//				// TODO offer all cached json files, not just the latest
-//				var latestRelease = releaseService.getLatest(repo.path());
-//				var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
-//				if (cachedJsonFile.exists())
-//					return Response.ok(repo.toFilename(), cachedJsonFile);
-//			}
-//		}
+		if (token.startsWith("repository_")) {
+			var info = token.substring(11).split("@");
+			if (info.length < 3)
+				throw Response.notFound();
+			try (var repo = repoService.get(info[0], info[1])) {
+				var commitId = info[2];
+				var commit = historyService.getAccessibleCommit(repo, commitId);
+				if (commit == null)
+					throw Response.notFound();
+				var cachedJsonFile = repo.getCachedJsonFile(commit.id);
+				if (!cachedJsonFile.exists())
+					throw Response.notFound();
+				return Response.ok(repo.toFilename(), cachedJsonFile);
+			}
+		}
 		return super.download(token);
 	}
 
@@ -68,26 +69,16 @@ public class DownloadJsonController extends DownloadController {
 			@PathVariable("repository") String repository,
 			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestParam(name = "path", required = false) String path) {
-		// TODO offer all cached json files, not just the latest
-//		if (isCompleteCurrentRepo(group, repository, commitId, path))
-//			return "repository_" + group + "@" + repository;
+		try (var repo = repoService.get(group, repository)) {
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (Strings.nullOrEmpty(path) && commit != null) {
+				var cachedJsonFile = repo.getCachedJsonFile(commit.id);
+				if (cachedJsonFile.exists())
+					return "repository_" + group + "@" + repository + "@" + commit.id;
+				repoService.generateCachedJson(repo, commit.id, libraryService.getLinkedLibraries(repo, commit));
+			}
+		}
 		return super.prepare(group, repository, commitId, path);
-	}
-
-	private boolean isCompleteCurrentRepo(String group, String repository, String commitId, String path) {
-		return false;
-//		try (var repo = repoService.get(group, repository)) {
-//			// TODO offer all cached json files, not just the latest
-//			var latestRelease = releaseService.getLatest(repo.path());
-//			var cachedJsonFile = repo.getCachedJsonFile(latestRelease.commitId);
-//			if (!cachedJsonFile.exists())
-//				return false; // is not cached
-//			if (!Strings.nullOrEmpty(path))
-//				return false; // is not complete repo
-//			if (commitId != null && !commitId.equals(repo.commits.resolve("HEAD")))
-//				return false; // is not current state (last commit)
-//			return true;
-//		}
 	}
 
 	@GetMapping("prepare/{group}/{repository}/{type}/{refId}")
@@ -111,8 +102,8 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(fileService.createTempFile(), repo,
-				repo.linkedLibraries(libraryService.getLibraryUrlResolver()), commit);
+		return new JsonWriter(fileService.createTempFile(), repo, libraryService.getLinkedLibraries(repo, commit),
+				commit);
 	}
 
 	@Override

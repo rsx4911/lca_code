@@ -50,14 +50,14 @@ public class LibraryController {
 		try (var repos = repoService.getAllAccessible()) {
 			var libraries = service.getAllAccessible();
 			var missing = repos.stream()
-					.map(Repository::linkedLibraries)
+					.map(Repository::getLibraries)
 					.flatMap(List::stream)
 					.distinct()
 					.filter(Predicate.not(libraries::contains))
 					.collect(Collectors.toSet());
 			return missing.stream().map(lib -> {
 				var linkedIn = repos.stream()
-						.filter(repo -> repo.linkedLibraries().contains(lib))
+						.filter(repo -> repo.getLibraries().contains(lib))
 						.map(Repository::path)
 						.toList();
 				var info = new HashMap<String, Object>();

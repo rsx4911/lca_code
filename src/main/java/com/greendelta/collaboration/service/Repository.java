@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.openlca.git.Compatibility;
+import org.openlca.git.model.Commit;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.SchemaVersion;
@@ -45,18 +45,20 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		return new File(fsPath);
 	}
 
-	public List<String> linkedLibraries() {
-		return linkedLibraries(null).stream()
-				.map(LibraryLink::id)
+	public List<String> getLibraries() {
+		return commits.find().all().stream()
+				.map(this::getLibraries)
+				.flatMap(List::stream)
+				.distinct()
 				.collect(Collectors.toList());
 	}
 
-	public List<LibraryLink> linkedLibraries(Function<LibraryLink, String> libToUrl) {
-		var info = getInfo();
+	public List<String> getLibraries(Commit commit) {
+		var info = getInfo(commit);
 		if (info == null || info.libraries() == null)
 			return new ArrayList<>();
 		return info.libraries().stream()
-				.map(lib -> new LibraryLink(lib.id(), libToUrl != null ? libToUrl.apply(lib) : null))
+				.map(LibraryLink::id)
 				.collect(Collectors.toList());
 	}
 

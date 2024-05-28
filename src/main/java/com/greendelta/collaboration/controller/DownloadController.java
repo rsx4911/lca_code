@@ -25,9 +25,9 @@ import com.greendelta.collaboration.service.user.UserService;
 abstract class DownloadController {
 
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
-	private final RepositoryService repoService;
-	private final UserService userService;
-	private final HistoryService historyService;
+	protected final RepositoryService repoService;
+	protected final UserService userService;
+	protected final HistoryService historyService;
 
 	protected DownloadController(RepositoryService repoService, UserService userService, HistoryService historyService) {
 		this.repoService = repoService;

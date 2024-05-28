@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 
 class Update1 {
@@ -29,7 +30,6 @@ class Update1 {
 		s.executeUpdate("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
 		return UPDATE_TO;
 	}
-
 
 	private void createReleases() throws SQLException, IOException {
 		var gitDir = getGitDir();
@@ -81,6 +81,11 @@ class Update1 {
 		}
 		sql += ")";
 		s.executeUpdate(sql);
+		var cachedJsonFile = new File(gitDir, "cached-json.zip");
+		if (cachedJsonFile.exists()) {
+			var newFile = new File(gitDir, "cached-json-" + commitId + ".zip");
+			Dirs.move(cachedJsonFile.toPath(), newFile.toPath());
+		}
 	}
 
 	private Map<String, String> getProperties(String repositoryPath) throws SQLException {
