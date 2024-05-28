@@ -164,10 +164,15 @@ define([
 							@router.registerRouteRewrite 'search', 'dashboard/activities'
 						else
 							@router.registerRouteRewrite 'search', 'dashboard/repositories'
+					if !settings.is('DASHBOARD_ACTIVITIES_ENABLED')
+						@router.registerRouteRewrite 'dashboardActivities', 'dashboard/repositories'
 					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
-					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					if currentUser.isAdmin() or currentUser.isDataManager() or currentUser.isUserManager()
+						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					else 
+						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
 				else if !settings.is('HOMEPAGE_ENABLED')
 					if settings.is('SEARCH_AVAILABLE')
 						@router.registerRouteRewrite 'landingPage', 'search'					
