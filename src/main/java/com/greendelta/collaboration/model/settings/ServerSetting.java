@@ -102,7 +102,6 @@ public enum ServerSetting implements SettingKey {
 	@Override
 	public boolean isPublicSetting() {
 		return !this.name().startsWith("GLAD_") 
-				&& !this.name().endsWith("_ENABLED")
 				&& this != LIBRARY_PATH
 				&& this != REPOSITORY_PATH;
 	}
