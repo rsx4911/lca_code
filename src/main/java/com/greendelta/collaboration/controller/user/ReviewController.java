@@ -116,7 +116,7 @@ public class ReviewController {
 	public Map<String, Object> completeReview(@PathVariable("id") long id) {
 		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
-		Review review = service.get(id);
+		var review = service.get(id);
 		if (review == null)
 			throw Response.notFound("No review with id " + id + " found");
 		try (var repo = repoService.get(review.repositoryPath)) {
