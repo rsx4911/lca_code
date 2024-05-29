@@ -281,7 +281,8 @@ public class RepositoryService {
 	}
 
 	private void generateJson(File repoDir, File jsonFile, String commitId, List<LibraryLink> linkedLibraries) {
-		// Don't use git repo in thread, since it might be closed by calling code
+		// Don't use git repo in thread, since it might be closed by calling
+		// code
 		var lockFile = new File(repoDir, ".lock_" + commitId);
 		if (lockFile.exists())
 			return;
@@ -300,10 +301,6 @@ public class RepositoryService {
 				}
 			}
 		}).start();
-	}
-	
-	public static void main(String[] args) throws IOException {
-		Files.write(new byte[0], new File("C:/Users/greve/test_lock_file.txt"));
 	}
 
 	public int getNoOfRepositories(User user) {
