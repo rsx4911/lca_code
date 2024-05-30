@@ -104,7 +104,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	private void runPushPostProcessing(RepositoryPath path, String username) {
 		try (var repo = repoService.get(path.group, path.repo)) {
 			var commit = repo.commits.head();
-			notificationService.dataPushed(repo, commit);
+			notificationService.dataPushed(repo, commit).send();
 			var groupSettings = groupService.getSettings(repo.group);
 			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE, 0));
 			var user = userService.getForUsername(username);
