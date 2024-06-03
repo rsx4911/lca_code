@@ -99,6 +99,7 @@ define([
 							return
 						result.repository = {group: group, name: name}
 						result.standalone = @standalone
+						result.releasesEnabled = settings.is 'RELEASES_ENABLED'
 						result.canCreateReleases = @repository.get 'userCanCreateReleases'
 						@prepareModel result
 						result.formatDate = Format.date
