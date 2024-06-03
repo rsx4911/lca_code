@@ -170,3 +170,4 @@ ALTER TABLE user_blocked_users ADD CONSTRAINT FKdalh7bfc8m46286xk6cpmkj9c FOREIG
 ALTER TABLE user_blocked_users ADD CONSTRAINT FKrfu5nmyf90ym7iv09rvduv86p FOREIGN KEY (user_id) REFERENCES user (id);
 
 INSERT INTO user(id, username, name, email, password, admin, can_create_groups, can_create_repositories, data_manager, max_size, messaging_enabled, no_of_repositories, notifications, show_comment_activities, show_commit_activities, show_online_status, show_read_receipt, show_task_activities, user_manager) VALUES (1, 'administrator', 'Administrator', 'please@change.me', '$2a$10$KN.4Uc0CngMH5qitgaLi.eM0gEi1tJioSdUwwKClLa1LA1E4XYXxe', 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1);
+INSERT INTO setting(id, name, value) VALUES (1, 'SCHEMA_VERSION', '2');
