@@ -164,7 +164,7 @@ public class PermissionsService {
 	}
 
 	public boolean canCreateReleasesIn(String repositoryPath) {
-		return hasPermissionTo(Permission.CREATE_RELEASES, repositoryPath);
+		return hasPermissionTo(Permission.MANAGE_RELEASES, repositoryPath);
 	}
 
 	private boolean hasPermissionTo(Permission permission, String groupOrRepo) {

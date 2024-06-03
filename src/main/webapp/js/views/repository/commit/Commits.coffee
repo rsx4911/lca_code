@@ -4,6 +4,7 @@ define([
 				'cs!utils/Events'
 				'cs!utils/Filter'
 				'cs!utils/Format'
+				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!views/repository/Download'
@@ -13,18 +14,62 @@ define([
 				'templates/views/repository/commit/commit-info'
 			]
 
-	(Backbone, moment, Events, Filter, Format, Layers, Renderer, Download, settings, template, listTemplate, infoTemplate) ->
+	(Backbone, moment, Events, Filter, Format, Forms, Layers, Renderer, Download, settings, template, listTemplate, infoTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
 
-			release: (event) ->
+			onRelease: (event) ->
 				target = $ Events.target event
 				commitId = target.attr 'data-commit-id'
+				isReleased = target.attr('data-status') is 'released'
+				@getReleaseInfo commitId, isReleased, (releaseInfo) =>
+					buttons = [{id: 'close', className: 'btn-default', text: 'Cancel', callback: () -> Layers.closeActive()}]
+					if isReleased
+						buttons.push {id: 'delete', className: 'btn-danger', text: 'Revoke release', callback: () => @revokeRelease(commitId)}
+					okButtonLabel = if isReleased then 'Update release' else 'Release'
+					buttons.push {id: 'complete-release', className: 'btn-success', text: okButtonLabel, callback: () => @release(commitId)}
+					Layers.showTemplateInLayer
+						title: if isReleased then 'Edit release information' else 'Specify release information'
+						template: 'repository/commit/release-info-layer'
+						dialogType: 'modal-large'
+						model:
+							values: releaseInfo
+							dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
+						buttons: buttons
+
+			getReleaseInfo: (commitId, isReleased, callback) ->
+				unless isReleased
+					callback @repository.get 'settings'
+					return
 				group = @repository.get 'group'
 				name = @repository.get 'name'
+				$.ajax
+					type: 'GET'
+					url: "ws/release/#{group}/#{name}/#{commitId}"
+					success: callback
+
+			release: () ->
+				data = Forms.toJson 'release-info'
+				Layers.closeActive()
 				Layers.showProgressIndicator 'Releasing'
+				group = @repository.get 'group'
+				name = @repository.get 'name'
 				$.ajax
 					type: 'POST'
+					url: "ws/release/#{group}/#{name}/#{commitId}"
+					contentType: 'application/json'
+					data: JSON.stringify(data)								
+					success: () ->
+						Layers.hideProgressIndicator()
+						Backbone.history.loadUrl()
+
+			revokeRelease: (commitId) ->
+				Layers.closeActive()
+				Layers.showProgressIndicator 'Revoking release'
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				$.ajax
+					type: 'DELETE'
 					url: "ws/release/#{group}/#{name}/#{commitId}"
 					success: () ->
 						Layers.hideProgressIndicator()
@@ -34,7 +79,7 @@ define([
 
 			events: 
 				'click a': (event) -> Events.followLink event
-				'click .release': 'release'
+				'click .release': 'onRelease'
 				'click [data-action=download-changelog]': (event) -> 
 					Events.preventDefault(event)
 					Download.changelog @repository.get('group'), @repository.get('name')

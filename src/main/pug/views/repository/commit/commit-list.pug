@@ -37,7 +37,10 @@ else
 							else
 								div: a.pull-right(href=repository.group + '/' + repository.name + '/commit/' + commit.id) Details &raquo;
 								.clear
-								if !commit.isReleased && canCreateReleases
-									button.pull-right.btn.btn-success.release(data-commit-id=commit.id) Release
+								if canCreateReleases
+									if !commit.isReleased
+										button.pull-right.btn.btn-success.release(data-commit-id=commit.id data-status='unreleased') Release
+									else
+										button.pull-right.btn.btn-warning.release(data-commit-id=commit.id data-status='released') Edit release info
 						.clear
 	+paging(resultInfo)

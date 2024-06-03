@@ -120,6 +120,10 @@ define([
 			doRender: (renderOptions, commits) ->
 				group = @repository.get 'group'
 				name = @repository.get 'name'
+				info = @repository.get 'settings'
+				releases = @repository.get 'releases'
+				if releases?.length
+					info = if @commitId then releases.find (r) => r.id is @commitId else releases[0]
 				@$el.html template
 					baseUrl: "#{group}/#{name}/datasets"
 					categoryPath: @categoryPath
@@ -127,8 +131,9 @@ define([
 					formatCommitDescription: Format.commitDescription
 					isPublic: !currentUser.isLoggedIn()
 					commits: commits
-					releases: @repository.get('releases')
+					releases: releases
 					commitId: @commitId
+					info: info
 					settings: @repository.get('settings')
 					getRootLabel: (type) -> return ModelTypes[type]
 					getIcon: Icons.get

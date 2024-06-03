@@ -26,6 +26,6 @@ public enum Permission {
 
 	CREATE_CHANGE_LOG,
 	
-	CREATE_RELEASES;
+	MANAGE_RELEASES;
 
 }

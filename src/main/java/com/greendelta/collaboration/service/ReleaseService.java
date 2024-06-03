@@ -28,14 +28,17 @@ public class ReleaseService {
 	}
 
 	public boolean isReleased(String repositoryPath, String commitId) {
-		var release = dao.getFirstForAttributes(Map.of(
-				"repositoryPath", repositoryPath,
-				"commitId", commitId));
-		return release != null;
+		return get(repositoryPath, commitId) != null;
 	}
 
 	public List<ReleaseInfo> getFor(String repositoryPath) {
 		return dao.getForAttribute("repositoryPath", repositoryPath);
+	}
+
+	public ReleaseInfo get(String repositoryPath, String commitId) {
+		return dao.getFirstForAttributes(Map.of(
+				"repositoryPath", repositoryPath,
+				"commitId", commitId));
 	}
 
 	public ReleaseInfo insert(ReleaseInfo release) {

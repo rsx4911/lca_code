@@ -279,6 +279,11 @@ public class RepositoryService {
 	public void generateCachedJson(Repository repo, String commitId, List<LibraryLink> linkedLibraries) {
 		generateJson(repo.dir, repo.getCachedJsonFile(commitId), commitId, linkedLibraries);
 	}
+	
+	public void deleteCachedJson(Repository repo, String commitId) {
+		var jsonFile = repo.getCachedJsonFile(commitId);
+		Dirs.delete(jsonFile);
+	}
 
 	private void generateJson(File repoDir, File jsonFile, String commitId, List<LibraryLink> linkedLibraries) {
 		// Don't use git repo in thread, since it might be closed by calling

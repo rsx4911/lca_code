@@ -22,31 +22,34 @@
 		@media(min-width 992px)
 			margin 25px auto
 
-		& > .center
-								
-			@media(min-width 992px)
+			& > .center
 				margin 0 25px
 
-				.two-columns, .three-columns, .four-columns
-					display grid
-					grid-column-gap 2%
+#main .full-size > .center, .modal-body
 
-					&:not(.no-margin-bottom) > *
-						margin-bottom 20px
+	@media(min-width 992px)
 
-				.two-columns
-					grid-template-columns 49% 49%
+		.two-columns, .three-columns, .four-columns
+			display grid
+			grid-column-gap 2%
 
-				.three-columns
-					grid-template-columns 32% 32% 32%
+			&:not(.no-margin-bottom) > *
+				margin-bottom 20px
 
-				.four-columns
-					grid-template-columns 23.5% 23.5% 23.5% 23.5%
+		.two-columns
+			grid-template-columns 49% 49%
 
-			@media(min-width 992px) and (max-width 1199px)
+		.three-columns
+			grid-template-columns 32% 32% 32%
 
-				.four-columns
-					grid-template-columns 49% 49%
+		.four-columns
+			grid-template-columns 23.5% 23.5% 23.5% 23.5%
+
+	@media(min-width 992px) and (max-width 1199px)
+
+		.four-columns
+			grid-template-columns 49% 49%
+
 
 body.public-mode
 	

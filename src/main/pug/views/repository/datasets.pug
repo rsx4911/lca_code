@@ -2,8 +2,6 @@ include ../mixins/category-breadcrumb.pug
 include ../mixins/forms.pug
 include ../mixins/long-text.pug
 
-- var info = releases && releases.length ? commitId ? releases.find(function(r) { return r.id === commitId; }) : releases[0] : settings;
-
 mixin static-setting(field, label, formatter)
 	if info[field]
 		- var value = formatter ? formatter(info[field]) : info[field];
