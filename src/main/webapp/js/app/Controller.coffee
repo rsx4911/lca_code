@@ -587,8 +587,8 @@ define([
 							Backbone.history.history.back()
 
 			setDocumentTitle: (options) ->
-				value = options.title or ''
-				if options.title and options.subTitle and currentUser.isLoggedIn()
+				value = options.viewOptions?.repository?.get('label') or options.title or ''
+				if value and options.subTitle and currentUser.isLoggedIn()
 					value += ' | ' + options.subTitle
 				title = 'LCA Collaboration Server'
 				if value
@@ -609,8 +609,8 @@ define([
 				document.title = title
 
 			setHeaderTitle: (options) ->
-				title = options.title or ''
-				if options.title and options.subTitle and currentUser.isLoggedIn()
+				title = options.viewOptions?.repository?.get('label') or options.title or ''
+				if title and options.subTitle and currentUser.isLoggedIn()
 					title += ' - ' + options.subTitle
 				if !options.href
 					$('#header-title').html title
@@ -620,6 +620,8 @@ define([
 				$('#header-title').attr 'title', title
 
 			checkRepositoryVersion: (options) ->
+				unless currentUser.isLoggedIn()
+					return
 				unless options.viewOptions?.repository
 					return
 				version = options.viewOptions.repository.get 'version'

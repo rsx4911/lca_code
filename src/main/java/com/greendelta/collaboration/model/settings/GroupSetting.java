@@ -21,7 +21,7 @@ public enum GroupSetting implements SettingKey {
 		
 	@Override
 	public boolean isPublicSetting() {
-		return !isAdminSetting();
+		return this == LABEL;
 	}
 
 	@Override

@@ -39,7 +39,10 @@ define([
 
 			getReleaseInfo: (commitId, isReleased, callback) ->
 				unless isReleased
-					callback @repository.get 'settings'
+					repoSettings = @repository.get 'settings'
+					unless repoSettings.label
+						repoSettings.label = @repository.get 'name'
+					callback repoSettings
 					return
 				group = @repository.get 'group'
 				name = @repository.get 'name'
@@ -50,6 +53,12 @@ define([
 
 			release: (commitId, isReleased) ->
 				data = Forms.toJson 'release-info'
+				unless data.label
+					Forms.markWithMessage 'release-info', 'label', 'Missing input', Forms.validateNotEmpty
+				unless data.version
+					Forms.markWithMessage 'release-info', 'version', 'Missing input', Forms.validateNotEmpty
+				if !data.label or !data.version
+					return
 				Layers.closeActive()
 				Layers.showProgressIndicator 'Releasing'
 				group = @repository.get 'group'

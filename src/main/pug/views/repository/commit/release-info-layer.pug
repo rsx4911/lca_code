@@ -2,8 +2,8 @@ include ../../mixins/forms.pug
 
 form#release-info
 	.three-columns
-		+input('label', 'Label')(value=values.label)
-		+input('version', 'Version')(value=values.version)
+		+input('label', 'Label*')(value=values.label)
+		+input('version', 'Version*')(value=values.version)
 		+select('typeOfData', 'Type of data', dataTypes, values.typeOfData)
 	.two-columns
 		+textarea('description', 'Description')(rows=5)

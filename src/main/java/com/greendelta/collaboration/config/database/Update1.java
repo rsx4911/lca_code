@@ -68,6 +68,12 @@ class Update1 {
 		if (Strings.nullOrEmpty(commitId))
 			return;
 		var properties = getProperties(repositoryPath);
+		if (Strings.nullOrEmpty(properties.get("version"))) {
+			properties.put("version", "Public");
+		}
+		if (Strings.nullOrEmpty(properties.get("label"))) {
+			properties.put("label", repositoryPath.substring(repositoryPath.indexOf("/") + 1));
+		}
 		var fields = Arrays.asList("label", "version", "description", "source_info", "contact_info", "project_info",
 				"project_funding", "appropriate_use", "dq_assessment", "citation", "type_of_data");
 		var sql = "INSERT INTO release_info(id, repository_path, commit_id";

@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.openlca.git.RepositoryInfo;
 
+import com.greendelta.collaboration.model.ReleaseInfo;
+import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Maps;
 
@@ -14,11 +16,22 @@ public class Repositories {
 		// only static access
 	}
 
+	public static Map<String, Object> map(Repository repo, ReleaseInfo release) {
+		var map = Maps.create();
+		map.put("group", repo.group);
+		map.put("name", repo.name);
+		var label = repo.groupSettings.get(GroupSetting.LABEL, repo.group) + "/" + release.label;
+		map.put("label", label);
+		map.put("settings", Releases.map(release));
+		map.put("hasReleases", true);
+		return map;
+	}
+
 	public static Map<String, Object> mapForList(Repository repo, Boolean hasReleases) {
 		var map = map(repo);
 		if (hasReleases != null) {
 			map.put("hasReleases", hasReleases);
-		}		
+		}
 		return map;
 	}
 
@@ -28,7 +41,7 @@ public class Repositories {
 			map.put("groupIsUserNamespace", groupIsUserNamespace);
 		}
 		return map;
-}
+	}
 
 	private static Map<String, Object> map(Repository repo) {
 		var map = Maps.create();
@@ -45,6 +58,5 @@ public class Repositories {
 		map.put("groupSettings", repo.groupSettings.toMap());
 		return map;
 	}
-
 
 }

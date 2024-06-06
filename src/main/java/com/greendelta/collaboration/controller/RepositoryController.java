@@ -1,8 +1,10 @@
 package com.greendelta.collaboration.controller;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
@@ -20,9 +22,9 @@ import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.ReleaseInfo;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
-import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.ReleaseService;
+import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 
 @RestController
@@ -30,14 +32,12 @@ import com.greendelta.collaboration.service.RepositoryService;
 public class RepositoryController {
 
 	private final RepositoryService service;
-	private final GroupService groupService;
 	private final HistoryService historyService;
 	private final ReleaseService releaseService;
 
-	public RepositoryController(RepositoryService service, GroupService groupService, HistoryService historyService,
+	public RepositoryController(RepositoryService service, HistoryService historyService,
 			ReleaseService releaseService) {
 		this.service = service;
-		this.groupService = groupService;
 		this.historyService = historyService;
 		this.releaseService = releaseService;
 	}
@@ -46,9 +46,15 @@ public class RepositoryController {
 	public List<Map<String, Object>> getReleased() {
 		try (var repositories = service.getReleased()) {
 			return repositories.stream()
-					.map(repo -> Repositories.mapForList(repo, true))
+					.map(this::putReleaseInfo)
 					.toList();
 		}
+	}
+
+	private Map<String, Object> putReleaseInfo(Repository repo) {
+		var commit = historyService.getLatestAccessibleCommit(repo);
+		var release = releaseService.get(repo.path(), commit.id);
+		return Repositories.map(repo, release);
 	}
 
 	@GetMapping("{group}/{name}")
@@ -56,10 +62,11 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
+			var mappedRepo = putReleaseInfo(repo);
 			var sortedCommitIds = historyService.getAccessibleCommits(repo).stream()
 					.map(c -> c.id)
-					.toList();
+					.collect(Collectors.toList());
+			Collections.reverse(sortedCommitIds);
 			var releases = releaseService.getFor(repo.path()).stream()
 					.sorted((r1, r2) -> compare(r1, r2, sortedCommitIds))
 					.map(Releases::map)

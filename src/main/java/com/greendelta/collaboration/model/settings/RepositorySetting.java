@@ -62,9 +62,7 @@ public enum RepositorySetting implements SettingKey {
 
 	@Override
 	public boolean isPublicSetting() {
-		return this != PROHIBIT_COMMITS
-				&& this != COMMENT_APPROVAL
-				&& !isAdminSetting();
+		return false;
 	}
 
 	@Override
