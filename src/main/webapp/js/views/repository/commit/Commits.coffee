@@ -27,7 +27,7 @@ define([
 					if isReleased
 						buttons.push {id: 'delete', className: 'btn-danger', text: 'Revoke release', callback: () => @revokeRelease(commitId)}
 					okButtonLabel = if isReleased then 'Update release' else 'Release'
-					buttons.push {id: 'complete-release', className: 'btn-success', text: okButtonLabel, callback: () => @release(commitId)}
+					buttons.push {id: 'complete-release', className: 'btn-success', text: okButtonLabel, callback: () => @release(commitId, isReleased)}
 					Layers.showTemplateInLayer
 						title: if isReleased then 'Edit release information' else 'Specify release information'
 						template: 'repository/commit/release-info-layer'
@@ -48,14 +48,14 @@ define([
 					url: "ws/release/#{group}/#{name}/#{commitId}"
 					success: callback
 
-			release: () ->
+			release: (commitId, isReleased) ->
 				data = Forms.toJson 'release-info'
 				Layers.closeActive()
 				Layers.showProgressIndicator 'Releasing'
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				$.ajax
-					type: 'POST'
+					type: if isReleased then 'PUT' else 'POST'
 					url: "ws/release/#{group}/#{name}/#{commitId}"
 					contentType: 'application/json'
 					data: JSON.stringify(data)								

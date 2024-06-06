@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -63,16 +64,32 @@ public class ReleaseController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
 			@RequestBody ReleaseInfo release) {
+		save(group, name, commitId, release);
+	}
+
+	@PutMapping("{group}/{name}/{commitId}")
+	public void updateRelease(@PathVariable("group") String group,
+			@PathVariable("name") String name,
+			@PathVariable("commitId") String commitId,
+			@RequestBody ReleaseInfo release) {
+		save(group, name, commitId, release);
+	}
+
+	private void save(String group, String name, String commitId, ReleaseInfo release) {
 		if (!settings.is(ServerSetting.RELEASES_ENABLED))
 			throw Response.unavailable("Release feature not enabled");
 		try (var repo = repoService.get(group, name)) {
 			var commit = checkAccess(repo, commitId);
-			if (service.isReleased(repo.path(), commitId))
-				throw Response.conflict("Commit " + commitId + " is released");
 			release.repositoryPath = repo.path();
 			release.commitId = commitId;
-			service.insert(release);
-			repoService.generateCachedJson(repo, commitId, libraryService.getLinkedLibraries(repo, commit));
+			var fromDb = service.get(repo.path(), commitId);
+			if (fromDb == null) {
+				service.insert(release);
+				repoService.generateCachedJson(repo, commitId, libraryService.getLinkedLibraries(repo, commit));
+			} else {
+				release.id = fromDb.id;
+				service.update(release);
+			}
 		}
 	}
 
@@ -89,7 +106,7 @@ public class ReleaseController {
 			repoService.deleteCachedJson(repo, commitId);
 		}
 	}
-	
+
 	private Commit checkAccess(Repository repo, String commitId) {
 		var commit = historyService.getAccessibleCommit(repo, commitId);
 		if (commit == null)
