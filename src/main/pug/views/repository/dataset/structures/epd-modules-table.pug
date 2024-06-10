@@ -5,6 +5,7 @@ mixin epd-modules-table()
 		thead
 			tr
 				th=getLabel('modules.name')
+				th=getLabel('modules.multiplier')
 				th=getLabel('modules.result')
 				th
 		tbody
@@ -15,5 +16,6 @@ mixin epd-module-row(epdModule, otherEpdModule)
 	- var changed = compareTo && !otherEpdModule ? 'added' : (compareTo && !epdModule ? 'removed' : null);
 	tr(data-compare=changed)
 		+sub-field-cell(epdModule, otherEpdModule, 'name')
+		+sub-field-cell(epdModule, otherEpdModule, 'multiplier')
 		+sub-field-ref-cell(epdModule, otherEpdModule, 'result')
 		td(data-path=epdModule?'modules[' + epdModule.name +']':null)
