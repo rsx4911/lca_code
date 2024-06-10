@@ -12,7 +12,7 @@ define () ->
 				e2 = e2?[subfield]
 			if field
 				e1 = e1?[field]
-				e2 = es?[field]
+				e2 = e2?[field]
 			value1 = e1?.toLowerCase() or ''
 			value2 = e2?.toLowerCase() or ''
 			if value1 < value2
@@ -35,6 +35,15 @@ define () ->
 
 	nwFactors: (dataset) ->
 		@sortByName dataset.factors, 'impactCategory'
+
+	socialAspects: (dataset) ->
+		@sortByName dataset.socialAspects, 'socialIndicator'
+
+	parameters: (dataset) ->
+		@sortByName dataset.parameters
+
+	epdModules: (dataset) ->
+		@sortByName dataset.modules
 
 	exchanges: (dataset, field) ->
 		exchanges = dataset[field]
@@ -84,9 +93,6 @@ define () ->
 				factor.products.sort (p1, p2) ->
 					return order[p1.id] - order[p2.id]
 
-	socialAspects: (dataset) ->
-		@sortByName dataset.socialAspects, 'socialIndicator'
-
 	documentation: (dataset) ->
 		unless dataset.processDocumentation
 			return
@@ -115,9 +121,6 @@ define () ->
 			if name2 < name1
 				return 1
 			return 0
-
-	parameters: (dataset) ->
-		@sortByName dataset.parameters
 
 	parameterSets: (dataset) ->
 		unless dataset.parameterSets

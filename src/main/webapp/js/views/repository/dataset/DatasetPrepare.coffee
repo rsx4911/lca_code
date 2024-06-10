@@ -45,6 +45,8 @@ define([
 					Sort.indicatorsAndScores dataset
 				when 'Result'
 					Sort.exchanges dataset, 'flowResults'
+				when 'Epd'
+					Sort.epdModules dataset
 
 		removeAtSigns: (object) ->
 			unless object
