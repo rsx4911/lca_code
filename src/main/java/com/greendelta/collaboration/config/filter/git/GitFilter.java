@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import org.eclipse.jgit.http.server.glue.ServletBinder;
 import org.eclipse.jgit.transport.resolver.FileResolver;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
+import org.openlca.git.model.Commit;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -90,26 +91,38 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			throws IOException, ServletException {
 		var request = req instanceof GitRequest ? (GitRequest) req : new GitRequest(req);
 		var loggedIn = request.basicHttpLogin(sessionService);
+		var previousCommit = getPreviousCommitIfGitPush(request);
 		super.doFilter(request, response, new FilterChainWrapper(request, response, chain));
 		if (!config.isGitUrl(request))
 			return;
 		if (request.getGitAction() == GitAction.GIT_PUSH) {
-			runPushPostProcessing(RepositoryPath.of(Requests.getRoute(request)), request.getRemoteUser());
+			runPushPostProcessing(request, previousCommit);
 		}
 		if (loggedIn) {
 			request.basicHttpLogout(sessionService);
 		}
 	}
 
-	private void runPushPostProcessing(RepositoryPath path, String username) {
+	private Commit getPreviousCommitIfGitPush(GitRequest request) {
+		if (!config.isGitUrl(request) || request.getGitAction() != GitAction.GIT_PUSH)
+			return null;
+		var path = RepositoryPath.of(Requests.getRoute(request));
 		try (var repo = repoService.get(path.group, path.repo)) {
-			var commit = repo.commits.head();
-			notificationService.dataPushed(repo, commit).send();
+			return repo.commits.find().latest();
+		}
+	}
+
+	private void runPushPostProcessing(GitRequest request, Commit previousCommit) {
+		var path = RepositoryPath.of(Requests.getRoute(request));
+		try (var repo = repoService.get(path.group, path.repo)) {
+			var latestCommit = repo.commits.find().latest();
+			notificationService.dataPushed(repo, latestCommit).send();
 			var groupSettings = groupService.getSettings(repo.group);
 			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE, 0));
+			var username = request.getRemoteUser();
 			var user = userService.getForUsername(username);
 			checkGroupSizeLimit(username, user.settings.maxSize);
-			indexService.indexAsync(path);
+			indexService.indexPrivateAsync(RepositoryPath.of(repo.path()), previousCommit, latestCommit);
 		}
 	}
 
@@ -121,5 +134,5 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			notificationService.groupSizeLimitExceeded(group, maxSize, actualSize).send();
 		}
 	}
-		
+
 }

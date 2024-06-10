@@ -82,4 +82,7 @@ class Updates {
 		}
 	}
 
+	record UpdateResult(int schemaVersion, boolean reindex) {
+	}
+
 }

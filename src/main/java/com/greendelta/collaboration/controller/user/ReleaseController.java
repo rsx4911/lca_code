@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.util.HashSet;
 import java.util.Map;
 
 import org.openlca.git.model.Commit;
@@ -21,8 +22,10 @@ import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
+import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.util.Maps;
 
@@ -34,15 +37,20 @@ public class ReleaseController {
 	private final RepositoryService repoService;
 	private final LibraryService libraryService;
 	private final HistoryService historyService;
+	private final ReleaseService releaseService;
+	private final IndexService indexService;
 	private final PermissionsService permissions;
 	private final SettingsService settings;
 
 	public ReleaseController(ReleaseService service, RepositoryService repoService, LibraryService libraryService,
-			HistoryService historyService, PermissionsService permissions, SettingsService settings) {
+			HistoryService historyService, ReleaseService releaseService, IndexService indexService,
+			PermissionsService permissions, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.libraryService = libraryService;
 		this.historyService = historyService;
+		this.releaseService = releaseService;
+		this.indexService = indexService;
 		this.permissions = permissions;
 		this.settings = settings;
 	}
@@ -65,7 +73,14 @@ public class ReleaseController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
 			@RequestBody ReleaseInfo release) {
-		save(group, name, commitId, release);
+		try (var repo = repoService.get(group, name)) {
+			var before = historyService.getLatestReleasedCommit(repo);
+			save(repo, commitId, release);
+			var after = historyService.getLatestReleasedCommit(repo);
+			if (before == null || !before.id.equals(after.id)) {
+				indexService.indexPublicAsync(RepositoryPath.of(repo.path()), before, after);
+			}
+		}
 	}
 
 	@PutMapping("{group}/{name}/{commitId}")
@@ -73,28 +88,36 @@ public class ReleaseController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
 			@RequestBody ReleaseInfo release) {
-		save(group, name, commitId, release);
+		try (var repo = repoService.get(group, name)) {
+			var before = historyService.getLatestReleasedCommit(repo);
+			var previous = releaseService.get(repo.path(), commitId).getTags();
+			save(repo, commitId, release);
+			if (!before.id.equals(commitId))
+				return;
+			if (!new HashSet<>(release.getTags()).equals(new HashSet<>(previous))) {
+				indexService.updatePublicTagsAsync(RepositoryPath.of(group, name));
+			}
+
+		}
 	}
 
-	private void save(String group, String name, String commitId, ReleaseInfo release) {
+	private void save(Repository repo, String commitId, ReleaseInfo release) {
 		if (!settings.is(ServerSetting.RELEASES_ENABLED))
 			throw Response.unavailable("Release feature not enabled");
 		if (Strings.nullOrEmpty(release.label))
 			throw Response.badRequest("label", "Missing input");
 		if (Strings.nullOrEmpty(release.version))
 			throw Response.badRequest("version", "Missing input");
-		try (var repo = repoService.get(group, name)) {
-			var commit = checkAccess(repo, commitId);
-			release.repositoryPath = repo.path();
-			release.commitId = commitId;
-			var fromDb = service.get(repo.path(), commitId);
-			if (fromDb == null) {
-				service.insert(release);
-				repoService.generateCachedJson(repo, commitId, libraryService.getLinkedLibraries(repo, commit));
-			} else {
-				release.id = fromDb.id;
-				service.update(release);
-			}
+		var commit = checkAccess(repo, commitId);
+		release.repositoryPath = repo.path();
+		release.commitId = commitId;
+		var fromDb = service.get(repo.path(), commitId);
+		if (fromDb == null) {
+			service.insert(release);
+			repoService.generateCachedJson(repo, commitId, libraryService.getLinkedLibraries(repo, commit));
+		} else {
+			release.id = fromDb.id;
+			service.update(release);
 		}
 	}
 
@@ -106,9 +129,15 @@ public class ReleaseController {
 			checkAccess(repo, commitId);
 			if (!service.isReleased(repo.path(), commitId))
 				throw Response.notFound("Commit " + commitId + " is not released");
+			var before = historyService.getLatestReleasedCommit(repo);
 			var release = service.get(repo.path(), commitId);
 			service.delete(release);
 			repoService.deleteCachedJson(repo, commitId);
+			save(repo, commitId, release);
+			var after = historyService.getLatestReleasedCommit(repo);
+			if (after == null || !after.id.equals(before.id)) {
+				indexService.indexPublicAsync(RepositoryPath.of(repo.path()), before, after);
+			}
 		}
 	}
 

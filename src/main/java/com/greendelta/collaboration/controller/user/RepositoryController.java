@@ -220,7 +220,7 @@ public class RepositoryController {
 			} else {
 				service.unpack(repo, input.getInputStream());
 			}
-			indexService.indexAsync(RepositoryPath.of(group, name));
+			indexService.indexPrivateAsync(RepositoryPath.of(group, name), null, repo.commits.head());
 		} catch (IOException e) {
 			log.error("Error getting input stream from multipart file", e);
 		}
@@ -282,7 +282,7 @@ public class RepositoryController {
 				deleteService.delete(to);
 				throw Response.error("Unexpected error during cloning");
 			}
-			indexService.indexAsync(RepositoryPath.of(newGroup, newName));
+			indexService.indexPrivateAsync(RepositoryPath.of(newGroup, newName), null, to.commits.head());
 		}
 	}
 
@@ -311,7 +311,7 @@ public class RepositoryController {
 			try (var client = new RepositoryClient(url, username, password)) {
 				client.exportRepository(repoId, stream -> {
 					service.unpack(repo, stream);
-					indexService.indexAsync(RepositoryPath.of(group, name));
+					indexService.indexPrivateAsync(RepositoryPath.of(group, name), null, repo.commits.head());
 				});
 			}
 		} catch (IOException e) {
@@ -348,7 +348,7 @@ public class RepositoryController {
 					var previous = repo.settings.get(RepositorySetting.TAGS, new ArrayList<String>());
 					repo.settings.set(setting, value);
 					if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
-						indexService.updateTagsAsync(RepositoryPath.of(group, name));
+						indexService.updatePrivateTagsAsync(RepositoryPath.of(group, name));
 					}
 					break;
 				default:

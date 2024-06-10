@@ -26,6 +26,7 @@ import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.settings.ImprintSetting;
 import com.greendelta.collaboration.model.settings.MailSetting;
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.Setting;
@@ -88,6 +89,7 @@ public class SettingsService {
 			case SERVER_SETTING -> serverConfig;
 			case MAIL_SETTING -> mailConfig;
 			case SEARCH_SETTING -> searchConfig;
+			case SEARCH_INDEX -> searchConfig.indices;
 			case IMPRINT_SETTING -> imprint;
 			default -> get(type, null);
 		};
@@ -277,9 +279,11 @@ public class SettingsService {
 	public class SearchConfig extends Settings<SearchSetting> {
 
 		private RestHighLevelClient client;
-
+		public final Settings<SearchIndex> indices;
+		
 		private SearchConfig() {
 			super(SettingType.SEARCH_SETTING);
+			indices = new Settings<>(SettingType.SEARCH_INDEX);
 		}
 
 		@Override
@@ -326,18 +330,9 @@ public class SettingsService {
 			return client;
 		}
 
-		public SearchClient getSearchClient() {
+		public SearchClient getSearchClient(SearchIndex index) {
 			try {
-				return new OsRestClient(getClient(), get(SearchSetting.INDEX_NAME));
-			} catch (Exception e) {
-				SettingsService.log.error("Error getting search client", e);
-				return null;
-			}
-		}
-
-		public SearchClient getIoDataSearchClient() {
-			try {
-				return new OsRestClient(getClient(), get(SearchSetting.IO_DATA_INDEX_NAME));
+				return new OsRestClient(getClient(), indices.get(index));
 			} catch (Exception e) {
 				SettingsService.log.error("Error getting search client", e);
 				return null;

@@ -27,7 +27,7 @@ class Update1 {
 	int run() throws SQLException, IOException {
 		Updates.runScript(s, "update1.sql");
 		createReleases();
-		s.executeUpdate("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
+		updateSettings();
 		return UPDATE_TO;
 	}
 
@@ -40,7 +40,6 @@ class Update1 {
 		for (var repositoryPath : repos) {
 			insertRelease(gitDir, repositoryPath, nextId++);
 		}
-		s.executeUpdate("DELETE FROM setting WHERE name = 'PUBLIC_ACCESS' OR name = 'JSON_FILE_GENERATION'");
 	}
 
 	private File getGitDir() throws SQLException {
@@ -117,6 +116,40 @@ class Update1 {
 		} catch (IOException e) {
 			return null;
 		}
+	}
+
+	private void updateSettings() throws SQLException {
+		s.executeUpdate("DELETE FROM setting WHERE name = 'PUBLIC_ACCESS' OR name = 'JSON_FILE_GENERATION' OR name = 'SEARCH_COMMIT_ID'");
+		s.executeUpdate("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
+		s.executeUpdate("UPDATE setting SET name = 'PRIVATE', type = 'SEARCH_INDEX' WHERE name = 'INDEX_NAME'");
+		s.executeUpdate("UPDATE setting SET name = 'IO_DATA', type = 'SEARCH_INDEX' WHERE name = 'IO_DATA_INDEX_NAME'");
+		insertPublicIndexSetting();
+	}
+
+	private void insertPublicIndexSetting() throws SQLException {
+		try (var rs = s
+				.executeQuery("SELECT value FROM setting WHERE name = 'RELEASES_ENABLED' AND lower(value) = 'true'")) {
+			if (!rs.next())
+				return;
+		}
+		try (var rs = s.executeQuery("SELECT value FROM setting WHERE name = 'SEARCH_ENABLED'")) {
+			if (!rs.next())
+				return;
+		}
+		String indexName = null;
+		try (var rs = s.executeQuery("SELECT value FROM setting WHERE name = 'PRIVATE'")) {
+			if (!rs.next())
+				return;
+			indexName = rs.getString("value");
+		}
+		long id = 1;
+		try (var rs = s.executeQuery("SELECT id FROM setting ODER BY id DESC")) {
+			if (rs.next()) {
+				id = rs.getLong("id");
+			}
+		}
+		s.executeUpdate("INSERT INTO setting(id, type, name, value)"
+				+ " VALUES (" + id + ", 'SEARCH_INDEX', 'PUBLIC', '" + indexName + "-public" + "')");
 	}
 
 }

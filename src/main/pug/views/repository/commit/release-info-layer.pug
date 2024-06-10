@@ -5,6 +5,7 @@ form#release-info
 		+input('label', 'Label*')(value=values.label)
 		+input('version', 'Version*')(value=values.version)
 		+select('typeOfData', 'Type of data', dataTypes, values.typeOfData)
+	+input('tags', 'Tags (comma separated list)')(value=values.tags?values.tags.join(','):'')
 	.two-columns
 		+textarea('description', 'Description')(rows=5)
 			| #{values.description}

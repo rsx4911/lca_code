@@ -9,10 +9,10 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -26,12 +26,14 @@ public class DeleteService {
 	private final GroupService groupService;
 	private final TaskService taskService;
 	private final MessagingService messagingService;
-	private final PermissionsService permissions;
 	private final CommentService commentService;
+	private final ReleaseService releaseService;
+	private final PermissionsService permissions;
 
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
-			MessagingService messagingService, PermissionsService permissions, CommentService commentService) {
+			MessagingService messagingService, ReleaseService releaseService, CommentService commentService,
+			PermissionsService permissions) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -39,8 +41,9 @@ public class DeleteService {
 		this.groupService = groupService;
 		this.taskService = taskService;
 		this.messagingService = messagingService;
-		this.permissions = permissions;
 		this.commentService = commentService;
+		this.releaseService = releaseService;
+		this.permissions = permissions;
 	}
 
 	public void delete(User user) {
@@ -109,6 +112,7 @@ public class DeleteService {
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
+		releaseService.delete(repo.path());
 		// TODO check if index is always updated when this is called
 		repoService.delete(repo);
 		memberService.removeMemberships(repo.path());

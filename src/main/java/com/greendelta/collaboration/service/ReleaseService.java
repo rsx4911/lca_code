@@ -49,6 +49,18 @@ public class ReleaseService {
 		return dao.update(release);
 	}
 
+	public void move(String oldPath, String newPath) {
+		var releases = getFor(oldPath);
+		releases.forEach(release -> {
+			release.repositoryPath = newPath;
+			update(release);
+		});
+	}
+
+	public void delete(String repositoryPath) {
+		getFor(repositoryPath).forEach(this::delete);
+	}
+
 	public void delete(ReleaseInfo release) {
 		dao.delete(release);
 	}

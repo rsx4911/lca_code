@@ -45,12 +45,9 @@ public class HistoryService {
 		if (!currentUser.isAnonymous())
 			return commits;
 		var releases = getReleaseCommitIds(repo);
-		var accessible = commits.stream()
+		return commits.stream()
 				.filter(commit -> releases.contains(commit.id))
 				.collect(Collectors.toList());
-		if (accessible.isEmpty())
-			throw Response.unauthorized();
-		return accessible;
 	}
 
 	public Commit getAccessibleCommit(Repository repo, String commitId) {
@@ -78,19 +75,33 @@ public class HistoryService {
 		return getLatestAccessibleCommitUntil(repo, path, null, null, commitId);
 	}
 
-	private Commit getLatestAccessibleCommitUntil(Repository repo, String path, ModelType type, String refId, String commitId) {
+	private Commit getLatestAccessibleCommitUntil(Repository repo, String path, ModelType type, String refId,
+			String commitId) {
 		var accessibleCommits = getAccessibleCommits(repo, path, type, refId, commitId);
 		if (!accessibleCommits.isEmpty())
 			return accessibleCommits.get(accessibleCommits.size() - 1);
 		return null;
 	}
 
-
 	public Commit getPreviouslyAccessibleCommit(Repository repo, String commitId) {
 		var accessibleCommits = getAccessibleCommits(repo, null, null, null, commitId);
 		if (accessibleCommits.size() == 1)
 			return null;
 		return accessibleCommits.get(accessibleCommits.size() - 2);
+	}
+
+	public List<Commit> getReleasedCommits(Repository repo) {
+		var releaseCommitIds = getReleaseCommitIds(repo);
+		return getAccessibleCommits(repo).stream()
+				.filter(commit -> releaseCommitIds.contains(commit.id))
+				.collect(Collectors.toList());
+	}
+
+	public Commit getLatestReleasedCommit(Repository repo) {
+		var releasedCommits = getReleasedCommits(repo);
+		if (releasedCommits.isEmpty())
+			return null;
+		return releasedCommits.get(0);
 	}
 
 	private Set<String> getReleaseCommitIds(Repository repo) {

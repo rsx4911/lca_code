@@ -59,6 +59,8 @@ define([
 					Forms.markWithMessage 'release-info', 'version', 'Missing input', Forms.validateNotEmpty
 				if !data.label or !data.version
 					return
+				if data.tags
+					data.tags = JSON.stringify data.tags.split ','
 				Layers.closeActive()
 				Layers.showProgressIndicator 'Releasing'
 				group = @repository.get 'group'

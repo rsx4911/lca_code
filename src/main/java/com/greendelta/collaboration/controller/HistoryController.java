@@ -62,8 +62,6 @@ public class HistoryController {
 			@PathVariable("refId") String refId) {
 		try (var repo = repoService.get(group, name)) {
 			var commits = service.getAccessibleCommits(repo, type, refId);
-			if (commits.size() == 0)
-				return Response.noContent();
 			Collections.reverse(commits);
 			return Response.ok(putAdditionalInfo(repo, commits));
 		}

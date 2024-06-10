@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
@@ -37,7 +38,6 @@ import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -105,10 +105,10 @@ public class AdminAreaController {
 	public void testSearchConfig() {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
-		SearchConfig config = settings.searchConfig;
+		var config = settings.searchConfig;
 		try {
 			var client = config.getClient();
-			String indexName = config.get(SearchSetting.INDEX_NAME);
+			String indexName = config.indices.get(SearchIndex.PRIVATE);
 			var exists = client.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
 			if (!exists)
 				throw Response.error("Index " + indexName + " does not exist");
@@ -154,7 +154,11 @@ public class AdminAreaController {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
-			indexService.reindexAllAsync(repos.stream().map(Repository::path).map(RepositoryPath::of).toList());
+			var paths = repos.stream()
+					.map(Repository::path)
+					.map(RepositoryPath::of)
+					.collect(Collectors.toList());
+			indexService.reindexAllAsync(paths);
 		}
 	}
 

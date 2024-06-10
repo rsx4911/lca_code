@@ -41,10 +41,9 @@ include ../mixins/forms.pug
 			+input('SEARCH_SETTING__SCHEMA', 'Schema')
 			+input('SEARCH_SETTING__HOST', 'Url')
 			+input('SEARCH_SETTING__PORT', 'Port')
-		.clear
-		.two-columns
-			+input('SEARCH_SETTING__INDEX_NAME', 'Search index')
-			+input('SEARCH_SETTING__IO_DATA_INDEX_NAME', 'Flow  index')
+			+input('SEARCH_INDEX__PRIVATE', 'Search index')
+			+input('SEARCH_INDEX__PUBLIC', 'Public search index')
+			+input('SEARCH_INDEX__IO_DATA', 'Flow  index')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear

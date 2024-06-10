@@ -170,6 +170,7 @@ public class RepositoryService {
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
+			releaseService.move(repo.path(), newRepo.path());
 			repo.settings.move(newRepo);
 			delete(repo);
 			return true;
@@ -327,6 +328,8 @@ public class RepositoryService {
 	}
 
 	public RepositoryList getAllAccessible() {
+		if (userService.getCurrentUser().isAnonymous())
+			return getReleased();
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new RepositoryList();

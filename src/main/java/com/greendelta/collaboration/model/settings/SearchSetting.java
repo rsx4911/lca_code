@@ -4,8 +4,6 @@ public enum SearchSetting implements SettingKey {
 
 	SCHEMA(String.class, "http"),
 	HOST(String.class, "localhost"),
-	INDEX_NAME(String.class, "collaboration-server"),
-	IO_DATA_INDEX_NAME(String.class, "collaboration-server-io-data"),
 	PORT(Integer.class, 9200);
 
 	private final Class<?> type;

@@ -20,8 +20,7 @@ public enum RepositorySetting implements SettingKey {
 	APPROPRIATE_USE(String.class),
 	DQ_ASSESSMENT(String.class),
 	CITATION(String.class),
-	TYPE_OF_DATA(String.class),
-	SEARCH_COMMIT_ID(String.class);
+	TYPE_OF_DATA(String.class);
 
 	private final Class<?> type;
 	private final TypeReference<?> subType;
@@ -67,8 +66,7 @@ public enum RepositorySetting implements SettingKey {
 
 	@Override
 	public boolean isAdminSetting() {
-		return this == MAX_SIZE
-				|| this == SEARCH_COMMIT_ID;
+		return this == MAX_SIZE;
 	}
 
 }
