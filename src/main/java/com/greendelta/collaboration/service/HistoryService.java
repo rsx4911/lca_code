@@ -101,7 +101,7 @@ public class HistoryService {
 		var releasedCommits = getReleasedCommits(repo);
 		if (releasedCommits.isEmpty())
 			return null;
-		return releasedCommits.get(0);
+		return releasedCommits.get(releasedCommits.size() - 1);
 	}
 
 	private Set<String> getReleaseCommitIds(Repository repo) {

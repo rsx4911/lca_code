@@ -133,7 +133,6 @@ public class ReleaseController {
 			var release = service.get(repo.path(), commitId);
 			service.delete(release);
 			repoService.deleteCachedJson(repo, commitId);
-			save(repo, commitId, release);
 			var after = historyService.getLatestReleasedCommit(repo);
 			if (after == null || !after.id.equals(before.id)) {
 				indexService.indexPublicAsync(RepositoryPath.of(repo.path()), before, after);
