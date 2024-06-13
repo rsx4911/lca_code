@@ -3,7 +3,7 @@ include ../../mixins/paging.pug
 
 mixin dataset-label(dataset)
 	- var imgSrc = 'images/model/small/' + getIcon(dataset);
-	if dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED'
+	if !standalone && (dataset.diffType === 'ADDED' || dataset.diffType === 'DELETED')
 		- imgSrc = 'ws/public/overlay?image=' + imgSrc + '&overlay=images/model/' + (dataset.diffType === 'ADDED' ? 'add' : 'delete') + '.png';
 	img.model-icon-small(src=imgSrc)
 	if dataset.diffType === 'DELETED'
