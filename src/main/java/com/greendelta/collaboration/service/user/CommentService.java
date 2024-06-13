@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.DatasetField;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -23,14 +24,14 @@ import com.greendelta.collaboration.service.SettingsService;
 public class CommentService {
 
 	private final Dao<Comment> dao;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final UserService userService;
 	private final SettingsService settings;
 
-	public CommentService(Dao<Comment> dao, AccessService accessService, UserService userService,
+	public CommentService(Dao<Comment> dao, PermissionsService permissions, UserService userService,
 			SettingsService settings) {
 		this.dao = dao;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.userService = userService;
 		this.settings = settings;
 	}
@@ -44,7 +45,7 @@ public class CommentService {
 			attributes.put("filter", "%" + filter.toLowerCase() + "%");
 		}
 		jpql += " ORDER BY c.date DESC";
-		return accessService.filterCanRead(dao.getAll(jpql, attributes));
+		return permissions.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public List<Comment> getAllFor(Repository repository) {
@@ -67,7 +68,7 @@ public class CommentService {
 			jpql += " AND c.field.commitId = :commitId";
 			attributes.put("commitId", commitId);
 		}
-		return accessService.filterCanRead(dao.getAll(jpql, attributes));
+		return permissions.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public void clearUser(User user) {
@@ -87,12 +88,12 @@ public class CommentService {
 		var jpql = "SELECT c FROM Comment c WHERE c.replyTo.id = :id ORDER BY c.date ASC";
 		var attributes = new HashMap<String, Object>();
 		attributes.put("id", id);
-		return accessService.filterCanRead(dao.getAll(jpql, attributes));
+		return permissions.filterCanRead(dao.getAll(jpql, attributes));
 	}
 
 	public Comment insert(Comment comment) {
-		if (!accessService.canCommentIn(comment.repositoryPath))
-			throw Response.forbidden(comment.repositoryPath, "COMMENT");
+		if (!permissions.canCommentIn(comment.repositoryPath))
+			throw Response.forbidden(comment.repositoryPath, Permission.COMMENT);
 		return dao.insert(comment);
 	}
 
@@ -153,8 +154,8 @@ public class CommentService {
 		var comment = dao.get(commentId);
 		if (comment == null)
 			return null;
-		if (!accessService.canManage(comment))
-			throw Response.forbidden(comment.repositoryPath, "MANAGE_COMMENT");
+		if (!permissions.canManage(comment))
+			throw Response.forbidden(comment.repositoryPath, Permission.MANAGE_COMMENTS);
 		comment.restrictedToRole = role;
 		dao.update(comment);
 		return comment;
@@ -171,7 +172,7 @@ public class CommentService {
 		if (isCurrentUser) {
 			comment.released = true;
 		}
-		if (accessService.canManageCommentsIn(comment.repositoryPath)) {
+		if (permissions.canManageCommentsIn(comment.repositoryPath)) {
 			comment.approved = true;
 		} else {
 			String repoPath = settings.get(ServerSetting.REPOSITORY_PATH);
@@ -189,7 +190,7 @@ public class CommentService {
 		var comment = dao.get(commentId);
 		if (comment == null)
 			return;
-		if (!accessService.canManage(comment))
+		if (!permissions.canManage(comment))
 			return;
 		dao.delete(getRepliesTo(commentId));
 		dao.delete(comment);

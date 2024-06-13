@@ -51,8 +51,6 @@ define([
 			updateUI: () ->
 				depending = {
 					'SEARCH_ENABLED': ['SEARCH_LINKS_ENABLED']
-					'PUBLIC_REPOSITORY_ENABLED': ['HOMEPAGE_ENABLED'],
-					'USER_REGISTRATION_ENABLED': ['USER_REGISTRATION_APPROVAL_ENABLED'],
 					'DATASET_TAGS_ENABLED': ['DATASET_TAGS_ON_DASHBOARD_ENABLED', 'DATASET_TAGS_ON_GROUPS_ENABLED', 'DATASET_TAGS_ON_REPOSITORIES_ENABLED']
 				}
 				for key in Object.keys(depending)
@@ -65,7 +63,7 @@ define([
 					@$('.search-settings').removeClass 'hidden'
 				else
 					@$('.search-settings').addClass 'hidden'
-				@$('#SEARCH_SETTING__IO_DATA_INDEX_NAME').prop 'disabled', !@$('#SERVER_SETTING__SEARCH_LINKS_ENABLED').is(':checked')
+				@$('#SEARCH_INDEX__IO_DATA').prop 'disabled', !@$('#SERVER_SETTING__SEARCH_LINKS_ENABLED').is(':checked')
 
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'
@@ -92,19 +90,15 @@ define([
 							Status.error text
 
 			testSearchConfiguration: (event) ->
-				@setSetting 'SEARCH_SETTING', 'SCHEMA', @$('#SEARCH_SETTING__SCHEMA').val(), () =>
-					@setSetting 'SEARCH_SETTING', 'HOST', @$('#SEARCH_SETTING__HOST').val(), () =>
-						@setSetting 'SEARCH_SETTING', 'PORT', @$('#SEARCH_SETTING__PORT').val(), () =>
-							@setSetting 'SEARCH_SETTING', 'INDEX_NAME', @$('#SEARCH_SETTING__INDEX_NAME').val(), () =>
-								$.ajax
-									type: 'GET'
-									url: 'ws/admin/area/testSearchConfig'
-									success: () -> Status.success 'Search is configured correctly'
-									error: (error) -> 
-										text = error?.responseText
-										unless text
-											text = 'Could not reach opensearch'
-										Status.error text
+				$.ajax
+					type: 'GET'
+					url: 'ws/admin/area/testSearchConfig'
+					success: () -> Status.success 'Search is configured correctly'
+					error: (error) -> 
+						text = error?.responseText
+						unless text
+							text = 'Could not reach opensearch'
+						Status.error text
 
 			testGladConfiguration: (event) ->
 				@setSetting 'SERVER_SETTING', 'GLAD_URL', @$('#SERVER_SETTING__GLAD_URL').val(), () ->

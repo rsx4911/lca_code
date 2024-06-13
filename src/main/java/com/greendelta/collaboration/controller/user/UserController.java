@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.jdbc.BlobProxy;
 import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +28,7 @@ import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
 import com.greendelta.collaboration.service.user.TeamService;
@@ -41,16 +42,16 @@ public class UserController {
 
 	private final UserService service;
 	private final TeamService teamService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final MessagingService messagingService;
 	private final SettingsService settings;
 
-	public UserController(UserService service, TeamService teamService, AccessService accessService,
+	public UserController(UserService service, TeamService teamService, PermissionsService permissions,
 			MembershipService membershipService, MessagingService messagingService, SettingsService settings) {
 		this.service = service;
 		this.teamService = teamService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.messagingService = messagingService;
 		this.settings = settings;
@@ -132,7 +133,7 @@ public class UserController {
 					.filter(messagingService::canMessage)
 					.toList();
 			case REVIEW -> users.stream()
-					.filter(user -> accessService.canReviewIn(user, repositoryPath))
+					.filter(user -> permissions.canReviewIn(user, repositoryPath))
 					.toList();
 			default -> users;
 		};
@@ -201,7 +202,12 @@ public class UserController {
 		}
 		if (currentUser.isUserManager()) {
 			fromDb.settings.userManager = user.settings.userManager;
-			fromDb.settings.dataManager = user.settings.dataManager;
+			if (currentUser.isDataManager()) {
+				fromDb.settings.dataManager = user.settings.dataManager;
+			}
+			if (currentUser.isLibraryManager()) {
+				fromDb.settings.libraryManager = user.settings.libraryManager;
+			}
 			fromDb.settings.canCreateGroups = user.settings.canCreateGroups;
 			fromDb.settings.canCreateRepositories = user.settings.canCreateRepositories;
 			fromDb.settings.noOfRepositories = user.settings.noOfRepositories;
@@ -220,7 +226,7 @@ public class UserController {
 		if (user == null)
 			throw Response.notFound();
 		try {
-			user.avatar = file != null ? file.getBytes() : null;
+			user.avatar = file != null ? BlobProxy.generateProxy(file.getBytes()) : null;
 			user = service.update(user);
 		} catch (IOException e) {
 			throw Response.error("Error reading avatar file");

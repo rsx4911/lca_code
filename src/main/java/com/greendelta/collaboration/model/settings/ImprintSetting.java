@@ -26,4 +26,14 @@ public enum ImprintSetting implements SettingKey {
 		return type;
 	}
 
+	@Override
+	public boolean isPublicSetting() {
+		return true;
+	}
+	
+	@Override
+	public boolean isAdminSetting() {
+		return false;
+	}
+
 }

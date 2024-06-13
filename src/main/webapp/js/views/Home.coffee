@@ -64,8 +64,8 @@ define([
 							return i1 - i2
 						@$el.html template
 							title: settings.getVal('HOME_TITLE')
-							showSearch: settings.is('SEARCH_ENABLED')
 							welcomeText: settings.getVal('HOME_TEXT')
+							showSearch: settings.is('SEARCH_AVAILABLE')
 							repositories: visible
 						Renderer.render @, renderOptions
 						setTimeout () =>

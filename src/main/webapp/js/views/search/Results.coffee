@@ -29,12 +29,15 @@ define([
 				processType: 5
 				modellingApproach: 6
 				location: 7
-				categoryPaths: 8
-				validFromYear: 9
-				validUntilYear: 10
-				contact: 11
-				repositoryTags: 12
-				datasetTags: 13
+				reviewType: 8
+				complianceDeclaration: 9
+				flowCompleteness: 10
+				categoryPaths: 11
+				validFromYear: 12
+				validUntilYear: 13
+				contact: 14
+				repositoryTags: 15
+				tags: 16
 
 			initialize: (options) ->
 				@aggregations = {}

@@ -1,0 +1,46 @@
+include ../mixins.pug
+include ./aspect-table.pug
+
+mixin scope-table(scopes)
+	table.table
+		thead
+			tr
+				th=getLabel('processDocumentation.reviews.scope')
+				th=getLabel('processDocumentation.reviews.methods')
+		tbody
+			each scope in scopes
+				- var changed = compareTo && !scope[1] ? 'added' : (compareTo && !scope[0] ? 'removed' : null);
+				tr(data-compare=changed)
+					+sub-field-cell(scope[0], scope[1], 'name')
+					td
+						ul
+							- var methods = getArrayValues(scope[0], scope[1], 'SCOPE_METHOD', 'methods')
+							each method in methods
+								+sub-field-li(method[0], method[1])
+
+mixin review-tables()
+	- var doc = dataset ? dataset.processDocumentation : null;
+	- var otherDoc = compareTo ? compareTo.processDocumentation : null;
+	- var reviews = getArrayValues(doc, otherDoc, 'REVIEW', 'reviews');
+	each values, index in reviews
+		- var changed = compareTo && !values[1] ? 'added' : (compareTo && !values[0] ? 'removed' : null);
+		- var review = values[0];
+		div(data-compare=changed)
+			strong=getLabel('processDocumentation.review')
+			table.table.no-head
+				tbody
+					+sub-field-row(values[0], values[1], 'processDocumentation.reviews.reviewType')
+					+sub-field-ref-row(values[0], values[1], 'processDocumentation.reviews.report')
+					+sub-field-row(values[0], values[1], 'processDocumentation.reviews.details')
+					- var getReviewerId = function(reviewer) {return reviewer.id};
+					- var reviewers = getValue(values[0], 'reviewers') 
+					- var otherReviewers = getValue(values[1], 'reviewers') 
+					+array-field-row(reviewers, otherReviewers, 'processDocumentation.reviews.reviewers', 'ACTOR', getReviewerId)
+			- var scopes = getArrayValues(values[0], values[1], 'SCOPE', 'scopes')
+			if scopes.length
+				+scope-table(scopes)
+			- var assessments = getArrayValues(values[0], values[1], 'ASPECT', 'assessment')
+			if assessments.length
+				+aspect-table(assessments, 'processDocumentation.reviews.assessment')
+		if index !== reviews.length - 1
+			hr

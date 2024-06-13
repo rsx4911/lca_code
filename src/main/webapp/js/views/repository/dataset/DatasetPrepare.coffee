@@ -28,6 +28,7 @@ define([
 				when 'Process'
 					Sort.exchanges dataset, 'exchanges'
 					Sort.socialAspects dataset
+					Sort.documentation dataset
 					Sort.parameters dataset
 					@prepareAllocationFactors dataset
 					if dataset.socialAspects
@@ -44,6 +45,8 @@ define([
 					Sort.indicatorsAndScores dataset
 				when 'Result'
 					Sort.exchanges dataset, 'flowResults'
+				when 'Epd'
+					Sort.epdModules dataset
 
 		removeAtSigns: (object) ->
 			unless object

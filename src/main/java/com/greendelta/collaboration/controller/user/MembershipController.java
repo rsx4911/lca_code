@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Memberships;
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.TeamService;
@@ -33,16 +34,16 @@ public class MembershipController {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final TeamService teamService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final NotificationService notificationService;
 
 	public MembershipController(MembershipService service, RepositoryService repoService, UserService userService,
-			TeamService teamService, AccessService accessService, NotificationService notificationService) {
+			TeamService teamService, PermissionsService permissions, NotificationService notificationService) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.teamService = teamService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.notificationService = notificationService;
 	}
 
@@ -270,9 +271,9 @@ public class MembershipController {
 			}
 		}
 		if (userService.exists(group))
-			throw Response.forbidden(group, "EDIT_MEMBERS");
-		if (!accessService.canRead(group))
-			throw Response.forbidden(group, "READ");
+			throw Response.forbidden(group, Permission.EDIT_MEMBERS);
+		if (!permissions.canRead(group))
+			throw Response.forbidden(group, Permission.READ);
 		return path;
 	}
 

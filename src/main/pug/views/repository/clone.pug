@@ -4,8 +4,4 @@ form#clone-form
 	#clone-form-general-message-group.alert(role='alert'): span.message
 	+input('clone-name', 'Name')
 	+select('clone-group', 'Group', groups)
-	+select('clone-commit', 'Version')
-		if commits.length
-			option(value=commits[0].id) Latest 
-		each commit, i in commits
-			option(value=commit.id)=formatCommitDescription(commit.message)
+	+commit-selection('clone-commit', 'Version', commits)

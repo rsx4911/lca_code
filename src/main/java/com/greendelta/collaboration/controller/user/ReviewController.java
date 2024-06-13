@@ -22,7 +22,7 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.ReviewService;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -33,18 +33,18 @@ public class ReviewController {
 	private final ReviewService service;
 	private final TaskService taskService;
 	private final UserService userService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final NotificationService notificationService;
 	private final RepositoryService repoService;
 	private final SettingsService settings;
 
 	public ReviewController(ReviewService service, TaskService taskService, UserService userService,
-			AccessService accessService, NotificationService notificationService, RepositoryService repoService,
+			PermissionsService permissions, NotificationService notificationService, RepositoryService repoService,
 			SettingsService settings) {
 		this.service = service;
 		this.taskService = taskService;
 		this.userService = userService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.notificationService = notificationService;
 		this.repoService = repoService;
 		this.settings = settings;
@@ -116,7 +116,7 @@ public class ReviewController {
 	public Map<String, Object> completeReview(@PathVariable("id") long id) {
 		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
-		Review review = service.get(id);
+		var review = service.get(id);
 		if (review == null)
 			throw Response.notFound("No review with id " + id + " found");
 		try (var repo = repoService.get(review.repositoryPath)) {
@@ -153,7 +153,7 @@ public class ReviewController {
 			throw Response.badRequest("", "Please select data set references before assigning a user");
 		try (var repo = repoService.get(review.repositoryPath)) {
 			var assignment = service.startAssignment(review, username,
-					(user, r) -> accessService.canReviewIn(user, r.path()));
+					(user, r) -> permissions.canReviewIn(user, r.path()));
 			notificationService.taskAssigned(repo, review, assignment).send();
 			return getActiveTasks();
 		}

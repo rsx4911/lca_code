@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -27,9 +26,11 @@ import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
+import com.google.common.io.Files;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
 import com.greendelta.collaboration.model.Membership;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
@@ -38,11 +39,10 @@ import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.SearchResults;
 
 @Service
 public class RepositoryService {
@@ -50,25 +50,27 @@ public class RepositoryService {
 	private static final Logger log = LogManager.getLogger(RepositoryService.class);
 
 	private final GroupService groupService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final UserService userService;
 	private final CommentService commentService;
 	private final SettingsService settings;
 	private final FileService fileService;
 	private final TaskService taskService;
+	private final ReleaseService releaseService;
 
-	public RepositoryService(GroupService groupService, AccessService accessService,
+	public RepositoryService(GroupService groupService, PermissionsService permissions,
 			MembershipService membershipService, UserService userService, CommentService commentService,
-			SettingsService settings, FileService fileService, TaskService taskService) {
+			SettingsService settings, FileService fileService, TaskService taskService, ReleaseService releaseService) {
 		this.groupService = groupService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.userService = userService;
 		this.commentService = commentService;
 		this.settings = settings;
 		this.fileService = fileService;
 		this.taskService = taskService;
+		this.releaseService = releaseService;
 	}
 
 	public Repository get(RepositoryPath path) {
@@ -95,10 +97,10 @@ public class RepositoryService {
 			throw Response.notFound("No repository '" + id + "' found");
 		if (!Repository.getDir(path, group, name).exists())
 			throw Response.notFound("No repository '" + group + "/" + name + "' found");
-		if (!accessService.canRead(id))
-			throw Response.forbidden(id, "READ");
+		if (!permissions.canRead(id) && !releaseService.hasReleases(id))
+			throw Response.forbidden(id, Permission.READ);
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
-				accessService::canSetSettings);
+				permissions::canSetSettingsOf);
 		var groupSettings = groupService.getSettings(group);
 		try {
 			return new Repository(path, group, name, repoSettings, groupSettings);
@@ -128,8 +130,8 @@ public class RepositoryService {
 
 	public Repository create(String group, String name) {
 		var currentUser = userService.getCurrentUser();
-		if (!accessService.canCreateRepositoryIn(group))
-			throw Response.forbidden(group, "WRITE");
+		if (!permissions.canCreateRepositoryIn(group))
+			throw Response.forbidden(group, Permission.WRITE);
 		var path = getPath(group, name);
 		if (path == null)
 			return null;
@@ -152,12 +154,12 @@ public class RepositoryService {
 	}
 
 	public boolean move(Repository repo, String group, String name) {
-		if (!accessService.canMove(repo.path()))
-			throw Response.forbidden(repo.path(), "MOVE");
-		if (!accessService.canCreateRepositoryIn(group))
-			throw Response.forbidden(group, "WRITE");
-		if (!accessService.canDelete(repo.path()))
-			throw Response.forbidden(repo.path(), "DELETE");
+		if (!permissions.canMove(repo.path()))
+			throw Response.forbidden(repo.path(), Permission.MOVE);
+		if (!permissions.canCreateRepositoryIn(group))
+			throw Response.forbidden(group, Permission.WRITE);
+		if (!permissions.canDelete(repo.path()))
+			throw Response.forbidden(repo.path(), Permission.DELETE);
 		if (exists(group, name))
 			return false;
 		try (var newRepo = create(group, name)) {
@@ -168,6 +170,7 @@ public class RepositoryService {
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
+			releaseService.move(repo.path(), newRepo.path());
 			repo.settings.move(newRepo);
 			delete(repo);
 			return true;
@@ -186,8 +189,8 @@ public class RepositoryService {
 	}
 
 	public boolean clone(Repository from, Repository to, Commit resetTo) {
-		if (!accessService.canWrite(to.group))
-			throw Response.forbidden(to.group, "WRITE");
+		if (!permissions.canWriteTo(to.group))
+			throw Response.forbidden(to.group, Permission.WRITE);
 		try {
 			Dirs.copy(from.dir.toPath(), to.dir.toPath());
 			if (resetTo != null) {
@@ -211,8 +214,8 @@ public class RepositoryService {
 	}
 
 	public boolean delete(Repository repo) {
-		if (!accessService.canDelete(repo.path()))
-			throw Response.forbidden(repo.path(), "DELETE");
+		if (!permissions.canDelete(repo.path()))
+			throw Response.forbidden(repo.path(), Permission.DELETE);
 		var path = getPath(repo.group, repo.name);
 		if (path == null)
 			return false;
@@ -274,9 +277,35 @@ public class RepositoryService {
 		}
 	}
 
-	public void generateJson(Repository repo, Function<LibraryLink, String> urlResolver) {
+	public void generateCachedJson(Repository repo, String commitId, List<LibraryLink> linkedLibraries) {
+		generateJson(repo.dir, repo.getCachedJsonFile(commitId), commitId, linkedLibraries);
+	}
+	
+	public void deleteCachedJson(Repository repo, String commitId) {
+		var jsonFile = repo.getCachedJsonFile(commitId);
+		Dirs.delete(jsonFile);
+	}
+
+	private void generateJson(File repoDir, File jsonFile, String commitId, List<LibraryLink> linkedLibraries) {
+		// Don't use git repo in thread, since it might be closed by calling
+		// code
+		var lockFile = new File(repoDir, ".lock_" + commitId);
+		if (lockFile.exists())
+			return;
 		new Thread(() -> {
-			RepositoryJsonWriter.writeCurrent(repo.dir, repo.getCachedJsonFile(), repo.linkedLibraries(urlResolver));
+			try {
+				Files.write(new byte[0], lockFile);
+				var tmpFile = fileService.createTempFile();
+				RepositoryJsonWriter.write(repoDir, commitId, tmpFile, linkedLibraries);
+				Files.copy(tmpFile, jsonFile);
+				tmpFile.delete();
+			} catch (IOException e) {
+				log.error("Error generating json file", e);
+			} finally {
+				if (lockFile.exists()) {
+					Dirs.delete(lockFile);
+				}
+			}
 		}).start();
 	}
 
@@ -292,34 +321,15 @@ public class RepositoryService {
 		return userGroup.listFiles().length;
 	}
 
-	public long getCount(boolean adminArea) {
-		try (var repos = getAll(false, adminArea)) {
+	public long getCount() {
+		try (var repos = getAllAccessible()) {
 			return repos.size();
 		}
 	}
 
-	public RepositorySearchResult getAll(int page, int pageSize, String filter, boolean onlyPublic,
-			boolean adminArea) {
-		var accessible = getAll(onlyPublic, adminArea);
-		try {
-			accessible.sort();
-			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, accessible, Repository::path);
-			return new RepositorySearchResult(result);
-		} catch (Throwable e) {
-			accessible.close();
-			return new RepositorySearchResult();
-		}
-	}
-
 	public RepositoryList getAllAccessible() {
-		return getAll(false, true);
-	}
-
-	public RepositoryList getPublic() {
-		return getAll(true, false);
-	}
-
-	private RepositoryList getAll(boolean onlyPublic, boolean adminArea) {
+		if (userService.getCurrentUser().isAnonymous())
+			return getReleased();
 		var path = getRootPath();
 		if (path == null || path.isEmpty())
 			return new RepositoryList();
@@ -334,30 +344,34 @@ public class RepositoryService {
 				if (!name.isDirectory())
 					continue;
 				var repoPath = RepositoryPath.of(group.getName(), name.getName());
-				if (!accessService.canRead(repoPath.toString(), !adminArea))
+				if (!permissions.canRead(repoPath.toString()))
 					continue;
 				var repo = get(group.getName(), name.getName());
-				if (onlyPublic && !repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-					repo.close();
-					continue;
-				}
 				repos.add(repo);
 			}
 		}
 		return repos;
 	}
 
-	public List<String> getPublicRepositoryOrder() {
+	public RepositoryList getReleased() {
+		return new RepositoryList(
+				releaseService.getAll().stream()
+						.map(info -> info.repositoryPath)
+						.distinct()
+						.map(this::get));
+	}
+
+	public List<String> getRepositoryOrder() {
 		return getRepositoryList(ServerSetting.REPOSITORIES_ORDER, true);
 	}
 
-	public List<String> getPublicHiddenRepositories() {
+	public List<String> getHiddenRepositories() {
 		return getRepositoryList(ServerSetting.REPOSITORIES_HIDDEN, false);
 	}
 
 	private List<String> getRepositoryList(ServerSetting key, boolean addMissing) {
 		List<String> repositoryArray = settings.get(key, new ArrayList<>());
-		try (var repos = getPublic()) {
+		try (var repos = getReleased()) {
 			var repoMap = repos.stream()
 					.collect(Collectors.toMap(repo -> repo.path(), repo -> repo));
 			var repoIds = new ArrayList<String>();

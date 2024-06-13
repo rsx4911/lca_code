@@ -1,9 +1,7 @@
 include mixins/forms.pug
 
 form#commit-selection
-	+select('commitId', 'Compare with version')
-		if commits[0] !== commitId
-			option(value=commits[0].id) Latest
-		each commit, i in commits
-			if commit.id !== commitId
-				option(value=commit.id)=formatCommitDescription(commit.message)
+	if commits && commits.length && commits[0].version
+		+release-selection('commitId', 'Compare with version', commits)
+	else
+		+commit-selection('commitId', 'Compare with version', commits)

@@ -7,7 +7,7 @@ mixin causal-allocation-factor-table()
 			tr
 				th
 				th=getLabel('allocationFactors.product')
-				- var factor = dataset ? dataset.causalAllocationFactors[0] : null;
+				- var factor = dataset && dataset.causalAllocationFactors ? dataset.causalAllocationFactors[0] : null;
 				- var otherFactor = compareTo && compareTo.causalAllocationFactors ? compareTo.causalAllocationFactors[0]: null;
 				- var products = getArrayValues(factor, otherFactor, 'PRODUCT', 'products');
 				each values in products

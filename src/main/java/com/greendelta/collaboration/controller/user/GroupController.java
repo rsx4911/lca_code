@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
@@ -21,10 +23,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.greendelta.collaboration.controller.util.Avatar;
 import com.greendelta.collaboration.controller.util.Module;
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -39,16 +42,16 @@ public class GroupController {
 
 	private final GroupService service;
 	private final UserService userService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final MembershipService membershipService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 
-	public GroupController(GroupService service, UserService userService, AccessService accessService,
+	public GroupController(GroupService service, UserService userService, PermissionsService permissions,
 			MembershipService membershipService, DeleteService deleteService, NotificationService notificationService) {
 		this.service = service;
 		this.userService = userService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.membershipService = membershipService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
@@ -62,7 +65,18 @@ public class GroupController {
 			@RequestParam(name = "module", required = false) Module module,
 			@RequestParam(name = "onlyIfCanWrite", defaultValue = "false") boolean onlyIfCanWrite,
 			@RequestParam(name = "adminArea", defaultValue = "false") boolean adminArea) {
-		var result = service.getAll(page, pageSize, filter, adminArea, onlyIfCanWrite);
+		var all = service.getAllAccessible();
+		if (onlyIfCanWrite) {
+			all = all.stream()
+					.filter(permissions::canWriteTo)
+					.collect(Collectors.toList());
+		}
+		if (adminArea) {
+			all = all.stream()
+					.filter(Predicate.not(service::isUserNamespace))
+					.collect(Collectors.toList());
+		}
+		var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all);
 		var user = userService.getCurrentUser();
 		return SearchResults.convert(result, group -> {
 			var map = Maps.of("name", (Object) group);
@@ -84,17 +98,17 @@ public class GroupController {
 		var isOwnNamespace = service.isOwnNamespace(name);
 		if (!isOwnNamespace && !service.exists(name))
 			throw Response.notFound("Group " + name + " not found");
-		if (!accessService.canRead(name))
-			throw Response.forbidden(name, "READ");
+		if (!permissions.canRead(name))
+			throw Response.forbidden(name, Permission.READ);
 		var group = new HashMap<String, Object>();
 		group.put("isUserGroup", isOwnNamespace);
-		group.put("userCanDelete", !isOwnNamespace && accessService.canDelete(name));
-		group.put("userCanWrite", accessService.canWrite(name));
-		group.put("userCanCreate", accessService.canCreateRepositoryIn(name));
-		group.put("userCanSetSettings", accessService.canSetSettings(name));
+		group.put("userCanDelete", !isOwnNamespace && permissions.canDelete(name));
+		group.put("userCanWrite", permissions.canWriteTo(name));
+		group.put("userCanCreate", permissions.canCreateRepositoryIn(name));
+		group.put("userCanSetSettings", permissions.canSetSettingsOf(name));
 		group.put("settings", service.getSettings(name).toMap());
 		var isUserspace = user != null && name.equals(user.username);
-		group.put("userCanEditMembers", !isUserspace && accessService.canEditMembersOf(name));
+		group.put("userCanEditMembers", !isUserspace && permissions.canEditMembersOf(name));
 		return group;
 	}
 
@@ -117,7 +131,8 @@ public class GroupController {
 		if (service.exists(name))
 			throw Response.badRequest("name", "Group " + name + " already exists");
 		if (!service.create(name, false))
-			throw Response.error("Could not create group, does the configured 'Repositories root directory' exist and can be write-accessed?");
+			throw Response.error(
+					"Could not create group, does the configured 'Repositories root directory' exist and can be write-accessed?");
 		notificationService.groupCreated(name).send();
 		return Response.created(Collections.singletonMap("name", name));
 	}
@@ -144,8 +159,8 @@ public class GroupController {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
 		var user = userService.getCurrentUser();
-		if (setting.isAdminSetting && !user.isDataManager() && !user.isUserManager())
-			throw Response.forbidden(name, "SET_SETTING");
+		if (setting.isAdminSetting() && !user.isDataManager() && !user.isUserManager())
+			throw Response.forbidden(name, Permission.SET_SETTINGS);
 		var value = data.get("value").toString();
 		service.getSettings(name).set(setting, value);
 	}

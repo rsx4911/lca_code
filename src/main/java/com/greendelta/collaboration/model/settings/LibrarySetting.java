@@ -33,4 +33,15 @@ public enum LibrarySetting implements SettingKey {
 	public <V> TypeReference<V> getSubType() {
 		return (TypeReference<V>) subType;
 	}
+	
+	@Override
+	public boolean isPublicSetting() {
+		return false;
+	}
+
+	@Override
+	public boolean isAdminSetting() {
+		return true;
+	}
+	
 }

@@ -10,7 +10,7 @@ import jakarta.persistence.Enumerated;
 @Embeddable
 public class DatasetField {
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	public ModelType modelType;
 

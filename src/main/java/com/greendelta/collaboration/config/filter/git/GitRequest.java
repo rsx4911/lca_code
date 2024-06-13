@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import org.eclipse.jgit.http.server.GitSmartHttpTools;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.util.Password;
@@ -51,14 +52,15 @@ public class GitRequest extends HttpServletRequestWrapper {
 		var username = principal[0];
 		var password = Password.getPasswordWithoutToken(principal[1]);
 		var token = Password.getToken(principal[1]);
-		var response = sessionService.login(this, username, password, token);
-		if (response.status() == HttpStatus.OK) {
+		try {
+			sessionService.login(this, username, password, token);
 			this.remoteUser = username;
 			return true;
+		} catch (ResponseStatusException e) {
+			if (e.getStatusCode() == HttpStatus.BAD_REQUEST)
+				throw new BadCredentialsException(e.getMessage());			
+			return false;
 		}
-		if (response.status() == HttpStatus.BAD_REQUEST)
-			throw new BadCredentialsException(response.message());
-		return false;
 	}
 
 	public void basicHttpLogout(SessionService sessionService) {

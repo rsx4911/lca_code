@@ -2,6 +2,7 @@ package com.greendelta.collaboration.service.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jgit.lib.ObjectId;
@@ -10,7 +11,6 @@ import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 import org.openlca.util.Strings;
 
-import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
@@ -25,7 +25,7 @@ class DsEntryManager {
 		this.commit = commit;
 	}
 
-	DsEntry createOrUpdate(DsEntry e, Reference ref) {
+	DsEntry createOrUpdate(DsEntry e, Reference ref, List<String> tags) {
 		if (e == null) {
 			e = new DsEntry(ref.type, ref.refId);
 		}
@@ -45,7 +45,7 @@ class DsEntryManager {
 		}
 		var r = getRepo(v);
 		if (r == null) {
-			r = createRepo(ref);
+			r = createRepo(ref, tags);
 			v.repos.add(r);
 		} else {
 			r.commitId = commit.id;
@@ -79,8 +79,8 @@ class DsEntryManager {
 	private void fillGenericVersion(DsVersion v, Reference ref, Map<String, Object> metaData) {
 		v.objectId = ref.objectId.name();
 		v.name = Maps.getString(metaData, "name");
-		var tags = Maps.getString(metaData, "tags");
-		v.tags = tags != null ? Arrays.asList(tags.split("/")) : new ArrayList<>();
+		var tags = Maps.getStringArray(metaData, "tags");
+		v.tags = tags != null ? Arrays.asList(tags) : new ArrayList<>();
 		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
@@ -102,14 +102,17 @@ class DsEntryManager {
 		v.validFromYear = Maps.get(metaData, "validFromYear");
 		v.validUntilYear = Maps.get(metaData, "validUntilYear");
 		v.flowType = Maps.get(metaData, "flowType");
+		v.reviewTypes = Maps.getAll(metaData, "reviewTypes", String.class);
+		v.complianceDeclarations = Maps.getAll(metaData, "complianceDeclarations", String.class);
+		v.flowCompleteness = Maps.getAll(metaData, "flowCompleteness", String.class);
 		return v;
 	}
 
-	private DsRepo createRepo(Reference ref) {
+	private DsRepo createRepo(Reference ref, List<String> tags) {
 		var r = new DsRepo();
 		r.path = repo.path();
 		r.group = repo.group;
-		r.tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
+		r.tags = tags;
 		r.commitId = commit.id;
 		r.commitMessage = commit.message;
 		return r;

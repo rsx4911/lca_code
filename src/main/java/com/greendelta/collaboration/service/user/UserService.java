@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.service.user;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,13 +9,23 @@ import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 import org.openlca.util.Strings;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Dao;
 import com.greendelta.collaboration.util.Dates;
@@ -23,7 +34,7 @@ import com.greendelta.search.wrapper.SearchResult;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService implements UserDetailsService, OAuth2UserService<OidcUserRequest, OidcUser> {
 
 	private final Dao<User> dao;
 	private final PasswordEncoder passwordEncoder;
@@ -72,13 +83,76 @@ public class UserService implements UserDetailsService {
 	}
 
 	public User getCurrentUser() {
-		if (isAnonymous())
-			return new User();
 		var auth = SecurityContextHolder.getContext().getAuthentication();
-		var user = getForUsername(auth.getName());
+		var user = getUser(auth);
 		if (user == null)
-			return new User();
+			throw Response.unauthorized("Could not find a matching user");
+		if (user.isDeactivated())
+			throw Response.unauthorized("User is deactivated or approval is pending");
 		return user;
+	}
+
+	public User getUser(Authentication auth) {
+		if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken)
+			return new User();
+		if (auth instanceof UsernamePasswordAuthenticationToken)
+			return getForUsername(auth.getName());
+		if (auth instanceof OAuth2AuthenticationToken token) {
+			var principal = token.getPrincipal();
+			String email = principal.getAttribute("email");
+			if (Strings.nullOrEmpty(email))
+				return null;
+			return getForEmail(email);
+		}
+		return null;
+	}
+
+	public User createUser(OAuth2User principal) {
+		String email = principal.getAttribute("email");
+		String preferredUsername = principal.getAttribute("preferred_username");
+		var user = new User();
+		user.email = email;
+		user.name = principal.getAttribute("name");
+		var emailUser = email.substring(0, email.indexOf("@"));
+		if (Strings.nullOrEmpty(user.name)) {
+			user.name = emailUser;
+		}
+		var username = toUsername(preferredUsername);
+		if (Strings.nullOrEmpty(username) || exists(username)) {
+			username = toUsername(user.name);
+		}
+		if (Strings.nullOrEmpty(username) || exists(username)) {
+			username = toUsername(emailUser);
+		}
+		var emailProvider = email.substring(email.indexOf("@") + 1, email.lastIndexOf("."));
+		var count = 0;
+		while (exists(username)) {
+			var suffix = count != 0 ? Integer.toString(count) : "";
+			username = toUsername(emailUser, emailProvider, suffix);
+			count++;
+		}
+		user.username = username;
+		user.settings.setDefaults();
+		return user;
+	}
+
+	private String toUsername(String... values) {
+		var username = "";
+		for (var value : values) {
+			if (Strings.nullOrEmpty(value))
+				continue;
+			if (!username.isEmpty()) {
+				username += "_";
+			}
+			for (var c : value.toCharArray()) {
+				if (Character.isLetterOrDigit(c) || c == '_') {
+					username += c;
+				} else {
+					username += "_";
+				}
+			}
+		}
+		return username.toLowerCase();
 	}
 
 	public long getCount() {
@@ -171,9 +245,16 @@ public class UserService implements UserDetailsService {
 		return dao.update(user);
 	}
 
-	public boolean isAnonymous() {
-		var auth = SecurityContextHolder.getContext().getAuthentication();
-		return auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken;
+	@Override
+	public OidcUser loadUser(OidcUserRequest request) throws OAuth2AuthenticationException {
+		var email = request.getIdToken().getEmail();
+		if (Strings.nullOrEmpty(email))
+			return new DefaultOidcUser(Collections.emptyList(), request.getIdToken());
+		var user = getForEmail(email);
+		if (user == null)
+			return new DefaultOidcUser(Collections.emptyList(), request.getIdToken());
+		user.idToken = request.getIdToken();
+		return user;
 	}
 
 }

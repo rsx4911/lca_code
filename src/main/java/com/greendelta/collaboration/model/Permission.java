@@ -23,7 +23,9 @@ public enum Permission {
 	MANAGE_TASK,
 
 	SET_SETTINGS,
+
+	CREATE_CHANGE_LOG,
 	
-	CAN_CREATE_CHANGE_LOG;
+	MANAGE_RELEASES;
 
 }

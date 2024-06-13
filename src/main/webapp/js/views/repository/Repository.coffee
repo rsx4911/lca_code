@@ -46,7 +46,6 @@ define([
 					roles: Roles.getAll()
 					dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
-					publicReposEnabled: settings.is('PUBLIC_REPOSITORY_ENABLED')
 					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
@@ -86,11 +85,6 @@ define([
 			
 			putSetting: (setting, value) ->
 				repository = @repository.toJSON()
-				if setting is 'PUBLIC_ACCESS'
-					value = if value is 'on' then true else if value is 'off' then false else value
-					@$('#jsonFileGeneration').attr 'disabled', !value
-				if setting is 'JSON_FILE_GENERATION'
-					Layers.showProgressIndicator 'Generating'
 				$.ajax
 					type: 'PUT'
 					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}"
@@ -189,7 +183,7 @@ define([
 				repoPath = "#{repository.group}/#{repository.name}"
 				$.ajax
 					type: 'GET'
-					url: "ws/history/#{repoPath}"
+					url: "ws/public/history/#{repoPath}"
 					success: (commits) =>
 						@loadGroups (groups) =>
 							callback commits, groups

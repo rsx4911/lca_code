@@ -17,7 +17,7 @@ import com.greendelta.collaboration.model.AbstractEntity;
 @Table
 public class Setting extends AbstractEntity {
 
-	@Column(columnDefinition = "VARCHAR(255)")
+	@Column
 	@Enumerated(EnumType.STRING)
 	private SettingType type;
 
@@ -50,7 +50,7 @@ public class Setting extends AbstractEntity {
 		if (type == Integer.class && value != null)
 			return (V) Integer.valueOf(Integer.parseInt(value));
 		if (type == Long.class && value != null)
-			return (V) Integer.valueOf(Integer.parseInt(value));
+			return (V) Long.valueOf(Long.parseLong(value));
 		if (type == Object.class && data != null) {
 			try {
 				String json = new String(data, StandardCharsets.UTF_8);

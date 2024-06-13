@@ -20,13 +20,11 @@ include ../mixins/forms.pug
 		+checkbox('SERVER_SETTING__COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
 		+checkbox('SERVER_SETTING__TASKS_ENABLED', 'Tasks: Editors can create review tasks')
 		+checkbox('SERVER_SETTING__MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
-		+checkbox('SERVER_SETTING__PUBLIC_REPOSITORY_ENABLED', 'Public repositories: Repositories can be marked as publicly accessible')
-		.indented-setting
-			+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page or login for anonymous users')
+		+checkbox('SERVER_SETTING__RELEASES_ENABLED', 'Releases: Commits of a repository can be released to the public')
+		+checkbox('SERVER_SETTING__HOMEPAGE_ENABLED', 'Homepage</strong>: Show a landing page instead of the default search page or login for anonymous users')
 		+checkbox('SERVER_SETTING__NOTIFICATIONS_ENABLED', 'Notifications</strong>: Users can receive notifications')
 		+checkbox('SERVER_SETTING__USER_REGISTRATION_ENABLED', 'User registration</strong>: Users can create accounts themselves')
-		.indented-setting
-			+checkbox('SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
+		+checkbox('SERVER_SETTING__USER_REGISTRATION_APPROVAL_ENABLED', 'User registration approval</strong>: Self signed-up users will be inactive until an admin activates them')
 		+checkbox('SERVER_SETTING__CHANGE_LOG_ENABLED', 'Change log</strong>: Users can create change logs from commit histories (local nodejs server for server side rendering must be installed)')
 		+checkbox('SERVER_SETTING__DASHBOARD_ACTIVITIES_ENABLED', 'Dashboard activities</strong>: Shows latest activities on the dashboard')
 		+checkbox('SERVER_SETTING__REPOSITORY_ACTIVITIES_ENABLED', 'Repository activities</strong>: Shows latest activities in each repository')
@@ -43,10 +41,9 @@ include ../mixins/forms.pug
 			+input('SEARCH_SETTING__SCHEMA', 'Schema')
 			+input('SEARCH_SETTING__HOST', 'Url')
 			+input('SEARCH_SETTING__PORT', 'Port')
-		.clear
-		.two-columns
-			+input('SEARCH_SETTING__INDEX_NAME', 'Search index')
-			+input('SEARCH_SETTING__IO_DATA_INDEX_NAME', 'Flow  index')
+			+input('SEARCH_INDEX__PRIVATE', 'Search index')
+			+input('SEARCH_INDEX__PUBLIC', 'Public search index')
+			+input('SEARCH_INDEX__IO_DATA', 'Flow  index')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear

@@ -6,6 +6,7 @@ public enum SettingType {
 	IMPRINT_SETTING(ImprintSetting.class, true),
 	MAIL_SETTING(MailSetting.class, true),
 	SEARCH_SETTING(SearchSetting.class, true),
+	SEARCH_INDEX(SearchIndex.class, true),
 	REPOSITORY_SETTING(RepositorySetting.class, false),
 	GROUP_SETTING(GroupSetting.class, false),
 	LIBRARY_SETTING(LibrarySetting.class, false);

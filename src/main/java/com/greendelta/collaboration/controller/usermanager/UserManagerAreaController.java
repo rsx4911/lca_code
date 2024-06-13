@@ -2,8 +2,7 @@ package com.greendelta.collaboration.controller.usermanager;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +13,8 @@ import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("ws/usermanager/area")
@@ -37,8 +38,10 @@ public class UserManagerAreaController {
 		var result = new HashMap<String, Object>();
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.isDataManager()) {
-			result.put("repositories", repoService.getCount(true));
-			result.put("groups", groupService.getCount(true));
+			result.put("repositories", repoService.getCount());
+			result.put("groups", groupService.getAllAccessible().stream()
+					.filter(Predicate.not(groupService::isUserNamespace))
+					.count());
 		}
 		if (currentUser.isUserManager()) {
 			result.put("users", userService.getCount());

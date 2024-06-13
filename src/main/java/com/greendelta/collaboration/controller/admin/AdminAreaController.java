@@ -8,12 +8,15 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,42 +26,61 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.EmailService;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
+import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.SettingsService.SearchConfig;
 import com.greendelta.collaboration.service.search.IndexService;
+import com.greendelta.collaboration.service.user.TeamService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("ws/admin/area")
 public class AdminAreaController {
 
-	// request listener is not counting calls to the server info, to avoid
-	// counting itself. To avoid hiding this information in the RequestListener
-	// task, the path is specified here (avoid error if changes on the path
-	// occur)
-	public static final String SERVER_INFO_PATH = "/ws/admin/area/serverInfo";
 	private final RepositoryService repoService;
+	private final GroupService groupService;
+	private final UserService userService;
+	private final TeamService teamService;
 	private final IndexService indexService;
 	private final SettingsService settings;
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
 
-	public AdminAreaController(RepositoryService repoService, IndexService indexingService, SettingsService settings,
+	public AdminAreaController(RepositoryService repoService, GroupService groupService, UserService userService,
+			TeamService teamService, IndexService indexingService, SettingsService settings,
 			EmailService emailService, AnnouncementService announcementService) {
 		this.repoService = repoService;
+		this.groupService = groupService;
+		this.userService = userService;
+		this.teamService = teamService;
 		this.indexService = indexingService;
 		this.settings = settings;
 		this.emailService = emailService;
 		this.announcementService = announcementService;
+	}
+
+	@GetMapping("count")
+	public Map<String, Object> getCounts(@Autowired HttpServletRequest request) {
+		var result = new HashMap<String, Object>();
+		result.put("repositories", repoService.getCount());
+		result.put("groups", groupService.getAllAccessible().stream()
+				.filter(Predicate.not(groupService::isUserNamespace))
+				.count());
+		result.put("users", userService.getCount());
+		result.put("teams", teamService.getCount());
+		return result;
 	}
 
 	@GetMapping("testGladConfig")
@@ -83,10 +105,10 @@ public class AdminAreaController {
 	public void testSearchConfig() {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
-		SearchConfig config = settings.searchConfig;
+		var config = settings.searchConfig;
 		try {
 			var client = config.getClient();
-			String indexName = config.get(SearchSetting.INDEX_NAME);
+			String indexName = config.indices.get(SearchIndex.PRIVATE);
 			var exists = client.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
 			if (!exists)
 				throw Response.error("Index " + indexName + " does not exist");
@@ -114,8 +136,8 @@ public class AdminAreaController {
 				ServerSetting.MODEL_TYPES_ORDER, ServerSetting.MODEL_TYPES_HIDDEN
 		});
 		var info = settings.serverConfig.toMap(setting -> relevantSettings.contains(setting));
-		info.put("repositoriesOrder", repoService.getPublicRepositoryOrder());
-		info.put("repositoriesHidden", repoService.getPublicHiddenRepositories());
+		info.put("repositoriesOrder", repoService.getRepositoryOrder());
+		info.put("repositoriesHidden", repoService.getHiddenRepositories());
 		info.put("indexingStatus", Maps.of(indexService.getIndexingStatus()));
 		return info;
 	}
@@ -132,7 +154,11 @@ public class AdminAreaController {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		try (var repos = repoService.getAllAccessible()) {
-			indexService.reindexAllAsync(repos.stream().map(Repository::path).map(RepositoryPath::of).toList());
+			var paths = repos.stream()
+					.map(Repository::path)
+					.map(RepositoryPath::of)
+					.collect(Collectors.toList());
+			indexService.reindexAllAsync(paths);
 		}
 	}
 

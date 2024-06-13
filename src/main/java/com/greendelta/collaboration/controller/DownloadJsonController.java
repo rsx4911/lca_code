@@ -22,6 +22,7 @@ import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.io.JsonWriter;
 import com.greendelta.collaboration.service.FileService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -31,14 +32,12 @@ import com.greendelta.collaboration.service.user.UserService;
 @RequestMapping("ws/public/download/json")
 public class DownloadJsonController extends DownloadController {
 
-	private final RepositoryService repoService;
 	private final LibraryService libraryService;
 	private final FileService fileService;
 
-	public DownloadJsonController(RepositoryService repoService, UserService userService,
+	public DownloadJsonController(RepositoryService repoService, UserService userService, HistoryService historyService,
 			LibraryService libraryService, FileService fileService) {
-		super(repoService, userService);
-		this.repoService = repoService;
+		super(repoService, userService, historyService);
 		this.libraryService = libraryService;
 		this.fileService = fileService;
 	}
@@ -47,9 +46,18 @@ public class DownloadJsonController extends DownloadController {
 	@GetMapping("{token}")
 	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
 		if (token.startsWith("repository_")) {
-			try (var repo = repoService.get(token.substring(11).replace("@", "/"))) {
-				if (repo.getCachedJsonFile().exists())
-					return Response.ok(repo.toFilename(), repo.getCachedJsonFile());
+			var info = token.substring(11).split("@");
+			if (info.length < 3)
+				throw Response.notFound();
+			try (var repo = repoService.get(info[0], info[1])) {
+				var commitId = info[2];
+				var commit = historyService.getAccessibleCommit(repo, commitId);
+				if (commit == null)
+					throw Response.notFound();
+				var cachedJsonFile = repo.getCachedJsonFile(commit.id);
+				if (!cachedJsonFile.exists())
+					throw Response.notFound();
+				return Response.ok(repo.toFilename(), cachedJsonFile);
 			}
 		}
 		return super.download(token);
@@ -61,21 +69,16 @@ public class DownloadJsonController extends DownloadController {
 			@PathVariable("repository") String repository,
 			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestParam(name = "path", required = false) String path) {
-		if (isCompleteCurrentRepo(group, repository, commitId, path))
-			return "repository_" + group + "@" + repository;
-		return super.prepare(group, repository, commitId, path);
-	}
-
-	private boolean isCompleteCurrentRepo(String group, String repository, String commitId, String path) {
 		try (var repo = repoService.get(group, repository)) {
-			if (!repo.getCachedJsonFile().exists())
-				return false; // is not cached
-			if (!Strings.nullOrEmpty(path))
-				return false; // is not complete repo
-			if (commitId != null && !commitId.equals(repo.commits.resolve("HEAD")))
-				return false; // is not current state (last commit)
-			return true;
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (Strings.nullOrEmpty(path) && commit != null) {
+				var cachedJsonFile = repo.getCachedJsonFile(commit.id);
+				if (cachedJsonFile.exists())
+					return "repository_" + group + "@" + repository + "@" + commit.id;
+				repoService.generateCachedJson(repo, commit.id, libraryService.getLinkedLibraries(repo, commit));
+			}
 		}
+		return super.prepare(group, repository, commitId, path);
 	}
 
 	@GetMapping("prepare/{group}/{repository}/{type}/{refId}")
@@ -99,8 +102,8 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(fileService.createTempFile(), repo,
-				repo.linkedLibraries(libraryService.getLibraryUrlResolver()), commit);
+		return new JsonWriter(fileService.createTempFile(), repo, libraryService.getLinkedLibraries(repo, commit),
+				commit);
 	}
 
 	@Override

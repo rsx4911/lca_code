@@ -5,6 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 public interface SettingKey {
 
 	String name();
+	
+	boolean isPublicSetting();
+	
+	boolean isAdminSetting();
 
 	Class<?> getType();
 

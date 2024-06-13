@@ -9,10 +9,12 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.git.RepositoryInfo;
+import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.ModelPath;
+import org.openlca.jsonld.SchemaVersion;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.jsonld.input.CategoryImport;
 
@@ -24,24 +26,36 @@ public class RepositoryJsonWriter implements Closeable {
 	private final static Logger log = LogManager.getLogger(RepositoryJsonWriter.class);
 	private final ZipStore zipStore;
 	private final OlcaRepository repo;
-	
-	public static void writeCurrent(File gitDir, File cachedJsonFile, List<LibraryLink> libraries) {
+
+	public static void write(File gitDir, String commitId, File cachedJsonFile, List<LibraryLink> libraries) {
 		try (var repo = new OlcaRepository(gitDir)) {
-			var writer = new RepositoryJsonWriter(repo, libraries, cachedJsonFile);
-			repo.references.find().iterate(ref -> writer.put(ref));
+			var writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo().schemaVersion(), cachedJsonFile);
+			var categories = new JsonArray();
+			repo.entries.iterate(commitId, entry -> {
+				if (entry.typeOfEntry == EntryType.CATEGORY) {
+					categories.add(entry.path);
+				} else if (entry.typeOfEntry == EntryType.DATASET) {
+					writer.put(entry);
+				}
+			});
+			writer.writeCategoriesJson(categories);
 			writer.close();
 		} catch (IOException e) {
 			log.error("Error writing json-ld archive", e);
 		}
 	}
 
-	public RepositoryJsonWriter(OlcaRepository repo, List<LibraryLink> libraries, File file) throws IOException {
+	RepositoryJsonWriter(OlcaRepository repo, List<LibraryLink> libraries, SchemaVersion schemaVersion,
+			File file) throws IOException {
 		this.zipStore = ZipStore.open(file);
 		this.repo = repo;
-		RepositoryInfo.create().withLibraries(libraries).writeTo(zipStore);
+		RepositoryInfo.create()
+				.withLibraries(libraries)
+				.withSchemaVersion(schemaVersion)
+				.writeTo(zipStore);
 	}
 
-	public String put(Reference ref) {
+	String put(Reference ref) {
 		var data = repo.datasets.get(ref);
 		if (data == null)
 			return null;
@@ -64,5 +78,5 @@ public class RepositoryJsonWriter implements Closeable {
 		var data = json.getBytes(StandardCharsets.UTF_8);
 		zipStore.put(CategoryImport.FILE_NAME, data);
 	}
-	
+
 }

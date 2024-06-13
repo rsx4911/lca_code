@@ -6,14 +6,12 @@ import com.greendelta.collaboration.util.JacksonTypes;
 public enum RepositorySetting implements SettingKey {
 
 	AVATAR(byte[].class),
-	PUBLIC_ACCESS(Boolean.class, false),
 	PROHIBIT_COMMITS(Boolean.class, false),
 	COMMENT_APPROVAL(Boolean.class, false),
-	JSON_FILE_GENERATION(Boolean.class, false),
 	MAX_SIZE(Long.class, 0l),
+	TAGS(JacksonTypes.STRING_LIST),
 	LABEL(String.class),
 	VERSION(String.class),
-	TAGS(JacksonTypes.STRING_LIST),
 	DESCRIPTION(String.class),
 	SOURCE_INFO(String.class),
 	CONTACT_INFO(String.class),
@@ -22,8 +20,7 @@ public enum RepositorySetting implements SettingKey {
 	APPROPRIATE_USE(String.class),
 	DQ_ASSESSMENT(String.class),
 	CITATION(String.class),
-	TYPE_OF_DATA(String.class),
-	SEARCH_COMMIT_ID(String.class);
+	TYPE_OF_DATA(String.class);
 
 	private final Class<?> type;
 	private final TypeReference<?> subType;
@@ -60,6 +57,16 @@ public enum RepositorySetting implements SettingKey {
 	@Override
 	public <V> TypeReference<V> getSubType() {
 		return (TypeReference<V>) subType;
+	}
+
+	@Override
+	public boolean isPublicSetting() {
+		return false;
+	}
+
+	@Override
+	public boolean isAdminSetting() {
+		return this == MAX_SIZE;
 	}
 
 }

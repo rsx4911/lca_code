@@ -10,7 +10,6 @@ import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
 
-
 public class DsVersion {
 
 	public String objectId;
@@ -31,7 +30,10 @@ public class DsVersion {
 	public String location;
 	public Integer validFromYear;
 	public Integer validUntilYear;
-
+	public List<String> reviewTypes;
+	public List<String> complianceDeclarations;
+	public List<String> flowCompleteness;
+	
 	void completeData() {
 		if (Strings.nullOrEmpty(category))
 			return;

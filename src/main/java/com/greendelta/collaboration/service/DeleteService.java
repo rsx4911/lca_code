@@ -3,15 +3,16 @@ package com.greendelta.collaboration.service;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.task.TaskAssignment;
 import com.greendelta.collaboration.model.task.TaskState;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.AccessService;
 import com.greendelta.collaboration.service.user.CommentService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 
@@ -25,12 +26,14 @@ public class DeleteService {
 	private final GroupService groupService;
 	private final TaskService taskService;
 	private final MessagingService messagingService;
-	private final AccessService accessService;
 	private final CommentService commentService;
+	private final ReleaseService releaseService;
+	private final PermissionsService permissions;
 
 	public DeleteService(UserService userService, TeamService teamService, MembershipService memberService,
 			RepositoryService repoService, GroupService groupService, TaskService taskService,
-			MessagingService messagingService, AccessService accessService, CommentService commentService) {
+			MessagingService messagingService, ReleaseService releaseService, CommentService commentService,
+			PermissionsService permissions) {
 		this.userService = userService;
 		this.teamService = teamService;
 		this.memberService = memberService;
@@ -38,16 +41,19 @@ public class DeleteService {
 		this.groupService = groupService;
 		this.taskService = taskService;
 		this.messagingService = messagingService;
-		this.accessService = accessService;
 		this.commentService = commentService;
+		this.releaseService = releaseService;
+		this.permissions = permissions;
 	}
 
 	public void delete(User user) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw Response.forbidden("User " + user.id, "DELETE");
-		try (var result = repoService.getAll(0, 0, user.username + "/", false, false)) {
-			result.data.forEach(this::delete);
+			throw Response.forbidden("User " + user.id, Permission.DELETE);
+		for (var repo : repoService.getAllAccessible()) {
+			if (repo.group.equals(user.username)) {
+				delete(repo);
+			}
 		}
 		groupService.delete(user.username);
 		teamService.getTeamsFor(user).forEach(team -> {
@@ -92,7 +98,7 @@ public class DeleteService {
 	public void delete(Team team) {
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isUserManager())
-			throw Response.forbidden("Team " + team.id, "DELETE");
+			throw Response.forbidden("Team " + team.id, Permission.DELETE);
 		memberService.removeMemberships(team);
 		messagingService.getMessages(team).forEach(message -> {
 			messagingService.delete(message);
@@ -101,11 +107,12 @@ public class DeleteService {
 	}
 
 	public void delete(Repository repo) {
-		if (!accessService.canDelete(repo.path()))
-			throw Response.forbidden(repo.path(), "DELETE");
+		if (!permissions.canDelete(repo.path()))
+			throw Response.forbidden(repo.path(), Permission.DELETE);
 		deleteTasksOf(repo);
 		commentService.delete(repo);
 		repo.settings.delete();
+		releaseService.delete(repo.path());
 		// TODO check if index is always updated when this is called
 		repoService.delete(repo);
 		memberService.removeMemberships(repo.path());
@@ -118,10 +125,10 @@ public class DeleteService {
 	}
 
 	public void deleteGroup(String name) {
-		if (!accessService.canDelete(name))
-			throw Response.forbidden(name, "DELETE");
-		try (var result = repoService.getAll(0, 0, name + "/", false, false)) {
-			for (Repository repo : result.data) {
+		if (!permissions.canDelete(name))
+			throw Response.forbidden(name, Permission.DELETE);
+		for (var repo : repoService.getAllAccessible()) {
+			if (repo.group.equals(name)) {
 				delete(repo);
 			}
 		}

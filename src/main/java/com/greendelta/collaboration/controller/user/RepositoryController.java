@@ -35,12 +35,12 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.LibraryService;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.IndexService;
-import com.greendelta.collaboration.service.user.AccessService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -57,25 +57,25 @@ public class RepositoryController {
 	private final GroupService groupService;
 	private final UserService userService;
 	private final MembershipService membershipService;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-	private final LibraryService libraryService;
+	private final ReleaseService releaseService;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
-			MembershipService membershipService, UserService userService, AccessService accessService,
+			MembershipService membershipService, UserService userService, PermissionsService permissions,
 			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
-			LibraryService libraryService) {
+			ReleaseService releaseService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.membershipService = membershipService;
-		this.accessService = accessService;
+		this.permissions = permissions;
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
-		this.libraryService = libraryService;
+		this.releaseService = releaseService;
 	}
 
 	@GetMapping
@@ -84,32 +84,40 @@ public class RepositoryController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "group", required = false) String group,
-			@RequestParam(name = "onlyPublic", defaultValue = "false") boolean onlyPublic,
 			@RequestParam(name = "module", required = false) Module module) {
-		try (var all = service.getAll(page, pageSize, filter, onlyPublic, true)) {
+		try (var all = service.getAllAccessible()) {
+			all.sort();
+			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all, Repository::path);
 			if (module == null)
-				return Response.ok(SearchResults.convert(all, Repositories::map));
+				return Response.ok(SearchResults.convert(result,
+						repo -> Repositories.mapForList(repo, releaseService.hasReleases(repo.path()))));
 			var user = userService.getCurrentUser();
 			switch (module) {
 				case DASHBOARD, GROUP:
-					return Response.ok(SearchResults.convert(all,
-							repo -> putRepositoryInfo(Repositories.map(repo), repo, user)));
+					return Response.ok(SearchResults.convert(result,
+							repo -> putRepositoryInfo(this.map(repo), repo, user)));
 				case REVIEW:
-					return Response.ok(all.data.stream()
-							.filter(repo -> accessService.canManageTaskIn(repo.path()))
-							.map(Repositories::map)
+					return Response.ok(all.stream()
+							.filter(repo -> permissions.canManageTaskIn(repo.path()))
+							.map(this::map)
 							.toList());
 				default:
-					return Response.ok(all.data.stream().map(Repositories::map).toList());
+					return Response.ok(all.stream()
+							.map(this::map)
+							.toList());
 			}
 		}
+	}
+
+	private Map<String, Object> map(Repository repo) {
+		return Repositories.mapForList(repo, releaseService.hasReleases(repo.path()));
 	}
 
 	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {
 		map.put("role", membershipService.getRole(user, repo.path()));
 		map.put("commits", repo.commits.find().all().size());
 		map.put("members", membershipService.getMemberships(repo.path()).size());
-		if (user.isDataManager()) {
+		if (!user.isAnonymous()) {
 			var lastCommit = repo.commits.find().latest();
 			map.put("lastCommit", lastCommit != null ? lastCommit.timestamp : null);
 		}
@@ -130,15 +138,16 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			var mappedRepo = Repositories.map(repo, groupService.isUserNamespace(group));
+			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
 			var path = repo.path();
-			mappedRepo.put("userCanDelete", accessService.canDelete(path));
-			mappedRepo.put("userCanWrite", accessService.canWrite(path));
-			mappedRepo.put("userCanMove", accessService.canMove(path));
-			mappedRepo.put("userCanClone", accessService.canMove(path));
-			mappedRepo.put("userCanEditMembers", accessService.canEditMembersOf(path));
-			mappedRepo.put("userCanSetSettings", accessService.canSetSettings(path));
-			mappedRepo.put("userCanCreateChangeLog", accessService.canCreateChangeLog(path));
+			mappedRepo.put("userCanDelete", permissions.canDelete(path));
+			mappedRepo.put("userCanWrite", permissions.canWriteTo(path));
+			mappedRepo.put("userCanMove", permissions.canMove(path));
+			mappedRepo.put("userCanClone", permissions.canMove(path));
+			mappedRepo.put("userCanEditMembers", permissions.canEditMembersOf(path));
+			mappedRepo.put("userCanSetSettings", permissions.canSetSettingsOf(path));
+			mappedRepo.put("userCanCreateChangeLog", permissions.canCreateChangeLogOf(path));
+			mappedRepo.put("userCanCreateReleases", permissions.canCreateReleasesIn(path));
 			mappedRepo.put("size", repo.getSize());
 			return mappedRepo;
 		}
@@ -174,7 +183,7 @@ public class RepositoryController {
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			notificationService.repositoryCreated(repo).send();
-			return Response.created(Repositories.map(repo, groupService.isUserNamespace(group)));
+			return Response.created(Repositories.mapForUser(repo, groupService.isUserNamespace(group)));
 		}
 	}
 
@@ -211,10 +220,7 @@ public class RepositoryController {
 			} else {
 				service.unpack(repo, input.getInputStream());
 			}
-			if (repo.settings.is(RepositorySetting.PUBLIC_ACCESS)) {
-				repo.settings.set(RepositorySetting.PUBLIC_ACCESS, false);
-			}
-			indexService.indexAsync(RepositoryPath.of(group, name));
+			indexService.indexPrivateAsync(RepositoryPath.of(group, name), null, repo.commits.head());
 		} catch (IOException e) {
 			log.error("Error getting input stream from multipart file", e);
 		}
@@ -248,7 +254,7 @@ public class RepositoryController {
 				throw Response.error("Repository could not be moved");
 			var newRepo = service.get(newGroup, newName);
 			notificationService.repositoryMoved(repo, newRepo).send();
-			var result = Repositories.map(newRepo, groupService.isUserNamespace(newGroup));
+			var result = Repositories.mapForUser(newRepo, groupService.isUserNamespace(newGroup));
 			indexService.moveIndexAsync(RepositoryPath.of(group, name), RepositoryPath.of(newGroup, newName));
 			return Response.ok(result);
 		}
@@ -276,7 +282,7 @@ public class RepositoryController {
 				deleteService.delete(to);
 				throw Response.error("Unexpected error during cloning");
 			}
-			indexService.indexAsync(RepositoryPath.of(newGroup, newName));
+			indexService.indexPrivateAsync(RepositoryPath.of(newGroup, newName), null, to.commits.head());
 		}
 	}
 
@@ -305,7 +311,7 @@ public class RepositoryController {
 			try (var client = new RepositoryClient(url, username, password)) {
 				client.exportRepository(repoId, stream -> {
 					service.unpack(repo, stream);
-					indexService.indexAsync(RepositoryPath.of(group, name));
+					indexService.indexPrivateAsync(RepositoryPath.of(group, name), null, repo.commits.head());
 				});
 			}
 		} catch (IOException e) {
@@ -336,24 +342,18 @@ public class RepositoryController {
 			@RequestBody Map<String, Object> data) {
 		var value = data.get("value");
 		try (var repo = service.get(group, name)) {
-			if (setting == RepositorySetting.TAGS) {
-				var tags = parseStringList(value);
-				if (tags != null && tags.isEmpty()) {
-					tags = null;
-				}
-				value = tags;
-				List<String> previous = repo.settings.get(RepositorySetting.TAGS);
-				if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
-					indexService.updateTagsAsync(RepositoryPath.of(group, name));
-				}
-			}
-			repo.settings.set(setting, value);
-			if (RepositorySetting.JSON_FILE_GENERATION.equals(setting)) {
-				try {
-					handleJsonFileGeneration(repo, Boolean.parseBoolean(value.toString()));
-				} catch (IOException e) {
-					throw Response.error("Error creating cached json file");
-				}
+			switch (setting) {
+				case TAGS:
+					var tags = parseStringList(value);
+					var previous = repo.settings.get(RepositorySetting.TAGS, new ArrayList<String>());
+					repo.settings.set(setting, value);
+					if (!new HashSet<>(tags).equals(new HashSet<>(previous))) {
+						indexService.updatePrivateTagsAsync(RepositoryPath.of(group, name));
+					}
+					break;
+				default:
+					repo.settings.set(setting, value);
+					break;
 			}
 		}
 	}
@@ -367,16 +367,6 @@ public class RepositoryController {
 		if (value instanceof List)
 			return (List<String>) value;
 		return new ArrayList<>();
-	}
-
-	private void handleJsonFileGeneration(Repository repo, boolean create) throws IOException {
-		var file = repo.getCachedJsonFile();
-		if (file.exists()) {
-			file.delete();
-		}
-		if (!create)
-			return;
-		service.generateJson(repo, libraryService.getLibraryUrlResolver());
 	}
 
 	@DeleteMapping("{group}/{name}")

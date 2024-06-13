@@ -11,19 +11,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
 import org.openlca.git.RepositoryInfo;
+import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.LibraryAccess;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.LibrarySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -82,8 +83,9 @@ public class LibraryService {
 		if (stream == null)
 			return null;
 		var currentUser = userService.getCurrentUser();
-		if (!currentUser.isDataManager() && (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
-			throw Response.forbidden("LIBRARIES", "WRITE");
+		if (!currentUser.isLibraryManager()
+				&& (!LibraryAccess.isTeamAccess(access) || !isTeamMember(access, currentUser)))
+			throw Response.forbidden("LIBRARIES", Permission.WRITE);
 		Path tmpFile = null;
 		try {
 			tmpFile = Files.createTempFile("cs-lib-", ".zip");
@@ -129,7 +131,7 @@ public class LibraryService {
 
 	private void checkWriteAccess(String name, List<String> accessTypes) {
 		var currentUser = userService.getCurrentUser();
-		if (currentUser.isDataManager())
+		if (currentUser.isLibraryManager())
 			return;
 		for (var access : accessTypes) {
 			if (LibraryAccess.isTeamAccess(access)) {
@@ -138,7 +140,7 @@ public class LibraryService {
 					return;
 			}
 		}
-		throw Response.forbidden(name, "WRITE");
+		throw Response.forbidden(name, Permission.WRITE);
 	}
 
 	private boolean isTeamMember(String teamname, User user) {
@@ -150,7 +152,7 @@ public class LibraryService {
 
 	public File get(String name) {
 		if (!new AccessCheck().canAccess(name, new ArrayList<>()))
-			throw Response.forbidden(name, "READ");
+			throw Response.forbidden(name, Permission.READ);
 		var file = getLibraryFile(name);
 		if (!file.exists())
 			return null;
@@ -163,7 +165,7 @@ public class LibraryService {
 			return null;
 		try (var repos = repoService.getAllAccessible()) {
 			var linkedIn = repos.stream()
-					.filter(repo -> repo.linkedLibraries().contains(name))
+					.filter(repo -> repo.getLibraries().contains(name))
 					.map(Repository::path)
 					.distinct().toList();
 			var accesses = getAccessTypes(name);
@@ -186,6 +188,17 @@ public class LibraryService {
 		return accesses.contains(LibraryAccess.PUBLIC.name());
 	}
 
+	public List<LibraryLink> getLinkedLibraries(Repository repo, Commit commit) {
+		return repo.getLibraries(commit).stream()
+				.map(lib -> new LibraryLink(lib, getLibraryUrl(lib)))
+				.collect(Collectors.toList());
+	}
+
+	private String getLibraryUrl(String libId) {
+		var serverUrl = settings.serverConfig.getServerUrl();
+		return serverUrl + "/ws/" + (isPublic(libId) ? "public/libraries/" : "libraries/") + libId;
+	}
+
 	private File getLibraryFile(String name) {
 		return new File(getLibraryPath(), name + ".zip");
 	}
@@ -205,7 +218,7 @@ public class LibraryService {
 	private List<String> addAccessType(String name, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
-				: settings.ACCESS.DATA_MANAGER;
+				: settings.ACCESS.LIBRARY_MANAGER;
 		var accessTypes = getAccessTypes(name);
 		if (accessTypes.contains(access))
 			return accessTypes;
@@ -218,7 +231,7 @@ public class LibraryService {
 	private List<String> removeAccessType(String name, String access) {
 		var settingsAccess = LibraryAccess.isTeamAccess(access)
 				? settings.ACCESS.TEAM_DATA(teamService.getForTeamname(access))
-				: settings.ACCESS.DATA_MANAGER;
+				: settings.ACCESS.LIBRARY_MANAGER;
 		var accessTypes = getAccessTypes(name);
 		if (!accessTypes.contains(access))
 			return accessTypes;
@@ -251,7 +264,7 @@ public class LibraryService {
 						.filter(accesses::contains)
 						.filter(access -> isTeamMember(access, user))
 						.count() > 0;
-			if (user.isDataManager())
+			if (user.isLibraryManager())
 				return true;
 			for (var access : accesses) {
 				var hasAccess = switch (access) {
@@ -282,11 +295,6 @@ public class LibraryService {
 			return linkedLibraries;
 		}
 
-	}
-
-	public Function<LibraryLink, String> getLibraryUrlResolver() {
-		var serverUrl = settings.serverConfig.getServerUrl();
-		return lib -> serverUrl + "/ws/" + (isPublic(lib.id()) ? "public/libraries/" : "libraries/") + lib.id();
 	}
 
 	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn,

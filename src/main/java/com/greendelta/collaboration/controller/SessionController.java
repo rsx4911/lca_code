@@ -1,20 +1,18 @@
 package com.greendelta.collaboration.controller;
 
-import java.util.Calendar;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.controller.util.Users;
@@ -23,15 +21,17 @@ import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.JobService;
 import com.greendelta.collaboration.service.SessionService;
+import com.greendelta.collaboration.service.SessionService.AuthProvider;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.TaskService;
 import com.greendelta.collaboration.service.user.NotificationService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Routes;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("ws/public")
@@ -47,9 +47,9 @@ public class SessionController {
 	private final NotificationService notificationService;
 	private final SessionService sessionService;
 
-	public SessionController(UserService userService, GroupService groupService, TeamService teamService, TaskService taskService,
-			SettingsService settings, JobService jobService, NotificationService notificationService,
-			SessionService sessionService) {
+	public SessionController(UserService userService, GroupService groupService, TeamService teamService,
+			TaskService taskService, SettingsService settings, JobService jobService,
+			NotificationService notificationService, SessionService sessionService) {
 		this.userService = userService;
 		this.groupService = groupService;
 		this.teamService = teamService;
@@ -62,9 +62,9 @@ public class SessionController {
 
 	@GetMapping
 	public Map<String, Object> getCurrentUser() {
-		if (userService.isAnonymous())
-			return Collections.singletonMap("id", 0);
 		var user = userService.getCurrentUser();
+		if (user.isAnonymous())
+			return Collections.singletonMap("id", 0);
 		var isInTeam = !teamService.getTeamsFor(user).isEmpty();
 		var mapped = Users.mapForCurrentUser(user, isInTeam);
 		mapped.put("noOfTasks", taskService.getAllActiveFor(user).size());
@@ -72,14 +72,19 @@ public class SessionController {
 		return mapped;
 	}
 
+	@GetMapping("auth-providers")
+	public List<AuthProvider> getAuthProviders() {
+		return sessionService.getAuthProviders();
+	}
+
 	@PostMapping("login")
 	public String login(
 			@RequestBody Map<String, Object> form,
-		 HttpServletRequest request) {
+			HttpServletRequest request) {
 		var username = Maps.getString(form, "username");
 		var password = Maps.getString(form, "password");
 		log.info("User {} attempts to login", username);
-		if (!userService.isAnonymous())
+		if (!userService.getCurrentUser().isAnonymous())
 			throw Response.conflict("Already authenticated");
 		if (Strings.nullOrEmpty(username))
 			throw Response.unauthorized("Invalid credentials");
@@ -93,13 +98,20 @@ public class SessionController {
 		}
 		password = Password.getPasswordWithoutToken(password);
 		var token = Password.getToken(password, (int) Maps.getLong(form, "token"));
-		return login(request, username, password, token);
+		try {
+			sessionService.login(request, username, password, token);
+			return "";
+		} catch (ResponseStatusException e) {
+			if (e.getMessage().equals("tokenRequired"))
+				return "tokenRequired";
+			throw e;
+		}
 	}
 
 	@PostMapping("register")
 	public void register(
 			@RequestBody Map<String, Object> form,
-		 HttpServletRequest request) {
+			HttpServletRequest request) {
 		if (!settings.is(ServerSetting.USER_REGISTRATION_ENABLED))
 			throw Response.unavailable("User registration feature not enabled");
 		var username = Maps.getString(form, "username");
@@ -108,7 +120,7 @@ public class SessionController {
 		var password = Maps.getString(form, "password");
 		var password2 = Maps.getString(form, "password2");
 		log.info("User {} attempts to register", username);
-		if (!userService.isAnonymous())
+		if (!userService.getCurrentUser().isAnonymous())
 			throw Response.badRequest("Already authenticated");
 		if (Strings.nullOrEmpty(username))
 			throw Response.badRequest("username", "Missing input: Username");
@@ -146,10 +158,7 @@ public class SessionController {
 		user.email = email;
 		var adminApproval = settings.is(ServerSetting.USER_REGISTRATION_APPROVAL_ENABLED);
 		if (adminApproval) {
-			var cal = Calendar.getInstance();
-			cal.add(Calendar.DAY_OF_MONTH, -1);
-			Dates.removeTimeInformation(cal);
-			user.settings.activeUntil = cal.getTime();
+			user.deactivate();
 		}
 		userService.setPassword(user, password);
 		user.settings.setDefaults();
@@ -157,19 +166,9 @@ public class SessionController {
 		if (adminApproval) {
 			notificationService.userRegistered(user).send();
 		} else {
-			login(request, username, password, null);
+			sessionService.login(request, username, password, null);
 		}
 		log.info("User {} successfully registered", username);
-	}
-
-	private String login(HttpServletRequest request, String username, String password, Integer token) {
-		var response = sessionService.login(request, username, password, token);
-		if (response.status() == HttpStatus.BAD_REQUEST && response.message().equals("tokenRequired"))
-			return response.message();
-		if (response.status() != HttpStatus.OK)
-			throw Response.status(response.status(), response.message());
-		log.info("User {} successfully logged in", username);
-		return "";
 	}
 
 	@PostMapping("request-password-reset")

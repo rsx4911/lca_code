@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import com.greendelta.collaboration.model.Comment;
 import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Message;
+import com.greendelta.collaboration.model.ReleaseInfo;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.job.Job;
@@ -59,6 +60,11 @@ public class DaoConfig {
 		return new Dao<>(Membership.class);
 	}
 
+	@Bean
+	public Dao<ReleaseInfo> releaseInfoDao() {
+		return new Dao<>(ReleaseInfo.class);
+	}
+	
 	@Bean
 	public Dao<Message> messageDao() {
 		return new Dao<>(Message.class);

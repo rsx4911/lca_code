@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.engine.jdbc.BlobProxy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,7 +56,8 @@ public class TeamController {
 		var currentUser = userService.getCurrentUser();
 		if (currentUser.isAnonymous())
 			return new ArrayList<>();
-		if (currentUser.isUserManager() || currentUser.isDataManager())
+		if ((currentUser.isLibraryManager() && module == Module.TEAM_LIBRARIES) || currentUser.isUserManager()
+				|| currentUser.isDataManager())
 			return service.getAll(0, 0, null, module == Module.TEAM_LIBRARIES).data.stream()
 					.filter(team -> !team.users.isEmpty())
 					.toList();
@@ -113,7 +115,7 @@ public class TeamController {
 		if (team == null)
 			throw Response.notFound();
 		try {
-			team.avatar = file != null ? file.getBytes() : null;
+			team.avatar = file != null ? BlobProxy.generateProxy(file.getBytes()) : null;
 			team = service.update(team);
 		} catch (IOException e) {
 			throw Response.error("Error reading avatar file");

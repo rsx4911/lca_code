@@ -21,7 +21,7 @@ import org.openlca.git.util.FieldDefinition;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
-import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
@@ -110,10 +110,8 @@ public class InputOutputDataService {
 		getClient().update(ids, update);
 	}
 
-	void index(Repository repo) {
-		String previousCommitId = repo.settings.get(RepositorySetting.SEARCH_COMMIT_ID);
-		var commits = repo.commits.find().after(previousCommitId).all();
-		Commit previousCommit = previousCommitId != null ? repo.commits.get(previousCommitId) : null;
+	void index(Repository repo, Commit previousCommit, Commit currentCommit) {
+		var commits = repo.commits.find().after(previousCommit.id).until(currentCommit.id).all();
 		var client = getClient();
 		if (client == null)
 			return;
@@ -138,7 +136,8 @@ public class InputOutputDataService {
 		}
 	}
 
-	private void updatePrevious(EntryBuffer buffer, Repository repo, Set<String> skipRefIds, Commit previousCommit, Commit commit) {
+	private void updatePrevious(EntryBuffer buffer, Repository repo, Set<String> skipRefIds, Commit previousCommit,
+			Commit commit) {
 		if (previousCommit == null)
 			return;
 		var previous = getForCommit(repo, previousCommit);
@@ -197,7 +196,7 @@ public class InputOutputDataService {
 	}
 
 	private SearchClient getClient() {
-		return settings.searchConfig.getIoDataSearchClient();
+		return settings.searchConfig.getSearchClient(SearchIndex.IO_DATA);
 	}
 
 	private String getIndexId(String repositoryPath, String commitId, String processRefId) {

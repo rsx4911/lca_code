@@ -10,8 +10,6 @@ To compile it from source you need to have the following tools installed:
 * [Maven](http://maven.apache.org/)
 * [Node.js](https://nodejs.org/) and [Gulp](http://gulpjs.com/) (for building the HTML5 user interface components)
 
-(As of version 1.7, Gulp4 may cause build failures. Revert to Gulp3.9.1 if this should occur)
-
 When you have these tools installed you can build the application from source via the following steps:
 
 #### Install the openLCA core modules and search-wrapper modules
@@ -22,33 +20,11 @@ These modules are plain Maven projects and can be installed via `mvn install`. S
 * [search-wrapper-os](https://github.com/GreenDelta/search-wrapper-os.git)
 * [search-wrapper-os-rest](https://github.com/GreenDelta/search-wrapper-os-rest.git)
 
-Clone these modules into your environment:
-
-```bash
-git clone https://github.com/GreenDelta/olca-modules.git
-git clone https://github.com/GreenDelta/search-wrapper.git
-git clone https://github.com/GreenDelta/search-wrapper-os.git
-git clone https://github.com/GreenDelta/search-wrapper-os-rest.git
-```
-
-Then build them using Maven
-
-```bash
-mvn install
-```
-
 #### Get the source code of the application
 We recommend that to use Git to manage the source code but you can also download the source code as a zip file. Create a development directory (the path should not contain whitespaces):
 
 ```bash
-mkdir lca-collaboration
-cd lca-collaboration
-```
-
-and get the source code:
-
-```bash
-git clone https://github.com/isdapps/lca-repo-application.git
+git clone https://git.greendelta.com/collaboration/collaboration-server
 ```
 
 #### Building the HTML pages
@@ -58,7 +34,7 @@ To build the HTML pages of the user interface, install the Node.js modules via [
 npm install
 ```
 
-This will create a folder `lca-collaboration/node_modules` with the dependent modules. After this, you can create the html package via Gulp:
+This will create a folder `collaboration-server/node_modules` with the dependent modules. After this, you can create the html package via Gulp:
 
 ```bash
 node_modules/gulp/bin/gulp.js build
@@ -72,7 +48,7 @@ Download the current Eclipse package for JEE developers (to have everything toge
     eclipse
       ...
       workspace
-    lca-collaboration
+    collaboration-server
       .git
       ...
 
@@ -83,7 +59,46 @@ mvn eclipse:eclipse
 ```
 	
 After this, open Eclipse and select the created workspace directory. Import the project into Eclipse via `Import/General/Existing Projects into Workspace`
-(select the lca-collaboration directory). You should now see the project in your Eclipse workspace.
+(select the collaboration-server directory). You should now see the project in your Eclipse workspace.
+
+#### Configuring OAuth 2.0 providers
+The LCA Collaboration Server includes support for OAuth 2.0 providers via Spring. The application scans for providers configured via the Spring application.properties and will add buttons - labeled "Continue with [client-name]" - in the login page, to redirect to the authentication provider automatically. The client-name will be read from the spring.security.oauth2.client.registration.[registration-id].client-name parameter. Note that for GitHub, Google and Facebook, the client-name - and all other required properties - are already provided by Spring's default configuration. If a user does not exist in the collaboration server, it will be added automatically, using the email and name from the provider, if the preferred_username attribute is not available, a username will be generated from the name and/or the email address. If no email address is specified, the login fails.
+
+Below you can find some example configurations:
+
+
+Github:
+
+```
+spring.security.oauth2.client.registration.github.client-id=your-github-client-id
+spring.security.oauth2.client.registration.github.client-secret=your-github-client-secret
+```
+
+Google:
+
+```
+spring.security.oauth2.client.registration.google.client-id=your-google-client-id
+spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
+```
+
+Facebook:
+
+```
+spring.security.oauth2.client.registration.facebook.client-id=your-facebook-client-id
+spring.security.oauth2.client.registration.facebook.client-secret=your-facebook-client-secret
+```
+
+Keycloak:
+
+```
+spring.security.oauth2.client.registration.keycloak.client-id=your-keycloak-client-app-id
+spring.security.oauth2.client.registration.keycloak.client-name=Keycloak
+spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.keycloak.scope=openid
+spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
+spring.security.oauth2.client.provider.keycloak.issuer-uri=http://[keycloak-host-or-ip]:[keycloak-port]/realms/[KeyCloakRealmName]
+# Example: http://localhost:8081/realms/SpringBootKeycloakRealm
+```
 
 #### Build the web application for deployment
 To build the web application to be deployed on a web server (e.g. tomcat) run:
@@ -92,7 +107,7 @@ To build the web application to be deployed on a web server (e.g. tomcat) run:
 mvn package
 ```
 
-The file 'lca-collaboration.war' in the target sub directory is the deployable application.
+The file 'lca-collaboration-server-{version}_{date}.war' in the target sub directory is the deployable application.
 
 ## Installation
 

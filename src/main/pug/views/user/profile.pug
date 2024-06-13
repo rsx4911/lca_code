@@ -3,7 +3,7 @@ include ../mixins/avatar-box.pug
 
 .header-box Account
 	if user.id && adminArea
-		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactive'
+		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactivate'
 		if !user.lastAdmin
 			button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
 	span.badge.pull-right.user-status(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated ? 'Inactive': 'Active'
@@ -26,8 +26,12 @@ form#user-form.content-box
 	if adminArea
 		if isAdmin
 			+checkbox('settings-admin', 'Is admin user')(disabled=user.lastAdmin)
+		if isUserManager
 			+checkbox('settings-userManager', 'Is allowed to manage users and teams')
+		if isDataManager
 			+checkbox('settings-dataManager', 'Is allowed to manage data (includes access to all repositories)')
+		if isLibraryManager
+			+checkbox('settings-libraryManager', 'Is allowed to manage libraries (includes access to all libraries)')
 		+checkbox('settings-canCreateGroups', 'Is allowed to create groups')
 		+checkbox('settings-canCreateRepositories', 'Is allowed to create repositories in her/his user group')
 		+input('settings-noOfRepositories', 'No. of user group repositories (0 = unlimited)', 'number')(class='input-sm', value=user&&user.settings?(user.settings.noOfRepositories||0):0, size=4, min=0)

@@ -32,6 +32,13 @@ define([
 					return true
 				return false
 
+			isLibraryManager: () ->
+				if @isAdmin()
+					return true
+				if @get('settings')?.libraryManager
+					return true
+				return false
+
 			isBlocked: (username) ->
 				for user in @get('settings').blockedUsers
 					if user.username is username

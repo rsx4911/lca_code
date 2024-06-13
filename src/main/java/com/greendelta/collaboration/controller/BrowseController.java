@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -39,13 +40,15 @@ public class BrowseController {
 	private final RepositoryService repoService;
 	private final UserService userService;
 	private final LibraryService libraryService;
+	private final HistoryService historyService;
 	private final SettingsService settings;
 
 	public BrowseController(RepositoryService repoService, UserService userService, LibraryService libraryService,
-			SettingsService settings) {
+			HistoryService historyService, SettingsService settings) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.libraryService = libraryService;
+		this.historyService = historyService;
 		this.settings = settings;
 	}
 
@@ -59,7 +62,7 @@ public class BrowseController {
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
 			@RequestParam(name = "commitId", required = false) String commitId) {
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits.find().until(commitId).latest();
+			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				return SearchResults.from(new ArrayList<>(), page, pageSize, 0);
 			var data = switch (categoryPath) {
@@ -152,9 +155,9 @@ public class BrowseController {
 		var path = Maps.getString(entry, "path");
 		var commitId = Maps.getString(entry, "commitId");
 		if (!path.startsWith(RepositoryInfo.FILE_NAME + "/"))
-			return repo.commits.find().path(path).until(commitId).latest();
+			return historyService.getLatestAccessibleCommitUntil(repo, path, commitId);
 		var library = Maps.getString(entry, "refId");
-		var commits = repo.commits.find().path(RepositoryInfo.FILE_NAME).until(commitId).all();
+		var commits = historyService.getAccessibleCommitsUntil(repo, RepositoryInfo.FILE_NAME, commitId);
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
 			var info = repo.getInfo(commit);
@@ -178,21 +181,15 @@ public class BrowseController {
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
 		try (var repo = repoService.get(group, name)) {
-			var commit = repo.commits.find().model(type, refId).until(commitId).latest();
+			var commit = historyService.getAccessibleCommit(repo, type, refId, commitId);
 			if (commit == null)
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
-			var latestCommitId = repo.commits.find().model(type, refId).latestId();
-			var loggedIn = userService.getCurrentUser().id != 0;
-			if (!loggedIn && !commit.id.equals(latestCommitId))
-				throw Response.unauthorized();
 			var ref = repo.references.get(type, refId, commit.id);
 			var dataset = repo.datasets.get(ref);
 			if (Strings.nullOrEmpty(dataset))
 				throw Response.notFound(type + " " + refId + " not found for commit " + commit.id);
-			var map = Maps.of(dataset);
-			if (loggedIn) {
-				map.put("commitId", commit.id);
-			}
+			var map = Maps.of(dataset);			
+			map.put("commitId", commit.id);
 			new IsInRepoInfo(repo, commitId).addIn(map);
 			return map;
 		}

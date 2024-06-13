@@ -315,8 +315,8 @@ gulp.task('copySsrCss', function() {
 });
 
 gulp.task('copySsrFonts', function() {
-  return gulp.src(['src/main/resources/static/css/fonts/*'])
-  .pipe(gulp.dest('./src/main/resources/ssr/files/css/fonts'));
+  return gulp.src(['src/main/resources/static/fonts/*'])
+  .pipe(gulp.dest('./src/main/resources/ssr/files/fonts'));
 });
 
 gulp.task('copySsrJs', function() {

@@ -18,6 +18,15 @@ define([
 				@$el.html template()
 				@$('h3').remove()
 				Renderer.render @, renderOptions
+				$.ajax
+					type: 'GET'
+					url: 'ws/public/auth-providers'
+					success: (providers) ->
+						if !providers?.length
+							return
+						$('.auth-provider-container').append '<div class="separator">or</div>'
+						providers.forEach (provider) ->
+							$('.auth-provider-container').append('<a class="btn btn-block btn-default" href="oauth2/authorization/' + provider.id + '">Continue with ' + provider.name + '</a>')
 
 			submit: (event) ->
 				target = $ Events.target event

@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.DatasetWriter;
 import com.greendelta.collaboration.model.User;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.user.UserService;
@@ -24,12 +25,14 @@ import com.greendelta.collaboration.service.user.UserService;
 abstract class DownloadController {
 
 	private final static Map<String, TokenInfo> tokens = new HashMap<>();
-	private final RepositoryService repoService;
-	private final UserService userService;
+	protected final RepositoryService repoService;
+	protected final UserService userService;
+	protected final HistoryService historyService;
 
-	protected DownloadController(RepositoryService repoService, UserService userService) {
+	protected DownloadController(RepositoryService repoService, UserService userService, HistoryService historyService) {
 		this.repoService = repoService;
 		this.userService = userService;
+		this.historyService = historyService;
 	}
 
 	protected String prepare(String group, String repository, String commitId, String path) {
@@ -37,8 +40,11 @@ abstract class DownloadController {
 			return prepare(group, repository, commitId);
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{}/{} (commit id {})", group, repository, path, commitId);
-			var writer = prepareWriter(repo, commitId, true);
-			repo.entries.iterate(commitId, path, writer::write);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound("commit " + commitId + " not found");
+			var writer = prepareWriter(repo, commit, true);
+			repo.entries.iterate(commit.id, path, writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -54,9 +60,12 @@ abstract class DownloadController {
 			if (entry == null)
 				throw Response.notFound("entry " + ref.path + " not found");
 			log().info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
-			var writer = prepareWriter(repo, commitId, true);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound("commit " + commitId + " not found");
+			var writer = prepareWriter(repo, commit, true);
 			writer.write(entry);
-			return put(writer, refId + "_" + commitId + ".zip");
+			return put(writer, refId + "_" + commit.id + ".zip");
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
 		}
@@ -66,9 +75,12 @@ abstract class DownloadController {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting {} paths  of repository {}/{}/{} (commit id {})", paths.size(), group, repository,
 					commitId);
-			var writer = prepareWriter(repo, commitId, true);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound("commit " + commitId + " not found");
+			var writer = prepareWriter(repo, commit, true);
 			paths.stream().forEach(path -> {
-				repo.entries.iterate(commitId, path, writer::write);
+				repo.entries.iterate(commit.id, path, writer::write);
 			});
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
@@ -79,18 +91,18 @@ abstract class DownloadController {
 	private String prepare(String group, String repository, String commitId) {
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{} (commit id {})", group, repository, commitId);
-			var writer = prepareWriter(repo, commitId, false);
-			repo.entries.iterate(commitId, writer::write);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound("commit " + commitId + " not found");
+			var writer = prepareWriter(repo, commit, false);
+			repo.entries.iterate(commit.id, writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
 		}
 	}
 
-	private DatasetWriter prepareWriter(Repository repo, String commitId, boolean withReferences) throws IOException {
-		var commit = repo.commits.find().until(commitId).latest();
-		if (commit == null)
-			throw Response.notFound("commit " + commitId + " not found");
+	private DatasetWriter prepareWriter(Repository repo, Commit commit, boolean withReferences) throws IOException {
 		var writer = createWriter(repo, commit);
 		if (withReferences) {
 			writer.withReferences();

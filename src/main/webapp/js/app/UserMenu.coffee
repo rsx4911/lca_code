@@ -94,6 +94,7 @@ define([
 					isAdmin: currentUser.isAdmin()
 					isUserManager: currentUser.isUserManager()
 					isDataManager: currentUser.isDataManager()
+					isLibraryManager: currentUser.isLibraryManager()
 					unreadMessages: conversations.getUnreadMessages()
 					websocketSupported: (window.WebSocket isnt undefined)
 					debugMode: LocalStorage.getValue('debugMode')

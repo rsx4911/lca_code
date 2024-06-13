@@ -22,9 +22,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.settings.ImprintSetting;
 import com.greendelta.collaboration.model.settings.MailSetting;
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.Setting;
@@ -87,6 +89,7 @@ public class SettingsService {
 			case SERVER_SETTING -> serverConfig;
 			case MAIL_SETTING -> mailConfig;
 			case SEARCH_SETTING -> searchConfig;
+			case SEARCH_INDEX -> searchConfig.indices;
 			case IMPRINT_SETTING -> imprint;
 			default -> get(type, null);
 		};
@@ -276,9 +279,11 @@ public class SettingsService {
 	public class SearchConfig extends Settings<SearchSetting> {
 
 		private RestHighLevelClient client;
-
+		public final Settings<SearchIndex> indices;
+		
 		private SearchConfig() {
 			super(SettingType.SEARCH_SETTING);
+			indices = new Settings<>(SettingType.SEARCH_INDEX);
 		}
 
 		@Override
@@ -325,18 +330,9 @@ public class SettingsService {
 			return client;
 		}
 
-		public SearchClient getSearchClient() {
+		public SearchClient getSearchClient(SearchIndex index) {
 			try {
-				return new OsRestClient(getClient(), get(SearchSetting.INDEX_NAME));
-			} catch (Exception e) {
-				SettingsService.log.error("Error getting search client", e);
-				return null;
-			}
-		}
-
-		public SearchClient getIoDataSearchClient() {
-			try {
-				return new OsRestClient(getClient(), get(SearchSetting.IO_DATA_INDEX_NAME));
+				return new OsRestClient(getClient(), indices.get(index));
 			} catch (Exception e) {
 				SettingsService.log.error("Error getting search client", e);
 				return null;
@@ -443,7 +439,7 @@ public class SettingsService {
 		private void checkAccess(String owner) {
 			if (type == null || access == null || access.allowed(owner))
 				return;
-			throw Response.forbidden(owner, "SET_SETTING");
+			throw Response.forbidden(owner, Permission.SET_SETTINGS);
 		}
 
 		public Map<String, Object> toMap() {
@@ -454,13 +450,14 @@ public class SettingsService {
 			return toMap(filter, false);
 		}
 
-		public Map<String, Object> toPreservedMap(Function<T, Boolean> filter) {
-			return toMap(filter, true);
+		public Map<String, Object> toPreservedMap() {
+			return toMap(null, true);
 		}
 
 		@SuppressWarnings("unchecked")
 		private Map<String, Object> toMap(Function<T, Boolean> filter, boolean preserveKeys) {
 			var map = new HashMap<String, Object>();
+			var user = userService.getCurrentUser();
 			if (local != null) {
 				local.forEach((k, v) -> map.put(preserveKeys ? k.name() : toFieldName(k), v));
 				return map;
@@ -469,6 +466,10 @@ public class SettingsService {
 				if (filter != null)
 					if (!filter.apply(key))
 						continue;
+				if (key.isAdminSetting() && !user.isAdmin())
+					continue;
+				if (user.isAnonymous() && !key.isPublicSetting())
+					continue;
 				var field = key.name();
 				if (!preserveKeys) {
 					field = toFieldName(key);
@@ -507,11 +508,12 @@ public class SettingsService {
 
 		public Access ADMIN = owner -> userService.getCurrentUser().isAdmin();
 		public Access DATA_MANAGER = owner -> userService.getCurrentUser().isDataManager();
+		public Access LIBRARY_MANAGER = owner -> userService.getCurrentUser().isLibraryManager();
 		public Access USER = owner -> userService.getCurrentUser().id != 0;
 
 		public Access TEAM_DATA(Team team) {
 			return owner -> {
-				if (userService.getCurrentUser().isDataManager())
+				if (userService.getCurrentUser().isLibraryManager())
 					return true;
 				if (team == null)
 					return false;

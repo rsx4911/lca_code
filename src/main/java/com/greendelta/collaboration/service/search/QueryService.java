@@ -12,9 +12,11 @@ import org.openlca.core.model.ModelType;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchFilterValue;
@@ -25,15 +27,19 @@ import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuild
 @Service
 class QueryService {
 
+	private static final String[] SEARCH_FIELDS = { "versions.name" };
 	private final SettingsService settings;
 	private final RepositoryService repoService;
 	private final ScoreService scoreService;
+	private final UserService userService;
 	private final DsEntryParser parser = new DsEntryParser();
 
-	QueryService(SettingsService settings, RepositoryService repoService, ScoreService scoreService) {
+	QueryService(SettingsService settings, RepositoryService repoService, ScoreService scoreService,
+			UserService userService) {
 		this.settings = settings;
 		this.repoService = repoService;
 		this.scoreService = scoreService;
+		this.userService = userService;
 	}
 
 	SearchResult<DsEntry> query(String query, int page, int pageSize, Map<String, Set<String>> filters) {
@@ -44,12 +50,14 @@ class QueryService {
 			var filteredTypes = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
 			putAggregations(builder, accessibleRepos, filteredTypes, filters);
 			if (!Strings.nullOrEmpty(query)) {
-				builder.query(toWildcardQuery(query.toLowerCase()), "versions.name");
+				builder.query(toWildcardQuery(query.toLowerCase()), SEARCH_FIELDS);
 			}
 			builder.page(page);
 			builder.pageSize(pageSize);
 			scoreService.applyTo(builder);
-			var client = settings.searchConfig.getSearchClient();
+			var client = userService.getCurrentUser().isAnonymous()
+					? settings.searchConfig.getSearchClient(SearchIndex.PUBLIC)
+					: settings.searchConfig.getSearchClient(SearchIndex.PRIVATE);
 			var searchQuery = builder.build();
 			var result = client.search(searchQuery);
 			return SearchResults.convert(result, parser::parse);

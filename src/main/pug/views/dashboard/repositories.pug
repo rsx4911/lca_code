@@ -1,11 +1,5 @@
 include ../mixins/forms.pug
 
-mixin public-checkbox()
-	.pull-right
-		p  
-		+checkbox('only-public', 'Only public', 'success', true)
-	.clear
-
 .header-box
 	if canCreateRepositories
 		.input-group.input-group-lg
@@ -28,9 +22,7 @@ mixin public-checkbox()
 					li: a(href='#' data-action='import-external')
 						span.glyphicon.glyphicon-import
 						| Import from another Collaboration Server
-		+public-checkbox()
 	else
 		.form-group
 			input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
-		+public-checkbox()
 #repositories.content-box

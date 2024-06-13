@@ -79,7 +79,7 @@ define([
 							return
 						$.ajax
 							type: 'PUT'
-							url: "ws/task/review/#{taskId}/cancel/#{user}"
+							url: "ws/task/review/#{taskId}/cancel#{user ? '/' + user : ''}"
 							success: (response) => 
 								if Controller.reviewWidget and Controller.reviewWidget.reviewId is @reviewId
 									Controller.reviewWidget.close()
@@ -93,7 +93,7 @@ define([
 				taskId = @reviewId
 				$.ajax
 					type: 'PUT'
-					url: "ws/task/review/#{taskId}/complete/#{user}"
+					url: "ws/task/review/#{taskId}/complete#{user ? '/' + user : ''}"
 					success: (response) =>
 						if Controller.reviewWidget and Controller.reviewWidget.reviewId is @reviewId
 							Controller.reviewWidget.close()

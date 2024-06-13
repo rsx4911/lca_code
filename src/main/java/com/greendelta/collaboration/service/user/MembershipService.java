@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Membership;
+import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
@@ -23,12 +24,12 @@ import com.greendelta.search.wrapper.SearchResult;
 public class MembershipService {
 
 	private final Dao<Membership> dao;
-	private final AccessService accessService;
+	private final PermissionsService permissions;
 
 	public MembershipService(Dao<Membership> dao, UserService userService, SettingsService settings) {
 		this.dao = dao;
 		// cannot inject access service - would result in a dependency loop
-		this.accessService = new AccessService(userService, this, settings);
+		this.permissions = new PermissionsService(userService, this, settings);
 	}
 
 	public boolean addMembership(User user, String groupOrRepo, Role role) {
@@ -280,8 +281,8 @@ public class MembershipService {
 	}
 
 	private void checkCanEdit(String path) {
-		if (!accessService.canEditMembersOf(path))
-			throw Response.forbidden(path, "CHANGE_ROLE");
+		if (!permissions.canEditMembersOf(path))
+			throw Response.forbidden(path, Permission.EDIT_MEMBERS);
 	}
 
 }

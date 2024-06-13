@@ -94,11 +94,11 @@ define([
 						return repoMenu
 					when 'admin'
 						adminMenu = []
-						if currentUser.isUserManager()
+						if currentUser.isUserManager() || currentUser.isDataManager()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
 						if currentUser.isAdmin()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
-						if currentUser.isDataManager()
+						if currentUser.isLibraryManager()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id:'libraries'}
 						return adminMenu
 
@@ -124,7 +124,7 @@ define([
 			initializeUserMenu: () ->
 				searchContainer = if $('#global-search-bar').length then '#global-search-bar' else '#user-menu'
 				separateSearch = searchContainer isnt '#user-menu'
-				if settings.is('SEARCH_ENABLED')
+				if settings.is('SEARCH_AVAILABLE')
 					@globalSearch = new GlobalSearch()
 					@globalSearch.render 
 						container: searchContainer
@@ -159,17 +159,22 @@ define([
 
 			registerRouteRewrites: () ->
 				if currentUser.isLoggedIn()
-					if !settings.is('SEARCH_ENABLED')
+					if !settings.is('SEARCH_AVAILABLE')
 						if settings.is('DASHBOARD_ACTIVITIES_ENABLED')
 							@router.registerRouteRewrite 'search', 'dashboard/activities'
 						else
 							@router.registerRouteRewrite 'search', 'dashboard/repositories'
+					if !settings.is('DASHBOARD_ACTIVITIES_ENABLED')
+						@router.registerRouteRewrite 'dashboardActivities', 'dashboard/repositories'
 					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
-					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					if currentUser.isAdmin() or currentUser.isDataManager() or currentUser.isUserManager()
+						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
+					else 
+						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
 				else if !settings.is('HOMEPAGE_ENABLED')
-					if settings.is('SEARCH_ENABLED')
+					if settings.is('SEARCH_AVAILABLE')
 						@router.registerRouteRewrite 'landingPage', 'search'					
 
 			registerAdminRoutes: () ->
@@ -201,7 +206,7 @@ define([
 					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
-				@router.registerAdminRoute 'adminLibraries', 'dataManager', -> @showView 
+				@router.registerAdminRoute 'adminLibraries', 'libraryManager', -> @showView 
 					view: 'libraries/Libraries'
 					title: 'Admin area - Libraries'
 					viewOptions: 
@@ -209,7 +214,7 @@ define([
 					nav:
 						type: 'admin'
 						active: 'libraries'
-				@router.registerAdminRoute 'adminAddLibrary', 'dataManager', -> @showView 
+				@router.registerAdminRoute 'adminAddLibrary', 'libraryManager', -> @showView 
 					view: 'libraries/Add'
 					title: 'Admin area - New library'
 					viewOptions: 
@@ -582,8 +587,8 @@ define([
 							Backbone.history.history.back()
 
 			setDocumentTitle: (options) ->
-				value = options.title or ''
-				if options.title and options.subTitle and currentUser.isLoggedIn()
+				value = options.viewOptions?.repository?.get('label') or options.title or ''
+				if value and options.subTitle and currentUser.isLoggedIn()
 					value += ' | ' + options.subTitle
 				title = 'LCA Collaboration Server'
 				if value
@@ -604,8 +609,8 @@ define([
 				document.title = title
 
 			setHeaderTitle: (options) ->
-				title = options.title or ''
-				if options.title and options.subTitle and currentUser.isLoggedIn()
+				title = options.viewOptions?.repository?.get('label') or options.title or ''
+				if title and options.subTitle and currentUser.isLoggedIn()
 					title += ' - ' + options.subTitle
 				if !options.href
 					$('#header-title').html title
@@ -615,6 +620,8 @@ define([
 				$('#header-title').attr 'title', title
 
 			checkRepositoryVersion: (options) ->
+				unless currentUser.isLoggedIn()
+					return
 				unless options.viewOptions?.repository
 					return
 				version = options.viewOptions.repository.get 'version'

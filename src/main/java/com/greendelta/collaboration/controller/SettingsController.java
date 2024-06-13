@@ -32,9 +32,8 @@ public class SettingsController {
 	@GetMapping
 	public Map<String, Object> getServerSettings() {
 		var user = userService.getCurrentUser();
-		var isAdmin = user != null && user.isAdmin();
-		if (isAdmin) {
-			try (var repos = repoService.getPublic()) {
+		if (user.isAdmin()) {
+			try (var repos = repoService.getReleased()) {
 				var paths = repos.stream().map(repo -> repo.path()).toList();
 				cleanup(ServerSetting.REPOSITORIES_ORDER, paths, true);
 				cleanup(ServerSetting.REPOSITORIES_HIDDEN, paths, false);
@@ -42,7 +41,7 @@ public class SettingsController {
 				cleanup(ServerSetting.MODEL_TYPES_HIDDEN, ModelTypes.DEFAULT_ORDER, false);
 			}
 		}
-		var settings = service.serverConfig.toPreservedMap(setting -> isAdmin || setting.isPublic());
+		var settings = service.serverConfig.toPreservedMap();
 		settings.put("SEARCH_AVAILABLE", service.searchConfig.isSearchAvailable());
 		settings.put("SEARCH_LINKS_AVAILABLE", service.searchConfig.isIoDataAvailable());
 		return settings;

@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.io;
+package com.greendelta.collaboration.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -14,29 +14,38 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
+import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Http;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-public class ChangeLogWriter {
+@Service
+public class ChangeLogService {
 
-	private final static Logger log = LogManager.getLogger(ChangeLogWriter.class);
+	private final static Logger log = LogManager.getLogger(ChangeLogService.class);
+	private final HistoryService historyService;
+
+	public ChangeLogService(HistoryService historyService) {
+		this.historyService = historyService;
+	}
 
 	public void generate(File file, HttpServletRequest request, Repository repo) {
 		generate(file, zos -> {
 			var data = renderCommits(request, repo);
 			packResource(zos, "index.html", data);
-			var commits = repo.commits.find().all();
-			for (var commit : commits) {
+			var commits = historyService.getAccessibleCommits(repo);
+			for (var i = 0; i < commits.size(); i++) {
+				var commit = commits.get(i);
+				var previousCommit = i != 0
+						? commits.get(i - 1)
+						: null;
 				data = renderCommit(request, repo, commit.id);
 				packResource(zos, commit.id + ".html", data);
-				var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
+				var diffs = repo.diffs.find().commit(previousCommit).excludeCategories().with(commit);
 				for (var diff : diffs) {
 					if (diff.diffType != DiffType.MODIFIED && diff.diffType != DiffType.MOVED)
 						continue;
@@ -47,9 +56,13 @@ public class ChangeLogWriter {
 		});
 	}
 
-	public void generate(File file, HttpServletRequest request, Repository repo, Commit commit) {
+	public void generate(File file, HttpServletRequest request, Repository repo, String commitId) {
 		generate(file, zos -> {
-			var diffs = repo.diffs.find().commit(commit).excludeCategories().withPreviousCommit();
+			var commit = historyService.getAccessibleCommit(repo, commitId);
+			if (commit == null)
+				throw Response.notFound("Could not find commit with id " + commitId);
+			var previousCommit = historyService.getPreviouslyAccessibleCommit(repo, commit.id);
+			var diffs = repo.diffs.find().commit(previousCommit).excludeCategories().with(commit);
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);
 			for (var diff : diffs) {
@@ -62,11 +75,9 @@ public class ChangeLogWriter {
 	}
 
 	private void generate(File file, Consumer<ZipOutputStream> renderer) {
-		try {
-			var zos = new ZipOutputStream(new FileOutputStream(file));
+		try (var zos = new ZipOutputStream(new FileOutputStream(file))) {
 			packResources(zos);
 			renderer.accept(zos);
-			zos.close();
 		} catch (IOException e) {
 			log.error("Error during changelog creation", e);
 		}
@@ -105,10 +116,9 @@ public class ChangeLogWriter {
 	}
 
 	private void packResources(ZipOutputStream zos) {
-		var is = getClass().getResourceAsStream("/ssr/resources.zip");
-		var zis = new ZipInputStream(is);
-		ZipEntry entry = null;
-		try {
+		try (var is = getClass().getResourceAsStream("/ssr/resources.zip");
+				var zis = new ZipInputStream(is)) {
+			ZipEntry entry = null;
 			while ((entry = zis.getNextEntry()) != null) {
 				var name = entry.getName();
 				if (name.contains("styles") && name.endsWith(".css")) {
@@ -122,8 +132,11 @@ public class ChangeLogWriter {
 	}
 
 	private void packResource(ZipOutputStream zos, String path, String data) {
-		var bias = new ByteArrayInputStream(data.getBytes());
-		packResource(zos, path, bias);
+		try (var bias = new ByteArrayInputStream(data.getBytes())) {
+			packResource(zos, path, bias);
+		} catch (IOException e) {
+			throw Response.error(e.getMessage());
+		}
 	}
 
 	private void packResource(ZipOutputStream zos, String path, InputStream is) {

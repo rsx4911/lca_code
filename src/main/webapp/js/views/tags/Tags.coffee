@@ -31,14 +31,12 @@ define([
 					url: url
 					success: (result) =>
 						tags = []
-						total = 0
 						for aggregation in result.aggregations
-							if aggregation.name is 'datasetTags'
+							if aggregation.name is 'tags' or aggregation.name is 'repositoryTags'
 								for entry in aggregation.entries
 									tags.push 
 										value: entry.key
 										count: entry.count
-									total += entry.count
 						@$el.html template()
 						Renderer.render @, renderOptions
 						@renderTags tags
@@ -53,7 +51,7 @@ define([
 					.words(tags.map((tag, index) => {
 						text: tag.value,
 						index: index,
-						size: 20 + (tag.count/totalCount) * 236,
+						size: 20 + (tag.count/totalCount) * 200,
 						color: 'rgb(' + @getColor() + ', ' + @getColor() + ', ' + @getColor() + ')'
 					}))
 					.padding(1)
@@ -69,9 +67,8 @@ define([
 					.font('Impact')
 					.random(() -> 0.51)
 					.fontSize((element) -> element.size)
-					.on('end', (words) => @draw(layout, words));
-
-				layout.start();
+					.on('end', (words) => @draw(layout, words))
+				layout.start()
 
 			getColor: (min = 100, max = 200) ->
 				return parseInt(min + Math.random() * (max - min))
@@ -89,7 +86,7 @@ define([
 					.style('font-family', 'Impact')
 					.style('fill', (element) -> element.color)
 					.attr('text-anchor', 'middle')
-					.attr('transform', (element) -> 'translate(' + [element.x, element.y] + ')rotate(' + element.rotate + ')')
+					.attr('transform', (element) -> 'translate(' + [element.x, element.y] + ') rotate(' + element.rotate + ')')
 					.text((element) -> element.text)
 
 )

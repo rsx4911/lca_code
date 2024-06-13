@@ -1,22 +1,31 @@
 package com.greendelta.collaboration.model;
 
-import java.util.Arrays;
+import java.sql.Blob;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.greendelta.collaboration.util.Dates;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "user")
-public class User extends AbstractEntity implements UserDetails {
+public class User extends AbstractEntity implements UserDetails, OidcUser {
 
 	private static final long serialVersionUID = -4989312202559805583L;
 
@@ -32,15 +41,19 @@ public class User extends AbstractEntity implements UserDetails {
 	@Column
 	public String password;
 
-	@Column(columnDefinition = "LONGBLOB")
+	@Column
 	@Lob
-	public byte[] avatar;
+	@JsonIgnore
+	public Blob avatar;
 
 	@Column
 	public String twoFactorSecret;
 
 	@Embedded
 	public UserSettings settings = new UserSettings();
+
+	@Transient
+	public OidcIdToken idToken;
 
 	@Override
 	public boolean equals(Object obj) {
@@ -74,6 +87,12 @@ public class User extends AbstractEntity implements UserDetails {
 		return settings.admin || settings.dataManager;
 	}
 
+	public boolean isLibraryManager() {
+		if (settings == null)
+			return false;
+		return settings.admin || settings.libraryManager;
+	}
+
 	public boolean isDeactivated() {
 		if (settings == null)
 			return false;
@@ -91,17 +110,29 @@ public class User extends AbstractEntity implements UserDetails {
 		return now.after(activeUntil);
 	}
 
+	public void deactivate() {
+		var cal = Calendar.getInstance();
+		cal.add(Calendar.DAY_OF_MONTH, -1);
+		Dates.removeTimeInformation(cal);
+		settings.activeUntil = cal.getTime();
+	}
+
 	@Override
 	public List<GrantedAuthority> getAuthorities() {
-		if (isAdmin())
-			return Arrays.asList(Authority.ADMIN, Authority.DATA_MANAGER, Authority.USER_MANAGER);
-		if (isDataManager() && isUserManager())
-			return Arrays.asList(Authority.DATA_MANAGER, Authority.USER_MANAGER);
-		if (isDataManager())
-			return Collections.singletonList(Authority.DATA_MANAGER);
-		if (isUserManager())
-			return Collections.singletonList(Authority.USER_MANAGER);
-		return Collections.emptyList();
+		var authorities = new ArrayList<GrantedAuthority>();
+		if (isAdmin()) {
+			authorities.add(Authority.ADMIN);
+		}
+		if (isUserManager()) {
+			authorities.add(Authority.USER_MANAGER);
+		}
+		if (isDataManager()) {
+			authorities.add(Authority.DATA_MANAGER);
+		}
+		if (isLibraryManager()) {
+			authorities.add(Authority.LIBRARY_MANAGER);
+		}
+		return authorities;
 	}
 
 	@Override
@@ -136,6 +167,40 @@ public class User extends AbstractEntity implements UserDetails {
 
 	public boolean isAnonymous() {
 		return id == 0l;
+	}
+
+	@Override
+	public Map<String, Object> getAttributes() {
+		return getClaims();
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public String getEmail() {
+		return email;
+	}
+
+	@Override
+	public Map<String, Object> getClaims() {
+		if (idToken == null)
+			return new HashMap<>();
+		return idToken.getClaims();
+	}
+
+	@Override
+	public OidcUserInfo getUserInfo() {
+		if (idToken == null)
+			return null;
+		return new OidcUserInfo(getClaims());
+	}
+
+	@Override
+	public OidcIdToken getIdToken() {
+		return idToken;
 	}
 
 }

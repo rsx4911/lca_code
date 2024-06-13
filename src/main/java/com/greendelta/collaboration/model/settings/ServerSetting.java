@@ -10,24 +10,24 @@ import com.greendelta.collaboration.util.ModelTypes;
 public enum ServerSetting implements SettingKey {
 
 	// features
-	MESSAGING_ENABLED(Boolean.class, true),
+	MESSAGING_ENABLED(Boolean.class, false),
 	TASKS_ENABLED(Boolean.class, true),
 	COMMENTS_ENABLED(Boolean.class, true),
-	PUBLIC_REPOSITORY_ENABLED(Boolean.class, true),
-	NOTIFICATIONS_ENABLED(Boolean.class, true),
+	RELEASES_ENABLED(Boolean.class, false),
+	NOTIFICATIONS_ENABLED(Boolean.class, false),
 	USER_REGISTRATION_ENABLED(Boolean.class, false),
 	USER_REGISTRATION_APPROVAL_ENABLED(Boolean.class, false),
-	CHANGE_LOG_ENABLED(Boolean.class, true),
+	CHANGE_LOG_ENABLED(Boolean.class, false),
 	DASHBOARD_ACTIVITIES_ENABLED(Boolean.class, true),
 	REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
-	HOMEPAGE_ENABLED(Boolean.class, true),
-	SEARCH_ENABLED(Boolean.class, true),
-	SEARCH_LINKS_ENABLED(Boolean.class, true),
+	HOMEPAGE_ENABLED(Boolean.class, false),
+	SEARCH_ENABLED(Boolean.class, false),
+	SEARCH_LINKS_ENABLED(Boolean.class, false),
 	REPOSITORY_TAGS_ENABLED(Boolean.class, true),
 	DATASET_TAGS_ENABLED(Boolean.class, true),
-	DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, true),
-	DATASET_TAGS_ON_GROUPS_ENABLED(Boolean.class, true),
-	DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, true),
+	DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, false),
+	DATASET_TAGS_ON_GROUPS_ENABLED(Boolean.class, false),
+	DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, false),
 
 	// basic settings
 	SERVER_NAME(String.class, "LCA Collaboration Server"),
@@ -99,8 +99,16 @@ public enum ServerSetting implements SettingKey {
 		return (TypeReference<V>) subType;
 	}
 
-	public boolean isPublic() {
-		return this != GLAD_API_KEY && this != REPOSITORY_PATH;
+	@Override
+	public boolean isPublicSetting() {
+		return !this.name().startsWith("GLAD_") 
+				&& this != LIBRARY_PATH
+				&& this != REPOSITORY_PATH;
+	}
+	
+	@Override
+	public boolean isAdminSetting() {
+		return !isPublicSetting();
 	}
 
 }
