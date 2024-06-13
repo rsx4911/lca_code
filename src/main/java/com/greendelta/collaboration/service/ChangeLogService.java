@@ -75,11 +75,9 @@ public class ChangeLogService {
 	}
 
 	private void generate(File file, Consumer<ZipOutputStream> renderer) {
-		try {
-			var zos = new ZipOutputStream(new FileOutputStream(file));
+		try (var zos = new ZipOutputStream(new FileOutputStream(file))) {
 			packResources(zos);
 			renderer.accept(zos);
-			zos.close();
 		} catch (IOException e) {
 			log.error("Error during changelog creation", e);
 		}
@@ -118,10 +116,9 @@ public class ChangeLogService {
 	}
 
 	private void packResources(ZipOutputStream zos) {
-		var is = getClass().getResourceAsStream("/ssr/resources.zip");
-		var zis = new ZipInputStream(is);
-		ZipEntry entry = null;
-		try {
+		try (var is = getClass().getResourceAsStream("/ssr/resources.zip");
+				var zis = new ZipInputStream(is)) {
+			ZipEntry entry = null;
 			while ((entry = zis.getNextEntry()) != null) {
 				var name = entry.getName();
 				if (name.contains("styles") && name.endsWith(".css")) {
@@ -135,8 +132,11 @@ public class ChangeLogService {
 	}
 
 	private void packResource(ZipOutputStream zos, String path, String data) {
-		var bias = new ByteArrayInputStream(data.getBytes());
-		packResource(zos, path, bias);
+		try (var bias = new ByteArrayInputStream(data.getBytes())) {
+			packResource(zos, path, bias);
+		} catch (IOException e) {
+			throw Response.error(e.getMessage());
+		}
 	}
 
 	private void packResource(ZipOutputStream zos, String path, InputStream is) {
