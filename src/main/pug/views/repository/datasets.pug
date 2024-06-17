@@ -29,7 +29,7 @@ mixin static-setting(field, label, formatter)
 				li: a(href='#' data-format='json' data-action='select-data') as JSON-LD (openLCA 2.x) (Subselect)...
 				li: a(href='#' data-format='json1' data-action='select-data') as JSON-LD (openLCA 1.x) (Subselect)...
 	.clear
-if info && (info.description || info.version || info.lastChange || info.typeOfData || info.sourceInfo || info.contactInfo || info.projectInfo || info.projectFunding || info.appropriateUse || info.dqAssessment)
+if info && (info.description || info.version || info.lastChange || info.typeOfData || info.sourceInfo || info.contactInfo || info.changeLog || info.projectInfo || info.projectFunding || info.appropriateUse || info.dqAssessment)
 	.header-box
 		.repository-description
 			if info.description
@@ -41,6 +41,7 @@ if info && (info.description || info.version || info.lastChange || info.typeOfDa
 				+static-setting('typeOfData', 'Type of data')
 				+static-setting('sourceInfo', 'Source information')
 				+static-setting('contactInfo', 'Contact information')
+				+static-setting('changeLog', 'Change log')
 				+static-setting('projectInfo', 'Project information')
 				+static-setting('projectFunding', 'Project funding')
 				+static-setting('appropriateUse', 'Appropriate use')

@@ -97,7 +97,6 @@ public class ReleaseController {
 			if (!new HashSet<>(release.getTags()).equals(new HashSet<>(previous))) {
 				indexService.updatePublicTagsAsync(RepositoryPath.of(group, name));
 			}
-
 		}
 	}
 

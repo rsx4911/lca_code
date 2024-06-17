@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS release_info (
   description VARCHAR(1000),
   source_info VARCHAR(1000),
   contact_info VARCHAR(1000),
+  change_log VARCHAR(1000),
   project_info VARCHAR(1000),
   project_funding VARCHAR(1000),
   appropriate_use VARCHAR(1000),
