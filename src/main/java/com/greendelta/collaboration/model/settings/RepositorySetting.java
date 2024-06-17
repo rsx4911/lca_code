@@ -15,6 +15,7 @@ public enum RepositorySetting implements SettingKey {
 	DESCRIPTION(String.class),
 	SOURCE_INFO(String.class),
 	CONTACT_INFO(String.class),
+	CHANGE_LOG(String.class),
 	PROJECT_INFO(String.class),
 	PROJECT_FUNDING(String.class),
 	APPROPRIATE_USE(String.class),
