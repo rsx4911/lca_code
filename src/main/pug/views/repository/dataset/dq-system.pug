@@ -4,7 +4,7 @@ include ./structures/data-quality-matrix.pug
 .content-box
 	.model-left-content
 		+header
-		.content
+		+content
 			h4(data-path='indicators')=getLabel('indicators')
 			+data-quality-matrix(dataset, false)
 			if dataset.hasUncertainties

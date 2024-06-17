@@ -67,7 +67,7 @@ define([
 				urlPart = @getUrlPart @type, refId
 				url = "ws/public/browse/#{urlPart}"
 				if commitId
-					url += '?commitId=' + commitId
+					url += "?commitId=#{commitId}"
 				$.ajax
 					type: 'GET'
 					url: url 

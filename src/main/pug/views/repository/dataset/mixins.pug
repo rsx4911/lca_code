@@ -3,6 +3,11 @@ include ../../mixins/forms.pug
 include ../../mixins/long-text.pug
 include ../../mixins/user-info.pug
 
+
+mixin content()
+	if !dataset.deleted && !dataset.notFound
+		block
+
 mixin menubar()
 	if !standalone
 		.header-box
@@ -12,6 +17,8 @@ mixin menubar()
 				+commit-selection('commitId', 'Commit', commits, commitId, true)
 			if dataset.deleted
 				.badge.pull-right.deleted Deleted
+			else if dataset.notFound
+				.badge.pull-right.deleted Not found
 			else
 				.btn-group-vertical.pull-right(role='group')
 					+download-dropdown
@@ -100,11 +107,14 @@ mixin header()
 mixin meta() 
 	.model-right-content.content-box
 		.meta-info
-			+labeled-field-block('version')
-			+labeled-field-block('lastChange', formatDate, '-')
+			if !dataset.deleted && !dataset.notFound
+				+labeled-field-block('version')
+				+labeled-field-block('lastChange', formatDate, '-')
 			+labeled-field-block('id')
-			+labeled-array-field-block('tags')(class='badge')
-			block
+			if !dataset.deleted && !dataset.notFound
+				+labeled-array-field-block('tags')(class='badge')
+			if !dataset.deleted && !dataset.notFound
+				block
 
 mixin maximize-icon()
 	li.maximize-content: a(href='#'): span.glyphicon.glyphicon-fullscreen
@@ -219,21 +229,23 @@ mixin labeled-array-field-block(path)
 mixin boolean-field(path)
 	- var value = getValue(dataset, path);
 	- var value2 = getValue(compareTo, path);
-	- var changed = compareTo&&value!=value2?'changed':null;
+	- var added = compareTo && (compareTo.deleted || compareTo.notFound);
+	- var changed = compareTo ? added ? 'added' : value != value2 ? 'changed' : null : null;
 	span(data-compare=changed)
 		+compare-icon(changed)
 		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
-		if changed
+		if changed && !added
 			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
 
 mixin boolean-field-block(path)
 	- var value = getValue(dataset, path);
 	- var value2 = getValue(compareTo, path);
-	- var changed = compareTo&&value!=value2?'changed':null;
+	- var added = compareTo && (compareTo.deleted || compareTo.notFound);
+	- var changed = compareTo ? added ? 'added' : value != value2 ? 'changed' : null : null;
 	div(data-compare=changed)
 		+compare-icon(changed)
 		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
-		if changed
+		if changed && !added
 			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
 
 mixin field-row-frame(path)

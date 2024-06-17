@@ -61,7 +61,7 @@ public class ChangeLogService {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound("Could not find commit with id " + commitId);
-			var previousCommit = historyService.getPreviouslyAccessibleCommit(repo, commit.id);
+			var previousCommit = historyService.getLatestAccessibleCommit(repo, options -> options.before(commit.id));
 			var diffs = repo.diffs.find().commit(previousCommit).excludeCategories().with(commit);
 			var data = renderCommit(request, repo, commit.id);
 			packResource(zos, "index.html", data);

@@ -107,7 +107,7 @@ define([
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				if currentUser.isLoggedIn()
-					historyUrl = "ws/#{group}/#{name}"
+					historyUrl = "ws/history/#{group}/#{name}"
 					if @categoryPath
 						historyUrl += "?path=#{@getCategoryPath()}"
 					$.ajax

@@ -4,7 +4,7 @@ include ./structures/unit-table.pug
 .content-box
 	.model-left-content
 		+header
-		.content
+		+content
 			if hasAtLeastOne(dataset, compareTo, 'units') || reviewMode
 				h4(data-path='units')=getLabel('units')
 				+unit-table()
