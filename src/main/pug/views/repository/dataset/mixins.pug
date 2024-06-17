@@ -18,7 +18,7 @@ mixin menubar()
 					+comparison-dropdown
 			.clear
 			if !isPublic
-				- var currentCommit = commits.find(function(c) { return c.id === dataset.commitId; });
+				- var currentCommit = commits.find(function(c) { return c.id === dataset.commitId; }) || commits[0];
 				+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
 					|  on #{formatDate(currentCommit.timestamp)}
 				.clear

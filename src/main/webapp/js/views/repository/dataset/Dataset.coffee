@@ -74,6 +74,9 @@ define([
 					success: callback
 
 			loadCommitHistory: (callback) ->
+				unless currentUser.isLoggedIn()
+					callback()
+					return
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'

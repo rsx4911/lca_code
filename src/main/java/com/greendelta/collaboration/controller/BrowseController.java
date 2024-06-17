@@ -181,7 +181,7 @@ public class BrowseController {
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
 		try (var repo = repoService.get(group, name)) {
-			var commit = historyService.getAccessibleCommit(repo, type, refId, commitId);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 			var ref = repo.references.get(type, refId, commit.id);
