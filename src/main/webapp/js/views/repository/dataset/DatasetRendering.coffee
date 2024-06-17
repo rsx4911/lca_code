@@ -55,6 +55,8 @@ define([
 			if !array or !array.length or !value
 				return null
 			for v in array
+				if !v
+					continue
 				if !type and v is value
 					return v
 				switch type
@@ -116,7 +118,9 @@ define([
 					return true
 			return false
 
-		compare = (value, value2) ->
+		compare = (value, value2, compareTo) ->
+			if compareTo and (compareTo.deleted or compareTo.notFound)
+				return 'added'
 			if (value2 or value2 is 0) && !(value || value is 0)
 				return 'removed'
 			if (value or value is 0) && !(value2 || value2 is 0)
@@ -200,7 +204,7 @@ define([
 				findValue: findValue
 				hasAtLeastOne: hasAtLeastOne
 				hasOneOf: hasOneOf
-				compare: (value, value2) -> return if compareTo then compare(value, value2) else null
+				compare: (value, value2) -> return if compareTo then compare(value, value2, compareTo) else null
 				compareUncertainty: compareUncertainty
 				getTypeAsEnum: @getTypeAsEnum
 				getLabel: (path) => return Labels.get @getTypeAsEnum(dataset.type), path

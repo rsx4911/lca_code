@@ -13,7 +13,7 @@ mixin target-amount-row()
 .content-box
 	.model-left-content
 		+header
-		.content
+		+content
 			- var hasLinks = hasAtLeastOne(dataset, null, 'processLinks');
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('overview', true, true)

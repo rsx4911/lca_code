@@ -67,17 +67,20 @@ define([
 				urlPart = @getUrlPart @type, refId
 				url = "ws/public/browse/#{urlPart}"
 				if commitId
-					url += '?commitId=' + commitId
+					url += "?commitId=#{commitId}"
 				$.ajax
 					type: 'GET'
 					url: url 
 					success: callback
 
 			loadCommitHistory: (callback) ->
+				unless currentUser.isLoggedIn()
+					callback()
+					return
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'
-					url: "ws/public/history/#{urlPart}"
+					url: "ws/history/#{urlPart}"
 					success: callback
 
 			getFileBaseUrl: () ->
@@ -195,11 +198,11 @@ define([
 				Toggle.init @$el
 				@initDatasetSpecifics()
 				@initTableSorting()
+				if @compareToCommitId and !@compareTo
+					@applyComparison @refId, @compareToCommitId
+				if @compareTo
+					@setComparisonStatistics()
 				if currentUser.isLoggedIn()
-					if @compareToCommitId and !@compareTo
-						@applyComparison @refId, @compareToCommitId
-					if @compareTo
-						@setComparisonStatistics()
 					if !@compareTo and !@compareToCommitId
 						@initComments true
 				if @standalone # used for change log
@@ -248,7 +251,8 @@ define([
 				type = target.attr 'data-compare-to'
 				selectFrom = if !currentUser.isLoggedIn() then @repository.get('releases') else @commits
 				if type is 'previous' and selectFrom.length > 1
-					commitId = selectFrom[1].id
+					currentIndex = if @commitId then selectFrom.findIndex((c) => c.id is @commitId) else 0 
+					commitId = selectFrom[currentIndex + 1].id
 					if commitId
 						@applyComparison @refId, commitId
 				else if type is 'other-version'

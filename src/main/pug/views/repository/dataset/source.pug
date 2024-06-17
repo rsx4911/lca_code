@@ -4,7 +4,7 @@ include ./mixins.pug
 .content-box
 	.model-left-content
 		+header
-		.content
+		+content
 			- var fileUrlPart = fileBaseUrl;
 			- var fileUrlQuery = null;
 			if fileUrlPart.indexOf('?') !== -1

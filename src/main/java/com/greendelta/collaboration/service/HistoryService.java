@@ -2,10 +2,11 @@ package com.greendelta.collaboration.service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
+import org.openlca.git.repo.Commits.Find;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
@@ -23,24 +24,15 @@ public class HistoryService {
 	}
 
 	public List<Commit> getAccessibleCommits(Repository repo) {
-		return getAccessibleCommits(repo, null, null, null, null);
+		return getAccessibleCommits(repo, null);
 	}
 
-	public List<Commit> getAccessibleCommits(Repository repo, String path) {
-		return getAccessibleCommits(repo, path, null, null, null);
-	}
-
-	public List<Commit> getAccessibleCommits(Repository repo, ModelType type, String refId) {
-		return getAccessibleCommits(repo, null, type, refId, null);
-	}
-
-	public List<Commit> getAccessibleCommitsUntil(Repository repo, String path, String commitId) {
-		return getAccessibleCommits(repo, path, null, null, commitId);
-	}
-
-	private List<Commit> getAccessibleCommits(Repository repo, String path, ModelType type, String refId,
-			String commitId) {
-		var commits = repo.commits.find().path(path).model(type, refId).until(commitId).all();
+	public List<Commit> getAccessibleCommits(Repository repo, Consumer<Find> options) {
+		var find = repo.commits.find();
+		if (options != null) {
+			options.accept(find);
+		}
+		var commits = find.all();
 		var currentUser = userService.getCurrentUser();
 		if (!currentUser.isAnonymous())
 			return commits;
@@ -51,13 +43,9 @@ public class HistoryService {
 	}
 
 	public Commit getAccessibleCommit(Repository repo, String commitId) {
-		return getAccessibleCommit(repo, null, null, commitId);
-	}
-
-	public Commit getAccessibleCommit(Repository repo, ModelType type, String refId, String commitId) {
 		var currentUser = userService.getCurrentUser();
 		if (commitId == null)
-			return getLatestAccessibleCommitUntil(repo, null, type, refId, null);
+			return getLatestAccessibleCommit(repo);
 		var commit = repo.commits.get(commitId);
 		if (commit == null)
 			return null;
@@ -68,26 +56,14 @@ public class HistoryService {
 	}
 
 	public Commit getLatestAccessibleCommit(Repository repo) {
-		return getLatestAccessibleCommitUntil(repo, null, null, null, null);
+		return getLatestAccessibleCommit(repo, null);
 	}
 
-	public Commit getLatestAccessibleCommitUntil(Repository repo, String path, String commitId) {
-		return getLatestAccessibleCommitUntil(repo, path, null, null, commitId);
-	}
-
-	private Commit getLatestAccessibleCommitUntil(Repository repo, String path, ModelType type, String refId,
-			String commitId) {
-		var accessibleCommits = getAccessibleCommits(repo, path, type, refId, commitId);
-		if (!accessibleCommits.isEmpty())
-			return accessibleCommits.get(accessibleCommits.size() - 1);
-		return null;
-	}
-
-	public Commit getPreviouslyAccessibleCommit(Repository repo, String commitId) {
-		var accessibleCommits = getAccessibleCommits(repo, null, null, null, commitId);
-		if (accessibleCommits.size() == 1)
+	public Commit getLatestAccessibleCommit(Repository repo, Consumer<Find> options) {
+		var accessibleCommits = getAccessibleCommits(repo, options);
+		if (accessibleCommits.isEmpty())
 			return null;
-		return accessibleCommits.get(accessibleCommits.size() - 2);
+		return accessibleCommits.get(accessibleCommits.size() - 1);
 	}
 
 	public List<Commit> getReleasedCommits(Repository repo) {

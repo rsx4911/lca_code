@@ -34,7 +34,7 @@ import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
-@RequestMapping("ws/public/history")
+@RequestMapping("ws/history")
 public class HistoryController {
 
 	private final HistoryService service;
@@ -61,7 +61,8 @@ public class HistoryController {
 			@PathVariable("type") ModelType type,
 			@PathVariable("refId") String refId) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = service.getAccessibleCommits(repo, type, refId);
+			var commits = service.getAccessibleCommits(repo,
+					options -> options.model(type, refId));
 			Collections.reverse(commits);
 			return Response.ok(putAdditionalInfo(repo, commits));
 		}
@@ -73,7 +74,7 @@ public class HistoryController {
 			@PathVariable("name") String name,
 			@RequestParam(name = "path", required = false) String path) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = service.getAccessibleCommits(repo, path);
+			var commits = service.getAccessibleCommits(repo, options -> options.path(path));
 			Collections.reverse(commits);
 			return Response.ok(putAdditionalInfo(repo, commits));
 		}
@@ -148,7 +149,7 @@ public class HistoryController {
 	}
 
 	private void putCount(Map<String, Object> map, Repository repo, Commit commit) {
-		var previousCommit = service.getPreviouslyAccessibleCommit(repo, commit.id);
+		var previousCommit = service.getLatestAccessibleCommit(repo, options -> options.before(commit.id));
 		var diffs = repo.diffs.find().unsorted().commit(previousCommit).with(commit);
 		map.put("id", commit.id);
 		map.put("additions", Diff.filter(diffs, DiffType.ADDED).size());
@@ -169,7 +170,7 @@ public class HistoryController {
 			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound();
-			var previousCommit = service.getPreviouslyAccessibleCommit(repo, commit.id);
+			var previousCommit = service.getLatestAccessibleCommit(repo, options -> options.before(commit.id));
 			var diff = repo.diffs.find().commit(previousCommit);
 			if (type != null) {
 				if (type == ModelType.CATEGORY) {

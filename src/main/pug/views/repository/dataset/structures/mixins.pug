@@ -22,7 +22,7 @@ mixin sub-field-row(ref, ref2, path)
 	- var field = path && path.indexOf('.') !== -1 ? path.substring(path.lastIndexOf('.') + 1) : path;
 	- var value = getValue(ref, field);
 	- var value2 = getValue(ref2, field); 
-	if value || value2
+	if value || value2 || reviewMode
 		tr
 			td=getLabel(path)
 			+sub-field-cell(ref, ref2, field)
@@ -31,7 +31,7 @@ mixin sub-field-ref-row(ref, ref2, path)
 	- var field = path && path.indexOf('.') !== -1 ? path.substring(path.lastIndexOf('.') + 1) : path;
 	- var value = getValue(ref, field);
 	- var value2 = getValue(ref2, field); 
-	if value || value2
+	if value || value2 || reviewMode
 		tr
 			td=getLabel(path)
 			+sub-field-ref-cell(ref, ref2, field)

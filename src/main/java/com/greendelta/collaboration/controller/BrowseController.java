@@ -155,9 +155,11 @@ public class BrowseController {
 		var path = Maps.getString(entry, "path");
 		var commitId = Maps.getString(entry, "commitId");
 		if (!path.startsWith(RepositoryInfo.FILE_NAME + "/"))
-			return historyService.getLatestAccessibleCommitUntil(repo, path, commitId);
+			return historyService.getLatestAccessibleCommit(repo,
+					options -> options.path(path).until(commitId));
 		var library = Maps.getString(entry, "refId");
-		var commits = historyService.getAccessibleCommitsUntil(repo, RepositoryInfo.FILE_NAME, commitId);
+		var commits = historyService.getAccessibleCommits(repo,
+				options -> options.path(RepositoryInfo.FILE_NAME).until(commitId));
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
 			var info = repo.getInfo(commit);
@@ -181,18 +183,36 @@ public class BrowseController {
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
 		try (var repo = repoService.get(group, name)) {
-			var commit = historyService.getAccessibleCommit(repo, type, refId, commitId);
+			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
-				throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
+				return handleMissing(repo, type, refId, commitId);
 			var ref = repo.references.get(type, refId, commit.id);
 			var dataset = repo.datasets.get(ref);
 			if (Strings.nullOrEmpty(dataset))
-				throw Response.notFound(type + " " + refId + " not found for commit " + commit.id);
-			var map = Maps.of(dataset);			
+				return handleMissing(repo, type, refId, commitId);
+			var map = Maps.of(dataset);
 			map.put("commitId", commit.id);
 			new IsInRepoInfo(repo, commitId).addIn(map);
 			return map;
 		}
+	}
+
+	private Map<String, Object> handleMissing(Repository repo, ModelType type, String refId, String commitId) {
+		var before = historyService.getLatestAccessibleCommit(repo, options -> options.before(commitId));
+		if (before != null)
+			return Map.of(
+					"@type", type.getModelClass().getSimpleName(),
+					"@id", refId,
+					"commitId", commitId,
+					"deleted", true);
+		var after = historyService.getLatestAccessibleCommit(repo, options -> options.after(commitId));
+		if (after != null)
+			return Map.of(
+					"@type", type.getModelClass().getSimpleName(),
+					"@id", refId,
+					"commitId", commitId,
+					"notFound", true);
+		throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 	}
 
 	private class IsInRepoInfo {
