@@ -77,7 +77,7 @@ define([
 					afterRender: (entry) =>
 						if entry.type is 'COMMIT'
 							setTimeout () =>
-								$.get "ws/public/history/count/#{entry.repositoryPath}/#{entry.id}", (count) =>
+								$.get "ws/history/count/#{entry.repositoryPath}/#{entry.id}", (count) =>
 									$(".commit-info-container[data-commit-id=#{count.id}]").html infoTemplate count
 							, 10
 					onEmpty: () =>

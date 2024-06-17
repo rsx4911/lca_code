@@ -80,7 +80,7 @@ define([
 				urlPart = @getUrlPart()
 				$.ajax
 					type: 'GET'
-					url: "ws/public/history/#{urlPart}"
+					url: "ws/history/#{urlPart}"
 					success: callback
 
 			getFileBaseUrl: () ->
