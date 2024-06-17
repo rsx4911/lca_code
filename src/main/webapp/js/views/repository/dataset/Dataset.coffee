@@ -198,11 +198,11 @@ define([
 				Toggle.init @$el
 				@initDatasetSpecifics()
 				@initTableSorting()
+				if @compareToCommitId and !@compareTo
+					@applyComparison @refId, @compareToCommitId
+				if @compareTo
+					@setComparisonStatistics()
 				if currentUser.isLoggedIn()
-					if @compareToCommitId and !@compareTo
-						@applyComparison @refId, @compareToCommitId
-					if @compareTo
-						@setComparisonStatistics()
 					if !@compareTo and !@compareToCommitId
 						@initComments true
 				if @standalone # used for change log
