@@ -42,10 +42,8 @@ public class IndexService {
 	}
 
 	private void offer(String title, int total, Consumer<Work> actualWork) {
-		if (!settings.searchConfig.isSearchAvailable())
-			return;
 		synchronized (workQueue) {
-			boolean isFirst = workQueue.isEmpty();
+			var isFirst = workQueue.isEmpty();
 			var work = new Work(title, total, actualWork);
 			workQueue.offer(work);
 			if (isFirst) {
@@ -84,6 +82,8 @@ public class IndexService {
 	}
 
 	public void clearIndexAsync() {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		offer("Clearing index", 1, work -> {
 			if (settings.is(ServerSetting.RELEASES_ENABLED)) {
 				searchService.on(SearchIndex.PUBLIC).clear();
@@ -97,6 +97,8 @@ public class IndexService {
 	}
 
 	public void indexPrivateAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(path);
 		offer("Indexing " + repo.path(), 1, work -> {
 			try {
@@ -113,7 +115,7 @@ public class IndexService {
 	}
 
 	public void indexPublicAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
-		if (!settings.is(ServerSetting.RELEASES_ENABLED))
+		if (!settings.searchConfig.isSearchAvailable() || !settings.is(ServerSetting.RELEASES_ENABLED))
 			return;
 		var repo = repoService.get(path);
 		offer("Indexing " + repo.path(), 1, work -> {
@@ -128,6 +130,8 @@ public class IndexService {
 	}
 
 	public void moveIndexAsync(RepositoryPath path, RepositoryPath newPath) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var newRepo = repoService.get(newPath);
 		offer("Moving index of " + path.toString() + " to " + newRepo.path(), 1, work -> {
 			try {
@@ -147,6 +151,8 @@ public class IndexService {
 	}
 
 	public void updatePrivateTagsAsync(RepositoryPath path) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(path);
 		offer("Reindexing " + repo.path(), 1, work -> {
 			try {
@@ -160,7 +166,7 @@ public class IndexService {
 	}
 
 	public void updatePublicTagsAsync(RepositoryPath path) {
-		if (!settings.is(ServerSetting.RELEASES_ENABLED))
+		if (!settings.searchConfig.isSearchAvailable() || !settings.is(ServerSetting.RELEASES_ENABLED))
 			return;
 		var repo = repoService.get(path);
 		offer("Reindexing " + repo.path(), 1, work -> {
@@ -178,6 +184,8 @@ public class IndexService {
 	}
 
 	public void reindexAsync(RepositoryPath path) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(path);
 		offer("Reindexing " + repo.path(), 1, work -> {
 			try {
@@ -207,6 +215,8 @@ public class IndexService {
 	}
 
 	public void reindexAllAsync(List<RepositoryPath> paths) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repos = new RepositoryList();
 		paths.forEach(path -> repos.add(repoService.get(path)));
 		offer("Reindexing all repositories", repos.size(), work -> {
@@ -241,6 +251,8 @@ public class IndexService {
 	}
 
 	public void deleteIndexAsync(String repoId) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(repoId);
 		offer("Deleting index of " + repo.path(), 1, work -> {
 			try {
@@ -253,6 +265,8 @@ public class IndexService {
 	}
 
 	public void deleteIndex(Repository repo) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var head = repo.commits.head();
 		if (settings.is(ServerSetting.RELEASES_ENABLED)) {
 			var latestRelease = historyService.getLatestReleasedCommit(repo);
