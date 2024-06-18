@@ -15,14 +15,14 @@ mixin menu-items(searchIcon)
 		a.no-deco.messages(href='messages' data-toggle='tooltip' data-placement='bottom' title='Inbox' aria-label='Inbox')
 			span.message-icon.glyphicon.glyphicon-comment(class=unreadMessages?'new-messages':null)
 			span.message-count(class=unreadMessages?null:'hidden' data-count=unreadMessages)=unreadMessages
-	a.logout(href='#')
-		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout' aria-label='Logout')
 	if settings['COMMENTS_ENABLED'] === true
 		a.toggle-review(href='#')
 			span.glyphicon.glyphicon-pencil(data-toggle='tooltip' data-placement='bottom' title='Review mode ' + (reviewMode?'on':'off') aria-label='Review mode ' + (reviewMode?'on':'off') data-active=reviewMode)
 	if isAdmin
 		a.toggle-debug(href='#')
 			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' aria-label='Debugging ' + (debugMode?'on':'off') title='Debugging ' + (debugMode?'on':'off'))
+	a.logout(href='#')
+		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout' aria-label='Logout')
 
 if isPublic
 	.pull-right.responsive-menu.dropdown
