@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS release_info (
   id BIGINT NOT NULL,
   repository_path VARCHAR(255),
   commit_id VARCHAR(255),
+  tags VARCHAR(255),
   label VARCHAR(255),
   version VARCHAR(255),
   description VARCHAR(1000),
@@ -29,3 +30,5 @@ ALTER TABLE user MODIFY avatar MEDIUMBLOB;
 ALTER TABLE user ADD COLUMN library_manager BIT(1);
 
 DROP TABLE IF EXISTS restriction_set;
+
+UPDATE user SET library_manager = admin = 1 OR data_manager = 1;

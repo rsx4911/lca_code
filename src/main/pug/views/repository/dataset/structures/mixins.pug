@@ -63,7 +63,7 @@ mixin sub-field-ref-cell(ref, ref2, path)
 mixin boolean-sub-field(ref, ref2, path)
 	- var value = getValue(ref, path);
 	- var value2 = getValue(ref2, path); 
-	- var changed = compareTo&&value!=value2?'changed':null;
+	- var changed = compareTo&&ref&&ref2&&value!=value2?'changed':null;
 	span(data-compare=changed)
 		+compare-icon(changed)
 		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png' aria-label=value?'Checked icon':'Unchecked icon')

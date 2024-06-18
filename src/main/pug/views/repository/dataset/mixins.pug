@@ -78,7 +78,7 @@ mixin comparison-dropdown()
 			span.caret
 		ul.dropdown-menu
 			- var selectFrom = releases || commits
-			- var isFirst = selectFrom[selectFrom.length - 1].id === commitId;
+			- var isFirst = selectFrom.length === 1 || selectFrom[selectFrom.length - 1].id === commitId;
 			if !isFirst
 				li: a(href='#' data-compare-to='previous') previous version
 				li.divider(role='separator')
@@ -94,7 +94,7 @@ mixin header()
 			h3(data-path='name')
 				+field('name')
 			.category
-				+category-field(dataset.category, getValue(compareTo, 'category'), null, null, dataset.categoryIsInRepo, getValue(compareTo, 'categoryIsInRepo'))
+				+category-field(dataset, compareTo)
 			h3: small: span(data-path='description')
 				+field('description', true)
 			.clear
@@ -373,23 +373,23 @@ mixin ref-block(path, defaultLabel)
 		+compare-icon(changed)
 		+ref(value, value2, defaultLabel)
 
-mixin category-field(category, category2, inTable, categoryType, isCategoryInRepo, isCategory2InRepo)
-	- var value = (category || '').split('/')
-	- var value2 = (category2 || '').split('/')
+mixin category-field(parent, otherParent, inTable, categoryType)
+	- var value = ((parent ? parent.category : null) || '').split('/')
+	- var value2 = ((otherParent ? otherParent.category : null) || '').split('/')
 	- var depth = inTable ? 2 : null;
-	- var categoryCompare = ((value && value2) || !inTable) && compareTo ? compare(value, value2) : null;
+	- var categoryCompare = ((value && value2) || !inTable) && parent && otherParent ? compare(value, value2) : null;
 	span(data-compare=categoryCompare)
 		+compare-icon(categoryCompare)
 		if value
 			- var typeLabel = getTypeLabel(getTypeAsEnum(categoryType ? categoryType : dataset.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
-			+category-breadcrumb(value, url, true, depth, commitId, !isCategoryInRepo)(data-path=!inTable?'category':null, class='original-value')
+			+category-breadcrumb(value, url, true, depth, commitId, !getValue(parent, 'categoryIsInRepo'))(data-path=!inTable?'category':null, class='original-value')
 			if value2
 				br
 		if value2 && (!value || categoryCompare)
 			- var typeLabel = getTypeLabel(getTypeAsEnum(compareTo.type));
 			- var url = baseUrl + 's' + '/' + typeLabel;
-			+category-breadcrumb(value2, url, true, depth, comparisonCommitId, !isOtherCategoryInRepo)(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
+			+category-breadcrumb(value2, url, true, depth, comparisonCommitId, !getValue(otherParent, 'categoryIsInRepo'))(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
 
 mixin uncertainty-cell(ref1, ref2, formatter)
 	- var u1 = ref1 ? ref1.uncertainty : null; 

@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS release_info (
   id BIGINT NOT NULL,
   repository_path VARCHAR(255),
   commit_id VARCHAR(255),
+  tags VARCHAR(255),
   label VARCHAR(255),
   version VARCHAR(255),
   description VARCHAR(1000),
