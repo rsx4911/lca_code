@@ -127,7 +127,7 @@ public class SecurityConfig {
 		if (route.startsWith("ws/") || route.startsWith("stomp/") || (isGitUrl = gitFilterConfig.isGitUrl(request))) {
 			response.reset();
 			if (e instanceof BadCredentialsException) {
-				if (e.getMessage().equals("tokenRequired")) {
+				if (e.getMessage().contains("tokenRequired")) {
 					response.setStatus(HttpStatus.BAD_REQUEST.value());
 				} else {
 					response.setStatus(HttpStatus.FAILED_DEPENDENCY.value());

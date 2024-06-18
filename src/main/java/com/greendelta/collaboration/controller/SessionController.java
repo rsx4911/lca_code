@@ -102,7 +102,7 @@ public class SessionController {
 			sessionService.login(request, username, password, token);
 			return "";
 		} catch (ResponseStatusException e) {
-			if (e.getMessage().equals("tokenRequired"))
+			if (e.getReason().equals("tokenRequired"))
 				return "tokenRequired";
 			throw e;
 		}
