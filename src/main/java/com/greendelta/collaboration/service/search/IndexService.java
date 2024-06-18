@@ -41,17 +41,14 @@ public class IndexService {
 		this.settings = settings;
 	}
 
-	private Work offer(String title, int total, Consumer<Work> actualWork) {
-		if (!settings.searchConfig.isSearchAvailable())
-			return null;
+	private void offer(String title, int total, Consumer<Work> actualWork) {
 		synchronized (workQueue) {
-			boolean isFirst = workQueue.isEmpty();
+			var isFirst = workQueue.isEmpty();
 			var work = new Work(title, total, actualWork);
 			workQueue.offer(work);
 			if (isFirst) {
 				runNext();
 			}
-			return work;
 		}
 	}
 
@@ -84,9 +81,13 @@ public class IndexService {
 		}
 	}
 
-	public Work clearIndexAsync() {
-		return offer("Clearing index", 1, work -> {
-			searchService.on(SearchIndex.PUBLIC).clear();
+	public void clearIndexAsync() {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
+		offer("Clearing index", 1, work -> {
+			if (settings.is(ServerSetting.RELEASES_ENABLED)) {
+				searchService.on(SearchIndex.PUBLIC).clear();
+			}
 			searchService.on(SearchIndex.PRIVATE).clear();
 			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 				ioDataService.clearIndex();
@@ -95,9 +96,11 @@ public class IndexService {
 		});
 	}
 
-	public Work indexPrivateAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
+	public void indexPrivateAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(path);
-		return offer("Indexing " + repo.path(), 1, work -> {
+		offer("Indexing " + repo.path(), 1, work -> {
 			try {
 				List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
 				searchService.on(SearchIndex.PRIVATE).index(repo, tags, previousCommit, commit);
@@ -111,9 +114,11 @@ public class IndexService {
 		});
 	}
 
-	public Work indexPublicAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
+	public void indexPublicAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
+		if (!settings.searchConfig.isSearchAvailable() || !settings.is(ServerSetting.RELEASES_ENABLED))
+			return;
 		var repo = repoService.get(path);
-		return offer("Indexing " + repo.path(), 1, work -> {
+		offer("Indexing " + repo.path(), 1, work -> {
 			try {
 				var release = releaseService.get(repo.path(), commit.id);
 				searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), previousCommit, commit);
@@ -124,11 +129,15 @@ public class IndexService {
 		});
 	}
 
-	public Work moveIndexAsync(RepositoryPath path, RepositoryPath newPath) {
+	public void moveIndexAsync(RepositoryPath path, RepositoryPath newPath) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var newRepo = repoService.get(newPath);
-		return offer("Moving index of " + path.toString() + " to " + newRepo.path(), 1, work -> {
+		offer("Moving index of " + path.toString() + " to " + newRepo.path(), 1, work -> {
 			try {
-				searchService.on(SearchIndex.PUBLIC).move(path, newRepo, newRepo.commits.head());
+				if (settings.is(ServerSetting.RELEASES_ENABLED)) {
+					searchService.on(SearchIndex.PUBLIC).move(path, newRepo, newRepo.commits.head());
+				}
 				var latestRelease = historyService.getLatestReleasedCommit(newRepo);
 				searchService.on(SearchIndex.PRIVATE).move(path, newRepo, latestRelease);
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
@@ -141,9 +150,11 @@ public class IndexService {
 		});
 	}
 
-	public Work updatePrivateTagsAsync(RepositoryPath path) {
+	public void updatePrivateTagsAsync(RepositoryPath path) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(path);
-		return offer("Reindexing " + repo.path(), 1, work -> {
+		offer("Reindexing " + repo.path(), 1, work -> {
 			try {
 				List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
 				searchService.on(SearchIndex.PRIVATE).updateTags(repo, repo.commits.head(), tags);
@@ -153,10 +164,12 @@ public class IndexService {
 			}
 		});
 	}
-	
-	public Work updatePublicTagsAsync(RepositoryPath path) {
+
+	public void updatePublicTagsAsync(RepositoryPath path) {
+		if (!settings.searchConfig.isSearchAvailable() || !settings.is(ServerSetting.RELEASES_ENABLED))
+			return;
 		var repo = repoService.get(path);
-		return offer("Reindexing " + repo.path(), 1, work -> {
+		offer("Reindexing " + repo.path(), 1, work -> {
 			try {
 				var latestRelease = historyService.getLatestReleasedCommit(repo);
 				if (latestRelease != null) {
@@ -170,18 +183,22 @@ public class IndexService {
 		});
 	}
 
-	public Work reindexAsync(RepositoryPath path) {
+	public void reindexAsync(RepositoryPath path) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(path);
-		return offer("Reindexing " + repo.path(), 1, work -> {
+		offer("Reindexing " + repo.path(), 1, work -> {
 			try {
 				var latestRelease = historyService.getLatestReleasedCommit(repo);
 				var head = repo.commits.head();
-				searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
+				if (settings.is(ServerSetting.RELEASES_ENABLED)) {
+					searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
+				}
 				searchService.on(SearchIndex.PRIVATE).remove(repo, head);
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.remove(repo);
 				}
-				if (latestRelease != null) {
+				if (settings.is(ServerSetting.RELEASES_ENABLED) && latestRelease != null) {
 					var release = releaseService.get(repo.path(), latestRelease.id);
 					searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), null, latestRelease);
 				}
@@ -197,21 +214,27 @@ public class IndexService {
 		});
 	}
 
-	public Work reindexAllAsync(List<RepositoryPath> paths) {
+	public void reindexAllAsync(List<RepositoryPath> paths) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repos = new RepositoryList();
 		paths.forEach(path -> repos.add(repoService.get(path)));
-		return offer("Reindexing all repositories", repos.size(), work -> {
+		offer("Reindexing all repositories", repos.size(), work -> {
 			try {
-				searchService.on(SearchIndex.PUBLIC).clear();
+				if (settings.is(ServerSetting.RELEASES_ENABLED)) {
+					searchService.on(SearchIndex.PUBLIC).clear();
+				}
 				searchService.on(SearchIndex.PRIVATE).clear();
 				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 					ioDataService.clearIndex();
 				}
 				repos.forEach(repo -> {
-					var latestRelease = historyService.getLatestReleasedCommit(repo);
-					if (latestRelease != null) {
-						var release = releaseService.get(repo.path(), latestRelease.id);
-						searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), null, latestRelease);
+					if (settings.is(ServerSetting.RELEASES_ENABLED)) {
+						var latestRelease = historyService.getLatestReleasedCommit(repo);
+						if (latestRelease != null) {
+							var release = releaseService.get(repo.path(), latestRelease.id);
+							searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), null, latestRelease);
+						}
 					}
 					var head = repo.commits.head();
 					List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
@@ -227,9 +250,11 @@ public class IndexService {
 		});
 	}
 
-	public Work deleteIndexAsync(String repoId) {
+	public void deleteIndexAsync(String repoId) {
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var repo = repoService.get(repoId);
-		return offer("Deleting index of " + repo.path(), 1, work -> {
+		offer("Deleting index of " + repo.path(), 1, work -> {
 			try {
 				deleteIndex(repo);
 			} finally {
@@ -240,9 +265,13 @@ public class IndexService {
 	}
 
 	public void deleteIndex(Repository repo) {
-		var latestRelease = historyService.getLatestReleasedCommit(repo);
+		if (!settings.searchConfig.isSearchAvailable())
+			return;
 		var head = repo.commits.head();
-		searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
+		if (settings.is(ServerSetting.RELEASES_ENABLED)) {
+			var latestRelease = historyService.getLatestReleasedCommit(repo);
+			searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
+		}
 		searchService.on(SearchIndex.PRIVATE).remove(repo, head);
 		if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
 			ioDataService.remove(repo);
