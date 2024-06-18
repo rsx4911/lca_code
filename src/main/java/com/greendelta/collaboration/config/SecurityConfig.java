@@ -7,13 +7,13 @@ import java.util.function.Supplier;
 
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDecision;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -55,16 +55,18 @@ public class SecurityConfig {
 	private final UserService userService;
 	private final SettingsService settings;
 	private final GitFilterConfig gitFilterConfig;
+	private final boolean basicAuthEnabled;
 	private AuthenticationManager authManager;
 	@Autowired(required = false)
 	private ClientRegistrationRepository authProviderRepository;
 
 	public SecurityConfig(PermissionsService permissions, UserService userService, SettingsService settings,
-			GitFilterConfig gitFilterConfig) {
+			GitFilterConfig gitFilterConfig, @Value("${authentication.basic-auth:#{false}}") boolean basicAuthEnabled) {
 		this.permissions = permissions;
 		this.userService = userService;
 		this.settings = settings;
 		this.gitFilterConfig = gitFilterConfig;
+		this.basicAuthEnabled = basicAuthEnabled;
 	}
 
 	@Bean
@@ -77,7 +79,6 @@ public class SecurityConfig {
 						.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
 				.securityContext(config -> config
 						.requireExplicitSave(false))
-				.httpBasic(Customizer.withDefaults())
 				.csrf(config -> config
 						.disable())
 				.exceptionHandling(config -> config
@@ -96,8 +97,11 @@ public class SecurityConfig {
 			http = http.oauth2Login(config -> config
 					.successHandler(this::onOauthSuccess)
 					.userInfoEndpoint(endpoint -> endpoint
-							.oidcUserService(userService))
-					);
+							.oidcUserService(userService)));
+		}
+		if (basicAuthEnabled) {
+			http = http.httpBasic(config -> config
+					.realmName(settings.serverConfig.get(ServerSetting.SERVER_NAME)));
 		}
 		return http.build();
 	}
