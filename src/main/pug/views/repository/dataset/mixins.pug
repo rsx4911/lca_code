@@ -78,7 +78,7 @@ mixin comparison-dropdown()
 			span.caret
 		ul.dropdown-menu
 			- var selectFrom = releases || commits
-			- var isFirst = selectFrom[selectFrom.length - 1].id === commitId;
+			- var isFirst = selectFrom.length === 1 || selectFrom[selectFrom.length - 1].id === commitId;
 			if !isFirst
 				li: a(href='#' data-compare-to='previous') previous version
 				li.divider(role='separator')
