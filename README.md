@@ -37,7 +37,7 @@ npm install
 This will create a folder `collaboration-server/node_modules` with the dependent modules. After this, you can create the html package via Gulp:
 
 ```bash
-node_modules/gulp/bin/gulp.js build
+npx gulp build
 ```
 
 This will build the HTML files.
@@ -104,6 +104,8 @@ spring.security.oauth2.client.provider.keycloak.issuer-uri=http://[keycloak-host
 To build the web application to be deployed on a web server (e.g. tomcat) run:
 
 ```bash
+mvn clean compile
+npx gulp build
 mvn package
 ```
 
