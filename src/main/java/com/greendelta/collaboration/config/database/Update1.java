@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.openlca.util.Dirs;
@@ -17,6 +19,7 @@ import org.openlca.util.Strings;
 
 class Update1 {
 
+	private static final Logger log = LogManager.getLogger(Update1.class);
 	private static final int UPDATE_TO = 2;
 	private final Statement s;
 
@@ -25,6 +28,7 @@ class Update1 {
 	}
 
 	int run() throws SQLException, IOException {
+		log.info("Running update1");
 		Updates.runScript(s, "update1.sql");
 		createReleases();
 		updateSettings();
@@ -32,9 +36,12 @@ class Update1 {
 	}
 
 	private void createReleases() throws SQLException, IOException {
+		log.info("Creating release info data");
 		var gitDir = getGitDir();
-		if (gitDir == null || !gitDir.exists())
+		if (gitDir == null || !gitDir.exists()) {
+			log.warn("Could not find git directory " + (gitDir == null ? "null" : gitDir.getAbsolutePath()));
 			return;
+		}
 		var repos = getPublicRepositories();
 		var nextId = 1;
 		for (var repositoryPath : repos) {
@@ -63,15 +70,16 @@ class Update1 {
 	}
 
 	private void insertRelease(File gitDir, String repositoryPath, long id) throws SQLException, IOException {
+		log.info("Inserting release info of " + repositoryPath);
 		var commitId = getLatestCommitId(new File(gitDir, repositoryPath));
 		if (Strings.nullOrEmpty(commitId))
 			return;
 		var properties = getProperties(repositoryPath);
-		if (Strings.nullOrEmpty(properties.get("version"))) {
-			properties.put("version", "Public");
+		if (Strings.nullOrEmpty(properties.get("VERSION"))) {
+			properties.put("VERSION", "Public");
 		}
-		if (Strings.nullOrEmpty(properties.get("label"))) {
-			properties.put("label", repositoryPath.substring(repositoryPath.indexOf("/") + 1));
+		if (Strings.nullOrEmpty(properties.get("LABEL"))) {
+			properties.put("LABEL", repositoryPath.substring(repositoryPath.indexOf("/") + 1));
 		}
 		var fields = Arrays.asList("label", "version", "description", "source_info", "contact_info", "project_info",
 				"project_funding", "appropriate_use", "dq_assessment", "citation", "type_of_data");
@@ -82,13 +90,16 @@ class Update1 {
 		sql += ") VALUES (" + id + ", '" + repositoryPath + "', '" + commitId + "'";
 		for (var field : fields) {
 			var value = properties.get(field.toUpperCase());
-			sql += ", " + (value != null ? "'" + value + "'" : "null");
+			sql += ", " + (value != null ? "'" + value.replace("'", "''") + "'" : "null");
 		}
 		sql += ")";
-		s.executeUpdate(sql);
+		update(sql);
 		var cachedJsonFile = new File(gitDir, "cached-json.zip");
 		if (cachedJsonFile.exists()) {
 			var newFile = new File(gitDir, "cached-json-" + commitId + ".zip");
+			log.info("Moving cached json file "
+					+ "from " + cachedJsonFile.getAbsolutePath()
+					+ " to " + newFile.getAbsolutePath());
 			Dirs.move(cachedJsonFile.toPath(), newFile.toPath());
 		}
 	}
@@ -107,22 +118,28 @@ class Update1 {
 		var repo = new FileRepository(gitDir);
 		try (var walk = new RevWalk(repo)) {
 			var head = repo.resolve("refs/heads/main");
-			if (head == null)
+			if (head == null) {
+				log.warn("Could not find refs/heads/main in " + gitDir.getAbsolutePath());
 				return null;
+			}
 			var commit = walk.parseCommit(head);
-			if (commit == null)
+			if (commit == null) {
+				log.warn("Could not find head commit of " + gitDir.getAbsolutePath());
 				return null;
+			}
 			return commit.getName();
 		} catch (IOException e) {
+			log.error("Error trying to access latest commit id of " + gitDir.getAbsolutePath(), e);
 			return null;
 		}
 	}
 
 	private void updateSettings() throws SQLException {
-		s.executeUpdate("DELETE FROM setting WHERE name = 'PUBLIC_ACCESS' OR name = 'JSON_FILE_GENERATION' OR name = 'SEARCH_COMMIT_ID'");
-		s.executeUpdate("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
-		s.executeUpdate("UPDATE setting SET name = 'PRIVATE', type = 'SEARCH_INDEX' WHERE name = 'INDEX_NAME'");
-		s.executeUpdate("UPDATE setting SET name = 'IO_DATA', type = 'SEARCH_INDEX' WHERE name = 'IO_DATA_INDEX_NAME'");
+		log.info("Updating settings table");
+		update("DELETE FROM setting WHERE name = 'PUBLIC_ACCESS' OR name = 'JSON_FILE_GENERATION' OR name = 'SEARCH_COMMIT_ID'");
+		update("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
+		update("UPDATE setting SET name = 'PRIVATE', type = 'SEARCH_INDEX' WHERE name = 'INDEX_NAME'");
+		update("UPDATE setting SET name = 'IO_DATA', type = 'SEARCH_INDEX' WHERE name = 'IO_DATA_INDEX_NAME'");
 		insertPublicIndexSetting();
 	}
 
@@ -148,8 +165,13 @@ class Update1 {
 				id = rs.getLong("id");
 			}
 		}
-		s.executeUpdate("INSERT INTO setting(id, type, name, value)"
+		update("INSERT INTO setting(id, type, name, value)"
 				+ " VALUES (" + id + ", 'SEARCH_INDEX', 'PUBLIC', '" + indexName + "-public" + "')");
+	}
+
+	private void update(String sql) throws SQLException {
+		log.info("  " + sql);
+		s.executeUpdate(sql);
 	}
 
 }

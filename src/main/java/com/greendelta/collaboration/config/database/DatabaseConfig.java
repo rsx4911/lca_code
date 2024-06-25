@@ -10,11 +10,15 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DatabaseConfig implements HibernatePropertiesCustomizer {
+
+	private static final Logger log = LogManager.getLogger(DatabaseConfig.class);
 
 	// tables present in all states of the schema
 	private static final List<String> TABLES = Arrays.asList("comment", "job", "membership", "message", "review",
@@ -30,11 +34,12 @@ public class DatabaseConfig implements HibernatePropertiesCustomizer {
 		try (var con = dataSource.getConnection();
 				var s = con.createStatement()) {
 			if (!databaseInitialized(con)) {
+				log.info("Initializing database");
 				Updates.runScript(s, "schema.sql");
 			}
 			Updates.checkAndRun(s);
 		} catch (SQLException | IOException e) {
-			e.printStackTrace();
+			log.error("Error updating database", e);
 		}
 	}
 
