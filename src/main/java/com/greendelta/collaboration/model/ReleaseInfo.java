@@ -32,7 +32,7 @@ public class ReleaseInfo extends AbstractEntity {
 	@Column
 	private String tags;
 
-	@Column(length = 1000)
+	@Column(length = 4000)
 	public String description;
 
 	@Column(length = 1000)
@@ -50,7 +50,7 @@ public class ReleaseInfo extends AbstractEntity {
 	@Column(length = 1000)
 	public String projectFunding;
 
-	@Column(length = 1000)
+	@Column(length = 4000)
 	public String appropriateUse;
 
 	@Column(length = 1000)
@@ -59,7 +59,7 @@ public class ReleaseInfo extends AbstractEntity {
 	@Column(length = 1000)
 	public String citation;
 
-	@Column(length = 1000)
+	@Column(length = 64)
 	public String typeOfData;
 
 	public List<String> getTags() {
