@@ -6,14 +6,18 @@ import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openlca.util.Strings;
 
 class Updates {
 
+	private static final Logger log = LogManager.getLogger(Updates.class);
 	private static final int CURRENT_SCHEMA_VERSION = 2;
 	private final Statement s;
 
 	static void runScript(Statement s, String script) throws IOException, SQLException {
+		log.info("Executing sql script: " + script);
 		try (var reader = new BufferedReader(new InputStreamReader(Updates.class.getResourceAsStream(script)))) {
 			var next = "";
 			for (var line : reader.lines().toList()) {
@@ -45,6 +49,7 @@ class Updates {
 			schemaVersion = runUpdateFrom(schemaVersion);
 		}
 		setSchemaVersion(schemaVersion, existed);
+		log.info("Database updated successfully to schema version " + schemaVersion);
 	}
 
 	private int runUpdateFrom(int currentVersion) throws SQLException, IOException {
@@ -63,12 +68,12 @@ class Updates {
 	}
 
 	private void setSchemaVersion(int schemaVersion, boolean existed) throws SQLException {
-		if (existed) {
-			s.executeUpdate("UPDATE setting SET value = '" + schemaVersion + "' WHERE name = 'SCHEMA_VERSION'");
-		} else {
-			s.executeUpdate("INSERT INTO setting(id, name, value) VALUES (" + getNextSettingId()
-					+ ", 'SCHEMA_VERSION', '" + schemaVersion + "')");
-		}
+		var sql = existed
+				? "UPDATE setting SET value = '" + schemaVersion + "' WHERE name = 'SCHEMA_VERSION'"
+				: "INSERT INTO setting(id, name, value) VALUES (" + getNextSettingId() + ", 'SCHEMA_VERSION', '"
+						+ schemaVersion + "')";
+		log.info("  " + sql);
+		s.executeUpdate(sql);
 	}
 
 	private long getNextSettingId() throws SQLException {

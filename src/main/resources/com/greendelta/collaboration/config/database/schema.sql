@@ -140,16 +140,16 @@ CREATE TABLE IF NOT EXISTS release_info (
   tags VARCHAR(255),
   label VARCHAR(255),
   version VARCHAR(255),
-  description VARCHAR(1000),
+  description VARCHAR(4000),
   source_info VARCHAR(1000),
   contact_info VARCHAR(1000),
   change_log VARCHAR(1000),
   project_info VARCHAR(1000),
   project_funding VARCHAR(1000),
-  appropriate_use VARCHAR(1000),
+  appropriate_use VARCHAR(4000),
   dq_assessment VARCHAR(1000),
   citation VARCHAR(1000),
-  type_of_data VARCHAR(1000),
+  type_of_data VARCHAR(64),
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
