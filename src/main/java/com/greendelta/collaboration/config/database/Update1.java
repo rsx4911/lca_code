@@ -137,7 +137,7 @@ class Update1 {
 	private void updateSettings() throws SQLException {
 		log.info("Updating settings table");
 		update("DELETE FROM setting WHERE name = 'PUBLIC_ACCESS' OR name = 'JSON_FILE_GENERATION' OR name = 'SEARCH_COMMIT_ID'");
-		update("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORIES_ENABLED'");
+		update("UPDATE setting SET name = 'RELEASES_ENABLED' WHERE name = 'PUBLIC_REPOSITORY_ENABLED'");
 		update("UPDATE setting SET name = 'PRIVATE', type = 'SEARCH_INDEX' WHERE name = 'INDEX_NAME'");
 		update("UPDATE setting SET name = 'IO_DATA', type = 'SEARCH_INDEX' WHERE name = 'IO_DATA_INDEX_NAME'");
 		insertPublicIndexSetting();
