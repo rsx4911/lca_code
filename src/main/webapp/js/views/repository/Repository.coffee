@@ -6,7 +6,6 @@ define([
 				'cs!utils/Forms'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
-				'cs!utils/Roles'
 				'cs!utils/Status'
 				'cs!app/Router'
 				'cs!models/CurrentUser'
@@ -14,7 +13,7 @@ define([
 				'templates/views/repository/repository'
 			]
 
-	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Roles, Status, Router, currentUser, settings, template) ->
+	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, settings, template) ->
 
 		class RepositoryView extends Backbone.View
 
@@ -43,7 +42,6 @@ define([
 				repository = @repository.toJSON()
 				@$el.html template
 					repository: repository
-					roles: Roles.getAll()
 					dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()

@@ -14,12 +14,13 @@ mixin comment-visibility(restrictedToRole, roles)
 					.caret.right
 				ul.dropdown-menu
 					each role in roles
-						li: a(href='#' data-role=role.id)=role.name
+						if role === restrictedToRole || isRoleAvailable(role)
+							li: a(href='#' data-role=role.id)=role.name
 
 mixin comment-info(comment, roles, showDatasetInfo)
 	- var canChangeVisibility = canComment && (currentUser.admin || (comment.user && currentUser.username === comment.user.username));
 	span.user-extra-info  commented on #{formatDate(comment.date)}
-	if canChangeVisibility
+	if canChangeVisibility && roles
 		| &nbsp;
 		+comment-visibility(comment.restrictedToRole, roles)
 	if (!comment.released && comment.user && comment.user.username === currentUser.username) || (comment.released && !comment.approved && canApprove)

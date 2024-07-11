@@ -6,6 +6,7 @@ form#set-role-form
 		+member-selection(true)
 	+select('role', 'Role')
 		each role in roles
-			option(value=role.id)=role.name
-			- var description = type === 'group' ? role.descriptionForGroup : role.descriptionForRepository
-			optgroup.additional-info(label=description)
+			if isRoleAvailable(role)
+				option(value=role.id)=role.name
+				- var description = type === 'group' ? role.descriptionForGroup : role.descriptionForRepository
+				optgroup.additional-info(label=description)
