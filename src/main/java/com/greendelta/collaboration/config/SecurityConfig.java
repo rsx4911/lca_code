@@ -1,11 +1,8 @@
 package com.greendelta.collaboration.config;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
-import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -140,12 +137,7 @@ public class SecurityConfig {
 				}
 			}
 		} else if (!Routes.isLoginUrl(route)) {
-			var query = request.getQueryString();
-			if (!Strings.nullOrEmpty(query)) {
-				route += "?" + query;
-			}
-			route = URLEncoder.encode(route, StandardCharsets.UTF_8.toString());
-			response.sendRedirect(request.getServletContext().getContextPath() + "/login?redirectUrl=" + route);
+			response.sendRedirect(Requests.getLoginRedirectUrl(request));
 		}
 	}
 
