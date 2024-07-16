@@ -2,7 +2,10 @@ package com.greendelta.collaboration.config.filter;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
+import org.openlca.util.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
@@ -69,7 +72,7 @@ public class RedirectFilter implements Filter {
 				if (Routes.isLoginUrl(route) && !user.isAnonymous()) {
 					response.sendRedirect(request.getContextPath() + "/");
 				} else if (user.isAnonymous() && redirectToLogin && !route.equals("login")) {
-					response.sendRedirect(request.getContextPath() + "/login");
+					redirectToLogin(request, response, route);
 				} else if (user.isAnonymous() && !Routes.isPublicUrl(route) && new File(publicIndex).exists()) {
 					request.getRequestDispatcher("/index_public.html").forward(request, response);
 				} else {
@@ -84,4 +87,13 @@ public class RedirectFilter implements Filter {
 		}
 	}
 
+	private void redirectToLogin(HttpServletRequest request, HttpServletResponse response, String route) throws IOException {
+		var query = request.getQueryString();
+		if (!Strings.nullOrEmpty(query)) {
+			route += "?" + query;
+		}
+		route = URLEncoder.encode(route, StandardCharsets.UTF_8.toString());
+		response.sendRedirect(request.getContextPath() + "/login?redirectUrl=" + route);
+	}
+	
 }
