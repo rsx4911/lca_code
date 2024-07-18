@@ -111,7 +111,7 @@ public class InputOutputDataService {
 	}
 
 	void index(Repository repo, Commit previousCommit, Commit currentCommit) {
-		var commits = repo.commits.find().after(previousCommit.id).until(currentCommit.id).all();
+		var commits = findCommits(repo, previousCommit, currentCommit);
 		var client = getClient();
 		if (client == null)
 			return;
@@ -134,6 +134,12 @@ public class InputOutputDataService {
 			updatePrevious(buffer, repo, skip, previousCommit, commit);
 			previousCommit = commit;
 		}
+	}
+
+	private List<Commit> findCommits(Repository repo, Commit previousCommit, Commit currentCommit) {
+		if (previousCommit == null)
+			return repo.commits.find().until(currentCommit.id).all();
+		return repo.commits.find().after(previousCommit.id).until(currentCommit.id).all();
 	}
 
 	private void updatePrevious(EntryBuffer buffer, Repository repo, Set<String> skipRefIds, Commit previousCommit,
