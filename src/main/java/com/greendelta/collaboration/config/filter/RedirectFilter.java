@@ -69,7 +69,7 @@ public class RedirectFilter implements Filter {
 				if (Routes.isLoginUrl(route) && !user.isAnonymous()) {
 					response.sendRedirect(request.getContextPath() + "/");
 				} else if (user.isAnonymous() && redirectToLogin && !route.equals("login")) {
-					response.sendRedirect(request.getContextPath() + "/login");
+					response.sendRedirect(Requests.getLoginRedirectUrl(request));
 				} else if (user.isAnonymous() && !Routes.isPublicUrl(route) && new File(publicIndex).exists()) {
 					request.getRequestDispatcher("/index_public.html").forward(request, response);
 				} else {

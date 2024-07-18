@@ -163,12 +163,8 @@ public class GroupService {
 		var user = userService.getForUsername(group);
 		if (user == null)
 			return groupSettings;
-		if (groupSettings.get(GroupSetting.LABEL) == null) {
-			groupSettings.set(GroupSetting.LABEL, user.name);
-		}
-		if (groupSettings.get(GroupSetting.DESCRIPTION) == null) {
-			groupSettings.set(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
-		}
+		groupSettings.setDefault(GroupSetting.LABEL, user.name);
+		groupSettings.setDefault(GroupSetting.DESCRIPTION, "The default group for user " + user.name);
 		return groupSettings;
 	}
 

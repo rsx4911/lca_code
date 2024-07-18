@@ -30,8 +30,10 @@ public enum Role {
 	REVIEWER(4, READ, WRITE, COMMENT, REVIEW),
 
 	EDITOR(5, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, SET_SETTINGS),
+	
+	RELEASE_MANAGER(6, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, SET_SETTINGS, MANAGE_RELEASES),
 
-	OWNER(6, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, CREATE, EDIT_MEMBERS, MOVE, CREATE_CHANGE_LOG, MANAGE_RELEASES, DELETE);
+	OWNER(7, READ, WRITE, COMMENT, REVIEW, MANAGE_COMMENTS, MANAGE_TASK, SET_SETTINGS, MANAGE_RELEASES, CREATE, EDIT_MEMBERS, MOVE, CREATE_CHANGE_LOG, DELETE);
 
 	private List<Permission> permissions;
 	private int level;
@@ -43,11 +45,6 @@ public enum Role {
 
 	public List<Permission> getPermissions() {
 		return permissions;
-	}
-
-	public boolean matches(Role role) {
-		int roleLevel = role != null ? role.level : NONE.level;
-		return this.level >= roleLevel;
 	}
 
 	public static Role best(Role r1, Role r2) {

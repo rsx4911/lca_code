@@ -36,7 +36,7 @@ define([
 					Layers.showTemplateInLayer
 						template: 'members/set-role'
 						title: "Add #{type} members"
-						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll()}
+						model: {type: type, users: Data.usersToOptions(users, existingUsers), teams: Data.teamsToOptions(teams, existingTeams), roles: Roles.getAll(), isRoleAvailable: Roles.isAvailable }
 						buttons: [{id: 'add-members', className: 'btn-success', text: "Add to #{type}", callback: () => @addMembers()}]
 
 			addMembers: () ->
@@ -63,7 +63,7 @@ define([
 				Layers.showTemplateInLayer
 					template: 'members/set-role'
 					title: "Set role for #{memberType} #{id}"
-					model: {type: type, roles: Roles.getAll()}	
+					model: {type: type, roles: Roles.getAll(), isRoleAvailable: Roles.isAvailable}	
 					buttons: [{
 						id: 'set-role'
 						className: 'btn-success'

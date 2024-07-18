@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +32,7 @@ public class JsonWriter implements DatasetWriter {
 	private final RepositoryJsonWriter writer;
 	private final Set<String> processed = new HashSet<String>();
 	private final JsonArray categories = new JsonArray();
+	private final Stack<Reference> toProcess = new Stack<>();
 
 	public JsonWriter(File file, Repository repo, List<LibraryLink> libraries, Commit commit) throws IOException {
 		this.tmpFile = file;
@@ -43,20 +45,21 @@ public class JsonWriter implements DatasetWriter {
 	public void write(Entry ref) {
 		if (ref.typeOfEntry == EntryType.MODEL_TYPE)
 			return;
+		if (processed.contains(keyOf(ref)))
+			return;
 		if (ref.typeOfEntry == EntryType.CATEGORY) {
-			if (processed.contains(ref.path))
-				return;
 			categories.add(ref.path);
 			processed.add(ref.path);
 			return;
 		}
-		writeRef(ref);
+		toProcess.add(ref);
+		while (!toProcess.isEmpty()) {
+			writeRef(toProcess.pop());
+		}
 	}
 
 	private void writeRef(Reference ref) {
-		if (processed.contains(ref.type.name() + ref.refId))
-			return;
-		processed.add(ref.type.name() + ref.refId);
+		processed.add(keyOf(ref));
 		var dataset = writer.put(ref);
 		if (dataset == null || !collectReferences)
 			return;
@@ -72,7 +75,7 @@ public class JsonWriter implements DatasetWriter {
 			log.trace("No data set found: " + type.name() + " " + refId);
 			return;
 		}
-		writeRef(ref);
+		toProcess.add(ref);
 	}
 
 	@Override
@@ -118,7 +121,7 @@ public class JsonWriter implements DatasetWriter {
 		var refId = Maps.getString(object, "@id");
 		if (refId == null)
 			return;
-		if (processed.contains(type.name() + refId))
+		if (processed.contains(keyOf(type, refId)))
 			return;
 		queue(type, refId);
 	}
@@ -130,6 +133,16 @@ public class JsonWriter implements DatasetWriter {
 			return type;
 		}
 		return null;
+	}
+	
+	private String keyOf(Reference ref) {
+		if (ref.isCategory)
+			return ref.path;
+		return keyOf(ref.type, ref.refId);
+	}
+	
+	private String keyOf(ModelType type, String refId) {
+		return type.name() + refId;		
 	}
 
 }

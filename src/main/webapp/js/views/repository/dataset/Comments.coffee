@@ -174,6 +174,7 @@ define([
 					canApprove: @canApprove
 					canEdit: true
 					roles: Roles.getAll()
+					isRoleAvailable: Roles.isAvailable
 					getRoleLabel: (role) -> return Roles[role].name
 					getLabel: (field) -> return Labels.get field.modelType, field.path
 				buttons: buttons

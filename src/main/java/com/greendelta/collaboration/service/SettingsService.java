@@ -280,7 +280,7 @@ public class SettingsService {
 
 		private RestHighLevelClient client;
 		public final Settings<SearchIndex> indices;
-		
+
 		private SearchConfig() {
 			super(SettingType.SEARCH_SETTING);
 			indices = new Settings<>(SettingType.SEARCH_INDEX);
@@ -357,6 +357,8 @@ public class SettingsService {
 		private final String owner;
 		// if no service is given, use local map
 		private final Map<T, Object> local;
+		// services can set default values
+		private final Map<T, Object> defaults = new HashMap<>();
 		private final Access access;
 
 		private Settings(SettingType type) {
@@ -373,8 +375,9 @@ public class SettingsService {
 			this.access = access;
 		}
 
+		@SuppressWarnings("unchecked")
 		public <V> V get(T key) {
-			return get(key, null);
+			return get(key, (V) defaults.get(key));
 		}
 
 		@SuppressWarnings("unchecked")
@@ -400,6 +403,10 @@ public class SettingsService {
 			return value != null && value;
 		}
 
+		public void setDefault(T key, Object value) {
+			defaults.put(key, value);
+		}
+		
 		public void set(T key, Object value) {
 			if (local != null) {
 				local.put(key, value);

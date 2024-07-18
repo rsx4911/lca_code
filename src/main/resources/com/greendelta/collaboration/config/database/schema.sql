@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS comment (
   ref_id VARCHAR(255), 
   released BIT, 
   repository_path VARCHAR(255), 
-  restricted_to_role ENUM('NONE', 'READER', 'CONTRIBUTOR', 'REVIEWER', 'EDITOR', 'OWNER'), 
+  restricted_to_role ENUM('NONE', 'READER', 'CONTRIBUTOR', 'REVIEWER', 'EDITOR', 'RELEASE_MANAGER', 'OWNER'), 
   text VARCHAR(4000), 
   reply_to_id BIGINT, 
   user_id BIGINT, 
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS job (
 CREATE TABLE IF NOT EXISTS membership (
   id BIGINT NOT NULL, 
   member_of VARCHAR(255), 
-  role ENUM('NONE', 'READER', 'CONTRIBUTOR', 'REVIEWER', 'EDITOR', 'OWNER'), 
+  role ENUM('NONE', 'READER', 'CONTRIBUTOR', 'REVIEWER', 'EDITOR', 'RELEASE_MANAGER', 'OWNER'), 
   team_id BIGINT, 
   user_id BIGINT, 
   PRIMARY KEY (id)
