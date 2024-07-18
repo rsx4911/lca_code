@@ -61,7 +61,7 @@ class Update1 {
 	private Set<String> getPublicRepositories() throws SQLException {
 		var publicRepositories = new HashSet<String>();
 		try (var rs = s.executeQuery(
-				"SELECT owner FROM setting WHERE name = 'PUBLIC_ACCESS'")) {
+				"SELECT owner FROM setting WHERE name = 'PUBLIC_ACCESS' AND lower(value) = 'true'")) {
 			while (rs.next()) {
 				publicRepositories.add(rs.getString("owner").trim());
 			}
