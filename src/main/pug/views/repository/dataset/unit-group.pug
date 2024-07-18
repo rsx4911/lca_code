@@ -6,8 +6,9 @@ include ./structures/unit-table.pug
 		+header
 		+content
 			if hasAtLeastOne(dataset, compareTo, 'units') || reviewMode
-				h4(data-path='units')=getLabel('units')
-				+unit-table()
+				.margin-0-25
+					h4(data-path='units')=getLabel('units')
+					+unit-table()
 	+meta
 		hr
 		+labeled-ref-block('defaultFlowProperty')
