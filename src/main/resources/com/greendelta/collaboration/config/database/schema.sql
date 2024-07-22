@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS user (
   user_manager BIT, 
   two_factor_secret VARCHAR(255), 
   username VARCHAR(255), 
+  library_manager BIT, 
   PRIMARY KEY (id)
 ) engine = InnoDB;
 
