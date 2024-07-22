@@ -160,9 +160,9 @@ class Update1 {
 			indexName = rs.getString("value");
 		}
 		long id = 1;
-		try (var rs = s.executeQuery("SELECT id FROM setting ODER BY id DESC")) {
+		try (var rs = s.executeQuery("SELECT id FROM setting ORDER BY id DESC")) {
 			if (rs.next()) {
-				id = rs.getLong("id");
+				id = rs.getLong("id") + 1;
 			}
 		}
 		update("INSERT INTO setting(id, type, name, value)"
