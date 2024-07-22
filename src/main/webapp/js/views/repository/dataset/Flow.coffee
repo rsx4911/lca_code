@@ -8,8 +8,8 @@ define([
 	(Filter, Icons, settings, template) ->
 
 		init: (repository, refId, commitId, flowType) ->
-			outType = if flowType is 'ELEMENTARY_FLOW' then 'emitted-by' else 'produced-by'
-			@initReferences repository, refId, commitId, 'used-by'
+			outType = if flowType is 'ELEMENTARY_FLOW' then 'emittedBy' else 'producedBy'
+			@initReferences repository, refId, commitId, 'usedBy'
 			@initReferences repository, refId, commitId, outType
 
 		initReferences: (repository, refId, commitId, type) ->
@@ -18,7 +18,7 @@ define([
 				return
 			group = repository.get 'group'
 			name = repository.get 'name'
-			direction = if type is 'used-by' then 'INPUT' else 'OUTPUT' 
+			direction = if type is 'usedBy' then 'INPUT' else 'OUTPUT' 
 			commitIdParam = if commitId then "&commitId=#{commitId}" else ''
 			filter = new Filter
 				container: "##{type}-data"

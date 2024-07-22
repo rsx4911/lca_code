@@ -111,6 +111,8 @@ public class InputOutputDataService {
 	}
 
 	void index(Repository repo, Commit previousCommit, Commit currentCommit) {
+		if (currentCommit == null)
+			return;
 		var commits = findCommits(repo, previousCommit, currentCommit);
 		var client = getClient();
 		if (client == null)
