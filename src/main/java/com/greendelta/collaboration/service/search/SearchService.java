@@ -53,6 +53,8 @@ public class SearchService {
 		}
 
 		void index(Repository repo, List<String> tags, Commit previousCommit, Commit commit) {
+			if (commit == null)
+				return;
 			var client = getClient();
 			if (client == null)
 				return;
@@ -118,6 +120,8 @@ public class SearchService {
 		}
 
 		void move(RepositoryPath oldPath, Repository newRepo, Commit commit) {
+			if (commit == null)
+				return;
 			var client = getClient();
 			if (client == null)
 				return;
