@@ -97,7 +97,10 @@ public class RepositoryController {
 			@PathVariable("group") String group,
 			@PathVariable("name") String name) {
 		try (var repo = service.get(group, name)) {
-			return Avatar.get(repo.settings.get(RepositorySetting.AVATAR), "avatar-repository.png");
+			byte[] avatar = repo.settings.get(RepositorySetting.AVATAR);
+			if (avatar != null)
+				return avatar;
+			return Avatar.get("avatar-repository.png");
 		}
 	}
 
