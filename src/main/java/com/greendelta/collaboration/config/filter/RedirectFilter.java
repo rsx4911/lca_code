@@ -1,6 +1,5 @@
 package com.greendelta.collaboration.config.filter;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
@@ -57,7 +56,7 @@ public class RedirectFilter implements Filter {
 		} else {
 			try {
 				var user = userService.getCurrentUser();
-				var publicIndex = request.getServletContext().getRealPath("index_public.html");
+				var publicIndex = getClass().getResource("/static/index_public.html");
 				var releasesEnabled = settings.is(ServerSetting.RELEASES_ENABLED);
 				var homepageEnabled = settings.is(ServerSetting.HOMEPAGE_ENABLED);
 				var searchEnabled = settings.searchConfig.isSearchAvailable();
@@ -70,7 +69,7 @@ public class RedirectFilter implements Filter {
 					response.sendRedirect(request.getContextPath() + "/");
 				} else if (user.isAnonymous() && redirectToLogin && !route.equals("login")) {
 					response.sendRedirect(Requests.getLoginRedirectUrl(request));
-				} else if (user.isAnonymous() && !Routes.isPublicUrl(route) && new File(publicIndex).exists()) {
+				} else if (user.isAnonymous() && !Routes.isPublicUrl(route) && publicIndex != null) {
 					request.getRequestDispatcher("/index_public.html").forward(request, response);
 				} else {
 					chain.doFilter(request, response);
