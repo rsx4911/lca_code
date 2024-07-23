@@ -116,7 +116,10 @@ public class GroupController {
 	public byte[] getAvatar(@PathVariable("name") String name) {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
-		return Avatar.get(service.getSettings(name).get(GroupSetting.AVATAR), "avatar-group.png");
+		byte[] avatar = service.getSettings(name).get(GroupSetting.AVATAR);
+		if (avatar != null)
+			return avatar;
+		return Avatar.get("avatar-group.png");
 	}
 
 	@PostMapping("{name}")
