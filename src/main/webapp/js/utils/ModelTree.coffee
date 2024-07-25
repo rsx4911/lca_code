@@ -25,6 +25,7 @@ define([
 		init: (container, repositoryPath, options) ->
 			defaultPath = options?.defaultPath || ''
 			multipleSelection = options?.multipleSelection || false
+			commitId = if options.commitId then "&commitId=#{options.commitId}" else ''
 			$(container).jstree 
 				plugins: if multipleSelection then ['checkbox'] else []
 				core:
@@ -35,7 +36,7 @@ define([
 						path = if node.id is '#' then defaultPath else node.id
 						$.ajax
 							type: 'GET'
-							url: "ws/public/browse/#{repositoryPath}?categoryPath=#{path}"
+							url: "ws/public/browse/#{repositoryPath}?categoryPath=#{path}#{commitId}"
 							success: (result) ->
 								data = []
 								if path

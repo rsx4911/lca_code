@@ -239,10 +239,13 @@ define([
 						ModelTree.init '#model-tree', options.repositoryPath, 
 							multipleSelection: options.multipleSelection
 							defaultPath: options.path || options.type
+							commitId: options.commitId
 						$('#select-model-button').prop 'disabled', true
 						$('#model-tree').on 'activate_node.jstree', (event, data) =>
-							$('#select-model-button').prop 'disabled', !options.releases
+							selection = ModelTree.getSelection '#model-tree'
+							$('#select-model-button').prop 'disabled', !selection or (options.multipleSelection and !selection.length)
 							if options.type and !options.multipleSelection and options.selectVersion and !options.releases
+								$('#select-model-button').prop 'disabled', true
 								refId = data.node.original.refId
 								@showProgressIndicator ['Loading', 'versions']
 								$.ajax
