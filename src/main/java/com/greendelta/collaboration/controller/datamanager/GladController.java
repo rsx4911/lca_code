@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.git.model.Reference;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,9 +85,9 @@ public class GladController {
 				repo.references.find().path(path).commit(commitId).iterate(ref -> {
 					existing.remove(ref.refId);
 					if (isReleased) {
-						api.putReleased(repo, ref);
+						api.putReleased(repo, ref, repo.path());
 					} else {
-						api.putUnreleased(repo, ref);
+						api.putUnreleased(repo, ref, repo.path());
 					}
 				});
 			});
@@ -182,15 +183,15 @@ public class GladController {
 			return entries;
 		}
 
-		public void putReleased(Repository repo, Reference ref) {
-			put(repo, ref, true);
+		public void putReleased(OlcaRepository repo, Reference ref, String path) {
+			put(repo, ref, path, true);
 		}
 
-		public void putUnreleased(Repository repo, Reference ref) {
-			put(repo, ref, false);
+		public void putUnreleased(OlcaRepository repo, Reference ref, String path) {
+			put(repo, ref, path, false);
 		}
 
-		public void put(Repository repo, Reference ref, boolean isReleased) {
+		public void put(OlcaRepository repo, Reference ref, String path, boolean isReleased) {
 			var json = repo.datasets.get(ref);
 			var data = Maps.of(json);
 			data.put("catgeories", ref.category.split("/"));
@@ -222,7 +223,7 @@ public class GladController {
 			data.put("format", "JSON_LD");
 			data.put("dataprovider", dataprovider);
 			data.put("dataSetUrl", serverUrl +
-					"/" + repo.path()
+					"/" + path
 					+ "/dataset/PROCESS/"
 					+ ref.refId
 					+ "?commitId=" + ref.commitId);
@@ -251,7 +252,7 @@ public class GladController {
 				var object = new URL(baseUrl + "/" + path);
 				var con = (HttpURLConnection) object.openConnection();
 				con.addRequestProperty("api-key", apiKey);
-				con.setRequestMethod("GET");
+				con.setRequestMethod(type);
 				if ("GET".equals(type)) {
 					con.setDoInput(true);
 					con.setRequestProperty("Accept", "application/json");
