@@ -28,6 +28,9 @@ define([
 					list.push({ key: key, value: map[key] })
 				return list
 
+			isGladConfigured: () ->
+				return !!@getVal('GLAD_URL') and !!@getVal('GLAD_API_KEY') and !!@getVal('GLAD_DATAPROVIDER')
+
 		return new Settings()
 
 )

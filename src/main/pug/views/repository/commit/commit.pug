@@ -9,6 +9,8 @@ include ../../mixins/user-info.pug
 		div: small: +commit-info(commit.additions, commit.updates, commit.deletions)
 	if !standalone && changeLogEnabled && commit.canCreateChangeLog
 		button.btn.btn-md.btn-success.pull-right.download-changelog Download changelog
+	if !standalone && isGladAvailable
+		button.btn.btn-lg.btn-default.pull-right(data-action='push-to-glad') Push to GLAD
 	.clear
 	if !standalone
 		+user-info(commit.user, commit.userDisplayName)(class='concealed')

@@ -4,15 +4,17 @@ define([
 				'cs!utils/Filter'
 				'cs!utils/Format'
 				'cs!utils/Icons'
+				'cs!utils/Layers'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!views/repository/Download'
 				'cs!models/Settings'
+				'cs!models/CurrentUser'
 				'templates/views/repository/commit/commit'
 				'templates/views/repository/commit/commit-references'
 			]
 
-	(Backbone, Events, Filter, Format, Icons, ModelTypes, Renderer, Download, settings, template, refTemplate) ->
+	(Backbone, Events, Filter, Format, Icons, Layers, ModelTypes, Renderer, Download, settings, currentUser, template, refTemplate) ->
 
 		class RepositoryCommit extends Backbone.View
 
@@ -20,6 +22,7 @@ define([
 
 			events: 
 				'click a[href]:not([target=_blank]):not(.standalone)': (event) -> Events.followLink event
+				'click .push-to-glad': 'pushToGlad' 
 				'click .download-changelog': (event) -> 
 					Events.preventDefault(event)
 					Download.changelog @repository.get('group'), @repository.get('name'), @commitId
@@ -65,6 +68,7 @@ define([
 						changeLogEnabled: settings.is('CHANGE_LOG_ENABLED')
 						formatDate: Format.dateTime
 						standalone: @standalone
+						isGladAvailable: settings.isGladConfigured() and currentUser.isDataManager()
 					@filter.init (result) => @setModelFilters result.modelTypes
 				Renderer.render @, renderOptions
 
@@ -96,5 +100,26 @@ define([
 					@filter.page = 1
 					@filter.load (result) =>
 						@filter.append result
+
+			pushToGlad: () ->
+				repository = @repository.toJSON()
+				repoPath = "#{repository.group}/#{repository.name}"
+				commitId = @commitId
+				Layers.selectModel
+					repositoryPath: repoPath
+					commitId: commitId
+					multipleSelection: true
+					type: 'PROCESS'
+					callback: (selection) ->
+						Layers.showProgressIndicator 'Pushing'
+						$.ajax
+							type: 'PUT'
+							url: "ws/datamanager/glad/push/#{repoPath}/#{commitId}"
+							contentType: 'application/json'
+							data: JSON.stringify(selection)
+							success: (response) ->
+								Layers.closeActive()
+								Status.success 'Successfully pushed selected data to GLAD'
+								Layers.hideProgressIndicator()
 
 )

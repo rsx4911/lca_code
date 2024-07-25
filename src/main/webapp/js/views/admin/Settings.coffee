@@ -106,12 +106,27 @@ define([
 				@setSetting 'SERVER_SETTING', 'GLAD_URL', @$('#SERVER_SETTING__GLAD_URL').val(), () ->
 					$.ajax
 						type: 'GET'
-						url: 'ws/admin/area/testGladConfig'
+						url: 'ws/datamanager/glad/testConfig'
 						success: () -> Status.success 'GLAD service is configured correctly'
 						error: (error) ->
 							text = error?.responseText
 							unless text
 								text = 'Could not reach GLAD service'
 							Status.error text
+
+			deleteGladData: (event) ->
+				Layers.showProgressIndicator 'Deleting data from GLAD'
+				$.ajax
+					type: 'DELETE'
+					url: 'ws/datamanager/glad/clear'
+					success: () ->
+						Layers.hideProgressIndicator()
+						Status.success 'Deleted all data from GLAD'
+					error: () ->
+						Layers.hideProgressIndicator()
+						text = error?.responseText
+						unless text
+							text = 'Could not reach GLAD service'
+						Status.error text
 
 )

@@ -91,11 +91,13 @@ include ../mixins/forms.pug
 			+input('IMPRINT_SETTING__REGISTRATION', 'Registration')
 			+input('IMPRINT_SETTING__VAT', 'Vat')
 		.clear
-	.header-box GLAD settings
+	.header-box GLAD service settings
 		button.btn.btn-primary.pull-right(data-action='test-glad') Check GLAD url
+		button.btn.btn-danger.pull-right(data-action='clear-glad') Delete all data from GLAD
 	.content-box
 		.three-columns
-			+input('SERVER_SETTING__GLAD_URL', 'Glad service base url')
-			+input('SERVER_SETTING__GLAD_API_KEY_HEADER', 'Glad service api-key header field')
-			+input('SERVER_SETTING__GLAD_API_KEY', 'Glad service api-key header value')
+			+input('SERVER_SETTING__GLAD_URL', 'Service url')
+			+input('SERVER_SETTING__GLAD_API_KEY', 'Api-key')
+			+input('SERVER_SETTING__GLAD_DATAPROVIDER', 'Dataprovider name')
+		.clear
 		.clear
