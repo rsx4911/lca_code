@@ -39,7 +39,6 @@ import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.model.glad.ProcessType;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.ReleaseService;
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.ServerConfig;
@@ -79,7 +78,7 @@ public class GladController {
 					throw Response.notFound("No repository with id " + group + "/" + name + " found");
 				var api = new GladApi(settings.serverConfig);
 				var isReleased = releaseService.isReleased(repo.path(), commitId);
-				var existing = api.listEntries(repo).stream()
+				var existing = api.listEntries(repo.path()).stream()
 						.map(Entry::refId)
 						.collect(Collectors.toSet());
 				paths.stream().forEach(path -> {
@@ -155,9 +154,9 @@ public class GladController {
 				throw Response.error("GLAD testcall returned unexpected content: " + result);
 		}
 
-		public List<Entry> listEntries(Repository repository) {
+		public List<Entry> listEntries(String path) {
 			return listEntries().stream()
-					.filter(e -> e.repositoryPath().equals(repository.path()))
+					.filter(e -> e.repositoryPath().equals(path))
 					.collect(Collectors.toList());
 		}
 
@@ -175,11 +174,11 @@ public class GladController {
 				resultInfo = Maps.getObject(results, "resultInfo");
 				for (var result : data) {
 					var url = Maps.getString(result, "dataSetUrl");
-					var startRepo = url.indexOf("/browse/") + 8;
-					var endRepo = url.indexOf("/PROCESS/");
+					var startRepo = serverUrl.length() + 1;
+					var endRepo = url.indexOf("/dataset/");
 					var repo = url.substring(startRepo, endRepo);
 					var startQuery = url.indexOf("?commitId=");
-					var processId = url.substring(endRepo + 9, startQuery);
+					var processId = url.substring(endRepo + 17, startQuery);
 					var commitId = url.substring(startQuery + 10);
 					entries.add(new Entry(repo, processId, commitId));
 				}
