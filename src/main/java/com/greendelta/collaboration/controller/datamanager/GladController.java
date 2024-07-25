@@ -73,35 +73,39 @@ public class GladController {
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
 			@RequestBody Set<String> paths) {
-		try (var repo = repoService.get(group, name)) {
-			if (repo == null)
-				throw Response.notFound("No repository with id " + group + "/" + name + " found");
-			var api = new GladApi(settings.serverConfig);
-			var isReleased = releaseService.isReleased(repo.path(), commitId);
-			var existing = api.listEntries(repo).stream()
-					.map(Entry::refId)
-					.collect(Collectors.toSet());
-			paths.stream().forEach(path -> {
-				repo.references.find().path(path).commit(commitId).iterate(ref -> {
-					existing.remove(ref.refId);
-					if (isReleased) {
-						api.putReleased(repo, ref, repo.path());
-					} else {
-						api.putUnreleased(repo, ref, repo.path());
-					}
+		new Thread(() -> {
+			try (var repo = repoService.get(group, name)) {
+				if (repo == null)
+					throw Response.notFound("No repository with id " + group + "/" + name + " found");
+				var api = new GladApi(settings.serverConfig);
+				var isReleased = releaseService.isReleased(repo.path(), commitId);
+				var existing = api.listEntries(repo).stream()
+						.map(Entry::refId)
+						.collect(Collectors.toSet());
+				paths.stream().forEach(path -> {
+					repo.references.find().path(path).commit(commitId).iterate(ref -> {
+						existing.remove(ref.refId);
+						if (isReleased) {
+							api.putReleased(repo, ref, repo.path());
+						} else {
+							api.putUnreleased(repo, ref, repo.path());
+						}
+					});
 				});
-			});
-			// delete remaining old entries
-			existing.forEach(api::delete);
-		}
+				// delete remaining old entries
+				existing.forEach(api::delete);
+			}
+		}).start();
 	}
 
 	@DeleteMapping("clear")
 	public void deleteAllData() {
-		var api = new GladApi(settings.serverConfig);
-		api.listEntries().stream()
-				.map(Entry::refId)
-				.forEach(api::delete);
+		new Thread(() -> {
+			var api = new GladApi(settings.serverConfig);
+			api.listEntries().stream()
+					.map(Entry::refId)
+					.forEach(api::delete);
+		}).start();
 	}
 
 	@GetMapping("testConfig")
