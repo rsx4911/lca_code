@@ -121,7 +121,7 @@ define([
 					url: 'ws/datamanager/glad/clear'
 					success: () ->
 						Layers.hideProgressIndicator()
-						Status.success 'Deleted all data from GLAD'
+						Status.success 'Data is now being deleted from GLAD'
 					error: () ->
 						Layers.hideProgressIndicator()
 						text = error?.responseText

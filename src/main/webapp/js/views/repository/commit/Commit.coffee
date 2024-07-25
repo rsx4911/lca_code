@@ -119,7 +119,7 @@ define([
 							data: JSON.stringify(selection)
 							success: (response) ->
 								Layers.closeActive()
-								Status.success 'Successfully pushed selected data to GLAD'
+								Status.success 'Selected data is now being uploaded to GLAD'
 								Layers.hideProgressIndicator()
 
 )
