@@ -8,6 +8,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.greendelta.collaboration.config.filter.git.GitFilterConfig;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SessionService;
 import com.greendelta.collaboration.service.SettingsService;
@@ -56,20 +57,11 @@ public class RedirectFilter implements Filter {
 		} else {
 			try {
 				var user = userService.getCurrentUser();
-				var publicIndex = getClass().getResource("/static/index_public.html");
-				var releasesEnabled = settings.is(ServerSetting.RELEASES_ENABLED);
-				var homepageEnabled = settings.is(ServerSetting.HOMEPAGE_ENABLED);
-				var searchEnabled = settings.searchConfig.isSearchAvailable();
-				var signUpEnabled = settings.is(ServerSetting.USER_REGISTRATION_ENABLED);
-				var redirectToLogin = (route.equals("") && !homepageEnabled)
-						|| (route.equals("search") && !searchEnabled)
-						|| (route.equals("sign-up") && !signUpEnabled)
-						|| !releasesEnabled;
-				if (Routes.isLoginUrl(route) && !user.isAnonymous()) {
+				if (redirectToIndex(user, route)) {
 					response.sendRedirect(request.getContextPath() + "/");
-				} else if (user.isAnonymous() && redirectToLogin && !route.equals("login")) {
+				} else if (redirectToLogin(user, route)) {
 					response.sendRedirect(Requests.getLoginRedirectUrl(request));
-				} else if (user.isAnonymous() && !Routes.isPublicUrl(route) && publicIndex != null) {
+				} else if (dispatchPublicIndex(user, route)) {
 					request.getRequestDispatcher("/index_public.html").forward(request, response);
 				} else {
 					chain.doFilter(request, response);
@@ -81,6 +73,31 @@ public class RedirectFilter implements Filter {
 				}
 			}
 		}
+	}
+
+	private boolean redirectToIndex(User user, String route) {
+		return !user.isAnonymous() && Routes.isLoginUrl(route);
+	}
+	
+	private boolean redirectToLogin(User user, String route) {
+		if (!user.isAnonymous() || route.equals("login"))
+			return false;
+		if (route.equals("") && !settings.is(ServerSetting.HOMEPAGE_ENABLED))
+			return true;
+		if (route.equals("search") && !settings.searchConfig.isSearchAvailable())
+			return true;
+		if (route.equals("sign-up") && !settings.is(ServerSetting.USER_REGISTRATION_ENABLED))
+			return true;
+		if (Routes.isPublicUrl(route))
+			return false;
+		if (!settings.is(ServerSetting.RELEASES_ENABLED))
+			return true;
+		return false;
+	}
+
+	private boolean dispatchPublicIndex(User user, String route) {
+		var publicIndex = getClass().getResource("/static/index_public.html");
+		return user.isAnonymous() && !Routes.isPublicUrl(route) && publicIndex != null;
 	}
 
 }

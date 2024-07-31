@@ -17,7 +17,7 @@ public class Requests {
 	public static String getLoginRedirectUrl(HttpServletRequest request) throws UnsupportedEncodingException {
 		var loginUrl = "login";
 		var route = getRoute(request);
-		if (!route.isEmpty()) {
+		if (!route.isEmpty() && !Routes.isPublicUrl(route) && !route.equals("search")) {
 			var query = request.getQueryString();
 			if (!Strings.nullOrEmpty(query)) {
 				route += "?" + query;
