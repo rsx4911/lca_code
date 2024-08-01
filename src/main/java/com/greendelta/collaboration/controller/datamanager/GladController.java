@@ -66,16 +66,25 @@ public class GladController {
 		this.settings = settings;
 	}
 
+	@GetMapping("list")
+	public Set<String> list() {
+		var api = new GladApi(settings.serverConfig);
+		return api.listEntries().stream()
+				.map(Entry::repositoryPath)
+				.collect(Collectors.toSet());
+	}
+
 	@PutMapping("push/{group}/{name}/{commitId}")
 	public void push(
 			@PathVariable("group") String group,
 			@PathVariable("name") String name,
 			@PathVariable("commitId") String commitId,
 			@RequestBody Set<String> paths) {
+		var repo = repoService.get(group, name);
+		if (repo == null)
+			throw Response.notFound("No repository with id " + group + "/" + name + " found");
 		new Thread(() -> {
-			try (var repo = repoService.get(group, name)) {
-				if (repo == null)
-					throw Response.notFound("No repository with id " + group + "/" + name + " found");
+			try {
 				var api = new GladApi(settings.serverConfig);
 				var isReleased = releaseService.isReleased(repo.path(), commitId);
 				var existing = api.listEntries(repo.path()).stream()
@@ -93,6 +102,8 @@ public class GladController {
 				});
 				// delete remaining old entries
 				existing.forEach(api::delete);
+			} finally {
+				repo.close();
 			}
 		}).start();
 	}
@@ -102,6 +113,18 @@ public class GladController {
 		new Thread(() -> {
 			var api = new GladApi(settings.serverConfig);
 			api.listEntries().stream()
+					.map(Entry::refId)
+					.forEach(api::delete);
+		}).start();
+	}
+
+	@DeleteMapping("clear/{group}/{name}")
+	public void deleteData(
+			@PathVariable("group") String group,
+			@PathVariable("name") String name) {
+		new Thread(() -> {
+			var api = new GladApi(settings.serverConfig);
+			api.listEntries(group + "/" + name).stream()
 					.map(Entry::refId)
 					.forEach(api::delete);
 		}).start();

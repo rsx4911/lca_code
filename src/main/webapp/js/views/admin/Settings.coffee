@@ -22,6 +22,8 @@ define([
 				'click [data-action=test-mail]': 'testMailConfiguration'
 				'click [data-action=test-search]': 'testSearchConfiguration'
 				'click [data-action=test-glad]': 'testGladConfiguration'
+				'click [data-action=list-glad]': 'listGladData'
+				'click [data-action=clear-glad]': () -> @deleteGladData()
 
 			render: (renderOptions) ->
 				@loadSettings (allSettings) =>
@@ -114,19 +116,41 @@ define([
 								text = 'Could not reach GLAD service'
 							Status.error text
 
-			deleteGladData: (event) ->
+			deleteGladData: (repositoryPath) ->
+				path = if repositoryPath then "/#{repositoryPath}" else ''
+				name = if repositoryPath then " of repository #{repositoryPath}" else ''
 				Layers.showProgressIndicator 'Deleting data from GLAD'
 				$.ajax
 					type: 'DELETE'
-					url: 'ws/datamanager/glad/clear'
+					url: "ws/datamanager/glad/clear#{path}"
 					success: () ->
 						Layers.hideProgressIndicator()
-						Status.success 'Data is now being deleted from GLAD'
+						Status.success "Data#{name} is now being deleted from GLAD"
 					error: () ->
 						Layers.hideProgressIndicator()
 						text = error?.responseText
 						unless text
 							text = 'Could not reach GLAD service'
 						Status.error text
+
+			listGladData: (event) ->
+				Layers.showProgressIndicator 'Loading data from GLAD'
+				$.ajax
+					type: 'GET'
+					url: "ws/datamanager/glad/list"
+					success: (repositories) =>
+						Layers.hideProgressIndicator()
+						Layers.showTemplateInLayer
+							template: 'admin/list-glad'
+							title: 'Repositories on GLAD'
+							model:
+								repositories: repositories
+							callback: () =>
+								$('[data-repository]').on 'click', (event) =>
+									Layers.closeActive()
+									target = $ Events.target event
+									repository = target.attr 'data-repository' 
+									@deleteGladData repository
+
 
 )

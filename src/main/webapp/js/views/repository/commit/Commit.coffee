@@ -7,6 +7,7 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!utils/Status'
 				'cs!views/repository/Download'
 				'cs!models/Settings'
 				'cs!models/CurrentUser'
@@ -14,7 +15,7 @@ define([
 				'templates/views/repository/commit/commit-references'
 			]
 
-	(Backbone, Events, Filter, Format, Icons, Layers, ModelTypes, Renderer, Download, settings, currentUser, template, refTemplate) ->
+	(Backbone, Events, Filter, Format, Icons, Layers, ModelTypes, Renderer, Status, Download, settings, currentUser, template, refTemplate) ->
 
 		class RepositoryCommit extends Backbone.View
 
@@ -22,7 +23,7 @@ define([
 
 			events: 
 				'click a[href]:not([target=_blank]):not(.standalone)': (event) -> Events.followLink event
-				'click .push-to-glad': 'pushToGlad' 
+				'click [data-action="push-to-glad"]': 'pushToGlad' 
 				'click .download-changelog': (event) -> 
 					Events.preventDefault(event)
 					Download.changelog @repository.get('group'), @repository.get('name'), @commitId

@@ -94,6 +94,7 @@ include ../mixins/forms.pug
 	.header-box GLAD service settings
 		button.btn.btn-primary.pull-right(data-action='test-glad') Check GLAD url
 		button.btn.btn-danger.pull-right(data-action='clear-glad') Delete all data from GLAD
+		button.btn.btn-default.pull-right(data-action='list-glad') List repositories on GLAD
 	.content-box
 		.three-columns
 			+input('SERVER_SETTING__GLAD_URL', 'Service url')
