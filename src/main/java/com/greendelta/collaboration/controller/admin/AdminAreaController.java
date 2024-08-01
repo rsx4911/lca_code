@@ -1,23 +1,16 @@
 package com.greendelta.collaboration.controller.admin;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.settings.MailSetting;
 import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -81,24 +75,6 @@ public class AdminAreaController {
 		result.put("users", userService.getCount());
 		result.put("teams", teamService.getCount());
 		return result;
-	}
-
-	@GetMapping("testGladConfig")
-	public void testGladConfig() {
-		try {
-			var config = settings.serverConfig;
-			String gladUrl = config.get(ServerSetting.GLAD_URL);
-			if (gladUrl == null || gladUrl.isEmpty())
-				throw Response.error("No glad url specified");
-			String gladHeaderField = config.get(ServerSetting.GLAD_API_KEY_HEADER);
-			String gladHeaderValue = config.get(ServerSetting.GLAD_API_KEY);
-			var result = get(gladUrl, gladHeaderField, gladHeaderValue);
-			if (!result.contains("\"resultInfo\":") || !result.contains("\"data\":")
-					|| !result.contains("\"aggregations\":"))
-				throw Response.error("GLAD testcall returned unexpected content: " + result);
-		} catch (Exception e) {
-			throw Response.error("Could not reach GLAD service");
-		}
 	}
 
 	@GetMapping("testSearchConfig")
@@ -187,7 +163,13 @@ public class AdminAreaController {
 				.filter(type -> type.singleton)
 				.collect(Collectors.toMap(
 						type -> type.name(),
-						type -> settings.getMap(type)));
+						type -> {
+							var map = settings.getMap(type);
+							if (type == SettingType.MAIL_SETTING) {
+								map.remove(MailSetting.PASS.name());
+							}
+							return map;
+						}));
 	}
 
 	@PutMapping("settings")
@@ -199,32 +181,6 @@ public class AdminAreaController {
 			value = null;
 		}
 		settings.set(key, value);
-	}
-
-	private String get(String gladBaseUrl, String headerField, String headerValue) throws Exception {
-		var object = new URL(gladBaseUrl + "/search");
-		var con = (HttpURLConnection) object.openConnection();
-		con.setDoOutput(true);
-		con.setRequestProperty("Content-Type", MediaType.APPLICATION_JSON_VALUE);
-		con.setRequestProperty("Accept", MediaType.APPLICATION_JSON_VALUE);
-		con.setRequestMethod("GET");
-		if (!Strings.nullOrEmpty(headerField) && !Strings.nullOrEmpty(headerValue)) {
-			con.addRequestProperty(headerField, headerValue);
-		}
-		var status = con.getResponseCode();
-		if (status != HttpURLConnection.HTTP_OK)
-			return null;
-		var s = con.getInputStream();
-		if (s == null)
-			return null;
-		var sb = new StringBuilder();
-		var br = new BufferedReader(new InputStreamReader(s, StandardCharsets.UTF_8));
-		String line = null;
-		while ((line = br.readLine()) != null) {
-			sb.append(line + "\n");
-		}
-		br.close();
-		return sb.toString();
 	}
 
 }

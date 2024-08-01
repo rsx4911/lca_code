@@ -2,6 +2,11 @@ package com.greendelta.collaboration.model.glad;
 
 import java.util.Map;
 
+import org.openlca.core.model.AllocationMethod;
+import org.openlca.jsonld.Enums;
+
+import com.greendelta.collaboration.util.Maps;
+
 public enum ModellingApproach {
 
 	PHYSICAL, ECONOMIC, CAUSAL, SYSTEM_EXPANSION, NONE, UNKNOWN, NOT_APPLICABLE;
@@ -18,6 +23,23 @@ public enum ModellingApproach {
 		if (sValue.isEmpty())
 			return null;
 		return valueOf(sValue.toUpperCase());
+	}
+
+	public static ModellingApproach fromDefaultAllocationMethod(Map<String, Object> map) {
+		if (map == null)
+			return null;
+		var value = Maps.getString(map, "defaultAllocationMethod");
+		if (value == null)
+			return ModellingApproach.UNKNOWN;
+		if (value.equals(Enums.getLabel(AllocationMethod.PHYSICAL)))
+			return ModellingApproach.PHYSICAL;
+		if (value.equals(Enums.getLabel(AllocationMethod.ECONOMIC)))
+			return ModellingApproach.ECONOMIC;
+		if (value.equals(Enums.getLabel(AllocationMethod.CAUSAL)))
+			return ModellingApproach.CAUSAL;
+		if (value.equals(Enums.getLabel(AllocationMethod.NONE)))
+			return ModellingApproach.NONE;
+		return ModellingApproach.UNKNOWN;
 	}
 
 }

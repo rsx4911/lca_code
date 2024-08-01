@@ -33,7 +33,6 @@ define([
 				'click [data-action=clone-repository]': 'openCloneLayer'
 				'click [data-action=move-repository]': 'openMoveLayer'
 				'click [data-action=export-repository]': 'exportRepository'
-				'click [data-action=push-to-glad]': 'pushToGlad'
 
 			initialize: (options) ->
 				{@repository} = options
@@ -44,7 +43,6 @@ define([
 					repository: repository
 					dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
-					isGladAvailable: !!settings.getVal('GLAD_URL') and currentUser.isDataManager()
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
 				@setMaxSize parseFloat repository.settings.maxSize
@@ -88,12 +86,6 @@ define([
 					url: "ws/repository/settings/#{repository.group}/#{repository.name}/#{setting}"
 					contentType: 'application/json'
 					data: JSON.stringify({value: value})
-					success: () =>
-						if setting is 'JSON_FILE_GENERATION'
-							Layers.hideProgressIndicator()
-					error: () =>
-						if setting is 'JSON_FILE_GENERATION'
-							Layers.hideProgressIndicator()
 
 			updateMaxSize: (event) ->
 				repository = @repository.toJSON()
@@ -117,16 +109,6 @@ define([
 				value = size * unit
 				repository.settings.maxSize = value
 				@putSetting 'MAX_SIZE', value
-
-			updateRestriction: (event) ->
-				target = $ Events.target event
-				restriction = target.attr('id').replace('@', ' ')
-				repository = @repository.toJSON()
-				repoPath = "#{repository.group}/#{repository.name}"
-				role = target.val()
-				$.ajax
-					type: if role then 'PUT' else 'DELETE'
-					url: "ws/repository/restriction/#{repoPath}/#{restriction}" + (if role then "/#{role}" else '')
 
 			deleteRepository: (event) ->
 				Events.preventDefault event
@@ -236,26 +218,5 @@ define([
 					error: (response) -> 
 						Layers.hideProgressIndicator()
 						Forms.handleError 'move-form', response
-
-			pushToGlad: () ->
-				repository = @repository.toJSON()
-				repoPath = "#{repository.group}/#{repository.name}"
-				Layers.selectModel
-					repositoryPath: repoPath
-					multipleSelection: true
-					type: 'PROCESS'
-					callback: (selection) ->
-						Layers.promptInput 'Dataprovider', 'text', settings.getVal('SERVER_NAME'), (dataprovider) ->
-							input = {paths: selection, dataprovider: dataprovider}
-							Layers.showProgressIndicator 'Pushing'
-							$.ajax
-								type: 'PUT'
-								url: "ws/datamanager/glad/push/#{repoPath}"
-								contentType: 'application/json'
-								data: JSON.stringify(input)
-								success: (response) ->
-									Layers.closeActive()
-									Status.success 'Successfully pushed selected data to GLAD'
-									Layers.hideProgressIndicator()
 
 )

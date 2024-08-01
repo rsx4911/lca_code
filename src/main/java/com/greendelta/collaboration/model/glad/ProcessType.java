@@ -2,6 +2,10 @@ package com.greendelta.collaboration.model.glad;
 
 import java.util.Map;
 
+import org.openlca.jsonld.Enums;
+
+import com.greendelta.collaboration.util.Maps;
+
 public enum ProcessType {
 
 	UNIT, FULLY_AGGREGATED, UNKNOWN;
@@ -18,6 +22,17 @@ public enum ProcessType {
 		if (sValue.isEmpty())
 			return null;
 		return valueOf(sValue.toUpperCase());
+	}
+
+	public static ProcessType fromProcessType(Map<String, Object> map) {
+		var value = Maps.getString(map, "processType");
+		if (value == null)
+			return ProcessType.UNKNOWN;
+		if (value.equals(Enums.getLabel(org.openlca.core.model.ProcessType.LCI_RESULT)))
+			return ProcessType.FULLY_AGGREGATED;
+		if (value.equals(Enums.getLabel(org.openlca.core.model.ProcessType.UNIT_PROCESS)))
+			return ProcessType.UNIT;
+		return ProcessType.UNKNOWN;
 	}
 
 }

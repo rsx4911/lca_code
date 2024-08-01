@@ -34,9 +34,11 @@ public enum ServerSetting implements SettingKey {
 	SERVER_URL(String.class),
 	REPOSITORY_PATH(String.class),
 	LIBRARY_PATH(String.class),
+	
+	// GLAD settings
 	GLAD_URL(String.class),
-	GLAD_API_KEY_HEADER(String.class, "api-key"),
 	GLAD_API_KEY(String.class),
+	GLAD_DATAPROVIDER(String.class),
 
 	// home settings
 	HOME_TITLE(String.class, ""),

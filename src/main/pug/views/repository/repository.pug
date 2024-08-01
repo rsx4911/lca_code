@@ -46,10 +46,6 @@ mixin repo-input(setting, field, label)
 			li: a(href='#' data-action='export-repository')
 				span.glyphicon.glyphicon-export
 				| Export
-			if isGladAvailable
-				li: a(href='#' data-action='push-to-glad')
-					span.glyphicon.glyphicon-globe
-					| Push to GLAD
 			if repository.userCanDelete
 				li: a(href='#' data-action='delete-repository')
 					span.glyphicon.glyphicon-remove
@@ -60,8 +56,6 @@ mixin repo-input(setting, field, label)
 			if repository.userCanClone
 				button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
 			button.btn.btn-lg.btn-default.pull-right(data-action='export-repository') Export
-			if isGladAvailable
-				button.btn.btn-lg.btn-default.pull-right(data-action='push-to-glad') Push to GLAD
 			if repository.userCanDelete
 				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
 

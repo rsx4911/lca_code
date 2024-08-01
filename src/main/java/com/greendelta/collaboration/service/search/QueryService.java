@@ -27,7 +27,7 @@ import com.greendelta.search.wrapper.aggregations.results.AggregationResultBuild
 @Service
 class QueryService {
 
-	private static final String[] SEARCH_FIELDS = { "versions.name" };
+	private static final String[] SEARCH_FIELDS = { "refId", "versions.name" };
 	private final SettingsService settings;
 	private final RepositoryService repoService;
 	private final ScoreService scoreService;

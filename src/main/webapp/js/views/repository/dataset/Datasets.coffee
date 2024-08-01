@@ -50,6 +50,7 @@ define([
 				Layers.selectModel
 					repositoryPath: "#{group}/#{name}"
 					multipleSelection: true
+					commitId: @commitId
 					path: @getCategoryPath()
 					callback: (selection) =>
 						if !selection or !selection.length
