@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.settings.MailSetting;
 import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -162,7 +163,13 @@ public class AdminAreaController {
 				.filter(type -> type.singleton)
 				.collect(Collectors.toMap(
 						type -> type.name(),
-						type -> settings.getMap(type)));
+						type -> {
+							var map = settings.getMap(type);
+							if (type == SettingType.MAIL_SETTING) {
+								map.remove(MailSetting.PASS.name());
+							}
+							return map;
+						}));
 	}
 
 	@PutMapping("settings")
