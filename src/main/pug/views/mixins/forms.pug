@@ -142,7 +142,7 @@ mixin commit-selection(id, label, commits, selected, inline)
 		+select(id, label, null, null, inline)
 			each commit, index in commits
 				if index === 0
-					option(value='', selected=!selected||commit.id===commitId) Latest
+					option(value=commit.id, selected=!selected||commit.id===commitId) Latest
 					optgroup.additional-info(label=commit.message)
 				else
 					option(value=commit.id selected=commit.id===selected)=formatCommitDescription(commit.message)
