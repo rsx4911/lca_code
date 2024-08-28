@@ -46,7 +46,7 @@ public class EmailService {
 			}
 			message.saveChanges();
 			new Thread(() -> {
-				sender.send(message);	
+				sender.send(message);
 			}).start();
 		} catch (MessagingException e) {
 			log.error("Error sending mail", e);
@@ -91,7 +91,7 @@ public class EmailService {
 
 	private MimeBodyPart createPart(String text, String type) throws MessagingException {
 		var part = new MimeBodyPart();
-		part.setContent(text, "text/" + type);
+		part.setContent(text, "text/" + type + "; charset=" + StandardCharsets.UTF_8.name());
 		return part;
 	}
 
