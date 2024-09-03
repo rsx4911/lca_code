@@ -6,7 +6,7 @@ include ./structures/unit-table.pug
 		+header
 		+content
 			if hasAtLeastOne(dataset, compareTo, 'units') || reviewMode
-				.margin-0-25
+				.margin-0-25-25
 					h4(data-path='units')=getLabel('units')
 					+unit-table()
 	+meta

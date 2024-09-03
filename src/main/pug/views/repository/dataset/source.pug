@@ -10,7 +10,7 @@ include ./mixins.pug
 			if fileUrlPart.indexOf('?') !== -1
 				- fileUrlQuery = fileUrlPart.substring(fileUrlPart.indexOf('?'));
 				- fileUrlPart = fileUrlPart.substring(0, fileUrlPart.indexOf('?'));
-			table.table.no-head.margin-0-25
+			table.table.no-head.margin-0-25-25
 				tbody
 					+field-link-row('url')
 					+field-row('year')
