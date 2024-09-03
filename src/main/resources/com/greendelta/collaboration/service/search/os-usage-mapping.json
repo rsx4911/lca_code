@@ -3,31 +3,40 @@
 		"repositoryPath": {
 			"type": "keyword"
 		},
+		"type": {
+			"type": "keyword"
+		},
 		"refId": {
+			"type": "keyword"
+		},
+		"name": {
+			"type": "keyword"
+		},
+		"processType": {
+			"type": "keyword"
+		},
+		"flowType": {
 			"type": "keyword"
 		},
 		"commitId": {
 			"type": "keyword"
 		},
-		"versions": {
+		"commitIds": {
+			"type": "keyword"
+		},
+		"references": {
 			"type": "nested",
 			"properties": {
-				"name": {
+				"field": {
 					"type": "keyword"
 				},
-				"processType": {
+				"type": {
 					"type": "keyword"
 				},
-				"commitId": {
+				"refId": {
 					"type": "keyword"
 				}
 			}
-		},
-		"inputs": {
-			"type": "keyword"
-		},
-		"outputs": {
-			"type": "keyword"
-		}		
+		}
 	}
 }

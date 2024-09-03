@@ -5,15 +5,17 @@ include ./structures/project-parameter-redef-table.pug
 .content-box
 	.model-left-content
 		+header
-		+content
+		+tabbed-content
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('variants', true)
 				+nav-tab('parameterRedefs')
+				+nav-usage-tab()
 			.tab-content
 				+nav-tab-pane('variants', true)
 					+project-variant-table()
 				+nav-tab-pane('parameterRedefs', true)
 					+project-parameter-redef-table()
+				+nav-usage-tab-pane()
 	+meta
 		hr
 		strong=getLabel('impactMethod')

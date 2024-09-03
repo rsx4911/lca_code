@@ -1,6 +1,8 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/Filter'
+				'cs!utils/Icons'
 				'cs!utils/Layers'
 				'cs!utils/LocalStorage'
 				'cs!utils/Renderer'
@@ -11,7 +13,6 @@ define([
 				'cs!views/repository/dataset/DQLayer'
 				'cs!views/repository/dataset/DQSystem'
 				'cs!views/repository/dataset/Exchanges'
-				'cs!views/repository/dataset/Flow'
 				'cs!views/repository/dataset/ImpactFactors'
 				'cs!views/repository/dataset/Location'
 				'cs!views/repository/dataset/ProductSystem'
@@ -36,10 +37,11 @@ define([
 				'templates/views/repository/dataset/dq-system'
 				'templates/views/repository/dataset/epd'
 				'templates/views/repository/dataset/result'
+				'templates/views/repository/dataset/structures/references'
 				'tablesorter'
 			]
 
-	(Backbone, Events, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, Flow, ImpactFactors, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, impactCategory, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, epd, result) ->
+	(Backbone, Events, Filter, Icons, Layers, LocalStorage, Renderer, Toggle, Comments, DatasetPrepare, DatasetRendering, DQLayer, DQSystem, Exchanges, ImpactFactors, Location, ProductSystem, Download, Router, currentUser, settings, project, productSystem, impactMethod, impactCategory, parameter, process, flow, socialIndicator, flowProperty, unitGroup, currency, source, actor, location, dqSystem, epd, result, referencesTemplate) ->
 
 		class RepositoryDataset extends Backbone.View
 
@@ -190,7 +192,7 @@ define([
 					otherFactorMap: if @compareTo and @compareTo.type is 'ImpactCategory' then ImpactFactors.map(@compareTo.impactFactors) else null
 					reviewMode: LocalStorage.getValue('reviewMode')
 					isPublic: !currentUser.isLoggedIn()
-					isSearchLinksEnabled: settings.is('SEARCH_LINKS_ENABLED')
+					showUsage: settings.is('SHOW_USAGE')
 				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo
 				@$el.html template model
 				if renderOptions
@@ -207,6 +209,8 @@ define([
 						@initComments true
 				if @standalone # used for change log
 					@removeLinks()
+				else
+					@initUsageTab()
 
 			removeLinks: () ->
 				links = @$('a:not([data-toggle=tab]):not(.toggle-control)')
@@ -217,8 +221,6 @@ define([
 			initDatasetSpecifics: () ->
 				if @dataset.type is 'Location' # and dataset.geometry
 					Location.initMap @dataset
-				if @dataset.type is 'Flow'
-					Flow.init @repository, @refId, @commitId, @dataset.flowType
 				if @dataset.type is 'DQSystem'
 					DQSystem.init @dataset
 
@@ -301,5 +303,37 @@ define([
 								$(entry).attr 'data-compare', 'changed'
 					if count
 						$('.dropdown-toggle .change-count', dropdown).html count
+
+			initUsageTab: () ->
+				if @type is 'Flow'
+					outType = if @dataset.flowType  is 'ELEMENTARY_FLOW' then 'emittedBy' else 'producedBy'
+					@initReferences 'usedBy', 'inputs'
+					@initReferences outType, 'outputs'
+				else
+					@initReferences 'usedBy'
+
+			initReferences: (id, field) ->
+				if !settings.is('SHOW_USAGE')
+					return
+				group = @repository.get 'group'
+				name = @repository.get 'name'
+				commitIdParam = if @commitId then "&commitId=#{@commitId}" else ''
+				fieldParam = if field then "&field=#{field}" else ''
+				filter = new Filter
+					container: "##{id}-data"
+					filterId: "#{id}-filter"
+					template: referencesTemplate
+					pageSize: 25
+					pageSizeId: "#{id}-page-size"
+					url: "ws/public/search/usage/#{@type}/#{@refId}?repositoryId=#{group}/#{name}#{commitIdParam}#{fieldParam}&"
+					beforeRender: (result) ->
+						result.getIcon = Icons.get
+						result.commitId = @commitId
+						result.baseUrl = "#{group}/#{name}/dataset"
+				filter.init (result) ->
+					if result.resultInfo.totalCount > 0
+						$("[href='##{id}']").html $("[href='##{id}']").html() + " (#{result.resultInfo.totalCount})"
+					else
+						$("[href='##{id}'], ##{id}").hide()
 
 )

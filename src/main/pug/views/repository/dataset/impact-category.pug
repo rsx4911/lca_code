@@ -6,10 +6,11 @@ include ./structures/parameter-table.pug
 .content-box
 	.model-left-content
 		+header
-		+content
+		+tabbed-content
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('impactFactors', true)
 				+nav-tab('parameters')
+				+nav-usage-tab()
 			.tab-content
 				+nav-tab-pane('impactFactors', true)
 					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
@@ -23,7 +24,7 @@ include ./structures/parameter-table.pug
 				+nav-tab-pane('parameters')
 					+parameter-table(true)
 					+parameter-table(false)
-
+					+nav-usage-tab-pane()
 	+meta
 		hr
 		+labeled-field-block('code', null, '-')

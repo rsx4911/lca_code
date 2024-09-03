@@ -24,18 +24,17 @@ public class IndexService {
 
 	private final RepositoryService repoService;
 	private final SearchService searchService;
-	private final InputOutputDataService ioDataService;
+	private final UsageService usageService;
 	private final HistoryService historyService;
 	private final ReleaseService releaseService;
 	private final SettingsService settings;
 	private final Queue<Work> workQueue = new LinkedList<>();
 
-	public IndexService(RepositoryService repoService, SearchService searchService,
-			InputOutputDataService ioDataService, HistoryService historyService, ReleaseService releaseService,
-			SettingsService settings) {
+	public IndexService(RepositoryService repoService, SearchService searchService, UsageService usageService,
+			HistoryService historyService, ReleaseService releaseService, SettingsService settings) {
 		this.repoService = repoService;
 		this.searchService = searchService;
-		this.ioDataService = ioDataService;
+		this.usageService = usageService;
 		this.historyService = historyService;
 		this.releaseService = releaseService;
 		this.settings = settings;
@@ -89,8 +88,8 @@ public class IndexService {
 				searchService.on(SearchIndex.PUBLIC).clear();
 			}
 			searchService.on(SearchIndex.PRIVATE).clear();
-			if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-				ioDataService.clearIndex();
+			if (settings.is(ServerSetting.SHOW_USAGE)) {
+				usageService.clearIndex();
 			}
 			work.worked++;
 		});
@@ -108,8 +107,8 @@ public class IndexService {
 						? repo.settings.get(RepositorySetting.TAGS)
 						: null;
 				searchService.on(SearchIndex.PRIVATE).index(repo, tags, previousCommit, commit);
-				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-					ioDataService.index(repo, previousCommit, commit);
+				if (settings.is(ServerSetting.SHOW_USAGE)) {
+					usageService.index(repo, previousCommit, commit);
 				}
 			} finally {
 				repo.close();
@@ -153,8 +152,8 @@ public class IndexService {
 					}
 				}
 				searchService.on(SearchIndex.PRIVATE).move(path, newRepo, newHead);
-				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-					ioDataService.move(path, newRepo);
+				if (settings.is(ServerSetting.SHOW_USAGE)) {
+					usageService.move(path, newRepo);
 				}
 			} finally {
 				newRepo.close();
@@ -223,8 +222,8 @@ public class IndexService {
 					searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
 				}
 				searchService.on(SearchIndex.PRIVATE).remove(repo, head);
-				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-					ioDataService.remove(repo);
+				if (settings.is(ServerSetting.SHOW_USAGE)) {
+					usageService.remove(repo);
 				}
 				if (settings.is(ServerSetting.RELEASES_ENABLED) && latestRelease != null) {
 					var release = releaseService.get(repo.path(), latestRelease.id);
@@ -234,8 +233,8 @@ public class IndexService {
 						? repo.settings.get(RepositorySetting.TAGS)
 						: null;
 				searchService.on(SearchIndex.PRIVATE).index(repo, tags, null, head);
-				if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-					ioDataService.index(repo, null, head);
+				if (settings.is(ServerSetting.SHOW_USAGE)) {
+					usageService.index(repo, null, head);
 				}
 			} finally {
 				repo.close();
@@ -272,8 +271,8 @@ public class IndexService {
 					var head = repo.commits.head();
 					List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
 					searchService.on(SearchIndex.PRIVATE).index(repo, tags, null, head);
-					if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-						ioDataService.index(repo, null, head);
+					if (settings.is(ServerSetting.SHOW_USAGE)) {
+						usageService.index(repo, null, head);
 					}
 					work.worked++;
 				});
@@ -314,8 +313,8 @@ public class IndexService {
 			}
 		}
 		searchService.on(SearchIndex.PRIVATE).remove(repo, head);
-		if (settings.is(ServerSetting.SEARCH_LINKS_ENABLED)) {
-			ioDataService.remove(repo);
+		if (settings.is(ServerSetting.SHOW_USAGE)) {
+			usageService.remove(repo);
 		}
 	}
 

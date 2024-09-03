@@ -5,6 +5,21 @@ include ../../mixins/user-info.pug
 
 
 mixin content()
+	- // content has no tabs, but if usage search is activated we need tabs, so that the usage tab can be appended
+	if !dataset.deleted && !dataset.notFound
+		if showUsage
+			ul.nav.nav-tabs(role='tablist')
+				+nav-tab('info', true, true)
+				+nav-usage-tab()
+			.tab-content
+				+nav-tab-pane('info', true, true)
+					block
+				+nav-usage-tab-pane()
+		else
+			block
+
+mixin tabbed-content()
+	- // content already has tabs
 	if !dataset.deleted && !dataset.notFound
 		block
 
@@ -127,10 +142,23 @@ mixin nav-tab(path, active, renderEmpty)
 				|  
 				span.badge.change-count
 
+mixin nav-usage-tab(id)
+	if showUsage
+		- id = id || 'usedBy';
+		+nav-tab(id, false, true)
+
 mixin nav-tab-pane(path, active, renderEmpty)
 	.tab-pane(id=path.replace('.', '-') role='tabpanel' class=active?'active':null)
 		if renderEmpty || hasAtLeastOne(dataset, compareTo, path)
 			block
+
+mixin nav-usage-tab-pane(id)
+	if showUsage
+		- id = id || 'usedBy';
+		+nav-tab-pane(id, false, true)
+			.form-group
+				input.form-control(id=id+'-filter' type='text' placeholder='Filter by name' aria-label='Filter by name')
+			div(id=id+'-data')
 
 mixin compare-icon(value)
 	if value === 'added'

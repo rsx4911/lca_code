@@ -5,10 +5,11 @@ include ./structures/nw-factor-table.pug
 .content-box
 	.model-left-content
 		+header
-		+content
+		+tabbed-content
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('impactCategories', true)
 				+nav-tab('nwSets')
+				+nav-usage-tab()
 			.tab-content
 				+nav-tab-pane('impactCategories', true)
 					+impact-category-table()
@@ -19,6 +20,7 @@ include ./structures/nw-factor-table.pug
 							|  - 
 							+sub-field(values[0], values[1], 'weightedScoreUnit')
 						+nw-factor-table(values[0], values[1])
+				+nav-usage-tab-pane()
 	+meta
 		hr
 		+labeled-field-block('code', null, '-')

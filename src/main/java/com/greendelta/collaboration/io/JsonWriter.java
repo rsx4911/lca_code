@@ -91,7 +91,6 @@ public class JsonWriter implements DatasetWriter {
 		return tmpFile;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void collectReferences(Map<String, Object> object) {
 		if (object == null)
 			return;
@@ -100,7 +99,7 @@ public class JsonWriter implements DatasetWriter {
 				for (var arrayElement : Maps.getArray(object, key)) {
 					if (!Maps.is(arrayElement))
 						continue;
-					collectReference((Map<String, Object>) arrayElement);
+					collectReference(Maps.of(arrayElement));
 				}
 				continue;
 			}

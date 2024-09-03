@@ -4,7 +4,7 @@ public enum SearchIndex implements SettingKey {
 
 	PRIVATE("collaboration-server"),
 	PUBLIC("collaboration-server-public"),
-	IO_DATA("collaboration-server-io-data");
+	USAGE("collaboration-server-usage");
 
 	private final Object defaultValue;
 

@@ -43,7 +43,7 @@ public class SettingsController {
 		}
 		var settings = service.serverConfig.toPreservedMap();
 		settings.put("SEARCH_AVAILABLE", service.searchConfig.isSearchAvailable());
-		settings.put("SEARCH_LINKS_AVAILABLE", service.searchConfig.isIoDataAvailable());
+		settings.put("SHOW_USAGE", service.searchConfig.isShowUsage());
 		return settings;
 	}
 

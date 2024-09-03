@@ -13,7 +13,7 @@ mixin target-amount-row()
 .content-box
 	.model-left-content
 		+header
-		+content
+		+tabbed-content
 			- var hasLinks = hasAtLeastOne(dataset, null, 'processLinks');
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('overview', true, true)
@@ -23,6 +23,7 @@ mixin target-amount-row()
 				+nav-tab('parameterSets')
 				if !standalone
 					+maximize-icon
+				+nav-usage-tab()
 			.tab-content
 				+nav-tab-pane('overview', true, true)
 					table.table.no-head
@@ -49,6 +50,7 @@ mixin target-amount-row()
 						+product-system-parameter-set-table(values[0], values[1])
 						if i < sets.length - 1
 							hr
+				+nav-usage-tab-pane()
 	+meta
 		hr
 		strong=getLabel('processes')

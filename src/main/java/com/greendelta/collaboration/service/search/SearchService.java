@@ -27,6 +27,7 @@ import com.greendelta.search.wrapper.SearchResult;
 public class SearchService {
 
 	private static final Logger log = LogManager.getLogger(SearchService.class);
+	private static final int BUFFER_SIZE = 1000;
 	private final SettingsService settings;
 	private final QueryService queryService;
 	private final DsEntryParser parser = new DsEntryParser();
@@ -62,7 +63,7 @@ public class SearchService {
 			if (diffs.isEmpty())
 				return;
 			var manager = new DsEntryManager(repo, commit);
-			var buffer = new EntryBuffer(client, 1000);
+			var buffer = new EntryBuffer(client, BUFFER_SIZE);
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED, DiffType.MOVED)
 					.forEach(diff -> index(buffer, repo, tags, manager, diff.newRef));
 			Diff.filter(diffs, DiffType.DELETED)
@@ -111,7 +112,7 @@ public class SearchService {
 			var client = getClient();
 			if (client == null)
 				return;
-			var buffer = new EntryBuffer(client, 1000);
+			var buffer = new EntryBuffer(client, BUFFER_SIZE);
 			update(buffer, repo, commit,
 					e -> e.versions.forEach(
 							v -> v.repos.forEach(
@@ -125,7 +126,7 @@ public class SearchService {
 			var client = getClient();
 			if (client == null)
 				return;
-			var buffer = new EntryBuffer(client, 1000);
+			var buffer = new EntryBuffer(client, BUFFER_SIZE);
 			update(buffer, newRepo, commit,
 					e -> e.versions.forEach(
 							v -> v.repos.forEach(
@@ -159,7 +160,7 @@ public class SearchService {
 			var client = getClient();
 			if (client == null)
 				return;
-			var buffer = new EntryBuffer(client, 1000);
+			var buffer = new EntryBuffer(client, BUFFER_SIZE);
 			var manager = new DsEntryManager(repo, null);
 			repo.references.find().commit(latest.id).iterate(ref -> remove(buffer, manager, ref));
 			buffer.flush();

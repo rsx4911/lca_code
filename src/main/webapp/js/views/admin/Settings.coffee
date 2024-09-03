@@ -52,7 +52,7 @@ define([
 
 			updateUI: () ->
 				depending = {
-					'SEARCH_ENABLED': ['SEARCH_LINKS_ENABLED']
+					'SEARCH_ENABLED': ['SHOW_USAGE']
 					'DATASET_TAGS_ENABLED': ['DATASET_TAGS_ON_DASHBOARD_ENABLED', 'DATASET_TAGS_ON_GROUPS_ENABLED', 'DATASET_TAGS_ON_REPOSITORIES_ENABLED']
 				}
 				for key in Object.keys(depending)
@@ -66,13 +66,13 @@ define([
 				else
 					@$('.search-settings').addClass 'hidden'
 				@$('#SEARCH_INDEX__PUBLIC').prop 'disabled', !@$('#SERVER_SETTING__RELEASES_ENABLED').is(':checked')
-				@$('#SEARCH_INDEX__IO_DATA').prop 'disabled', !@$('#SERVER_SETTING__SEARCH_LINKS_ENABLED').is(':checked')
+				@$('#SEARCH_INDEX__USAGE').prop 'disabled', !@$('#SERVER_SETTING__SHOW_USAGE').is(':checked')
 
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'
 					settings.setVal key, value
 				if type is 'SERVER_SETTING' or type is 'SEARCH_INDEX'
-					if type is 'SEARCH_INDEX' or key is 'SEARCH_ENABLED' or key is 'SEARCH_LINKS_ENABLED' or key is 'RELEASES_ENABLED'
+					if type is 'SEARCH_INDEX' or key is 'SEARCH_ENABLED' or key is 'SHOW_USAGE' or key is 'RELEASES_ENABLED'
 						@$('#search-note').show()
 				$.ajax
 					type: 'PUT'

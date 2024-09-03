@@ -10,9 +10,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.core.model.Direction;
 import org.openlca.core.model.ModelType;
-import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,13 +32,11 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.DsEntry;
 import com.greendelta.collaboration.service.search.IndexService;
-import com.greendelta.collaboration.service.search.InputOutputDataService;
 import com.greendelta.collaboration.service.search.SearchService;
+import com.greendelta.collaboration.service.search.UsageService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Aggregations;
 import com.greendelta.collaboration.util.Maps;
-import com.greendelta.collaboration.util.MetaData;
-import com.greendelta.collaboration.util.SearchResults;
 import com.greendelta.search.wrapper.SearchQuery;
 import com.greendelta.search.wrapper.SearchResult;
 import com.greendelta.search.wrapper.aggregations.results.AggregationResult;
@@ -56,18 +52,18 @@ public class SearchController {
 	private final RepositoryService repoService;
 	private final GroupService groupService;
 	private final UserService userService;
-	private final InputOutputDataService ioDataService;
+	private final UsageService usageService;
 	private final IndexService indexService;
 	private final SettingsService settings;
 
 	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
-			UserService userService, InputOutputDataService ioDataService, IndexService indexService,
+			UserService userService, UsageService usageService, IndexService indexService,
 			SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.groupService = groupService;
 		this.userService = userService;
-		this.ioDataService = ioDataService;
+		this.usageService = usageService;
 		this.indexService = indexService;
 		this.settings = settings;
 	}
@@ -83,7 +79,8 @@ public class SearchController {
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
 		var result = service.search(query, page, pageSize, parameters);
 		result.aggregations.stream()
-				.filter(r -> r.name.equals(Aggregations.CATEGORY.name) || r.name.equals(Aggregations.FLOW_COMPLETENESS.name))
+				.filter(r -> r.name.equals(Aggregations.CATEGORY.name)
+						|| r.name.equals(Aggregations.FLOW_COMPLETENESS.name))
 				.forEach(r -> r.group("/"));
 		return map(result);
 	}
@@ -184,17 +181,18 @@ public class SearchController {
 		}).filter(Objects::nonNull).toList();
 	}
 
-	@GetMapping("flowLinks/{flowRefId}")
-	public SearchResult<Map<String, Object>> searchFlowLinks(
-			@PathVariable("flowRefId") String flowRefId,
+	@GetMapping("usage/{type}/{refId}")
+	public SearchResult<Map<String, Object>> searchUsage(
+			@PathVariable("type") ModelType type,
+			@PathVariable("refId") String refId,
 			@RequestParam(name = "repositoryId") String repositoryId,
-			@RequestParam(name = "direction", required = false) Direction direction,
+			@RequestParam(name = "field", required = false) String field,
 			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-		if (!settings.searchConfig.isIoDataAvailable())
-			throw Response.unavailable("Search links feature not enabled or search cluster not available");
+		if (!settings.searchConfig.isShowUsage())
+			throw Response.unavailable("Show usage feature not enabled or search cluster not available");
 		try (var repo = repoService.get(repositoryId)) {
 			if (commitId == null) {
 				commitId = repo.commits.find().latestId();
@@ -202,16 +200,8 @@ public class SearchController {
 			if (commitId == null)
 				throw Response.notFound();
 			var commit = repo.commits.get(commitId);
-			var result = ioDataService.query(repo, commit, flowRefId, direction, page, pageSize, filter);
-			return SearchResults.convert(result, entry -> addProcessInfo(repo, commit, entry));
+			return usageService.query(repo, type, refId, field, commit, page, pageSize, filter);
 		}
-	}
-
-	private Map<String, Object> addProcessInfo(Repository repo, Commit commit, Map<String, Object> entry) {
-		var refId = Maps.getString(entry, "refId");
-		var ref = repo.references.get(ModelType.PROCESS, refId, commit.id);
-		entry.put("type", ModelType.PROCESS.name());
-		return MetaData.forBrowse(entry, ref, repo);
 	}
 
 	private String removeStringFilter(String name, Map<String, Set<String>> filters) {

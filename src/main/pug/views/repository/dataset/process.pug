@@ -15,7 +15,7 @@ include ./structures/compliance-tables.pug
 .content-box
 	.model-left-content
 		+header
-		+content
+		+tabbed-content
 			ul.nav.nav-tabs(role='tablist')
 				+nav-tab('exchanges', true)
 				+nav-tab('processDocumentation', false, true)
@@ -25,6 +25,7 @@ include ./structures/compliance-tables.pug
 				+nav-tab('processDocumentation.flowCompleteness', false)
 				+nav-tab('processDocumentation.reviews', false)
 				+nav-tab('processDocumentation.complianceDeclarations', false)
+				+nav-usage-tab()
 			.tab-content
 				+nav-tab-pane('exchanges', true)
 					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
@@ -79,6 +80,7 @@ include ./structures/compliance-tables.pug
 					+review-tables()
 				+nav-tab-pane('processDocumentation.complianceDeclarations')
 					+compliance-tables()
+				+nav-usage-tab-pane()
 	+meta
 		hr
 		strong=getLabel('isQuantitativeReference')

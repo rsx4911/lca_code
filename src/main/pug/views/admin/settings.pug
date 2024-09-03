@@ -16,7 +16,7 @@ include ../mixins/forms.pug
 		#search-note.alert.alert-warning You need to reindex all repositories, for the search/usage to show correct results.
 		+checkbox('SERVER_SETTING__SEARCH_ENABLED', 'Search</strong>: Users can search for data sets within repositories they have access to')
 		.indented-setting
-			+checkbox('SERVER_SETTING__SEARCH_LINKS_ENABLED', 'Flow usage</strong>: Enables analysis and display of flow usage')
+			+checkbox('SERVER_SETTING__SHOW_USAGE', 'Usage</strong>: Enables analysis and display of data set usage')
 		+checkbox('SERVER_SETTING__COMMENTS_ENABLED', 'Comments: Reviewers are enabled to make comments on data set fields')
 		+checkbox('SERVER_SETTING__TASKS_ENABLED', 'Tasks: Editors can create review tasks')
 		+checkbox('SERVER_SETTING__MESSAGING_ENABLED', 'Messaging: Users can write messages to each other')
@@ -43,7 +43,7 @@ include ../mixins/forms.pug
 			+input('SEARCH_SETTING__PORT', 'Port')
 			+input('SEARCH_INDEX__PRIVATE', 'Search index')
 			+input('SEARCH_INDEX__PUBLIC', 'Public search index')
-			+input('SEARCH_INDEX__IO_DATA', 'Flow  index')
+			+input('SEARCH_INDEX__USAGE', 'Usage search index')
 	.header-box Mail configuration 
 		button.btn.btn-primary.pull-right(data-action='test-mail') Send test mail
 		.clear

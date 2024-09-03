@@ -303,8 +303,8 @@ public class SettingsService {
 			}
 		}
 
-		public boolean isIoDataAvailable() {
-			if (!SettingsService.this.is(ServerSetting.SEARCH_LINKS_ENABLED))
+		public boolean isShowUsage() {
+			if (!SettingsService.this.is(ServerSetting.SHOW_USAGE))
 				return false;
 			try {
 				return getClient() != null;
