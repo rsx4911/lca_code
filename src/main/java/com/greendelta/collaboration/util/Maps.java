@@ -211,7 +211,7 @@ public class Maps {
 			}
 			return values.toArray(new String[values.size()]);
 		}
-		return null;
+		return new String[] { value.toString() };
 	}
 
 	public static String getString(Map<String, Object> map, String field) {
@@ -298,7 +298,7 @@ public class Maps {
 			return new ArrayList<>((Collection<T>) value);
 		if (value.getClass().isArray())
 			return Arrays.asList((T[]) value);
-		return null;
+		return Arrays.asList((T) value);
 	}
 
 	public static boolean isObject(Map<String, Object> map, String field) {

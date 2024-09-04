@@ -160,9 +160,9 @@ public class UsageService {
 			if (skip.contains(ModelType.valueOf(type), refId))
 				continue;
 			var commitId = Maps.getString(data, "commitId");
-			var commitIds = Arrays.asList(Maps.getStringArray(data, "commitIds"));
+			var commitIds = new ArrayList<>(Arrays.asList(Maps.getStringArray(data, "commitIds")));
 			commitIds.add(commit.id);
-			buffer.putUpdate(getIndexId(repo.path(), commitId, type, refId), Maps.of("commitIds", commitIds));
+			buffer.putUpdate(getIndexId(repo.path(), type, refId, commitId), Maps.of("commitIds", commitIds));
 		}
 		buffer.flush();
 	}
@@ -260,24 +260,24 @@ public class UsageService {
 		public final String repositoryPath;
 		public final ModelType type;
 		public final String refId;
-		public final String name;
+		public final String commitId;
 		public final ProcessType processType;
 		public final FlowType flowType;
-		public final String commitId;
-		public final List<String> commitIds;
+		public final String name;
 		public final List<Ref> references;
+		public final List<String> commitIds;
 
 		private Entry(String repositoryPath, ModelType type, String refId, String commitId, ProcessType processType,
 				FlowType flowType, String name, List<Ref> references) {
 			this.repositoryPath = repositoryPath;
 			this.type = type;
 			this.refId = refId;
-			this.name = name;
+			this.commitId = commitId;
 			this.processType = processType;
 			this.flowType = flowType;
-			this.commitId = commitId;
-			this.commitIds = Arrays.asList(commitId);
+			this.name = name;
 			this.references = references;
+			this.commitIds = Arrays.asList(commitId);
 		}
 
 	}
