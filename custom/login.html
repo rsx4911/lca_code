@@ -123,7 +123,7 @@
         <div id="token-group" class="form-group hidden"><label for="token" class="control-label">Token</label><input
             id="token" name="token" type="text" class="form-control" /><a href="login" class="default-link">Login with
             another user</a></div><button type="submit" class="btn btn-primary btn-block">Login</button>
-        <div class="sign-up-link-container"> Don't have an account yet? <a class="default-link" href="sign-up">Sign
+        <div class="sign-up-link-container" style="display:none"> Don't have an account yet? <a class="default-link" href="sign-up">Sign
             up</a></div>
       </form>
       <form id="reset-password" method="post" style="display:none;">
@@ -196,7 +196,6 @@
 	registerOnClickHandler('login')
 	registerOnClickHandler('reset-password')
 	registerOnClickHandler('sign-up')
-	$('.sign-up-link-container').hide()
 	$.ajax({type: 'GET', url: 'ws/public/settings', success: function(settings) {
 		if (settings['USER_REGISTRATION_ENABLED']) {
 			$('.sign-up-link-container').show()
@@ -211,6 +210,7 @@
 		$('#reset').attr('disabled', !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($('#email').val()))
 	})
 	$('#login').on('submit', function(event) {
+		event.preventDefault()
 		$('#login-general-message').hide()
 		var data = {username: $('#login #username').val(), password: $('#login #password').val()}
 		if ($('#login #token').is(':visible')) {
@@ -232,23 +232,27 @@
 				$('#login-general-message').show()
 				$('#login-general-message .message').html(response.responseJSON ? response.responseJSON.message : response.responseText)
 				$('#login #token').val('')
-			}});
+			}
+		})
 		return false
 	})
 	$('#reset-password').on('submit', function(event) {
+		event.preventDefault()
 		$('#reset-password-general-message').hide()
 		var data = {email: $('#reset-password #email').val()}
 		$.ajax({type: 'POST', url: 'ws/public/request-password-reset', contentType: 'application/json', data: JSON.stringify(data), 
 			success: function(response) {
 				$('#reset, #reset-password #email').attr('disabled', true)
 				$('#reset').removeClass('btn-primary').addClass('btn-success').html('Password reset requested')
-			}});
+			}
+		})
 		return false
 	})
 	$('#sign-up').on('submit', function(event) {
+		event.preventDefault()
 		$('#sign-up-general-message').hide()
 		$('#sign-up .has-error').removeClass('has-error')
-		var data = {username: $('#sign-up #username').val(), name: $('#sign-up #name').val(), email: $('#sign-up #email').val(), password: $('#sign-up #password').val(), password2: $('#sign-up #password2').val()};
+		var data = {username: $('#sign-up #username').val(), name: $('#sign-up #name').val(), email: $('#sign-up #email').val(), password: $('#sign-up #password').val(), password2: $('#sign-up #password2').val()}
 		$.ajax({type: 'POST', url: 'ws/public/register', contentType: 'application/json', data: JSON.stringify(data), 
 			success: function(response) {
 				window.location.href = ''
@@ -260,7 +264,8 @@
 					$('#sign-up #' + error.field).parent().addClass('has-error')
 				}
 	
-			}});
+			}
+		})
 		return false
 	})</script>
 </body>
