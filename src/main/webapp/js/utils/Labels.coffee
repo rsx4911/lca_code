@@ -50,12 +50,21 @@ define () ->
 		'pcr': 'PCR'
 		'modules.name': 'Module'
 		'impactResults.indicator': 'Impact category'
+		'manufacturing': 'Manufacturing description'
+		'productUsage': 'Product usage description'
+		'epdType': 'EPD type'
+		'manufacturer': 'Declaration owner / Manufacturer'
+		'registrationId': 'Registration number'
+		'originalEpd': 'Original EPD'
+		'urn': 'URN'
 
 	get: (type, path) ->
 		if type is 'CURRENCY' and path is 'code'
 			return 'Currency code'
 		if type is 'PROCESS' and path is 'dqEntry'
 			return 'Data quality entry'
+		if type is 'EPD' and path is 'validFrom'
+			return 'Publication date'
 		corrected = path
 		while corrected.indexOf('[') isnt -1
 			corrected = corrected.substring(0, corrected.indexOf('[')) + corrected.substring(corrected.indexOf(']') + 1)

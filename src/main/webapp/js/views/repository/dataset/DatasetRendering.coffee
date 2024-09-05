@@ -188,6 +188,13 @@ define([
 					switch value
 						when 'UNIT_PROCESS' then return 'Unit process'
 						when 'LCI_RESULT' then return 'System process'
+				when 'EpdType'
+					switch value
+						when 'AVERAGE_DATASET' then return 'Average dataset'
+						when 'GENERIC_DATASET' then return 'Generic dataset'
+						when 'REPRESENTATIVE_DATASET' then return 'Representative dataset'
+						when 'SPECIFIC_DATASET' then return 'Specific dataset'
+						when 'TEMPLATE_DATASET' then return 'Template dataset'
 			return ''
 
 		getFunctions: (dataset, compareTo) ->
