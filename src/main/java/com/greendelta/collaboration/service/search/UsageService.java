@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,17 +60,19 @@ public class UsageService {
 		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
-	public SearchResult<Map<String, Object>> query(Repository repo, ModelType type, String refId, String field,
-			Commit commit, int page, int pageSize, String filter) {
+	public SearchResult<Map<String, Object>> query(Repository repo, String refId, String field, Commit commit, int page,
+			int pageSize, String filter) {
 		var query = new SearchQueryBuilder();
 		query.filter("repositoryPath", SearchFilterValue.term(repo.path()));
 		query.page(page);
 		query.pageSize(pageSize);
 		query.fields("type", "refId", "name", "processType", "flowType");
-		query.filter("references.type", SearchFilterValue.term(type.name()));
-		query.filter("references.refId", SearchFilterValue.term(refId));
-		if (field != null) {
-			query.filter("references.field", SearchFilterValue.term(field));
+		if ("inputs".equals(field)) {
+			query.filter("inputs", SearchFilterValue.term(refId));
+		} else if ("outputs".equals(field)) {
+			query.filter("outputs", SearchFilterValue.term(refId));
+		} else {
+			query.filter("others", SearchFilterValue.term(refId));
 		}
 		if (!Strings.nullOrEmpty(filter)) {
 			query.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
@@ -126,8 +126,9 @@ public class UsageService {
 		if (diff.type == ModelType.PROCESS) {
 			flowType = getQuantitativeReferenceFlowType(json);
 		}
-		var refs = new ArrayList<>(collectReferences(json));
-		return new Entry(repo.path(), diff.type, diff.refId, diff.newRef.commitId, processType, flowType, name, refs);
+		var entry = new Entry(repo.path(), diff.type, diff.refId, diff.newRef.commitId, processType, flowType, name);
+		collectReferences(entry, null, json);
+		return entry;
 	}
 
 	private FlowType getQuantitativeReferenceFlowType(Map<String, Object> json) {
@@ -177,49 +178,51 @@ public class UsageService {
 		return new IndexIterator(getClient(), query, BUFFER_SIZE);
 	}
 
-	private Set<Ref> collectReferences(Map<String, Object> object) {
+	private void collectReferences(Entry entry, String parentField, Map<String, Object> object) {
 		if (object == null)
-			return new HashSet<>();
-		var references = new HashSet<Ref>();
-		for (var field : object.keySet()) {
-			if (Maps.isArray(object, field)) {
-				for (var arrayElement : Maps.getArray(object, field)) {
+			return;
+		for (var nextField : object.keySet()) {
+			var field = parentField != null
+					? parentField + "." + nextField
+					: nextField;
+			if (Maps.isArray(object, nextField)) {
+				for (var arrayElement : Maps.getArray(object, nextField)) {
 					if (!Maps.is(arrayElement))
 						continue;
-					references.addAll(collectReference(field, Maps.of(arrayElement)));
+					var map = Maps.of(arrayElement);
+					if ("exchanges".equals(field)) {
+						if (Maps.getBoolean(map, "isInput")) {
+							collectReference(entry, "inputs", map);
+						} else {
+							collectReference(entry, "outputs", map);
+						}
+					} else {
+						collectReference(entry, field, map);
+					}
 				}
 				continue;
 			}
-			if (!Maps.isObject(object, field))
+			if (!Maps.isObject(object, nextField))
 				continue;
-			references.addAll(collectReference(field, Maps.getObject(object, field)));
+			collectReference(entry, field, Maps.getObject(object, nextField));
 		}
-		return references;
 	}
 
-	private Set<Ref> collectReference(String field, Map<String, Object> object) {
-		if (!(object.containsKey("@type") && object.containsKey("@id")))
-			return collectReferences(object);
-		var type = getType(Maps.getString(object, "@type"));
-		if (type == null)
-			return new HashSet<>();
+	private void collectReference(Entry entry, String field, Map<String, Object> object) {
+		if (!(object.containsKey("@type") && object.containsKey("@id"))) {
+			collectReferences(entry, field, object);
+			return;
+		}
 		var refId = Maps.getString(object, "@id");
 		if (refId == null)
-			return new HashSet<>();
-		if (field.equals("exchanges")) {
-			var isInput = Maps.getBoolean(object, "isInput");
-			field = isInput ? "inputs" : "outputs";
+			return;
+		if (field.equals("inputs.flow")) {
+			entry.inputs.add(refId);
+		} else if (field.equals("outputs.flow")) {
+			entry.outputs.add(refId);
+		} else {
+			entry.others.add(refId);
 		}
-		return Collections.singleton(new Ref(field, type, refId));
-	}
-
-	private ModelType getType(String name) {
-		for (var type : ModelType.values()) {
-			if (!type.getModelClass().getSimpleName().equals(name))
-				continue;
-			return type;
-		}
-		return null;
 	}
 
 	void move(RepositoryPath path, Repository newRepo) {
@@ -264,11 +267,13 @@ public class UsageService {
 		public final ProcessType processType;
 		public final FlowType flowType;
 		public final String name;
-		public final List<Ref> references;
 		public final List<String> commitIds;
+		public final List<String> inputs = new ArrayList<>();
+		public final List<String> outputs = new ArrayList<>();
+		public final List<String> others = new ArrayList<>();
 
 		private Entry(String repositoryPath, ModelType type, String refId, String commitId, ProcessType processType,
-				FlowType flowType, String name, List<Ref> references) {
+				FlowType flowType, String name) {
 			this.repositoryPath = repositoryPath;
 			this.type = type;
 			this.refId = refId;
@@ -276,22 +281,7 @@ public class UsageService {
 			this.processType = processType;
 			this.flowType = flowType;
 			this.name = name;
-			this.references = references;
 			this.commitIds = Arrays.asList(commitId);
-		}
-
-	}
-
-	public class Ref {
-
-		public final String field;
-		public final ModelType type;
-		public final String refId;
-
-		private Ref(String field, ModelType type, String refId) {
-			this.field = field;
-			this.type = type;
-			this.refId = refId;
 		}
 
 	}

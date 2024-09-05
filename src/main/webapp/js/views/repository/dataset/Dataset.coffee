@@ -305,9 +305,10 @@ define([
 						$('.dropdown-toggle .change-count', dropdown).html count
 
 			initUsageTab: () ->
-				if @type is 'Flow'
+				if @type is 'FLOW'
 					outType = if @dataset.flowType  is 'ELEMENTARY_FLOW' then 'emittedBy' else 'producedBy'
-					@initReferences 'usedBy', 'inputs'
+					@initReferences 'usedBy'
+					@initReferences 'consumedBy', 'inputs'
 					@initReferences outType, 'outputs'
 				else
 					@initReferences 'usedBy'
@@ -325,7 +326,7 @@ define([
 					template: referencesTemplate
 					pageSize: 25
 					pageSizeId: "#{id}-page-size"
-					url: "ws/public/search/usage/#{@type}/#{@refId}?repositoryId=#{group}/#{name}#{commitIdParam}#{fieldParam}&"
+					url: "ws/public/search/usage/#{@refId}?repositoryId=#{group}/#{name}#{commitIdParam}#{fieldParam}&"
 					beforeRender: (result) ->
 						result.getIcon = Icons.get
 						result.commitId = @commitId

@@ -10,6 +10,7 @@ include ./structures/flow-property-table.pug
 				+nav-tab('flowInfo', true, true)
 				+nav-tab('flowProperties')
 				+nav-usage-tab('usedBy')
+				+nav-usage-tab('consumedBy')
 				+nav-usage-tab(outId)
 			.tab-content
 				+nav-tab-pane('flowInfo', true, true)
@@ -25,6 +26,7 @@ include ./structures/flow-property-table.pug
 				+nav-tab-pane('flowProperties')
 					+flow-property-table()
 				+nav-usage-tab-pane('usedBy')
+				+nav-usage-tab-pane('consumedBy')
 				+nav-usage-tab-pane(outId)
 	+meta
 	.clear

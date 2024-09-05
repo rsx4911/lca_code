@@ -24,19 +24,14 @@
 		"commitIds": {
 			"type": "keyword"
 		},
-		"references": {
-			"type": "nested",
-			"properties": {
-				"field": {
-					"type": "keyword"
-				},
-				"type": {
-					"type": "keyword"
-				},
-				"refId": {
-					"type": "keyword"
-				}
-			}
+		"inputs": {
+			"type": "keyword"
+		},
+		"outputs": {
+			"type": "keyword"
+		},
+		"others": {
+			"type": "keyword"
 		}
 	}
 }
