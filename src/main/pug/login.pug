@@ -23,7 +23,7 @@ html(lang='en')
 			#login-container
 				+login-form
 					button.btn.btn-primary.btn-block(type='submit') Login
-					.sign-up-link-container
+					.sign-up-link-container(style="display:none")
 						| Don't have an account yet? 
 						a.default-link(href='sign-up') Sign up
 				+reset-password-form()(style='display:none')
@@ -60,7 +60,6 @@ html(lang='en')
 			registerOnClickHandler('login')
 			registerOnClickHandler('reset-password')
 			registerOnClickHandler('sign-up')
-			$('.sign-up-link-container').hide()
 			$.ajax({type: 'GET', url: 'ws/public/settings', success: function(settings) {
 				if (settings['USER_REGISTRATION_ENABLED']) {
 					$('.sign-up-link-container').show()
