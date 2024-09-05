@@ -13,7 +13,7 @@ mixin login-form()
 		.auth-provider-container
 	
 mixin reset-password-form()
-	form#reset-password&attributes(attributes)
+	form#reset-password(method='post')&attributes(attributes)
 		h3 Reset password
 		#reset-password-general-message.alert.alert-success(role='alert'): span.message
 		+input('email', 'E-Mail')
@@ -21,7 +21,7 @@ mixin reset-password-form()
 		block
 
 mixin sign-up-form() 
-	form#sign-up&attributes(attributes)
+	form#sign-up(method='post')&attributes(attributes)
 		h3 Sign up
 		#sign-up-general-message.alert.alert-danger(role='alert'): span.message
 		+input('username', 'Username')(placeholder='johndoe')
