@@ -23,7 +23,7 @@ html(lang='en')
 			#login-container
 				+login-form
 					button.btn.btn-primary.btn-block(type='submit') Login
-					.sign-up-link-container 
+					.sign-up-link-container
 						| Don't have an account yet? 
 						a.default-link(href='sign-up') Sign up
 				+reset-password-form()(style='display:none')
@@ -74,12 +74,13 @@ html(lang='en')
 			$('#reset-password #email').on('keyup', function() {
 				$('#reset').attr('disabled', !/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test($('#email').val()))
 			})
-			var params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
+			var params = Object.fromEntries(new URLSearchParams(window.location.search).entries())
 			if (params.error) {
 				$('#login-general-message').show()
 				$('#login-general-message .message').html(params.error)
 			}
 			$('#login').on('submit', function(event) {
+				event.preventDefault()
 				$('#login-general-message').hide()
 				var data = {username: $('#login #username').val(), password: $('#login #password').val()}
 				if ($('#login #token').is(':visible')) {
@@ -100,23 +101,27 @@ html(lang='en')
 						$('#login-general-message').show()
 						$('#login-general-message .message').html(response.responseJSON ? response.responseJSON.message : response.responseText)
 						$('#login #token').val('')
-					}});
+					}
+				})
 				return false
 			})
 			$('#reset-password').on('submit', function(event) {
+				event.preventDefault()
 				$('#reset-password-general-message').hide()
 				var data = {email: $('#reset-password #email').val()}
 				$.ajax({type: 'POST', url: 'ws/public/request-password-reset', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
 						$('#reset, #reset-password #email').attr('disabled', true)
 						$('#reset').removeClass('btn-primary').addClass('btn-success').html('Password reset requested')
-					}});
+					}
+				})
 				return false
 			})
 			$('#sign-up').on('submit', function(event) {
+				event.preventDefault()
 				$('#sign-up-general-message').hide()
 				$('#sign-up .has-error').removeClass('has-error')
-				var data = {username: $('#sign-up #username').val(), name: $('#sign-up #name').val(), email: $('#sign-up #email').val(), password: $('#sign-up #password').val(), password2: $('#sign-up #password2').val()};
+				var data = {username: $('#sign-up #username').val(), name: $('#sign-up #name').val(), email: $('#sign-up #email').val(), password: $('#sign-up #password').val(), password2: $('#sign-up #password2').val()}
 				$.ajax({type: 'POST', url: 'ws/public/register', contentType: 'application/json', data: JSON.stringify(data), 
 					success: function(response) {
 						window.location.href = ''
@@ -128,7 +133,8 @@ html(lang='en')
 							$('#sign-up #' + error.field).parent().addClass('has-error')
 						}
 
-					}});
+					}
+				})
 				return false
 			})
 			$.ajax({type: 'GET', url: 'ws/public/auth-providers', success: function(providers) {
