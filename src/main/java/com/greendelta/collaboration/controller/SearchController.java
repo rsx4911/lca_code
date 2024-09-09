@@ -189,7 +189,7 @@ public class SearchController {
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
-		if (!settings.searchConfig.isShowUsage())
+		if (!settings.searchConfig.isUsageSearchEnabled())
 			throw Response.unavailable("Show usage feature not enabled or search cluster not available");
 		try (var repo = repoService.get(repositoryId)) {
 			if (commitId == null) {

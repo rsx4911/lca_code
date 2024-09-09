@@ -303,8 +303,8 @@ public class SettingsService {
 			}
 		}
 
-		public boolean isShowUsage() {
-			if (!SettingsService.this.is(ServerSetting.SHOW_USAGE))
+		public boolean isUsageSearchEnabled() {
+			if (!SettingsService.this.is(ServerSetting.USAGE_SEARCH_ENABLED))
 				return false;
 			try {
 				return getClient() != null;

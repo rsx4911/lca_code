@@ -22,7 +22,7 @@ public enum ServerSetting implements SettingKey {
 	REPOSITORY_ACTIVITIES_ENABLED(Boolean.class, true),
 	HOMEPAGE_ENABLED(Boolean.class, false),
 	SEARCH_ENABLED(Boolean.class, false),
-	SHOW_USAGE(Boolean.class, false),
+	USAGE_SEARCH_ENABLED(Boolean.class, false),
 	REPOSITORY_TAGS_ENABLED(Boolean.class, true),
 	DATASET_TAGS_ENABLED(Boolean.class, true),
 	DATASET_TAGS_ON_DASHBOARD_ENABLED(Boolean.class, false),

@@ -192,7 +192,7 @@ define([
 					otherFactorMap: if @compareTo and @compareTo.type is 'ImpactCategory' then ImpactFactors.map(@compareTo.impactFactors) else null
 					reviewMode: LocalStorage.getValue('reviewMode')
 					isPublic: !currentUser.isLoggedIn()
-					showUsage: settings.is('SHOW_USAGE')
+					showUsage: settings.is('USAGE_SEARCH_ENABLED')
 				$.extend model, DatasetRendering.getFunctions @dataset, @compareTo
 				@$el.html template model
 				if renderOptions
@@ -314,7 +314,7 @@ define([
 					@initReferences 'usedBy'
 
 			initReferences: (id, field) ->
-				if !settings.is('SHOW_USAGE')
+				if !settings.is('USAGE_SEARCH_ENABLED')
 					return
 				group = @repository.get 'group'
 				name = @repository.get 'name'

@@ -88,7 +88,7 @@ public class IndexService {
 				searchService.on(SearchIndex.PUBLIC).clear();
 			}
 			searchService.on(SearchIndex.PRIVATE).clear();
-			if (settings.is(ServerSetting.SHOW_USAGE)) {
+			if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 				usageService.clearIndex();
 			}
 			work.worked++;
@@ -107,7 +107,7 @@ public class IndexService {
 						? repo.settings.get(RepositorySetting.TAGS)
 						: null;
 				searchService.on(SearchIndex.PRIVATE).index(repo, tags, previousCommit, commit);
-				if (settings.is(ServerSetting.SHOW_USAGE)) {
+				if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 					usageService.index(repo, previousCommit, commit);
 				}
 			} finally {
@@ -152,7 +152,7 @@ public class IndexService {
 					}
 				}
 				searchService.on(SearchIndex.PRIVATE).move(path, newRepo, newHead);
-				if (settings.is(ServerSetting.SHOW_USAGE)) {
+				if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 					usageService.move(path, newRepo);
 				}
 			} finally {
@@ -222,7 +222,7 @@ public class IndexService {
 					searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
 				}
 				searchService.on(SearchIndex.PRIVATE).remove(repo, head);
-				if (settings.is(ServerSetting.SHOW_USAGE)) {
+				if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 					usageService.remove(repo);
 				}
 				if (settings.is(ServerSetting.RELEASES_ENABLED) && latestRelease != null) {
@@ -233,7 +233,7 @@ public class IndexService {
 						? repo.settings.get(RepositorySetting.TAGS)
 						: null;
 				searchService.on(SearchIndex.PRIVATE).index(repo, tags, null, head);
-				if (settings.is(ServerSetting.SHOW_USAGE)) {
+				if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 					usageService.index(repo, null, head);
 				}
 			} finally {
@@ -271,7 +271,7 @@ public class IndexService {
 					var head = repo.commits.head();
 					List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
 					searchService.on(SearchIndex.PRIVATE).index(repo, tags, null, head);
-					if (settings.is(ServerSetting.SHOW_USAGE)) {
+					if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 						usageService.index(repo, null, head);
 					}
 					work.worked++;
@@ -313,7 +313,7 @@ public class IndexService {
 			}
 		}
 		searchService.on(SearchIndex.PRIVATE).remove(repo, head);
-		if (settings.is(ServerSetting.SHOW_USAGE)) {
+		if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
 			usageService.remove(repo);
 		}
 	}
