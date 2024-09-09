@@ -36,6 +36,8 @@ public class Aggregations {
 			GROUP, REPOSITORY, MODEL_TYPE, REPOSITORY_TAGS, DATASET_TAGS };
 	public static final SearchAggregation[] PROCESS_FILTERS = new SearchAggregation[] {
 			PROCESS_TYPE, MODELLING_APPROACH, LOCATION, START_YEAR, END_YEAR, CONTACT, REVIEW_TYPE, COMPLIANCE_DECLARATION, FLOW_COMPLETENESS };
+	public static final SearchAggregation[] EPD_FILTERS = new SearchAggregation[] {
+			START_YEAR, END_YEAR };
 	public static final SearchAggregation[] FLOW_FILTERS = new SearchAggregation[] {
 			FLOW_TYPE };
 
@@ -44,6 +46,8 @@ public class Aggregations {
 		var filters = new ArrayList<>(Arrays.asList(DEFAULT_FILTERS));
 		if (modelType == ModelType.PROCESS) {
 			filters.addAll(Arrays.asList(PROCESS_FILTERS));
+		} else if (modelType == ModelType.EPD) {
+			filters.addAll(Arrays.asList(EPD_FILTERS));
 		} else if (modelType == ModelType.FLOW) {
 			filters.addAll(Arrays.asList(FLOW_FILTERS));
 		}

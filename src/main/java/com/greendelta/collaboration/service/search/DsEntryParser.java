@@ -22,6 +22,8 @@ class DsEntryParser {
 			var v = new DsVersion();
 			if (e.type == ModelType.PROCESS) {
 				v = parseProcessSpecific(version);
+			} else if (e.type == ModelType.EPD) {
+				v = parseEpdSpecific(version);
 			} else if (e.type == ModelType.FLOW) {
 				v = parseFlowSpecific(version);
 			}
@@ -56,7 +58,14 @@ class DsEntryParser {
 		v.contact = Maps.get(version, "contact");
 		v.reviewTypes = Maps.getAll(version, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(version, "complianceDeclarations", String.class);
-		v.flowCompleteness= Maps.getAll(version, "flowCompleteness", String.class);
+		v.flowCompleteness = Maps.getAll(version, "flowCompleteness", String.class);
+		return v;
+	}
+
+	private DsVersion parseEpdSpecific(Map<String, Object> version) {
+		var v = new DsVersion();
+		v.validFromYear = Maps.get(version, "validFromYear");
+		v.validUntilYear = Maps.get(version, "validUntilYear");
 		return v;
 	}
 

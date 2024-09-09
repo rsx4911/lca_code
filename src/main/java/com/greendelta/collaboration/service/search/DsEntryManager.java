@@ -65,6 +65,8 @@ class DsEntryManager {
 		var metaData = MetaData.forSearch(ref, repo);
 		if (ref.type == ModelType.PROCESS)
 			return processVersion(ref, metaData);
+		if (ref.type == ModelType.EPD)
+			return epdVersion(ref, metaData);
 		if (ref.type == ModelType.FLOW)
 			return flowVersion(ref, metaData);
 		return genericVersion(ref, metaData);
@@ -85,13 +87,6 @@ class DsEntryManager {
 		v.completeData();
 	}
 
-	private DsVersion flowVersion(Reference ref, Map<String, Object> metaData) {
-		var v = new DsVersion();
-		fillGenericVersion(v, ref, metaData);
-		v.flowType = Maps.get(metaData, "flowType");
-		return v;
-	}
-
 	private DsVersion processVersion(Reference ref, Map<String, Object> metaData) {
 		var v = new DsVersion();
 		fillGenericVersion(v, ref, metaData);
@@ -105,6 +100,21 @@ class DsEntryManager {
 		v.reviewTypes = Maps.getAll(metaData, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(metaData, "complianceDeclarations", String.class);
 		v.flowCompleteness = Maps.getAll(metaData, "flowCompleteness", String.class);
+		return v;
+	}
+
+	private DsVersion epdVersion(Reference ref, Map<String, Object> metaData) {
+		var v = new DsVersion();
+		fillGenericVersion(v, ref, metaData);
+		v.validFromYear = Maps.get(metaData, "validFromYear");
+		v.validUntilYear = Maps.get(metaData, "validUntilYear");
+		return v;
+	}
+
+	private DsVersion flowVersion(Reference ref, Map<String, Object> metaData) {
+		var v = new DsVersion();
+		fillGenericVersion(v, ref, metaData);
+		v.flowType = Maps.get(metaData, "flowType");
 		return v;
 	}
 

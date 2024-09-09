@@ -27,7 +27,7 @@ import com.greendelta.collaboration.model.glad.ModellingApproach;
 import com.greendelta.collaboration.service.Repository;
 
 public class MetaData {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(MetaData.class);
 
 	public static Map<String, Object> forBrowse(Map<String, Object> e, Reference ref, Repository repo) {
@@ -95,11 +95,14 @@ public class MetaData {
 		if (mode == Mode.SEARCH) {
 			defs.add(FieldDefinition.allOf("tags"));
 		}
-		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS) {
+		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS || ref.type == ModelType.EPD) {
 			defs.add(FieldDefinition.firstOf("location.name"));
 		}
 		if (ref.type == ModelType.FLOW) {
 			defs.add(FieldDefinition.firstOf("flowType", FlowType::valueOf));
+		} else if (ref.type == ModelType.EPD) {
+			defs.add(FieldDefinition.firstOf("validFrom", MetaData::getYear));
+			defs.add(FieldDefinition.firstOf("validUntil", MetaData::getYear));
 		} else if (ref.type == ModelType.PROCESS) {
 			defs.add(FieldDefinition.firstOf("location.name"));
 			defs.add(FieldDefinition.firstOf("processType", ProcessType::valueOf));
@@ -135,30 +138,36 @@ public class MetaData {
 		}
 		if (mode == Mode.SEARCH) {
 			entry.put("tags", info.get("tags"));
-			entry.put("contact", info.get("processDocumentation.dataSetOwner.name"));
-			entry.put("validFromYear", info.get("processDocumentation.validFrom"));
-			entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
-			entry.put("modellingApproach", info.get("defaultAllocationMethod"));
-			var reviewTypes = Maps.getAll(info, "processDocumentation.reviews.reviewType", String.class).stream()
-					.map(type -> Strings.nullOrEmpty(type) ? "unspecified" : type)
-					.collect(Collectors.toSet());
-			if (reviewTypes.isEmpty()) {
-				reviewTypes.add("unreviewed");
+			if (ref.type == ModelType.EPD) {
+				entry.put("validFromYear", info.get("validFrom"));
+				entry.put("validUntilYear", info.get("validUntil"));
+			} else if (ref.type == ModelType.PROCESS) {
+				entry.put("contact", info.get("processDocumentation.dataSetOwner.name"));
+				entry.put("validFromYear", info.get("processDocumentation.validFrom"));
+				entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
+				entry.put("modellingApproach", info.get("defaultAllocationMethod"));
+				var reviewTypes = Maps.getAll(info, "processDocumentation.reviews.reviewType", String.class).stream()
+						.map(type -> Strings.nullOrEmpty(type) ? "unspecified" : type)
+						.collect(Collectors.toSet());
+				if (reviewTypes.isEmpty()) {
+					reviewTypes.add("unreviewed");
+				}
+				entry.put("reviewTypes", reviewTypes);
+				entry.put("complianceDeclarations",
+						info.get("processDocumentation.complianceDeclarations.system.name"));
+				var flowCompleteness = new HashSet<String>();
+				var aspects = Maps.getAll(info, "processDocumentation.flowCompleteness.aspect", String.class);
+				var values = Maps.getAll(info, "processDocumentation.flowCompleteness.value", String.class);
+				if (aspects.size() != values.size()) {
+					log.warn("Aspect count doesnt match value count");
+					return;
+				}
+				for (var i = 0; i < aspects.size(); i++) {
+					flowCompleteness.add(values.get(i));
+					flowCompleteness.add(values.get(i) + "/" + aspects.get(i));
+				}
+				entry.put("flowCompleteness", flowCompleteness);
 			}
-			entry.put("reviewTypes", reviewTypes);
-			entry.put("complianceDeclarations", info.get("processDocumentation.complianceDeclarations.system.name"));
-			var flowCompleteness = new HashSet<String>();
-			var aspects = Maps.getAll(info, "processDocumentation.flowCompleteness.aspect", String.class);
-			var values = Maps.getAll(info, "processDocumentation.flowCompleteness.value", String.class);
-			if (aspects.size() != values.size()) {
-				log.warn("Aspect count doesnt match value count");
-				return;
-			}
-			for (var i = 0; i < aspects.size(); i++) {
-				flowCompleteness.add(values.get(i));
-				flowCompleteness.add(values.get(i) + "/" + aspects.get(i));
-			}
-			entry.put("flowCompleteness", flowCompleteness);
 		}
 	}
 
