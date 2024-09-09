@@ -1,16 +1,20 @@
 include ./mixins.pug
 
 mixin epd-modules-table()
-	table.table.epd-modules
-		thead
-			tr
-				th=getLabel('modules.name')
-				th=getLabel('modules.multiplier')
-				th=getLabel('modules.result')
-				th
-		tbody
-			each values in getArrayValues(dataset, compareTo, 'EPD_MODULE', 'modules')
-				+epd-module-row(values[0], values[1])
+	- var modules = getArrayValues(dataset, compareTo, 'EPD_MODULE', 'modules');
+	if !modules || !modules.length
+		.no-content-message No EPD modules defined
+	else
+		table.table.epd-modules
+			thead
+				tr
+					th=getLabel('modules.name')
+					th=getLabel('modules.multiplier')
+					th=getLabel('modules.result')
+					th
+			tbody
+				each values in modules
+					+epd-module-row(values[0], values[1])
 
 mixin epd-module-row(epdModule, otherEpdModule)
 	- var changed = compareTo && !otherEpdModule ? 'added' : (compareTo && !epdModule ? 'removed' : null);

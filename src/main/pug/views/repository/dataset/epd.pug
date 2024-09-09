@@ -5,19 +5,20 @@ include ./structures/epd-modules-table.pug
 	.model-left-content
 		+header
 		+tabbed-content
+			- showDocumentationTab = hasOneOf(dataset, compareTo, ['validFrom', 'validUntil', 'location', 'manufacturing', 'productUsage', 'manufacturer', 'programOperator', 'registrationId', 'originalEpd', 'epdType', 'pcr', 'dataGenerator', 'verifier', 'useAdvice'])
 			ul.nav.nav-tabs(role='tablist')
-				+nav-tab('modules', true)
-				+nav-tab('documentation', false, true)
+				+nav-tab('modules', true, true)
+				+nav-tab('documentation', false, showDocumentationTab)
 			.tab-content
-				+nav-tab-pane('modules', true)
+				+nav-tab-pane('modules', true, true)
 					+epd-modules-table
-				+nav-tab-pane('documentation', false, true)
+				+nav-tab-pane('documentation', false, showDocumentationTab)
 					if hasOneOf(dataset, compareTo, ['validFrom', 'validUntil', 'location']) || reviewMode
 						table.table
 							thead: tr: th(colspan=2)=getLabel('timeAndLocation')
 							tbody
-								+field-row('validFrom', formatDate)
-								+field-row('validUntil', formatDate)
+								+field-row('validFrom', formatDate, '-')
+								+field-row('validUntil', formatDate, '-')
 								+ref-row('location')
 					if hasOneOf(dataset, compareTo, ['manufacturing', 'productUsage']) || reviewMode
 						table.table
@@ -45,12 +46,13 @@ include ./structures/epd-modules-table.pug
 								+ref-row('verifier')
 								+field-row('useAdvice')
 	+meta
-		hr
-		strong=getLabel('product.flow')
-		div
-			+field('product.amount')
-			|  
-			+field('product.unit.name')
-			|  
-			+ref-field('product.flow')
+		if hasOneOf(dataset, compareTo, ['product']) || reviewMode
+			hr
+			strong=getLabel('product.flow')
+			div
+				+field('product.amount')
+				|  
+				+field('product.unit.name')
+				|  
+				+ref-field('product.flow')
 	.clear
