@@ -88,6 +88,7 @@ public class UsageService {
 		for (var commit : commits) {
 			new UsageIndexer(buffer, repo, commit).index();
 		}
+		buffer.flush();
 	}
 
 	public class UsageIndexer {
@@ -125,7 +126,6 @@ public class UsageService {
 				collectReferences(entry, null, json);
 				buffer.putInsert(entry.getId(), entry);
 			}
-			buffer.flush();
 		}
 
 		private FlowType getQuantitativeReferenceFlowType(Map<String, Object> json) {
