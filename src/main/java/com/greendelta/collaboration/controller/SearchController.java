@@ -182,7 +182,7 @@ public class SearchController {
 		}).filter(Objects::nonNull).toList();
 	}
 
-	@GetMapping("usage/{type}/{refId}")
+	@GetMapping("usage/{refId}")
 	public SearchResult<Map<String, Object>> searchUsage(
 			@PathVariable("refId") String refId,
 			@RequestParam(name = "repositoryId") String repositoryId,
