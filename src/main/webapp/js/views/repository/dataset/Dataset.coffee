@@ -318,7 +318,6 @@ define([
 					return
 				group = @repository.get 'group'
 				name = @repository.get 'name'
-				commitIdParam = if @commitId then "&commitId=#{@commitId}" else ''
 				fieldParam = if field then "&field=#{field}" else ''
 				filter = new Filter
 					container: "##{id}-data"
@@ -326,10 +325,9 @@ define([
 					template: referencesTemplate
 					pageSize: 25
 					pageSizeId: "#{id}-page-size"
-					url: "ws/public/search/usage/#{@refId}?repositoryId=#{group}/#{name}#{commitIdParam}#{fieldParam}&"
+					url: "ws/public/search/usage/#{@refId}?repositoryId=#{group}/#{name}#{fieldParam}&"
 					beforeRender: (result) ->
 						result.getIcon = Icons.get
-						result.commitId = @commitId
 						result.baseUrl = "#{group}/#{name}/dataset"
 				filter.init (result) ->
 					if result.resultInfo.totalCount > 0

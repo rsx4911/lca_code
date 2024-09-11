@@ -25,7 +25,7 @@ class DsEntryManager {
 		this.commit = commit;
 	}
 
-	DsEntry createOrUpdate(DsEntry e, Reference ref, List<String> tags) {
+	DsEntry createOrUpdate(DsEntry e, Reference ref, List<String> repoTags) {
 		if (e == null) {
 			e = new DsEntry(ref.type, ref.refId);
 		}
@@ -45,11 +45,11 @@ class DsEntryManager {
 		}
 		var r = getRepo(v);
 		if (r == null) {
-			r = createRepo(ref, tags);
+			r = createRepo(ref, repoTags);
 			v.repos.add(r);
 		} else {
 			r.commitId = commit.id;
-			r.commitMessage = commit.message;
+			r.tags = repoTags;
 		}
 		return e;
 	}
@@ -63,59 +63,47 @@ class DsEntryManager {
 
 	private DsVersion createVersion(Reference ref) {
 		var metaData = MetaData.forSearch(ref, repo);
-		if (ref.type == ModelType.PROCESS)
-			return processVersion(ref, metaData);
-		if (ref.type == ModelType.EPD)
-			return epdVersion(ref, metaData);
-		if (ref.type == ModelType.FLOW)
-			return flowVersion(ref, metaData);
-		return genericVersion(ref, metaData);
+		var version = new DsVersion();
+		fillGeneric(version, ref, metaData);
+		if (ref.type == ModelType.FLOW) {
+			fillFlowSpecific(version, metaData);
+		} else if (ref.type == ModelType.EPD) {
+			fillEpdSpecific(version, metaData);
+		} else if (ref.type == ModelType.PROCESS) {
+			fillProcessSpecific(version, metaData);
+		}
+		return version;
 	}
 
-	private DsVersion genericVersion(Reference ref, Map<String, Object> metaData) {
-		var v = new DsVersion();
-		fillGenericVersion(v, ref, metaData);
-		return v;
-	}
-
-	private void fillGenericVersion(DsVersion v, Reference ref, Map<String, Object> metaData) {
+	private void fillGeneric(DsVersion v, Reference ref, Map<String, Object> metaData) {
 		v.objectId = ref.objectId.name();
 		v.name = Maps.getString(metaData, "name");
+		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		var tags = Maps.getStringArray(metaData, "tags");
 		v.tags = tags != null ? Arrays.asList(tags) : new ArrayList<>();
-		v.category = !Strings.nullOrEmpty(ref.category) ? ref.category : null;
 		v.completeData();
 	}
 
-	private DsVersion processVersion(Reference ref, Map<String, Object> metaData) {
-		var v = new DsVersion();
-		fillGenericVersion(v, ref, metaData);
-		v.location = Maps.get(metaData, "location");
-		v.processType = Maps.get(metaData, "processType");
-		v.contact = Maps.get(metaData, "contact");
-		v.modellingApproach = Maps.get(metaData, "modellingApproach");
+	private void fillFlowSpecific(DsVersion v, Map<String, Object> metaData) {
+		v.flowType = Maps.get(metaData, "flowType");
+	}
+
+	private void fillEpdSpecific(DsVersion v, Map<String, Object> metaData) {
 		v.validFromYear = Maps.get(metaData, "validFromYear");
 		v.validUntilYear = Maps.get(metaData, "validUntilYear");
+	}
+
+	private void fillProcessSpecific(DsVersion v, Map<String, Object> metaData) {
 		v.flowType = Maps.get(metaData, "flowType");
+		v.validFromYear = Maps.get(metaData, "validFromYear");
+		v.validUntilYear = Maps.get(metaData, "validUntilYear");
+		v.processType = Maps.get(metaData, "processType");
+		v.modellingApproach = Maps.get(metaData, "modellingApproach");
+		v.contact = Maps.get(metaData, "contact");
+		v.location = Maps.get(metaData, "location");
 		v.reviewTypes = Maps.getAll(metaData, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(metaData, "complianceDeclarations", String.class);
 		v.flowCompleteness = Maps.getAll(metaData, "flowCompleteness", String.class);
-		return v;
-	}
-
-	private DsVersion epdVersion(Reference ref, Map<String, Object> metaData) {
-		var v = new DsVersion();
-		fillGenericVersion(v, ref, metaData);
-		v.validFromYear = Maps.get(metaData, "validFromYear");
-		v.validUntilYear = Maps.get(metaData, "validUntilYear");
-		return v;
-	}
-
-	private DsVersion flowVersion(Reference ref, Map<String, Object> metaData) {
-		var v = new DsVersion();
-		fillGenericVersion(v, ref, metaData);
-		v.flowType = Maps.get(metaData, "flowType");
-		return v;
 	}
 
 	private DsRepo createRepo(Reference ref, List<String> tags) {
@@ -124,7 +112,6 @@ class DsEntryManager {
 		r.group = repo.group;
 		r.tags = tags;
 		r.commitId = commit.id;
-		r.commitMessage = commit.message;
 		return r;
 	}
 

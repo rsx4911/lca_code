@@ -278,7 +278,8 @@ public class SettingsService {
 
 	public class SearchConfig extends Settings<SearchSetting> {
 
-		private RestHighLevelClient client;
+		private RestHighLevelClient restClient;
+		private final Map<SearchIndex, SearchClient> clients = new HashMap<>();
 		public final Settings<SearchIndex> indices;
 
 		private SearchConfig() {
@@ -290,14 +291,15 @@ public class SettingsService {
 		public void set(SearchSetting key, Object value) {
 			super.set(key, value);
 			close();
-			client = null;
+			restClient = null;
+			clients.clear();
 		}
 
 		public boolean isSearchAvailable() {
 			if (!SettingsService.this.is(ServerSetting.SEARCH_ENABLED))
 				return false;
 			try {
-				return getClient() != null;
+				return getRestClient() != null;
 			} catch (IOException e) {
 				return false;
 			}
@@ -307,17 +309,17 @@ public class SettingsService {
 			if (!SettingsService.this.is(ServerSetting.USAGE_SEARCH_ENABLED))
 				return false;
 			try {
-				return getClient() != null;
+				return getRestClient() != null;
 			} catch (IOException e) {
 				return false;
 			}
 		}
 
-		public RestHighLevelClient getClient() throws IOException {
-			if (client != null) {
-				if (!client.ping(RequestOptions.DEFAULT))
+		public RestHighLevelClient getRestClient() throws IOException {
+			if (restClient != null) {
+				if (!restClient.ping(RequestOptions.DEFAULT))
 					throw new IOException("Could not ping search cluster");
-				return client;
+				return restClient;
 			}
 			String host = get(SearchSetting.HOST);
 			int port = get(SearchSetting.PORT);
@@ -326,24 +328,26 @@ public class SettingsService {
 					RestClient.builder(new HttpHost(host, port, schema), new HttpHost(host, port + 1, schema)));
 			if (!client.ping(RequestOptions.DEFAULT))
 				throw new IOException("Could not ping search cluster");
-			this.client = client;
+			this.restClient = client;
 			return client;
 		}
 
 		public SearchClient getSearchClient(SearchIndex index) {
-			try {
-				return new OsRestClient(getClient(), indices.get(index));
-			} catch (Exception e) {
-				SettingsService.log.error("Error getting search client", e);
-				return null;
-			}
+			return clients.computeIfAbsent(index, i -> {
+				try {
+					return new OsRestClient(getRestClient(), indices.get(i));
+				} catch (IOException e) {
+					SettingsService.log.error("Error getting search client", e);
+					return null;
+				}
+			});
 		}
 
 		public void close() {
-			if (client == null)
+			if (restClient == null)
 				return;
 			try {
-				client.close();
+				restClient.close();
 			} catch (IOException e) {
 				SettingsService.log.error("Error closing search client", e);
 			}
@@ -406,7 +410,7 @@ public class SettingsService {
 		public void setDefault(T key, Object value) {
 			defaults.put(key, value);
 		}
-		
+
 		public void set(T key, Object value) {
 			if (local != null) {
 				local.put(key, value);

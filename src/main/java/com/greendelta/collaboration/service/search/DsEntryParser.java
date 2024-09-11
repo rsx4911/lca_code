@@ -20,59 +20,62 @@ class DsEntryParser {
 		for (var vMap : Maps.getAll(entry, "versions", Map.class)) {
 			var version = (Map<String, Object>) vMap;
 			var v = new DsVersion();
-			if (e.type == ModelType.PROCESS) {
-				v = parseProcessSpecific(version);
+			parseGeneric(v, version);
+			if (e.type == ModelType.FLOW) {
+				parseFlowSpecific(v, version);
 			} else if (e.type == ModelType.EPD) {
-				v = parseEpdSpecific(version);
-			} else if (e.type == ModelType.FLOW) {
-				v = parseFlowSpecific(version);
+				parseEpdSpecific(v, version);
+			} else if (e.type == ModelType.PROCESS) {
+				parseProcessSpecific(v, version);
 			}
-			v.objectId = Maps.get(version, "objectId");
-			v.category = Maps.get(version, "category");
-			v.categoryPaths = Maps.getAll(version, "categoryPaths", String.class);
-			v.name = Maps.get(version, "name");
-			v.tags = Maps.getAll(version, "tags", String.class);
 			for (var cMap : Maps.getAll(version, "repos", Map.class)) {
 				var commit = (Map<String, Object>) cMap;
-				var r = new DsRepo();
-				r.path = Maps.get(commit, "path");
-				r.group = Maps.get(commit, "group");
-				r.tags = Maps.getAll(commit, "tags", String.class);
-				r.commitId = Maps.get(commit, "commitId");
-				r.commitMessage = Maps.get(commit, "commitMessage");
+				var r = createRepo(commit);
 				v.repos.add(r);
 			}
 			e.versions.add(v);
 		}
 		return e;
+
 	}
 
-	private DsVersion parseProcessSpecific(Map<String, Object> version) {
-		var v = new DsVersion();
-		v.processType = ModelTypes.processType(version);
+	private void parseGeneric(DsVersion v, Map<String, Object> version) {
+		v.objectId = Maps.get(version, "objectId");
+		v.category = Maps.get(version, "category");
+		v.categoryPaths = Maps.getAll(version, "categoryPaths", String.class);
+		v.name = Maps.get(version, "name");
+		v.tags = Maps.getAll(version, "tags", String.class);
+	}
+
+	private void parseFlowSpecific(DsVersion v, Map<String, Object> version) {
+		v.flowType = ModelTypes.flowType(version);
+	}
+
+	private void parseEpdSpecific(DsVersion v, Map<String, Object> version) {
+		v.validFromYear = Maps.get(version, "validFromYear");
+		v.validUntilYear = Maps.get(version, "validUntilYear");
+	}
+
+	private void parseProcessSpecific(DsVersion v, Map<String, Object> version) {
 		v.flowType = ModelTypes.flowType(version);
 		v.validFromYear = Maps.get(version, "validFromYear");
 		v.validUntilYear = Maps.get(version, "validUntilYear");
-		v.location = Maps.get(version, "location");
 		v.modellingApproach = ModellingApproach.from(version);
+		v.processType = ModelTypes.processType(version);
 		v.contact = Maps.get(version, "contact");
+		v.location = Maps.get(version, "location");
 		v.reviewTypes = Maps.getAll(version, "reviewTypes", String.class);
 		v.complianceDeclarations = Maps.getAll(version, "complianceDeclarations", String.class);
 		v.flowCompleteness = Maps.getAll(version, "flowCompleteness", String.class);
-		return v;
 	}
 
-	private DsVersion parseEpdSpecific(Map<String, Object> version) {
-		var v = new DsVersion();
-		v.validFromYear = Maps.get(version, "validFromYear");
-		v.validUntilYear = Maps.get(version, "validUntilYear");
-		return v;
-	}
-
-	private DsVersion parseFlowSpecific(Map<String, Object> version) {
-		var v = new DsVersion();
-		v.flowType = ModelTypes.flowType(version);
-		return v;
+	private DsRepo createRepo(Map<String, Object> commit) {
+		var r = new DsRepo();
+		r.path = Maps.get(commit, "path");
+		r.group = Maps.get(commit, "group");
+		r.tags = Maps.getAll(commit, "tags", String.class);
+		r.commitId = Maps.get(commit, "commitId");
+		return r;
 	}
 
 }

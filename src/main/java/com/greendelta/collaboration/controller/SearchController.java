@@ -24,6 +24,7 @@ import org.springframework.web.util.UriUtils;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.Repository;
@@ -56,8 +57,7 @@ public class SearchController {
 	private final SettingsService settings;
 
 	public SearchController(SearchService service, RepositoryService repoService, GroupService groupService,
-			UserService userService, UsageService usageService, IndexService indexService,
-			SettingsService settings) {
+			UserService userService, UsageService usageService, IndexService indexService, SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.groupService = groupService;
@@ -92,7 +92,9 @@ public class SearchController {
 			var loggedIn = userService.getCurrentUser().id != 0;
 			var map = Maps.create();
 			var resultInfo = Maps.of(result.resultInfo);
-			resultInfo.put("indexing", indexService.getIndexingStatus() != null);
+			resultInfo.put("indexing", indexService.isBeingUpdated(loggedIn
+					? SearchIndex.PRIVATE
+					: SearchIndex.PUBLIC));
 			map.put("resultInfo", resultInfo);
 			map.put("data", mapData(result, repositories, loggedIn));
 			var aggregations = result.aggregations.stream().filter(a -> {
@@ -180,25 +182,18 @@ public class SearchController {
 		}).filter(Objects::nonNull).toList();
 	}
 
-	@GetMapping("usage/{refId}")
+	@GetMapping("usage/{type}/{refId}")
 	public SearchResult<Map<String, Object>> searchUsage(
 			@PathVariable("refId") String refId,
 			@RequestParam(name = "repositoryId") String repositoryId,
 			@RequestParam(name = "field", required = false) String field,
-			@RequestParam(name = "commitId", required = false) String commitId,
 			@RequestParam(name = "filter", required = false) String filter,
 			@RequestParam(name = "page", defaultValue = "1") int page,
 			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
 		if (!settings.searchConfig.isUsageSearchEnabled())
 			throw Response.unavailable("Show usage feature not enabled or search cluster not available");
 		try (var repo = repoService.get(repositoryId)) {
-			if (commitId == null) {
-				commitId = repo.commits.find().latestId();
-			}
-			if (commitId == null)
-				throw Response.notFound();
-			var commit = repo.commits.get(commitId);
-			return usageService.query(repo, refId, field, commit, page, pageSize, filter);
+			return usageService.query(repo, refId, field, page, pageSize, filter);
 		}
 	}
 

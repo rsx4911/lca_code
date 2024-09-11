@@ -35,7 +35,6 @@ import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
-import com.greendelta.collaboration.util.Maps;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -83,7 +82,7 @@ public class AdminAreaController {
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		var config = settings.searchConfig;
 		try {
-			var client = config.getClient();
+			var client = config.getRestClient();
 			String indexName = config.indices.get(SearchIndex.PRIVATE);
 			var exists = client.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
 			if (!exists)
@@ -114,7 +113,7 @@ public class AdminAreaController {
 		var info = settings.serverConfig.toMap(setting -> relevantSettings.contains(setting));
 		info.put("repositoriesOrder", repoService.getRepositoryOrder());
 		info.put("repositoriesHidden", repoService.getHiddenRepositories());
-		info.put("indexingStatus", Maps.of(indexService.getIndexingStatus()));
+		info.put("indexingTasks", indexService.getIndexingTasks());
 		return info;
 	}
 

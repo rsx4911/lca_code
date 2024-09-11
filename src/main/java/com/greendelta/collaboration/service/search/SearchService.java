@@ -113,10 +113,15 @@ public class SearchService {
 			if (client == null)
 				return;
 			var buffer = new EntryBuffer(client, BUFFER_SIZE);
-			update(buffer, repo, commit,
-					e -> e.versions.forEach(
-							v -> v.repos.forEach(
-									r -> r.tags = tags)));
+			update(buffer, repo, commit, e -> {
+				e.versions.forEach(v -> {
+					v.repos.stream()
+							.filter(r -> r.path.equals(repo.path()))
+							.forEach(r -> {
+								r.tags = tags;
+							});
+				});
+			});
 			buffer.flush();
 		}
 
@@ -127,13 +132,16 @@ public class SearchService {
 			if (client == null)
 				return;
 			var buffer = new EntryBuffer(client, BUFFER_SIZE);
-			update(buffer, newRepo, commit,
-					e -> e.versions.forEach(
-							v -> v.repos.forEach(
-									r -> {
-										r.group = newRepo.group;
-										r.path = newRepo.path();
-									})));
+			update(buffer, newRepo, commit, e -> {
+				e.versions.forEach(v -> {
+					v.repos.stream()
+							.filter(r -> r.path.equals(oldPath.toString()))
+							.forEach(r -> {
+								r.group = newRepo.group;
+								r.path = newRepo.path();
+							});
+				});
+			});
 			buffer.flush();
 		}
 

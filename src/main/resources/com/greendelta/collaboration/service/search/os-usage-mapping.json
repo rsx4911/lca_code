@@ -1,6 +1,6 @@
 {
 	"properties": {
-		"repositoryPath": {
+		"path": {
 			"type": "keyword"
 		},
 		"type": {
@@ -9,19 +9,13 @@
 		"refId": {
 			"type": "keyword"
 		},
-		"name": {
-			"type": "keyword"
-		},
 		"processType": {
 			"type": "keyword"
 		},
 		"flowType": {
 			"type": "keyword"
 		},
-		"commitId": {
-			"type": "keyword"
-		},
-		"commitIds": {
+		"name": {
 			"type": "keyword"
 		},
 		"inputs": {

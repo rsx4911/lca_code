@@ -19,17 +19,19 @@ public class DsVersion {
 	public String category;
 	public List<String> categoryPaths;
 	public List<String> tags;
-	public ModellingApproach modellingApproach = ModellingApproach.UNKNOWN;
 
 	// if process or flow
 	public FlowType flowType;
 
-	// if process
-	public ProcessType processType;
-	public String contact;
-	public String location;
+	// if process or epd
 	public Integer validFromYear;
 	public Integer validUntilYear;
+
+	// if process
+	public ProcessType processType;
+	public ModellingApproach modellingApproach = ModellingApproach.UNKNOWN;
+	public String contact;
+	public String location;
 	public List<String> reviewTypes;
 	public List<String> complianceDeclarations;
 	public List<String> flowCompleteness;

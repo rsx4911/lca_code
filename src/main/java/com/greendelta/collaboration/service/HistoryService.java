@@ -1,5 +1,6 @@
 package com.greendelta.collaboration.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -10,6 +11,7 @@ import org.openlca.git.repo.Commits.Find;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.user.UserService;
 
 @Service
@@ -17,10 +19,12 @@ public class HistoryService {
 
 	private final UserService userService;
 	private final ReleaseService releaseService;
+	private final SettingsService settings;
 
-	public HistoryService(UserService userService, ReleaseService releaseService) {
+	public HistoryService(UserService userService, ReleaseService releaseService, SettingsService settings) {
 		this.userService = userService;
 		this.releaseService = releaseService;
+		this.settings = settings;
 	}
 
 	public List<Commit> getAccessibleCommits(Repository repo) {
@@ -81,6 +85,8 @@ public class HistoryService {
 	}
 
 	private Set<String> getReleaseCommitIds(Repository repo) {
+		if (!settings.is(ServerSetting.RELEASES_ENABLED))
+			return new HashSet<>();
 		return releaseService.getFor(repo.path()).stream()
 				.map(r -> r.commitId)
 				.collect(Collectors.toSet());

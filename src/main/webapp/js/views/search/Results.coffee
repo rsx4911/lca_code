@@ -74,15 +74,20 @@ define([
 						result.getPagingUrl = (page) => return Util.getUrlPart 'search/', @query, page, @pageSize, @aggregations, result.aggregations
 						result.clearUrl = Util.getUrlPart 'search/', null, 1, 10
 						result.getHighlightedVersionIndex = (dataset) =>
-						    index = dataset.versions.findIndex((version) => !!version.repos.find((repo) => repoId.indexOf(repo.path) isnt -1))
-						    if index isnt -1
-						        return index
-						    return dataset.versions.length - 1
+							index = dataset.versions.findIndex (version) => 
+								if @query and @query isnt dataset.refId and version.name.toLowerCase().indexOf(@query.name.toLowerCase()) is -1
+									return false
+								return !!version.repos.find (repo) =>
+									repoId.indexOf(repo.path) isnt -1
+							if index isnt -1
+								return index
+							return dataset.versions.length - 1
 						result.getHighlightedRepoIndex = (version) =>
-						    index = version.repos.findIndex((repo) => repoId.indexOf(repo.path) isnt -1) 
-						    if index isnt -1
-						        return index
-						    return version.repos.length - 1
+							index = version.repos.findIndex (repo) =>
+								repoId.indexOf(repo.path) isnt -1 
+							if index isnt -1
+								return index
+							return version.repos.length - 1
 						result.getAggregationUrl = (type, value, without = false) =>
 							query = @query
 							if type is 'query' and without

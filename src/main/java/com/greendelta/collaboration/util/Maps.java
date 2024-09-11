@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -301,6 +302,13 @@ public class Maps {
 		return Arrays.asList((T) value);
 	}
 
+	public static Set<String> getSet(Map<String, Object> map, String field) {
+		var array = Maps.getStringArray(map, field);
+		if (array == null)
+			return null;
+		return new HashSet<>(Arrays.asList(array));
+	}
+	
 	public static boolean isObject(Map<String, Object> map, String field) {
 		var value = get(map, field);
 		return is(value);

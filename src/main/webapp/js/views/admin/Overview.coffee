@@ -276,24 +276,24 @@ define([
 				if currentUser.isDataManager()
 					@repositoryFilter.init()
 					@groupFilter.init()
-					@renderIndexingStatus(data.indexingStatus)
+					@renderIndexingTasks(data.indexingTasks)
 
-			renderIndexingStatus: (indexing) ->
+			renderIndexingTasks: (indexingTasks) ->
 				unless $('#indexing-status').length
 					return
-				unless indexing
+				unless indexingTasks
 					@$('#indexing-status').html('')
 					return
 				html = "<small><div>Indexing status:</div>"
-				for title, index in indexing.titles
-					if index is 0
-						html += "<div>* #{title} (#{indexing.worked + 1}/#{indexing.total})</div>"
-					else
-						html += "<div>* #{title}</div>"
+				for task, index in indexingTasks
+					if index < 5
+						html += "<div>* #{task}</div>"
+				if indexingTasks.length > 5
+					html += "<div>* and #{indexingTasks.length - 5} more"
 				html += '</small>'
 				@$('#indexing-status').html html
 				setTimeout () =>
-					$.get 'ws/admin/area/serverInfo', (serverInfo) => @renderIndexingStatus(serverInfo.indexingStatus)						
+					$.get 'ws/admin/area/serverInfo', (serverInfo) => @renderIndexingTasks(serverInfo.indexingTasks)						
 				, 5000
 
 )
