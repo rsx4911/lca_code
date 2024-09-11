@@ -84,9 +84,8 @@ public class UsageService {
 				.after(previousCommit != null ? previousCommit.id : null)
 				.until(currentCommit.id)
 				.all();
-		System.out.println("Indexing " + repo.path());
+		log.info("Indexing " + repo.path());
 		for (var commit : commits) {
-			System.out.println(commit.message);
 			new UsageIndexer(buffer, repo, commit).index();
 		}
 	}
