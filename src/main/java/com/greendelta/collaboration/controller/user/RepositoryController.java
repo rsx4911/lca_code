@@ -35,14 +35,14 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.ReleaseService;
+import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.search.IndexService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
@@ -61,12 +61,12 @@ public class RepositoryController {
 	private final IndexService indexService;
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
-	private final ReleaseService releaseService;
+	private final HistoryService historyService;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, PermissionsService permissions,
 			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
-			ReleaseService releaseService) {
+			HistoryService historyService) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -75,7 +75,7 @@ public class RepositoryController {
 		this.indexService = indexService;
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
-		this.releaseService = releaseService;
+		this.historyService = historyService;
 	}
 
 	@GetMapping
@@ -89,8 +89,7 @@ public class RepositoryController {
 			all.sort();
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all, Repository::path);
 			if (module == null)
-				return Response.ok(SearchResults.convert(result,
-						repo -> Repositories.mapForList(repo, releaseService.hasReleases(repo.path()))));
+				return Response.ok(SearchResults.convert(result, this::map));
 			var user = userService.getCurrentUser();
 			switch (module) {
 				case DASHBOARD, GROUP:
@@ -110,7 +109,7 @@ public class RepositoryController {
 	}
 
 	private Map<String, Object> map(Repository repo) {
-		return Repositories.mapForList(repo, releaseService.hasReleases(repo.path()));
+		return Repositories.mapForList(repo, !historyService.getReleasedCommits(repo).isEmpty());
 	}
 
 	private Map<String, Object> putRepositoryInfo(Map<String, Object> map, Repository repo, User user) {

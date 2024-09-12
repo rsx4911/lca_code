@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -25,6 +26,7 @@ import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.google.common.io.Files;
 import com.greendelta.collaboration.controller.util.Response;
@@ -58,10 +60,12 @@ public class RepositoryService {
 	private final FileService fileService;
 	private final TaskService taskService;
 	private final ReleaseService releaseService;
+	private final HistoryService historyService;
 
 	public RepositoryService(GroupService groupService, PermissionsService permissions,
 			MembershipService membershipService, UserService userService, CommentService commentService,
-			SettingsService settings, FileService fileService, TaskService taskService, ReleaseService releaseService) {
+			SettingsService settings, FileService fileService, TaskService taskService, ReleaseService releaseService,
+			HistoryService historyService) {
 		this.groupService = groupService;
 		this.permissions = permissions;
 		this.membershipService = membershipService;
@@ -71,6 +75,7 @@ public class RepositoryService {
 		this.fileService = fileService;
 		this.taskService = taskService;
 		this.releaseService = releaseService;
+		this.historyService = historyService;
 	}
 
 	public Repository get(RepositoryPath path) {
@@ -97,13 +102,14 @@ public class RepositoryService {
 			throw Response.notFound("No repository '" + id + "' found");
 		if (!Repository.getDir(path, group, name).exists())
 			throw Response.notFound("No repository '" + group + "/" + name + "' found");
-		if (!permissions.canRead(id) && !releaseService.hasReleases(id))
-			throw Response.forbidden(id, Permission.READ);
 		Settings<RepositorySetting> repoSettings = settings.get(SettingType.REPOSITORY_SETTING, id,
 				permissions::canSetSettingsOf);
 		var groupSettings = groupService.getSettings(group);
 		try {
-			return new Repository(path, group, name, repoSettings, groupSettings);
+			var repo = new Repository(path, group, name, repoSettings, groupSettings);
+			if (!permissions.canRead(id) && historyService.getReleasedCommits(repo).isEmpty())
+				throw Response.forbidden(id, Permission.READ);
+			return repo;
 		} catch (IOException e) {
 			log.error("Error opening repository", e);
 			return null;
@@ -280,7 +286,7 @@ public class RepositoryService {
 	public void generateCachedJson(Repository repo, String commitId, List<LibraryLink> linkedLibraries) {
 		generateJson(repo.dir, repo.getCachedJsonFile(commitId), commitId, linkedLibraries);
 	}
-	
+
 	public void deleteCachedJson(Repository repo, String commitId) {
 		var jsonFile = repo.getCachedJsonFile(commitId);
 		Dirs.delete(jsonFile);
@@ -358,7 +364,14 @@ public class RepositoryService {
 				releaseService.getAll().stream()
 						.map(info -> info.repositoryPath)
 						.distinct()
-						.map(this::get));
+						.map(path -> {
+							try {
+								return get(path);
+							} catch (ResponseStatusException e) {
+								return null;
+							}
+						})
+						.filter(Objects::nonNull));
 	}
 
 	public List<String> getRepositoryOrder() {

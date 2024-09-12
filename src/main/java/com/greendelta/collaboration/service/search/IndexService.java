@@ -1,7 +1,9 @@
 package com.greendelta.collaboration.service.search;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.function.Consumer;
 
@@ -39,15 +41,20 @@ public class IndexService {
 		this.settings = settings;
 	}
 
-	private void offer(SearchIndex index, String task, Runnable actualWork) {
-		offer(index, null, task, repo -> actualWork.run());
+	private void offer(String task, Runnable actualWork) {
+		offer(null, null, null, task, repo -> actualWork.run());
 	}
 
 	private void offer(SearchIndex index, RepositoryPath repoPath, String task, Consumer<Repository> actualWork) {
+		offer(index, null, repoPath, task, actualWork);
+	}
+
+	private void offer(SearchIndex index, SearchIndex secondIndex, RepositoryPath repoPath, String task,
+			Consumer<Repository> actualWork) {
 		synchronized (workQueue) {
 			var repo = repoPath != null ? repoService.get(repoPath) : null;
 			var isFirst = workQueue.isEmpty();
-			var work = new Work(index, repo, task, actualWork);
+			var work = new Work(repo, task, actualWork, index, secondIndex);
 			workQueue.offer(work);
 			if (isFirst) {
 				runNext();
@@ -82,11 +89,17 @@ public class IndexService {
 			if (workQueue.isEmpty())
 				return null;
 			return workQueue.stream().map(work -> {
-				var task = switch(work.index) {
-					case PUBLIC -> "[Public search] ";
-					case PRIVATE -> "[Private search] ";
-					case USAGE -> "[Usage search] ";
-				};
+				var task = "";
+				if (!work.indices.isEmpty()) {
+					for (var index : work.indices) {
+						task += switch (index) {
+							case PUBLIC -> "[Public search] ";
+							case PRIVATE -> "[Private search] ";
+							case PRIVATE_USAGE -> "[Public usage] ";
+							case PUBLIC_USAGE -> "[Private usage] ";
+						};
+					}
+				}
 				task += work.task;
 				if (work.repo != null) {
 					task += " " + work.repo.path();
@@ -100,20 +113,17 @@ public class IndexService {
 		synchronized (workQueue) {
 			if (workQueue.isEmpty())
 				return false;
-			return workQueue.stream().filter(work -> work.index == index).count() > 0;
+			return workQueue.stream().filter(work -> work.indices.contains(index)).count() > 0;
 		}
 	}
 
 	public void clearIndexAsync() {
 		if (!settings.searchConfig.isSearchAvailable())
 			return;
-		if (settings.is(ServerSetting.RELEASES_ENABLED)) {
-			offer(SearchIndex.PUBLIC, "Clearing index", searchService.on(SearchIndex.PUBLIC)::clear);
-		}
-		offer(SearchIndex.PRIVATE, "Clearing index", searchService.on(SearchIndex.PRIVATE)::clear);
-		if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
-			offer(SearchIndex.USAGE, "Clearing index", usageService::clearIndex);
-		}
+		offer("Clearing indices", () -> {
+			searchService.on(SearchIndex.PUBLIC, SearchIndex.PRIVATE).clear();
+			usageService.on(SearchIndex.PUBLIC_USAGE, SearchIndex.PRIVATE_USAGE).clear();
+		});
 	}
 
 	public void indexPrivateAsync(RepositoryPath path, Commit previousCommit, Commit commit) {
@@ -123,11 +133,11 @@ public class IndexService {
 			return;
 		offer(SearchIndex.PRIVATE, path, "Indexing", repo -> {
 			List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
-			searchService.on(SearchIndex.PRIVATE).index(repo, tags, previousCommit, commit);
+			searchService.on(SearchIndex.PRIVATE).index(repo.path(), repo, tags, previousCommit, commit);
 		});
 		if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
-			offer(SearchIndex.USAGE, path, "Indexing", repo -> {
-				usageService.index(repo, previousCommit, commit);
+			offer(SearchIndex.PRIVATE_USAGE, path, "Indexing", repo -> {
+				usageService.on(SearchIndex.PRIVATE_USAGE).index(repo.path(), repo, previousCommit, commit);
 			});
 		}
 	}
@@ -139,8 +149,13 @@ public class IndexService {
 			return;
 		offer(SearchIndex.PUBLIC, path, "Indexing", repo -> {
 			var release = releaseService.get(repo.path(), commit.id);
-			searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), previousCommit, commit);
+			searchService.on(SearchIndex.PUBLIC).index(repo.path(), repo, release.getTags(), previousCommit, commit);
 		});
+		if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
+			offer(SearchIndex.PUBLIC_USAGE, path, "Indexing", repo -> {
+				usageService.on(SearchIndex.PUBLIC_USAGE).index(repo.path(), repo, previousCommit, commit);
+			});
+		}
 	}
 
 	public void moveIndexAsync(RepositoryPath path, RepositoryPath newPath) {
@@ -159,8 +174,13 @@ public class IndexService {
 			offer(SearchIndex.PRIVATE, newPath, "Moving " + path.toString() + " to",
 					repo -> searchService.on(SearchIndex.PRIVATE).move(path, repo, newHead));
 			if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
-				offer(SearchIndex.USAGE, newPath, "Moving index of " + path.toString() + " to", repo -> {
-					usageService.move(path, repo);
+				if (latestRelease != null) {
+					offer(SearchIndex.PUBLIC_USAGE, newPath, "Moving index of " + path.toString() + " to", repo -> {
+						usageService.on(SearchIndex.PUBLIC_USAGE).move(path, repo);
+					});
+				}
+				offer(SearchIndex.PRIVATE_USAGE, newPath, "Moving index of " + path.toString() + " to", repo -> {
+					usageService.on(SearchIndex.PRIVATE_USAGE).move(path, repo);
 				});
 			}
 		}
@@ -202,23 +222,59 @@ public class IndexService {
 			if (head == null)
 				return;
 			var latestRelease = historyService.getLatestReleasedCommit(r);
-			if (latestRelease != null) {
-				offer(SearchIndex.PUBLIC, path, "Reindexing", repo -> {
-					var release = releaseService.get(r.path(), latestRelease.id);
-					searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
-					searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), null, latestRelease);
+			if (latestRelease == null) {
+				offer(SearchIndex.PRIVATE, path, "Reindexing", repo -> {
+					List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
+					var indexer = searchService.on(SearchIndex.PRIVATE);
+					indexer.remove(repo, head);
+					indexer.index(repo.path(), repo, tags, null, head);
 				});
-			}
-			offer(SearchIndex.PRIVATE, path, "Reindexing", repo -> {
-				List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
-				searchService.on(SearchIndex.PRIVATE).remove(repo, head);
-				searchService.on(SearchIndex.PRIVATE).index(repo, tags, null, head);
-			});
-			if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
-				offer(SearchIndex.USAGE, path, "Reindexing", repo -> {
-					usageService.remove(repo);
-					usageService.index(repo, null, head);
-				});
+				if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
+					offer(SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
+						var indexer = usageService.on(SearchIndex.PRIVATE_USAGE);
+						indexer.remove(repo);
+						indexer.index(repo.path(), repo, null, head);
+					});
+				}
+			} else {
+				var release = releaseService.get(r.path(), latestRelease.id);
+				if (head.equals(latestRelease)) {
+					offer(SearchIndex.PUBLIC, SearchIndex.PRIVATE, path, "Reindexing", repo -> {
+						var indexer = searchService.on(SearchIndex.PUBLIC, SearchIndex.PRIVATE);
+						indexer.remove(repo, head);
+						indexer.index(repo.path(), repo, release.getTags(), null, head);
+					});
+					if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
+						offer(SearchIndex.PUBLIC_USAGE, SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
+							var indexer = usageService.on(SearchIndex.PUBLIC_USAGE, SearchIndex.PRIVATE_USAGE);
+							indexer.remove(repo);
+							indexer.index(repo.path(), repo, null, head);
+						});
+					}
+				} else {
+					offer(SearchIndex.PUBLIC, path, "Reindexing", repo -> {
+						var indexer = searchService.on(SearchIndex.PUBLIC);
+						indexer.remove(repo, latestRelease);
+						indexer.index(repo.path(), repo, release.getTags(), null, latestRelease);
+					});
+					offer(SearchIndex.PRIVATE, path, "Reindexing", repo -> {
+						var indexer = searchService.on(SearchIndex.PRIVATE);
+						indexer.remove(repo, latestRelease);
+						indexer.index(repo.path(), repo, release.getTags(), null, head);
+					});
+					if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
+						offer(SearchIndex.PUBLIC_USAGE, path, "Reindexing", repo -> {
+							var indexer = usageService.on(SearchIndex.PUBLIC_USAGE);
+							indexer.remove(repo);
+							indexer.index(repo.path(), repo, null, latestRelease);
+						});
+						offer(SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
+							var indexer = usageService.on(SearchIndex.PRIVATE_USAGE);
+							indexer.remove(repo);
+							indexer.index(repo.path(), repo, null, head);
+						});
+					}
+				}
 			}
 		}
 	}
@@ -226,42 +282,77 @@ public class IndexService {
 	public void reindexAllAsync(List<RepositoryPath> paths) {
 		if (!settings.searchConfig.isSearchAvailable())
 			return;
-		if (settings.is(ServerSetting.RELEASES_ENABLED)) {
-			offer(SearchIndex.PUBLIC, "Clearing index", searchService.on(SearchIndex.PUBLIC)::clear);
-			for (var path : paths) {
-				try (var r = repoService.get(path)) {
-					var latestRelease = historyService.getLatestReleasedCommit(r);
-					if (latestRelease == null)
-						continue;
-					offer(SearchIndex.PUBLIC, path, "Indexing", repo -> {
-						var release = releaseService.get(repo.path(), latestRelease.id);
-						searchService.on(SearchIndex.PUBLIC).index(repo, release.getTags(), null, latestRelease);
-					});
-				}
-			}
-		}
-		offer(SearchIndex.PRIVATE, "Clearing index", searchService.on(SearchIndex.PRIVATE)::clear);
+		searchService.on(SearchIndex.PUBLIC, SearchIndex.PRIVATE).clear();
+		usageService.on(SearchIndex.PUBLIC_USAGE, SearchIndex.PRIVATE_USAGE).clear();
 		for (var path : paths) {
 			try (var r = repoService.get(path)) {
 				var head = r.commits.head();
 				if (head == null)
-					continue;
-				offer(SearchIndex.PRIVATE, path, "Indexing", repo -> {
-					List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
-					searchService.on(SearchIndex.PRIVATE).index(repo, tags, null, head);
-				});
+					return;
+				var latestRelease = historyService.getLatestReleasedCommit(r);
+				if (latestRelease == null) {
+					offer(SearchIndex.PRIVATE, path, "Reindexing", repo -> {
+						List<String> tags = repo.settings != null ? repo.settings.get(RepositorySetting.TAGS) : null;
+						var indexer = searchService.on(SearchIndex.PRIVATE);
+						indexer.remove(repo, head);
+						indexer.index(repo.path(), repo, tags, null, head);
+					});
+				} else {
+					var release = releaseService.get(r.path(), latestRelease.id);
+					if (head.equals(latestRelease)) {
+						offer(SearchIndex.PUBLIC, SearchIndex.PRIVATE, path, "Reindexing", repo -> {
+							var indexer = searchService.on(SearchIndex.PUBLIC, SearchIndex.PRIVATE);
+							indexer.remove(repo, head);
+							indexer.index(repo.path(), repo, release.getTags(), null, head);
+						});
+					} else {
+						offer(SearchIndex.PUBLIC, path, "Reindexing", repo -> {
+							var indexer = searchService.on(SearchIndex.PUBLIC);
+							indexer.remove(repo, latestRelease);
+							indexer.index(repo.path(), repo, release.getTags(), null, latestRelease);
+						});
+						offer(SearchIndex.PRIVATE, path, "Reindexing", repo -> {
+							var indexer = searchService.on(SearchIndex.PRIVATE);
+							indexer.remove(repo, latestRelease);
+							indexer.index(repo.path(), repo, release.getTags(), null, head);
+						});
+					}
+				}
 			}
 		}
 		if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
-			offer(SearchIndex.USAGE, "Clearing index", usageService::clearIndex);
 			for (var path : paths) {
 				try (var r = repoService.get(path)) {
 					var head = r.commits.head();
 					if (head == null)
-						continue;
-					offer(SearchIndex.USAGE, path, "Indexing", repo -> {
-						usageService.index(repo, null, head);
-					});
+						return;
+					var latestRelease = historyService.getLatestReleasedCommit(r);
+					if (latestRelease == null) {
+						offer(SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
+							var indexer = usageService.on(SearchIndex.PRIVATE_USAGE);
+							indexer.remove(repo);
+							indexer.index(repo.path(), repo, null, head);
+						});
+					} else {
+						if (head.equals(latestRelease)) {
+							offer(SearchIndex.PUBLIC_USAGE, SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
+								var indexer = usageService.on(SearchIndex.PUBLIC_USAGE, SearchIndex.PRIVATE_USAGE);
+								indexer.remove(repo);
+								indexer.index(repo.path(), repo, null, head);
+							});
+						} else {
+							offer(SearchIndex.PUBLIC_USAGE, path, "Reindexing", repo -> {
+								var indexer = usageService.on(SearchIndex.PUBLIC_USAGE);
+								indexer.remove(repo);
+								indexer.index(repo.path(), repo, null, latestRelease);
+							});
+							offer(SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
+								var indexer = usageService.on(SearchIndex.PRIVATE_USAGE);
+								indexer.remove(repo);
+								indexer.index(repo.path(), repo, null, head);
+							});
+						}
+					}
 				}
 			}
 		}
@@ -278,22 +369,25 @@ public class IndexService {
 			if (latestRelease != null) {
 				searchService.on(SearchIndex.PUBLIC).remove(repo, latestRelease);
 			}
+			if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
+				usageService.on(SearchIndex.PUBLIC_USAGE).remove(repo);
+			}
 		}
 		searchService.on(SearchIndex.PRIVATE).remove(repo, head);
 		if (settings.is(ServerSetting.USAGE_SEARCH_ENABLED)) {
-			usageService.remove(repo);
+			usageService.on(SearchIndex.PRIVATE_USAGE).remove(repo);
 		}
 	}
 
-	public class Work implements Runnable {
+	private class Work implements Runnable {
 
-		public final SearchIndex index;
-		public final Repository repo;
-		public final String task;
+		private final List<SearchIndex> indices;
+		private final Repository repo;
+		private final String task;
 		private final Consumer<Repository> work;
 
-		private Work(SearchIndex index, Repository repo, String task, Consumer<Repository> work) {
-			this.index = index;
+		private Work(Repository repo, String task, Consumer<Repository> work, SearchIndex... indices) {
+			this.indices = Arrays.asList(indices).stream().filter(Objects::nonNull).toList();
 			this.repo = repo;
 			this.task = task;
 			this.work = work;
@@ -302,16 +396,6 @@ public class IndexService {
 		@Override
 		public void run() {
 			work.accept(repo);
-		}
-
-	}
-
-	public class IndexingStatus {
-
-		public final List<String> tasks;
-
-		private IndexingStatus(List<String> tasks) {
-			this.tasks = tasks;
 		}
 
 	}

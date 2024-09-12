@@ -17,6 +17,7 @@ import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Entry;
 import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.jsonld.Enums;
 import org.openlca.util.Strings;
@@ -24,22 +25,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.greendelta.collaboration.model.glad.ModellingApproach;
-import com.greendelta.collaboration.service.Repository;
 
 public class MetaData {
 
 	private static final Logger log = LoggerFactory.getLogger(MetaData.class);
 
-	public static Map<String, Object> forBrowse(Map<String, Object> e, Reference ref, Repository repo) {
+	public static Map<String, Object> forBrowse(Map<String, Object> e, Reference ref, OlcaRepository repo) {
 		putDatasetInfo(e, ref, repo, Mode.BROWSE);
 		return e;
 	}
 
-	public static Map<String, Object> forBrowse(Entry e, Repository repo) {
+	public static Map<String, Object> forBrowse(Entry e, OlcaRepository repo) {
 		return toDatasetInfo(e, repo, Mode.BROWSE);
 	}
 
-	private static Map<String, Object> toDatasetInfo(Entry e, Repository repo, Mode mode) {
+	private static Map<String, Object> toDatasetInfo(Entry e, OlcaRepository repo, Mode mode) {
 		var entry = Maps.of(e);
 		entry.remove("objectId");
 		if (e.typeOfEntry != EntryType.DATASET)
@@ -48,18 +48,18 @@ public class MetaData {
 		return entry;
 	}
 
-	public static Map<String, Object> forSearch(Reference r, Repository repo) {
+	public static Map<String, Object> forSearch(Reference r, OlcaRepository repo) {
 		return toDatasetInfo(r, repo, Mode.SEARCH);
 	}
 
-	private static Map<String, Object> toDatasetInfo(Reference r, Repository repo, Mode mode) {
+	private static Map<String, Object> toDatasetInfo(Reference r, OlcaRepository repo, Mode mode) {
 		var ref = Maps.of(r);
 		ref.remove("objectId");
 		putDatasetInfo(ref, r, repo, mode);
 		return ref;
 	}
 
-	public static Map<String, Object> forBrowse(Diff diff, Repository repo) {
+	public static Map<String, Object> forBrowse(Diff diff, OlcaRepository repo) {
 		var ref = diff.diffType == DiffType.DELETED ? diff.oldRef : diff.newRef;
 		var meta = putDatasetInfo(ref, diff.diffType, repo, Mode.BROWSE);
 		var commitId = diff.newRef != null ? diff.newRef.commitId : diff.oldRef.commitId;
@@ -67,24 +67,24 @@ public class MetaData {
 		return meta;
 	}
 
-	public static String getName(Repository repo, ModelType type, String refId, String commitId) {
+	public static String getName(OlcaRepository repo, ModelType type, String refId, String commitId) {
 		var ref = repo.references.get(type, refId, commitId);
 		return getName(repo, ref);
 	}
 
-	public static String getName(Repository repo, Reference ref) {
+	public static String getName(OlcaRepository repo, Reference ref) {
 		var info = repo.datasets.parse(ref, "name");
 		var name = info.get("name");
 		return name != null ? name.toString() : "";
 	}
 
-	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, Repository repo, Mode mode) {
+	private static Map<String, Object> putDatasetInfo(Reference ref, DiffType diffType, OlcaRepository repo, Mode mode) {
 		var map = toDatasetInfo(ref, repo, mode);
 		map.put("diffType", diffType);
 		return map;
 	}
 
-	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, Repository repo,
+	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, OlcaRepository repo,
 			Mode mode) {
 		if (ref.isCategory) {
 			entry.put("name", ref.path.substring(ref.path.lastIndexOf("/") + 1));

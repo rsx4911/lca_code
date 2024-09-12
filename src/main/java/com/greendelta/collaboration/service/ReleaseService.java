@@ -20,13 +20,6 @@ public class ReleaseService {
 		return dao.getAll();
 	}
 
-	public boolean hasReleases(String groupOrRepository) {
-		var releases = dao.query(
-				"SELECT release FROM ReleaseInfo release WHERE release.repositoryPath LIKE :path",
-				Map.of("path", groupOrRepository + "%"));
-		return !releases.isEmpty();
-	}
-
 	public boolean isReleased(String repositoryPath, String commitId) {
 		return get(repositoryPath, commitId) != null;
 	}

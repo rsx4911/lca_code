@@ -185,11 +185,20 @@ public class BrowseController {
 		try (var repo = repoService.get(group, name)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
-				return handleMissing(repo, type, refId, commitId);
+				throw Response.notFound(notFoundMessage(type, refId, null));
 			var ref = repo.references.get(type, refId, commit.id);
+			if (ref == null) {
+				var previousCommitId = repo.commits.find().before(commit.id).latestId();
+				if (repo.references.get(type, refId, previousCommitId) == null)
+					throw Response.notFound(notFoundMessage(type, refId, commitId));
+			}
 			var dataset = repo.datasets.get(ref);
 			if (Strings.nullOrEmpty(dataset))
-				return handleMissing(repo, type, refId, commitId);
+				return Map.of(
+						"@type", type.getModelClass().getSimpleName(),
+						"@id", refId,
+						"commitId", commitId != null ? commitId : "",
+						"deleted", true);
 			var map = Maps.of(dataset);
 			map.put("commitId", commit.id);
 			new IsInRepoInfo(repo, commitId).addIn(map);
@@ -197,22 +206,10 @@ public class BrowseController {
 		}
 	}
 
-	private Map<String, Object> handleMissing(Repository repo, ModelType type, String refId, String commitId) {
-		var before = historyService.getLatestAccessibleCommit(repo, options -> options.before(commitId));
-		if (before != null)
-			return Map.of(
-					"@type", type.getModelClass().getSimpleName(),
-					"@id", refId,
-					"commitId", commitId,
-					"deleted", true);
-		var after = historyService.getLatestAccessibleCommit(repo, options -> options.after(commitId));
-		if (after != null)
-			return Map.of(
-					"@type", type.getModelClass().getSimpleName(),
-					"@id", refId,
-					"commitId", commitId,
-					"notFound", true);
-		throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
+	private String notFoundMessage(ModelType type, String refId, String commitId) {
+		if (Strings.nullOrEmpty(commitId))
+			return type + " " + refId + " not found";
+		return type + " " + refId + " not found for commit " + commitId;
 	}
 
 	private class IsInRepoInfo {

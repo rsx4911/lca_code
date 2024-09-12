@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,6 +16,7 @@ import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.DiffType;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.Enums;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
@@ -33,31 +37,19 @@ public class UsageService {
 
 	private static final Logger log = LogManager.getLogger(UsageService.class);
 	private static final int BUFFER_SIZE = 100;
+	private final UserService userService;
 	private final SettingsService settings;
 
-	public UsageService(SettingsService settings) {
+	public UsageService(UserService userService, SettingsService settings) {
+		this.userService = userService;
 		this.settings = settings;
-	}
-
-	private void createIndex() {
-		try {
-			getClient().create(Map.of(
-					"config", readJson("os-usage-config.json"),
-					"mapping", readJson("os-usage-mapping.json")));
-		} catch (IOException e) {
-			log.error("Error creating search ref index", e);
-		}
-	}
-
-	private String readJson(String resource) throws IOException {
-		var stream = getClass().getResourceAsStream(resource);
-		if (stream == null)
-			return "{}";
-		return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
 	}
 
 	public SearchResult<Map<String, Object>> query(Repository repo, String refId, String field, int page, int pageSize,
 			String filter) {
+		var client = userService.getCurrentUser().isAnonymous()
+				? settings.searchConfig.getSearchClient(SearchIndex.PUBLIC_USAGE)
+				: settings.searchConfig.getSearchClient(SearchIndex.PRIVATE_USAGE);
 		var query = new SearchQueryBuilder();
 		query.page(page);
 		query.pageSize(pageSize);
@@ -70,45 +62,35 @@ public class UsageService {
 		if (!Strings.nullOrEmpty(filter)) {
 			query.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
 		}
-		return getClient().search(query.build());
+		return client.search(query.build());
 	}
 
-	void index(Repository repo, Commit previousCommit, Commit currentCommit) {
-		if (currentCommit == null)
-			return;
-		var client = getClient();
-		if (client == null)
-			return;
-		var buffer = new EntryBuffer(client, BUFFER_SIZE);
-		var commits = repo.commits.find()
-				.after(previousCommit != null ? previousCommit.id : null)
-				.until(currentCommit.id)
-				.all();
-		for (var commit : commits) {
-			new UsageIndexer(buffer, repo, commit).index();
-		}
-		buffer.flush();
+	Index on(SearchIndex... indices) {
+		var clients = Arrays.asList(indices).stream().map(settings.searchConfig::getSearchClient).toList();
+		return new Index(clients.toArray(new SearchClient[clients.size()]));
 	}
 
-	public class UsageIndexer {
+	static class Index {
 
-		private final Repository repo;
-		private final Commit commit;
-		private final EntryBuffer buffer;
+		private final List<SearchClient> clients;
 
-		private UsageIndexer(EntryBuffer buffer, Repository repo, Commit commit) {
-			this.repo = repo;
-			this.commit = commit;
-			this.buffer = buffer;
+		Index(SearchClient... clients) {
+			this.clients = Arrays.asList(clients).stream().filter(Objects::nonNull).toList();
 		}
 
-		private void index() {
-			var diffs = repo.diffs.find().commit(commit)
+		void index(String path, OlcaRepository repo, Commit previousCommit, Commit commit) {
+			if (commit == null)
+				return;
+			var buffer = new EntryBuffer(clients, BUFFER_SIZE);
+			var diffs = repo.diffs.find()
+					.commit(previousCommit)
 					.excludeCategories()
-					.withPreviousCommit();
+					.with(commit);
 			for (var diff : diffs) {
-				if (diff.diffType == DiffType.DELETED)
+				if (diff.diffType == DiffType.DELETED) {
+					buffer.putRemove(Entry.toId(path, diff.type, diff.refId));
 					continue;
+				}
 				var ref = diff.newRef;
 				var dataset = repo.datasets.get(ref);
 				var json = Maps.of(dataset);
@@ -121,10 +103,18 @@ public class UsageService {
 				var n = !Strings.nullOrEmpty(location)
 						? name += " - " + location
 						: name;
-				var entry = new Entry(repo.path(), ref.type, ref.refId, processType, flowType, n);
+				var entry = new Entry(path, ref.type, ref.refId, processType, flowType, n);
 				collectReferences(entry, null, json);
+				if (entry.inputs.isEmpty() && entry.outputs.isEmpty() && entry.others.isEmpty())
+					continue;
+				if (entry.refId.equals("05000718-d26b-4e98-adda-74f33bae5b97")) {
+					entry.others.add("00b5e4eb-9f85-40df-89c8-df38cae81b78");
+					entry.inputs.clear();
+					entry.outputs.clear();
+				}
 				buffer.putInsert(entry.getId(), entry);
 			}
+			buffer.flush();
 		}
 
 		private FlowType getQuantitativeReferenceFlowType(Map<String, Object> json) {
@@ -200,35 +190,52 @@ public class UsageService {
 			return null;
 		}
 
-	}
+		void move(RepositoryPath path, Repository newRepo) {
+			for (var client : clients) {
+				var builder = new SearchQueryBuilder()
+						.filter("path", SearchFilterValue.term(path));
+				var ids = client.searchIds(builder.build());
+				if (ids.isEmpty())
+					continue;
+				client.update(ids, Maps.of("path", newRepo.path()));
+			}
+		}
 
-	void move(RepositoryPath path, Repository newRepo) {
-		var client = getClient();
-		if (client == null)
-			return;
-		var builder = new SearchQueryBuilder()
-				.filter("path", SearchFilterValue.term(path));
-		var ids = client.searchIds(builder.build());
-		client.update(ids, Maps.of("path", newRepo.path()));
-	}
+		void remove(Repository repo) {
+			for (var client : clients) {
+				var builder = new SearchQueryBuilder()
+						.filter("path", SearchFilterValue.term(repo.path()));
+				var ids = client.searchIds(builder.build());
+				if (ids.isEmpty())
+					continue;
+				client.remove(ids);
+			}
+		}
 
-	void remove(Repository repo) {
-		var client = getClient();
-		if (client == null)
-			return;
-		var builder = new SearchQueryBuilder()
-				.filter("path", SearchFilterValue.term(repo.path()));
-		var ids = client.searchIds(builder.build());
-		client.remove(ids);
-	}
+		void clear() {
+			for (var client : clients) {
+				client.delete();
+				createIndex(client);
+			}
+		}
 
-	void clearIndex() {
-		getClient().delete();
-		createIndex();
-	}
+		private void createIndex(SearchClient client) {
+			try {
+				client.create(Map.of(
+						"config", readJson("os-usage-config.json"),
+						"mapping", readJson("os-usage-mapping.json")));
+			} catch (IOException e) {
+				log.error("Error creating search ref index", e);
+			}
+		}
 
-	private SearchClient getClient() {
-		return settings.searchConfig.getSearchClient(SearchIndex.USAGE);
+		private String readJson(String resource) throws IOException {
+			var stream = getClass().getResourceAsStream(resource);
+			if (stream == null)
+				return "{}";
+			return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+		}
+
 	}
 
 	public record Entry(String path, ModelType type, String refId, ProcessType processType, FlowType flowType,
@@ -240,6 +247,10 @@ public class UsageService {
 		}
 
 		private String getId() {
+			return toId(path, type, refId);
+		}
+
+		private static String toId(String path, ModelType type, String refId) {
 			return Strings.join(Arrays.asList(path, type.name(), refId), '/');
 		}
 

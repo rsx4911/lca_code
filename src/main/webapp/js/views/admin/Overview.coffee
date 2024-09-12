@@ -284,13 +284,9 @@ define([
 				unless indexingTasks
 					@$('#indexing-status').html('')
 					return
-				html = "<small><div>Indexing status:</div>"
+				html = "<hr><div>Indexing status:</div>"
 				for task, index in indexingTasks
-					if index < 5
-						html += "<div>* #{task}</div>"
-				if indexingTasks.length > 5
-					html += "<div>* and #{indexingTasks.length - 5} more"
-				html += '</small>'
+					html += "<div>* #{task}</div>"
 				@$('#indexing-status').html html
 				setTimeout () =>
 					$.get 'ws/admin/area/serverInfo', (serverInfo) => @renderIndexingTasks(serverInfo.indexingTasks)						

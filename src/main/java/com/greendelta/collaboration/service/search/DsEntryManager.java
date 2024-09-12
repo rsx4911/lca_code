@@ -9,18 +9,20 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.util.Strings;
 
-import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.MetaData;
 
 class DsEntryManager {
 
-	private final Repository repo;
+	private final String path;
+	private final OlcaRepository repo;
 	private final Commit commit;
 
-	DsEntryManager(Repository repo, Commit commit) {
+	DsEntryManager(String path, OlcaRepository repo, Commit commit) {
+		this.path = path;
 		this.repo = repo;
 		this.commit = commit;
 	}
@@ -108,8 +110,8 @@ class DsEntryManager {
 
 	private DsRepo createRepo(Reference ref, List<String> tags) {
 		var r = new DsRepo();
-		r.path = repo.path();
-		r.group = repo.group;
+		r.path = path;
+		r.group = path.substring(0, path.indexOf("/"));
 		r.tags = tags;
 		r.commitId = commit.id;
 		return r;
@@ -132,7 +134,7 @@ class DsEntryManager {
 
 	private DsRepo getRepo(DsVersion v) {
 		for (var r : v.repos)
-			if (r.path.equals(repo.path()))
+			if (r.path.equals(path))
 				return r;
 		return null;
 	}

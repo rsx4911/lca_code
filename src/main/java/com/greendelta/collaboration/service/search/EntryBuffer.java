@@ -1,7 +1,9 @@
 package com.greendelta.collaboration.service.search;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,27 +13,38 @@ import com.greendelta.search.wrapper.SearchClient;
 class EntryBuffer {
 
 	private final int bufferSize;
-	private SearchClient client;
+	private List<SearchClient> clients;
 	private Set<String> toRemove = new HashSet<>();
 	private Map<String, Object> toUpdate = new HashMap<>();
 	private Map<String, Object> toInsert = new HashMap<>();
 
 	EntryBuffer(SearchClient client, int bufferSize) {
-		this.client = client;
+		this.clients = Arrays.asList(client);
+		this.bufferSize = bufferSize;
+	}
+
+	EntryBuffer(List<SearchClient> clients, int bufferSize) {
+		this.clients = clients;
 		this.bufferSize = bufferSize;
 	}
 
 	void flush() {
 		if (!toInsert.isEmpty()) {
-			client.index(convert(toInsert));
+			for (var client : clients) {
+				client.index(convert(toInsert));
+			}
 			toInsert.clear();
 		}
 		if (!toUpdate.isEmpty()) {
-			client.update(convert(toUpdate));
+			for (var client : clients) {
+				client.update(convert(toUpdate));
+			}
 			toUpdate.clear();
 		}
 		if (!toRemove.isEmpty()) {
-			client.remove(toRemove);
+			for (var client : clients) {
+				client.remove(toRemove);
+			}
 			toRemove.clear();
 		}
 	}

@@ -2,8 +2,10 @@ package com.greendelta.collaboration.service.search;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -13,6 +15,7 @@ import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
+import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.TypedRefId;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +33,6 @@ public class SearchService {
 	private static final int BUFFER_SIZE = 1000;
 	private final SettingsService settings;
 	private final QueryService queryService;
-	private final DsEntryParser parser = new DsEntryParser();
 
 	public SearchService(SettingsService settings, QueryService queryService) {
 		this.settings = settings;
@@ -41,41 +43,44 @@ public class SearchService {
 		return queryService.query(query, page, pageSize, filters);
 	}
 
-	Index on(SearchIndex name) {
-		return new Index(name);
+	Index on(SearchIndex... indices) {
+		var clients = Arrays.asList(indices).stream().map(settings.searchConfig::getSearchClient).toList();
+		return new Index(clients.toArray(new SearchClient[clients.size()]));
 	}
 
-	class Index {
+	static class Index {
 
-		private final SearchIndex index;
+		private final List<SearchClient> clients;
+		private final DsEntryParser parser = new DsEntryParser();
 
-		private Index(SearchIndex index) {
-			this.index = index;
+		Index(SearchClient... clients) {
+			this.clients = Arrays.asList(clients).stream().filter(Objects::nonNull).toList();
 		}
 
-		void index(Repository repo, List<String> tags, Commit previousCommit, Commit commit) {
+		void index(String path, OlcaRepository repo, List<String> tags, Commit previousCommit, Commit commit) {
 			if (commit == null)
 				return;
-			var client = getClient();
-			if (client == null)
-				return;
-			var diffs = repo.diffs.find().unsorted().commit(previousCommit).excludeCategories().with(commit);
+			var diffs = repo.diffs.find()
+					.unsorted()
+					.commit(previousCommit)
+					.excludeCategories()
+					.with(commit);
 			if (diffs.isEmpty())
 				return;
-			var manager = new DsEntryManager(repo, commit);
-			var buffer = new EntryBuffer(client, BUFFER_SIZE);
+			var manager = new DsEntryManager(path, repo, commit);
+			var buffer = new EntryBuffer(clients, BUFFER_SIZE);
 			Diff.filter(diffs, DiffType.ADDED, DiffType.MODIFIED, DiffType.MOVED)
 					.forEach(diff -> index(buffer, repo, tags, manager, diff.newRef));
 			Diff.filter(diffs, DiffType.DELETED)
-					.forEach(diff -> remove(buffer, manager, diff.oldRef));
+					.forEach(diff -> remove(clients.get(0), buffer, manager, diff.oldRef));
 			buffer.flush();
 		}
 
-		private void index(EntryBuffer buffer, Repository repo, List<String> tags, DsEntryManager manager,
+		private void index(EntryBuffer buffer, OlcaRepository repo, List<String> tags, DsEntryManager manager,
 				Reference ref) {
 			if (ref == null)
 				return;
-			var entry = find(ref);
+			var entry = find(clients.get(0), ref);
 			boolean insert = entry == null;
 			entry = manager.createOrUpdate(entry, ref, tags);
 			if (insert) {
@@ -85,10 +90,10 @@ public class SearchService {
 			}
 		}
 
-		private void remove(EntryBuffer buffer, DsEntryManager manager, Reference ref) {
+		private void remove(SearchClient client, EntryBuffer buffer, DsEntryManager manager, Reference ref) {
 			if (ref == null)
 				return;
-			var entry = find(ref);
+			var entry = find(client, ref);
 			if (entry == null)
 				return;
 			manager.remove(entry, ref);
@@ -99,20 +104,21 @@ public class SearchService {
 			}
 		}
 
-		private DsEntry find(Reference ref) {
+		private DsEntry find(SearchClient client, Reference ref) {
 			if (ref == null)
 				return null;
-			var map = getClient().get(getIndexId(ref));
+			var map = client.get(getIndexId(ref));
 			return parser.parse(map);
+		}
+
+		private String getIndexId(TypedRefId ref) {
+			return ref.type.name() + "/" + ref.refId;
 		}
 
 		void updateTags(Repository repo, Commit commit, List<String> tags) {
 			if (commit == null)
 				return;
-			var client = getClient();
-			if (client == null)
-				return;
-			var buffer = new EntryBuffer(client, BUFFER_SIZE);
+			var buffer = new EntryBuffer(clients, BUFFER_SIZE);
 			update(buffer, repo, commit, e -> {
 				e.versions.forEach(v -> {
 					v.repos.stream()
@@ -128,10 +134,7 @@ public class SearchService {
 		void move(RepositoryPath oldPath, Repository newRepo, Commit commit) {
 			if (commit == null)
 				return;
-			var client = getClient();
-			if (client == null)
-				return;
-			var buffer = new EntryBuffer(client, BUFFER_SIZE);
+			var buffer = new EntryBuffer(clients, BUFFER_SIZE);
 			update(buffer, newRepo, commit, e -> {
 				e.versions.forEach(v -> {
 					v.repos.stream()
@@ -148,7 +151,7 @@ public class SearchService {
 		private void update(EntryBuffer buffer, Repository repo, Commit commit, Consumer<DsEntry> update) {
 			if (commit == null)
 				return;
-			var manager = new DsEntryManager(repo, commit);
+			var manager = new DsEntryManager(repo.path(), repo, commit);
 			repo.references.find().commit(commit.id).iterate(ref -> update(buffer, manager, ref, update));
 		}
 
@@ -162,26 +165,32 @@ public class SearchService {
 			buffer.putUpdate(getIndexId(ref), entry);
 		}
 
+		private DsEntry find(Reference ref) {
+			if (ref == null)
+				return null;
+			var map = clients.get(0).get(getIndexId(ref));
+			return parser.parse(map);
+		}
+
 		void remove(Repository repo, Commit latest) {
 			if (latest == null)
 				return;
-			var client = getClient();
-			if (client == null)
-				return;
-			var buffer = new EntryBuffer(client, BUFFER_SIZE);
-			var manager = new DsEntryManager(repo, null);
-			repo.references.find().commit(latest.id).iterate(ref -> remove(buffer, manager, ref));
+			var buffer = new EntryBuffer(clients, BUFFER_SIZE);
+			var manager = new DsEntryManager(repo.path(), repo, null);
+			repo.references.find().commit(latest.id).iterate(ref -> remove(clients.get(0), buffer, manager, ref));
 			buffer.flush();
 		}
 
 		void clear() {
-			getClient().delete();
-			createIndex();
+			for (var client : clients) {
+				client.delete();
+				createIndex(client);
+			}
 		}
 
-		private void createIndex() {
+		private void createIndex(SearchClient client) {
 			try {
-				getClient().create(Map.of(
+				client.create(Map.of(
 						"config", readJson("os-config.json"),
 						"mapping", readJson("os-mapping.json")));
 			} catch (IOException e) {
@@ -194,14 +203,6 @@ public class SearchService {
 			if (stream == null)
 				return "{}";
 			return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-		}
-
-		private String getIndexId(TypedRefId ref) {
-			return ref.type.name() + "/" + ref.refId;
-		}
-
-		SearchClient getClient() {
-			return settings.searchConfig.getSearchClient(index);
 		}
 
 	}

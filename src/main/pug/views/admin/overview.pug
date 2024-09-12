@@ -11,12 +11,13 @@ mixin box(label, plural, count)
 			if label === 'Repository' && isSearchEnabled
 				button.btn.btn-xs.btn-default.pull-right(data-action='reindex-repositories') Reindex
 				button.btn.btn-xs.btn-default.pull-right(data-action='clear-index') Clear index
-				#indexing-status
 			else if label === 'User'
 				button.btn.btn-xs.btn-default.pull-right(data-action='copy-users-to-clipboard') Copy to clipboard
 			input.form-control.input-sm.filter.pull-right(id=lcLabel + '-filter' type='text' placeholder='filter' aria-label='Filter + ' + label)
 			.clear
 		div(id=lcPlural)
+		if label === 'Repository' && isSearchEnabled
+			#indexing-status
 
 mixin editable-text(action, label, value, defaultValue)
 	div

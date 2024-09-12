@@ -27,6 +27,7 @@ import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.settings.ImprintSetting;
 import com.greendelta.collaboration.model.settings.MailSetting;
 import com.greendelta.collaboration.model.settings.SearchIndex;
+import com.greendelta.collaboration.model.settings.SearchIndex.SearchIndexType;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.Setting;
@@ -292,7 +293,9 @@ public class SettingsService {
 			super.set(key, value);
 			close();
 			restClient = null;
-			clients.clear();
+			synchronized (clients) {
+				clients.clear();
+			}
 		}
 
 		public boolean isSearchAvailable() {
@@ -333,14 +336,22 @@ public class SettingsService {
 		}
 
 		public SearchClient getSearchClient(SearchIndex index) {
-			return clients.computeIfAbsent(index, i -> {
-				try {
-					return new OsRestClient(getRestClient(), indices.get(i));
-				} catch (IOException e) {
-					SettingsService.log.error("Error getting search client", e);
-					return null;
-				}
-			});
+			if (!SettingsService.this.is(ServerSetting.SEARCH_ENABLED))
+				return null;
+			if (index.type == SearchIndexType.USAGE && !SettingsService.this.is(ServerSetting.USAGE_SEARCH_ENABLED))
+				return null;
+			if (index.isPublic && !SettingsService.this.is(ServerSetting.RELEASES_ENABLED))
+				return null;
+			synchronized (clients) {
+				return clients.computeIfAbsent(index, i -> {
+					try {
+						return new OsRestClient(getRestClient(), indices.get(i));
+					} catch (IOException e) {
+						SettingsService.log.error("Error getting search client", e);
+						return null;
+					}
+				});
+			}
 		}
 
 		public void close() {
