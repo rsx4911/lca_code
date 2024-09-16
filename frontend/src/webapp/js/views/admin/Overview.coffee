@@ -284,7 +284,7 @@ define([
 				unless indexingTasks
 					@$('#indexing-status').html('')
 					return
-				html = "<hr><div>Indexing status (#{indexingTasks.length} tasks queued ):</div>"
+				html = "<hr><div>Indexing status (#{indexingTasks.length} tasks queued):</div>"
 				for task, index in indexingTasks
 					html += "<div>* #{task}</div>"
 				@$('#indexing-status').html html
