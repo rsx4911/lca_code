@@ -82,7 +82,11 @@ public class GroupController {
 			var map = Maps.of("name", (Object) group);
 			var settings = service.getSettings(group);
 			map.put("settings", settings.toMap());
-			map.put("label", settings.get(GroupSetting.LABEL, group));
+			String label = settings.get(GroupSetting.LABEL);
+			if (Strings.nullOrEmpty(label)) {
+				label = group;
+			}
+			map.put("label", label);
 			if (module != Module.DASHBOARD)
 				return map;
 			map.put("role", membershipService.getRole(user, group));

@@ -174,10 +174,8 @@ define([
 					url: 'ws/group?onlyIfCanWrite=true&page=0'
 					success: (result) =>
 						options = []
-						if currentUser.get('username')
-							options.push currentUser.get 'username'
 						for group in result.data
-							options.push group.name
+							options.push [group.name, group.label]
 						callback options
 
 			cloneRepository: () ->
