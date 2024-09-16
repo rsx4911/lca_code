@@ -67,6 +67,7 @@ define([
 					@$('.search-settings').addClass 'hidden'
 				@$('#SEARCH_INDEX__PUBLIC').prop 'disabled', !@$('#SERVER_SETTING__RELEASES_ENABLED').is(':checked')
 				@$('#SEARCH_INDEX__USAGE').prop 'disabled', !@$('#SERVER_SETTING__USAGE_SEARCH_ENABLED').is(':checked')
+				@$('#SEARCH_INDEX__PUBLIC_USAGE').prop('disabled', !@$('#SERVER_SETTING__USAGE_SEARCH_ENABLED').is(':checked') or !@$('#SERVER_SETTING__RELEASES_ENABLED').is(':checked'))
 
 			setSetting: (type, key, value, callback) ->
 				if type is 'SERVER_SETTING'

@@ -95,8 +95,8 @@ public class IndexService {
 						task += switch (index) {
 							case PUBLIC -> "[Public search] ";
 							case PRIVATE -> "[Private search] ";
-							case PRIVATE_USAGE -> "[Public usage] ";
-							case PUBLIC_USAGE -> "[Private usage] ";
+							case PRIVATE_USAGE -> "[Private usage] ";
+							case PUBLIC_USAGE -> "[Public usage] ";
 						};
 					}
 				}
@@ -288,7 +288,7 @@ public class IndexService {
 			try (var r = repoService.get(path)) {
 				var head = r.commits.head();
 				if (head == null)
-					return;
+					continue;
 				var latestRelease = historyService.getLatestReleasedCommit(r);
 				if (latestRelease == null) {
 					offer(SearchIndex.PRIVATE, path, "Reindexing", repo -> {
@@ -325,7 +325,7 @@ public class IndexService {
 				try (var r = repoService.get(path)) {
 					var head = r.commits.head();
 					if (head == null)
-						return;
+						continue;
 					var latestRelease = historyService.getLatestReleasedCommit(r);
 					if (latestRelease == null) {
 						offer(SearchIndex.PRIVATE_USAGE, path, "Reindexing", repo -> {
