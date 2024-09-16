@@ -55,8 +55,8 @@ define([
 							@$('#login-general-message').hide()
 							@$('#token').focus()
 						else
-							window.location.href = ''
 							currentUser.unset 'inLoginProcess'
+							window.location.reload()
 					error: (response) =>
 						@$('#login-general-message').show()
 						@$('#login-general-message .message').html response.responseText
