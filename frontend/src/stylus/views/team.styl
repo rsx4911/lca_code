@@ -1,0 +1,25 @@
+.team-view 
+
+	.team-members
+		background-color rgb(255, 255, 255)
+
+		.content-box
+			padding 0
+
+	.team-member
+		padding 10px
+		border-bottom 1px solid rgb(231, 233, 237)
+
+		button[data-action=remove-member]
+			margin-top 7px
+
+	.two-columns
+
+		@media(min-width 1120px)
+			grid-template-columns 54% 44% !important
+
+		@media(min-width 1220px)
+			grid-template-columns 58% 40% !important
+					
+		@media(min-width 1320px)
+			grid-template-columns 63% 35% !important

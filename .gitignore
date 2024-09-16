@@ -1,43 +1,23 @@
-HELP.md
-target/
-node_modules/
-.mvn
-!**/src/main/**/target/
-!**/src/test/**/target/
-/src/main/resources/ssr
-/src/main/resources/static
-/src/main/webapp/js/libs
-/src/main/webapp/js/templates
-/src/main/webapp/js/app/DynamicDependencies.coffee
-/src/main/webapp/*.html
-/src/main/webapp/LICENSE.txt
-/src/main/webapp/THIRD-PARTY.txt
-/src/main/webapp/css/main.css
+/.mvn
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+/search/target/
+/search/.classpath
+/search/.project
+/search/.settings
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+/backend/src/main/webapp
+/backend/src/main/resources/ssr
+/backend/src/main/resources/static
+/backend/.classpath
+/backend/.project
+/backend/.settings
+/backend/target/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
+/frontend/node_modules/
+/frontend/src/webapp/js/libs
+/frontend/src/webapp/js/templates
+/frontend/src/webapp/js/app/DynamicDependencies.coffee
+/frontend/src/webapp/*.html
+/frontend/src/webapp/THIRD-PARTY.txt
+/frontend/src/webapp/css/main.css
+/frontend/.vscode/

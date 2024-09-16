@@ -1,0 +1,36 @@
+mixin count-info(amount, label, labelPlural, last)
+    | #{amount} #{amount !== 1 ? labelPlural : label}
+    if !last
+        | , 
+
+mixin repository-entry(repo, inGroupView)
+    - var repoId = repo.group + '/' + repo.name
+    .pull-left
+        img.avatar(src='ws/repository/avatar/' + repoId, aria-label='Avatar of ' + repoId)
+    .pull-left.repository-entry-content
+        a.follow(href=repoId)
+            strong=inGroupView ? repo.settings.label||repo.name : repo.label
+        .pull-right.vertical-list
+            div
+                if repo.role
+                    span.pull-right.badge.badge-warning(title=repo.role.description)=repo.role.name
+                if !repo.version.isSupported
+                    span.pull-right.badge.badge-warning Incompatible version
+                .clear
+            if repo.hasReleases
+                div: span.pull-right.badge.badge-success Released
+        div: i
+            +count-info(repo.commits, 'commit', 'commits', false)
+            span.dataset-count-container(data-repo-id=repoId)
+                img(src='images/loader.gif' width=16 height=16)
+                |  data sets
+            | , 
+            +count-info(repo.members, 'member', 'members', true)
+            if repo.lastCommit && !inGroupView
+                | , last commit on #{formatDate(repo.lastCommit)}
+        .description: i=repo.settings.description
+        .tags
+            if repo.settings.tags
+                each tag in repo.settings.tags
+                    span.badge=tag
+    .clear

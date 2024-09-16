@@ -1,0 +1,21 @@
+include ../mixins/repository-entry.pug
+include ../mixins/paging.pug
+
+.list-container
+	each group in data
+		.list-entry
+			.pull-left
+				- var imgSrc = group.isUserspace ? 'ws/user/avatar/' + group.name : 'ws/group/avatar/' + group.name
+				img.avatar(src=imgSrc, aria-label='Avator of group ' + group.name)
+			.pull-left
+				a.follow(href='groups/' + group.name)
+					strong=group.label
+				div: i
+					+count-info(group.repositories, 'repository', 'repositories', group.isUserspace)
+					if !group.isUserspace
+						+count-info(group.members, 'member', 'members', true)
+				div.description: i=group.settings.description
+			if group.role
+				span.pull-right.role.badge(title=group.role.description)=group.role.name
+			.clear
+	+paging(resultInfo)
