@@ -251,12 +251,13 @@ public class StandaloneReindexing {
 		var osHost = get(map, "HOST", Maps::getString, "localhost");
 		var osPort = get(map, "PORT", Maps::getInteger, 9200);
 		var osSchema = get(map, "SCHEMA", Maps::getString, "http");
-		var publicIndex = get(map, "PUBLIC", "RELEASES_ENABLED", Maps::getString);
+		var publicIndex = getIf(map, "PUBLIC", Maps::getString, "collaboration-server-public",
+				"RELEASES_ENABLED");
 		var privateIndex = Maps.getString(map, "PRIVATE");
-		var publicUsageIndex = get(map, "PUBLIC_USAGE", "USAGE_SEARCH_ENABLED",
-				Maps::getString);
-		var privateUsageIndex = get(map, "PRIVATE_USAGE", "USAGE_SEARCH_ENABLED",
-				Maps::getString);
+		var publicUsageIndex = getIf(map, "PUBLIC_USAGE", Maps::getString, "collaboration-server-usage-public",
+				"USAGE_SEARCH_ENABLED", "RELEASES_ENABLED");
+		var privateUsageIndex = getIf(map, "PRIVATE_USAGE", Maps::getString, "collaboration-server-usage",
+				"USAGE_SEARCH_ENABLED");
 		if (Strings.nullOrEmpty(publicIndex) && Strings.nullOrEmpty(privateIndex)
 				&& Strings.nullOrEmpty(publicUsageIndex) && Strings.nullOrEmpty(privateUsageIndex))
 			throw new IllegalArgumentException("Missing argument of: public, private or usage)");
@@ -276,14 +277,18 @@ public class StandaloneReindexing {
 		throw new IllegalArgumentException("Missing argument: " + param);
 	}
 
-	private static <T> T get(Map<String, Object> args, String param, String ifParam,
-			BiFunction<Map<String, Object>, String, T> get) {
-		if (!Maps.getBoolean(args, ifParam))
-			return null;
+	private static <T> T getIf(Map<String, Object> args, String param, BiFunction<Map<String, Object>, String, T> get,
+			T defaultValue, String... ifParams) {
+		for (var ifParam : ifParams)
+			if (!Maps.getBoolean(args, ifParam))
+				return null;
 		var value = get.apply(args, param);
 		if (value != null)
 			return value;
-		throw new IllegalArgumentException("Missing argument: " + param);
+		if (defaultValue == null)
+			return null;
+		System.out.println("No value for parameter " + param + " provided, using default value: " + defaultValue);
+		return defaultValue;
 	}
 
 	private static <T> T get(Map<String, Object> args, String param, BiFunction<Map<String, Object>, String, T> get,
@@ -297,7 +302,8 @@ public class StandaloneReindexing {
 		return defaultValue;
 	}
 
-	public SearchResult<Map<String, Object>> query(SearchClient client, String path, String refId, String field, int page, int pageSize,
+	public SearchResult<Map<String, Object>> query(SearchClient client, String path, String refId, String field,
+			int page, int pageSize,
 			String filter) {
 		var query = new SearchQueryBuilder();
 		query.page(page);
@@ -313,6 +319,7 @@ public class StandaloneReindexing {
 		}
 		return client.search(query.build());
 	}
+
 	private record Input(String sqlHost, int sqlPort, String sqlUser, String sqlPass, String sqlDb) {
 	}
 
