@@ -129,11 +129,6 @@ gulp.task('copyFontModules', function() {
     .pipe(gulp.dest('./src/webapp/css/fonts'));
 });
 
-gulp.task('copyLicense', function() {
-  return gulp.src(['../THIRD-PARTY.txt'])
-    .pipe(gulp.dest('./src/webapp'));	
-});
-
 gulp.task('pugIndex', function() {
   return gulp.src('./src/pug/*.pug')
     .pipe(pug({ locals: {} }))
@@ -191,6 +186,11 @@ gulp.task('copyGraph', function() {
       './src/webapp/graph/**/*.*',
     ])
     .pipe(gulp.dest('../backend/src/main/resources/static/graph'));
+});
+
+gulp.task('copyLicense', function() {
+  return gulp.src(['../THIRD-PARTY.txt'])
+    .pipe(gulp.dest('../backend/src/main/webapp'));	
 });
 
 gulp.task('collectDependencies', function() {
