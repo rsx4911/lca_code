@@ -37,11 +37,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.ServerSetting;
+import com.greendelta.collaboration.search.ModellingApproach;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.SettingsService.ServerConfig;
-import com.greendelta.collaboration.service.search.ModellingApproach;
 import com.greendelta.collaboration.util.Dates;
 import com.greendelta.collaboration.util.Maps;
 

@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service.search;
+package com.greendelta.collaboration.search;
 
 import java.util.Map;
 
@@ -6,10 +6,10 @@ import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 
-class DsEntryParser {
+public class DsEntryParser {
 
 	@SuppressWarnings("unchecked")
-	DsEntry parse(Map<String, Object> entry) {
+	public DsEntry parse(Map<String, Object> entry) {
 		if (entry == null)
 			return null;
 		var type = getType(entry, "type", ModelType.class);

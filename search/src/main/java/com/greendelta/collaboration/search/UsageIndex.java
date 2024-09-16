@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service.search;
+package com.greendelta.collaboration.search;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,17 +24,18 @@ import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 
-class UsageIndex {
+public class UsageIndex {
+	
 	private static final Logger log = LogManager.getLogger(UsageIndex.class);
 	private static final int BUFFER_SIZE = 100;
 
 	private final List<SearchClient> clients;
 
-	UsageIndex(SearchClient... clients) {
+	public UsageIndex(SearchClient... clients) {
 		this.clients = Arrays.asList(clients).stream().filter(Objects::nonNull).toList();
 	}
 
-	void index(String path, OlcaRepository repo, Commit previousCommit, Commit commit) {
+	public void index(String path, OlcaRepository repo, Commit previousCommit, Commit commit) {
 		if (commit == null)
 			return;
 		var buffer = new EntryBuffer(clients, BUFFER_SIZE);
@@ -146,7 +147,7 @@ class UsageIndex {
 		return null;
 	}
 
-	void move(String oldPath, String newPath) {
+	public void move(String oldPath, String newPath) {
 		for (var client : clients) {
 			var builder = new SearchQueryBuilder()
 					.filter("path", SearchFilterValue.term(oldPath));
@@ -157,7 +158,7 @@ class UsageIndex {
 		}
 	}
 
-	void remove(String path) {
+	public void remove(String path) {
 		for (var client : clients) {
 			var builder = new SearchQueryBuilder()
 					.filter("path", SearchFilterValue.term(path));
@@ -168,7 +169,7 @@ class UsageIndex {
 		}
 	}
 
-	void clear() {
+	public void clear() {
 		for (var client : clients) {
 			client.delete();
 			createIndex(client);

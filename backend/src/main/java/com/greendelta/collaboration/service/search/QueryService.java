@@ -13,6 +13,8 @@ import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.SearchIndex;
+import com.greendelta.collaboration.search.DsEntry;
+import com.greendelta.collaboration.search.DsEntryParser;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;

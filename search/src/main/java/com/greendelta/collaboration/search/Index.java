@@ -1,4 +1,4 @@
-package com.greendelta.collaboration.service.search;
+package com.greendelta.collaboration.search;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -19,18 +19,18 @@ import org.openlca.git.util.TypedRefId;
 
 import com.greendelta.search.wrapper.SearchClient;
 
-class Index {
+public class Index {
 
 	private static final Logger log = LogManager.getLogger(Index.class);
 	private static final int BUFFER_SIZE = 1000;
 	private final List<SearchClient> clients;
 	private final DsEntryParser parser = new DsEntryParser();
 
-	Index(SearchClient... clients) {
+	public Index(SearchClient... clients) {
 		this.clients = Arrays.asList(clients).stream().filter(Objects::nonNull).toList();
 	}
 
-	void index(String path, OlcaRepository repo, List<String> tags, Commit previousCommit, Commit commit) {
+	public void index(String path, OlcaRepository repo, List<String> tags, Commit previousCommit, Commit commit) {
 		if (commit == null)
 			return;
 		var diffs = repo.diffs.find()
@@ -88,7 +88,7 @@ class Index {
 		return ref.type.name() + "/" + ref.refId;
 	}
 
-	void updateTags(String path, OlcaRepository repo, Commit commit, List<String> tags) {
+	public void updateTags(String path, OlcaRepository repo, Commit commit, List<String> tags) {
 		if (commit == null)
 			return;
 		var buffer = new EntryBuffer(clients, BUFFER_SIZE);
@@ -104,7 +104,7 @@ class Index {
 		buffer.flush();
 	}
 
-	void move(String oldPath, String newPath, OlcaRepository newRepo, Commit commit) {
+	public void move(String oldPath, String newPath, OlcaRepository newRepo, Commit commit) {
 		if (commit == null)
 			return;
 		var id = newPath.split("/");
@@ -146,7 +146,7 @@ class Index {
 		return parser.parse(map);
 	}
 
-	void remove(String path, OlcaRepository repo, Commit latest) {
+	public void remove(String path, OlcaRepository repo, Commit latest) {
 		if (latest == null)
 			return;
 		var buffer = new EntryBuffer(clients, BUFFER_SIZE);
@@ -155,7 +155,7 @@ class Index {
 		buffer.flush();
 	}
 
-	void clear() {
+	public void clear() {
 		for (var client : clients) {
 			client.delete();
 			createIndex(client);

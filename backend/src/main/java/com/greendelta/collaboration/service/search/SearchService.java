@@ -7,6 +7,8 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.SearchIndex;
+import com.greendelta.collaboration.search.DsEntry;
+import com.greendelta.collaboration.search.Index;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchResult;

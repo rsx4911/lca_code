@@ -7,6 +7,7 @@ import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.SearchIndex;
+import com.greendelta.collaboration.search.UsageIndex;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.user.UserService;
