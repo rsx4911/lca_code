@@ -90,43 +90,47 @@ public class StandaloneReindexing {
 				privateIndex.clear();
 				publicUsageIndex.clear();
 				privateUsageIndex.clear();
-				if (repos.isEmpty()) {
-					System.out.println("No repositories found in git");
-				}
+
+				System.out.println(repos.size() + " repositories found in git");
+				var count = 0;
 				for (var repo : repos) {
 					var head = repo.repo.commits.head();
 					var tags = getTags(tagsStatement, repo);
 					var release = getLatestRelease(publicClient, releasesStatement, repo);
+					var m = repo.path + " (" + ++count + "/" + repos.size() + ")";
 					if (release == null) {
-						System.out.println("[Private search] Indexing " + repo.path);
+						System.out.println(
+								"[Private search] Indexing " + m);
 						privateIndex.index(repo.path, repo.repo, tags, null, head);
 					} else {
 						if (head.equals(release.commit)) {
-							System.out.println("[Public search, Private search] Indexing " + repo.path);
+							System.out.println("[Public search, Private search] Indexing " + m);
 							searchIndices.index(repo.path, repo.repo, release.tags, null, release.commit);
 						} else {
-							System.out.println("[Public search] Indexing " + repo.path);
+							System.out.println("[Public search] Indexing " + m);
 							publicIndex.index(repo.path, repo.repo, release.tags, null, release.commit);
-							System.out.println("[Private search] Indexing " + repo.path);
+							System.out.println("[Private search] Indexing " + m);
 							privateIndex.index(repo.path, repo.repo, tags, null, head);
 						}
 					}
 				}
 				if (publicUsageClient != null || privateUsageClient != null) {
+					count = 0;
 					for (var repo : repos) {
 						var head = repo.repo.commits.head();
 						var release = getLatestRelease(publicUsageClient, releasesStatement, repo);
+						var m = repo.path + " (" + ++count + "/" + repos.size() + ")";
 						if (release == null) {
-							System.out.println("[Private usage search] Indexing " + repo.path);
+							System.out.println("[Private usage search] Indexing " + m);
 							privateUsageIndex.index(repo.path, repo.repo, null, head);
 						} else {
 							if (head.equals(release.commit)) {
-								System.out.println("[Public usage search, Private usage search] Indexing " + repo.path);
+								System.out.println("[Public usage search, Private usage search] Indexing " + m);
 								usageIndices.index(repo.path, repo.repo, null, release.commit);
 							} else {
-								System.out.println("[Public usage search] Indexing " + repo.path);
+								System.out.println("[Public usage search] Indexing " + m);
 								publicUsageIndex.index(repo.path, repo.repo, null, release.commit);
-								System.out.println("[Private usage search] Indexing " + repo.path);
+								System.out.println("[Private usage search] Indexing " + m);
 								privateUsageIndex.index(repo.path, repo.repo, null, head);
 							}
 						}
