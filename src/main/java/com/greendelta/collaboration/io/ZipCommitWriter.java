@@ -101,9 +101,7 @@ public class ZipCommitWriter extends CommitWriter {
 
 	private String getPath(ModelType type, String refId) {
 		var category = getCategory(type, refId);
-		if (Strings.nullOrEmpty(category))
-			return type.name() + "/" + refId + GitUtil.DATASET_SUFFIX;
-		return type.name() + "/" + category + "/" + refId + GitUtil.DATASET_SUFFIX;
+		return GitUtil.toDatasetPath(type, category, refId);
 	}
 
 	private String getCategory(ModelType type, String refId) {
