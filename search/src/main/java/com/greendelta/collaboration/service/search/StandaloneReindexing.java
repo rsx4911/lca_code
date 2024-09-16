@@ -69,6 +69,7 @@ public class StandaloneReindexing {
 				var releasesStatement = connection.prepareStatement(RELEASES_QUERY)) {
 			var settings = getSettings(connection);
 			var client = getRestClient(settings);
+
 			var repos = getRepos(settings.gitDir);
 			try {
 				var publicClient = createClient(client, settings.publicIndex);
@@ -89,6 +90,9 @@ public class StandaloneReindexing {
 				privateIndex.clear();
 				publicUsageIndex.clear();
 				privateUsageIndex.clear();
+				if (repos.isEmpty()) {
+					System.out.println("No repositories found in git");
+				}
 				for (var repo : repos) {
 					var head = repo.repo.commits.head();
 					var tags = getTags(tagsStatement, repo);
@@ -143,12 +147,12 @@ public class StandaloneReindexing {
 		if (args.length % 2 != 0)
 			throw new IllegalArgumentException("Invalid arguments");
 		var map = new HashMap<String, Object>();
-		for (var i = 0; i < args.length; i++) {
+		for (var i = 0; i < args.length; i += 2) {
 			var key = args[i];
 			if (!key.startsWith("--"))
 				throw new IllegalArgumentException("Invalid arguments: " + key);
 			var value = args[i + 1];
-			map.put(key.substring(1), value);
+			map.put(key.substring(2), value);
 		}
 		var sqlHost = get(map, "sqlHost", Maps::getString, "localhost");
 		var sqlPort = get(map, "sqlPort", Maps::getInteger, 3306);
@@ -189,8 +193,6 @@ public class StandaloneReindexing {
 				repos.add(new Repo(group.getName() + "/" + repoDir.getName(), repo));
 			}
 		}
-		if (repos.isEmpty())
-			throw new IllegalArgumentException("No repositories found in git");
 		return repos;
 	}
 
