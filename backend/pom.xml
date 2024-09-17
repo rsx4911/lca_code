@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<version>2.2.1</version>
 	<groupId>com.greendelta</groupId>
-	<artifactId>collaboration-server-webapp</artifactId>
+	<artifactId>collaboration-server-backend</artifactId>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -87,42 +87,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>3.4.1</version>
-				<executions>
-					<execution>
-						<id>npm_install</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<configuration>
-							<workingDirectory>../frontend</workingDirectory>
-							<executable>npm</executable>
-							<arguments>
-								<argument>install</argument>
-							</arguments>
-						</configuration>
-					</execution>
-					<execution>
-						<id>exec_gulp</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<configuration>							
-							<workingDirectory>../frontend</workingDirectory>
-							<executable>npx</executable>
-							<arguments>
-								<argument>gulp</argument>
-								<argument>build</argument>
-							</arguments>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
