@@ -1,0 +1,34 @@
+include ./structures/impact-result-table.pug
+include ./structures/exchange-table.pug
+include ./structures/exchange-list.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+tabbed-content
+			ul.nav.nav-tabs(role='tablist')
+				- var showImpactResults = (dataset.impactResults && dataset.impactResults.length) || (compareTo && compareTo.impactResults && compareTo.impactResult.length)
+				- var showFlowResults = !showImpactResults && (dataset.flowResults && dataset.flowResults.length) || (compareTo && compareTo.flowResults && compareTo.flowResults.length)
+				+nav-tab('impactResults', showImpactResults)
+				+nav-tab('flowResults', showFlowResults)
+				+nav-usage-tab()
+			.tab-content
+				+nav-tab-pane('impactResults', showImpactResults)
+					+impact-result-table()
+				+nav-tab-pane('flowResults', showFlowResults)
+					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
+					.clear
+					.exchange-tables.toggleable
+						+exchange-table('flowResults', true)
+						+exchange-table('flowResults', false)
+					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
+					.clear
+					.exchange-list.toggleable
+						+exchange-list(exchangeMap, otherExchangeMap)
+				+nav-usage-tab-pane()
+	+meta
+		hr
+		+labeled-ref-block('productSystem')
+		+labeled-ref-block('impactMethod')
+	.clear

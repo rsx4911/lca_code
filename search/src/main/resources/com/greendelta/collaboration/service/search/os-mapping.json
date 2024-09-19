@@ -1,0 +1,77 @@
+{
+	"properties": {
+		"type": {
+			"type": "keyword"
+		},
+		"refId": {
+			"type": "keyword"
+		},
+		"versions": {
+			"type": "nested",
+			"properties": {
+				"name": {
+					"type": "text"
+				},
+				"objectId": {
+					"type": "keyword"
+				},
+				"category": {
+					"type": "keyword"
+				},
+				"categoryPaths": {
+					"type": "keyword"
+				},
+				"tags": {
+					"type": "keyword"
+				},
+				"modellingApproach": {
+					"type": "keyword"
+				},
+				"flowType": {
+					"type": "keyword"
+				},
+				"processType": {
+					"type": "keyword"
+				},
+				"contact": {
+					"type": "keyword"
+				},
+				"location": {
+					"type": "keyword"
+				},
+				"validFromYear": {
+					"type": "keyword"
+				},
+				"validUntilYear": {
+					"type": "keyword"
+				},
+				"reviewTypes": {
+					"type": "keyword"
+				},
+				"complianceDeclarations": {
+					"type": "keyword"
+				},
+				"flowCompleteness": {
+					"type": "keyword"
+				},
+				"repos": {
+					"type": "nested",
+					"properties": {
+						"group": {
+							"type": "keyword"
+						},
+						"path": {
+							"type": "keyword"
+						},
+						"commitId": {
+							"type": "keyword"
+						},
+						"tags": {
+							"type": "keyword"
+						}
+					}
+				}
+			}
+		}
+	}
+}

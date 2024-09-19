@@ -1,0 +1,126 @@
+include ./structures/exchange-list.pug
+include ./structures/exchange-table.pug
+include ./structures/non-causal-allocation-factor-table.pug
+include ./structures/causal-allocation-factor-table.pug
+include ./structures/social-aspect-table.pug
+include ./structures/parameter-table.pug
+include ./structures/aspect-table.pug
+include ./structures/review-tables.pug
+include ./structures/compliance-tables.pug
+
+- var doc = dataset.processDocumentation;
+- var otherDoc = getValue(compareTo, 'processDocumentation');
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+tabbed-content
+			ul.nav.nav-tabs(role='tablist')
+				+nav-tab('exchanges', true)
+				+nav-tab('processDocumentation', false, true)
+				+nav-tab('allocationFactors')
+				+nav-tab('socialAspects')
+				+nav-tab('parameters')
+				+nav-tab('processDocumentation.flowCompleteness', false)
+				+nav-tab('processDocumentation.reviews', false)
+				+nav-tab('processDocumentation.complianceDeclarations', false)
+				+nav-usage-tab()
+			.tab-content
+				+nav-tab-pane('exchanges', true)
+					a.pull-right.toggle-control.switch-to-list(href='#') Switch to list view
+					.clear
+					.exchange-tables.toggleable
+						+exchange-table('exchanges', true)
+						+exchange-table('exchanges', false)
+					a.pull-right.toggle-control.switch-to-table(href='#') Switch to table view
+					.clear
+					.exchange-list.toggleable
+						+exchange-list(exchangeMap, otherExchangeMap)
+				+nav-tab-pane('processDocumentation', false, true)
+					table.table.no-head
+						tbody
+							+field-row('processDocumentation.inventoryMethodDescription')
+							+field-row('processDocumentation.modelingConstantsDescription')
+							+field-row('processDocumentation.completenessDescription')
+							+field-row('processDocumentation.dataSelectionDescription')
+							+field-row('processDocumentation.dataTreatmentDescription')
+							+field-row('processDocumentation.samplingDescription')
+							+field-row('processDocumentation.dataCollectionDescription')
+							+field-row('processDocumentation.useAdvice')
+							+field-row('processDocumentation.reviewDetails')
+							+ref-row('processDocumentation.reviewer')
+							+field-row('processDocumentation.projectDescription')
+							+field-row('processDocumentation.intendedApplication')
+							+ref-row('processDocumentation.dataSetOwner')
+							+ref-row('processDocumentation.dataGenerator')
+							+ref-row('processDocumentation.dataDocumentor')
+							+ref-row('processDocumentation.publication')
+							+field-row('processDocumentation.creationDate', formatDate)
+							+field-row('processDocumentation.restrictionsDescription')
+							+boolean-field-row('processDocumentation.isCopyrightProtected')
+							- var getSourceId = function(source) {return source.id};
+							- var sources = getValue(doc, 'sources');
+							- var otherSources = getValue(otherDoc, 'sources');
+							+array-field-row(sources, otherSources, 'processDocumentation.sources', 'SOURCE', getSourceId)
+				+nav-tab-pane('processDocumentation.flowCompleteness')
+					- var aspects = getArrayValues(doc, otherDoc, 'ASPECT', 'flowCompleteness');
+					+aspect-table(aspects, 'processDocumentation.flowCompleteness')
+				+nav-tab-pane('allocationFactors')
+					if hasAtLeastOne(dataset, compareTo, 'nonCausalAllocationFactors')
+						+non-causal-allocation-factor-table()
+					if hasAtLeastOne(dataset, compareTo, 'causalAllocationFactors')
+						+causal-allocation-factor-table()
+				+nav-tab-pane('socialAspects')
+					+social-aspect-table()
+				+nav-tab-pane('parameters')
+					+parameter-table(true)
+					+parameter-table(false)
+				+nav-tab-pane('processDocumentation.reviews')
+					+review-tables()
+				+nav-tab-pane('processDocumentation.complianceDeclarations')
+					+compliance-tables()
+				+nav-usage-tab-pane()
+	+meta
+		hr
+		strong=getLabel('isQuantitativeReference')
+		- var flow = null;
+		- var otherFlow = null;
+		- var eIndex = -1;
+		if dataset.exchanges
+			each exchange, index in dataset.exchanges
+				if exchange.isQuantitativeReference
+					- flow = exchange.flow;
+					- eIndex = index;
+		if compareTo && compareTo.exchanges
+			each otherExchange, index in compareTo.exchanges
+				if otherExchange.isQuantitativeReference
+					- otherFlow = otherExchange.flow;
+		- var qRefChanged = compareTo ? compare(flow, otherFlow) : null;
+		div(data-compare=qRefChanged)
+			+compare-icon(qRefChanged)
+			+ref(flow, otherFlow, '-')
+		+labeled-ref-block('location')
+		- var typeFormat = function(value) {return value==='LCI_RESULT'?'System process':'Unit process'};
+		+labeled-field-block('processType', typeFormat)
+		+labeled-boolean-field-block('isInfrastructureProcess')
+		if hasOneOf(doc, otherDoc, ['validFrom', 'validUntil']) || reviewMode
+			hr
+			+labeled-field-block('processDocumentation.validFrom', formatDate, '-')
+			+labeled-field-block('processDocumentation.validUntil', formatDate, '-')
+		if hasOneOf(doc, otherDoc, ['timeDescription', 'geographyDescription', 'technologyDescription']) || reviewMode
+			hr
+			+labeled-field-block('processDocumentation.timeDescription', null, '-', true)
+			+labeled-field-block('processDocumentation.geographyDescription', null, '-', true)
+			+labeled-field-block('processDocumentation.technologyDescription', null, '-', true)
+		if hasOneOf(dataset, compareTo, ['dqSystem', 'dqEntry', 'exchangeDqSystem', 'socialDqSystem']) || reviewMode
+			hr
+			+labeled-ref-block('dqSystem')
+			+labeled-ref-block('exchangeDqSystem')
+			+labeled-ref-block('socialDqSystem')
+			- var dqChanged = compareTo ? compare(dataset.dqEntry, compareTo.dqEntry) : null;
+			strong=getLabel('dqEntry')
+			div(data-path='dqEntry')
+				- var otherSystem = compareTo ? compareTo.dqSystem : null;
+				+dq-field(dataset, compareTo, 'dqEntry', dataset.dqSystem, otherSystem, '-')
+	.clear

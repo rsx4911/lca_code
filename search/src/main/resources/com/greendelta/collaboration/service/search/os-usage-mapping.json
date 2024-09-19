@@ -1,0 +1,31 @@
+{
+	"properties": {
+		"path": {
+			"type": "keyword"
+		},
+		"type": {
+			"type": "keyword"
+		},
+		"refId": {
+			"type": "keyword"
+		},
+		"processType": {
+			"type": "keyword"
+		},
+		"flowType": {
+			"type": "keyword"
+		},
+		"name": {
+			"type": "keyword"
+		},
+		"inputs": {
+			"type": "keyword"
+		},
+		"outputs": {
+			"type": "keyword"
+		},
+		"others": {
+			"type": "keyword"
+		}
+	}
+}

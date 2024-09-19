@@ -1,0 +1,12 @@
+mixin commit-info-entry(value, label, clazz, first)
+    if value
+        if !first
+            | , 
+        span.commit-info(class=clazz) #{value}
+        |  #{value === 1 ? label : label + 's'}
+
+mixin commit-info(additions, updates, deletions)
+    span
+        +commit-info-entry(additions, 'addition', 'additions', true)
+        +commit-info-entry(updates, 'change', 'updates', !additions)
+        +commit-info-entry(deletions, 'deletion', 'deletions', !additions && !updates)

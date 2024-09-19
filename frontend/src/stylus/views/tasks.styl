@@ -1,0 +1,63 @@
+.tasks-view, .review-widget
+
+	input[type=checkbox]
+		margin 4px 4px 0 0
+
+	input[type=checkbox]:checked + *
+		text-decoration line-through
+
+.tasks-view
+
+	.header-box
+		line-height 34px
+
+	.task-assignments p
+		margin-bottom 0
+
+	.task-link
+		margin-left 10px
+
+	.dataset-references .three-columns
+		margin-bottom 20px
+		
+.review-widget
+	position fixed
+	z-index 1100
+	background-color rgb(255, 255, 255)
+	border 1px solid rgb(221, 223, 227)
+	overflow hidden
+	display flex
+	flex-direction column
+
+	.header-box
+		padding 10px
+		display flex
+		font-weight bold
+		cursor pointer
+		border-top 0
+
+		.review-title
+			overflow hidden
+			white-space nowrap
+			text-overflow ellipsis
+			flex 0 0 auto
+			margin-right 5px
+		
+		[data-action]
+			cursor pointer
+
+		.glyphicon
+			font-size 10px
+			margin-top 4px
+			margin-right 4px
+
+	.content-box
+		padding 10px 0
+		overflow auto
+
+		.review-reference
+			padding 0 10px
+
+		&.filtered .review-reference > input:checked, &.filtered .review-reference > input:checked + a
+			display none
+			visibility hidden
