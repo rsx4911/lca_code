@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -286,7 +286,7 @@ public class GladController {
 
 		private String send(String type, String path, Map<String, Object> data) {
 			try {
-				var object = new URL(baseUrl + "/" + path);
+				var object = URI.create(baseUrl + "/" + path).toURL();
 				var con = (HttpURLConnection) object.openConnection();
 				con.addRequestProperty("api-key", apiKey);
 				con.setRequestMethod(type);
