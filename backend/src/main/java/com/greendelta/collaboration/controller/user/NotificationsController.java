@@ -38,7 +38,7 @@ public class NotificationsController {
 	}
 
 	@PutMapping("enable/{notifications}")
-	public void enable(@PathVariable("notifications") String notifications) {
+	public void enable(@PathVariable String notifications) {
 		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();
@@ -47,7 +47,7 @@ public class NotificationsController {
 	}
 
 	@PutMapping("disable/{notifications}")
-	public void disable(@PathVariable("notifications") String notifications) {
+	public void disable(@PathVariable String notifications) {
 		if (!settings.is(ServerSetting.NOTIFICATIONS_ENABLED))
 			throw Response.unavailable("Notifications feature not enabled");
 		var currentUser = userService.getCurrentUser();

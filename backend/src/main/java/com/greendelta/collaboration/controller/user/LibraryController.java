@@ -69,7 +69,7 @@ public class LibraryController {
 	}
 
 	@GetMapping("{name}")
-	public ResponseEntity<Resource> get(@PathVariable("name") String name) {
+	public ResponseEntity<Resource> get(@PathVariable String name) {
 		var library = service.get(name);
 		if (library == null)
 			throw Response.notFound();
@@ -78,8 +78,8 @@ public class LibraryController {
 
 	@PostMapping
 	public String create(
-			@RequestParam("file") MultipartFile file,
-			@RequestParam("access") String access) {
+			@RequestParam MultipartFile file,
+			@RequestParam String access) {
 		try (var stream = file.getInputStream()) {
 			var id = service.insert(stream, access);
 			if (id == null)
@@ -93,7 +93,7 @@ public class LibraryController {
 	}
 
 	@DeleteMapping("{name}/{access}")
-	public void delete(@PathVariable("name") String name, @PathVariable("access") String access) {
+	public void delete(@PathVariable String name, @PathVariable String access) {
 		if (service.get(name) == null)
 			throw Response.notFound("No library " + name + " found");
 		if (!service.delete(name, access))

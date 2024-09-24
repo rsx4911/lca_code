@@ -52,16 +52,16 @@ public class TeamController {
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "page", defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "module", required = false) Module module) {
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(required = false) String filter,
+			@RequestParam(required = false) Module module) {
 		var result = service.getAll(page, pageSize, filter, false);
 		return Response.ok(SearchResults.convert(result, Teams::mapForOthers));
 	}
 
 	@GetMapping("{teamname}")
-	public Map<String, Object> get(@PathVariable("teamname") String teamname) {
+	public Map<String, Object> get(@PathVariable String teamname) {
 		var team = service.getForTeamname(teamname);
 		if (team == null)
 			throw Response.notFound();
@@ -70,7 +70,7 @@ public class TeamController {
 
 	@PostMapping("{teamname}")
 	public ResponseEntity<Map<String, Object>> create(
-			@PathVariable("teamname") String teamname,
+			@PathVariable String teamname,
 			@RequestBody Team team) {
 		if (Strings.nullOrEmpty(teamname))
 			throw Response.badRequest("teamname", "Missing input: Teamname");
@@ -90,7 +90,7 @@ public class TeamController {
 
 	@PutMapping("{teamname}")
 	public Map<String, Object> update(
-			@PathVariable("teamname") String teamname,
+			@PathVariable String teamname,
 			@RequestBody Team team) {
 		var fromDb = authorizedGetTeam(teamname);
 		if (fromDb == null)
@@ -113,7 +113,7 @@ public class TeamController {
 
 	@PutMapping("{teamname}/activeuntil")
 	public void setActiveUntil(
-			@PathVariable("teamname") String teamname,
+			@PathVariable String teamname,
 			@RequestBody Map<String, Object> data) {
 		var team = authorizedGetTeam(teamname);
 		if (team == null)
@@ -126,7 +126,7 @@ public class TeamController {
 	}
 
 	@DeleteMapping("{teamname}")
-	public void delete(@PathVariable("teamname") String teamname) {
+	public void delete(@PathVariable String teamname) {
 		var team = service.getForTeamname(teamname);
 		if (team == null)
 			throw Response.notFound();

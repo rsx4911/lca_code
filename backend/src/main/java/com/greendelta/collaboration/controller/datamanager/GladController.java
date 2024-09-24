@@ -76,9 +76,9 @@ public class GladController {
 
 	@PutMapping("push/{group}/{name}/{commitId}")
 	public void push(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId,
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId,
 			@RequestBody Set<String> paths) {
 		var repo = repoService.get(group, name);
 		if (repo == null)
@@ -120,8 +120,8 @@ public class GladController {
 
 	@DeleteMapping("clear/{group}/{name}")
 	public void deleteData(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		new Thread(() -> {
 			var api = new GladApi(settings.serverConfig);
 			api.listEntries(group + "/" + name).stream()

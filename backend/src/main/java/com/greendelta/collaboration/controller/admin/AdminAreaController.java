@@ -96,10 +96,10 @@ public class AdminAreaController {
 	}
 
 	@GetMapping("testMailConfig/{email}")
-	public void testMailConfig(@PathVariable("email") String recipient) {
+	public void testMailConfig(@PathVariable String email) {
 		var mail = new EmailJob();
 		mail.subject = "Collaboration server test email";
-		mail.recipient = recipient;
+		mail.recipient = email;
 		emailService.send(mail);
 	}
 
@@ -139,8 +139,8 @@ public class AdminAreaController {
 
 	@PutMapping("reindex/{group}/{repository}")
 	public void reindex(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository) {
+			@PathVariable String group,
+			@PathVariable String repository) {
 		if (!settings.searchConfig.isSearchAvailable())
 			throw Response.unavailable("Search feature not enabled or search cluster unavailable");
 		indexService.reindexAsync(RepositoryPath.of(group, repository));

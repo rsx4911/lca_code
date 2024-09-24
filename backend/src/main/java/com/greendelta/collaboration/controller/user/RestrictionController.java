@@ -20,8 +20,8 @@ public class RestrictionController {
 
 	@PostMapping
 	public ResponseEntity<List<Map<String, Object>>> checkAgainstLibraries(
-			@RequestParam("group") String group,
-			@RequestParam("name") String name,
+			@RequestParam String group,
+			@RequestParam String name,
 			@RequestBody List<String> refIds) {
 		return Response.ok(new ArrayList<Map<String, Object>>());
 	}

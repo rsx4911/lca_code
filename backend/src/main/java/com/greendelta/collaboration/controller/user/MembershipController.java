@@ -49,16 +49,16 @@ public class MembershipController {
 
 	@GetMapping("{group}")
 	public SearchResult<Map<String, Object>> getAllForGroup(
-			@PathVariable("group") String group,
-			@RequestParam(name = "filter", required = false) String filter) {
+			@PathVariable String group,
+			@RequestParam(required = false) String filter) {
 		return getAll(group, null, filter);
 	}
 
 	@GetMapping("{group}/{repo}")
 	public SearchResult<Map<String, Object>> getAllForRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@RequestParam(name = "filter", required = false) String filter) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@RequestParam(required = false) String filter) {
 		return getAll(group, repo, filter);
 	}
 
@@ -70,19 +70,19 @@ public class MembershipController {
 
 	@PostMapping("{group}/user/{username}/{role}")
 	public ResponseEntity<?> addUserRoleToGroup(
-			@PathVariable("group") String group,
-			@PathVariable("username") String username,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String username,
+			@PathVariable Role role) {
 		addUserRole(group, null, username, role);
 		return Response.created();
 	}
 
 	@PostMapping("{group}/{repo}/user/{username}/{role}")
 	public ResponseEntity<?> addUserRoleToRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@PathVariable("username") String username,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@PathVariable String username,
+			@PathVariable Role role) {
 		addUserRole(group, repo, username, role);
 		return Response.created();
 	}
@@ -104,19 +104,19 @@ public class MembershipController {
 
 	@PostMapping("{group}/team/{teamname}/{role}")
 	public ResponseEntity<?> addTeamRoleToGroup(
-			@PathVariable("group") String group,
-			@PathVariable("teamname") String teamname,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String teamname,
+			@PathVariable Role role) {
 		addTeamRole(group, null, teamname, role);
 		return Response.created();
 	}
 
 	@PostMapping("{group}/{repo}/team/{teamname}/{role}")
 	public ResponseEntity<?> addTeamRoleToRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@PathVariable("teamname") String teamname,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@PathVariable String teamname,
+			@PathVariable Role role) {
 		addTeamRole(group, repo, teamname, role);
 		return Response.created();
 	}
@@ -138,18 +138,18 @@ public class MembershipController {
 
 	@PutMapping("{group}/user/{username}/{role}")
 	public void updateUserRoleInGroup(
-			@PathVariable("group") String group,
-			@PathVariable("username") String username,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String username,
+			@PathVariable Role role) {
 		updateUserRole(group, null, username, role);
 	}
 
 	@PutMapping("{group}/{repo}/user/{username}/{role}")
 	public void updateUserRoleInRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@PathVariable("username") String username,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@PathVariable String username,
+			@PathVariable Role role) {
 		updateUserRole(group, repo, username, role);
 	}
 
@@ -170,18 +170,18 @@ public class MembershipController {
 
 	@PutMapping("{group}/team/{teamname}/{role}")
 	public void updateTeamRoleInGroup(
-			@PathVariable("group") String group,
-			@PathVariable("teamname") String teamname,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String teamname,
+			@PathVariable Role role) {
 		updateTeamRole(group, null, teamname, role);
 	}
 
 	@PutMapping("{group}/{repo}/team/{teamname}/{role}")
 	public void updateTeamRoleInRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@PathVariable("teamname") String teamname,
-			@PathVariable("role") Role role) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@PathVariable String teamname,
+			@PathVariable Role role) {
 		updateTeamRole(group, repo, teamname, role);
 	}
 
@@ -202,8 +202,8 @@ public class MembershipController {
 
 	@DeleteMapping("{group}/user/{username}")
 	public void removeUserRoleFromGroup(
-			@PathVariable("group") String group,
-			@PathVariable("username") String username) {
+			@PathVariable String group,
+			@PathVariable String username) {
 		var path = getAuthorizedPath(group, null);
 		var user = userService.getForUsername(username);
 		var notification = notificationService.memberRemoved(group, user);
@@ -215,9 +215,9 @@ public class MembershipController {
 
 	@DeleteMapping("{group}/{repo}/user/{username}")
 	public void removeUserRoleFromRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@PathVariable("username") String username) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@PathVariable String username) {
 		if (repo.equals("null")) {
 			removeUserRoleFromGroup(group, username);
 			return;
@@ -235,16 +235,16 @@ public class MembershipController {
 
 	@DeleteMapping("{group}/team/{teamname}")
 	public void removeTeamRoleFromGroup(
-			@PathVariable("group") String group,
-			@PathVariable("teamname") String teamname) {
+			@PathVariable String group,
+			@PathVariable String teamname) {
 		removeTeamRole(group, null, teamname);
 	}
 
 	@DeleteMapping("{group}/{repo}/team/{teamname}")
 	public void removeTeamRoleFromRepository(
-			@PathVariable("group") String group,
-			@PathVariable("repo") String repo,
-			@PathVariable("teamname") String teamname) {
+			@PathVariable String group,
+			@PathVariable String repo,
+			@PathVariable String teamname) {
 		removeTeamRole(group, repo, teamname);
 	}
 

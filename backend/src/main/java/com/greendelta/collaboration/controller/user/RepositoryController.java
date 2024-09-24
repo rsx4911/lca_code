@@ -80,11 +80,11 @@ public class RepositoryController {
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "page", defaultValue = "1") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "group", required = false) String group,
-			@RequestParam(name = "module", required = false) Module module) {
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(required = false) String filter,
+			@RequestParam(required = false) String group,
+			@RequestParam(required = false) Module module) {
 		try (var all = service.getAllAccessible()) {
 			all.sort();
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, all, Repository::path);
@@ -125,8 +125,8 @@ public class RepositoryController {
 
 	@GetMapping("count/{group}/{name}")
 	public ResponseEntity<?> getReferenceCount(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			return Response.ok(Map.of("datasets", repo.references.find().count()));
 		}
@@ -134,8 +134,8 @@ public class RepositoryController {
 
 	@GetMapping("{group}/{name}")
 	public Map<String, Object> get(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			var mappedRepo = Repositories.mapForUser(repo, groupService.isUserNamespace(group));
 			var path = repo.path();
@@ -154,8 +154,8 @@ public class RepositoryController {
 
 	@GetMapping("avatar/{group}/{name}")
 	public byte[] getAvatar(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			byte[] avatar = repo.settings.get(RepositorySetting.AVATAR);
 			if (avatar != null)
@@ -166,8 +166,8 @@ public class RepositoryController {
 
 	@GetMapping("export/{group}/{name}")
 	public ResponseEntity<Resource> doExport(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			return Response.ok(repo.toFilename(), service.pack(repo));
 		} catch (IOException e) {
@@ -177,8 +177,8 @@ public class RepositoryController {
 
 	@PostMapping("{group}/{name}")
 	public ResponseEntity<Map<String, Object>> create(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		checkValid(group, name);
 		try (var repo = service.create(group, name)) {
 			if (repo == null)
@@ -211,16 +211,16 @@ public class RepositoryController {
 
 	@PostMapping("import/{group}/{name}")
 	public void doImport(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@RequestParam("file") MultipartFile input,
-			@RequestParam(name = "format", defaultValue = "repository") String format,
-			@RequestParam(name = "commitMessage", required = false) String commitMessage) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@RequestParam MultipartFile file,
+			@RequestParam(defaultValue = "repository") String format,
+			@RequestParam(required = false) String commitMessage) {
 		try (var repo = service.get(group, name)) {
 			if (format != null && "json-ld".equals(format.toLowerCase())) {
-				importJsonLd(repo, input.getInputStream(), commitMessage);
+				importJsonLd(repo, file.getInputStream(), commitMessage);
 			} else {
-				service.unpack(repo, input.getInputStream());
+				service.unpack(repo, file.getInputStream());
 			}
 			indexService.indexPrivateAsync(RepositoryPath.of(group, name), null, repo.commits.head());
 		} catch (IOException e) {
@@ -246,10 +246,10 @@ public class RepositoryController {
 
 	@PostMapping("move/{group}/{name}/{newGroup}/{newName}")
 	public ResponseEntity<Map<String, Object>> move(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("newGroup") String newGroup,
-			@PathVariable("newName") String newName) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String newGroup,
+			@PathVariable String newName) {
 		checkValid(newGroup, newName);
 		try (var repo = service.get(group, name)) {
 			if (!service.move(repo, newGroup, newName))
@@ -264,11 +264,11 @@ public class RepositoryController {
 
 	@PostMapping("clone/{group}/{name}/{commitId}/{newGroup}/{newName}")
 	public void clone(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId,
-			@PathVariable("newGroup") String newGroup,
-			@PathVariable("newName") String newName) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId,
+			@PathVariable String newGroup,
+			@PathVariable String newName) {
 		checkValid(newGroup, newName);
 		try (var from = service.get(group, name);
 				var to = service.create(newGroup, newName)) {
@@ -290,8 +290,8 @@ public class RepositoryController {
 
 	@PostMapping("import/external/{group}/{name}")
 	public void importExternal(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
+			@PathVariable String group,
+			@PathVariable String name,
 			@RequestBody Map<String, Object> map) {
 		var url = Maps.getString(map, "url");
 		if (Strings.nullOrEmpty(url))
@@ -325,9 +325,9 @@ public class RepositoryController {
 
 	@PutMapping("avatar/{group}/{name}")
 	public byte[] setAvatar(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@RequestParam(name = "file", required = false) MultipartFile file) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@RequestParam(required = false) MultipartFile file) {
 		try (var repo = service.get(group, name)) {
 			repo.settings.set(RepositorySetting.AVATAR, file != null ? file.getBytes() : null);
 			return getAvatar(group, name);
@@ -338,9 +338,9 @@ public class RepositoryController {
 
 	@PutMapping("settings/{group}/{name}/{setting}")
 	public void setSetting(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("setting") RepositorySetting setting,
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable RepositorySetting setting,
 			@RequestBody Map<String, Object> data) {
 		var value = data.get("value");
 		try (var repo = service.get(group, name)) {
@@ -373,8 +373,8 @@ public class RepositoryController {
 
 	@DeleteMapping("{group}/{name}")
 	public void delete(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			var notification = notificationService.repositoryDeleted(repo);
 			indexService.deleteIndex(repo);

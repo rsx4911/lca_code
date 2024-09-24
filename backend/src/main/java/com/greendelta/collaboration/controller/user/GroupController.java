@@ -59,12 +59,12 @@ public class GroupController {
 
 	@GetMapping
 	public SearchResult<Map<String, Object>> getAll(
-			@RequestParam(name = "page", defaultValue = "1") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "module", required = false) Module module,
-			@RequestParam(name = "onlyIfCanWrite", defaultValue = "false") boolean onlyIfCanWrite,
-			@RequestParam(name = "adminArea", defaultValue = "false") boolean adminArea) {
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(required = false) String filter,
+			@RequestParam(required = false) Module module,
+			@RequestParam(defaultValue = "false") boolean onlyIfCanWrite,
+			@RequestParam(defaultValue = "false") boolean adminArea) {
 		var all = service.getAllAccessible();
 		if (onlyIfCanWrite) {
 			all = all.stream()
@@ -97,7 +97,7 @@ public class GroupController {
 	}
 
 	@GetMapping("{name}")
-	public Map<String, Object> get(@PathVariable("name") String name) {
+	public Map<String, Object> get(@PathVariable String name) {
 		var user = userService.getCurrentUser();
 		var isOwnNamespace = service.isOwnNamespace(name);
 		if (!isOwnNamespace && !service.exists(name))
@@ -117,7 +117,7 @@ public class GroupController {
 	}
 
 	@GetMapping("avatar/{name}")
-	public byte[] getAvatar(@PathVariable("name") String name) {
+	public byte[] getAvatar(@PathVariable String name) {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
 		byte[] avatar = service.getSettings(name).get(GroupSetting.AVATAR);
@@ -127,7 +127,7 @@ public class GroupController {
 	}
 
 	@PostMapping("{name}")
-	public ResponseEntity<Map<String, Object>> create(@PathVariable("name") String name) {
+	public ResponseEntity<Map<String, Object>> create(@PathVariable String name) {
 		if (Strings.nullOrEmpty(name))
 			throw Response.badRequest("name", "Missing input: Name");
 		if (!Routes.isValid(name))
@@ -146,8 +146,8 @@ public class GroupController {
 
 	@PutMapping("avatar/{name}")
 	public byte[] setAvatar(
-			@PathVariable("name") String name,
-			@RequestParam(name = "file", required = false) MultipartFile file) {
+			@PathVariable String name,
+			@RequestParam(required = false) MultipartFile file) {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
 		try {
@@ -160,8 +160,8 @@ public class GroupController {
 
 	@PutMapping("settings/{name}/{setting}")
 	public void setSetting(
-			@PathVariable("name") String name,
-			@PathVariable("setting") GroupSetting setting,
+			@PathVariable String name,
+			@PathVariable GroupSetting setting,
 			@RequestBody Map<String, Object> data) {
 		if (!service.isOwnNamespace(name) && !service.exists(name))
 			throw Response.notFound(name);
@@ -173,7 +173,7 @@ public class GroupController {
 	}
 
 	@DeleteMapping("{name}")
-	public void delete(@PathVariable("name") String name) {
+	public void delete(@PathVariable String name) {
 		if (!service.exists(name) || service.isUserNamespace(name))
 			throw Response.notFound("Group " + name + " not found");
 		var notification = notificationService.groupDeleted(name);

@@ -50,12 +50,12 @@ public class ActivityController {
 
 	@GetMapping
 	public SearchResult<Map<String, Object>> getAll(
-			@RequestParam(name = "page", defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "showCommitActivities", defaultValue = "true") boolean showCommitActivities,
-			@RequestParam(name = "showCommentActivities", defaultValue = "true") boolean showCommentActivities,
-			@RequestParam(name = "showTaskActivities", defaultValue = "true") boolean showTaskActivities,
-			@RequestParam(name = "repositoryPath", required = false) String repositoryPath) {
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(defaultValue = "true") boolean showCommitActivities,
+			@RequestParam(defaultValue = "true") boolean showCommentActivities,
+			@RequestParam(defaultValue = "true") boolean showTaskActivities,
+			@RequestParam(required = false) String repositoryPath) {
 		if (repositoryPath == null && !settings.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED))
 			throw Response.unavailable("Dashboard activities feature not enabled");
 		if (repositoryPath != null && !settings.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))

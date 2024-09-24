@@ -47,17 +47,17 @@ public class ChangeLogController {
 	@GetMapping("{group}/{name}")
 	public String request(
 			HttpServletRequest request,
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		return request(request, group, name, null);
 	}
 
 	@GetMapping("{group}/{name}/{commitId}")
 	public String request(
 			HttpServletRequest request,
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId) {
 		if (!settings.is(ServerSetting.CHANGE_LOG_ENABLED))
 			throw Response.unavailable("Change log feature not enabled");
 		try (var repo = repoService.get(group, name)) {
@@ -80,7 +80,7 @@ public class ChangeLogController {
 	}
 
 	@GetMapping("{token}")
-	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
+	public ResponseEntity<Resource> download(@PathVariable String token) {
 		var info = tokens.get(token);
 		if (info == null)
 			throw Response.notFound();

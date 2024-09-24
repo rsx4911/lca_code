@@ -66,8 +66,8 @@ public class SecurityConfig {
 		this.basicAuthEnabled = basicAuthEnabled;
 	}
 
-	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http = http
 				.headers(config -> config
 						.frameOptions(options -> options
@@ -177,9 +177,9 @@ public class SecurityConfig {
 		return new HttpStatusReturningLogoutSuccessHandler(HttpStatus.OK);
 	}
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-			throws Exception {
+    @Bean
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
 		this.authManager = authenticationConfiguration.getAuthenticationManager();
 		return this.authManager;
 	}

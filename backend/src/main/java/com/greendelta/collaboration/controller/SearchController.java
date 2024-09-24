@@ -184,12 +184,12 @@ public class SearchController {
 
 	@GetMapping("usage/{refId}")
 	public SearchResult<Map<String, Object>> searchUsage(
-			@PathVariable("refId") String refId,
-			@RequestParam(name = "repositoryId") String repositoryId,
-			@RequestParam(name = "field", required = false) String field,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "page", defaultValue = "1") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+			@PathVariable String refId,
+			@RequestParam String repositoryId,
+			@RequestParam(required = false) String field,
+			@RequestParam(required = false) String filter,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int pageSize) {
 		if (!settings.searchConfig.isUsageSearchEnabled())
 			throw Response.unavailable("Show usage feature not enabled or search cluster not available");
 		try (var repo = repoService.get(repositoryId)) {
