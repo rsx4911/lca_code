@@ -76,7 +76,7 @@ public class SearchController {
 		var page = removeIntFilter("page", parameters, 1);
 		var pageSize = removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
-		var result = service.search(query, page, pageSize, parameters);
+		var result = service.query(query, page, pageSize, parameters);
 		result.aggregations.stream()
 				.filter(r -> r.name.equals(Aggregations.CATEGORY.name)
 						|| r.name.equals(Aggregations.FLOW_COMPLETENESS.name))
