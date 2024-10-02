@@ -59,9 +59,9 @@ public class UserController {
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "module", required = false) Module module,
-			@RequestParam(name = "repositoryPath", required = false) String repositoryPath,
-			@RequestParam(name = "filter", required = false) String filter) {
+			@RequestParam(required = false) Module module,
+			@RequestParam(required = false) String repositoryPath,
+			@RequestParam(required = false) String filter) {
 		var users = getUsers(module, repositoryPath).stream();
 		if (!Strings.nullOrEmpty(filter)) {
 			users = users.filter(u -> u.name.contains(filter));
@@ -140,7 +140,7 @@ public class UserController {
 	}
 
 	@GetMapping("{username}")
-	public Map<String, Object> get(@PathVariable("username") String username) {
+	public Map<String, Object> get(@PathVariable String username) {
 		var user = service.getForUsername(username);
 		if (user == null)
 			throw Response.notFound();
@@ -155,7 +155,7 @@ public class UserController {
 	}
 
 	@GetMapping("avatar/{username}")
-	public byte[] getAvatar(@PathVariable("username") String username) {
+	public byte[] getAvatar(@PathVariable String username) {
 		if ("null".equals(username) || username == null)
 			return Avatar.get("avatar-user.png");
 		var user = service.getForUsername(username);
@@ -165,7 +165,7 @@ public class UserController {
 	}
 
 	@GetMapping("twoFactorAuth/{username}")
-	public Map<String, Object> showTwoFactorAuthentication(@PathVariable("username") String username) {
+	public Map<String, Object> showTwoFactorAuthentication(@PathVariable String username) {
 		var user = authorizedGetUser(username);
 		if (user == null)
 			throw Response.notFound();
@@ -179,7 +179,7 @@ public class UserController {
 
 	@PutMapping("{username}")
 	public Map<String, Object> update(
-			@PathVariable("username") String username,
+			@PathVariable String username,
 			@RequestBody User user) {
 		var fromDb = authorizedGetUser(username);
 		if (fromDb == null)
@@ -220,8 +220,8 @@ public class UserController {
 
 	@PutMapping("avatar/{username}")
 	public byte[] setAvatar(
-			@PathVariable("username") String username,
-			@RequestParam(name = "file", required = false) MultipartFile file) {
+			@PathVariable String username,
+			@RequestParam(required = false) MultipartFile file) {
 		var user = authorizedGetUser(username);
 		if (user == null)
 			throw Response.notFound();
@@ -236,7 +236,7 @@ public class UserController {
 
 	@PutMapping("setpassword/{username}")
 	public void setPassword(
-			@PathVariable("username") String username,
+			@PathVariable String username,
 			@RequestBody Map<String, Object> map) {
 		var password = Maps.getString(map, "password");
 		var password2 = Maps.getString(map, "password2");
@@ -257,8 +257,8 @@ public class UserController {
 
 	@PutMapping("twoFactorAuth/{username}/{enable}")
 	public Map<String, Object> toggleTwoFactorAuthentication(
-			@PathVariable("username") String username,
-			@PathVariable("enable") boolean enable) {
+			@PathVariable String username,
+			@PathVariable boolean enable) {
 		var user = authorizedGetUser(username);
 		if (user == null)
 			throw Response.notFound();

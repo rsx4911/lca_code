@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -76,9 +76,9 @@ public class GladController {
 
 	@PutMapping("push/{group}/{name}/{commitId}")
 	public void push(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId,
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId,
 			@RequestBody Set<String> paths) {
 		var repo = repoService.get(group, name);
 		if (repo == null)
@@ -120,8 +120,8 @@ public class GladController {
 
 	@DeleteMapping("clear/{group}/{name}")
 	public void deleteData(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		new Thread(() -> {
 			var api = new GladApi(settings.serverConfig);
 			api.listEntries(group + "/" + name).stream()
@@ -286,7 +286,7 @@ public class GladController {
 
 		private String send(String type, String path, Map<String, Object> data) {
 			try {
-				var object = new URL(baseUrl + "/" + path);
+				var object = URI.create(baseUrl + "/" + path).toURL();
 				var con = (HttpURLConnection) object.openConnection();
 				con.addRequestProperty("api-key", apiKey);
 				con.setRequestMethod(type);

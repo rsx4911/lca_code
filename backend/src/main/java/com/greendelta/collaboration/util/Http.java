@@ -25,8 +25,9 @@ public class Http {
 	}
 
 	public static String getString(CloseableHttpResponse response) throws IOException {
-		return new BufferedReader(new InputStreamReader(response.getEntity().getContent()))
-				.lines().collect(Collectors.joining("\n"));
+		try (var reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()))) {
+			return reader.lines().collect(Collectors.joining("\n"));
+		}
 	}
 
 }

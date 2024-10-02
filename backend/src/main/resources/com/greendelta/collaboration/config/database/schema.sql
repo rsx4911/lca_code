@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS team_users (
 
 CREATE TABLE IF NOT EXISTS team (
   id BIGINT NOT NULL, 
-  avatar MEDIUMBLOB, 
+  avatar LONGBLOB,
   name VARCHAR(255), 
   teamname VARCHAR(255), 
   PRIMARY KEY (id)
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS user_blocked_users (
 
 CREATE TABLE IF NOT EXISTS user (
   id BIGINT NOT NULL, 
-  avatar MEDIUMBLOB, 
+  avatar LONGBLOB,
   email VARCHAR(255), 
   name VARCHAR(255), 
   password VARCHAR(255), 

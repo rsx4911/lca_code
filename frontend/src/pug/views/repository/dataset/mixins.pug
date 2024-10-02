@@ -321,7 +321,7 @@ mixin array-field-row(value, value2, path, type, getSpecificId)
 							+compare-icon('removed')
 							+ref(null, other)
 
-mixin field-link-row(path, urlPrefix, query)
+mixin field-link-row(type, path, urlPrefix, query)
 	- var value = getValue(dataset, path);
 	- var value2 = getValue(compareTo, path); 
 	if value || value2 || reviewMode
@@ -329,9 +329,15 @@ mixin field-link-row(path, urlPrefix, query)
 		+field-row-frame(path)(data-compare=changed)
 			+compare-icon(changed)
 			if value
+				- var isExternal = type === 'external';
+				- var isEmail = type === 'email';
 				- var href = urlPrefix ? urlPrefix + '/' + value : value;
 				if query
-					- href += query
+					- href += query;
+				if isExternal && href.indexOf('http') !== 0 && href.indexOf('//') !== 0
+					- href = 'http://' + href;
+				if isEmail && href.indexOf('mailto:') !== 0
+					- href = 'mailto:' + href
 				a.original-value(href=href target='_blank')=value
 			if changed && value2
 				span.comparison-value=value2

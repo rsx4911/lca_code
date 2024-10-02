@@ -56,10 +56,10 @@ public class HistoryController {
 
 	@GetMapping("{group}/{name}/{type}/{refId}")
 	public ResponseEntity<List<Map<String, Object>>> getCommitHistory(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable ModelType type,
+			@PathVariable String refId) {
 		try (var repo = repoService.get(group, name)) {
 			var commits = service.getAccessibleCommits(repo,
 					options -> options.model(type, refId));
@@ -70,9 +70,9 @@ public class HistoryController {
 
 	@GetMapping("{group}/{name}")
 	public ResponseEntity<List<Map<String, Object>>> getCommitHistory(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@RequestParam(name = "path", required = false) String path) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@RequestParam(required = false) String path) {
 		try (var repo = repoService.get(group, name)) {
 			var commits = service.getAccessibleCommits(repo, options -> options.path(path));
 			Collections.reverse(commits);
@@ -82,11 +82,11 @@ public class HistoryController {
 
 	@GetMapping("search/{group}/{name}")
 	public ResponseEntity<Map<String, Object>> getCommitHistory(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "page", defaultValue = "1") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@RequestParam(required = false) String filter,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int pageSize) {
 		try (var repo = repoService.get(group, name)) {
 			var commits = service.getAccessibleCommits(repo);
 			Collections.reverse(commits);
@@ -119,9 +119,9 @@ public class HistoryController {
 
 	@GetMapping("commit/{group}/{name}/{commitId}")
 	public Map<String, Object> getCommit(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId) {
 		try (var repo = repoService.get(group, name)) {
 			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
@@ -135,9 +135,9 @@ public class HistoryController {
 
 	@GetMapping("count/{group}/{name}/{commitId}")
 	public Map<String, Object> getCount(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId) {
 		try (var repo = repoService.get(group, name)) {
 			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
@@ -159,13 +159,13 @@ public class HistoryController {
 
 	@GetMapping("references/{group}/{name}/{commitId}")
 	public Map<String, Object> getReferences(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId,
-			@RequestParam(name = "type", required = false) ModelType type,
-			@RequestParam(name = "page", defaultValue = "1") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "filter", required = false) String filter) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId,
+			@RequestParam(required = false) ModelType type,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(required = false) String filter) {
 		try (var repo = repoService.get(group, name)) {
 			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)

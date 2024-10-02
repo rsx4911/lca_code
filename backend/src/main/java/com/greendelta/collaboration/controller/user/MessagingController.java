@@ -51,8 +51,8 @@ public class MessagingController {
 
 	@GetMapping("user/{username}")
 	public ResponseEntity<List<Map<String, Object>>> getMessages(
-			@PathVariable("username") String username,
-			@RequestParam(name = "before", required = false) long before) {
+			@PathVariable String username,
+			@RequestParam(required = false) long before) {
 		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var user = userService.getCurrentUser();
@@ -71,8 +71,8 @@ public class MessagingController {
 
 	@GetMapping("team/{teamname}")
 	public ResponseEntity<List<Map<String, Object>>> getTeamMessages(
-			@PathVariable("teamname") String teamname,
-			@RequestParam(name = "before", required = false) long before) {
+			@PathVariable String teamname,
+			@RequestParam(required = false) long before) {
 		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var team = teamService.getForTeamname(teamname);
@@ -100,7 +100,7 @@ public class MessagingController {
 	}
 
 	@PutMapping("block/{username}")
-	public void blockUser(@PathVariable("username") String username) {
+	public void blockUser(@PathVariable String username) {
 		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var other = userService.getForUsername(username);
@@ -112,7 +112,7 @@ public class MessagingController {
 	}
 
 	@PutMapping("unblock/{username}")
-	public void unblockUser(@PathVariable("username") String username) {
+	public void unblockUser(@PathVariable String username) {
 		if (!settings.is(ServerSetting.MESSAGING_ENABLED))
 			throw Response.unavailable("Messaging feature not enabled");
 		var other = userService.getForUsername(username);

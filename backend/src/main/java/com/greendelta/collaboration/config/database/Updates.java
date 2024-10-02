@@ -13,7 +13,7 @@ import org.openlca.util.Strings;
 class Updates {
 
 	private static final Logger log = LogManager.getLogger(Updates.class);
-	private static final int CURRENT_SCHEMA_VERSION = 2;
+	private static final int CURRENT_SCHEMA_VERSION = 3;
 	private final Statement s;
 
 	static void runScript(Statement s, String script) throws IOException, SQLException {
@@ -55,6 +55,7 @@ class Updates {
 	private int runUpdateFrom(int currentVersion) throws SQLException, IOException {
 		return switch (currentVersion) {
 			case 0, 1 -> new Update1(s).run();
+			case 2 -> new Update2(s).run();
 			default -> throw new IllegalArgumentException("Unknown schema version: " + currentVersion);
 		};
 	}

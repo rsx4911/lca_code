@@ -46,8 +46,8 @@ public class TeamController {
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "module", required = false) Module module) {
+			@RequestParam(required = false) String filter,
+			@RequestParam(required = false) Module module) {
 		var result = getVisible(module);
 		return Response.ok(result.stream().map(Teams::mapForOthers).toList());
 	}
@@ -100,7 +100,7 @@ public class TeamController {
 	}
 
 	@GetMapping("avatar/{teamname}")
-	public byte[] getAvatar(@PathVariable("teamname") String teamname) {
+	public byte[] getAvatar(@PathVariable String teamname) {
 		var team = service.getForTeamname(teamname);
 		if (team == null)
 			return Avatar.get("avatar-team.png");
@@ -109,8 +109,8 @@ public class TeamController {
 
 	@PutMapping("avatar/{teamname}")
 	public byte[] setAvatar(
-			@PathVariable("teamname") String teamname,
-			@RequestParam(name = "file", required = false) MultipartFile file) {
+			@PathVariable String teamname,
+			@RequestParam(required = false) MultipartFile file) {
 		var team = authorizedGetTeam(teamname);
 		if (team == null)
 			throw Response.notFound();

@@ -54,13 +54,13 @@ public class BrowseController {
 
 	@GetMapping("{group}/{name}")
 	public SearchResult<Map<String, Object>> getCategoryContent(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@RequestParam(name = "categoryPath", defaultValue = "") String categoryPath,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "page", defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "commitId", required = false) String commitId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@RequestParam(defaultValue = "") String categoryPath,
+			@RequestParam(required = false) String filter,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(required = false) String commitId) {
 		try (var repo = repoService.get(group, name)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
@@ -173,11 +173,11 @@ public class BrowseController {
 
 	@GetMapping("{group}/{name}/{type}/{refId}")
 	public Map<String, Object> getData(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId,
-			@RequestParam(name = "commitId", required = false) String commitId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable ModelType type,
+			@PathVariable String refId,
+			@RequestParam(required = false) String commitId) {
 		if (commitId != null && commitId.contains("?gladview")) {
 			// TODO this is a quickfix to support broken glad urls
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));

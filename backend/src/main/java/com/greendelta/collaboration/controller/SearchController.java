@@ -76,7 +76,7 @@ public class SearchController {
 		var page = removeIntFilter("page", parameters, 1);
 		var pageSize = removeIntFilter("pageSize", parameters, SearchQuery.DEFAULT_PAGE_SIZE);
 		log.info("Running search for '{}', page={}, pageSize={}, parameters={}", query, page, pageSize, parameters);
-		var result = service.search(query, page, pageSize, parameters);
+		var result = service.query(query, page, pageSize, parameters);
 		result.aggregations.stream()
 				.filter(r -> r.name.equals(Aggregations.CATEGORY.name)
 						|| r.name.equals(Aggregations.FLOW_COMPLETENESS.name))
@@ -184,12 +184,12 @@ public class SearchController {
 
 	@GetMapping("usage/{refId}")
 	public SearchResult<Map<String, Object>> searchUsage(
-			@PathVariable("refId") String refId,
-			@RequestParam(name = "repositoryId") String repositoryId,
-			@RequestParam(name = "field", required = false) String field,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "page", defaultValue = "1") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
+			@PathVariable String refId,
+			@RequestParam String repositoryId,
+			@RequestParam(required = false) String field,
+			@RequestParam(required = false) String filter,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(defaultValue = "10") int pageSize) {
 		if (!settings.searchConfig.isUsageSearchEnabled())
 			throw Response.unavailable("Show usage feature not enabled or search cluster not available");
 		try (var repo = repoService.get(repositoryId)) {

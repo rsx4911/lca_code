@@ -26,8 +26,8 @@ public class OverlayController {
 
 	@GetMapping(produces = MediaType.IMAGE_PNG_VALUE)
 	public byte[] getImageWithOverlay(
-			@RequestParam(name = "image", required = true) String image,
-			@RequestParam(name = "overlay", required = true) String overlay) {
+			@RequestParam(required = true) String image,
+			@RequestParam(required = true) String overlay) {
 		try {
 			var icon = getResource(image);
 			var overlayIcon = getResource(overlay);

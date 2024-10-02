@@ -20,63 +20,63 @@ import com.greendelta.collaboration.service.Dao;
 @Configuration
 public class DaoConfig {
 
-	@Bean
-	public Dao<Job> jobDao() {
+    @Bean
+    Dao<Job> jobDao() {
 		return new Dao<>(Job.class);
 	}
 
-	@Bean
-	public Dao<Setting> settingDao() {
+    @Bean
+    Dao<Setting> settingDao() {
 		return new Dao<>(Setting.class);
 	}
 
-	@Bean
-	public Dao<Review> reviewDao() {
+    @Bean
+    Dao<Review> reviewDao() {
 		return new Dao<>(Review.class);
 	}
 
-	@Bean
-	public Dao<ReviewReference> reviewReferenceDao() {
+    @Bean
+    Dao<ReviewReference> reviewReferenceDao() {
 		return new Dao<>(ReviewReference.class);
 	}
 
-	@Bean
-	public Dao<Task> taskDao() {
+    @Bean
+    Dao<Task> taskDao() {
 		return new Dao<>(Task.class);
 	}
 
-	@Bean
-	public Dao<TaskAssignment> taskAssignmentDao() {
+    @Bean
+    Dao<TaskAssignment> taskAssignmentDao() {
 		return new Dao<>(TaskAssignment.class);
 	}
 
-	@Bean
-	public Dao<Comment> commentDao() {
+    @Bean
+    Dao<Comment> commentDao() {
 		return new Dao<>(Comment.class);
 	}
 
-	@Bean
-	public Dao<Membership> membershipDao() {
+    @Bean
+    Dao<Membership> membershipDao() {
 		return new Dao<>(Membership.class);
 	}
 
-	@Bean
-	public Dao<ReleaseInfo> releaseInfoDao() {
+    @Bean
+    Dao<ReleaseInfo> releaseInfoDao() {
 		return new Dao<>(ReleaseInfo.class);
 	}
-	
-	@Bean
-	public Dao<Message> messageDao() {
+
+    @Bean
+    Dao<Message> messageDao() {
 		return new Dao<>(Message.class);
 	}
 
-	@Bean
-	public Dao<Team> teamDao() {
+    @Bean
+    Dao<Team> teamDao() {
 		return new Dao<>(Team.class);
 	}
 
-	@Bean
-	public Dao<User> userDao() {
+    @Bean
+    Dao<User> userDao() {
 		return new Dao<>(User.class);
 	}
 

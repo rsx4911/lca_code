@@ -56,9 +56,9 @@ public class ReleaseController {
 	}
 
 	@GetMapping("{group}/{name}/{commitId}")
-	public Map<String, Object> getReleaseInfo(@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId) {
+	public Map<String, Object> getReleaseInfo(@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId) {
 		try (var repo = repoService.get(group, name)) {
 			checkAccess(repo, commitId);
 			if (!service.isReleased(repo.path(), commitId))
@@ -69,9 +69,9 @@ public class ReleaseController {
 	}
 
 	@PostMapping("{group}/{name}/{commitId}")
-	public void release(@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId,
+	public void release(@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId,
 			@RequestBody ReleaseInfo release) {
 		try (var repo = repoService.get(group, name)) {
 			var before = historyService.getLatestReleasedCommit(repo);
@@ -84,9 +84,9 @@ public class ReleaseController {
 	}
 
 	@PutMapping("{group}/{name}/{commitId}")
-	public void updateRelease(@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId,
+	public void updateRelease(@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId,
 			@RequestBody ReleaseInfo release) {
 		try (var repo = repoService.get(group, name)) {
 			var before = historyService.getLatestReleasedCommit(repo);
@@ -121,9 +121,9 @@ public class ReleaseController {
 	}
 
 	@DeleteMapping("{group}/{name}/{commitId}")
-	public void revokeRelease(@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("commitId") String commitId) {
+	public void revokeRelease(@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable String commitId) {
 		try (var repo = repoService.get(group, name)) {
 			checkAccess(repo, commitId);
 			if (!service.isReleased(repo.path(), commitId))

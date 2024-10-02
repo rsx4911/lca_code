@@ -2,7 +2,7 @@ package com.greendelta.collaboration.io;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
 
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
@@ -67,7 +67,7 @@ public class RepositoryClient implements AutoCloseable {
 			var index = value.indexOf("JSESSIONID=");
 			var endIndex = value.indexOf(";", index);
 			var sessionId = value.substring(index + "JSESSIONID=".length(), endIndex);
-			var url = new URL(baseUrl);
+			var url = URI.create(baseUrl);
 			var cookie = new BasicClientCookie("JSESSIONID", sessionId);
 			cookie.setDomain(url.getHost());
 			cookie.setPath(url.getPath());

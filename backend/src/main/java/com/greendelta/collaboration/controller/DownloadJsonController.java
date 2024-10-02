@@ -44,7 +44,7 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	@GetMapping("{token}")
-	public ResponseEntity<Resource> download(@PathVariable("token") String token) {
+	public ResponseEntity<Resource> download(@PathVariable String token) {
 		if (token.startsWith("repository_")) {
 			var info = token.substring(11).split("@");
 			if (info.length < 3)
@@ -65,10 +65,10 @@ public class DownloadJsonController extends DownloadController {
 
 	@GetMapping("prepare/{group}/{repository}")
 	public String prepareByPath(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository,
-			@RequestParam(name = "commitId", required = false) String commitId,
-			@RequestParam(name = "path", required = false) String path) {
+			@PathVariable String group,
+			@PathVariable String repository,
+			@RequestParam(required = false) String commitId,
+			@RequestParam(required = false) String path) {
 		try (var repo = repoService.get(group, repository)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (Strings.nullOrEmpty(path) && commit != null) {
@@ -83,19 +83,19 @@ public class DownloadJsonController extends DownloadController {
 
 	@GetMapping("prepare/{group}/{repository}/{type}/{refId}")
 	public String prepareDataset(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId,
-			@RequestParam(name = "commitId", required = false) String commitId) {
+			@PathVariable String group,
+			@PathVariable String repository,
+			@PathVariable ModelType type,
+			@PathVariable String refId,
+			@RequestParam(required = false) String commitId) {
 		return super.prepare(group, repository, type, refId, commitId);
 	}
 
 	@PostMapping("prepare/{group}/{repository}")
 	public String prepareSelection(
-			@PathVariable("group") String group,
-			@PathVariable("repository") String repository,
-			@RequestParam(name = "commitId", required = false) String commitId,
+			@PathVariable String group,
+			@PathVariable String repository,
+			@RequestParam(required = false) String commitId,
 			@RequestBody Set<String> paths) {
 		return super.prepare(group, repository, commitId, paths);
 	}

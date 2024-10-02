@@ -59,8 +59,8 @@ public class RepositoryController {
 
 	@GetMapping("{group}/{name}")
 	public Map<String, Object> get(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			var mappedRepo = putReleaseInfo(repo);
 			var sortedCommitIds = historyService.getAccessibleCommits(repo).stream()
@@ -82,8 +82,8 @@ public class RepositoryController {
 
 	@GetMapping("count/{group}/{name}")
 	public ResponseEntity<?> getReferenceCount(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			var commit = historyService.getLatestAccessibleCommit(repo);
 			if (commit == null)
@@ -94,8 +94,8 @@ public class RepositoryController {
 
 	@GetMapping("avatar/{group}/{name}")
 	public byte[] getAvatar(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name) {
+			@PathVariable String group,
+			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			byte[] avatar = repo.settings.get(RepositorySetting.AVATAR);
 			if (avatar != null)
@@ -106,12 +106,12 @@ public class RepositoryController {
 
 	@GetMapping("file/{group}/{name}/{type}/{refId}/{path}")
 	public ResponseEntity<Resource> getFile(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId,
-			@PathVariable("path") String path,
-			@RequestParam(name = "commitId", required = false) String commitId) throws IOException {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable ModelType type,
+			@PathVariable String refId,
+			@PathVariable String path,
+			@RequestParam(required = false) String commitId) throws IOException {
 		try (var repo = service.get(group, name)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)

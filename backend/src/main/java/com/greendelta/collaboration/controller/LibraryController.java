@@ -21,7 +21,7 @@ public class LibraryController {
 	}
 
 	@GetMapping("{name}")
-	public ResponseEntity<Resource> get(@PathVariable("name") String name) {
+	public ResponseEntity<Resource> get(@PathVariable String name) {
 		var library = service.get(name);
 		if (library == null)
 			throw Response.notFound();

@@ -57,12 +57,12 @@ public class CommentController {
 
 	@GetMapping("{group}/{name}")
 	public Map<String, Object> getForRepository(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@RequestParam(name = "filter", required = false) String filter,
-			@RequestParam(name = "page", required = false, defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", required = false, defaultValue = "10") int pageSize,
-			@RequestParam(name = "includeReplies", defaultValue = "false") boolean includeReplies) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@RequestParam(required = false) String filter,
+			@RequestParam(required = false, defaultValue = "0") int page,
+			@RequestParam(required = false, defaultValue = "10") int pageSize,
+			@RequestParam(defaultValue = "false") boolean includeReplies) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
 		try (var repo = repoService.get(group, name)) {
@@ -78,11 +78,11 @@ public class CommentController {
 
 	@GetMapping("{group}/{name}/{type}/{refId}")
 	public Map<String, Object> getForDataset(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId,
-			@RequestParam(name = "commitId", required = false) String commitId) {
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable ModelType type,
+			@PathVariable String refId,
+			@RequestParam(required = false) String commitId) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
 		try (var repo = repoService.get(group, name)) {
@@ -113,7 +113,7 @@ public class CommentController {
 	}
 
 	@GetMapping("{id}/replies")
-	public List<Map<String, Object>> getReplies(@PathVariable("id") long id) {
+	public List<Map<String, Object>> getReplies(@PathVariable long id) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
 		var comment = service.get(id);
@@ -125,11 +125,11 @@ public class CommentController {
 
 	@PostMapping("{group}/{name}/{type}/{refId}/{commitId}")
 	public Map<String, Object> add(
-			@PathVariable("group") String group,
-			@PathVariable("name") String name,
-			@PathVariable("type") ModelType type,
-			@PathVariable("refId") String refId,
-			@PathVariable("commitId") String commitId,
+			@PathVariable String group,
+			@PathVariable String name,
+			@PathVariable ModelType type,
+			@PathVariable String refId,
+			@PathVariable String commitId,
 			@RequestBody Map<String, Object> map) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
@@ -160,7 +160,7 @@ public class CommentController {
 
 	@PutMapping("{id}")
 	public Map<String, Object> edit(
-			@PathVariable("id") long id,
+			@PathVariable long id,
 			@RequestBody Map<String, Object> map) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
@@ -176,7 +176,7 @@ public class CommentController {
 	}
 
 	@PutMapping("{id}/release")
-	public Map<String, Object> release(@PathVariable("id") long id) {
+	public Map<String, Object> release(@PathVariable long id) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
 		var comment = service.release(id);
@@ -189,12 +189,12 @@ public class CommentController {
 
 	@PutMapping("{id}/visibility/{role}")
 	public Map<String, Object> changeVisibility(
-			@PathVariable("id") long id,
-			@PathVariable("role") String roleString) {
+			@PathVariable long id,
+			@PathVariable String role) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
-		var role = "null".equals(roleString) ? null : Role.valueOf(roleString);
-		var comment = service.changeVisibility(id, role);
+		var roleValue = "null".equals(role) ? null : Role.valueOf(role);
+		var comment = service.changeVisibility(id, roleValue);
 		if (comment == null)
 			throw Response.notFound();
 		try (var repo = repoService.get(comment.repositoryPath)) {
@@ -203,7 +203,7 @@ public class CommentController {
 	}
 
 	@DeleteMapping("{id}")
-	public void delete(@PathVariable("id") long id) {
+	public void delete(@PathVariable long id) {
 		if (!settings.is(ServerSetting.COMMENTS_ENABLED))
 			throw Response.unavailable("Comment feature not enabled");
 		service.delete(id);

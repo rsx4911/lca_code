@@ -43,16 +43,16 @@ public class UserController {
 
 	@GetMapping
 	public ResponseEntity<?> getAll(
-			@RequestParam(name = "page", defaultValue = "0") int page,
-			@RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
-			@RequestParam(name = "filter", required = false) String filter) {
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int pageSize,
+			@RequestParam(required = false) String filter) {
 		var result = service.getAll(page, pageSize, filter);
 		return Response.ok(SearchResults.convert(result, Users::mapForAdmin));
 	}
 
 	@PostMapping("{username}")
 	public ResponseEntity<Map<String, Object>> create(
-			@PathVariable("username") String username,
+			@PathVariable String username,
 			@RequestBody User user) {
 		if (Strings.nullOrEmpty(username))
 			throw Response.badRequest("username", "Missing input: Username");
@@ -78,7 +78,7 @@ public class UserController {
 	}
 
 	@DeleteMapping("{username}")
-	public void delete(@PathVariable("username") String username) {
+	public void delete(@PathVariable String username) {
 		var user = service.getForUsername(username);
 		if (user == null)
 			throw Response.notFound();
