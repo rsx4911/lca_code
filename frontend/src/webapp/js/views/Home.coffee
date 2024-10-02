@@ -1,6 +1,7 @@
 define([
 				'backbone'
 				'cs!utils/Events'
+				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!app/Router'
 				'cs!views/repository/Download'
@@ -8,7 +9,7 @@ define([
 				'templates/views/home'
 			]
 
-	(Backbone, Events, Renderer, Router, Download, settings, template) ->
+	(Backbone, Events, ModelTypes, Renderer, Router, Download, settings, template) ->
 
 		class Home extends Backbone.View
 
@@ -39,7 +40,18 @@ define([
 
 			updateCount: (repo) ->
 				$.get "ws/public/repository/count/#{repo.group}/#{repo.name}", (count) =>
-					$(".pinned-repository[data-group=#{repo.group}][data-repo=#{repo.name}] .dataset-count-container").html "#{count.datasets} #{if count.datasets is 1 then 'data set' else 'data sets' }"
+					total = 0
+					tooltip = ''
+					for type in Object.keys(count)
+						c = count[type]
+						total += c
+						if c > 0
+							if tooltip
+								tooltip += '\n'
+							tooltip += "#{c} #{if count[type] is 1 then ModelTypes.singular(type) else ModelTypes.plural(type)}"
+					countContainer = $(".pinned-repository[data-group=#{repo.group}][data-repo=#{repo.name}] .dataset-count-container")
+					countContainer.attr 'title', tooltip
+					countContainer.html "#{total} #{if total is 1 then 'data set' else 'data sets' }"
 
 			events: 
 				'click a[href]:not([target=_blank])': (event) -> Events.followLink event
