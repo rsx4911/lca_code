@@ -39,9 +39,11 @@ define([
 
 			render: (renderOptions) ->
 				repository = @repository.toJSON()
+				dataTypes = settings.get('TYPES_OF_DATA')
+				dataTypes.splice(0, 0, '')
 				@$el.html template
 					repository: repository
-					dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
+					dataTypes: dataTypes
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')

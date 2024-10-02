@@ -46,9 +46,17 @@ define([
 			updateSetting: (event) ->
 				target = $ Events.target event
 				typeAndKey = target.attr('id').split('__')
+				type = typeAndKey[0]
+				key = typeAndKey[1]
 				value = if target.attr('type') is 'checkbox' then target.is ':checked' else target.val()
-				@setSetting typeAndKey[0], typeAndKey[1], value
-				@updateUI()
+				@setSetting type, key , value, (returnValue) =>
+					if target.attr('type') is 'checkbox'
+						target.prop('checked', returnValue is true or returnValue is 'true')
+					else
+						target.val returnValue
+					if type is 'SERVER_SETTING'
+						settings.setVal key, returnValue
+					@updateUI()
 
 			updateUI: () ->
 				depending = {
@@ -70,8 +78,6 @@ define([
 				@$('#SEARCH_INDEX__PUBLIC_USAGE').prop('disabled', !@$('#SERVER_SETTING__USAGE_SEARCH_ENABLED').is(':checked') or !@$('#SERVER_SETTING__RELEASES_ENABLED').is(':checked'))
 
 			setSetting: (type, key, value, callback) ->
-				if type is 'SERVER_SETTING'
-					settings.setVal key, value
 				if type is 'SERVER_SETTING' or type is 'SEARCH_INDEX'
 					if type is 'SEARCH_INDEX' or key is 'SEARCH_ENABLED' or key is 'USAGE_SEARCH_ENABLED' or key is 'RELEASES_ENABLED'
 						@$('#search-note').show()
@@ -80,7 +86,7 @@ define([
 					url: 'ws/admin/area/settings'
 					contentType: 'application/json'
 					data: JSON.stringify({type: type, key: key, value: value})
-					success: () -> callback?()
+					success: (returnValue) -> callback?(returnValue)
 
 			testMailConfiguration: (event) ->
 				Layers.promptInput 'Recipient', 'text', currentUser.get('email'), (recipient) ->
