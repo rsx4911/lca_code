@@ -8,13 +8,14 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!views/repository/Download'
+				'cs!models/CurrentUser'
 				'cs!models/Settings'
 				'templates/views/repository/commit/commits'
 				'templates/views/repository/commit/commit-list'
 				'templates/views/repository/commit/commit-info'
 			]
 
-	(Backbone, moment, Events, Filter, Format, Forms, Layers, Renderer, Download, settings, template, listTemplate, infoTemplate) ->
+	(Backbone, moment, Events, Filter, Format, Forms, Layers, Renderer, Download, currentUser, settings, template, listTemplate, infoTemplate) ->
 
 		class RepositoryCommits extends Backbone.View
 
@@ -104,7 +105,7 @@ define([
 					template: listTemplate
 					filterId: 'filter'
 					delayedFilter: true
-					url: "ws/history/search/#{group}/#{name}?"
+					url: "ws/public/history/search/#{group}/#{name}?"
 					beforeRender: (result) =>
 						unless result
 							return
@@ -112,6 +113,7 @@ define([
 						result.standalone = @standalone
 						result.releasesEnabled = settings.is 'RELEASES_ENABLED'
 						result.canCreateReleases = @repository.get 'userCanCreateReleases'
+						result.isLoggedIn = currentUser.isLoggedIn()
 						@prepareModel result
 						result.formatDate = Format.date
 					afterRender: (result) =>
@@ -119,7 +121,7 @@ define([
 							return
 						setTimeout () =>
 							for commit in result.data
-								$.get "ws/history/count/#{group}/#{name}/#{commit.id}", (count) =>
+								$.get "ws/public/history/count/#{group}/#{name}/#{commit.id}", (count) =>
 									$(".commit-info-container[data-commit-id=#{count.id}]").html infoTemplate count
 						, 10
 

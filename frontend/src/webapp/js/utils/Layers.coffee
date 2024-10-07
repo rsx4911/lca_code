@@ -250,7 +250,7 @@ define([
 								@showProgressIndicator ['Loading', 'versions']
 								$.ajax
 									type: 'GET'
-									url: "ws/history/#{options.repositoryPath}/#{options.type}/#{refId}"
+									url: "ws/public/history/#{options.repositoryPath}/#{options.type}/#{refId}"
 									success: (commits) =>
 										$('#select-model-button').prop 'disabled', (!commits || !commits.length)
 										$('#model-selection #commitId').empty()

@@ -91,12 +91,12 @@ define([
 			doRender: () ->
 				orderedRepositories = (settings.getVal('REPOSITORIES_ORDER') || [])
 				@visible.sort (r1, r2) =>
-					if @sortBy is 'Relevance'
-						i1 = orderedRepositories.indexOf(r1.group + '/' + r1.name)
-						i2 = orderedRepositories.indexOf(r2.group + '/' + r2.name)
-					else
+					if @sortBy is 'Release date'
 						i1 = r2.settings.releaseDate
 						i2 = r1.settings.releaseDate
+					else
+						i1 = orderedRepositories.indexOf(r1.group + '/' + r1.name)
+						i2 = orderedRepositories.indexOf(r2.group + '/' + r2.name)
 					return i1 - i2
 
 				@$el.html template

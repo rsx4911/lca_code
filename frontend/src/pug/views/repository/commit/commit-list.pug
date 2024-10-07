@@ -11,23 +11,25 @@ else
 				.date 
 					img(src='images/calendar.png' aria-label='Calendar icon')
 					|  #{formatDate(group.date)}
-				.count #{group.count} commit
-					if group.count > 1 
-						| s
+				if isLoggedIn
+					.count #{group.count} commit
+						if group.count > 1 
+							| s
 			.commits
 				each commit in group.commits
 					.commit
 						.commit-details.pull-left
 							.commit-message
-								span=commit.message
-								if !standalone && commit.isReleased
+								span=isLoggedIn ? commit.message : commit.releaseInfo.version
+								if isLoggedIn && !standalone && commit.isReleased
 									span.badge.badge-success Released
-							if !standalone
+							if isLoggedIn && !standalone
 								+user-info(commit.user, commit.userDisplayName)(class='concealed')
 									|  on #{formatDate(commit.timestamp)}
 						.commit-link.pull-right
-							.commit-id.pull-right=commit.id
-							.clear
+							if isLoggedIn
+								.commit-id.pull-right=commit.id
+								.clear
 							.pull-right.commit-info-container(data-commit-id=commit.id)
 								img(src='images/loader.gif' width=16 height=16)
 							.clear

@@ -34,7 +34,7 @@ import com.greendelta.collaboration.util.MetaData;
 import com.greendelta.collaboration.util.SearchResults;
 
 @RestController
-@RequestMapping("ws/history")
+@RequestMapping("ws/public/history")
 public class HistoryController {
 
 	private final HistoryService service;
