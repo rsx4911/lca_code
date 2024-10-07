@@ -60,7 +60,7 @@ public class RepositoryController {
 	private Map<String, Object> putReleaseInfo(Repository repo) {
 		var commit = historyService.getLatestAccessibleCommit(repo);
 		var release = releaseService.get(repo.path(), commit.id);
-		return Repositories.map(repo, release);
+		return Repositories.map(repo, commit, release);
 	}
 
 	@GetMapping("{group}/{name}")
