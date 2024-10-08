@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.util.Strings;
 import org.slf4j.Logger;
@@ -33,12 +34,14 @@ import com.greendelta.collaboration.io.RepositoryClient;
 import com.greendelta.collaboration.io.ZipCommitWriter;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.search.IndexService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
@@ -62,11 +65,12 @@ public class RepositoryController {
 	private final DeleteService deleteService;
 	private final NotificationService notificationService;
 	private final HistoryService historyService;
+	private final SettingsService settings;
 
 	public RepositoryController(RepositoryService service, GroupService groupService,
 			MembershipService membershipService, UserService userService, PermissionsService permissions,
 			IndexService indexService, DeleteService deleteService, NotificationService notificationService,
-			HistoryService historyService) {
+			HistoryService historyService, SettingsService settings) {
 		this.service = service;
 		this.groupService = groupService;
 		this.userService = userService;
@@ -76,6 +80,7 @@ public class RepositoryController {
 		this.deleteService = deleteService;
 		this.notificationService = notificationService;
 		this.historyService = historyService;
+		this.settings = settings;
 	}
 
 	@GetMapping
@@ -148,6 +153,13 @@ public class RepositoryController {
 			mappedRepo.put("userCanCreateChangeLog", permissions.canCreateChangeLogOf(path));
 			mappedRepo.put("userCanCreateReleases", permissions.canCreateReleasesIn(path));
 			mappedRepo.put("size", repo.getSize());
+			var latestRelease = historyService.getLatestReleasedCommit(repo);
+			var modelTypes = repo.getModelTypes(latestRelease);
+			List<String> typeOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER);
+			mappedRepo.put("modelTypes", typeOrder.stream()
+					.map(ModelType::valueOf)
+					.filter(modelTypes::contains)
+					.toList());
 			return mappedRepo;
 		}
 	}

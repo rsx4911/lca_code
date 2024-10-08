@@ -86,8 +86,8 @@ public class RepositoryController {
 		return Integer.compare(sortedCommitIds.indexOf(r1.commitId), sortedCommitIds.indexOf(r2.commitId));
 	}
 
-	@GetMapping("count/{group}/{name}")
-	public ResponseEntity<?> getReferenceCount(
+	@GetMapping("meta/{group}/{name}")
+	public ResponseEntity<?> getMetaData(
 			@PathVariable String group,
 			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
@@ -106,7 +106,14 @@ public class RepositoryController {
 					sortedCounts.put(type, counts.get(type));
 				}
 			}
-			return Response.ok(sortedCounts);
+			var metaData = new HashMap<String, Object>();
+			metaData.put("counts", sortedCounts);
+			var modelTypes = repo.getModelTypes(commit);
+			var mainModelType = (String) repo.settings.get(RepositorySetting.MAIN_MODEL_TYPE);
+			if (mainModelType != null && modelTypes.contains(ModelType.valueOf(mainModelType))) {
+				metaData.put("mainModelType", mainModelType);
+			}
+			return Response.ok(metaData);
 		}
 	}
 

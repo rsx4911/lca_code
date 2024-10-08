@@ -21,7 +21,8 @@ public enum RepositorySetting implements SettingKey {
 	APPROPRIATE_USE(String.class),
 	DQ_ASSESSMENT(String.class),
 	CITATION(String.class),
-	TYPE_OF_DATA(String.class);
+	TYPE_OF_DATA(String.class),
+	MAIN_MODEL_TYPE(String.class);
 
 	private final Class<?> type;
 	private final TypeReference<?> subType;

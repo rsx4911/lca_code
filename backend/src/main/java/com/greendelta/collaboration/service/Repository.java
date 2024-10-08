@@ -3,11 +3,15 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.openlca.core.model.ModelType;
 import org.openlca.git.Compatibility;
 import org.openlca.git.model.Commit;
+import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.SchemaVersion;
@@ -74,6 +78,18 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		if (info == null)
 			return SchemaVersion.fallback().value();
 		return info.schemaVersion().value();
+	}
+
+	public Set<ModelType> getModelTypes(Commit commit) {
+		var types = new HashSet<ModelType>();
+		if (commit == null)
+			return types;
+		entries.iterate(commit.id, entry -> {
+			if (entry.typeOfEntry == EntryType.MODEL_TYPE) {
+				types.add(entry.type);
+			}
+		});
+		return types;
 	}
 
 	public String path() {

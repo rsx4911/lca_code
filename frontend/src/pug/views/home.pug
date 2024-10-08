@@ -1,4 +1,5 @@
 include ./mixins/forms.pug
+include ./mixins/long-text.pug
 
 .home-container
 	h3=title
@@ -30,11 +31,9 @@ include ./mixins/forms.pug
 					.dataset-count
 						span.dataset-count-container
 							img(src='images/loader.gif' width=16 height=16)
-							|  data sets 
+							|  
 						button.btn.btn-default.btn-xs(data-action='download' title='Download ' + repo.label + ' as JSON-LD'): span.glyphicon.glyphicon-download
-						br
-						.badge.badge-primary=repo.settings.typeOfData
 					.repo-description
 						if repo.settings.description
-							h4: small=repo.settings.description
+							h4: small: +long-text(repo.settings.description, 250, true)
 					button.btn.btn-lg.btn-block.btn-success(data-action='browse') Browse 

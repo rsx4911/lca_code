@@ -3,13 +3,14 @@ define([
 				'cs!utils/Events'
 				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
+				'cs!utils/Toggle'
 				'cs!app/Router'
 				'cs!views/repository/Download'
 				'cs!models/Settings'
 				'templates/views/home'
 			]
 
-	(Backbone, Events, ModelTypes, Renderer, Router, Download, settings, template) ->
+	(Backbone, Events, ModelTypes, Renderer, Toggle, Router, Download, settings, template) ->
 
 		class Home extends Backbone.View
 
@@ -38,28 +39,32 @@ define([
 				repo = target.attr 'data-repo'
 				Download.repository group, repo
 
-			getCount: (repoId, callback) ->
+			getMetaData: (repoId, callback) ->
 				if @counts[repoId]
 					callback @counts[repoId]
 				else
-					$.get "ws/public/repository/count/#{repoId}", (count) =>
+					$.get "ws/public/repository/meta/#{repoId}", (count) =>
 						@counts[repoId] = count
 						callback count
 
 			updateCount: (repo) ->
-				@getCount "#{repo.group}/#{repo.name}", (count) =>
+				@getMetaData "#{repo.group}/#{repo.name}", (metaData) =>
 					total = 0
 					tooltip = ''
-					for type in Object.keys(count)
-						c = count[type]
+					for type in Object.keys(metaData.counts)
+						c = metaData.counts[type]
 						total += c
 						if c > 0
 							if tooltip
 								tooltip += '\n'
-							tooltip += "#{c} #{if count[type] is 1 then ModelTypes.singular(type) else ModelTypes.plural(type)}"
+							tooltip += "#{c} #{if metaData.counts[type] is 1 then ModelTypes.singular(type) else ModelTypes.plural(type)}"
 					countContainer = $(".pinned-repository[data-group=#{repo.group}][data-repo=#{repo.name}] .dataset-count-container")
 					countContainer.attr 'title', tooltip
-					countContainer.html "#{total} #{if total is 1 then 'data set' else 'data sets' }"
+					if metaData.mainModelType
+						count = metaData.counts[metaData.mainModelType]
+						countContainer.html "#{count} #{if count is 1 then ModelTypes.singular(metaData.mainModelType) else ModelTypes.plural(metaData.mainModelType)} "
+					else
+						countContainer.html "#{total} #{if total is 1 then 'data set' else 'data sets' } "
 
 			applyFilter: () ->
 				@typeOfData = $('#typeOfData').val()
@@ -104,9 +109,11 @@ define([
 					welcomeText: settings.getVal('HOME_TEXT')
 					showSearch: settings.is('SEARCH_AVAILABLE')
 					typeOfData: @typeOfData
+					getModelTypeLabel: ModelTypes.plural
 					sortBy: @sortBy
 					repositories: @visible
 				Renderer.render @, @renderOptions
+				Toggle.init @$el
 				setTimeout () =>
 					for repo in @visible
 						@updateCount repo

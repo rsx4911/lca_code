@@ -5,6 +5,7 @@ define([
 				'cs!utils/Format'
 				'cs!utils/Forms'
 				'cs!utils/Layers'
+				'cs!utils/ModelTypes'
 				'cs!utils/Renderer'
 				'cs!utils/Status'
 				'cs!app/Router'
@@ -13,7 +14,7 @@ define([
 				'templates/views/repository/repository'
 			]
 
-	(Backbone, Avatar, Events, Format, Forms, Layers, Renderer, Status, Router, currentUser, settings, template) ->
+	(Backbone, Avatar, Events, Format, Forms, Layers, ModelTypes, Renderer, Status, Router, currentUser, settings, template) ->
 
 		class RepositoryView extends Backbone.View
 
@@ -39,11 +40,16 @@ define([
 
 			render: (renderOptions) ->
 				repository = @repository.toJSON()
-				dataTypes = settings.get('TYPES_OF_DATA')
+				dataTypes = settings.get('TYPES_OF_DATA').map((type) -> type)
 				dataTypes.splice(0, 0, '')
+				modelTypes = []
+				if repository.modelTypes && repository.modelTypes.length
+					modelTypes.push(['', ''])
+					repository.modelTypes.forEach((type) -> modelTypes.push([type, ModelTypes.singular(type)]))
 				@$el.html template
 					repository: repository
 					dataTypes: dataTypes
+					modelTypes: modelTypes
 					commentsEnabled: settings.is('COMMENTS_ENABLED')
 				Renderer.render @, renderOptions
 				Avatar.initCropper 'repository', @repository.get('group') + '/' + @repository.get('name')
