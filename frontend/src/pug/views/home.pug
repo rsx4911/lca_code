@@ -9,13 +9,16 @@ include ./mixins/forms.pug
 				input#search.form-control(type='text' placeholder='Search across all public repositories' aria-label='Search')
 				span.input-group-btn
 					button.btn.btn-lg.btn-primary(data-action='search') Search
-	.filter-options.pull-right
-		- var typesOfData = ['All'];
-		each repo in repositories
-			if repo.settings.typeOfData && typesOfData.indexOf(repo.settings.typeOfData) === -1
-				- typesOfData.push(repo.settings.typeOfData);
-		+select('typeOfData', 'Type of data', typesOfData, typeOfData || 'All', true)
-		+select('sortBy', 'Sort by', ['Relevance', 'Release date'], sortBy || 'Relevance', true)
+	if repositories.length > 6
+		hr
+		.filter-options.pull-right
+			- var typesOfData = ['All'];
+			each repo in repositories
+				if repo.settings.typeOfData && typesOfData.indexOf(repo.settings.typeOfData) === -1
+					- typesOfData.push(repo.settings.typeOfData);
+			if typesOfData.length > 2
+				+select('typeOfData', 'Type of data', typesOfData, typeOfData || 'All', true)
+			+select('sortBy', 'Sort by', ['Relevance', 'Release date'], sortBy || 'Relevance', true)
 	.clear
 
 .pinned-repositories(class=repositories.length>=3?'three-columns':repositories.length===2?'two-columns':null)
