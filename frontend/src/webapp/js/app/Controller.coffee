@@ -51,6 +51,7 @@ define([
 							userMenu.push {href: @concatUrl(prefix, 'dashboard/activities'), imageSrc: 'images/activities.png', label: 'Activities', id: 'activities'}
 						userMenu.push {href: @concatUrl(prefix, 'dashboard/repositories'), imageSrc: 'images/repository.png', label: 'Repositories', id: 'repositories'}
 						userMenu.push {href: @concatUrl(prefix, 'dashboard/groups'), imageSrc: 'images/group.png', label: 'Groups', id: 'groups'}
+						userMenu.push {href: @concatUrl(prefix, 'dashboard/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id: 'libraries'}
 						if settings.is('DATASET_TAGS_ENABLED') and settings.is('DATASET_TAGS_ON_DASHBOARD_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'dashboard/tags'), imageSrc: 'images/tags.png', label: 'Tags', id: 'tags'}
 						return userMenu
@@ -67,8 +68,6 @@ define([
 							userMenu.push {href: @concatUrl(prefix, 'user/messaging'), imageSrc: 'images/inbox.png', label: 'Messaging', id: 'messaging'}
 						if settings.is('NOTIFICATIONS_ENABLED')
 							userMenu.push {href: @concatUrl(prefix, 'user/notifications'), imageSrc: 'images/notifications.png', label: 'Notifications', id: 'notifications'}
-						if currentUser.get('isInTeam') is true or currentUser.get('isInTeam') is 'true' 
-							userMenu.push {href: @concatUrl(prefix, 'user/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id:'libraries'}
 						return userMenu
 					when 'group'
 						isUserspace = currentUser.isLoggedIn() && currentUser.get('username') is options.urlPrefix
@@ -98,8 +97,6 @@ define([
 							adminMenu.push {href: @concatUrl(prefix, 'administration/overview'), imageSrc: 'images/overview.png', label: 'Overview', id:'overview'}
 						if currentUser.isAdmin()
 							adminMenu.push {href: @concatUrl(prefix, 'administration/settings'), imageSrc: 'images/settings.png', label: 'Settings', id:'settings'}
-						if currentUser.isLibraryManager()
-							adminMenu.push {href: @concatUrl(prefix, 'administration/libraries'), imageSrc: 'images/libraries.png', label: 'Libraries', id:'libraries'}
 						return adminMenu
 
 			initializeNavigation: () ->
@@ -169,10 +166,7 @@ define([
 					@router.registerRouteRewrite 'landingPage', 'dashboard/activities'
 					@router.registerRouteRewrite 'dashboardRepositories', 'dashboard/repositories'
 					@router.registerRouteRewrite 'userProfile', 'user/profile'
-					if currentUser.isAdmin() or currentUser.isDataManager() or currentUser.isUserManager()
-						@router.registerRouteRewrite 'adminOverview', 'administration/overview'
-					else 
-						@router.registerRouteRewrite 'adminOverview', 'administration/libraries'
+					@router.registerRouteRewrite 'adminOverview', 'administration/overview'
 				else if !settings.is('HOMEPAGE_ENABLED')
 					if settings.is('SEARCH_AVAILABLE')
 						@router.registerRouteRewrite 'landingPage', 'search'					
@@ -206,22 +200,6 @@ define([
 					title: "Profile | #{teamname}"
 					viewOptions: 
 						team: new Team {teamname: teamname}
-				@router.registerAdminRoute 'adminLibraries', 'libraryManager', -> @showView 
-					view: 'libraries/Libraries'
-					title: 'Admin area - Libraries'
-					viewOptions: 
-						isAdminArea: true
-					nav:
-						type: 'admin'
-						active: 'libraries'
-				@router.registerAdminRoute 'adminAddLibrary', 'libraryManager', -> @showView 
-					view: 'libraries/Add'
-					title: 'Admin area - New library'
-					viewOptions: 
-						isAdminArea: true
-					nav:
-						type: 'admin'
-						active: 'libraries'
 				@router.registerAdminRoute 'adminSettings', 'admin', -> @showView 
 					view: 'admin/Settings'
 					title: 'Admin area - Settings'
@@ -266,22 +244,6 @@ define([
 					nav: 
 						type: 'user'
 						active: 'notifications'
-				@router.registerUserRoute 'userLibraries', -> @showView 
-					view: 'libraries/Libraries'
-					title: 'Libraries'
-					viewOptions: 
-						isAdminArea: false
-					nav:
-						type: 'user'
-						active: 'libraries'
-				@router.registerUserRoute 'userAddLibrary', -> @showView 
-					view: 'libraries/Add'
-					title: 'New library'
-					viewOptions: 
-						isAdminArea: false
-					nav:
-						type: 'admin'
-						active: 'libraries'
 				@router.registerUserRoute 'landingPage', -> 
 					if currentUser.isLoggedIn()
 						@showView 
@@ -312,6 +274,18 @@ define([
 					nav: 
 						type: 'dashboard'
 						active: 'groups'
+				@router.registerUserRoute 'dashboardLibraries', -> @showView 
+					view: 'dashboard/Libraries'
+					title: 'Libraries'
+					nav:
+						type: 'dashboard'
+						active: 'libraries'
+				@router.registerUserRoute 'dashboardAddLibrary', -> @showView 
+					view: 'dashboard/AddLibrary'
+					title: 'New library'
+					nav:
+						type: 'dashboard'
+						active: 'libraries'
 				@router.registerUserRoute 'dashboardTags', -> @showView 
 					view: 'tags/Tags'
 					title: 'Tags' 

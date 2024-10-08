@@ -89,16 +89,20 @@ define([
 					success: (returnValue) -> callback?(returnValue)
 
 			testMailConfiguration: (event) ->
-				Layers.promptInput 'Recipient', 'text', currentUser.get('email'), (recipient) ->
-					$.ajax
-						type: 'GET'
-						url: "ws/admin/area/testMailConfig/#{recipient}"
-						success: () -> Status.success "Test email was send to #{recipient}"
-						error: (error) -> 
-							text = error?.responseText
-							unless text
-								text = 'Could not send test mail'
-							Status.error text
+				Layers.promptInput
+					type: 'text'
+					label: 'Recipient'
+					value: currentUser.get('email')
+					callback: (recipient) ->
+						$.ajax
+							type: 'GET'
+							url: "ws/admin/area/testMailConfig/#{recipient}"
+							success: () -> Status.success "Test email was send to #{recipient}"
+							error: (error) -> 
+								text = error?.responseText
+								unless text
+									text = 'Could not send test mail'
+								Status.error text
 
 			testSearchConfiguration: (event) ->
 				$.ajax
