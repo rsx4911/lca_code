@@ -69,6 +69,7 @@ define([
 						changeLogEnabled: settings.is('CHANGE_LOG_ENABLED')
 						formatDate: Format.dateTime
 						standalone: @standalone
+						isLoggedIn: currentUser.isLoggedIn()
 						isGladAvailable: settings.isGladConfigured() and currentUser.isDataManager()
 					@filter.init (result) => @setModelFilters result.modelTypes
 				Renderer.render @, renderOptions
