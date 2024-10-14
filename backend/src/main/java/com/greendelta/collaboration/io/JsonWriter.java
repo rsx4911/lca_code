@@ -12,8 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Entry;
-import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.util.TypedRefIdMap;
 import org.openlca.jsonld.LibraryLink;
@@ -42,12 +40,12 @@ public class JsonWriter implements DatasetWriter {
 	}
 
 	@Override
-	public void write(Entry ref) {
-		if (ref.typeOfEntry == EntryType.MODEL_TYPE)
+	public void write(Reference ref) {
+		if (ref.isModelType || ref.isRepositoryInfo || ref.isLibrary)
 			return;
 		if (processed.contains(keyOf(ref)))
 			return;
-		if (ref.typeOfEntry == EntryType.CATEGORY) {
+		if (ref.isCategory) {
 			categories.add(ref.path);
 			processed.add(ref.path);
 			return;

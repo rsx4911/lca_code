@@ -42,13 +42,15 @@ define([
 								if path
 									result.data.sort (a, b) -> return if a.name < b.name then -1 else if a.name > b.name then 1 else 0
 								for e in result.data
+									if e.isRepositoryInfo or e.isLibrary
+										continue
 									data.push
 										id: e.path
-										refId: if e.typeOfEntry is 'DATASET' then e.refId else null
-										text: if e.typeOfEntry is 'MODEL_TYPE' then ModelTypes[e.type] else e.name
-										children: e.typeofEntry isnt 'DATASET'
+										refId: if e.isDataset then e.refId else null
+										text: if e.isModelType then ModelTypes[e.type] else e.name
+										children: !e.isDataset
 										commitId: e.commitId
-										icon: "images/model/small/#{if e.typeOfEntry isnt 'DATASET' then 'category/' else ''}#{e.type.toLowerCase()}.png"
+										icon: "images/model/small/#{if !e.isDataset then 'category/' else ''}#{e.type.toLowerCase()}.png"
 								callback data
 
 		getSelection: (container, firstOnly) ->

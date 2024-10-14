@@ -11,34 +11,27 @@ import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
-import org.openlca.git.model.Entry;
-import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.util.Strings;
 
+import com.greendelta.collaboration.service.LibraryService;
+
 public class MetaData {
 
-	public static Map<String, Object> get(Map<String, Object> e, Reference ref, OlcaRepository repo) {
-		putDatasetInfo(e, ref, repo);
-		return e;
-	}
-
-	public static Map<String, Object> get(Entry e, OlcaRepository repo) {
+	public static Map<String, Object> get(Reference e, OlcaRepository repo, LibraryService libraryService) {
 		var entry = Maps.of(e);
 		entry.remove("objectId");
-		if (e.typeOfEntry != EntryType.DATASET)
-			return entry;
-		putDatasetInfo(entry, e, repo);
+		putDatasetInfo(entry, e, repo, libraryService);
 		return entry;
 	}
 
-	public static Map<String, Object> get(Diff diff, OlcaRepository repo) {
+	public static Map<String, Object> get(Diff diff, OlcaRepository repo, LibraryService libraryService) {
 		var ref = diff.diffType == DiffType.DELETED ? diff.oldRef : diff.newRef;
 		var meta = Maps.of(ref);
 		meta.remove("objectId");
-		putDatasetInfo(meta, ref, repo);
+		putDatasetInfo(meta, ref, repo, libraryService);
 		meta.put("diffType", diff.diffType);
 		var commitId = diff.newRef != null ? diff.newRef.commitId : diff.oldRef.commitId;
 		meta.put("commitId", commitId);
@@ -56,11 +49,14 @@ public class MetaData {
 		return name != null ? name.toString() : "";
 	}
 
-	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, OlcaRepository repo) {
-		if (ref.isCategory) {
-			entry.put("name", ref.path.substring(ref.path.lastIndexOf("/") + 1));
-			return;
+	private static void putDatasetInfo(Map<String, Object> entry, Reference ref, OlcaRepository repo,
+			LibraryService libraryService) {
+		entry.put("typeOfEntry", getTypeOfEntry(ref));
+		if (ref.isRepositoryInfo || ref.isLibrary) {
+			putLibraryInfo(entry, ref, libraryService);
 		}
+		if (!ref.isDataset)
+			return;
 		var defs = new ArrayList<FieldDefinition>();
 		defs.add(FieldDefinition.firstOf("name"));
 		if (ref.type == ModelType.FLOW || ref.type == ModelType.PROCESS || ref.type == ModelType.EPD) {
@@ -94,6 +90,30 @@ public class MetaData {
 		}
 	}
 
+	private static void putLibraryInfo(Map<String, Object> entry, Reference ref, LibraryService libraryService) {
+		entry.put("type", "LIBRARY");
+		if (!ref.isLibrary)
+			return;
+		var refId = Maps.getString(entry, "refId");
+		var available = libraryService.get(refId) != null;
+		entry.put("isAvailable", available);
+		if (available) {
+			entry.put("isPublic", libraryService.isPublic(refId));
+		}
+	}
+
+	private static String getTypeOfEntry(Reference entry) {
+		if (entry.isModelType || entry.isRepositoryInfo)
+			return "MODEL_TYPE";
+		if (entry.isCategory)
+			return "CATEGORY";
+		if (entry.isDataset)
+			return "DATASET";
+		if (entry.isLibrary)
+			return "LIBRARY";
+		return null;
+	}
+
 	public static Stream<Map<String, Object>> sortByName(Stream<Map<String, Object>> data) {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "typeOfEntry");
@@ -108,8 +128,8 @@ public class MetaData {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "type");
 			var t2 = Maps.getString(m2, "type");
-			var i1 = t1 != null ? typesOrder.indexOf(t1) : typesOrder.size();
-			var i2 = t2 != null ? typesOrder.indexOf(t2) : typesOrder.size();
+			var i1 = !"LIBRARY".equals(t1) ? typesOrder.indexOf(t1) : typesOrder.size();
+			var i2 = !"LIBRARY".equals(t1) ? typesOrder.indexOf(t2) : typesOrder.size();
 			return Integer.compare(i1, i2);
 		});
 	}

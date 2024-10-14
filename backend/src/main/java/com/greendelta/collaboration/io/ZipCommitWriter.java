@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 
@@ -69,12 +70,12 @@ public class ZipCommitWriter extends CommitWriter {
 		}
 	}
 
-	private List<Change> getChanges() {
+	private Set<Change> getChanges() {
 		return Arrays.asList(ModelType.values()).stream()
 				.sorted((t1, t2) -> Strings.compare(t1.name(), t2.name()))
 				.map(this::getChanges)
 				.flatMap(List::stream)
-				.toList();
+				.collect(Collectors.toSet());
 	}
 
 	private List<Change> getChanges(ModelType type) {

@@ -10,9 +10,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
+import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
+import org.openlca.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.HistoryService;
+import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -42,15 +45,18 @@ public class HistoryController {
 	private final UserService userService;
 	private final PermissionsService permissions;
 	private final ReleaseService releaseService;
+	private final LibraryService libraryService;
 	private final SettingsService settings;
 
 	public HistoryController(HistoryService service, RepositoryService repoService, UserService userService,
-			PermissionsService permissions, ReleaseService releaseService, SettingsService settings) {
+			PermissionsService permissions, ReleaseService releaseService, LibraryService libraryService,
+			SettingsService settings) {
 		this.service = service;
 		this.repoService = repoService;
 		this.userService = userService;
 		this.permissions = permissions;
 		this.releaseService = releaseService;
+		this.libraryService = libraryService;
 		this.settings = settings;
 	}
 
@@ -74,7 +80,10 @@ public class HistoryController {
 			@PathVariable String name,
 			@RequestParam(required = false) String path) {
 		try (var repo = repoService.get(group, name)) {
-			var commits = service.getAccessibleCommits(repo, options -> options.path(path));
+			var p = "LIBRARY".equals(path)
+					? RepositoryInfo.FILE_NAME
+					: path;
+			var commits = service.getAccessibleCommits(repo, options -> options.path(p));
 			Collections.reverse(commits);
 			return Response.ok(putAdditionalInfo(repo, commits));
 		}
@@ -162,7 +171,7 @@ public class HistoryController {
 			@PathVariable String group,
 			@PathVariable String name,
 			@PathVariable String commitId,
-			@RequestParam(required = false) ModelType type,
+			@RequestParam(required = false) String categoryPath,
 			@RequestParam(defaultValue = "1") int page,
 			@RequestParam(defaultValue = "10") int pageSize,
 			@RequestParam(required = false) String filter) {
@@ -170,32 +179,37 @@ public class HistoryController {
 			var commit = service.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound();
+			if ("LIBRARY".equals(categoryPath)) {
+				categoryPath = RepositoryInfo.FILE_NAME;
+			}
 			var previousCommit = service.getLatestAccessibleCommit(repo, options -> options.before(commit.id));
 			var diff = repo.diffs.find().commit(previousCommit);
-			if (type != null) {
-				if (type == ModelType.CATEGORY) {
+			if (!Strings.nullOrEmpty(categoryPath)) {
+				if (categoryPath.equals(ModelType.CATEGORY.name())) {
 					diff = diff.onlyCategories();
 				} else {
-					diff = diff.filter(type.name()).excludeCategories();
+					diff = diff.filter(categoryPath).excludeCategories();
 				}
 			}
 			var diffs = diff.with(commit);
-			var mapped = diffs.stream().map(d -> MetaData.get(d, repo));
+			var mapped = diffs.stream().map(d -> MetaData.get(d, repo, libraryService));
 			List<String> typesOrder = settings.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
 			mapped = MetaData.sortByTypeAndName(mapped, typesOrder);
 			var result = SearchResults.pagedAndFiltered(page, pageSize, filter, mapped.toList());
 			var map = Maps.of(result);
-			map.put("modelTypes", getModelTypes(diffs));
+			map.put("modelTypes", getModelTypes(result.data));
 			return map;
 		}
 	}
 
-	private Set<ModelType> getModelTypes(List<Diff> diffs) {
-		var types = new HashSet<ModelType>();
+	private Set<String> getModelTypes(List<Map<String, Object>> diffs) {
+		var types = new HashSet<String>();
 		diffs.forEach(d -> {
-			types.add(d.type);
-			if (d.isCategory) {
-				types.add(ModelType.CATEGORY);
+			var type = Maps.getString(d, "type");
+			if (Maps.getBoolean(d, "isCategory")) {
+				types.add(ModelType.CATEGORY.name());
+			} else {
+				types.add(type);
 			}
 		});
 		return types;

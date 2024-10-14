@@ -3,6 +3,7 @@ package com.greendelta.collaboration.controller.user;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ public class LibraryController {
 			var libraries = service.getAllAccessible();
 			var missing = repos.stream()
 					.map(Repository::getLibraries)
-					.flatMap(List::stream)
+					.flatMap(Set::stream)
 					.distinct()
 					.filter(Predicate.not(libraries::contains))
 					.collect(Collectors.toSet());

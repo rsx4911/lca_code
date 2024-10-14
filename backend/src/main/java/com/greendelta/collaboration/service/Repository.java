@@ -2,18 +2,14 @@ package com.greendelta.collaboration.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.openlca.core.model.ModelType;
 import org.openlca.git.Compatibility;
 import org.openlca.git.model.Commit;
-import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.repo.OlcaRepository;
-import org.openlca.jsonld.LibraryLink;
 import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
@@ -49,21 +45,12 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		return new File(fsPath);
 	}
 
-	public List<String> getLibraries() {
+	public Set<String> getLibraries() {
 		return commits.find().all().stream()
 				.map(this::getLibraries)
-				.flatMap(List::stream)
+				.flatMap(Set::stream)
 				.distinct()
-				.collect(Collectors.toList());
-	}
-
-	public List<String> getLibraries(Commit commit) {
-		var info = getInfo(commit);
-		if (info == null || info.libraries() == null)
-			return new ArrayList<>();
-		return info.libraries().stream()
-				.map(LibraryLink::id)
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 	}
 
 	public int getServerVersion() {
@@ -85,7 +72,7 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		if (commit == null)
 			return types;
 		entries.iterate(commit.id, entry -> {
-			if (entry.typeOfEntry == EntryType.MODEL_TYPE) {
+			if (entry.isModelType) {
 				types.add(entry.type);
 			}
 		});

@@ -56,7 +56,7 @@ define([
 				commitId = @commitId
 				url = "ws/public/history/references/#{repo.group}/#{repo.name}/#{commitId}?"
 				if @type
-					url += 'type=' + @type + '&'
+					url += 'categoryPath=' + @type + '&'
 				return url
 
 			render: (renderOptions) ->
