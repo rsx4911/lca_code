@@ -75,7 +75,7 @@ define([
 						result.clearUrl = Util.getUrlPart 'search/', null, 1, 10
 						result.getHighlightedVersionIndex = (dataset) =>
 							index = dataset.versions.findIndex (version) => 
-								if @query and @query isnt dataset.refId and version.name.toLowerCase().indexOf(@query.name.toLowerCase()) is -1
+								if @query and @query isnt dataset.refId and version.name.toLowerCase().indexOf(@query.toLowerCase()) is -1
 									return false
 								return !!version.repos.find (repo) =>
 									repoId.indexOf(repo.path) isnt -1
