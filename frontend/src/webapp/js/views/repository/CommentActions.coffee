@@ -59,6 +59,7 @@ define([
 				currentUser: {username: currentUser.get('username'), admin: currentUser.isAdmin()}
 				formatDate: Format.dateTime
 				formatModelType: (type) -> return ModelTypes[type]
+				isRoleAvailable: Roles.isAvailable
 				getRoleLabel: (role) -> return Roles[role].name
 				getLabel: (field) -> return Labels.get field.modelType, field.path
 			for key in Object.keys(renderData.clickEvents)
