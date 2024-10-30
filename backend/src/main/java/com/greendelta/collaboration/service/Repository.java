@@ -71,7 +71,7 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		var types = new HashSet<ModelType>();
 		if (commit == null)
 			return types;
-		entries.iterate(commit.id, entry -> {
+		references.find().includeCategories().commit(commit.id).iterate(entry -> {
 			if (entry.isModelType) {
 				types.add(entry.type);
 			}

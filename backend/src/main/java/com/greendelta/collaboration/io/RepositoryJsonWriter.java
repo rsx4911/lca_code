@@ -30,7 +30,7 @@ public class RepositoryJsonWriter implements Closeable {
 		try (var repo = new OlcaRepository(gitDir)) {
 			var writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo().schemaVersion(), cachedJsonFile);
 			var categories = new JsonArray();
-			repo.entries.iterate(commitId, entry -> {
+			repo.references.find().includeCategories().commit(commitId).iterate(entry -> {
 				if (entry.isCategory) {
 					categories.add(entry.path);
 				} else if (entry.isDataset) {

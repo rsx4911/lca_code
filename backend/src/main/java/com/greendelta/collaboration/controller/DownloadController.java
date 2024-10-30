@@ -29,7 +29,8 @@ abstract class DownloadController {
 	protected final UserService userService;
 	protected final HistoryService historyService;
 
-	protected DownloadController(RepositoryService repoService, UserService userService, HistoryService historyService) {
+	protected DownloadController(RepositoryService repoService, UserService userService,
+			HistoryService historyService) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.historyService = historyService;
@@ -44,7 +45,7 @@ abstract class DownloadController {
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
 			var writer = prepareWriter(repo, commit, true);
-			repo.entries.iterate(commit.id, path, writer::write);
+			repo.references.find().includeCategories().commit(commit.id).path(path).iterate(writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -56,7 +57,7 @@ abstract class DownloadController {
 			var ref = repo.references.get(type, refId, commitId);
 			if (ref == null)
 				throw Response.notFound("ref " + type + " " + refId + " not found");
-			var entry = repo.entries.get(ref.path, commitId);
+			var entry = repo.references.get(ref.path, commitId);
 			if (entry == null)
 				throw Response.notFound("entry " + ref.path + " not found");
 			log().info("Exporting {} {} of repository {}/{} (commit id {})", type, refId, group, repository, commitId);
@@ -80,7 +81,7 @@ abstract class DownloadController {
 				throw Response.notFound("commit " + commitId + " not found");
 			var writer = prepareWriter(repo, commit, true);
 			paths.stream().forEach(path -> {
-				repo.entries.iterate(commit.id, path, writer::write);
+				repo.references.find().includeCategories().commit(commit.id).path(path).iterate(writer::write);
 			});
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
@@ -95,7 +96,7 @@ abstract class DownloadController {
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
 			var writer = prepareWriter(repo, commit, false);
-			repo.entries.iterate(commit.id, writer::write);
+			repo.references.find().includeCategories().commit(commit.id).iterate(writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");

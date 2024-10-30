@@ -7,14 +7,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 
 import org.eclipse.jgit.lib.PersonIdent;
 import org.openlca.core.model.ModelType;
-import org.openlca.git.model.Change;
-import org.openlca.git.model.ModelRef;
+import org.openlca.git.model.Diff;
+import org.openlca.git.model.Reference;
 import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.util.GitUtil;
 import org.openlca.git.util.MetaDataParser;
@@ -70,19 +69,19 @@ public class ZipCommitWriter extends CommitWriter {
 		}
 	}
 
-	private Set<Change> getChanges() {
+	private List<Diff> getChanges() {
 		return Arrays.asList(ModelType.values()).stream()
 				.sorted((t1, t2) -> Strings.compare(t1.name(), t2.name()))
 				.map(this::getChanges)
 				.flatMap(List::stream)
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 	}
 
-	private List<Change> getChanges(ModelType type) {
+	private List<Diff> getChanges(ModelType type) {
 		var changes = zip.getRefIds(type).stream()
 				.map(refId -> getPath(type, refId))
-				.map(ModelRef::new)
-				.map(Change::add)
+				.map(Reference::new)
+				.map(Diff::added)
 				.collect(Collectors.toList());
 		var categories = zip.getJson(CategoryImport.FILE_NAME);
 		if (categories == null || !categories.isJsonArray())
@@ -94,7 +93,7 @@ public class ZipCommitWriter extends CommitWriter {
 			var path = category.getAsString();
 			if (!allCategories.contains(path)) {
 				allCategories.add(path);
-				changes.add(Change.add(new ModelRef(path)));
+				changes.add(Diff.added(new Reference(path)));
 			}
 		}
 		return changes;
@@ -115,7 +114,7 @@ public class ZipCommitWriter extends CommitWriter {
 	}
 
 	@Override
-	protected byte[] getData(Change change) throws IOException {
+	protected byte[] getData(Diff change) throws IOException {
 		var path = ModelPath.jsonOf(change.type, change.refId);
 		return zip.getBytes(path);
 	}
@@ -129,7 +128,7 @@ public class ZipCommitWriter extends CommitWriter {
 		}
 
 		@Override
-		public List<String> list(Change change, String relativePath) {
+		public List<String> list(Diff change, String relativePath) {
 			var root = ModelPath.binFolderOf(change.type, change.refId);
 			var path = getPath(change, relativePath);
 			return zip.getFiles(path).stream()
@@ -138,19 +137,19 @@ public class ZipCommitWriter extends CommitWriter {
 		}
 
 		@Override
-		public boolean isDirectory(Change change, String relativePath) {
+		public boolean isDirectory(Diff change, String relativePath) {
 			var path = getPath(change, relativePath);
 			var files = zip.getBinFiles(change.type, change.refId);
 			return !files.contains("/" + path);
 		}
 
 		@Override
-		public byte[] resolve(Change change, String relativePath) throws IOException {
+		public byte[] resolve(Diff change, String relativePath) throws IOException {
 			var path = getPath(change, relativePath);
 			return zip.getBytes(path);
 		}
 
-		private String getPath(Change change, String relativePath) {
+		private String getPath(Diff change, String relativePath) {
 			var root = ModelPath.binFolderOf(change.type, change.refId);
 			if (Strings.nullOrEmpty(root))
 				return root;
