@@ -90,7 +90,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	public void doFilter(ServletRequest req, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		var request = req instanceof GitRequest ? (GitRequest) req : new GitRequest(req);
-		var loggedIn = request.basicHttpLogin(sessionService);
+		var loggedIn = request.basicHttpLogin(sessionService, userService);
 		var previousCommit = getPreviousCommitIfGitPush(request);
 		super.doFilter(request, response, new FilterChainWrapper(request, response, chain));
 		if (!config.isGitUrl(request))
