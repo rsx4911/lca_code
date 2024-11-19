@@ -23,6 +23,11 @@ else
 								span=isLoggedIn ? commit.message : commit.releaseInfo.version
 								if isLoggedIn && !standalone && commit.isReleased
 									span.badge.badge-success Released
+							if !isLoggedIn && !standalone && commit.releaseInfo.changeLog
+								hr.dense
+								each changeLogLine in (commit.releaseInfo.changeLog).split('\n')
+									span=changeLogLine
+									br
 							if isLoggedIn && !standalone
 								+user-info(commit.user, commit.userDisplayName)(class='concealed')
 									|  on #{formatDate(commit.timestamp)}

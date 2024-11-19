@@ -1,6 +1,7 @@
 package com.greendelta.collaboration.controller.user;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.openlca.git.model.Commit;
@@ -64,10 +65,40 @@ public class ReleaseController {
 			if (!service.isReleased(repo.path(), commitId))
 				throw Response.notFound("Commit " + commitId + " is not released");
 			var release = service.get(repo.path(), commitId);
-			return Maps.of(release);
+			var mapped = Maps.of(release);
+			var previousId = getPreviousReleaseId(repo, commitId);
+			var commits = repo.commits.find().after(previousId).until(commitId).all();
+			mapped.put("generatedChangeLog", generateChangeLog(commits));
+			return mapped;
 		}
 	}
 
+	private String getPreviousReleaseId(Repository repo, String commitId) {
+		var released = historyService.getReleasedCommits(repo);
+		if (released.size() == 1)
+			return null;
+		Commit previous = null;
+		for (var release : released) {
+			if (release.id.equals(commitId))
+				break;
+			previous = release;
+		}
+		if (previous == null)
+			return null;
+		return previous.id;
+	}
+
+	private String generateChangeLog(List<Commit> commits) {
+		var changeLog = "";
+		for (var commit : commits) {
+			if (!changeLog.isEmpty()) {
+				changeLog += "\n";
+			}
+			changeLog += "* " + commit.message;
+		}
+		return changeLog;
+	}
+	
 	@PostMapping("{group}/{name}/{commitId}")
 	public void release(@PathVariable String group,
 			@PathVariable String name,

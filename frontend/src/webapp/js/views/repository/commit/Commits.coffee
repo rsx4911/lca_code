@@ -37,6 +37,10 @@ define([
 							values: releaseInfo
 							dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
 						buttons: buttons
+						callback: () ->
+							$('[data-action=changeLog-click]').on 'click', (event) ->
+								Events.preventDefault event
+								$('#changeLog').val releaseInfo.generatedChangeLog
 
 			getReleaseInfo: (commitId, isReleased, callback) ->
 				unless isReleased

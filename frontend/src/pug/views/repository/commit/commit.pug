@@ -5,6 +5,13 @@ include ../../mixins/user-info.pug
 .header-box
 	h4.pull-left
 		div=isLoggedIn ? commit.message : commit.releaseInfo.version
+		if !isLoggedIn && !standalone && commit.releaseInfo.changeLog
+			small
+				hr.dense
+				each changeLogLine in (commit.releaseInfo.changeLog).split('\n')
+					span=changeLogLine
+					br
+				hr.dense
 		if isLoggedIn
 			div: small=commit.id
 		div: small: +commit-info(commit.additions, commit.updates, commit.deletions)
