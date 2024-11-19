@@ -53,7 +53,7 @@ define([
 			accessTypes = []
 			if currentUser.isLibraryManager()
 				accessTypes.push ['PUBLIC', 'Public']				
-			accessTypes.push ['USER', 'All users']
+				accessTypes.push ['USER', 'All users']
 			accessTypes.push ['MEMBER', 'All members of linking repositories']
 			return accessTypes
 
