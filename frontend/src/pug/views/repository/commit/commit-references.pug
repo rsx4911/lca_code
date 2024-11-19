@@ -20,9 +20,10 @@ each dataset in data
 		else
 			- url = 'ws/public/libraries/' + dataset.refId;
 	else if dataset.isCategory
-		- url = baseUrl + 's/' + getTypeLabel(dataset.type) + '/' + (dataset.category ? dataset.category + '/' : '') + dataset.name + '?commitId=' + commitId;
+		- url = baseUrl + 's/' + getTypeLabel(dataset.type) + '/' + (dataset.category ? dataset.category + '/' : '') + dataset.name;
 	else
-		- url = baseUrl + '/' + dataset.type + '/' + dataset.refId + '?commitId=' + commitId;
+		- url = baseUrl + '/' + dataset.type + '/' + dataset.refId;
+	- url += '?commitId=' + commitId;
 	- var linkDataset = dataset.diffType !== 'DELETED' && (!dataset.isLibrary || dataset.isAvailable) && (!standalone || (!dataset.isLibrary && dataset.diffType !== 'ADDED'));
 	.file-reference(id=dataset.id)
 		.header

@@ -43,6 +43,8 @@ define () ->
 			':group/:name/commits(?:query)': 'repositoryCommits'
 			':group/:name/commit/:commitId(?:query)': 'repositoryCommit'
 			':group/:name/comments': 'repositoryComments'
+			':group/:name/releases(?:query)': 'repositoryCommits'
+			':group/:name/release/:commitId(?:query)': 'repositoryCommit'
 			':group/:name/tags': 'repositoryTags'
 			':group/:name/members': 'repositoryMembers'
 			'*path':'notFound'

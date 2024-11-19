@@ -40,6 +40,7 @@ define([
 					beforeRender: (result) => 
 						result.commitId = commitId
 						result.standalone = @standalone
+						result.isLoggedIn = currentUser.isLoggedIn()
 						result.baseUrl = "#{repo.group}/#{repo.name}/dataset"
 						result.getIcon = Icons.get
 						result.getTypeLabel = (type) -> return ModelTypes[type]

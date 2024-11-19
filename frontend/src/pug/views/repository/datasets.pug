@@ -13,7 +13,7 @@ mixin static-setting(field, label, formatter)
 			+release-selection('commit', 'Version', releases, commitId, true)
 			if releases.length > 1
 				|  
-				small: small: a(href=repoUrl + '/commits') View history
+				small: small: a(href=repoUrl + '/releases') View history
 		else if !isPublic
 			+commit-selection('commit', 'Commit', commits, commitId, true)
 	.pull-right
