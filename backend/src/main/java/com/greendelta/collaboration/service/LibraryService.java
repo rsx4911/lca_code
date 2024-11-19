@@ -171,11 +171,11 @@ public class LibraryService {
 
 	private boolean canAccess(String library, Set<String> linkedLibraries) {
 		var user = userService.getCurrentUser();
-		LibraryAccess access = getSetting(library, LibrarySetting.ACCESS);
-		if (access == null)
-			return true;
 		if (user.isLibraryManager())
 			return true;
+		LibraryAccess access = getSetting(library, LibrarySetting.ACCESS);
+		if (access == null)
+			return false;
 		if (access == LibraryAccess.PUBLIC)
 			return true;
 		if (access == LibraryAccess.USER)
