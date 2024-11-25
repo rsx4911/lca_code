@@ -67,14 +67,19 @@ mixin repo-input(setting, field, label)
 	if repository.userCanSetSettings
 		+select('typeOfData', 'Type of data', dataTypes, repository.settings.typeOfData)(data-setting='TYPE_OF_DATA')
 		+input('tags', 'Tags')(value=repository.settings.tags?repository.settings.tags.join(','):'')
+		if modelTypes.length > 1
+			+select('mainModelType', 'Main model type', modelTypes, repository.settings.mainModelType)(data-setting='MAIN_MODEL_TYPE')
 	else
 		- var typeOfData = repository.settings.typeOfData || '-';
+		- var mainModelType = repository.settings.mainModelType || '-';
 		+static('typeOfData', 'Type of data', typeOfData)
 		+static('tags', 'Tags')
 			.tags
 				if repository.settings.tags
 					each tag in repository.settings.tags
 						span.badge=tag
+		if modelTypes.length > 1
+			+static('mainModelType', 'Main model type', mainModelType)
 	- var maxSize = repository.settings.maxSize; 
 	- var inGb = false;
 	if maxSize

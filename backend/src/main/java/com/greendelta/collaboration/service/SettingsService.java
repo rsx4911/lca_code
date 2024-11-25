@@ -114,6 +114,17 @@ public class SettingsService {
 		return (Setting) dao.getFirstForAttributes(attributes);
 	}
 
+	@SuppressWarnings("unchecked")
+	public <T extends SettingKey, V> List<V> getValues(T key) {
+		var type = SettingType.getFor(key);
+		var attributes = new HashMap<String, Object>();
+		attributes.put("type", type);
+		attributes.put("name", key.name());
+		return (List<V>) dao.getForAttributes(attributes).stream()
+				.map(Setting::getValue)
+				.collect(Collectors.toList());
+	}
+
 	private <T extends SettingKey> void set(SettingType type, T key, String owner, Object value) {
 		var setting = get(type, key, owner);
 		var update = setting != null;

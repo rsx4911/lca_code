@@ -20,8 +20,8 @@ public class Routes {
 	private final static List<String> RESERVED = Arrays.asList(
 			"null", "undefined", "users", "team", "teams", "repositories", "categoryInfo", "count", "public", "ws",
 			"sockets", "stomp", "group", "groups", "dashboard", "commit", "category", "members", "member", "references",
-			"settings", "admin", "usermanager", "datamanager", "librarymanager", "messaging", "block", "unblock", "login", "search",
-			"imprint", "overlay", "import", "export", "missing");
+			"settings", "admin", "usermanager", "datamanager", "librarymanager", "messaging", "block", "unblock",
+			"login", "search", "imprint", "overlay", "import", "export", "missing", "api");
 
 	public static boolean isUserRoute(String name) {
 		return USER_ROUTES.contains(name);
@@ -51,16 +51,10 @@ public class Routes {
 		return isUserRoute(name) || isPublicResource(name) || isPublicUrl(name) || RESERVED.contains(name);
 	}
 
-	public static boolean isValid(String name, char... additionalValidChars) {
-		if (name.length() < 4)
+	public static boolean isValid(String name) {
+		if (name.length() < 3)
 			return false;
-		var regex = "^[a-zA-Z0-9_";
-		if (additionalValidChars != null) {
-			for (var character : additionalValidChars) {
-				regex += character;
-			}
-		}
-		regex += "]+$";
+		var regex = "^[a-zA-Z0-9_-]+$";
 		if (!name.matches(regex))
 			return false;
 		return true;

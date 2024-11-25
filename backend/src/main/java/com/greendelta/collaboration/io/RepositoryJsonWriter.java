@@ -9,7 +9,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.git.RepositoryInfo;
-import org.openlca.git.model.Entry.EntryType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.LibraryLink;
@@ -31,10 +30,10 @@ public class RepositoryJsonWriter implements Closeable {
 		try (var repo = new OlcaRepository(gitDir)) {
 			var writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo().schemaVersion(), cachedJsonFile);
 			var categories = new JsonArray();
-			repo.entries.iterate(commitId, entry -> {
-				if (entry.typeOfEntry == EntryType.CATEGORY) {
+			repo.references.find().includeCategories().commit(commitId).iterate(entry -> {
+				if (entry.isCategory) {
 					categories.add(entry.path);
-				} else if (entry.typeOfEntry == EntryType.DATASET) {
+				} else if (entry.isDataset) {
 					writer.put(entry);
 				}
 			});

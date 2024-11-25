@@ -1,13 +1,16 @@
 package com.greendelta.collaboration.controller.admin;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +21,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.MailSetting;
+import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.SearchIndex;
 import com.greendelta.collaboration.model.settings.SearchSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
@@ -28,6 +35,7 @@ import com.greendelta.collaboration.service.AnnouncementService;
 import com.greendelta.collaboration.service.EmailService;
 import com.greendelta.collaboration.service.EmailService.EmailJob;
 import com.greendelta.collaboration.service.GroupService;
+import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.RepositoryService;
@@ -46,22 +54,25 @@ public class AdminAreaController {
 	private final GroupService groupService;
 	private final UserService userService;
 	private final TeamService teamService;
+	private final ReleaseService releaseService;
 	private final IndexService indexService;
-	private final SettingsService settings;
 	private final EmailService emailService;
 	private final AnnouncementService announcementService;
+	private final SettingsService settings;
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	public AdminAreaController(RepositoryService repoService, GroupService groupService, UserService userService,
-			TeamService teamService, IndexService indexingService, SettingsService settings,
-			EmailService emailService, AnnouncementService announcementService) {
+			TeamService teamService, ReleaseService releaseService, IndexService indexingService,
+			EmailService emailService, AnnouncementService announcementService, SettingsService settings) {
 		this.repoService = repoService;
 		this.groupService = groupService;
 		this.userService = userService;
 		this.teamService = teamService;
+		this.releaseService = releaseService;
 		this.indexService = indexingService;
-		this.settings = settings;
 		this.emailService = emailService;
 		this.announcementService = announcementService;
+		this.settings = settings;
 	}
 
 	@GetMapping("count")
@@ -172,14 +183,36 @@ public class AdminAreaController {
 	}
 
 	@PutMapping("settings")
-	public void setSetting(@RequestBody Map<String, String> data) {
+	public Object setSetting(@RequestBody Map<String, String> data) {
 		var type = SettingType.valueOf(data.get("type"));
 		var key = type.getSettingKey(data.get("key"));
 		var value = data.get("value");
 		if (value != null && value.trim().isEmpty()) {
 			value = null;
 		}
+		if (key == ServerSetting.TYPES_OF_DATA) {
+			try {
+				value = checkTypesOfData(value);
+			} catch (IOException e) {
+				return settings.get(key);
+			}
+		}
 		settings.set(key, value);
+		return settings.get(key);
+
+	}
+
+	private String checkTypesOfData(String value) throws JsonMappingException, JsonProcessingException {
+		if (Strings.nullOrEmpty(value)) {
+			value = "";
+		}
+		var types = new LinkedHashSet<>();
+		Arrays.asList(value.split(",")).stream().map(String::trim).forEach(types::add);
+		releaseService.getAll().stream().map(release -> release.typeOfData).forEach(types::add);
+		types.addAll(settings.getValues(RepositorySetting.TYPE_OF_DATA));
+		types.remove(null);
+		types.remove("");
+		return mapper.writeValueAsString(types);
 	}
 
 }

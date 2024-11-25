@@ -7,36 +7,22 @@ define([
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
 				'cs!utils/Status'
-				'templates/views/libraries/add-library'
+				'cs!models/CurrentUser'
+				'templates/views/dashboard/add-library'
 			]
 
-	(Backbone, Router, Data, Events, Forms, Layers, Renderer, Status, template) ->
+	(Backbone, Router, Data, Events, Forms, Layers, Renderer, Status, currentUser, template) ->
 
 		class AdminAddLibrary extends Backbone.View
-
-			getAccessTypes = (isAdminArea, callback) ->
-				if isAdminArea
-					callback [['PUBLIC', 'Public'], ['USER', 'Only users'], ['MEMBER', 'Only members of linking repository']]
-					return
-				Data.getTeams 'TEAM_LIBRARIES', (teams) ->
-					options = []
-					for team in teams
-						options.push([team.teamname, team.name])
-					callback options
 
 			className: 'multi-box-view'
 
 			events:
 				'click [data-action=add]': 'addLibrary'
 
-			initialize: (options) ->
-				@isAdminArea = options?.isAdminArea
-
 			render: (renderOptions) ->
-				getAccessTypes @isAdminArea, (accessTypes) =>
-					@$el.html template
-						isAdminArea: @isAdminArea
-						accessTypes: accessTypes
+				@$el.html template
+					accessTypes: Data.getAccessTypes()
 				Renderer.render @, renderOptions
 
 			addLibrary: () ->
@@ -59,10 +45,7 @@ define([
 					success: (library) => 
 						Layers.hideProgressIndicator()
 						Status.success "Library #{library} successfully added"
-						if @isAdminArea
-							Router.navigate 'administration/libraries'
-						else
-							Router.navigate 'user/libraries'
+						Router.navigate 'dashboard/libraries'
 					error: (response) ->
 						Layers.hideProgressIndicator()
 						Forms.handleError 'library-form', response

@@ -3,6 +3,7 @@ package com.greendelta.collaboration.controller.user;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -12,12 +13,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.LibraryAccess;
 import com.greendelta.collaboration.service.LibraryService;
 import com.greendelta.collaboration.service.LibraryService.LibraryInfo;
 import com.greendelta.collaboration.service.Repository;
@@ -37,12 +40,7 @@ public class LibraryController {
 
 	@GetMapping
 	public List<LibraryInfo> getAll() {
-		return service.getAllAccessible().stream().map(lib -> service.getInfo(lib, true)).toList();
-	}
-
-	@GetMapping("teams")
-	public List<LibraryInfo> getAllForTeams() {
-		return service.getAccessibleForTeams().stream().map(lib -> service.getInfo(lib, false)).toList();
+		return service.getAllAccessible().stream().map(lib -> service.getInfo(lib)).toList();
 	}
 
 	@GetMapping("missing")
@@ -51,7 +49,7 @@ public class LibraryController {
 			var libraries = service.getAllAccessible();
 			var missing = repos.stream()
 					.map(Repository::getLibraries)
-					.flatMap(List::stream)
+					.flatMap(Set::stream)
 					.distinct()
 					.filter(Predicate.not(libraries::contains))
 					.collect(Collectors.toSet());
@@ -79,7 +77,7 @@ public class LibraryController {
 	@PostMapping
 	public String create(
 			@RequestParam MultipartFile file,
-			@RequestParam String access) {
+			@RequestParam LibraryAccess access) {
 		try (var stream = file.getInputStream()) {
 			var id = service.insert(stream, access);
 			if (id == null)
@@ -92,11 +90,19 @@ public class LibraryController {
 		}
 	}
 
-	@DeleteMapping("{name}/{access}")
-	public void delete(@PathVariable String name, @PathVariable String access) {
+	@PutMapping("{name}/{access}")
+	public void changeAccess(@PathVariable String name, @PathVariable LibraryAccess access) {
 		if (service.get(name) == null)
 			throw Response.notFound("No library " + name + " found");
-		if (!service.delete(name, access))
+		if (!service.update(name, access))
+			throw Response.error("Error updating library " + name);
+	}
+
+	@DeleteMapping("{name}")
+	public void delete(@PathVariable String name) {
+		if (service.get(name) == null)
+			throw Response.notFound("No library " + name + " found");
+		if (!service.delete(name))
 			throw Response.error("Error deleting library " + name);
 	}
 

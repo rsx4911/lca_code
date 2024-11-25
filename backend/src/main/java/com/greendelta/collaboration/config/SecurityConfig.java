@@ -156,7 +156,7 @@ public class SecurityConfig {
 
 	private boolean canGitAccess(GitRequest request, String repoId) {
 		var sessionService = new SessionService(authManager, userService);
-		var loggedIn = request.basicHttpLogin(sessionService);
+		var loggedIn = request.basicHttpLogin(sessionService, userService);
 		try {
 			if (request.getGitAction() == GitAction.GIT_PUSH || request.getGitAction() == GitAction.GIT_PUSH_SERVICE)
 				return permissions.canWriteTo(repoId) && !areCommitsProhibited(repoId);

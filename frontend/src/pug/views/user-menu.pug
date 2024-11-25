@@ -6,6 +6,8 @@ mixin menu-items(searchIcon)
 		span.glyphicon.glyphicon-home(data-toggle='tooltip' data-placement='bottom' title='Dashboard' aria-label='Dashboard')
 	a(href='dashboard/repositories')
 		span.glyphicon.glyphicon-th-list(data-toggle='tooltip' data-placement='bottom' title='Repositories' aria-label='Repositories')
+	a(href='dashboard/libraries')
+		span.glyphicon.glyphicon-hdd(data-toggle='tooltip' data-placement='bottom' title='Libraries' aria-label='Libraries')
 	if isDataManager || isUserManager || isLibraryManager
 		a(href='administration')
 			span.glyphicon.glyphicon-wrench(data-toggle='tooltip' data-placement='bottom' title='Admin area' aria-label='Admin area')

@@ -115,24 +115,32 @@ define([
 
 			set: (event, label, field, key) ->
 				Events.preventDefault event
-				Layers.promptInput label, 'textarea', @serverInfo[field], (value) =>
-					@setSetting key, value, () ->
-						Backbone.history.loadUrl()
+				Layers.promptInput
+					type: 'textarea'
+					label: label
+					value: @serverInfo[field]
+					callback: (value) =>
+						@setSetting key, value, () ->
+							Backbone.history.loadUrl()
 
 			setAnnouncement: (event) ->
 				Events.preventDefault event
-				Layers.promptInput 'Announcement', 'textarea', @serverInfo.announcementMessage, (value) =>
-					$.ajax
-						type: 'PUT'
-						url: if value then 'ws/admin/area/announce' else 'ws/admin/area/clearAnnouncement'
-						contentType: if value then 'text/plain' else null
-						data: value
-						success: () => 
-							Backbone.history.loadUrl()
-							if value
-								Announcements.announce value
-							else
-								Announcements.clear()						
+				Layers.promptInput 
+					type: 'textarea'
+					label: 'Announcement'
+					value: @serverInfo.announcementMessage
+					callback: (value) =>
+						$.ajax
+							type: 'PUT'
+							url: if value then 'ws/admin/area/announce' else 'ws/admin/area/clearAnnouncement'
+							contentType: if value then 'text/plain' else null
+							data: value
+							success: () => 
+								Backbone.history.loadUrl()
+								if value
+									Announcements.announce value
+								else
+									Announcements.clear()
 				
 			setSetting: (key, value, callback) ->
 				$.ajax

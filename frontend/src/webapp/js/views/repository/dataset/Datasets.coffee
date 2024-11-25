@@ -108,7 +108,7 @@ define([
 				group = @repository.get 'group'
 				name = @repository.get 'name'
 				if currentUser.isLoggedIn()
-					historyUrl = "ws/history/#{group}/#{name}"
+					historyUrl = "ws/public/history/#{group}/#{name}"
 					if @categoryPath
 						historyUrl += "?path=#{@getCategoryPath()}"
 					$.ajax
@@ -126,7 +126,7 @@ define([
 				if releases?.length
 					info = if @commitId then releases.find (r) => r.id is @commitId else releases[0]
 				@$el.html template
-					baseUrl: "#{group}/#{name}/datasets"
+					repoUrl: "#{group}/#{name}"
 					categoryPath: @categoryPath
 					formatDate: Format.dateTime
 					formatCommitDescription: Format.commitDescription

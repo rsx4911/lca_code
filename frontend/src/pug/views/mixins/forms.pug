@@ -116,10 +116,13 @@ mixin radios(group, options)
 				| &nbsp;
 			block
 
-mixin textarea(id, label)
+mixin textarea(id, label, action)
 	.form-group(id=id + '-group')
 		if label
 			label.control-label(for=id)!=label
+		if action
+			|  
+			button.btn.btn-xs.btn-default(data-action=id+'-click')=action
 		textarea.form-control(id=id name=id)&attributes(attributes)
 			block
 

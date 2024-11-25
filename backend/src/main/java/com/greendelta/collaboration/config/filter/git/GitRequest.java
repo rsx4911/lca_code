@@ -2,18 +2,19 @@ package com.greendelta.collaboration.config.filter.git;
 
 import java.util.Base64;
 
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletRequestWrapper;
-
 import org.eclipse.jgit.http.server.GitSmartHttpTools;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.greendelta.collaboration.service.SessionService;
+import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Password;
 import com.greendelta.collaboration.util.Requests;
+
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 public class GitRequest extends HttpServletRequestWrapper {
 
@@ -39,7 +40,7 @@ public class GitRequest extends HttpServletRequestWrapper {
 		return remoteUser;
 	}
 
-	public boolean basicHttpLogin(SessionService sessionService) {
+	public boolean basicHttpLogin(SessionService sessionService, UserService userService) {
 		var auth = getRequest().getHeader("Authorization");
 		if (auth == null)
 			return false;
@@ -50,6 +51,12 @@ public class GitRequest extends HttpServletRequestWrapper {
 		if (principal.length != 2)
 			return false;
 		var username = principal[0];
+		if (userService.getForUsername(username) == null) {
+			var user = userService.getForEmail(username);
+			if (user == null)
+				return false;
+			username = user.username;
+		}
 		var password = Password.getPasswordWithoutToken(principal[1]);
 		var token = Password.getToken(principal[1]);
 		try {
@@ -58,7 +65,7 @@ public class GitRequest extends HttpServletRequestWrapper {
 			return true;
 		} catch (ResponseStatusException e) {
 			if (e.getStatusCode() == HttpStatus.BAD_REQUEST)
-				throw new BadCredentialsException(e.getMessage());			
+				throw new BadCredentialsException(e.getMessage());
 			return false;
 		}
 	}
@@ -79,13 +86,13 @@ public class GitRequest extends HttpServletRequestWrapper {
 	}
 
 	public enum GitAction {
-		
+
 		GIT_PUSH,
-		
+
 		GIT_PUSH_SERVICE,
 
 		OTHER;
-		
+
 	}
-	
+
 }

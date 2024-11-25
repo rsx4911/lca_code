@@ -11,6 +11,7 @@ include ../mixins/forms.pug
 			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
 			+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
 		.clear
+		+input('SERVER_SETTING__TYPES_OF_DATA', 'Types of data')
 	.header-box Enabled features
 	.content-box
 		#search-note.alert.alert-warning You need to reindex all repositories, for the search/usage to show correct results.

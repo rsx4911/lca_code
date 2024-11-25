@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.openlca.git.RepositoryInfo;
+import org.openlca.git.model.Commit;
 
 import com.greendelta.collaboration.model.ReleaseInfo;
 import com.greendelta.collaboration.model.settings.GroupSetting;
@@ -16,13 +17,14 @@ public class Repositories {
 		// only static access
 	}
 
-	public static Map<String, Object> map(Repository repo, ReleaseInfo release) {
+	public static Map<String, Object> map(Repository repo, Commit commit, ReleaseInfo release) {
 		var map = Maps.create();
 		map.put("group", repo.group);
 		map.put("name", repo.name);
 		var label = repo.groupSettings.get(GroupSetting.LABEL, repo.group) + "/" + release.label;
 		map.put("label", label);
 		map.put("settings", Releases.map(release));
+		Maps.put(map, "settings.releaseDate", commit.timestamp);
 		map.put("hasReleases", true);
 		return map;
 	}

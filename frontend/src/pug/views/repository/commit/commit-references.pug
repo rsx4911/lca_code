@@ -11,15 +11,19 @@ mixin dataset-label(dataset)
 	else
 		span=dataset.name
 
-
 each dataset in data
-	- var url = baseUrl;
-	if dataset.isCategory
-		- url += 's/' + getTypeLabel(dataset.type) + '/' + (dataset.category ? dataset.category + '/' : '') + dataset.name;
+	- var url = '';
+	if dataset.isLibrary
+		if dataset.isPublic
+			- url = 'ws/libraries/' + dataset.refId;
+		else
+			- url = 'ws/public/libraries/' + dataset.refId;
+	else if dataset.isCategory
+		- url = baseUrl + 's/' + getTypeLabel(dataset.type) + '/' + (dataset.category ? dataset.category + '/' : '') + dataset.name;
 	else
-		- url += '/' + dataset.type + '/' + dataset.refId;
+		- url = baseUrl + '/' + dataset.type + '/' + dataset.refId;
 	- url += '?commitId=' + commitId;
-	- var linkDataset = dataset.diffType !== 'DELETED' || (standalone && dataset.diffType !== 'ADDED');
+	- var linkDataset = dataset.diffType !== 'DELETED' && (!dataset.isLibrary || dataset.isAvailable) && (!standalone || (!dataset.isLibrary && dataset.diffType !== 'ADDED'));
 	.file-reference(id=dataset.id)
 		.header
 			if linkDataset

@@ -2,6 +2,8 @@ package com.greendelta.collaboration.controller;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,10 +24,12 @@ import com.greendelta.collaboration.controller.util.Repositories;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.ReleaseInfo;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
+import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.HistoryService;
 import com.greendelta.collaboration.service.ReleaseService;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.service.RepositoryService;
+import com.greendelta.collaboration.service.SettingsService;
 
 @RestController
 @RequestMapping("ws/public/repository")
@@ -34,12 +38,14 @@ public class RepositoryController {
 	private final RepositoryService service;
 	private final HistoryService historyService;
 	private final ReleaseService releaseService;
+	private final SettingsService settings;
 
 	public RepositoryController(RepositoryService service, HistoryService historyService,
-			ReleaseService releaseService) {
+			ReleaseService releaseService, 	SettingsService settings) {
 		this.service = service;
 		this.historyService = historyService;
 		this.releaseService = releaseService;
+		this.settings = settings;
 	}
 
 	@GetMapping
@@ -54,7 +60,7 @@ public class RepositoryController {
 	private Map<String, Object> putReleaseInfo(Repository repo) {
 		var commit = historyService.getLatestAccessibleCommit(repo);
 		var release = releaseService.get(repo.path(), commit.id);
-		return Repositories.map(repo, release);
+		return Repositories.map(repo, commit, release);
 	}
 
 	@GetMapping("{group}/{name}")
@@ -80,15 +86,34 @@ public class RepositoryController {
 		return Integer.compare(sortedCommitIds.indexOf(r1.commitId), sortedCommitIds.indexOf(r2.commitId));
 	}
 
-	@GetMapping("count/{group}/{name}")
-	public ResponseEntity<?> getReferenceCount(
+	@GetMapping("meta/{group}/{name}")
+	public ResponseEntity<?> getMetaData(
 			@PathVariable String group,
 			@PathVariable String name) {
 		try (var repo = service.get(group, name)) {
 			var commit = historyService.getLatestAccessibleCommit(repo);
 			if (commit == null)
-				return Response.ok(Map.of("datasets", 0));
-			return Response.ok(Map.of("datasets", repo.references.find().commit(commit.id).count()));
+				return Response.ok(new HashMap<>());
+			var counts = new HashMap<ModelType, Long>();
+			repo.references.find().commit(commit.id).iterate(ref -> {
+				counts.put(ref.type, counts.getOrDefault(ref.type, 0l) + 1);
+			});
+			var sortedCounts = new LinkedHashMap<ModelType, Long>();
+			List<String> orderedTypes = settings.get(ServerSetting.MODEL_TYPES_ORDER);
+			for (var typeString : orderedTypes) {
+				var type = ModelType.valueOf(typeString);
+				if (counts.containsKey(type)) {
+					sortedCounts.put(type, counts.get(type));
+				}
+			}
+			var metaData = new HashMap<String, Object>();
+			metaData.put("counts", sortedCounts);
+			var modelTypes = repo.getModelTypes(commit);
+			var mainModelType = (String) repo.settings.get(RepositorySetting.MAIN_MODEL_TYPE);
+			if (mainModelType != null && modelTypes.contains(ModelType.valueOf(mainModelType))) {
+				metaData.put("mainModelType", mainModelType);
+			}
+			return Response.ok(metaData);
 		}
 	}
 

@@ -126,38 +126,45 @@ define([
 						{id: 'login', text: 'Login', className: 'btn-primary', callback: 'login'}
 					]
 			
-			promptInput: (label, type, value, callback) ->
-				unless value
-					value = ''
+			promptInput: (options) ->
+				unless options.value
+					options.value = ''
 				buttons = []
 				buttons.push {text: 'Cancel', className: 'btn-default', callback: @closeActive}
 				buttons.push {text: 'Ok', className: 'btn-success', callback: () =>
-					if type is 'file'
+					if options.type is 'file'
 						file = $('#input-data')[0].files[0]
 						fileName = Forms.getFileName 'input-data'
 						if !file or !fileName
-							callback()
+							options.callback()
 						else 
 							fileData = new FormData()
 							fileData.append 'file', file
 							fileData.append 'fileName', fileName
-							callback fileData
+							options.callback fileData
 					else
-						callback $('#input-data').val()
+						options.callback $('#input-data').val()
 					@closeActive()
 				}
-				body = null
-				if type is 'textarea'
-					body = "<label for=\"input-data\">#{label}</label><textarea id=\"input-data\" class=\"form-control\" rows=\"5\"></textarea>"
+				body = "<label for=\"input-data\">#{options.label}</label>"
+				if options.type is 'textarea'
+					body += '<textarea id="input-data" class="form-control" rows="5"></textarea>'
+				else if options.type is 'select'
+					body += '<select id="input-data" name="input-data" class="form-control">'
+					for option in options.options
+						if !Array.isArray option
+							option = [option, option]
+						body += "<option value={#{option[0]}}>#{option[1]}</option>"
+					body += '</select>'
 				else
-					realType = if type is 'date' then 'text' else type
-					body = "<label for=\"input-data\">#{label}</label><input id=\"input-data\" type=\"#{realType}\" class=\"form-control\">"
+					inputType = if options.type is 'date' then 'text' else options.type
+					body = "<input id=\"input-data\" type=\"#{inputType}\" class=\"form-control\">"
 				@showMessageInLayer
 					body: body
-					title: "Specify #{label}"
+					title: "Specify #{options.label}"
 					buttons: buttons
-				if value
-					$('#input-data').val value
+				if options.value
+					$('#input-data').val options.value
 
 			handleUserAndTeamData: (options, users, teams) ->
 				existing = options.exclude or []
@@ -250,7 +257,7 @@ define([
 								@showProgressIndicator ['Loading', 'versions']
 								$.ajax
 									type: 'GET'
-									url: "ws/history/#{options.repositoryPath}/#{options.type}/#{refId}"
+									url: "ws/public/history/#{options.repositoryPath}/#{options.type}/#{refId}"
 									success: (commits) =>
 										$('#select-model-button').prop 'disabled', (!commits || !commits.length)
 										$('#model-selection #commitId').empty()

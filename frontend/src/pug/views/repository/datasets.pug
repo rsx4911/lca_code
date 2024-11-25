@@ -11,6 +11,9 @@ mixin static-setting(field, label, formatter)
 	.pull-left
 		if isPublic
 			+release-selection('commit', 'Version', releases, commitId, true)
+			if releases.length > 1
+				|  
+				small: small: a(href=repoUrl + '/releases') View history
 		else if !isPublic
 			+commit-selection('commit', 'Commit', commits, commitId, true)
 	.pull-right
@@ -52,7 +55,7 @@ if categoryPath
 		.form-group
 			input#filter.form-control.input-lg(type='text' placeholder='Filter by name' aria-label='Filter by name')
 	.header-box
-		+category-breadcrumb(categoryPath.split('/'), baseUrl, false, false, commitId)
+		+category-breadcrumb(categoryPath.split('/'), repoUrl + '/datasets', false, false, commitId)
 
 .content-box
 	table.table.table-browse
