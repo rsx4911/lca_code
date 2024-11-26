@@ -174,8 +174,6 @@ public class LibraryService {
 		if (user.isLibraryManager())
 			return true;
 		LibraryAccess access = getSetting(library, LibrarySetting.ACCESS);
-		if (access == null)
-			return false;
 		if (access == LibraryAccess.PUBLIC)
 			return true;
 		if (access == LibraryAccess.USER)
