@@ -1,6 +1,8 @@
 package com.greendelta.collaboration.controller.user;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +13,9 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.lib.PersonIdent;
+import org.openlca.core.library.LibraryDir;
+import org.openlca.core.library.LibraryPackage;
+import org.openlca.util.Dirs;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -58,19 +63,24 @@ public class LibraryController {
 		try (var repos = repoService.getAllAccessible()) {
 			var libraries = service.getAllAccessible();
 			var missing = repos.stream()
-					.map(Repository::getLibraries)
+					.map(Repository::getLinkedLibraries)
 					.flatMap(Set::stream)
 					.distinct()
 					.filter(Predicate.not(libraries::contains))
 					.collect(Collectors.toSet());
 			return missing.stream().map(lib -> {
 				var linkedIn = repos.stream()
+						.filter(repo -> repo.getLinkedLibraries().contains(lib))
+						.map(Repository::path)
+						.toList();
+				var currentlyLinkedIn = repos.stream()
 						.filter(repo -> repo.getLibraries().contains(lib))
 						.map(Repository::path)
 						.toList();
 				var info = new HashMap<String, Object>();
 				info.put("name", lib);
 				info.put("linkedIn", linkedIn);
+				info.put("currentlyLinkedIn", currentlyLinkedIn);
 				return info;
 			}).toList();
 		}
@@ -119,18 +129,29 @@ public class LibraryController {
 			return new HashSet<>();
 		var user = userService.getCurrentUser();
 		var success = new HashSet<String>();
-		for (var repoId : data.repositories) {
-			try (var repo = repoService.get(repoId)) {
-				LibraryReplacer.in(repo)
-						.resolveLibraryFileWith(service::getLibraryFile)
-						.as(new PersonIdent(user.username, ""))
-						.withMessage(data.message)
-						.replace(toReplace, replaceWith)
-						.run();
-				success.add(repoId);
-			} catch (IOException e) {
-				log.error("Error replacing library " + toReplace + " with " + replaceWith + " in repository " + repoId);
+		File tmp = null;
+		try {
+			tmp = Files.createTempDirectory("cs-library-dir").toFile();
+			var libFile = service.getLibraryFile(replaceWith);
+			var libDir = LibraryDir.of(tmp);
+			LibraryPackage.unzip(libFile, libDir);
+			var replacement = libDir.getLibrary(replaceWith).get();
+			for (var repoId : data.repositories) {
+				try (var repo = repoService.get(repoId)) {
+					LibraryReplacer.in(repo)
+							.as(new PersonIdent(user.username, ""))
+							.withMessage(data.message)
+							.replace(toReplace, replacement)
+							.run();
+					success.add(repoId);
+				} catch (IOException e) {
+					log.error("Error replacing library " + toReplace + " with " + replaceWith + " in repo " + repoId);
+				}
 			}
+		} catch (IOException e) {
+			log.error("Error extracting library " + replaceWith);
+		} finally {
+			Dirs.delete(tmp);
 		}
 		return success;
 	}

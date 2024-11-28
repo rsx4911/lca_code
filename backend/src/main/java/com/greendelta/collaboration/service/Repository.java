@@ -45,7 +45,7 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		return new File(fsPath);
 	}
 
-	public Set<String> getLibraries() {
+	public Set<String> getLinkedLibraries() {
 		return commits.find().all().stream()
 				.map(this::getLibraries)
 				.flatMap(Set::stream)

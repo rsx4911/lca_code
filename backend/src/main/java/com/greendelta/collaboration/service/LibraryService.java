@@ -74,12 +74,16 @@ public class LibraryService {
 			return null;
 		try (var repos = repoService.getAllAccessible()) {
 			var linkedIn = repos.stream()
+					.filter(repo -> repo.getLinkedLibraries().contains(library))
+					.map(Repository::path)
+					.distinct().toList();
+			var currentlyLinkedIn = repos.stream()
 					.filter(repo -> repo.getLibraries().contains(library))
 					.map(Repository::path)
 					.distinct().toList();
 			LibraryAccess access = getSetting(library, LibrarySetting.ACCESS);
 			String owner = getSetting(library, LibrarySetting.OWNER);
-			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn, owner, access);
+			return new LibraryInfo(LibraryPackage.getInfo(file), linkedIn, currentlyLinkedIn, owner, access);
 		}
 	}
 
@@ -193,7 +197,7 @@ public class LibraryService {
 	private Set<String> getLinkedLibraries() {
 		try (var accessible = repoService.getAllAccessible()) {
 			return accessible.stream()
-					.map(Repository::getLibraries)
+					.map(Repository::getLinkedLibraries)
 					.flatMap(Set::stream)
 					.collect(Collectors.toSet());
 		}
@@ -212,11 +216,13 @@ public class LibraryService {
 	}
 
 	public record LibraryInfo(String name, String description, boolean isRegionalized, List<String> linkedIn,
+			List<String> currentlyLinkedIn,
 			String owner, LibraryAccess access) {
 
-		private LibraryInfo(org.openlca.core.library.LibraryInfo info, List<String> linkedIn, String owner,
+		private LibraryInfo(org.openlca.core.library.LibraryInfo info, List<String> linkedIn,
+				List<String> currentlyLinkedIn, String owner,
 				LibraryAccess access) {
-			this(info.name(), info.description(), info.isRegionalized(), linkedIn, owner, access);
+			this(info.name(), info.description(), info.isRegionalized(), linkedIn, currentlyLinkedIn, owner, access);
 		}
 
 	}

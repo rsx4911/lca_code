@@ -2,10 +2,11 @@ define([
 				'backbone'
 				'cs!utils/Layers'
 				'cs!utils/Renderer'
+				'cs!utils/Status'
 				'templates/views/dashboard/library-updater'
 			]
 
-	(Backbone, Layers, Renderer, template) ->
+	(Backbone, Layers, Renderer, Status, template) ->
 
         class LibraryUpdater extends Backbone.View
 
@@ -24,20 +25,20 @@ define([
                 @disableOption 'toReplace', replaceWithId
                 toReplace = @libraries.find((lib) -> lib.name is toReplaceId)
                 replaceWith = @libraries.find((lib) -> lib.name is replaceWithId)
-                repos = toReplace.linkedIn.filter((repo) -> replaceWith and !replaceWith.linkedIn.find((r) -> r is repo))
                 noReposLabel = @$ '#no-repos-label'
                 pleaseSelectLabel = @$ '#please-select-label'
                 pleaseSelectLabel.removeClass 'hidden'
                 noReposLabel.addClass 'hidden'
                 if toReplaceId and replaceWithId
                     pleaseSelectLabel.addClass 'hidden'
+                    repos = toReplace.currentlyLinkedIn.filter((repo) -> replaceWith and !replaceWith.currentlyLinkedIn.find((r) -> r is repo))
                     if !repos.length
                         noReposLabel.removeClass 'hidden'
                 for c in @$('input[type=checkbox]')
                     checkbox = $ c
                     div = checkbox.parent().parent()
                     div.addClass 'hidden'
-                    if repos.find((repo) -> repo is checkbox.attr('id'))
+                    if (repos or []).find((repo) -> repo is checkbox.attr('id'))
                         div.removeClass 'hidden'
                 @updateButton()
 
@@ -66,9 +67,11 @@ define([
                     data: JSON.stringify 
                         repositories: repos
                         message: message
-                    success: () ->
+                    success: (repos) ->
                         Layers.hideProgressIndicator()
                         Layers.closeActive()
+                        Status.success "Successfully updated repositories: #{repos.join(', ')}"
+                        Backbone.history.loadUrl()
 
             events:
                 'change #toReplace, #replaceWith': 'onChange'

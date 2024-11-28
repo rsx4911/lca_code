@@ -4,7 +4,7 @@ include ../mixins/forms.pug
 - var options = [''];
 each library in libraries
     - options.push(library.name);
-    each repo in library.linkedIn
+    each repo in library.currentlyLinkedIn
         if repos.indexOf(repo) === -1
             - repos.push(repo);
 - repos.sort(function(r1, r2) { return r1.toLowerCase().localeCompare(r2.toLowerCase()); });
