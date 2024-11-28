@@ -36,7 +36,7 @@ public class JsonWriter implements DatasetWriter {
 		this.tmpFile = file;
 		this.references = new TypedRefIdMap<Reference>();
 		repo.references.find().commit(commit.id).iterate(ref -> references.put(ref, ref));
-		this.writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo(commit).schemaVersion(), tmpFile);
+		this.writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo(commit.id).schemaVersion(), tmpFile);
 	}
 
 	@Override

@@ -115,6 +115,10 @@ public class RepositoryService {
 			return null;
 		}
 	}
+	
+	File getDir(RepositoryPath path) {
+		return Repository.getDir(getRootPath(), path.group, path.repo);
+	}
 
 	public boolean exists(String group, String name) {
 		var root = new File(getRootPath());

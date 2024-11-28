@@ -11,7 +11,6 @@ import java.util.Set;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Commit;
-import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -115,8 +114,7 @@ public class BrowseController {
 				options -> options.path(RepositoryInfo.FILE_NAME).until(commitId));
 		for (var i = commits.size() - 1; i >= 0; i--) {
 			var commit = commits.get(i);
-			var info = repo.getInfo(commit);
-			var libraries = info.libraries().stream().map(LibraryLink::id).toList();
+			var libraries = repo.getLibraries(commit);
 			if (libraries.contains(library))
 				continue;
 			if ((i + 1) < commits.size())
