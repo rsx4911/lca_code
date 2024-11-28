@@ -20,7 +20,7 @@ mixin access-group(libraries, label, access)
 							else
 								.comma-separated
 									each repo in library.linkedIn
-										span: a.follow(href='/' + repo + '/datasets/Libraries')=repo
+										span: a.follow(href=repo + '/datasets/Libraries')=repo
 						td
 							if isLibraryOwner(library)
 								button.btn.btn-xs.btn-warning(data-action='change-access' data-name=library.name) Change access
@@ -40,7 +40,7 @@ mixin missing-libraries(missingLibraries)
 					td
 						.comma-separated
 							each repo in (library.linkedIn || [])
-								span: a.follow(href='/' + repo + '/datasets/Libraries')=repo
+								span: a.follow(href=repo + '/datasets/Libraries')=repo
 					td
 						button.btn.btn-xs.btn-success(data-action='add') Add
 
