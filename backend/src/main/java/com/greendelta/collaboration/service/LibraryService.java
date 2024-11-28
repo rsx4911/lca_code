@@ -8,14 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
-import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Commit;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
@@ -93,12 +91,12 @@ public class LibraryService {
 		return access == LibraryAccess.PUBLIC;
 	}
 
-	private String getLibraryUrl(String library) {
+	public String getLibraryUrl(String library) {
 		var serverUrl = settings.serverConfig.getServerUrl();
 		return serverUrl + "/ws/" + (isPublic(library) ? "public/libraries/" : "libraries/") + library;
 	}
 
-	private File getLibraryFile(String library) {
+	public File getLibraryFile(String library) {
 		return new File(getLibraryPath(), library + ".zip");
 	}
 
@@ -174,8 +172,6 @@ public class LibraryService {
 		if (user.isLibraryManager())
 			return true;
 		LibraryAccess access = getSetting(library, LibrarySetting.ACCESS);
-		if (access == null)
-			return false;
 		if (access == LibraryAccess.PUBLIC)
 			return true;
 		if (access == LibraryAccess.USER)
@@ -197,11 +193,8 @@ public class LibraryService {
 	private Set<String> getLinkedLibraries() {
 		try (var accessible = repoService.getAllAccessible()) {
 			return accessible.stream()
-					.map(Repository::getInfo)
-					.filter(Objects::nonNull)
-					.map(RepositoryInfo::libraries)
-					.flatMap(List::stream)
-					.map(LibraryLink::id)
+					.map(Repository::getLibraries)
+					.flatMap(Set::stream)
 					.collect(Collectors.toSet());
 		}
 	}
