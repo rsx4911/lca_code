@@ -154,7 +154,7 @@ define([
 					for option in options.options
 						if !Array.isArray option
 							option = [option, option]
-						body += "<option value={#{option[0]}}>#{option[1]}</option>"
+						body += "<option value=#{option[0]}>#{option[1]}</option>"
 					body += '</select>'
 				else
 					inputType = if options.type is 'date' then 'text' else options.type
