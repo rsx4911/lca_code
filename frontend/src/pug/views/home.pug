@@ -2,7 +2,7 @@ include ./mixins/forms.pug
 include ./mixins/long-text.pug
 
 .home-container
-	h3=title
+	h3!=title
 	p!=welcomeText
 	if showSearch
 		form#search-form

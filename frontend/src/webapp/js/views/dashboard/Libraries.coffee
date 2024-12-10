@@ -23,6 +23,17 @@ define([
 						groups[library.access] = group
 				return groups
 
+			openUpdater = () ->
+				Layers.showViewInLayer
+					title: 'Update libraries in repositories'
+					view: 'dashboard/LibraryUpdater'
+					viewOptions:
+						libraries: @libraries
+					buttons: [
+						{ text: 'Cancel', callback: () -> Layers.closeActive() }
+						{ text: 'Update', className: 'btn-success', callback: 'update', id: 'btn-update-library' }
+					]
+
 			changeAccess = (event) ->
 				target = $ Events.target event
 				name = target.attr 'data-name'
@@ -66,8 +77,9 @@ define([
 			events:
 				'click a[href].follow': (event) -> Events.followLink event
 				'click [data-action=add]': () -> Router.navigate 'dashboard/libraries/add'
-				'click [data-action=delete]': deleteLibrary
+				'click [data-action=open-updater]': openUpdater
 				'click [data-action=change-access]': changeAccess
+				'click [data-action=delete]': deleteLibrary
 
 			initialize: (options) ->
 				@isAdminArea = options?.isAdminArea
@@ -77,6 +89,7 @@ define([
 					type: 'GET'
 					url: 'ws/libraries'
 					success: (libraries) =>
+						@libraries = libraries
 						$.ajax
 							type: 'GET'
 							url: 'ws/libraries/missing'

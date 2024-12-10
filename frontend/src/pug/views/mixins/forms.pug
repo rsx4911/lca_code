@@ -39,10 +39,12 @@ mixin input(id, label, type, inline, required, hide)
 mixin hidden(id, value)
 	input(id=id name=id value=value type='hidden')
 
-mixin select(id, label, options, defaultSelection, inline)
+mixin select(id, label, options, defaultSelection, inline, required)
 	div(id=id + '-group' class=inline?'form-inline':'form-group' style=inline?'display:inline-block':null)
 		if label
 			label.control-label(for=id)!=label
+				if required
+					sup *
 		select.form-control(id=id name=id)&attributes(attributes)
 			if options
 				+options(options, defaultSelection)
