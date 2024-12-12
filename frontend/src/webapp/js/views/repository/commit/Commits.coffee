@@ -29,13 +29,15 @@ define([
 						buttons.push {id: 'delete', className: 'btn-danger', text: 'Revoke release', callback: () => @revokeRelease(commitId)}
 					okButtonLabel = if isReleased then 'Update release' else 'Release'
 					buttons.push {id: 'complete-release', className: 'btn-success', text: okButtonLabel, callback: () => @release(commitId, isReleased)}
+					dataTypes = settings.get('TYPES_OF_DATA').map((type) -> type)
+					dataTypes.splice(0, 0, '')
 					Layers.showTemplateInLayer
 						title: if isReleased then 'Edit release information' else 'Specify release information'
 						template: 'repository/commit/release-info-layer'
 						dialogType: 'modal-large'
 						model:
 							values: releaseInfo
-							dataTypes: ['', 'I/O', 'Hybrid', 'System processes', 'Unit processes']
+							dataTypes: dataTypes
 						buttons: buttons
 						callback: () ->
 							$('[data-action=changeLog-click]').on 'click', (event) ->

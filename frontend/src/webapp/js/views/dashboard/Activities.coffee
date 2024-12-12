@@ -31,8 +31,10 @@ define([
 					repository: if @repository then @repository.toJSON() else null
 				Renderer.render @, renderOptions
 				settings = currentUser.get 'settings'
+				if !settings
+					settings = {}
 				if !settings.showCommitActivities and !settings.showCommentActivities and !settings.showTaskActivities
-					@updateSettings { showCommitActivities: true, showCommentActivities: true, showTaskActivities: true }, () =>
+					@updateSettings {}, () =>
 						Forms.fill 'activities-config', settings
 						@initFeed()
 				else
