@@ -19,7 +19,7 @@ include ./mixins/long-text.pug
 					- typesOfData.push(repo.settings.typeOfData);
 			if typesOfData.length > 2
 				+select('typeOfData', 'Type of data', typesOfData, typeOfData || 'All', true)
-			+select('sortBy', 'Sort by', ['Relevance', 'Release date'], sortBy || 'Relevance', true)
+			+select('sortBy', 'Sort by', ['Default', 'Release date'], sortBy || 'Default', true)
 	.clear
 
 .pinned-repositories(class=repositories.length>=3?'three-columns':repositories.length===2?'two-columns':null)
