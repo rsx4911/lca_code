@@ -8,6 +8,7 @@ each library in libraries
         if repos.indexOf(repo) === -1
             - repos.push(repo);
 - repos.sort(function(r1, r2) { return r1.toLowerCase().localeCompare(r2.toLowerCase()); });
+.alert.alert-warning(style='display:block'): span.message This is an experimental feature, please use with care and make backups of repositories before usage
 +select('toReplace', 'Library to update', options, '', false, true)
 +select('replaceWith', 'Update with', options, '', false, true)
 +input('message', 'Commit message', 'text', false, true)
