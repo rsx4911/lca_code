@@ -69,6 +69,7 @@ define([
 				displayName = target.attr 'data-user-displayname'
 				taskId = @reviewId
 				forUser = if displayName then " for #{displayName}" else ''
+				urlPart = if user then "/#{user}" else ''
 				Layers.askQuestion
 					title: 'Cancel task' + forUser
 					question: 'Do you really want to cancel this task' + forUser
@@ -79,7 +80,7 @@ define([
 							return
 						$.ajax
 							type: 'PUT'
-							url: "ws/task/review/#{taskId}/cancel#{user ? '/' + user : ''}"
+							url: "ws/task/review/#{taskId}/cancel#{urlPart}"
 							success: (response) => 
 								if Controller.reviewWidget and Controller.reviewWidget.reviewId is @reviewId
 									Controller.reviewWidget.close()
@@ -91,9 +92,10 @@ define([
 				target = $ Events.target event, 'button'
 				user = target.attr('data-username') or ''
 				taskId = @reviewId
+				urlPart = if user then "/#{user}" else ''
 				$.ajax
 					type: 'PUT'
-					url: "ws/task/review/#{taskId}/complete#{user ? '/' + user : ''}"
+					url: "ws/task/review/#{taskId}/complete#{urlPart}"
 					success: (response) =>
 						if Controller.reviewWidget and Controller.reviewWidget.reviewId is @reviewId
 							Controller.reviewWidget.close()
