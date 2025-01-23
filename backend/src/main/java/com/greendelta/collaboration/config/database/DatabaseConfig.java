@@ -35,7 +35,7 @@ public class DatabaseConfig implements HibernatePropertiesCustomizer {
 				var s = con.createStatement()) {
 			if (!databaseInitialized(con)) {
 				log.info("Initializing database");
-				Updates.runScript(s, "schema.sql");
+				Updates.executeScript(s, "schema.sql");
 			}
 			Updates.checkAndRun(s);
 		} catch (SQLException | IOException e) {

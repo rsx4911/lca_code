@@ -10,29 +10,21 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 
-class Update1 {
-
-	private static final Logger log = LogManager.getLogger(Update1.class);
-	private static final int UPDATE_TO = 2;
-	private final Statement s;
+class Update1 extends Update {
 
 	Update1(Statement s) {
-		this.s = s;
+		super(s, 1);
 	}
 
-	int run() throws SQLException, IOException {
-		log.info("Running update1");
-		Updates.runScript(s, "update1.sql");
+	@Override
+	protected void executeCode() throws SQLException, IOException {
 		createReleases();
 		updateSettings();
-		return UPDATE_TO;
 	}
 
 	private void createReleases() throws SQLException, IOException {
