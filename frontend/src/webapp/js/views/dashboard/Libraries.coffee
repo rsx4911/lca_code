@@ -47,7 +47,7 @@ define([
 						Layers.showProgressIndicator 'Updating'
 						$.ajax
 							type: 'PUT'
-							url: "ws/libraries/#{name}/#{value}"
+							url: "ws/libraries/#{encodeURI(name)}/#{value}"
 							success: () ->
 								Layers.hideProgressIndicator()
 								Status.success "Successfully updated library #{name}"
@@ -63,7 +63,7 @@ define([
 					Layers.showProgressIndicator 'Deleting'
 					$.ajax
 						type: 'DELETE'
-						url: "ws/libraries/#{name}"
+						url: "ws/libraries/#{encodeURI(name)}"
 						success: () -> 
 							Layers.hideProgressIndicator()
 							Status.success "Successfully deleted library #{name}"
