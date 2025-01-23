@@ -90,7 +90,7 @@ define([
 					type: 'PUT'
 					url: "ws/group/settings/#{group.name}/#{setting}"
 					contentType: 'application/json'
-					data: JSON.stringify({value: value || ''})
+					data: JSON.stringify({value: value || 0})
 
 			setMaxSize: (size) ->
 				unless size
