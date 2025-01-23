@@ -64,11 +64,6 @@ public class UsageIndex {
 			collectReferences(entry, null, json);
 			if (entry.inputs.isEmpty() && entry.outputs.isEmpty() && entry.others.isEmpty())
 				continue;
-			if (entry.refId.equals("05000718-d26b-4e98-adda-74f33bae5b97")) {
-				entry.others.add("00b5e4eb-9f85-40df-89c8-df38cae81b78");
-				entry.inputs.clear();
-				entry.outputs.clear();
-			}
 			buffer.putInsert(entry.getId(), entry);
 		}
 		buffer.flush();
@@ -99,6 +94,8 @@ public class UsageIndex {
 			var field = parentField != null
 					? parentField + "." + nextField
 					: nextField;
+			if ("allocationFactors".equals(field))
+				continue;
 			if (Maps.isArray(value, nextField)) {
 				for (var arrayElement : Maps.getArray(value, nextField)) {
 					if (!Maps.is(arrayElement))
