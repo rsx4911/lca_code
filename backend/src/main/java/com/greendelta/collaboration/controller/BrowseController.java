@@ -136,6 +136,8 @@ public class BrowseController {
 			// TODO this is a quickfix to support broken glad urls
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
+		if (commitId != null && commitId.contains("-"))
+			throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 		try (var repo = repoService.get(group, name)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
