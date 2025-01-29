@@ -37,6 +37,7 @@ public class Index {
 				.unsorted()
 				.commit(previousCommit)
 				.excludeCategories()
+				.excludeLibraries()
 				.with(commit);
 		if (diffs.isEmpty())
 			return;
