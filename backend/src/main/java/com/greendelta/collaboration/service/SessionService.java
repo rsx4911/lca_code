@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.greendelta.collaboration.controller.util.Response;
+import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.user.UserService;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 
@@ -59,7 +60,7 @@ public class SessionService {
 		return authProviders;
 	}
 
-	public void login(HttpServletRequest request, String username, String password, Integer token) {
+	public User login(HttpServletRequest request, String username, String password, Integer token) {
 		try {
 			var auth = authManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 			SecurityContextHolder.getContext().setAuthentication(auth);
@@ -83,11 +84,12 @@ public class SessionService {
 				if (!valid)
 					throw Response.badRequest("Invalid token");
 			}
+			log.info("User {} successfully logged in", username);
+			return user;
 		} catch (ResponseStatusException e) {
 			logout(request);
 			throw e;
 		}
-		log.info("User {} successfully logged in", username);
 	}
 
 	public void logout(HttpServletRequest request) {

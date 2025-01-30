@@ -90,12 +90,6 @@ public class SessionController {
 			throw Response.unauthorized("Invalid credentials");
 		if (Strings.nullOrEmpty(password))
 			throw Response.unauthorized("Invalid credentials");
-		if (userService.getForUsername(username) == null) {
-			var user = userService.getForEmail(username);
-			if (user == null)
-				throw Response.unauthorized("Invalid credentials");
-			username = user.username;
-		}
 		password = Password.getPasswordWithoutToken(password);
 		var token = Password.getToken(password, (int) Maps.getLong(form, "token"));
 		try {
