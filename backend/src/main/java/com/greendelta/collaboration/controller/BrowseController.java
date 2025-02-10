@@ -1,8 +1,6 @@
 package com.greendelta.collaboration.controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +9,8 @@ import java.util.Set;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Commit;
+import org.openlca.git.model.Reference;
+import org.openlca.git.util.TypedRefIdMap;
 import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -82,7 +82,8 @@ public class BrowseController {
 				var eName = Maps.getString(entry, "name");
 				var entryPath = Strings.nullOrEmpty(categoryPath) ? eName : categoryPath + "/" + eName;
 				if (Maps.getBoolean(entry, "isRepositoryInfo")) {
-					entry.put("count", repo.references.find().includeCategories().nonRecursive().commit(commit.id).path(entryPath).count());
+					entry.put("count", repo.references.find().includeCategories().nonRecursive().commit(commit.id)
+							.path(entryPath).count());
 				} else if (!Maps.getBoolean(entry, "isLibrary")) {
 					entry.put("count", repo.references.find().commit(commit.id).path(entryPath).count());
 				}
@@ -93,7 +94,8 @@ public class BrowseController {
 	}
 
 	private List<Map<String, Object>> getEntries(Repository repo, Commit commit, String categoryPath) {
-		var entries = repo.references.find().includeCategories().nonRecursive().commit(commit.id).path(categoryPath).all();
+		var entries = repo.references.find().includeCategories().nonRecursive().commit(commit.id).path(categoryPath)
+				.all();
 		var mapped = entries.stream().map(e -> MetaData.get(e, repo, libraryService));
 		if (!Strings.nullOrEmpty(categoryPath))
 			return MetaData.sortByName(mapped).toList();
@@ -134,6 +136,8 @@ public class BrowseController {
 			// TODO this is a quickfix to support broken glad urls
 			commitId = commitId.substring(0, commitId.indexOf("?gladview"));
 		}
+		if (commitId != null && commitId.contains("-"))
+			throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 		try (var repo = repoService.get(group, name)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
@@ -153,52 +157,57 @@ public class BrowseController {
 						"deleted", true);
 			var map = Maps.of(dataset);
 			map.put("commitId", commit.id);
-			new IsInRepoInfo(repo, commitId).addIn(map);
+			new CategoryInfo(repo, commitId).addTo(map);
 			return map;
 		}
 	}
 
-	private class IsInRepoInfo {
+	private class CategoryInfo {
 
-		private final EnumMap<ModelType, Set<String>> refs = new EnumMap<>(ModelType.class);
+		private final TypedRefIdMap<Reference> refs = new TypedRefIdMap<>();
 		private final Set<String> categories = new HashSet<>();
 
-		private IsInRepoInfo(Repository repo, String commitId) {
-			repo.references.find().commit(commitId).iterate(entry -> {
-				if (entry.isDataset) {
-					refs.computeIfAbsent(entry.type, key -> new HashSet<>()).add(entry.refId);
-				} else if (entry.isCategory) {
-					categories.add(entry.path);
+		private CategoryInfo(Repository repo, String commitId) {
+			repo.references.find().includeCategories().commit(commitId).iterate(ref -> {
+				if (ref.isDataset) {
+					refs.put(ref, ref);
+				} else if (ref.isCategory) {
+					categories.add(ref.path);
 				}
 			});
 		}
 
-		private void addIn(Map<String, Object> object) {
+		private void addTo(Map<String, Object> object) {
 			for (var key : new HashSet<>(object.keySet())) {
 				if (key.equals("category")) {
 					var category = Maps.getString(object, "category");
 					var type = Maps.getModelType(object);
 					object.put("categoryIsInRepo", isCategoryInRepo(type, category));
-				}
-				if (Maps.isObject(object, key)) {
-					addTo(Maps.getObject(object, key));
+				} else if (Maps.isObject(object, key)) {
+					_addTo(Maps.getObject(object, key));
 				} else if (Maps.isArray(object, key)) {
 					for (var child : Maps.getArray(object, key)) {
 						if (Maps.is(child)) {
-							addTo(Maps.of(child));
+							_addTo(Maps.of(child));
 						}
 					}
 				}
 			}
 		}
 
-		private void addTo(Map<String, Object> object) {
-			addIn(object);
+		private void _addTo(Map<String, Object> object) {
 			var type = Maps.getModelType(object);
 			var refId = Maps.getString(object, "@id");
-			if (type == null || Strings.nullOrEmpty(refId))
+			if (type == null || Strings.nullOrEmpty(refId)) {
+				addTo(object);
 				return;
-			object.put("isInRepo", refs.getOrDefault(type, Collections.emptySet()).contains(refId));
+			}
+			var ref = refs.get(type, refId);
+			object.put("isInRepo", ref != null);
+			if (ref != null) {
+				object.put("category", ref.category);
+			}
+			addTo(object);
 		}
 
 		private boolean isCategoryInRepo(ModelType type, String category) {
@@ -208,5 +217,4 @@ public class BrowseController {
 		}
 
 	}
-
 }

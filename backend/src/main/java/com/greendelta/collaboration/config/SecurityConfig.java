@@ -89,7 +89,8 @@ public class SecurityConfig {
 						.requestMatchers("/**").access(this::canAccessRepo))
 				.logout(config -> config
 						.logoutUrl("/ws/public/logout")
-						.logoutSuccessHandler(getLogoutSuccessHandler()));
+						.logoutSuccessHandler(getLogoutSuccessHandler())
+						.deleteCookies("JSESSIONID"));
 		if (authProviderRepository != null) {
 			http = http.oauth2Login(config -> config
 					.successHandler(this::onOauthSuccess)

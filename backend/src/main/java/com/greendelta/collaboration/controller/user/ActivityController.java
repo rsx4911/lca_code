@@ -94,7 +94,7 @@ public class ActivityController {
 					.forEach(entry -> {
 						String id = Maps.getString(entry, "id");
 						var commit = commits.get(id);
-						var user = userService.getForUsername(commit.user);
+						var user = userService.getForUsernameOrEmail(commit.user);
 						entry.put("userDisplayName", user != null ? user.name : commit.user);
 					});
 			return result;

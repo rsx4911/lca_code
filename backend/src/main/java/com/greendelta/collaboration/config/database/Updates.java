@@ -13,10 +13,10 @@ import org.openlca.util.Strings;
 class Updates {
 
 	private static final Logger log = LogManager.getLogger(Updates.class);
-	private static final int CURRENT_SCHEMA_VERSION = 4;
+	private static final int CURRENT_SCHEMA_VERSION = 5;
 	private final Statement s;
 
-	static void runScript(Statement s, String script) throws IOException, SQLException {
+	static void executeScript(Statement s, String script) throws IOException, SQLException {
 		log.info("Executing sql script: " + script);
 		try (var reader = new BufferedReader(new InputStreamReader(Updates.class.getResourceAsStream(script)))) {
 			var next = "";
@@ -55,8 +55,9 @@ class Updates {
 	private int runUpdateFrom(int currentVersion) throws SQLException, IOException {
 		return switch (currentVersion) {
 			case 0, 1 -> new Update1(s).run();
-			case 2 -> new Update2(s).run();
-			case 3 -> new Update3(s).run();
+			case 2 -> new Update(s, 2).run();
+			case 3 -> new Update(s, 3).run();
+			case 4 -> new Update(s, 4).run();
 			default -> throw new IllegalArgumentException("Unknown schema version: " + currentVersion);
 		};
 	}

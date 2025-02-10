@@ -27,7 +27,7 @@ public class Setting extends AbstractEntity {
 	@Column
 	private String name;
 
-	@Column(length = 4000)
+	@Column(length = 65535)
 	private String value;
 
 	@Lob

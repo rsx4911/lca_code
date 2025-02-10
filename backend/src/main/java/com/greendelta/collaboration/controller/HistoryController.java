@@ -224,7 +224,7 @@ public class HistoryController {
 	}
 
 	private Map<String, Object> putAdditionalInfo(Repository repo, Map<String, Object> map) {
-		var user = userService.getForUsername(Maps.getString(map, "user"));
+		var user = userService.getForUsernameOrEmail(Maps.getString(map, "user"));
 		var id = Maps.getString(map, "id");
 		var isReleased = releaseService.isReleased(repo.path(), id);
 		map.put("userDisplayName", user != null ? user.name : Maps.getString(map, "user"));

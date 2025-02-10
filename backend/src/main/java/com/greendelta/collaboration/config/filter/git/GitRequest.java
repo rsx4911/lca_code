@@ -51,17 +51,11 @@ public class GitRequest extends HttpServletRequestWrapper {
 		if (principal.length != 2)
 			return false;
 		var username = principal[0];
-		if (userService.getForUsername(username) == null) {
-			var user = userService.getForEmail(username);
-			if (user == null)
-				return false;
-			username = user.username;
-		}
 		var password = Password.getPasswordWithoutToken(principal[1]);
 		var token = Password.getToken(principal[1]);
 		try {
-			sessionService.login(this, username, password, token);
-			this.remoteUser = username;
+			var user = sessionService.login(this, username, password, token);
+			this.remoteUser = user.username;
 			return true;
 		} catch (ResponseStatusException e) {
 			if (e.getStatusCode() == HttpStatus.BAD_REQUEST)

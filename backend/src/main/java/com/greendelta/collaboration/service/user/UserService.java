@@ -45,10 +45,10 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 	}
 
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		var user = getForUsername(username);
+	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+		var user = getForUsernameOrEmail(usernameOrEmail);
 		if (user == null)
-			throw new UsernameNotFoundException("Couldn't find user " + username);
+			throw new UsernameNotFoundException("Couldn't find user " + usernameOrEmail);
 		return user;
 	}
 
@@ -58,6 +58,13 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 
 	public User getForEmail(String email) {
 		return dao.getFirstForAttribute("email", email, true);
+	}
+
+	public User getForUsernameOrEmail(String usernameOrEmail) {
+		var user = getForUsername(usernameOrEmail);
+		if (user != null)
+			return user;
+		return getForEmail(usernameOrEmail);
 	}
 
 	public boolean exists(String username) {

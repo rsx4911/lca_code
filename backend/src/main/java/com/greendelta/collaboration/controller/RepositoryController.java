@@ -95,7 +95,7 @@ public class RepositoryController {
 			if (commit == null)
 				return Response.ok(new HashMap<>());
 			var counts = new HashMap<ModelType, Long>();
-			repo.references.find().commit(commit.id).iterate(ref -> {
+			repo.references.find().includeLibraries().commit(commit.id).iterate(ref -> {
 				counts.put(ref.type, counts.getOrDefault(ref.type, 0l) + 1);
 			});
 			var sortedCounts = new LinkedHashMap<ModelType, Long>();

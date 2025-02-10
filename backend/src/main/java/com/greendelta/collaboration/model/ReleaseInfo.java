@@ -32,31 +32,31 @@ public class ReleaseInfo extends AbstractEntity {
 	@Column
 	private String tags;
 
-	@Column(length = 4000)
+	@Column(length = 65535)
 	public String description;
 
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String sourceInfo;
 
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String contactInfo;
 	
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String changeLog;
 
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String projectInfo;
 
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String projectFunding;
 
-	@Column(length = 4000)
+	@Column(length = 65535)
 	public String appropriateUse;
 
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String dqAssessment;
 
-	@Column(length = 1000)
+	@Column(length = 65535)
 	public String citation;
 
 	@Column(length = 64)
