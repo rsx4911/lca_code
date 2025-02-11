@@ -13,9 +13,9 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
-import org.openlca.git.util.TypedRefIdMap;
 import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Strings;
+import org.openlca.util.TypedRefIdMap;
 
 import com.google.gson.JsonArray;
 import com.greendelta.collaboration.service.Repository;
