@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.openlca.core.model.ModelType;
-import org.openlca.git.util.TypedRefId;
+import org.openlca.core.model.TypedRefId;
 
 public class DsEntry extends TypedRefId {
 

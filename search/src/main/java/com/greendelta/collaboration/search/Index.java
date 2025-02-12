@@ -10,12 +10,12 @@ import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.core.model.TypedRefId;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
-import org.openlca.git.util.TypedRefId;
 
 import com.greendelta.search.wrapper.SearchClient;
 
