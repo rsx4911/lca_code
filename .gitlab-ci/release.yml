@@ -51,6 +51,6 @@ build:
       --build-arg "VERSION=$VERSION"
       --tag "$TAG"
       --tag "$TAG_LATEST"
-    - echo "$HUB_REGISTRY_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - echo "$HUB_REGISTRY_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin registry.greendelta.com
     - docker push "$TAG"
     - docker push "$TAG_LATEST"
