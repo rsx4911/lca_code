@@ -44,8 +44,11 @@ build:
     - echo "Building Docker image for version $VERSION"
     - TAG="registry.greendelta.com/hub/collaboration-server:$VERSION"
     - TAG_LATEST="registry.greendelta.com/hub/collaboration-server:latest"
+    # TODO remove --build-arg "VERSION=$VERSION" when the olca-modules artifact
+    #   is supposed to be always available in the Maven repository
     - docker build .
-      --file build/Dockerfile
+      --file docker/Dockerfile
+      --build-arg "VERSION=$VERSION"
       --tag "$TAG"
       --tag "$TAG_LATEST"
     - echo "$HUB_REGISTRY_TOKEN" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"

@@ -1,6 +1,7 @@
 # Build the server WAR file
 FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
+ARG VERSION
 
 RUN apt-get update && \
     apt-get install -y nodejs npm zip unzip
@@ -18,6 +19,12 @@ RUN SW_VERSION=$(grep -A 1 '<artifactId>search-wrapper-os</artifactId>' search/p
       | awk -F '[<>]' '{print $3}') && \
     git clone --depth 1 --branch "$SW_VERSION" https://github.com/GreenDelta/search-wrapper.git search-wrapper && \
     mvn install -f search-wrapper/pom.xml
+
+# Install olca-modules at cs-<version>-release tag
+# TODO This is a temporary workaround as the olca-modules artifact is not
+#   always published first on Maven Central (to be deleted when released)
+RUN git clone --depth 1 --branch cs-"$VERSION"-release https://github.com/GreenDelta/olca-modules.git olca-modules && \
+    mvn install -f olca-modules/pom.xml -DskipTests=true
 
 RUN mvn clean compile
 
@@ -57,7 +64,7 @@ RUN rm -rf webapps/*  && \
 
 # Copy the server files
 COPY --from=builder ROOT webapps/ROOT
-COPY ./build/application.properties webapps/ROOT/WEB-INF/classes/application.properties
+COPY ./docker/application.properties webapps/ROOT/WEB-INF/classes/application.properties
 RUN chown -R collab:collab webapps/ROOT && \
     chmod -R 750 webapps/ROOT
 
