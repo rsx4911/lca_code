@@ -82,8 +82,9 @@ public class BrowseController {
 				var eName = Maps.getString(entry, "name");
 				var entryPath = Strings.nullOrEmpty(categoryPath) ? eName : categoryPath + "/" + eName;
 				if (Maps.getBoolean(entry, "isRepositoryInfo")) {
-					entry.put("count", repo.references.find().includeCategories().nonRecursive().commit(commit.id)
-							.path(entryPath).count());
+					entry.put("count",
+							repo.references.find().includeCategories().includeLibraries().nonRecursive()
+									.commit(commit.id).path(entryPath).count());
 				} else if (!Maps.getBoolean(entry, "isLibrary")) {
 					entry.put("count", repo.references.find().commit(commit.id).path(entryPath).count());
 				}
@@ -94,8 +95,8 @@ public class BrowseController {
 	}
 
 	private List<Map<String, Object>> getEntries(Repository repo, Commit commit, String categoryPath) {
-		var entries = repo.references.find().includeCategories().nonRecursive().commit(commit.id).path(categoryPath)
-				.all();
+		var entries = repo.references.find().includeCategories().includeLibraries().nonRecursive().commit(commit.id)
+				.path(categoryPath).all();
 		var mapped = entries.stream().map(e -> MetaData.get(e, repo, libraryService));
 		if (!Strings.nullOrEmpty(categoryPath))
 			return MetaData.sortByName(mapped).toList();
