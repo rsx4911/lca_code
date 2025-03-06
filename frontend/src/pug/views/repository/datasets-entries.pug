@@ -31,9 +31,9 @@ each entry in data
 		- url += '/datasets/' + categoryPath + '/' + entry.name; 
 	else if entry.isLibrary
 		if entry.isPublic
-			- url = '/ws/public/libraries/' + entry.name;
+			- url = 'ws/public/libraries/' + entry.name;
 		else
-			- url = '/ws/libraries/' + entry.name;
+			- url = 'ws/libraries/' + entry.name;
 		- target = '_blank';
 	else
 		- url += '/dataset/' + entry.type + '/' + entry.refId; 
