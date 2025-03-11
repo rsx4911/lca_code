@@ -244,6 +244,12 @@ public class SettingsService {
 		@Override
 		public void set(MailSetting key, Object value) {
 			super.set(key, value);
+			mailSender = null;
+		}
+
+		public String getFrom() {
+			String from = get(MailSetting.DEFAULT_FROM);
+			return from != null ? from : get(MailSetting.USER);
 		}
 
 		public JavaMailSender getMailSender() {
@@ -263,7 +269,7 @@ public class SettingsService {
 			// if (proto.equals("smtps")) {
 			// props.put("mail.smtps.ssl.protocols", "TLSv1.2");
 			// }
-			String from = user != null ? user : get(MailSetting.DEFAULT_FROM);
+			String from = getFrom();
 			if (from != null) {
 				try {
 					props.put("mail." + proto + ".from", new InternetAddress(from).getAddress());
