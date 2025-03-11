@@ -34,7 +34,7 @@ public class EmailService {
 			message.setRecipient(RecipientType.TO, new InternetAddress(mail.recipient));
 			message.setSentDate(Calendar.getInstance().getTime());
 			message.setSubject(mail.subject, StandardCharsets.UTF_8.name());
-			message.setFrom(new InternetAddress(config.get(MailSetting.DEFAULT_FROM)));
+			message.setFrom(new InternetAddress(config.getFrom()));
 			if (mail.isMixedContent()) {
 				message.setContent(createMixedContent(mail));
 			} else {
