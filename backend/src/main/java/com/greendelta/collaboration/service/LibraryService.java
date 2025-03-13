@@ -122,8 +122,13 @@ public class LibraryService {
 			@Override
 			public ModelRefSet getRefs(String library) throws IOException {
 				var refs = new ModelRefSet();
-				try (var zipFile = new ZipFile(getLibraryFile(library))) {
+				var libraryFile = getLibraryFile(library);
+				if (!libraryFile.exists())
+					return refs;
+				try (var zipFile = new ZipFile(libraryFile)) {
 					var meta = zipFile.getEntry("meta.zip");
+					if (meta == null)
+						return refs;
 					try (var stream = new ZipInputStream(zipFile.getInputStream(meta))) {
 						ZipEntry next = null;
 						while ((next = stream.getNextEntry()) != null) {
