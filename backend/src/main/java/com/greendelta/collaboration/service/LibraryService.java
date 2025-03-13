@@ -10,12 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.library.LibraryPackage;
-import org.openlca.git.model.Commit;
+import org.openlca.git.util.GitUtil;
+import org.openlca.git.util.ModelRefSet;
 import org.openlca.jsonld.LibraryLink;
+import org.openlca.jsonld.ModelPath;
 import org.openlca.util.Dirs;
 import org.springframework.stereotype.Service;
 
@@ -111,10 +116,40 @@ public class LibraryService {
 		return libraryPath;
 	}
 
-	public List<LibraryLink> getLinkedLibraries(Repository repo, Commit commit) {
-		return repo.getLibraries(commit).stream()
-				.map(lib -> new LibraryLink(lib, getLibraryUrl(lib)))
-				.collect(Collectors.toList());
+	public LibraryLoader loader() {
+		return new LibraryLoader() {
+
+			@Override
+			public ModelRefSet getRefs(String library) throws IOException {
+				var refs = new ModelRefSet();
+				try (var zipFile = new ZipFile(getLibraryFile(library))) {
+					var meta = zipFile.getEntry("meta.zip");
+					try (var stream = new ZipInputStream(zipFile.getInputStream(meta))) {
+						ZipEntry next = null;
+						while ((next = stream.getNextEntry()) != null) {
+							var name = next.getName();
+							var split = name.split("/");
+							if (split.length != 2 || !split[1].endsWith(GitUtil.DATASET_SUFFIX))
+								continue;
+							var type = ModelPath.typeOf(split[0]);
+							if (type.isEmpty())
+								continue;
+							var refId = split[1].substring(0, split[1].indexOf(GitUtil.DATASET_SUFFIX));
+							refs.add(type.get(), refId);
+						}
+					}
+				}
+				return refs;
+			}
+
+			@Override
+			public LibraryLink getLink(String library) {
+				var serverUrl = settings.serverConfig.getServerUrl();
+				var url = serverUrl + "/ws/" + (isPublic(library) ? "public/libraries/" : "libraries/") + library;
+				return new LibraryLink(library, url);
+			}
+		};
+
 	}
 
 	public String insert(InputStream stream, LibraryAccess access) throws IOException {
@@ -224,6 +259,14 @@ public class LibraryService {
 				LibraryAccess access) {
 			this(info.name(), info.description(), info.isRegionalized(), linkedIn, currentlyLinkedIn, owner, access);
 		}
+
+	}
+
+	public interface LibraryLoader {
+
+		ModelRefSet getRefs(String library) throws IOException;
+
+		LibraryLink getLink(String library);
 
 	}
 
