@@ -1,0 +1,109 @@
+<html>
+	<head>
+		<title>My first Three.js app</title>
+		<style>
+			body{margin: 0; overflow: hidden; background-color: black}
+			#main {width: 100%; height: 100%}
+			#main-old {width: 80%; height: 100%; float:left}
+			#menu {width: 20%; height: 100%; float:left}
+			#loader {width: 100%; height: 2px}
+			#loaderbar {width: 0%; height: 100%; background-color:rgb(50, 200, 50); transition: width 1s ease}
+		</style>
+	</head>
+	<body>
+		<div id="loader" style="display:none">
+			<div id="loaderbar"></div>
+		</div>
+		<div>
+			<div id="main"></div>
+			<!--
+			<div id="menu">
+				<select id="multi-highlighter">
+					<option>----- Please select a property to highlight -----</option>
+				</select>
+				<select id="detail-highlighter">
+					<option>----- Please select a property to highlight -----</option>
+				</select>
+			</div>
+			-->
+		</div>
+		<script src="js/lib/jquery.js"></script>
+		<script src="js/lib/three.min.js"></script>
+		<script src="js/lib/Projector.js"></script>
+		<script src="js/lib/CanvasRenderer.js"></script>
+		<script src="js/lib/SVGRenderer.js"></script>
+		<script src="js/lib/raphael-min.js"></script>
+		<script src="js/lib/dracula_graph.js"></script>
+		<script src="js/lib/dracula_algorithms.js"></script>
+		<script src="js/data.js"></script>
+		<script src="js/actions.js"></script>
+		<script src="js/controls.js"></script>
+		<script src="js/layout2d.js"></script>
+		<script src="js/layout3d.js"></script>
+		<script src="js/menu.js"></script>
+		<script src="js/diagram.js"></script>
+		<script src="js/progress.js"></script>
+		<script> 
+			var stack = [];
+			var main = FullDiagram.get();
+			
+			function render(type, iterations) {
+				
+				main.init($('#main')[0], 2);				
+				main.camera.position.set(0, 0, main.distance * -250);
+				main.camera.lookAt(new THREE.Vector3(0, 0, 0));
+				main.render();
+
+				var layout = type === '3d' ? Layout3d : Layout2d;				
+				main.graph = layout.createGraph();
+				main.layout = layout.createLayout(main, iterations);
+
+				for (var i = 0; i < window.modelIds.length; i++) {
+					var p = window.processes[window.modelIds[i]];
+					if (p.isRef) {
+						stack.push(p.id);
+						main.createNode(p, true);
+						break;
+					}
+				}
+				Progress.start(window.modelIds.length);
+				Menu.init(main, window.processes);
+				main.layout.start();
+				createNext();
+			}
+
+			function createNext() {
+				if (main.layout.isRunning) {
+					setTimeout(createNext, 10);		
+					return;
+				}
+				if (!stack.length) {
+					main.isComplete = true;
+					Progress.done();
+					return;
+				}
+				var next = stack.slice();
+				var current = next.length;
+				stack = [];
+				while (next.length) {
+					var id = next.pop();
+					var process = window.processes[id];
+					for (var j = 0; j < process.incoming.length; j++) {
+						var providerId = process.incoming[j];
+						if (main.nodes[providerId]) {
+							continue;
+						}
+						var provider = window.processes[providerId];
+						provider.parentId = id;
+						main.createNode(provider);
+						main.createConnection(providerId, id);
+						stack.push(providerId);
+					}
+				}
+				Progress.worked(current);
+				setTimeout(createNext, 10);
+			}
+
+		</script>
+	</body>
+</html>

@@ -1,0 +1,17 @@
+include ./mixins.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+content
+			table.table.no-head.margin-0-25-25
+				tbody
+					+field-row('unitOfMeasurement')
+					+field-row('evaluationScheme')
+					+field-row('activityVariable')
+					+ref-row('activityQuantity')
+					if dataset.activityUnit || getValue(compareTo, activityUnit) || reviewMode
+						+field-row('activityUnit.name')
+	+meta
+	.clear

@@ -1,0 +1,27 @@
+include ../../mixins/forms.pug
+
+form#release-info
+	.three-columns
+		+input('label', 'Label*')(value=values.label)
+		+input('version', 'Version*')(value=values.version)
+		+select('typeOfData', 'Type of data', dataTypes, values.typeOfData)
+	+input('tags', 'Tags (comma separated list)')(value=values.tags?values.tags.join(','):'')
+	.two-columns
+		+textarea('description', 'Description')(rows=5)
+			| #{values.description}
+		+textarea('sourceInfo', 'Source information')(rows=5)
+			| #{values.sourceInfo}
+		+textarea('contactInfo', 'Contact information')(rows=5)
+			| #{values.contactInfo}
+		+textarea('changeLog', 'Change log', 'Generate from commit messages')(rows=5)
+			| #{values.changeLog}
+		+textarea('projectInfo', 'Project information')(rows=5)
+			| #{values.projectInfo}
+		+textarea('projectFunding', 'Project funding')(rows=5)
+			| #{values.projectFunding}
+		+textarea('appropriateUse', 'Appropriate use')(rows=5)
+			| #{values.appropriateUse}
+		+textarea('dqAssessment', 'Data quality assessment')(rows=5)
+			| #{values.dqAssessment}
+		+textarea('citation', 'Citation')(rows=5)
+			| #{values.citation}

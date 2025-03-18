@@ -1,0 +1,58 @@
+.admin-overview
+
+	@media(min-width 992px)
+		padding 1%
+	
+	.overview
+		padding 10px
+
+		@media(max-width 991px)
+			padding 0
+
+		.header-box
+			width 100%
+			padding 30px
+			text-align center
+			
+			@media(min-width 992px)
+				border 0
+
+			.count
+				font-size 36px
+				margin 30px 0
+
+		.list-box
+			padding 10px 30px
+			font-size 16px			
+
+			.filter
+				margin-bottom 10px
+			
+		.btn
+			padding-left 5px
+			padding-right 5px
+
+	.ordered-list
+		display flex
+
+		.glyphicon
+			cursor pointer
+
+		li[data-hidden] .list-label
+			font-style italic
+			text-decoration line-through
+			color rgb(125, 125, 125)
+
+		li:first-child > span.glyphicon.glyphicon-upload
+			display none
+
+		li:last-child > span.glyphicon.glyphicon-download
+			display none
+		
+.server-settings-view
+	
+	.content-box
+		padding 25px
+
+	.indented-setting
+		margin-left 21px

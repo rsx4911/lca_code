@@ -1,0 +1,14 @@
+include ./mixins.pug
+
+.header-box
+  span.review-title(title=review.name)=review.name
+  span.glyphicon.glyphicon-info-sign(data-action='open-review')
+  span.glyphicon.glyphicon-filter(data-action='filter-checked')
+  span.glyphicon.glyphicon-resize-full(data-action='toggle-size')
+  span(aria-hidden='true' data-action='close-widget') &times;
+  span.sr-only Close
+.content-box
+  each list in references
+    each reference in list
+      +reference(review, reference, 'review-widget')(class='review-reference')
+    p  

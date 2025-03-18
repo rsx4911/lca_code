@@ -1,0 +1,19 @@
+include ../mixins/user-info.pug
+
+each membership in data
+	.member-row
+		- var memberType = membership.user ? 'User' : 'Team';
+		- var lcType = memberType.toLowerCase();
+		- var id = membership.user ? membership.user.username : membership.team.teamname;
+		- var name = membership.user ? membership.user.name : membership.team.name;
+		- var roleDescription = type === 'group-members' ? membership.role.descriptionForGroup : membership.role.descriptionForRepository;
+		+user-info(id, name, memberType)
+		span.pull-right.role(title=roleDescription)=membership.role.name
+			if canEdit && (membership.role.id !== 'OWNER' || !onlyOneOwner) && (!membership.user || group !== membership.user.username)
+				|  
+				button.btn.btn-xs.btn-danger(title='Remove member' data-action='remove-member' data-id=id data-type=lcType)
+					span.glyphicon.glyphicon-minus
+				|  
+				button.btn.btn-xs.btn-warning(title='Edit role' data-action='set-role' data-id=id data-type=lcType)
+					span.glyphicon.glyphicon-edit
+		.clear

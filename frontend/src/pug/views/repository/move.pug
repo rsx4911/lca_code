@@ -1,0 +1,6 @@
+include ../mixins/forms.pug
+
+form#move-form
+	#move-form-general-message-group.alert(role='alert'): span.message
+	+input('move-name', 'Name')
+	+select('move-group', 'Group', groups)

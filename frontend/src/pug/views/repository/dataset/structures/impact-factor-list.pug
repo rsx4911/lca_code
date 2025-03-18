@@ -1,0 +1,80 @@
+include ../mixins.pug
+
+mixin impact-factor-list(map, otherMap)
+	- var cats1 = [];
+	if map
+		each key in Object.keys(map)
+			- cats1.push(key);
+	if otherMap
+		each key in Object.keys(otherMap)
+			if $.inArray(key, cats1) === -1
+				- cats1.push(key);
+	each cat1 in cats1.sort()
+		- var cats2 = [];
+		if map && map[cat1]
+			each key in Object.keys(map[cat1])
+				- cats2.push(key);
+		if otherMap && otherMap[cat1]
+			each key in Object.keys(otherMap[cat1])
+				if $.inArray(key, cats2) === -1
+					- cats2.push(key);
+		each cat2 in cats2.sort()
+			- var rLabel = cat1 + (cat2 ? ', ' + cat2 : '');
+			- var value = null;
+			if map && map[cat1]
+				- value = map[cat1][cat2];
+			if otherMap && otherMap[cat1]
+				- otherValue = otherMap[cat1][cat2];
+			+impact-factor-sublist(rLabel, value, otherValue)
+
+mixin impact-factor-sublist(title, array, otherArray)
+	- var allValues = getArrayValues(array, otherArray, 'IMPACT_FACTOR');
+	if allValues.length
+		.impact-factor-list-part
+			h4=title
+			table
+				each values, index in allValues
+					+impact-factor(values[0], values[1], index)
+			if allValues.length > 10
+				a.toggle-control(href='#') Show #{allValues.length - 10} more
+				a.toggle-control(href='#' style='display:none') Show less
+
+mixin impact-factor(factor, other, index)
+	- var value = getValue(factor, 'value');
+	- value = value || value === 0
+	- var otherValue = getValue(other, 'value');
+	- otherValue = otherValue || otherValue === 0
+	- var unit = getValue(factor, 'unit');
+	- var otherUnit = getValue(other, 'unit');
+	- var flow = getValue(factor, 'flow');
+	- var otherFlow = getValue(other, 'flow');
+	- var location = getValue(factor, 'location');
+	- var otherLocation = getValue(other, 'location');
+	- var title = value ? value + (otherValue && otherValue != value ? ' / ' + otherValue : '') : (otherValue ? otherValue : '');
+	- var valueChanged = compare(value, otherValue);
+	- var unitChanged = compare(unit, otherUnit) || compare(getValue(unit, 'name'), getValue(otherUnit, 'name'));
+	- var flowChanged = compare(flow, otherFlow) || compare(getValue(flow, 'name'), getValue(otherFlow, 'name'));
+	- var locationChanged = compare(location, otherLocation) || compare(getValue(location, 'name'), getValue(otherLocation, 'name'));
+	- var changed = valueChanged || unitChanged || flowChanged || locationChanged;
+	tr(class=index>=10?'toggleable':null, style=index>=10?'display:none':null)
+		td: span.same-size-font(title=title, data-compare=valueChanged)
+			if factor
+				span.original-value
+					if factor.value > 0
+						| &nbsp;
+					| #{formatScientific(factor.value, true)}
+			if other && (valueChanged || !factor)
+				span.comparison-value
+					if other.value > 0
+						| &nbsp;
+					| #{formatScientific(other.value, true)}
+		td(data-compare=unitChanged)
+			if unit
+				span.original-value=unit.name
+			if otherUnit && (unitChanged || !unit)
+				span.comparison-value=otherUnit.name
+		td
+			span(data-compare=flowChanged): +ref(flow, otherFlow, null, true)
+			if (location || otherLocation)
+				|  in 
+				span(data-compare=locationChanged): +ref(location, otherLocation, null, true)

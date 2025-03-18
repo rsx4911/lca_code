@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css?timestamp=1726593164207"/></head><body class="public-mode">
+<div class="official-website-banner">
+  <div class="official-website-banner__message">
+    <img src="./images/amflag.jpg" alt="">An official website of the United States government.
+    <button class="official-website-banner__trigger content-collapsed"">Here&#39;s how you know.</button>
+  </div>
+  <div class="official-website-banner__content" style="display:none;">
+    <div class="content-region content-region__first">
+      <img src="./images/icon-dot-gov.svg" alt="">
+      <p><strong>The .gov means it&#39;s official.</strong><br>Federal government websites always use a .gov or .mil domain. Before sharing sensitive information online, make sure you&#39;re on a .gov or .mil site by inspecting your browser&#39;s address (or &quot;location&quot;) bar.</p>
+    </div>
+    <div class="content-region content-region__second">
+      <img src="./images/icon-https.svg" alt="">
+      <p>This site is also protected by an SSL (Secure Sockets Layer) certificate that&#39;s been signed by the U.S. government. The https:// means all transmitted data is encrypted  &mdash; in other words, any information or browsing history that you provide is transmitted securely.</p>
+    </div>
+  </div>
+</div>
+<div class="navbar-default ">
+  <div id="lca_logotitle">
+    <img alt="" style="width:80px" src="images/lca_logo.png">
+    <span>Life Cycle Assessment Commons</span>
+  </div>
+  <div id="user-menu"></div>
+  <div id="header-title-container">
+    <div id="header-title"></div>
+  </div>
+</div>
+
+<nav></nav>
+<div id="main" role="heading" aria-level="1">
+	<div class="full-size">
+		<div class="center"></div>
+	</div>
+</div>
+<footer class="footer">
+  <div class="footer__secondary-section">
+    <div class="container">
+      <ul>
+        <li><a href="https://www.nal.usda.gov/main/web-policies-and-important-links" target="_blank">Policies and Links</a></li>
+        <li><a href="https://www.usda.gov/plain-writing" target="_blank">Plain Writing</a></li>
+        <li><a href="https://www.dm.usda.gov/foia/" target="_blank">FOIA</a></li>
+        <li><a href="https://www.nal.usda.gov/main/accessibility" target="_blank">Accessibility Statement</a></li>
+        <li><a href="https://www.usda.gov/privacy-policy" target="_blank">Privacy Policy</a></li>
+        <li><a href="https://www.usda.gov/non-discrimination-statement" target="_blank">Non-Discrimination
+                Statement</a></li>
+                <li><a href="https://www.usda.gov/oascr/civil-rights-statements" target="_blank">Civil Rights Policy</a></li>
+        <li><a href="https://www.ars.usda.gov/docs/quality-of-information/" target="_blank">Information Quality</a>
+        </li>
+        <li><a href="https://www.ars.usda.gov" target="_blank">Agricultural Research Service</a></li>
+        <li><a href="https://www.usda.gov" target="_blank">USDA.gov</a></li>
+        <li><a href="https://www.usa.gov" target="_blank">USA.gov</a></li>
+        <li><a href="https://www.whitehouse.gov" target="_blank">WhiteHouse.gov</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+<div id="build-info" data-admin-only="true">
+  <span id="release-version"></span>, 
+  <span id="commit-version"></span>, 
+  <span id="build-date"></span>
+</div>
+</div>
+<script src="js/main.js?timestamp=1726593164207"></script></body></html>
+<script>
+(function ($) {
+  let trigger = $('.official-website-banner__trigger');
+
+  trigger.addClass('content-collapsed');
+
+  trigger.click(function() {
+    $('.official-website-banner__content').slideToggle(250);
+    if (trigger.hasClass('content-collapsed')) {
+      trigger.removeClass('content-collapsed').addClass('content-expanded');
+    }
+    else if (trigger.hasClass('content-expanded')) {
+      trigger.removeClass('content-expanded').addClass('content-collapsed');
+    }
+  });
+})(jQuery);
+</script>

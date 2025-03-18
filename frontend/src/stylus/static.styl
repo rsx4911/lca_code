@@ -1,0 +1,128 @@
+body.login, body.imprint, body.maintenance, body.job
+	background white
+
+	header
+		border-bottom 1px solid rgb(221, 221, 221)
+	
+		.logo-container
+			background-color initial
+			float none
+			margin 0 auto
+
+			img
+				text-align-center		
+
+#main-login, #main-job
+	width 400px
+	margin 0 auto
+	padding-top 20px
+
+	@media(max-width 480px)
+		width 100%
+		margin 0
+		padding-top 0
+
+#login-description, #maintenance-description
+	text-align center
+	margin-bottom 20px
+
+#login-container, #maintenance-container
+	padding 25px
+	background-color rgb(253, 253, 253)
+	border 1px solid rgb(221, 221, 221)
+
+	h3
+		margin-top 0
+		margin-bottom 20px
+
+.sign-up-link-container
+	text-align right
+
+#footer
+	border-top 1px solid rgb(221, 221, 221)
+	position fixed
+	width 100%
+	bottom 0
+	background white
+	height 40px
+	padding 10px
+	text-align center
+	font-weight bold
+	
+.imprint-table
+	
+	td:first-child
+		padding-right 10px
+		
+	td:last-child
+		padding-left 10px
+		border-left 1px solid rgb(221, 221, 221)
+
+#maintenance-notification
+	display none
+
+body.maintenance-mode
+
+	nav .profile-link
+		bottom 30px
+
+	#main
+		margin-bottom 50px
+
+	#maintenance-notification
+		display block
+		position fixed
+		bottom 0
+		left 0
+		width 100%
+		height 30px
+		padding 5px
+		text-align center
+		background-color rgb(217, 83, 79)
+		color rgb(255, 255, 255)
+
+#announcements, #dismiss-announcement
+	display none
+
+body.has-announcements
+
+	header
+		top 50px
+
+	nav
+		margin-top 115px
+
+	#main
+		padding-top 115px
+
+	#announcements
+		display block
+		position fixed
+		width 100%
+		text-align center
+		background-color rgb(240, 173, 78)
+		color white
+		height 50px
+		line-height 16px
+		font-size 14px
+		overflow hidden
+		padding 1px calc((100% - 1430px) / 2) 1px calc(240px + (100% - 1430px) / 2)
+
+		@media(max-width 1630px)
+			padding 1px 100px 1px calc(230px + 100 * ((100% - 991px) / 640))
+
+		@media(max-width 991px)
+			padding 1px 100px 1px 10px
+
+		table
+			width 100%
+			height 100%
+
+		table > tbody > tr > td
+			vertical-align middle
+
+	#dismiss-announcement
+		display block
+		position fixed
+		top 10px
+		right 10px
