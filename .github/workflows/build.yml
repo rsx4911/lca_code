@@ -3,7 +3,7 @@ name: Building LCA Collaboration Server
 on:
   push:
     branches:
-      - feature/git-actions
+      - main
   pull_request:
     branches:
       - main
