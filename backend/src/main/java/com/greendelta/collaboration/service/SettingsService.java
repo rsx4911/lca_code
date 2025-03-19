@@ -249,7 +249,7 @@ public class SettingsService {
 
 		public String getFrom() {
 			String from = get(MailSetting.DEFAULT_FROM);
-			return from != null ? from : get(MailSetting.USER);
+			return !Strings.nullOrEmpty(from) ? from : get(MailSetting.USER);
 		}
 
 		public JavaMailSender getMailSender() {

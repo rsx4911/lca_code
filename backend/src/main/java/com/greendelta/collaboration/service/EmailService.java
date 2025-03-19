@@ -28,6 +28,8 @@ public class EmailService {
 
 	public void send(EmailJob mail) {
 		var config = settings.mailConfig;
+		if (!config.isValid())
+			return;
 		var sender = config.getMailSender();
 		try {
 			var message = sender.createMimeMessage();
