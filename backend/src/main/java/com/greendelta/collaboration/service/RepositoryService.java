@@ -22,7 +22,6 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.actions.GitInit;
 import org.openlca.git.model.Commit;
-import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
@@ -38,6 +37,7 @@ import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.LibraryService.LibraryLoader;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
@@ -287,8 +287,8 @@ public class RepositoryService {
 		}
 	}
 
-	public void generateCachedJson(Repository repo, String commitId, List<LibraryLink> linkedLibraries) {
-		generateJson(repo.dir, repo.getCachedJsonFile(commitId), commitId, linkedLibraries);
+	public void generateCachedJson(Repository repo, Commit commit, LibraryLoader libraryLoader) {
+		generateJson(repo.dir, repo.getCachedJsonFile(commit.id), commit, libraryLoader);
 	}
 
 	public void deleteCachedJson(Repository repo, String commitId) {
@@ -296,17 +296,17 @@ public class RepositoryService {
 		Dirs.delete(jsonFile);
 	}
 
-	private void generateJson(File repoDir, File jsonFile, String commitId, List<LibraryLink> linkedLibraries) {
+	private void generateJson(File repoDir, File jsonFile, Commit commit, LibraryLoader libraryLoader) {
 		// Don't use git repo in thread, since it might be closed by calling
 		// code
-		var lockFile = new File(repoDir, ".lock_" + commitId);
+		var lockFile = new File(repoDir, ".lock_" + commit.id);
 		if (lockFile.exists())
 			return;
 		new Thread(() -> {
 			try {
 				Files.write(new byte[0], lockFile);
 				var tmpFile = fileService.createTempFile();
-				RepositoryJsonWriter.write(repoDir, commitId, tmpFile, linkedLibraries);
+				RepositoryJsonWriter.write(repoDir, commit, tmpFile, libraryLoader);
 				Files.copy(tmpFile, jsonFile);
 				tmpFile.delete();
 			} catch (IOException e) {
