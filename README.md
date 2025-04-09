@@ -5,7 +5,7 @@
 <p>search/ &ndash; Search indexing and querying service (OpenSearch).</p>
 <p>ssr/ &ndash; Server-side rendering support.</p>
 <p>custom/ &ndash; Shared business logic and utilities.</p>
-<p>docker/ &ndash; Container and deployment config.</p>
+<p>docker/ &ndash; Container and deployment nyarconfig.</p>
 <p>src/ &ndash; Legacy or support code.</p>
 <p><strong>Key Technologies</strong><br />Frontend: Node.js, Pug (template engine), Bootstrap, Tailwind CSS, SWR</p>
 <p>Backend: Spring Boot, Kotlin, JPA/Hibernate</p>
@@ -23,8 +23,7 @@
 <p><strong>3. Rendering</strong><br />Public pages are server-side rendered via ssr/</p>
 <p>Authenticated areas are rendered client-side</p>
 <p>Shared state handled by React Context and SWR</p>
-<p><strong>4. Development Flow</strong><br />Backend: mvn spring-boot:run</p>
-<p>Frontend: yarn dev</p>
+<p><strong>4. Development Flow
 <p>Services run independently and communicate via REST</p>
 <p><strong>Environment Setup</strong><br />Clone Repo:</p>
 <p>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git<br />Clone and Build External Modules:</p>
