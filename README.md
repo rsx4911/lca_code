@@ -6,10 +6,11 @@ https://github.com/greendelta
 
 We currnetly use LCA Stage to build our code. Please use the code tab above for more detail about the code mix.
 
-Please pull the following code libraries:
-
-https://github.com/GreenDelta/olca-modules
-https://github.com/GreenDelta/search-wrapper
+<ul>
+<li>Please pull the following code libraries:</li>
+<li>https://github.com/GreenDelta/olca-modules</li>
+<li>https://github.com/GreenDelta/search-wrapper</li>
+</ul>
 
 Currently these are the only dependencies needed to build the Commons. The code tab above will provide the main repository. This will reflect code pushed from GreenDelta.
 
