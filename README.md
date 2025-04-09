@@ -1,121 +1,66 @@
-Internal Developer Documentation
-Overview
-This document provides a high-level guide to our web platform’s application structure, stack, key workflows, and tooling to support onboarding and internal development.
+Please note this is a manual build and deploy process. We hope to retire this process shortly.
 
-Application Structure
-├── backend
-│   ├── src
-│   └── target
-├── custom
-├── docker
-├── frontend
-│   ├── custom
-│   ├── external-libs
-│   ├── node_modules
-│   └── src
-├── node_modules
-├── search
-│   ├── src
-│   └── target
-├── src
-│   └── main
-└── ssr
-backend/ – Main service backend (Spring Boot).
+lca-short.txt
 
-frontend/ – Node.js app for user-facing frontend using Pug and Bootstrap.
+The source code is built from GreenDelta, a company in Germany. Their repository link is listed below. They are the creators and owners of the LCA application.
 
-search/ – Search indexing and querying service (OpenSearch).
+https://github.com/greendelta
 
-ssr/ – Server-side rendering support.
+We currnetly use LCA Stage to build our code. Please use the code tab above for more detail about the code mix.
 
-custom/ – Shared business logic and utilities.
+Please pull the following code libraries:
 
-docker/ – Container and deployment config.
+https://github.com/GreenDelta/olca-modules
+https://github.com/GreenDelta/search-wrapper
 
-src/ – Legacy or support code.
+Currently these are the only dependencies needed to build the Commons. The code tab above will provide the main repository. This will reflect code pushed from GreenDelta.
 
-Key Technologies
-Frontend: Node.js, Pug (template engine), Bootstrap, Tailwind CSS, SWR
+The pull the primary code repository: https://github.com/USDA-REE-ARS/nal-lca-repo-application
 
-Backend: Spring Boot, Kotlin, JPA/Hibernate
+Here is what I have under my local directory. Please note the reposirtoires I stated above in the below image.
 
-Search: OpenSearch (Java client)
+AS WITH ALL NEW CODE PLEASE PULL THE DEPENDECNY UPDATES BEFORE TRYING TO BUILD THE NEW CODE.
 
-Database: MySQL
+Image
 
-Auth: OAuth2 + JWT
+Build
 
-Build Tools: Maven (backend & external modules), Yarn (frontend)
+We are currently using Apache Maven (https://maven.apache.org/) to build and deploy the Commons.
 
-Infrastructure: NGINX, GitHub Actions, AWS
+If building a depedency creates an issue then please include the skipTests flag. These are repsitory tests that were set by GreenDelta at some point.
 
-Key Workflows
-1. Authentication
-Users authenticate via OAuth2 (Google, Microsoft)
+When building olca-modules, use -DskipTests
 
-JWT tokens are issued and validated in the backend
+mvn clean install -DskipTests
 
-Frontend stores access tokens in HttpOnly cookies
+After the dependencies have been built. You can run the primary repository.
 
-2. Search
-Search data is ingested by the search module
+There are 2 profiles, Stage and Production. The respective commands are below.
 
-Uses OpenSearch for full-text and fuzzy queries
+mvn clean package -P appserver-stage
+mvn clean package -P appserver-prod
 
-Backend communicates with OpenSearch using the Java High-Level REST Client
+The outcome should be a complied WAR file. This will be found in nal-lca-repo-application/backend/target.
+Please rename the file to lca-collaboration.war. This file will be ready to deploy to the web server directory, i.e. /opt/tomcat/webapps.
 
-3. Rendering
-Public pages are server-side rendered via ssr/
+Please stop tomcat, using systemctl. Systemctl is a containerzied service that runs on Linux. Please do your own research as the guts of Systemctl are little beyond this post.
 
-Authenticated areas are rendered client-side
+Stop the web server.
+systemctl stop tomcat
 
-Shared state handled by React Context and SWR
+Manual move the WAR file.
+/opt/tomcat/webapps
 
-4. Development Flow
-Backend: mvn spring-boot:run
+Then restart the web server.
+systemctl restart tomcat
 
-Frontend: yarn dev
+The code updates should be deployed now. You can check the udpated feature to verify.
 
-Services run independently and communicate via REST
+So, to summarize:
 
-Environment Setup
-Clone Repo:
-
-git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git
-Clone and Build External Modules:
-
-git clone https://github.com/GreenDelta/olca-modules.git
-cd olca-modules && mvn clean install -DskipTests
-
-git clone https://github.com/GreenDelta/search-wrapper.git
-cd search-wrapper && mvn clean install -DskipTests
-Install Dependencies:
-
-cd backend && mvn clean install
-cd ../frontend && yarn install
-cd ../search && mvn clean install
-Run Backend:
-
-cd backend
-mvn spring-boot:run
-Run Frontend:
-
-cd frontend
-yarn dev
-Run Search Service (if needed):
-
-cd search
-mvn spring-boot:run
-Frontend Build (Optional)
-To build frontend separately (usually handled as part of Maven build):
-
-npm install
-gulp
-# Or with context:
-node_modules/gulp/bin/gulp.js --contextPath=/lca-collaboration/ --appserver=prod --customDir=custom
-Tips
-Use VSCode + IntelliJ for full IDE support across frontend/backend
-
-Ensure Java 17 and Node.js 18+ are installed
-
-Shared environment variables live in .env
+git pull olca-modules/search-wrapper
+mvn clean install -DskipTests olca modules/search-wrapper (you need to be in the project directory with the POM.xml file)
+Then run the respective environment profile
+mvn clean package -P appserver-(stage or prod)
+Deploy the WAR (web archive) to the tomcat web server root
+Manage the restart process with tomcat appropriately.
