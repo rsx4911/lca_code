@@ -12,6 +12,7 @@ We currnetly use LCA Stage to build our code. Please use the code tab above for 
 <li>https://github.com/GreenDelta/search-wrapper</li>
 </ul>
 
+
 Currently these are the only dependencies needed to build the Commons. The code tab above will provide the main repository. This will reflect code pushed from GreenDelta.
 
 The pull the primary code repository: https://github.com/USDA-REE-ARS/nal-lca-repo-application
