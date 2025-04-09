@@ -24,7 +24,7 @@
 <p>Authenticated areas are rendered client-side</p>
 <p><strong>Environment Setup</strong><br />
 <p>Clone Repo:</p>
-<p>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git</p><br />
+<p>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git</p>
 <p>Clone and Build External Modules:</p>
 <p>git clone https://github.com/GreenDelta/olca-modules.git<br />cd olca-modules &amp;&amp; mvn clean install -DskipTests</p>
 <p>git clone https://github.com/GreenDelta/search-wrapper.git<br />cd search-wrapper &amp;&amp; mvn clean install -DskipTests</p>
