@@ -1,6 +1,4 @@
-Please note this is a manual build and deploy process. We hope to retire this process shortly.
-
-lca-short.txt
+<b>Please note this is a manual build and deploy process. We hope to retire this process shortly.</b>
 
 The source code is built from GreenDelta, a company in Germany. Their repository link is listed below. They are the creators and owners of the LCA application.
 
