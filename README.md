@@ -12,7 +12,7 @@
 <p>Search: OpenSearch (Java client)</p>
 <p>Database: MySQL</p>
 <p>Auth: OAuth2 + JWT</p>
-<p>Build Tools: Maven (backend &amp; external modules), Yarn (frontend)</p>
+<p>Build Tools: Maven (backend &amp; external modules)</p>
 <p>Infrastructure: NGINX, GitHub Actions, AWS</p>
 <p>Key Workflows<br /><strong>1. Authentication</strong><br />Users authenticate via OAuth2 (Google, Microsoft)</p>
 <p>JWT tokens are issued and validated in the backend</p>
