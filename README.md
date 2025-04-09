@@ -29,11 +29,8 @@
 <p>Environment Setup<br />Clone Repo:</p>
 <p>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git<br />Clone and Build External Modules:</p>
 <p>git clone https://github.com/GreenDelta/olca-modules.git<br />cd olca-modules &amp;&amp; mvn clean install -DskipTests</p>
-<p>git clone https://github.com/GreenDelta/search-wrapper.git<br />cd search-wrapper &amp;&amp; mvn clean install -DskipTests<br />Install Dependencies:</p>
-<p>cd backend &amp;&amp; mvn clean install<br />cd ../frontend &amp;&amp; yarn install<br />cd ../search &amp;&amp; mvn clean install<br />Run Backend:</p>
-<p>cd backend<br />mvn spring-boot:run<br />Run Frontend:</p>
-<p>cd frontend<br />yarn dev<br />Run Search Service (if needed):</p>
-<p>cd search<br />mvn spring-boot:run<br />Frontend Build (Optional)<br />To build frontend separately (usually handled as part of Maven build):</p>
+<p>git clone https://github.com/GreenDelta/search-wrapper.git<br />cd search-wrapper &amp;&amp; mvn clean install -DskipTests</p>
+<p><br />Frontend Build (Optional)<br />To build frontend separately (usually handled as part of Maven build):</p>
 <p>npm install<br />gulp<br /># Or with context:<br />node_modules/gulp/bin/gulp.js --contextPath=/lca-collaboration/ --appserver=prod --customDir=custom<br />Tips<br />Use VSCode + IntelliJ for full IDE support across frontend/backend</p>
 <p>Ensure Java 17 and Node.js 18+ are installed</p>
 <p>Shared environment variables live in .env</p>
