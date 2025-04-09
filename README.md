@@ -27,6 +27,6 @@
 <p>git clone https://github.com/GreenDelta/olca-modules.git<br />cd olca-modules &amp;&amp; mvn clean install -DskipTests</p>
 <p>git clone https://github.com/GreenDelta/search-wrapper.git<br />cd search-wrapper &amp;&amp; mvn clean install -DskipTests</p>
 <p><br /><strong>Frontend Build (Optional)</strong><br />To build frontend separately (usually handled as part of Maven build):</p>
-<p>npm install<br />gulp<br /># Or with context:<br />node_modules/gulp/bin/gulp.js --contextPath=/lca-collaboration/ --appserver=prod --customDir=custom<br />Tips<br />Use VSCode + IntelliJ for full IDE support across frontend/backend</p>
+<p>npm install<br />gulp<br /># Or with context:<br />node_modules/gulp/bin/gulp.js --contextPath=/<b>lca-collaboration</b>/ --appserver=prod --customDir=custom<br />Tips<br />Use VSCode + IntelliJ for full IDE support across frontend/backend</p>
 <p>Ensure Java 21+ and Node.js LATEST are installed</p>
 <p>Shared environment variables live in .env</p>
