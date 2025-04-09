@@ -22,9 +22,6 @@
 <p>Backend communicates with OpenSearch using the Java High-Level REST Client</p>
 <p><strong>3. Rendering</strong><br />Public pages are server-side rendered via ssr/</p>
 <p>Authenticated areas are rendered client-side</p>
-<p>Shared state handled by React Context and SWR</p>
-<p><strong>4. Development Flow
-<p>Services run independently and communicate via REST</p>
 <p><strong>Environment Setup</strong><br />Clone Repo:</p>
 <p>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git<br />Clone and Build External Modules:</p>
 <p>git clone https://github.com/GreenDelta/olca-modules.git<br />cd olca-modules &amp;&amp; mvn clean install -DskipTests</p>
