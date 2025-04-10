@@ -1,5 +1,4 @@
 name: Building LCA Collaboration Server
-
 on:
   push:
     branches:
