@@ -1,34 +1,141 @@
-<p><strong>Internal Developer Documentation</strong><br />Overview<br />This document provides a high-level guide to our web platform&rsquo;s application structure, stack, key workflows, and tooling to support onboarding and internal development.</p>
-<p><strong>Application Structure</strong><br />├── backend<br />│ ├── src<br />│ └── target<br />├── custom<br />├── docker<br />├── frontend<br />│ ├── custom<br />│ ├── external-libs<br />│ ├── node_modules<br />│ └── src<br />├── node_modules<br />├── search<br />│ ├── src<br />│ └── target<br />├── src<br />│ └── main<br />└── ssr</p>
-<p>backend/ &ndash; Main service backend (Spring Boot).</p>
-<p>frontend/ &ndash; Node.js app for user-facing frontend using Pug and Bootstrap.</p>
-<p>search/ &ndash; Search indexing and querying service (OpenSearch).</p>
-<p>ssr/ &ndash; Server-side rendering support.</p>
-<p>custom/ &ndash; Shared business logic and utilities.</p>
-<p>docker/ &ndash; Container and deployment nyarconfig.</p>
-<p>src/ &ndash; Legacy or support code.</p>
-<p><strong>Key Technologies</strong><br />Frontend: Node.js, Pug (template engine), Bootstrap, Tailwind CSS, SWR</p>
-<p>Backend: Spring Boot, Kotlin, JPA/Hibernate</p>
-<p>Search: OpenSearch (Java client)</p>
-<p>Database: MySQL</p>
-<p>Auth: OAuth2 + JWT</p>
-<p>Build Tools: Maven (backend &amp; external modules)</p>
-<p>Infrastructure: NGINX, GitHub Actions, AWS</p>
-<p>Key Workflows<br /><strong>1. Authentication</strong><br />Users authenticate via OAuth2 (Google, Microsoft)</p>
-<p>JWT tokens are issued and validated in the backend</p>
-<p>Frontend stores access tokens in HttpOnly cookies</p>
-<p><strong>2. Search</strong><br />Search data is ingested by the search module</p>
-<p>Uses OpenSearch for full-text and fuzzy queries</p>
-<p>Backend communicates with OpenSearch using the Java High-Level REST Client</p>
-<p><strong>3. Rendering</strong><br />Public pages are server-side rendered via ssr/</p>
-<p>Authenticated areas are rendered client-side</p>
-<p><strong>Environment Setup</strong><br />
-<p>Clone Repo:</p>
-<p>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git</p>
-<p>Clone and Build External Modules:</p>
-<p>git clone https://github.com/GreenDelta/olca-modules.git<br />cd olca-modules &amp;&amp; mvn clean install -DskipTests</p>
-<p>git clone https://github.com/GreenDelta/search-wrapper.git<br />cd search-wrapper &amp;&amp; mvn clean install -DskipTests</p>
-<p><br /><strong>Frontend Build (Optional)</strong><br />To build frontend separately (usually handled as part of Maven build):</p>
-<p>npm install<br />gulp<br /># Or with context:<br />node_modules/gulp/bin/gulp.js --contextPath=/<b>lca-collaboration</b>/ --appserver=prod --customDir=custom<br />Tips<br />Use VSCode + IntelliJ for full IDE support across frontend/backend</p>
-<p>Ensure Java 21+ and Node.js LATEST are installed</p>
-<p>Shared environment variables live in .env</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internal Developer Documentation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      color: #005a9c;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f0f0f0;
+    }
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      font-family: monospace;
+    }
+    a {
+      color: #005a9c;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Internal Developer Documentation</h1>
+
+  <h2>Overview</h2>
+  <p>This document provides a high-level guide to our web platform’s application structure, stack, key workflows, and tooling to support onboarding and internal development.</p>
+
+  <h2>Application Structure</h2>
+  <pre><code>├── backend
+│   ├── src
+│   └── target
+├── custom
+├── docker
+├── frontend
+│   ├── custom
+│   ├── external-libs
+│   ├── node_modules
+│   └── src
+├── node_modules
+├── search
+│   ├── src
+│   └── target
+├── src
+│   └── main
+└── ssr</code></pre>
+
+  <ul>
+    <li><strong>backend/</strong> – Main service backend (Spring Boot).</li>
+    <li><strong>frontend/</strong> – Node.js app for user-facing frontend using Pug and Bootstrap.</li>
+    <li><strong>search/</strong> – Search indexing and querying service (OpenSearch).</li>
+    <li><strong>ssr/</strong> – Server-side rendering support.</li>
+    <li><strong>custom/</strong> – Shared business logic and utilities.</li>
+    <li><strong>docker/</strong> – Container and deployment config.</li>
+    <li><strong>src/</strong> – Legacy or support code.</li>
+  </ul>
+
+  <h2>Key Technologies</h2>
+  <table>
+    <tr><th>Layer</th><th>Stack</th></tr>
+    <tr><td>Frontend</td><td>Node.js, Pug (template engine), Bootstrap, Tailwind CSS, SWR</td></tr>
+    <tr><td>Backend</td><td>Spring Boot (Kotlin), JPA/Hibernate</td></tr>
+    <tr><td>Search</td><td>OpenSearch (Java client)</td></tr>
+    <tr><td>Database</td><td>MySQL</td></tr>
+    <tr><td>Auth</td><td>OAuth2 + JWT</td></tr>
+    <tr><td>Build</td><td>Maven (backend & modules), Yarn (frontend)</td></tr>
+    <tr><td>Infra</td><td>NGINX, GitHub Actions, AWS</td></tr>
+  </table>
+
+  <h2>Key Workflows</h2>
+
+  <h3>1. Authentication</h3>
+  <ul>
+    <li>Users authenticate via OAuth2 (Google, Microsoft)</li>
+    <li>JWT tokens are issued and validated in the backend</li>
+    <li>Frontend stores access tokens in HttpOnly cookies</li>
+  </ul>
+
+  <h3>2. Search</h3>
+  <ul>
+    <li>Search data is ingested by the <code>search</code> module</li>
+    <li>Uses OpenSearch for full-text and fuzzy queries</li>
+    <li>Backend communicates with OpenSearch using the Java High-Level REST Client</li>
+  </ul>
+
+  <h3>3. Rendering</h3>
+  <ul>
+    <li>Public pages are server-side rendered via <code>ssr/</code></li>
+    <li>Authenticated areas are rendered client-side</li>
+    <li>Shared state handled by React Context and SWR</li>
+  </ul>
+
+  <h3>4. Development Flow</h3>
+  <ul>
+    <li>Backend: <code>mvn spring-boot:run</code></li>
+    <li>Frontend: <code>yarn dev</code></li>
+    <li>Services run independently and communicate via REST</li>
+  </ul>
+
+  <h2>Environment Setup</h2>
+
+  <h3>1. Clone Repo</h3>
+  <pre><code>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git</code></pre>
+
+  <h3>2. Clone and Build External Modules</h3>
+  <pre><code>git clone https://github.com/GreenDelta/olca-modules.git
+cd olca-modules && mvn clean install -DskipTests
+
+git clone https://github.com/GreenDelta/search-wrapper.git
+cd search-wrapper && mvn clean install -DskipTests</code></pre>
+
+  <h3>3. Install Dependencies</h3>
+  <pre><code>cd backend && mvn clean install
+cd ../frontend && yarn install
+cd ../search && mvn clean install</code></pre>
