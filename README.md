@@ -1,50 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Internal Developer Documentation</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      padding: 20px;
-      max-width: 960px;
-      margin: auto;
-      background: #f9f9f9;
-      color: #333;
-    }
-    h1, h2 {
-      color: #005a9c;
-    }
-    pre {
-      background: #eee;
-      padding: 10px;
-      overflow-x: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-    th {
-      background: #f0f0f0;
-    }
-    code {
-      background: #eee;
-      padding: 2px 4px;
-      font-family: monospace;
-    }
-    a {
-      color: #005a9c;
-    }
-  </style>
-</head>
+
 <body>
 
   <h1>Internal Developer Documentation</h1>
