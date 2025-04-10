@@ -147,3 +147,37 @@ mvn spring-boot:run</code></pre>
   <h3>5. Run Frontend</h3>
   <pre><code>cd frontend
 yarn dev</code></pre>
+
+  <h3>6. Run Search Service (if needed)</h3>
+  <pre><code>cd search
+mvn spring-boot:run</code></pre>
+
+  <h2>Frontend Build (Optional)</h2>
+  <p>To build frontend separately (usually handled as part of Maven build):</p>
+  <pre><code>npm install
+gulp
+# Or with context:
+node_modules/gulp/bin/gulp.js --contextPath=/lca-collaboration/ --appserver=prod --customDir=custom</code></pre>
+
+  <h2>Tips</h2>
+  <ul>
+    <li>Use VSCode + IntelliJ for full IDE support across frontend/backend</li>
+    <li>Ensure Java 17 and Node.js 18+ are installed</li>
+    <li>Shared environment variables live in <code>.env</code></li>
+  </ul>
+
+  <h2>Contribution Guidelines</h2>
+  <ul>
+    <li>PRs must be reviewed by at least one team member</li>
+    <li>Use conventional commits</li>
+    <li>Run tests and linters before pushing</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <ul>
+    <li>Slack: <code>#dev-internal</code></li>
+    <li>Docs: <a href="https://your-docs-url">Confluence Page</a></li>
+  </ul>
+
+</body>
+</html>
