@@ -1,116 +1,149 @@
-# LCA Collaboration Server
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Internal Developer Documentation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1, h2 {
+      color: #005a9c;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #f0f0f0;
+    }
+    code {
+      background: #eee;
+      padding: 2px 4px;
+      font-family: monospace;
+    }
+    a {
+      color: #005a9c;
+    }
+  </style>
+</head>
+<body>
 
-This repository contains the source code of the LCA Collaboration Server application. It is a servlet web application build with Spring Boot. This project depends on some of the [olca-modules](https://github.com/GreenDelta/olca-modules) project which is a plain [Maven](http://maven.apache.org/) project that contains the core functionalities (e.g. the model, database access, calculations, and data exchange) of openLCA. 
+  <h1>Internal Developer Documentation</h1>
 
-## Building from source
-To compile it from source you need to have the following tools installed:
+  <h2>Overview</h2>
+  <p>This document provides a high-level guide to our web platform’s application structure, stack, key workflows, and tooling to support onboarding and internal development.</p>
 
-* [Git](https://git-scm.com/) (optional)
-* a [Java Development Kit 17](https://openjdk.org/)
-* [Maven](http://maven.apache.org/)
-* [Node.js](https://nodejs.org/) and [Gulp](http://gulpjs.com/) (for building the HTML5 user interface components)
+  <h2>Application Structure</h2>
+  <pre><code>├── backend
+│   ├── src
+│   └── target
+├── custom
+├── docker
+├── frontend
+│   ├── custom
+│   ├── external-libs
+│   ├── node_modules
+│   └── src
+├── node_modules
+├── search
+│   ├── src
+│   └── target
+├── src
+│   └── main
+└── ssr</code></pre>
 
-When you have these tools installed you can build the application from source via the following steps:
+  <ul>
+    <li><strong>backend/</strong> – Main service backend (Spring Boot).</li>
+    <li><strong>frontend/</strong> – Node.js app for user-facing frontend using Pug and Bootstrap.</li>
+    <li><strong>search/</strong> – Search indexing and querying service (OpenSearch).</li>
+    <li><strong>ssr/</strong> – Server-side rendering support.</li>
+    <li><strong>custom/</strong> – Shared business logic and utilities.</li>
+    <li><strong>docker/</strong> – Container and deployment config.</li>
+    <li><strong>src/</strong> – Legacy or support code.</li>
+  </ul>
 
-#### Install the openLCA core modules and search-wrapper modules
-In addition the following modules are required and not distributed via maven central repository, therefore you need to download and build them manually:
-These modules are plain Maven projects and can be installed via `mvn install`. See the respective repositories for a more information.
-* [olca-modules](https://github.com/GreenDelta/olca-modules.git)
-* [search-wrapper](https://github.com/GreenDelta/search-wrapper.git)
-* [search-wrapper-os](https://github.com/GreenDelta/search-wrapper-os.git)
-* [search-wrapper-os-rest](https://github.com/GreenDelta/search-wrapper-os-rest.git)
+  <h2>Key Technologies</h2>
+  <table>
+    <tr><th>Layer</th><th>Stack</th></tr>
+    <tr><td>Frontend</td><td>Node.js, Pug (template engine), Bootstrap, Tailwind CSS, SWR</td></tr>
+    <tr><td>Backend</td><td>Spring Boot (Kotlin), JPA/Hibernate</td></tr>
+    <tr><td>Search</td><td>OpenSearch (Java client)</td></tr>
+    <tr><td>Database</td><td>MySQL</td></tr>
+    <tr><td>Auth</td><td>OAuth2 + JWT</td></tr>
+    <tr><td>Build</td><td>Maven (backend & modules), Yarn (frontend)</td></tr>
+    <tr><td>Infra</td><td>NGINX, GitHub Actions, AWS</td></tr>
+  </table>
 
-#### Get the source code of the application
-We recommend that to use Git to manage the source code but you can also download the source code as a zip file. Create a development directory (the path should not contain whitespaces):
+  <h2>Key Workflows</h2>
 
-```bash
-git clone https://git.greendelta.com/collaboration/collaboration-server
-```
+  <h3>1. Authentication</h3>
+  <ul>
+    <li>Users authenticate via OAuth2 (Google, Microsoft)</li>
+    <li>JWT tokens are issued and validated in the backend</li>
+    <li>Frontend stores access tokens in HttpOnly cookies</li>
+  </ul>
 
-#### Building the HTML pages
-To build the HTML pages of the user interface, install the Node.js modules via [npm](https://www.npmjs.com/) (npm is a package manager that comes with your Node.js installation):
+  <h3>2. Search</h3>
+  <ul>
+    <li>Search data is ingested by the <code>search</code> module</li>
+    <li>Uses OpenSearch for full-text and fuzzy queries</li>
+    <li>Backend communicates with OpenSearch using the Java High-Level REST Client</li>
+  </ul>
 
-```
-npm install
-```
+  <h3>3. Rendering</h3>
+  <ul>
+    <li>Public pages are server-side rendered via <code>ssr/</code></li>
+    <li>Authenticated areas are rendered client-side</li>
+    <li>Shared state handled by React Context and SWR</li>
+  </ul>
 
-This will create a folder `collaboration-server/node_modules` with the dependent modules. After this, you can create the html package via Gulp:
+  <h3>4. Development Flow</h3>
+  <ul>
+    <li>Backend: <code>mvn spring-boot:run</code></li>
+    <li>Frontend: <code>yarn dev</code></li>
+    <li>Services run independently and communicate via REST</li>
+  </ul>
 
-```bash
-npx gulp build
-```
+  <h2>Environment Setup</h2>
 
-This will build the HTML files.
+  <h3>1. Clone Repo</h3>
+  <pre><code>git clone https://github.com/USDA-REE-ARS/nal-lca-repo-application.git</code></pre>
 
-#### Prepare the Eclipse workspace
-Download the current Eclipse package for JEE developers (to have everything together you can extract it into your development directory). Create a workspace directory in your development directory (e.g. under the eclipse folder to have a clean structure):
+  <h3>2. Clone and Build External Modules</h3>
+  <pre><code>git clone https://github.com/GreenDelta/olca-modules.git
+cd olca-modules && mvn clean install -DskipTests
 
-    eclipse
-      ...
-      workspace
-    collaboration-server
-      .git
-      ...
+git clone https://github.com/GreenDelta/search-wrapper.git
+cd search-wrapper && mvn clean install -DskipTests</code></pre>
 
-To create the relevant project files for eclipse run:
+  <h3>3. Install Dependencies</h3>
+  <pre><code>cd backend && mvn clean install
+cd ../frontend && yarn install
+cd ../search && mvn clean install</code></pre>
 
-```bash
-mvn eclipse:eclipse
-```
-	
-After this, open Eclipse and select the created workspace directory. Import the project into Eclipse via `Import/General/Existing Projects into Workspace`
-(select the collaboration-server directory). You should now see the project in your Eclipse workspace.
+  <h3>4. Run Backend</h3>
+  <pre><code>cd backend
+mvn spring-boot:run</code></pre>
 
-#### Configuring OAuth 2.0 providers
-The LCA Collaboration Server includes support for OAuth 2.0 providers via Spring. The application scans for providers configured via the Spring application.properties and will add buttons - labeled "Continue with [client-name]" - in the login page, to redirect to the authentication provider automatically. The client-name will be read from the spring.security.oauth2.client.registration.[registration-id].client-name parameter. Note that for GitHub, Google and Facebook, the client-name - and all other required properties - are already provided by Spring's default configuration. If a user does not exist in the collaboration server, it will be added automatically, using the email and name from the provider, if the preferred_username attribute is not available, a username will be generated from the name and/or the email address. If no email address is specified, the login fails.
-
-Below you can find some example configurations:
-
-
-Github:
-
-```
-spring.security.oauth2.client.registration.github.client-id=your-github-client-id
-spring.security.oauth2.client.registration.github.client-secret=your-github-client-secret
-```
-
-Google:
-
-```
-spring.security.oauth2.client.registration.google.client-id=your-google-client-id
-spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
-```
-
-Facebook:
-
-```
-spring.security.oauth2.client.registration.facebook.client-id=your-facebook-client-id
-spring.security.oauth2.client.registration.facebook.client-secret=your-facebook-client-secret
-```
-
-Keycloak:
-
-```
-spring.security.oauth2.client.registration.keycloak.client-id=your-keycloak-client-app-id
-spring.security.oauth2.client.registration.keycloak.client-name=Keycloak
-spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
-spring.security.oauth2.client.registration.keycloak.scope=openid
-spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
-spring.security.oauth2.client.provider.keycloak.issuer-uri=http://[keycloak-host-or-ip]:[keycloak-port]/realms/[KeyCloakRealmName]
-# Example: http://localhost:8081/realms/SpringBootKeycloakRealm
-```
-
-#### Build the web application for deployment
-To build the web application to be deployed on a web server (e.g. tomcat) run:
-
-```bash
-mvn clean compile
-npx gulp build
-mvn package
-```
-
-The file 'lca-collaboration-server-{version}_{date}.war' in the target sub directory is the deployable application.
-
-## Installation
-
-Please refer to the official installation instructions available on the [openLCA website](https://www.openlca.org/lca-collaboration-server-2-0-installation-guide/)
+  <h3>5. Run Frontend</h3>
+  <pre><code>cd frontend
+yarn dev</code></pre>
