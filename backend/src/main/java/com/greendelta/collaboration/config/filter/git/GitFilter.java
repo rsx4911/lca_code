@@ -116,7 +116,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		var path = RepositoryPath.of(Requests.getRoute(request));
 		try (var repo = repoService.get(path.group, path.repo)) {
 			var latestCommit = repo.commits.find().latest();
-			if (latestCommit == null)
+			if (latestCommit == null || latestCommit.equals(previousCommit))
 				return;
 			notificationService.dataPushed(repo, latestCommit).send();
 			var groupSettings = groupService.getSettings(repo.group);
