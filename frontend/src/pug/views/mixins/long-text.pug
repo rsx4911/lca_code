@@ -1,3 +1,9 @@
+mixin multiline-text(value)
+	each line, index in value.split('\r\n')
+		if index > 0
+			br
+		| #{line}
+
 mixin toggleable()
 	span.toggleable
 	|  
@@ -8,10 +14,12 @@ mixin toggleable()
 	a.toggle-control(href='#' style='display:none' aria-label='Show less') Show less
 
 mixin toggleable-text(short, long, showLongInTitle)
-	span.toggleable(title=showLongInTitle ? value : null)=short
+	span.toggleable(title=showLongInTitle ? long : null)
+		+multiline-text(short)
 	|  
 	a.toggle-control(href='#' aria-label='Show more') Show more
-	span.toggleable(style='display:none')=long
+	span.toggleable(style='display:none')
+		+multiline-text(long)
 	|  
 	a.toggle-control(href='#' style='display:none' aria-label='Show less') Show less
 
@@ -21,5 +29,5 @@ mixin long-text(value, length)
 	if value && value.length > length
 		- const short = value.substring(0, Math.floor(length - length / 5)) + '... '
 		+toggleable-text(short, value, true)
-	else
-		| #{value}
+	else if value
+		+multiline-text(value)
