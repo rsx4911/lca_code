@@ -2,6 +2,7 @@ package com.greendelta.collaboration.model.settings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.greendelta.collaboration.model.LibraryAccess;
@@ -51,8 +52,10 @@ public enum ServerSetting implements SettingKey {
 	REPOSITORIES_HIDDEN(JacksonTypes.STRING_LIST, new ArrayList<>()),
 	MODEL_TYPES_ORDER(JacksonTypes.STRING_LIST, ModelTypes.DEFAULT_ORDER),
 	MODEL_TYPES_HIDDEN(JacksonTypes.STRING_LIST, new ArrayList<>()),
-	TYPES_OF_DATA(JacksonTypes.STRING_LIST, new ArrayList<>(Arrays.asList(
-			"Unit processes", "System processes", "Impact methods", "I/O", "Hybrid"))),
+	TYPES_OF_DATA(
+					JacksonTypes.STRING_LIST,
+					new ArrayList<>(Arrays.asList(
+							"Unit processes", "System processes", "Impact methods", "I/O", "Hybrid"))),
 
 	// maintenance
 	MAINTENANCE_MODE(Boolean.class, false),
@@ -90,8 +93,8 @@ public enum ServerSetting implements SettingKey {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getDefaultValue() {
-		return (T) defaultValue;
+	public <T> T getDefaultValue(Map<String, String> values) {
+		return Setting.getDefaultValue(this.name(), type, subType, values, (T) defaultValue);
 	}
 
 	@Override

@@ -1,5 +1,9 @@
 package com.greendelta.collaboration.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -79,5 +83,11 @@ public class DaoConfig {
     Dao<User> userDao() {
 		return new Dao<>(User.class);
 	}
+    
+    @Bean(name = "defaultSettings")
+    @ConfigurationProperties(prefix = "cs.settings.default-values")
+    Map<String, Map<String, String>> defaultSettings() {
+        return new HashMap<>();
+    }
 
 }

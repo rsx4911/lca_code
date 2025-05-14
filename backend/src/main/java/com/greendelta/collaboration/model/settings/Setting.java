@@ -1,6 +1,12 @@
 package com.greendelta.collaboration.model.settings;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.greendelta.collaboration.model.AbstractEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,10 +14,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.greendelta.collaboration.model.AbstractEntity;
 
 @Entity
 @Table
@@ -38,11 +40,40 @@ public class Setting extends AbstractEntity {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <V> V getValue() {
+	public <V> V getValue(Map<String, String> defaultValues) {
 		var key = getKey();
 		if (key.getType().equals(byte[].class))
 			return (V) data;
 		var type = key.getType();
+		if (type == Object.class && data != null) {
+			try {
+				return parseValue(type, new String(data, StandardCharsets.UTF_8), key.getSubType());
+			} catch (JsonProcessingException e) {
+				return key.getDefaultValue(defaultValues);
+			}
+		}
+		if (type == Object.class)
+			return null;
+		if (type == byte[].class)
+			return (V) data;
+		if (value != null)
+			return parseValue(type, value);
+		if (value == null)
+			return key.getDefaultValue(defaultValues);
+		return (V) value;
+	}
+
+	static <V> V parseValue(Class<?> type, String value) {
+		try {
+			return parseValue(type, value, null);
+		} catch (JsonProcessingException e) {
+			// not possible
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	static <V> V parseValue(Class<?> type, String value, TypeReference<V> subType) throws JsonProcessingException {
 		if (type.isEnum())
 			return getEnumValue(type, value);
 		if (type == Boolean.class && value != null)
@@ -51,25 +82,27 @@ public class Setting extends AbstractEntity {
 			return (V) Integer.valueOf(Integer.parseInt(value));
 		if (type == Long.class && value != null)
 			return (V) Long.valueOf(Long.parseLong(value));
-		if (type == Object.class && data != null) {
-			try {
-				String json = new String(data, StandardCharsets.UTF_8);
-				return new ObjectMapper().readValue(json, key.getSubType());
-			} catch (JsonProcessingException e) {
-				return key.getDefaultValue();
-			}
-		}
-		if (type == Object.class)
-			return null;
-		if (type == byte[].class)
-			return (V) data;
-		if (value == null)
-			return key.getDefaultValue();
+		if (type == Object.class && value != null)
+			return new ObjectMapper().readValue(value, subType);
 		return (V) value;
 	}
 
 	@SuppressWarnings("unchecked")
-	private <V> V getEnumValue(Class<?> type, String value) {
+	static <T> T getDefaultValue(String name, Class<?> type, TypeReference<?> subType, Map<String, String> values,
+			T defaultValue) {
+		if (values != null && values.containsKey(name)) {
+			try {
+				return (T) Setting.parseValue(type, values.get(name), subType);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+				return defaultValue;
+			}
+		}
+		return defaultValue;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <V> V getEnumValue(Class<?> type, String value) {
 		for (var v : type.getEnumConstants())
 			if (v.toString().equals(value))
 				return (V) v;
