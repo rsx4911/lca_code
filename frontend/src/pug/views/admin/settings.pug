@@ -7,12 +7,13 @@ include ../mixins/forms.pug
 			+input('SERVER_SETTING__SERVER_NAME', 'Server name')
 			+input('SERVER_SETTING__SERVER_URL', 'Base url (e.g. used in email links)')
 		.clear
-		.two-columns
-			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
-				span.help-block
-			+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
-				span.help-block
-		.clear
+		if !settings['SERVER_SETTING']['DOCKER_INSTALLATION']
+			.two-columns
+				+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
+					span.help-block
+				+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
+					span.help-block
+			.clear
 		+input('SERVER_SETTING__TYPES_OF_DATA', 'Types of data')
 	.header-box Enabled features
 	.content-box

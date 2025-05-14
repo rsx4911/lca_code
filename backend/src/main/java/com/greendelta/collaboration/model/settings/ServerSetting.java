@@ -31,6 +31,7 @@ public enum ServerSetting implements SettingKey {
 	DATASET_TAGS_ON_REPOSITORIES_ENABLED(Boolean.class, false),
 
 	// basic settings
+	DOCKER_INSTALLATION(Boolean.class, false),
 	SERVER_NAME(String.class, "LCA Collaboration Server"),
 	SERVER_URL(String.class),
 	REPOSITORY_PATH(String.class),
