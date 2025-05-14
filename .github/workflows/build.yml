@@ -1,55 +1,95 @@
-name: Building LCA Collaboration Server
+name: Build and Deploy LCA Collaboration Server
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+      - 'dev/**'
+      - 'release/**'
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout LCA Repository
         uses: actions/checkout@v4
 
-      - name: Checkout Search-Wrapper Repo
+      - name: Checkout Other Repositories
         uses: actions/checkout@v4
         with:
           repository: GreenDelta/search-wrapper
           path: search-wrapper-repo
 
-      - name: Checkout Olca Modules Repo
+      - name: Checkout OLCA Modules
         uses: actions/checkout@v4
         with:
           repository: GreenDelta/olca-modules
           path: olca-modules
 
-      - name: Set up JDK 21
+      - name: Set up Java 21
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'maven'
 
-      - name: Build Search Wrapper Project
+      - name: Install Prerequisites on Remote VM
         run: |
-          cd search-wrapper-repo
-          mvn clean install -DskipTests
+          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --command '
+              echo "[1] Installing Prerequisites..."
+              bash scripts/install-prerequisites.sh
+            '
 
-      - name: Build olca-modules Project
+      - name: Determine Deployment Environment
+        id: mapenv
         run: |
-          cd olca-modules
-          mvn clean install -DskipTests
+          if [[ "${GITHUB_REF_NAME}" == feature/* ]]; then
+            echo "env=dev" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == release/* ]]; then
+            echo "env=stage" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == main ]]; then
+            echo "env=prod" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build LCA Repo
-        run: mvn clean install -DskipTests
+      - name: Copy Configuration Files to Remote VM
+        run: |
+          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --command '
+              echo "[2] Copying Configuration Files..."
+              bash scripts/copy-configs.sh ${{ steps.mapenv.outputs.env }}
+            '
 
-      - name: Upload WAR Artifact
+      - name: Build Java Projects (Search Wrapper, OLCA, LCA Repo)
+        run: |
+          cd search-wrapper-repo && mvn clean install -DskipTests
+          cd ../olca-modules && mvn clean install -DskipTests
+          cd .. && mvn clean install -DskipTests
+
+      - name: Upload WAR File
         uses: actions/upload-artifact@v4
         with:
-          name: built-war
+          name: lca-war
           path: backend/target/collaboration-server-backend-*.war
+
+      - name: Copy WAR to Tomcat
+        run: |
+          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --command '
+              echo "[3] Copying WAR to Tomcat Webapps Folder..."
+              cp backend/target/collaboration-server-backend-*.war /opt/tomcat/webapps/
+            '
+
+      - name: Restart Services on Remote VM
+        run: |
+          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --command '
+              echo "[4] Restarting Services..."
+              sudo systemctl restart nginx
+              sudo systemctl restart tomcat
+              sudo systemctl restart opensearch
+            '
