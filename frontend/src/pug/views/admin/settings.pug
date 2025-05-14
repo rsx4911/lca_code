@@ -9,7 +9,9 @@ include ../mixins/forms.pug
 		.clear
 		.two-columns
 			+input('SERVER_SETTING__REPOSITORY_PATH', 'Repositories root directory')
+				span.help-block
 			+input('SERVER_SETTING__LIBRARY_PATH', 'Libraries directory')
+				span.help-block
 		.clear
 		+input('SERVER_SETTING__TYPES_OF_DATA', 'Types of data')
 	.header-box Enabled features
