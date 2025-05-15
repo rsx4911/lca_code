@@ -111,6 +111,18 @@ mvn package
 
 The file 'lca-collaboration-server-{version}_{date}.war' in the target sub directory is the deployable application.
 
+#### Build the Docker image locally
+
+```bash
+docker build -f docker/Dockerfile -t cs --build-arg VERSION={version} .
+```
+
+After this, you can run the application (without DB) via `docker run cs` to 
+test it locally.
+For more extensive tests, run the container within the Docker Compose 
+environment (see [lca-collaboration-server-docker](https://github.com/GreenDelta/lca-collaboration-server-docker)).
+Do not forget to change the image name in the `compose.yaml` file.
+
 ## Installation
 
-Please refer to the official installation instructions available on the [openLCA website](https://www.openlca.org/lca-collaboration-server-2-0-installation-guide/)
+Please refer to the official installation instructions available on the [openLCA website](https://www.openlca.org/lca-collaboration-server-2-0-installation-guide/).
