@@ -176,13 +176,13 @@ public class RepositoryService {
 			if (newRepo == null)
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
-			Dirs.move(repo.dir.toPath(), newRepo.dir.toPath());
+			Dirs.copy(repo.dir.toPath(), newRepo.dir.toPath());
 			moveMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
 			releaseService.move(repo.path(), newRepo.path());
 			repo.settings.move(newRepo);
-			delete(repo);
+			Dirs.delete(repo.dir.toPath());
 			return true;
 		}
 	}
