@@ -30,7 +30,6 @@ import org.springframework.web.server.ResponseStatusException;
 import com.google.common.io.Files;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
-import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
@@ -115,7 +114,7 @@ public class RepositoryService {
 			return null;
 		}
 	}
-	
+
 	File getDir(RepositoryPath path) {
 		return Repository.getDir(getRootPath(), path.group, path.repo);
 	}
@@ -177,19 +176,20 @@ public class RepositoryService {
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
 			Dirs.copy(repo.dir.toPath(), newRepo.dir.toPath());
-			moveMemberships(repo, newRepo);
+			copyMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
 			releaseService.move(repo.path(), newRepo.path());
 			repo.settings.move(newRepo);
+			membershipService.removeMemberships(repo.path());
 			Dirs.delete(repo.dir.toPath());
 			return true;
 		}
 	}
 
-	private void moveMemberships(Repository fromRepo, Repository toRepo) {
+	private void copyMemberships(Repository fromRepo, Repository toRepo) {
 		var memberships = membershipService.getMemberships(fromRepo.path());
-		for (Membership membership : memberships) {
+		for (var membership : memberships) {
 			if (membership.team != null) {
 				membershipService.addMemberships(membership.team, toRepo.path(), membership.role);
 			} else {

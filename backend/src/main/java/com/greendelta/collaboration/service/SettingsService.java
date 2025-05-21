@@ -148,9 +148,10 @@ public class SettingsService {
 	}
 
 	private void move(SettingType type, String owner, String newOwner) {
-		find(type, owner).forEach(setting -> {
+		find(type, owner).stream().filter(Setting::isSet).forEach(setting -> {
 			dao.delete(setting);
 			Setting newSetting = Setting.create(type, setting.getKey(), newOwner);
+			newSetting.setValue(setting.getValue(null));
 			dao.insert(newSetting);
 		});
 	}
