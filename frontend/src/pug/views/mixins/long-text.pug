@@ -1,8 +1,11 @@
 mixin multiline-text(value)
-	each line, index in value.split('\r\n')
-		if index > 0
-			br
-		| #{line}
+	if typeof value === 'string'
+		each line, index in value.split('\r\n')
+			if index > 0
+				br
+			| #{line}
+	else
+		| #{value}
 
 mixin toggleable()
 	span.toggleable
