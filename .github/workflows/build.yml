@@ -6,12 +6,25 @@ on:
       - main
       - 'dev/**'
       - 'release/**'
+      - 'feature/**'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: dev
 
     steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Checkout LCA Repository
         uses: actions/checkout@v4
 
@@ -27,11 +40,23 @@ jobs:
           repository: GreenDelta/olca-modules
           path: olca-modules
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '21'
+      - name: Create Ephemeral Azure VM
+        id: create_vm
+        run: |
+          VM_NAME=lca-ephemeral-${{ github.run_id }}-${{ github.run_number }}
+          echo "VM_NAME=$VM_NAME" >> $GITHUB_ENV
+
+          az vm create \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --name $VM_NAME \
+            --image ${{ vars.AZ_VM_IMAGE }} \
+            --admin-username ${{ secrets.AZ_VM_USERNAME }} \
+            --generate-ssh-keys \
+            --size ${{ vars.AZ_VM_SIZE }} \
+            --output json > vm.json
+
+          VM_IP=$(jq -r '.publicIpAddress' vm.json)
+          echo "VM_IP=$VM_IP" >> $GITHUB_ENV
 
       - name: Install Prerequisites on Remote VM
         run: |
