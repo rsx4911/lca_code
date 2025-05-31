@@ -151,7 +151,7 @@ jobs:
             sudo mkdir -p /opt/lca-cs/repository
 
             echo "Downloading files using AzCopy..."
-            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository" --recursive
+            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive
 
             echo "All files downloaded to /opt/lca-cs/repository"
           EOF
