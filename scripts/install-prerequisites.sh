@@ -25,11 +25,10 @@ if mariadb --version 2>/dev/null | grep "10.11"; then
   echo "MariaDB 10.11 is already installed."
 else
   echo "Installing MariaDB 10.11..."
-  sudo apt-get install software-properties-common gnupg -y
-  sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-  sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] http://mirror.biznetgio.com/mariadb/repo/10.11/ubuntu jammy main'
-  sudo apt-get update
+  curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
+  sudo apt-get update -y
   sudo apt-get install -y mariadb-server
+  sudo systemctl enable mariadb
   sudo systemctl start mariadb
   echo "MariaDB 10.11 installed and started."
 fi
