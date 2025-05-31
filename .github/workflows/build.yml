@@ -120,7 +120,7 @@ jobs:
           echo "Deploying WAR file to Tomcat..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
             sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
-         EOF
+          EOF
 
       - name: Restart Services on Remote VM
         run: |
