@@ -140,11 +140,11 @@ jobs:
         run: |
           mkdir -p /opt/lca-cs/repository
           az storage blob download-batch \
-            --account-name ${{ secrets.AZ_STORAGE_ACCOUNT }} \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
             --destination /opt/lca-cs/repository \
-            --source ${{ secrets.AZ_CONTAINER_NAME }} \
+            --source ${{ secrets.AZURE_CONTAINER_NAME }} \
             --auth-mode key \
-            --account-key ${{ secrets.AZ_STORAGE_KEY }}
+            --account-key ${{ secrets.AZURE_STORAGE_KEY }}
 
 
       - name: Restart services using Azure CLI
