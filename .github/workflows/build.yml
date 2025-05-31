@@ -136,16 +136,21 @@ jobs:
           
           echo "sas_token=$SAS_TOKEN" >> $GITHUB_OUTPUT
 
-      - name: Download files from Blob
+      - name: Install AzCopy & Download Artifacts
         run: |
-          mkdir -p /opt/lca-cs/repository
-          az storage blob download-batch \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-            --destination /opt/lca-cs/repository \
-            --source ${{ secrets.AZURE_CONTAINER_NAME }} \
-            --auth-mode key \
-            --account-key ${{ secrets.AZURE_STORAGE_KEY }}
-
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+            echo "Installing AzCopy..."
+            curl -sL https://aka.ms/downloadazcopy-v10-linux | tar -xz --strip-components=1
+            sudo mv azcopy /usr/local/bin/
+          
+            echo "Creating /opt/lca-cs/repository if not exists..."
+            sudo mkdir -p /opt/lca-cs/repository
+          
+            echo "Downloading files using AzCopy..."
+            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.generate_sas.outputs.sas_token }}" "/opt/lca-cs/repository" --recursive
+          
+            echo "All files downloaded to /opt/lca-cs/repository"
+          EOF
 
       - name: Restart services using Azure CLI
         run: |
