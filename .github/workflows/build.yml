@@ -125,13 +125,19 @@ jobs:
         id: gensas
         run: |
           EXPIRY=$(date -u -d '1 hour' '+%Y-%m-%dT%H:%MZ')
+          ACCOUNT_KEY=$(az storage account keys list \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --query '[0].value' -o tsv)
+
           SAS=$(az storage container generate-sas \
-          --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-          --name ${{ secrets.AZURE_CONTAINER_NAME }} \
-          --permissions rl \
-          --account-key $(az storage account keys list --account-name ryanlcastorage --query '[0].value' -o tsv) \
-          --https-only \
-          --output tsv)
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --name ${{ secrets.AZURE_CONTAINER_NAME }} \
+            --permissions rl \
+            --expiry "$EXPIRY" \
+            --account-key "$ACCOUNT_KEY" \
+            --https-only \
+            --output tsv)
+
           echo "sas_token=$SAS" >> "$GITHUB_OUTPUT"
 
       - name: Install AzCopy & Download Artifacts
@@ -140,13 +146,13 @@ jobs:
             echo "Installing AzCopy..."
             curl -sL https://aka.ms/downloadazcopy-v10-linux | tar -xz --strip-components=1
             sudo mv azcopy /usr/local/bin/
-          
+
             echo "Creating /opt/lca-cs/repository if not exists..."
             sudo mkdir -p /opt/lca-cs/repository
-          
+
             echo "Downloading files using AzCopy..."
             azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository" --recursive
-          
+
             echo "All files downloaded to /opt/lca-cs/repository"
           EOF
 
