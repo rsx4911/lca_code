@@ -11,9 +11,20 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ steps.mapenv.outputs.env }}
 
     steps:
+      - name: Determine Deployment Environment
+        id: mapenv
+        run: |
+          if [[ "${GITHUB_REF_NAME}" == feature/* ]]; then
+            echo "env=dev" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == release/* ]]; then
+            echo "env=stage" >> $GITHUB_OUTPUT
+          elif [[ "${GITHUB_REF_NAME}" == main ]]; then
+            echo "env=prod" >> $GITHUB_OUTPUT
+          fi
+
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -70,29 +81,21 @@ jobs:
             ./install-prerequisites.sh
           EOF
 
-      - name: Determine Deployment Environment
-        id: mapenv
-        run: |
-          if [[ "${GITHUB_REF_NAME}" == feature/* ]]; then
-            echo "env=dev" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == release/* ]]; then
-            echo "env=stage" >> $GITHUB_OUTPUT
-          elif [[ "${GITHUB_REF_NAME}" == main ]]; then
-            echo "env=prod" >> $GITHUB_OUTPUT
-          fi
-
       - name: Copy Configuration Files to Remote VM
         run: |
-          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
-            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --command '
-              echo "[2] Copying Configuration Files..."
-              bash scripts/copy-configs.sh ${{ steps.mapenv.outputs.env }}
-            '
+          echo "Copying copy-configs.sh to remote VM..."
+          scp -o StrictHostKeyChecking=no scripts/copy-configs.sh \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
+          
+          echo "Executing copy-configs.sh on remote VM..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+            chmod +x copy-configs.sh
+            ./copy-configs.sh ${{ steps.mapenv.outputs.env }}
+            EOF
 
       - name: Build Java Projects (Search Wrapper, OLCA, LCA Repo)
         run: |
-          cd search-wrapper-repo && mvn clean install -DskipTests
+          cdd search-wrapper-repo && mvn clean install -DskipTests
           cd ../olca-modules && mvn clean install -DskipTests
           cd .. && mvn clean install -DskipTests
 
@@ -138,7 +141,7 @@ jobs:
           # Delete OS disk
           OS_DISK_NAME=$(az disk list --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --query "[?contains(name,'$VM_NAME')].name" -o tsv)
           if [ -n "$OS_DISK_NAME" ]; then
-            echo "🗑️ Deleting OS disk: $OS_DISK_NAME"
+            echo "Deleting OS disk: $OS_DISK_NAME"
             az disk delete --name "$OS_DISK_NAME" --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --yes
           fi
           
@@ -148,7 +151,7 @@ jobs:
             echo "Found NIC: $NIC_NAME"
           
             # Disassociate public IP
-            echo "🔗 Disassociating Public IP from NIC..."
+            echo "Disassociating Public IP from NIC..."
             az network nic ip-config update \
               --name ipconfig$VM_NAME \
               --nic-name $NIC_NAME \
