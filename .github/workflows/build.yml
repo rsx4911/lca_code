@@ -149,6 +149,8 @@ jobs:
 
             echo "Creating /opt/lca-cs/repository if not exists..."
             sudo mkdir -p /opt/lca-cs/repository
+            sudo chown -R $USER:$USER /opt/lca-cs/repository
+            sudo chmod -R 777 /opt/lca-cs/repository
 
             echo "Downloading files using AzCopy..."
             azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive
