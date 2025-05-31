@@ -60,11 +60,14 @@ jobs:
 
       - name: Install Prerequisites on Remote VM
         run: |
-          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
-            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --command '
-              echo "[1] Installing Prerequisites..."
-              bash scripts/install-prerequisites.sh
+          echo "Transferring install-prerequisites.sh to VM..."
+          scp -o StrictHostKeyChecking=no scripts/install-prerequisites.sh \
+            ${{ secrets.AZ_VM_USERNAME }}@$VM_IP:/home/${{ secrets.AZ_VM_USERNAME }}/
+
+          echo "Running install-prerequisites.sh on VM..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@$VM_IP <<EOF
+            chmod +x install-prerequisites.sh
+            ./install-prerequisites.sh
             '
 
       - name: Determine Deployment Environment
