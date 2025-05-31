@@ -113,14 +113,15 @@ jobs:
 
       - name: Copy WAR to Tomcat
         run: |
-          az config set extension.dynamic_install_allow_preview=true
+          echo "Copying WAR file to remote VM..."
+          scp -o StrictHostKeyChecking=no backend/target/collaboration-server-backend-*.war \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
           
-          az ssh vm --name ${{ env.VM_NAME }} \
-                    --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-                    --command '
-                      echo "Copying WAR to Tomcat Webapps Folder..."
-                      cp backend/target/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
-                    '
+          echo "Deploying WAR file to Tomcat..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+            sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
+         EOF
+
 
       - name: Restart Services on Remote VM
         run: |
