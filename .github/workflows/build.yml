@@ -129,7 +129,7 @@ jobs:
           --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
           --name ${{ secrets.AZURE_CONTAINER_NAME }} \
           --permissions rl \
-          --expiry $EXPIRY \
+          --account-key $(az storage account keys list --account-name ryanlcastorage --query '[0].value' -o tsv) \
           --https-only \
           --output tsv)
           echo "sas_token=$SAS" >> "$GITHUB_OUTPUT"
