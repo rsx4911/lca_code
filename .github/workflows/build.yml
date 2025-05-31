@@ -121,38 +121,29 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
             sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
           EOF
-      - name: Copy from Azure Storage to VM and Unzip
+      - name: Generate SAS Token for Blob Access
+        id: generate_sas
         run: |
-          echo "Connecting to VM to download and extract blob file..."
+          EXPIRY=$(date -u -d "+1 hour" '+%Y-%m-%dT%H:%MZ')
+          SAS_TOKEN=$(az storage container generate-sas \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --name ${{ secrets.AZURE_CONTAINER_NAME }} \
+            --permissions r \
+            --expiry $EXPIRY \
+            --auth-mode key \
+            --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+            --output tsv)
           
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
-            set -e
-          
-            echo "Step 1: Create target directory if not exists..."
-            sudo mkdir -p /opt/lca-cs/repository
-            sudo chown $USER:$USER /opt/lca-cs/repository
-            cd /opt/lca-cs/repository
-          
-            echo "Step 2: Install Azure CLI if missing..."
-            if ! command -v az &> /dev/null; then
-              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-            fi
-          
-            echo "Step 3: Download file from Azure Blob Storage..."
-            az storage blob download \
-              --account-name "${{ secrets.AZURE_STORAGE_ACCOUNT }}" \
-              --account-key "${{ secrets.AZURE_STORAGE_KEY }}" \
-              --container-name my-container \
-              --name backup.zip \
-              --file backup.zip
-          
-            echo "Step 4: Unzip the file..."
-            unzip -o backup.zip
-            rm -f backup.zip
-          
-            echo "Files extracted to /opt/lca-cs/repository:"
-            ls -lh
-          EOF
+          echo "sas_token=$SAS_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Download files from Blob
+        run: |
+          mkdir -p /opt/lca-cs/repository
+          az storage blob download-batch \
+            --destination /opt/lca-cs/repository \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --source ${{ secrets.AZURE_CONTAINER_NAME }} \
+            --sas-token "${{ steps.generate_sas.outputs.sas_token }}"
 
       - name: Restart services using Azure CLI
         run: |
