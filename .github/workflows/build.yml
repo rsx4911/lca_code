@@ -110,19 +110,21 @@ jobs:
 
       - name: Copy WAR to Tomcat
         run: |
-          az ssh vm --name ${{ secrets.AZ_VM_NAME }} \
-            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --command '
-              echo "[3] Copying WAR to Tomcat Webapps Folder..."
-              cp backend/target/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
-            '
+          az config set extension.dynamic_install_allow_preview=true
+          
+          az ssh vm --name ${{ env.VM_NAME }} \
+                    --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+                    --command '
+                      echo "Copying WAR to Tomcat Webapps Folder..."
+                      cp backend/target/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
+                    '
 
       - name: Restart Services on Remote VM
         run: |
-          faz ssh vm --name ${{ secrets.AZ_VM_NAME }} \
+          faz ssh vm --name ${{ env.VM_NAME }} \
             --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
             --command '
-              echo "[4] Restarting Services..."
+              echo "Restarting Services..."
               sudo systemctl restart nginx
               sudo systemctl restart tomcat
               sudo systemctl restart opensearch
