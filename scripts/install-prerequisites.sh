@@ -33,6 +33,40 @@ else
   echo "MariaDB 10.11 installed and started."
 fi
 
+# ------------------ MariaDB Database & User Setup ------------------
+echo "Setting up MariaDB database and user..."
+
+DB_NAME="${DB_NAME:-lca}" # fallback if not passed
+DB_USER="${DB_USER:?lca}"
+DB_PASS="${DB_PASSWORD:?lca}"
+
+# Wait for MariaDB to be ready
+until sudo mariadb -e "SELECT 1;" >/dev/null 2>&1; do
+  echo "Waiting for MariaDB to start..."
+  sleep 2
+done
+
+# Create database if not exists
+sudo mariadb -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
+
+# Check if user exists
+USER_EXISTS=$(sudo mariadb -N -e "SELECT COUNT(*) FROM mysql.user WHERE user = '${DB_USER}' AND host = 'localhost';")
+
+if [ "$USER_EXISTS" -eq 0 ]; then
+  echo "Creating MariaDB user '${DB_USER}'..."
+  sudo mariadb -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+else
+  echo "User '${DB_USER}' exists. Updating password..."
+  sudo mariadb -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+fi
+
+# Grant privileges
+sudo mariadb -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
+sudo mariadb -e "FLUSH PRIVILEGES;"
+
+echo "MariaDB database '${DB_NAME}' and user '${DB_USER}' configured."
+
+
 # ------------------ OpenSearch 2.19 ------------------
 echo "Checking OpenSearch..."
 if [ -d "/usr/share/opensearch" ] && /usr/share/opensearch/bin/opensearch --version | grep "2.19"; then

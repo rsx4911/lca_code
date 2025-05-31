@@ -77,6 +77,9 @@ jobs:
 
           echo "Running install-prerequisites.sh on VM..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@$VM_IP <<EOF
+            export DB_NAME="${{ vars.DB_NAME }}"
+            export DB_USER="${{ secrets.DB_USER }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             chmod +x install-prerequisites.sh
             ./install-prerequisites.sh
           EOF
