@@ -88,7 +88,7 @@ jobs:
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
           
           echo "Executing copy-configs.sh on remote VM..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} <<EOF
             chmod +x copy-configs.sh
             ./copy-configs.sh ${{ steps.mapenv.outputs.env }}
             EOF
