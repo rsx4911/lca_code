@@ -161,7 +161,7 @@ jobs:
             '
 
       - name: Clean Up Ephemeral VM and Resources
-        if: always()
+        if: false
         run: |
           echo "Cleaning up all resources for $VM_NAME"
           
