@@ -83,8 +83,11 @@ jobs:
 
       - name: Copy Configuration Files to Remote VM
         run: |
-          echo "Copying copy-configs.sh to remote VM..."
+          echo "Copying scripts and configs to remote VM..."
           scp -o StrictHostKeyChecking=no scripts/copy-configs.sh \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
+          
+          scp -o StrictHostKeyChecking=no -r configs \
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
           
           echo "Executing copy-configs.sh on remote VM..."
