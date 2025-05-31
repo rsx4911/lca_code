@@ -68,7 +68,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@$VM_IP <<EOF
             chmod +x install-prerequisites.sh
             ./install-prerequisites.sh
-            '
+          EOF
 
       - name: Determine Deployment Environment
         id: mapenv
@@ -127,7 +127,7 @@ jobs:
         run: |
           echo "Cleaning up all resources for $VM_NAME"
           
-          # Delete VM (does NOT delete disks by default)
+          # Delete the VM (but it does NOT delete the NIC or disk by default)
           if az vm show --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME &> /dev/null; then
             echo "Deleting VM..."
             az vm delete --yes --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME
@@ -138,30 +138,47 @@ jobs:
           # Delete OS disk
           OS_DISK_NAME=$(az disk list --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --query "[?contains(name,'$VM_NAME')].name" -o tsv)
           if [ -n "$OS_DISK_NAME" ]; then
-            echo "Deleting OS disk: $OS_DISK_NAME"
+            echo "🗑️ Deleting OS disk: $OS_DISK_NAME"
             az disk delete --name "$OS_DISK_NAME" --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --yes
           fi
           
-          # Delete NIC
-          NIC_ID=$(az vm show -g ${{ secrets.AZ_RESOURCE_GROUP }} -n $VM_NAME --query 'networkProfile.networkInterfaces[0].id' -o tsv 2>/dev/null || echo "")
-          if [ -n "$NIC_ID" ]; then
+          # Get NIC name
+          NIC_NAME=$(az network nic list --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --query "[?contains(name,'$VM_NAME')].name" -o tsv)
+          if [ -n "$NIC_NAME" ]; then
+            echo "Found NIC: $NIC_NAME"
+          
+            # Disassociate public IP
+            echo "🔗 Disassociating Public IP from NIC..."
+            az network nic ip-config update \
+              --name ipconfig$VM_NAME \
+              --nic-name $NIC_NAME \
+              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+              --remove publicIpAddress || echo "Skipped or already disassociated."
+          
+            # Disassociate NSG
+            echo "🔗 Disassociating NSG from NIC..."
+            az network nic update \
+              --name $NIC_NAME \
+              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+              --remove networkSecurityGroup || echo "NSG disassociation skipped or failed."
+          
             echo "Deleting NIC..."
-            az network nic delete --ids $NIC_ID
+            az network nic delete --name $NIC_NAME --resource-group ${{ secrets.AZ_RESOURCE_GROUP }}
           else
             echo "NIC not found."
           fi
           
           # Delete Public IP
-          echo "Deleting public IP..."
-          az network public-ip delete --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name ${VM_NAME}PublicIP || echo "Public IP may already be deleted."
+          echo "Deleting Public IP..."
+          az network public-ip delete \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --name ${VM_NAME}PublicIP || echo "Public IP may already be deleted."
           
-          # Optionally: delete NSG (if explicitly created or auto-named)
-          NSG_NAME=${VM_NAME}NSG
-          if az network nsg show --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $NSG_NAME &> /dev/null; then
-            echo "Deleting NSG: $NSG_NAME"
-            az network nsg delete --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $NSG_NAME
-          else
-            echo "NSG not found or default."
-          fi
+          # Delete NSG
+          echo "Deleting NSG..."
+          az network nsg delete \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --name ${VM_NAME}NSG || echo "NSG may already be deleted."
           
-          echo "Cleanup complete. Zero-cost ensured."
+          echo "Cleanup complete."
+
