@@ -122,12 +122,14 @@ jobs:
             sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
           EOF
 
-      - name: Restart Services on Remote VM
+      - name: Restart services using Azure CLI
         run: |
-          az ssh vm --name ${{ env.VM_NAME }} \
+          az vm run-command invoke \
             --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --command '
-              echo "Restarting Services..."
+            --name ${{ env.VM_NAME }} \
+            --command-id RunShellScript \
+            --scripts '
+              echo "Restarting services..."
               sudo systemctl restart nginx
               sudo systemctl restart tomcat
               sudo systemctl restart opensearch
