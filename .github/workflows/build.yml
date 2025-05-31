@@ -122,7 +122,6 @@ jobs:
             sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
          EOF
 
-
       - name: Restart Services on Remote VM
         run: |
           faz ssh vm --name ${{ env.VM_NAME }} \
