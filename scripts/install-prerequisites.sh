@@ -53,7 +53,7 @@ if [ -d "/opt/tomcat" ] && /opt/tomcat/bin/version.sh | grep "10.1.20"; then
   echo "Tomcat 10.1.20 is already installed."
 else
   echo "Installing Tomcat 10.1.20..."
-  curl -O https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.20/bin/apache-tomcat-10.1.20.tar.gz
+  curl -O https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.20/bin/apache-tomcat-10.1.20.tar.gz
   tar -xzf apache-tomcat-10.1.20.tar.gz
   sudo mv apache-tomcat-10.1.20 /opt/tomcat
   sudo chmod +x /opt/tomcat/bin/*.sh
