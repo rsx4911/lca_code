@@ -27,7 +27,7 @@ else
   echo "Installing MariaDB 10.11..."
   sudo apt-get install software-properties-common gnupg -y
   sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-  sudo add-apt-repository 'deb [arch=amd64] http://mirror.23media.com/mariadb/repo/10.11/ubuntu focal main'
+  sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] http://mirror.biznetgio.com/mariadb/repo/10.11/ubuntu jammy main'
   sudo apt-get update
   sudo apt-get install -y mariadb-server
   sudo systemctl start mariadb
