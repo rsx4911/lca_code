@@ -118,29 +118,29 @@ jobs:
               sudo systemctl restart tomcat
               sudo systemctl restart opensearch
             '
-          
-          - name: Clean Up Ephemeral VM
-            if: always()
-            run: |
-              echo "Cleaning up VM: $VM_NAME"
 
-              # Delete VM if it exists
-              if az vm show --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME &> /dev/null; then
-                echo "Deleting VM..."
-                az vm delete --yes --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME
-              else
-                echo "VM does not exist or already deleted."
-              fi
+      - name: Clean Up Ephemeral VM
+        if: always()
+        run: |
+          echo "Cleaning up VM: $VM_NAME"
 
-              # Delete NIC
-              NIC_ID=$(az vm show -g ${{ secrets.AZ_RESOURCE_GROUP }} -n $VM_NAME --query 'networkProfile.networkInterfaces[0].id' -o tsv 2>/dev/null || echo "")
-              if [ -n "$NIC_ID" ]; then
-                echo "Deleting NIC..."
-                az network nic delete --ids $NIC_ID
-              else
-                echo "NIC not found."
-              fi
+          # Delete VM if it exists
+          if az vm show --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME &> /dev/null; then
+            echo "Deleting VM..."
+            az vm delete --yes --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME
+          else
+            echo "VM does not exist or already deleted."
+          fi
 
-              # Delete Public IP
-              echo "Deleting public IP..."
-              az network public-ip delete --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name ${VM_NAME}PublicIP || echo "Public IP may not exist."
+          # Delete NIC
+          NIC_ID=$(az vm show -g ${{ secrets.AZ_RESOURCE_GROUP }} -n $VM_NAME --query 'networkProfile.networkInterfaces[0].id' -o tsv 2>/dev/null || echo "")
+          if [ -n "$NIC_ID" ]; then
+            echo "Deleting NIC..."
+            az network nic delete --ids $NIC_ID
+          else
+            echo "NIC not found."
+          fi
+
+          # Delete Public IP
+          echo "Deleting public IP..."
+          az network public-ip delete --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name ${VM_NAME}PublicIP || echo "Public IP may not exist."
