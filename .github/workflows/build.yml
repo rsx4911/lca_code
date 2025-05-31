@@ -94,7 +94,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} <<EOF
             chmod +x copy-configs.sh
             ./copy-configs.sh ${{ steps.mapenv.outputs.env }}
-            EOF
+          EOF
 
       - name: Build Java Projects (Search Wrapper, OLCA, LCA Repo)
         run: |
