@@ -121,20 +121,18 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
             sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
           EOF
-      - name: Generate SAS Token for Blob Access
-        id: generate_sas
+      - name: Generate SAS Token
+        id: gensas
         run: |
-          EXPIRY=$(date -u -d "+1 hour" '+%Y-%m-%dT%H:%MZ')
-          SAS_TOKEN=$(az storage container generate-sas \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-            --name ${{ secrets.AZURE_CONTAINER_NAME }} \
-            --permissions r \
-            --expiry $EXPIRY \
-            --auth-mode key \
-            --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
-            --output tsv)
-          
-          echo "sas_token=$SAS_TOKEN" >> $GITHUB_OUTPUT
+          EXPIRY=$(date -u -d '1 hour' '+%Y-%m-%dT%H:%MZ')
+          SAS=$(az storage container generate-sas \
+          --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+          --name ${{ secrets.AZURE_CONTAINER_NAME }} \
+          --permissions rl \
+          --expiry $EXPIRY \
+          --https-only \
+          --output tsv)
+          echo "sas_token=$SAS" >> "$GITHUB_OUTPUT"
 
       - name: Install AzCopy & Download Artifacts
         run: |
@@ -147,7 +145,7 @@ jobs:
             sudo mkdir -p /opt/lca-cs/repository
           
             echo "Downloading files using AzCopy..."
-            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.generate_sas.outputs.sas_token }}" "/opt/lca-cs/repository" --recursive
+            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository" --recursive
           
             echo "All files downloaded to /opt/lca-cs/repository"
           EOF
