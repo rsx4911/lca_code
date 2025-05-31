@@ -124,7 +124,7 @@ jobs:
 
       - name: Restart Services on Remote VM
         run: |
-          faz ssh vm --name ${{ env.VM_NAME }} \
+          az ssh vm --name ${{ env.VM_NAME }} \
             --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
             --command '
               echo "Restarting Services..."

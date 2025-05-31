@@ -78,6 +78,33 @@ else
   sudo mv opensearch-2.19.0 /usr/share/opensearch
   sudo chmod -R 755 /usr/share/opensearch
   sudo nohup /usr/share/opensearch/bin/opensearch > /dev/null 2>&1 &
+  echo "OpenSearch 2.19 installed."
+  echo "Creating systemd service for OpenSearch..."
+  sudo bash -c 'cat > /etc/systemd/system/opensearch.service' <<EOF
+[Unit]
+Description=OpenSearch
+Documentation=https://opensearch.org/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=OPENSEARCH_HOME=/usr/share/opensearch
+WorkingDirectory=/usr/share/opensearch
+ExecStart=/usr/share/opensearch/bin/opensearch
+Restart=always
+LimitNOFILE=65536
+LimitNPROC=4096
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl enable opensearch
+  sudo systemctl start opensearch
   echo "OpenSearch 2.19 installed and started."
 fi
 
@@ -92,6 +119,31 @@ else
   sudo mv apache-tomcat-10.1.20 /opt/tomcat
   sudo chmod +x /opt/tomcat/bin/*.sh
   sudo nohup /opt/tomcat/bin/startup.sh > /dev/null 2>&1 &
+  echo "Tomcat 10.1.20 installed."
+  echo "Creating systemd service for Tomcat..."
+  sudo bash -c 'cat > /etc/systemd/system/tomcat.service' <<EOF
+[Unit]
+Description=Apache Tomcat
+After=network.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+Environment=JAVA_HOME=/opt/java/jdk-21.0.3+9
+Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_BASE=/opt/tomcat
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/opt/tomcat/bin/shutdown.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl enable tomcat
+  sudo systemctl start tomcat
   echo "Tomcat 10.1.20 installed and started."
 fi
 
