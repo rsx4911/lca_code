@@ -1,0 +1,19 @@
+include ./structures/data-quality-matrix.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+content
+			.margin-0-25-25
+				h4(data-path='indicators')=getLabel('indicators')
+				+data-quality-matrix(dataset, false)
+				if dataset.hasUncertainties
+					hr
+					h4=getLabel('uncertainties')
+					+data-quality-matrix(dataset, true)
+	+meta
+		hr
+		strong=getLabel('source')
+		+ref-block('source', '-')
+	.clear

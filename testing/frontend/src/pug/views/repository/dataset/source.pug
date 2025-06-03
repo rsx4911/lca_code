@@ -1,0 +1,20 @@
+include ./mixins.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+content
+			- var fileUrlPart = fileBaseUrl;
+			- var fileUrlQuery = null;
+			if fileUrlPart.indexOf('?') !== -1
+				- fileUrlQuery = fileUrlPart.substring(fileUrlPart.indexOf('?'));
+				- fileUrlPart = fileUrlPart.substring(0, fileUrlPart.indexOf('?'));
+			table.table.no-head.margin-0-25-25
+				tbody
+					+field-link-row('external', 'url')
+					+field-row('year')
+					+field-link-row('internal', 'externalFile', fileUrlPart, fileUrlQuery)
+					+field-row('textReference')
+	+meta
+	.clear

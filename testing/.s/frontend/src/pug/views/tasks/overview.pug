@@ -1,0 +1,23 @@
+mixin task-box(label, tasks)
+	.content-container
+		.header-box=label
+			block
+		.content-box
+			if tasks.length
+				- var lastRepo = '';
+				each task in tasks
+					if lastRepo !== task.repositoryPath
+						div: a(href=task.repositoryPath)=task.repositoryLabel||task.repositoryPath
+						- lastRepo = task.repositoryPath
+					div: a.task-link.default-link(href='tasks/' + task.type.toLowerCase() + '/' + task.id)=task.name
+			else
+				.no-content-message No tasks in this category
+
+.two-columns
+	+task-box('To do', tasks.todo)
+		if canCreateTasks
+			button.btn.btn-success.btn-lg.pull-right(data-route='tasks/review/new') Create review task
+			.clear
+	+task-box('In progress', tasks.inProgress)
+	+task-box('Completed', tasks.completed)
+	+task-box('Canceled', tasks.canceled)

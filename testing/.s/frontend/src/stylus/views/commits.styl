@@ -1,0 +1,52 @@
+.full-size > .center > .repository-commits
+		padding 0
+
+.repository-commits
+	
+	.commit-group
+		width 100%
+		padding 10px 20px
+		border-bottom 1px solid rgb(221, 221, 221)
+		
+		.date-and-count
+			float left
+			width 120px
+			
+			@media(max-width 560px)
+				display none
+			
+			.count
+				color rgb(127, 143, 164)
+				font-size 90%
+	
+		.commit
+			padding 0 10px 10px 10px
+
+			@media(min-width 561px)
+				margin-left 120px
+
+			&:not(:first-child)
+				padding 10px
+			
+			&:not(:last-child)
+				border-bottom 1px solid rgb(221, 221, 221)
+
+			.commit-details
+				max-width calc(100% - 330px)
+
+				.commit-message
+					font-weight bold
+								
+			.commit-link
+
+				@media(min-width 768px)
+					width 310px					
+
+				& > a
+					color rgb(127, 143, 164)
+					font-size 90%
+
+				.commit-id
+
+					@media(max-width 767px)
+						display none

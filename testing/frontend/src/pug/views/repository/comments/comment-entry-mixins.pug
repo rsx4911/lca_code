@@ -1,0 +1,91 @@
+include ../../mixins/user-info.pug
+
+mixin comment-visibility(restrictedToRole, roles)
+	- var title = 'Visible to everybody';
+	if restrictedToRole
+		- title = 'Only visible for users with role \'' + getRoleLabel(restrictedToRole) + '\' or higher';
+	.change-visibility.dropdown
+		a(href='#' data-toggle='dropdown')
+			span.comment-visibility.glyphicon(class=!restrictedToRole?'glyphicon-globe':'glyphicon-lock' title=title)
+		ul.dropdown-menu
+			li: a(href='#' data-role='null') Everybody
+			li.dropdown-submenu
+				a(href='#') Specific role 
+					.caret.right
+				ul.dropdown-menu
+					each role in roles
+						if role === restrictedToRole || isRoleAvailable(role)
+							li: a(href='#' data-role=role.id)=role.name
+
+mixin comment-info(comment, roles, showDatasetInfo)
+	- var canChangeVisibility = canComment && (currentUser.admin || (comment.user && currentUser.username === comment.user.username));
+	span.user-extra-info  commented on #{formatDate(comment.date)}
+	if canChangeVisibility && roles
+		| &nbsp;
+		+comment-visibility(comment.restrictedToRole, roles)
+	if (!comment.released && comment.user && comment.user.username === currentUser.username) || (comment.released && !comment.approved && canApprove)
+		|  | 
+		a.default-link.release(href='#')
+			small=!comment.released?'Release':'Approve'
+	if comment.released && !comment.approved && !canApprove
+		|  | 
+		i: small Approval pending
+	if !comment.replyTo && canComment && comment.released && !!comment.approved
+		|  | 
+		a.default-link.reply-to(href='#')
+			small Reply
+	if (!comment.released || !comment.approved) && canEdit && comment.user && comment.user.username === currentUser.username
+		|  | 
+		a.default-link.edit(href='#')
+			small Edit
+		|  
+		a.remove(href='#'): span.glyphicon.glyphicon-remove
+
+mixin comment-entry(comment, roles, showDatasetInfo)
+	- var classes = [];
+	if comment.replyTo
+		- classes.push('reply');
+	if comment.released 
+		if comment.approved
+			- classes.push('approved');
+		else
+			- classes.push('released');
+	- var addClass = null;
+	if classes.length
+		- addClass = '';
+		each c, index in classes
+			if index > 0
+				- addClass += ' '
+			- addClass += c;
+	.comment-entry(class=addClass, data-comment-id=comment.id)
+		- var username = comment.user ? comment.user.username : 'null'
+		- var name = comment.user ? comment.user.name : 'Anonymous user'
+		+user-info(username, name)
+			+comment-info(comment, roles, false)
+			if showDatasetInfo
+				- var field = comment.field;
+				- var label = getLabel(field);
+				- var query = '?';
+				if field.commitId
+					- query += 'commitId=' + field.commitId + '&';
+				- query += 'commentPath=' + (field.path || 'null');
+				.dataset-link: a.default-link(href=comment.repositoryPath + '/dataset/' + field.modelType + '/' + field.refId + query) 
+					img.model-icon-small(src='images/model/small/' + field.modelType.toLowerCase() + '.png', aria-label='Icon of ' + field.modelType)
+					- var path = comment.dsPath
+					if path && path[0] === '/'
+						- path = path.substring(1);
+					span=path 
+						if label
+							|  - #{label}
+			.comment-text(class=!showDatasetInfo?'comment-layer':null)=comment.text
+			if comment.replyCount
+				.replies
+					a.toggle-control(href='#')
+						span.glyphicon.glyphicon-chevron-down
+						|  Show #{comment.replyCount} replies
+					.toggleable(style='display:none')
+						img.loader(src='images/loader.gif')
+					a.toggle-control(href='#' style='display:none') 
+						span.glyphicon.glyphicon-chevron-up
+						|  Hide #{comment.replyCount} replies
+		.clear

@@ -1,0 +1,6 @@
+if !repositories || !repositories.length
+    div Currently there is no repository on GLAD
+else
+    each repository in repositories
+        div #{repository} 
+            button.btn.btn-xs.btn-danger(data-repository=repository) Delete from GLAD

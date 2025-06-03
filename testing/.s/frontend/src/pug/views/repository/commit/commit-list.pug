@@ -1,0 +1,54 @@
+include ../../mixins/commit-info.pug
+include ../../mixins/paging.pug
+include ../../mixins/user-info.pug
+
+if !groups || !groups.length
+	.no-content-message No commits found	
+else
+	each group in groups
+		.commit-group
+			.date-and-count
+				.date 
+					img(src='images/calendar.png' aria-label='Calendar icon')
+					|  #{formatDate(group.date)}
+				if isLoggedIn
+					.count #{group.count} commit
+						if group.count > 1 
+							| s
+			.commits
+				each commit in group.commits
+					.commit
+						.commit-details.pull-left
+							.commit-message
+								span=isLoggedIn ? commit.message : commit.releaseInfo.version
+								if isLoggedIn && !standalone && commit.isReleased
+									span.badge.badge-success Released
+							if !isLoggedIn && !standalone && commit.releaseInfo.changeLog
+								hr.dense
+								each changeLogLine in (commit.releaseInfo.changeLog).split('\n')
+									span=changeLogLine
+									br
+							if isLoggedIn && !standalone
+								+user-info(commit.user, commit.userDisplayName)(class='concealed')
+									|  on #{formatDate(commit.timestamp)}
+						.commit-link.pull-right
+							if isLoggedIn
+								.commit-id.pull-right=commit.id
+								.clear
+							.pull-right.commit-info-container(data-commit-id=commit.id)
+								img(src='images/loader.gif' width=16 height=16)
+							.clear
+							if standalone
+								div: a.pull-right(href=commit.id + '.html') Details
+									small >>
+							else
+								- var subpath = isLoggedIn ? 'commit' : 'release'
+								div: a.pull-right(href=repository.group + '/' + repository.name + '/' + subpath + '/' + commit.id) Details &raquo;
+								.clear
+								if canCreateReleases
+									if !commit.isReleased && releasesEnabled
+										button.pull-right.btn.btn-success.release(data-commit-id=commit.id data-status='unreleased') Release
+									else if commit.isReleased
+										button.pull-right.btn.btn-warning.release(data-commit-id=commit.id data-status='released') Edit release info
+						.clear
+	+paging(resultInfo)

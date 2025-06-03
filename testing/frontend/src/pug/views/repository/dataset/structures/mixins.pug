@@ -1,0 +1,79 @@
+include ../mixins.pug
+
+mixin sub-field-ref(ref, ref2, path)
+	- var value = getValue(ref, path);
+	- var value2 = getValue(ref2, path); 
+	- var changed = ref && ref2 ? compare(value, value2) : null;
+	span(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		+ref(value, value2)
+		block
+
+mixin sub-field-header(ref, ref2, path, alternativePath)
+	- var value = getValue(ref, path, alternativePath);
+	- var value2 = getValue(ref2, path, alternativePath); 
+	- var changed = ref && ref2 ? compare(value, value2) : null;
+	th(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		+compare-value(value, value2)
+		block
+
+mixin sub-field-row(ref, ref2, path)
+	- var field = path && path.indexOf('.') !== -1 ? path.substring(path.lastIndexOf('.') + 1) : path;
+	- var value = getValue(ref, field);
+	- var value2 = getValue(ref2, field); 
+	if value || value2 || reviewMode
+		tr
+			td=getLabel(path)
+			+sub-field-cell(ref, ref2, field)
+
+mixin sub-field-ref-row(ref, ref2, path)
+	- var field = path && path.indexOf('.') !== -1 ? path.substring(path.lastIndexOf('.') + 1) : path;
+	- var value = getValue(ref, field);
+	- var value2 = getValue(ref2, field); 
+	if value || value2 || reviewMode
+		tr
+			td=getLabel(path)
+			+sub-field-ref-cell(ref, ref2, field)
+
+mixin sub-field-cell(ref, ref2, path, alternativePath, formatter, ignoreNull, collapseLongText)
+	- var value = getValue(ref, path, alternativePath, formatter);
+	- var value2 = getValue(ref2, path, alternativePath, formatter); 
+	- var changed = (ref && ref2) || ignoreNull ? compare(value, value2) : null;
+	td(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		if collapseLongText && !changed
+			if collapseLongText === true
+				+long-text(value)
+			else
+				+long-text(value, collapseLongText)
+		else
+			+compare-value(value, value2)
+		block
+
+mixin sub-field-ref-cell(ref, ref2, path)
+	- var value = getValue(ref, path);
+	- var value2 = getValue(ref2, path); 
+	- var changed = ref && ref2 ? compare(value, value2) : null;
+	td(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		+ref(value, value2)
+		block
+
+mixin boolean-sub-field(ref, ref2, path)
+	- var value = getValue(ref, path);
+	- var value2 = getValue(ref2, path); 
+	- var changed = compareTo&&ref&&ref2&&value!=value2?'changed':null;
+	span(data-compare=changed)
+		+compare-icon(changed)
+		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png' aria-label=value?'Checked icon':'Unchecked icon')
+		if changed
+			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png' aria-label=value?'Checked icon':'Unchecked icon')
+
+mixin sub-field-li(value, value2)
+	- var changed = compareTo && !value2 ? 'added' : (compareTo && !value ? 'removed' : compareTo && value != value2 ? 'changed' : null);
+	li(data-compare=changed)
+		+compare-icon(changed)
+		span.original-value=value
+		if changed
+			span.comparison-value=value2

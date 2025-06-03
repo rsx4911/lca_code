@@ -1,0 +1,30 @@
+include ../../mixins/commit-info.pug
+include ../../mixins/forms.pug
+include ../../mixins/user-info.pug
+
+.header-box
+	h4.pull-left
+		div=isLoggedIn ? commit.message : commit.releaseInfo.version
+		if !isLoggedIn && !standalone && commit.releaseInfo.changeLog
+			small
+				hr.dense
+				each changeLogLine in (commit.releaseInfo.changeLog).split('\n')
+					span=changeLogLine
+					br
+				hr.dense
+		if isLoggedIn
+			div: small=commit.id
+		div: small: +commit-info(commit.additions, commit.updates, commit.deletions)
+	if isLoggedIn && !standalone
+		if changeLogEnabled && commit.canCreateChangeLog
+			button.btn.btn-md.btn-success.pull-right.download-changelog Download changelog
+		if isGladAvailable
+			button.btn.btn-lg.btn-default.pull-right(data-action='push-to-glad') Push to GLAD
+		.clear
+		+user-info(commit.user, commit.userDisplayName)(class='concealed')
+			|  on #{formatDate(commit.timestamp)}
+	.pull-right(style='margin-top:5px;'): +select('type', 'Filter by model type', [], '', true)
+	.clear
+	.form-group
+		input#filter.form-control(type='text' placeholder='Filter by name' aria-label='Filter by name')
+.file-references.content-box

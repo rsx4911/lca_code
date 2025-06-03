@@ -1,0 +1,21 @@
+a.no-deco(href='#' data-action='show-message' data-type=recipient.type data-id=recipient.id)
+	.list-entry(class=selected?'active':null)
+		span.unread-messages.badge=unreadMessages?unreadMessages:''
+		span.online-indicator.badge(style=online?null:'display:none') &nbsp;
+		img.avatar.pull-left(src='ws/' + recipient.type + '/avatar/' + recipient.id, aria-label='Avatar of user ' + recipient.name)
+		if isBlocked
+			img.avatar.blocked(src='images/blocked.png' aria-label='Blocked avatar')
+		.message-container
+			div
+				.username.pull-left=recipient.name
+				.date.pull-right
+					if message
+						| #{formatTimeOrDate(message.date)}
+				.clear
+			.message
+				if message
+					if message.readDate && message.to.username === recipient.username
+						span.glyphicon.glyphicon-ok.read-indicator.is-read
+						|  
+					| #{message.text}
+		.clear

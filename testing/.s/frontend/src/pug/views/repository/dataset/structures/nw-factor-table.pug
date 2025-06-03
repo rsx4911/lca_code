@@ -1,0 +1,36 @@
+include ./mixins.pug
+
+mixin nw-factor-table(set, otherSet)
+	- var factors = getArrayValues(set, otherSet, 'NW_FACTOR', 'factors');
+	- var showNorm = false;
+	- var showWeight = false;
+	each factor in factors
+		- showNorm = showNorm || getValue(factor[0], 'normalisationFactor') || getValue(factor[1], 'normalisationFactor');
+		- showWeight = showWeight || getValue(factor[0], 'weightingFactor') || getValue(factor[1], 'weightingFactor');
+	if showNorm || showWeight
+		table#nw-factors.table
+			thead
+				tr
+					th=getLabel('nwSets.factors.impactCategory')
+					th
+						if showNorm
+							| #{getLabel('nwSets.factors.normalisationFactor')}
+					th
+						if showWeight
+							| #{getLabel('nwSets.factors.weightingFactor')}
+					th
+			tbody
+				each values in factors
+					- var nwSetId = getValue(set, 'id'); 
+					+nw-factor-row(values[0], values[1])
+
+mixin nw-factor-row(factor, otherFactor, nwSetId)
+	- var category = getValue(factor, 'impactCategory');
+	- var otherCategory = getValue(otherFactor, 'impactCategory');
+	- var changed = compareTo && !otherFactor ? 'added' : (compareTo && !factor ? 'removed' : null);
+	tr(data-compare=changed)
+		td
+			+sub-field(category, otherCategory, 'name')
+		+sub-field-cell(factor, otherFactor, 'normalisationFactor', null, formatScientific)
+		+sub-field-cell(factor, otherFactor, 'weightingFactor', null, formatScientific)
+		td(data-path=category?'nwSets[' + nwSetId + '].factors[' + category.id +']':null)

@@ -1,0 +1,165 @@
+html, body 
+	margin 0
+	padding 0
+	height 100%
+
+body 
+	font-family sans-serif
+	color rgb(84, 86, 91)
+
+	&:not(.public-mode)
+		background-color rgb(234, 235, 236)
+
+	&.login
+		background-color initial
+
+header
+	width 100%
+	height 65px
+	background-color white
+	border-bottom 1px solid rgb(221, 221, 221)
+
+	.logo-container
+		float left
+		padding-left 7px
+		height 65px
+		width 65px
+		background-color rgb(51, 60, 71)
+			
+		@media(min-width 992px)
+			width 230px
+			padding-left 91px
+
+		.logo
+			padding-top 8px
+					
+	.content-container
+		height 64px
+		float left
+		
+		@media(max-width 480px)
+			max-width 60%
+
+		@media(min-width 481px) and (max-width 767px)
+			max-width 70%
+
+		@media(min-width 768px) and (max-width 991px)
+			max-width 50%
+
+		@media(min-width 992px) and (max-width 1199px)
+			max-width 30%
+
+		@media(min-width 1200px) and (max-width 1299px)
+			max-width 45%
+
+		@media(min-width 1300px)
+			max-width 50%
+
+		.header-content
+			margin-left 30px
+			padding-top 13px
+
+			@media(max-width 480px)
+				margin-left 10px
+				
+			#header-title
+				height 40px
+				overflow hidden
+
+body.public-mode
+	height 100%
+	
+	header .logo-container
+		width 65px
+		padding-left 7px
+
+.btn .text
+	
+	@media(max-width 480px)
+		display none
+
+ul
+	margin 0
+	padding 0
+	list-style none			
+
+	&.dropdown-menu
+		left initial
+		right 0
+
+a, a:hover, a:visited, a:active, a:focus
+	
+	&:not(.btn):not(.default-link)
+		color inherit
+
+a.no-link, a.no-deco
+	text-decoration none !important
+	color inherit !important
+
+.form-value
+	margin-bottom 10px
+
+.align-center
+	text-align center
+
+.align-right
+	text-align right
+
+.clear
+	clear both
+
+.no-wrap
+	white-space nowrap
+
+.overflow-ellipsis
+	text-overflow ellipsis
+	overflow hidden
+	white-space nowrap
+    
+.center-inline
+	margin-left auto
+	margin-right auto
+
+.form-inline select
+
+	@media (min-width 768px)
+		margin-left 5px
+		
+.input-group-lg > .form-control, .input-group-lg > .input-group-addon, .input-group-lg > .input-group-btn > .btn, .form-control, .btn
+		border-radius 2px
+
+button.pull-right + button.pull-right
+	margin-right 5px
+
+input[type=checkbox], input[type=radio]
+	cursor pointer
+
+.abc-checkbox label
+	padding-left 9px
+	padding-top 2px
+
+.error-page
+	margin 50px auto 0 auto
+	text-align center
+
+	&:not(.stacktrace)
+		width 350px
+			
+	&.stacktrace .error-message
+		text-align initial
+		font-size 12px
+		padding 0 20px
+    	
+	hr
+		border-top 1px solid rgb(201, 201, 201)
+
+*
+	word-wrap break-word
+
+#block-interaction
+	position fixed
+	top 0
+	left 0
+	z-index 9999
+	width 100%
+	height 100%

@@ -1,0 +1,498 @@
+include ../../mixins/category-breadcrumb.pug
+include ../../mixins/forms.pug
+include ../../mixins/long-text.pug
+include ../../mixins/user-info.pug
+
+
+mixin content()
+	- // content has no tabs, but if usage search is activated we need tabs, so that the usage tab can be appended
+	if !dataset.deleted && !dataset.notFound
+		if showUsage
+			ul.nav.nav-tabs(role='tablist')
+				+nav-tab('info', true, true)
+				+nav-usage-tab()
+			.tab-content
+				+nav-tab-pane('info', true, true)
+					block
+				+nav-usage-tab-pane()
+		else
+			block
+
+mixin tabbed-content()
+	- // content already has tabs
+	if !dataset.deleted && !dataset.notFound
+		block
+
+mixin menubar()
+	if !standalone
+		.header-box
+			if isPublic
+				+release-selection('commitId', 'Version', releases, commitId, true)
+			else
+				+commit-selection('commitId', 'Commit', commits, commitId, true)
+			if dataset.deleted
+				.badge.pull-right.deleted Deleted
+			else if dataset.notFound
+				.badge.pull-right.deleted Not found
+			else
+				.btn-group-vertical.pull-right(role='group')
+					+download-dropdown
+					+comparison-dropdown
+			.clear
+			if !isPublic
+				- var currentCommit = commits.find(function(c) { return c.id === dataset.commitId; }) || commits[0];
+				+user-info(currentCommit.user, currentCommit.userDisplayName)(class='concealed' data-path='null')
+					|  on #{formatDate(currentCommit.timestamp)}
+				.clear
+	if compareTo
+		.header-box.comparison-statistics
+			h4 Differences 
+				if !standalone
+					| to 
+					if compareTo.id !== dataset.id
+						| '#{compareTo.name}' 
+					+version-info()
+
+			.pull-left(data-compare='added') 
+				+compare-icon('added')
+				| Additions: 
+				span.count 0
+			.pull-left(data-compare='changed')
+				+compare-icon('changed')
+				| Changes: 
+				span.count 0
+			.pull-left(data-compare='removed')
+				+compare-icon('removed')
+				| Deletions: 
+				span.count 0
+			.clear
+
+mixin version-info()
+		if isPublic
+			- var version = releases.find(function(r) { return r.id === compareTo.commitId; }).version;
+			| version '#{version}'
+		else
+			| version '#{compareTo.commitId}'
+
+mixin download-dropdown()
+	.dropdown.btn-group
+		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+			span.glyphicon.glyphicon-download
+			span.text Download 
+			span.caret
+		ul.dropdown-menu
+			li: a(href='#' data-format='json') as JSON-LD (openLCA 2.x)
+			li: a(href='#' data-format='json1') as JSON-LD (openLCA 1.x)
+
+mixin comparison-dropdown()
+	.dropdown.btn-group
+		button.btn.btn-success.dropdown-toggle(data-toggle='dropdown' aria-haspopup='true' aria-expanded='false')
+			span.glyphicon.glyphicon-transfer
+			span.text Compare to
+			span  
+			span.caret
+		ul.dropdown-menu
+			- var selectFrom = releases || commits
+			- var isFirst = selectFrom.length === 1 || selectFrom[selectFrom.length - 1].id === commitId;
+			if !isFirst
+				li: a(href='#' data-compare-to='previous') previous version
+				li.divider(role='separator')
+			if selectFrom.length > 2 || (selectFrom.length === 2 && isFirst)
+				li: a(href='#' data-compare-to='other-version') other version...
+			li: a(href='#' data-compare-to='other-dataset') other data set...
+
+
+mixin header()
+	.title(class=isPublic?'header-box':null)
+		img.pull-right.model-icon(src='images/model/large/' + getIcon(dataset), aria-label='Model icon of ' + dataset.type)
+		.info-header
+			h3(data-path='name')
+				+field('name')
+			.category
+				+category-field(dataset, compareTo)
+			h3: small: span(data-path='description')
+				+field('description', true)
+			.clear
+	block
+	if !isPublic
+		hr
+	else
+		p &nbsp;
+
+mixin meta() 
+	.model-right-content.content-box
+		.meta-info
+			if !dataset.deleted && !dataset.notFound
+				+labeled-field-block('version')
+				+labeled-field-block('lastChange', formatDate, '-')
+			+labeled-field-block('id')
+			if !dataset.deleted && !dataset.notFound
+				+labeled-array-field-block('tags')(class='badge')
+			if !dataset.deleted && !dataset.notFound
+				block
+
+mixin maximize-icon()
+	li.maximize-content: a(href='#'): span.glyphicon.glyphicon-fullscreen
+
+mixin nav-tab(path, active, renderEmpty)
+	if renderEmpty || reviewMode || hasAtLeastOne(dataset, compareTo, path)
+		li(role='presentation' class=active?'active':null)
+			- var id = path.replace('.', '-');
+			a(href=('#' + id) aria-controls=id role='tab' data-toggle='tab' data-path=path)=getLabel(path)
+				|  
+				span.badge.change-count
+
+mixin nav-usage-tab(id)
+	if showUsage
+		- id = id || 'usedBy';
+		+nav-tab(id, false, true)
+
+mixin nav-tab-pane(path, active, renderEmpty)
+	.tab-pane(id=path.replace('.', '-') role='tabpanel' class=active?'active':null)
+		if renderEmpty || hasAtLeastOne(dataset, compareTo, path)
+			block
+
+mixin nav-usage-tab-pane(id)
+	if showUsage
+		- id = id || 'usedBy';
+		+nav-tab-pane(id, false, true)
+			.form-group
+				input.form-control(id=id+'-filter' type='text' placeholder='Filter by name' aria-label='Filter by name')
+			div(id=id+'-data')
+
+mixin compare-icon(value)
+	if value === 'added'
+		span.comparison-indicator.glyphicon.glyphicon-plus-sign&attributes(attributes)
+	else if value === 'changed'
+		span.comparison-indicator.glyphicon.glyphicon-exclamation-sign&attributes(attributes)
+	else if value === 'removed'
+		span.comparison-indicator.glyphicon.glyphicon-minus-sign&attributes(attributes)
+
+mixin compare-value(value, value2, defaultLabel)
+	if value || value === 0
+		if $.isArray(value)
+			span.comma-separated.original-value
+				each v in value
+					span=v
+		else
+			span.original-value=value
+	else if defaultLabel && !(compareTo && (value2 || value2 === 0))
+		| #{defaultLabel}
+	if (value2 || value2 === 0) && value != value2
+		if $.isArray(value2)
+			span.comma-separated.comparison-value
+				each v in value2
+					span=v
+		else
+			span.comparison-value=value2
+
+mixin field(path, collapseLongtext)
+	+sub-field(dataset, compareTo, path, null, collapseLongText)&attributes(attributes)
+
+mixin sub-field(ref, ref2, path, alternativePath, collapseLongText)
+	- var value = getValue(ref, path, alternativePath);
+	- var value2 = getValue(ref2, path, alternativePath); 
+	- var changed = ref && ref2 ? compare(value, value2) : null;
+	span(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		if collapseLongText && !changed
+			+long-text(value)
+		else
+			+compare-value(value, value2)
+		block
+
+mixin field-block(path, defaultLabel)
+	+sub-field-block(dataset, compareTo, path, null, defaultLabel)&attributes(attributes)
+
+mixin sub-field-block(ref, ref2, path, alternativePath, defaultLabel)
+	- var value = getValue(ref, path, alternativePath);
+	- var value2 = getValue(ref2, path, alternativePath); 
+	- var changed = ref && ref2 ? compare(value, value2) : null;
+	div(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		+compare-value(value, value2, defaultLabel)
+		block
+
+mixin labeled-field-block(path, formatter, defaultLabel, cropLongText)
+	- var value = getValue(dataset, path, null, formatter);
+	- var value2 = getValue(compareTo, path, null, formatter);
+	- var changed = compare(value, value2);
+	strong=getLabel(path)
+	div(data-path=path, data-compare=changed)
+		+compare-icon(changed)
+		if changed || !cropLongText
+			+compare-value(value, value2, defaultLabel)
+		else
+			+long-text(value || defaultLabel)
+
+mixin labeled-boolean-field-block(path)
+	strong=getLabel(path)
+	+boolean-field-block(path)
+
+mixin labeled-ref-block(path)
+	strong=getLabel(path)
+	+ref-block(path, '-')
+
+mixin labeled-array-field-block(path)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path);
+	if (value && value.length) || (value2 && value2.length)
+		strong=getLabel(path)
+			div(data-path=path)
+				if value
+					each v in value
+						- var other = value2 ? findValue(null, v, value2) : null;
+						span(data-compare=compareTo&&!other?'added':null)
+							if !other
+								+compare-icon('added')
+							span&attributes(attributes)=v
+				if value2
+					each other in value2
+						- var v = findValue(null, other, value);
+						if !v
+							span(data-compare='removed')
+								+compare-icon('removed')
+								span&attributes(attributes)=other
+
+mixin boolean-field(path)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path);
+	- var added = compareTo && (compareTo.deleted || compareTo.notFound);
+	- var changed = compareTo ? added ? 'added' : value != value2 ? 'changed' : null : null;
+	span(data-compare=changed)
+		+compare-icon(changed)
+		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
+		if changed && !added
+			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
+
+mixin boolean-field-block(path)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path);
+	- var added = compareTo && (compareTo.deleted || compareTo.notFound);
+	- var changed = compareTo ? added ? 'added' : value != value2 ? 'changed' : null : null;
+	div(data-compare=changed)
+		+compare-icon(changed)
+		span.original-value: img.icon-small(src='images/check_' + (value?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
+		if changed && !added
+			span.comparison-value: img.icon-small(src='images/check_' + (value2?'true':'false') + '.png', aria-label=value?'Checked icon':'Unchecked icon')
+
+mixin field-row-frame(path)
+	tr
+		td=getLabel(path)
+		td(data-path=path)&attributes(attributes)
+			block
+
+mixin field-row-value(value, value2)
+	- var changed = compare(value, value2);
+	+compare-icon(changed)
+	if changed
+		+compare-value(value, value2)
+	else
+		+long-text(value)
+
+mixin field-row(path, formatter)
+	- var value = getValue(dataset, path, null, formatter);
+	- var value2 = getValue(compareTo, path, null, formatter);
+	if value || value2 || reviewMode
+		- var changed = compare(value, value2);
+		+field-row-frame(path)(data-compare=changed)
+			+field-row-value(value, value2)
+			block
+
+mixin boolean-field-row(path) 
+	+field-row-frame(path)
+		+boolean-field(path)
+
+mixin array-field-row(value, value2, path, type, getSpecificId)
+	if (value && value.length) || (value2 && value2.length) || reviewMode
+		+field-row-frame(path)
+			if value
+				each v in value
+					- var other = value2 ? findValue(type, v, value2) : null;
+					div(data-compare=compareTo&&!other?'added':null, data-path=path + '[' + getSpecificId(v) + ']')
+						if !other
+							+compare-icon('added')
+						+ref(v, null)
+			if value2
+				each other in value2
+					- var v = findValue(type, other, value);
+					if !v
+						div(data-compare='removed')
+							+compare-icon('removed')
+							+ref(null, other)
+
+mixin field-link-row(type, path, urlPrefix, query)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path); 
+	if value || value2 || reviewMode
+		- var changed = compareTo ? compare(value, value2) : null;
+		+field-row-frame(path)(data-compare=changed)
+			+compare-icon(changed)
+			if value
+				- var isExternal = type === 'external';
+				- var isEmail = type === 'email';
+				- var href = urlPrefix ? urlPrefix + '/' + value : value;
+				if query
+					- href += query;
+				if isExternal && href.indexOf('http') !== 0 && href.indexOf('//') !== 0
+					- href = 'http://' + href;
+				if isEmail && href.indexOf('mailto:') !== 0
+					- href = 'mailto:' + href
+				a.original-value(href=href target='_blank')=value
+			if changed && value2
+				span.comparison-value=value2
+
+mixin ref(ref, ref2, defaultLabel, noCompareIcon)
+	- var changed = ref2 && compare(ref, ref2);
+	- var changedName = ref2 && !changed && compare(getValue(ref, 'name'), getValue(ref2, 'name'));
+	span(data-compare=changedName==='changed'?'changed':null)
+		if changedName==='changed' && !noCompareIcon
+			+compare-icon(changedName)
+		span.original-value
+			if ref
+				img.model-icon-small(src='images/model/small/' + getIcon(ref), aria-label='Model icon of ' + ref.type)
+				- var query = commitId ? '?commitId=' + commitId : ''
+				- var path = '';
+				if ref.category
+					if $.isArray(ref.category)
+						each category, index in ref.category
+							if index > 0
+								- path += '/';
+							- path += category;
+					else
+						- path = ref.category;
+					- path += '/' + ref.name
+				else
+					- path = ref.name;
+				if ref.isInRepo
+					a(href=baseUrl + '/' + getTypeAsEnum(ref.type) + '/' + ref.id + query, title=path)=ref.name
+				else
+					span(title=path)=ref.name
+			else if defaultLabel && !(compareTo && ref2)
+				| #{defaultLabel}
+		if changed || changedName
+			span.comparison-value
+				img.model-icon-small(src='images/model/small/' + getIcon(ref2), aria-label='Model icon of ' + ref2.type)
+				- var query = comparisonCommitId ? '?commitId=' + comparisonCommitId : ''
+				- var path = ref2.category ? ref2.category + '/' + ref2.name : ref2.name
+				if ref2.isInRepo
+					a(href=baseUrl + '/' + getTypeAsEnum(ref2.type) + '/' + ref2.id + query, title=path)=ref2.name
+				else
+					span(title=path)=ref2.name
+
+mixin ref-row(path)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path);
+	if value || value === 0 || value2 || value2 === 0 || reviewMode
+		- var changed = compare(value, value2)
+		tr
+			td=getLabel(path)
+			td(data-compare=changed, data-path=path)
+				+compare-icon(changed)
+				+ref(value, value2)
+
+mixin ref-field(path, defaultLabel)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path); 
+	- var changed = compareTo ? compare(value, value2) : null;
+	span(data-compare=changed, data-path=path)
+		+compare-icon(changed)
+		+ref(value, value2, defaultLabel)
+
+mixin ref-block(path, defaultLabel)
+	- var value = getValue(dataset, path);
+	- var value2 = getValue(compareTo, path); 
+	- var changed = compareTo ? compare(value, value2) : null;
+	div(data-compare=changed, data-path=path)
+		+compare-icon(changed)
+		+ref(value, value2, defaultLabel)
+
+mixin category-field(parent, otherParent, inTable, categoryType)
+	- var value = ((parent ? parent.category : null) || '').split('/')
+	- var value2 = ((otherParent ? otherParent.category : null) || '').split('/')
+	- var depth = inTable ? 2 : null;
+	- var categoryCompare = ((value && value2) || !inTable) && parent && otherParent ? compare(value, value2) : null;
+	span(data-compare=categoryCompare)
+		+compare-icon(categoryCompare)
+		if value
+			- var typeLabel = getTypeLabel(getTypeAsEnum(categoryType ? categoryType : dataset.type));
+			- var url = baseUrl + 's' + '/' + typeLabel;
+			+category-breadcrumb(value, url, true, depth, commitId, !getValue(parent, 'categoryIsInRepo'))(data-path=!inTable?'category':null, class='original-value')
+			if value2
+				br
+		if value2 && (!value || categoryCompare)
+			- var typeLabel = getTypeLabel(getTypeAsEnum(compareTo.type));
+			- var url = baseUrl + 's' + '/' + typeLabel;
+			+category-breadcrumb(value2, url, true, depth, comparisonCommitId, !getValue(otherParent, 'categoryIsInRepo'))(class='comparison-value', style=value&&!inTable?'margin-left:19px':null)
+
+mixin uncertainty-cell(ref1, ref2, formatter)
+	- var u1 = ref1 ? ref1.uncertainty : null; 
+	- var u2 = ref2 ? ref2.uncertainty : null; 
+	- var changed = ref1 && ref2 && compareTo ? compareUncertainty(u1, u2) : null;
+	td(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		if u1
+			span.original-value: +uncertainty(u1, formatter)
+		if changed && u2
+			span.comparison-value: +uncertainty(u2, formatter)
+		block
+
+mixin uncertainty(uncertainty, formatter)
+	if uncertainty
+		if uncertainty.distributionType === 'LOG_NORMAL_DISTRIBUTION'
+			| Lognormal distribution
+			br
+			| Geom. mean: 
+			+formatted-number-span(uncertainty, 'geomMean', formatter)
+			br
+			| Geom. SD: 
+			+formatted-number-span(uncertainty, 'geomSd', formatter)
+		else if uncertainty.distributionType === 'NORMAL_DISTRIBUTION'
+			| Normal distribution 
+			br
+			| Mean: 
+			+formatted-number-span(uncertainty, 'mean', formatter)
+			br
+			| SD: 
+			+formatted-number-span(uncertainty, 'sd', formatter)
+		else if uncertainty.distributionType === 'TRIANGLE_DISTRIBUTION'
+			| Triangle distribution
+			br
+			| Min: 
+			+formatted-number-span(uncertainty, 'minimum', formatter)
+			br
+			| Mode: 
+			+formatted-number-span(uncertainty, 'mode', formatter)
+			br
+			| Max: 
+			+formatted-number-span(uncertainty, 'maximum', formatter)
+		else if uncertainty.distributionType === 'UNIFORM_DISTRIBUTION'
+			| Uniform distribution 
+			br
+			| Min: 
+			+formatted-number-span(uncertainty, 'minimum', formatter)
+			br
+			| Max: 
+			+formatted-number-span(uncertainty, 'maximum', formatter)
+
+mixin formatted-number-span(ref, path, formatter)
+	span(title=getValue(ref, path))=getValue(ref, path, null, formatter)
+
+mixin dq-field(ref, ref2, path, system, system2, defaultLabel, inTable)
+	- var value = getValue(ref, path);
+	- var value2 = getValue(ref2, path); 
+	- var changed = (!inTable || (ref && ref2)) && compareTo ? compare(value, value2) : null;
+	span(data-compare=changed)&attributes(attributes)
+		+compare-icon(changed)
+		+dq-sub-field(value, system, 'original')
+		if changed || (!value && value2)
+			+dq-sub-field(value2, system2, 'comparison')
+		else if !value
+			| #{defaultLabel}
+
+mixin dq-sub-field(entry, system, type)
+	if entry
+		if system
+			a(href='#' data-action='show-data-quality', data-entry=entry, data-scheme=system.id, class=type+'-value')=entry
+		else
+			span(class=type+'-value')=entry
