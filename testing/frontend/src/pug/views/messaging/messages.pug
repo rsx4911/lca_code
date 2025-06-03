@@ -1,0 +1,19 @@
+.header-box
+	.actions
+		button.btn.btn-success.btn-lg(data-action='start-new-conversation') Start new conversation
+	.message-with
+		img.avatar(aria-label='Avatar of current recipient')
+		span.username
+		button.btn.btn-lg.btn-danger.block.pull-right(style='display:none') Block
+		button.btn.btn-lg.btn-danger.unblock.pull-right(style='display:none') Unblock
+	.clear
+.content-box
+	#conversations
+		.list-container
+	#conversation
+		#conversation-messages
+		#conversation-input
+			span.glyphicon.glyphicon-send(style=selected?null:'display:none')
+			.conversation-input-wrapper
+				input#next-message(disabled=selected?false:true placeholder=selected?'Type your message here...':null, aria-label='Message input')
+	.clear

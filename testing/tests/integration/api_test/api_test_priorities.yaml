@@ -1,0 +1,888 @@
+# LCA Collaboration Server API Routes for testing
+# Organized by priority (PO, P1, P2) for CI/CD pipeline execution
+# Used for testing in the CI/CD pipeline
+# Category: Fast - Quick operations that don't take much time to run.
+# Category: Slow - Operations that typically take longer to complete/ complex processing items.
+
+api_test_priorities:
+  P0:
+    description: "Critical features that must work for core functionality"
+    routes:
+      # Authentication
+      - path: /ws/public/login
+        method: POST
+        description: Login to the system
+        component: Authentication
+        category: fast
+        request_payload:
+          username: "${AUTH_USERNAME}"
+          password: "${AUTH_PASSWORD}"
+        expected_responses:
+          - code: 200
+            description: Login successful
+          - code: 401
+            description: Invalid Credentials
+      
+      # Group Management
+      - path: /ws/group
+        method: GET
+        description: List all accessible groups
+        component: Group
+        category: fast
+        expected_responses:
+        - code: 200
+          description: List of groups 
+          
+      # Repository Management
+      - path: /ws/respository
+        method: GET
+        description: List all accessible repositories
+        component: Repository
+        category: fast
+        expected_responses:
+        - code: 200
+          description: List of repositories returned
+
+      # Dataset Management
+      - path: /ws/public/browse/{group}/{repo}/{type}/{refId}
+        method: GET
+        description: Retrieve dataset
+        component: Dataset
+        category: fast
+        parameters:
+          - name: commitId 
+            in: query
+            optional: true
+        expected_responses:
+          - code: 200
+            description: Dataset successfully retrieved
+          - code: 404
+            description: Dataset not found 
+
+      # Search Management
+      - path: /ws/public/search
+        method: GET
+        description: Search datasets
+        component: Search
+        category: fast
+        parameters:
+          - name: query
+            in: query
+            optional: true
+          - name: page
+            in: query
+            optional: true
+            default: 1
+          - name: pageSize
+            in: query
+            optional: true
+            default: 25
+        expected_responses:
+          - code: 200
+            description: Search results returned
+
+      # Download Management
+      - path: /ws/public/download/json/prepare/{group}/{repo}
+        method: GET
+        description: Prepare repository for download
+        component: Download
+        category: slow
+        parameters:
+          - name: commitId
+            in: query
+            optional: true
+        expected_responses:
+          - code: 200
+            description: Download token returned 
+
+      - path: /ws/public/download/json/{token}
+        method: GET
+        description: Download prepared JSON-LD package
+        component: Download
+        category: slow
+        expected_responses:
+          - code: 200
+            description: JSON-LD package downloaded
+          - code: 404
+            description: Invalid token 
+
+
+  P1:
+    description: "Important features/High Priority endpoints needed for regular operation"
+    routes:
+      # Group Management
+      - path: /ws/group/{group}
+        method: GET
+        description: Get group settings
+        component: Group
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Returns the settings and permissions for {group}
+          - code: 401
+            description: Not logged in 
+          - code: 403
+            description: No permission to READ in {group}
+          - code: 404
+            description: Group not found 
+
+      - path: /ws/group/{group}
+        method: POST
+        description: Create a new group
+        component: Group 
+        category: fast
+        expected_responses:
+          - code: 201
+            description: Group successfully created
+          - code: 409
+            description: Group already exists
+
+      - path: /ws/group/settings/{group}/{setting}
+        method: PUT
+        description: Update group settings
+        component: Group
+        category: fast
+        request_payload:
+          value: "Setting value"
+        expected_repsonses:
+          - code: 200
+            description: Setting successfully updated
+
+      - path: /ws/group/{group}
+        method: DELETE
+        description: Delete a group (final cleanup)
+        component: Group
+        category: slow
+        expected_repsonses:
+          - code: 200
+            description: Group successfully deleted
+          - code: 403
+            description: No permission to delete
+
+      # Repository Management
+      - path: /ws/repository/{group}/{repo}
+        method: GET 
+        description: Get repository settings
+        component: Repository
+        category: fast 
+        expected_repsonses:
+          - code: 200
+            description: Returns the settings and permissions for {group}/{repo}
+          - code: 401
+            description: Not logged in
+          - code: 403
+            description: No permission to READ in {group}/{repo}
+          - code: 404
+            description: Repository not found
+          - code: 406
+            description: Unsupported schema
+
+      - path: /ws/repository/{group}/{repo}
+        method: POST
+        description: Create a new repository
+        component: Repository
+        category: fast
+        expected_repsonses:
+          - code: 201
+            description: Repository successfully created
+          - code: 409
+            description: Repository already exists
+
+      - path: /ws/repository/settings/{group}/{repo}/{setting}/{value}
+        method: PUT
+        description: Update respository settings
+        component: Repository
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Setting successfully updated
+
+      - path: /ws/repository/{group}/{repo}
+        method: DELETE
+        description: Delete a repository (final cleanup)
+        component: Repository
+        category: slow
+        expected_repsonses:
+          - code: 200
+            description: Repository successfully deleted
+          - code: 403
+            description: No permission to delete
+
+      # Membership Management - Group
+      - path: /ws/membership/{group}
+        method: GET
+        description: Get group memberships
+        component: Membership - Group
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Group memberships returned
+
+      - path: /ws/membership/{group}/user/{username}/{role}
+        method: POST
+        description: Add a user to a group
+        component: Membership - Group
+        category: fast
+        expected_reponses:
+          - code: 201
+            description: User successfully added to group
+          - code: 409
+            description: User already in group
+
+      - path: /ws/membership/{group}/user/{username}/{newRole}
+        method: PUT
+        description: Update a user's role in a group
+        component: Membership - Group
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: User role successfully updated
+
+      - path: /ws/membership/{group}/user/{username}
+        method: DELETE
+        description: Remove a user from a group
+        component: Membership - Group 
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: User successfully removed from group
+
+      # Membership Management - Repository
+      - path: /ws/membership/{group}/{repo}
+        method: GET
+        description: Get repository memberships
+        component: Membership - Repository
+        category: fast
+        expected_reponses:
+          - code: 200
+            description: Repository memberships returned
+
+      - path: /ws/membership/{group}/{repo}/user/{username}/{role}
+        method: POST
+        description: Add a user to a repository
+        component: Membership - Repository
+        category: fast
+        expected_repsonses:
+          - code: 201
+            description: User successfully added to repository
+          - code: 409
+            description: User already in repository
+
+      - path: /ws/membership/{group}/{repo}/user/{username}
+        method: DELETE
+        description: Remove a user from a repository
+        component: Membership - Repository
+        category: fast
+        expected_responses:
+          - code: 200
+            descriptin: User successfully removed from repository
+
+      # Dataset Management
+      - path: /ws/public/browse/{group}/{repo}/{type}/{refId}
+        method: GET
+        description: Get Dataset - permission check 
+        component: Dataset
+        category: fast
+        parameters:
+          - name: commitId
+            in: query
+            optional: true
+        expected_repsonses:
+          - code: 200
+            description: Dataset successfully retrieved
+          - code: 403
+            description: No permission to READ in {group}/{repo}
+      
+      - path: /ws/public/browse/{group}/{repo}/{type}/{nonexistent-refId}
+        method: GET 
+        description: Get dataset - Non-existent
+        component: Dataset
+        category: fast
+        parameters:
+          - name: commitId
+            in: query
+            optional: true
+        expected_repsonses:
+          - code: 404
+            description: Dataset not found
+
+      # Search Management
+      - path: /ws/public/search
+        method: GET
+        description: Search datasets by group
+        component: Search
+        category: fast
+        parameters:
+          - name: group
+            in: query
+            default: "testgroup"
+        expected_reponses:
+          - code: 200
+            description: Filtered search results by group returned
+
+      - path: /ws/public/search
+        method: GET
+        description: Search datasets by repository
+        component: Search
+        category: fast
+        parameters:
+          - name: repositoryId 
+            in: query
+            default: "testgroup/testrepo"
+        expected_repsonses:
+          - name: 200
+            description: Filtered search results by repository returned
+
+      - path: /ws/public/search
+        method: GET 
+        description: Search datasets with pagination
+        component: Search
+        category: fast
+        parameters:
+          - name: page
+            in: query
+            default: 2
+          - name: pageSize
+            in: query
+            default: 20
+        expected_repsonses:
+          - code: 200
+            description: Paginated search results returned
+      
+      - path: /ws/public/search/flowLinks/{flowRefId}
+        method: GET
+        description: Search flow links 
+        component: Search
+        category: fast
+        parameters:
+          - name: direction
+            in: query
+            optional: true 
+          - name: page
+            in: query
+            optional: true
+            default: 1
+        expected_repsonses:
+          - code: 200
+            description: Flow link results returned
+
+      # History Management
+      - path: /ws/history/{group}/{repo}
+        method: GET
+        description: Get repository commit history 
+        component: History
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Repository history returned
+          - code: 204
+            description: No commits found
+
+      - path: /ws/history/{group}/{repo}/{type}/{refId}
+        method: GET 
+        description: Get dataset commit history
+        component: History
+        category: fast
+        expected_repsonses: 
+          - code: 200
+            description: Dataset history returned
+          - code: 204
+            description: No commits found
+
+  P2:
+    description: "Low priority/Secondary tests or edge-case APIs; test after core coverage"
+    routes:
+      # Authentication
+      - path: /ws/public/login
+        method: POST
+        description: Login with 2FA
+        component: Authentication
+        category: slow
+        request_payload:
+          - username: "${AUTH_USERNAME}" 
+          - password: "${AUTH_PASSWORD}"
+          - token: "${2FA_TOKEN}"
+        expected_repsonses:
+          - code: 200
+            description: Login successful with 2FA 
+          - code: 401
+            description: Invalid token 
+
+      - path: /ws/public/login
+        method: POST
+        description: Login when already authenticated
+        component: Authentication
+        category: fast
+        request_payload:
+          - username: "${AUTH_USERNAME}"
+          - password: "${AUTH_PASSWORD}"
+        expected_repsonses:
+          - code: 409
+            description: Already authenticated
+
+      # Group Management
+      - path: /ws/group
+        method: GET
+        description: List groups with pagination
+        component: Group 
+        category: fast
+        parameters:
+          - name: page
+            in: query
+            default: 2
+          - name: pageSize
+            in: query
+            default: 20
+        expected_repsonses:
+          - code: 200
+            description: Paginated groups returned 
+
+      - path: /ws/group
+        method: GET
+        description: List groups with filtering
+        component: Group 
+        category: fast
+        parameters:
+          - name: filter 
+            in: query
+            default: "test" 
+          - name: onlyIfCanWrite
+            in: query
+            default: true
+        expected_repsonses:
+          - code: 200
+            description: Filtered groups returned
+
+      - path: /ws/group/{nonexistent-group}
+        method: GET
+        description: Get non-existent group 
+        component: Group
+        category: fast 
+        expected_repsonses:
+          - code: 404
+            description: Group not found
+
+      - path: /ws/group/{group}
+        method: POST 
+        description: Create group with invalid name 
+        component: Group 
+        category: fast 
+        expected_repsonses:
+          - code: 400
+            description: Invalid group name 
+
+      - path: /ws/group/avatar/{group}
+        method: GET 
+        description: Get group avatar 
+        component: Group 
+        category: fast 
+        expected_repsonses:
+          - code: 200
+            description: Group avatar returned
+          - code: 404
+            description: Avatar not found 
+
+      - path: /ws/group/avatar/{group}
+        method: PUT 
+        description: Set group avatar
+        component: Group
+        category: slow 
+        request_payload_type: multipart/form-data
+        expected_repsonses:
+          - code: 200
+            description: Avatar successfully set 
+          - code: 403
+            description: No permission to write 
+
+      # Repository Management
+      - path: /ws/repository
+        method: GET
+        description: List repositories with pagination
+        component: Repository
+        category: fast
+        parameters:
+          - name: page
+            in: query
+            default: 2
+          - name: pageSize
+            in: query
+            default: 20
+          - name: group
+            in: query
+            default: "testgroup"
+        expected_repsonses: 
+          - code: 200
+            description: Paginated repositories returned
+
+      - path: /ws/repository/{group}/{nonexistent-repo}
+        method: GET
+        description: Get non-existent repository 
+        component: Repository
+        category: fast
+        expected_repsonses:
+          - code: 404
+            description: Repository not found
+
+      - path: /ws/repository/meta/{group}/{repo}
+        method: GET
+        description: Get repository meta information
+        component: Repository
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Repository meta information returned
+          - code: 404
+            description: Repository not found 
+
+      - path: /ws/repository/avatar/{group}/{repo}
+        method: GET
+        description: Get repository avatar
+        component: Repository
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Repository avatar returned
+          - code: 404
+            description: Avatar not found
+
+      - path: /ws/repository/avatar/{group}/{repo}
+        method: PUT
+        description: Set repository avatar
+        component: Repository
+        category: slow
+        request_payload_type: multipart/form-data
+        expected_repsonses:
+          - code: 200
+            description: Avatar successfully set
+          - code: 403
+            description: No permission to write
+
+      - path: /ws/repository/export/{group}/{repo}
+        method: GET
+        description: Export repository
+        component: Repository
+        category: slow
+        expected_repsonses:
+          - code: 200
+            description: Repository exported successfully
+          - code: 404
+            description: Repository not found
+
+      - path: /ws/repository/import/{group}/{repo}
+        method: POST
+        description: Import repository data (JSON-LD)
+        component: Repository
+        category: slow
+        parameters:
+          - name: format 
+            in: query
+            default: "json-ld"
+        request_payload_type: multipart/form-data
+        expected_repsonses:
+          - code: 200
+            description: Data imported successfully
+          - code: 400
+            description: Missing commit message
+
+      - path: /ws/repository/move/{group}/{repo}/{newGroup}/{newRepo}
+        method: POST 
+        description: Move repository
+        component: Repository
+        category: slow
+        expected_repsonses:
+          - code: 200
+            description: Repository moved successfully
+          - code: 409
+            description: Target repository already exists
+
+      - path: /ws/repository/clone/{group}/{repo}/{commitId}/{newGroup}/{newRepo}
+        method: POST
+        description: Clone repository
+        component: Repository
+        category: slow
+        expected_repsonses:
+          - code: 200
+            description: Repository cloned successfully
+          - code: 409
+            description: Target repository already exists
+
+      # Membership Management - Group
+      - path: /ws/membership/{group}/team/{teamname}/{role}
+        method: POST
+        description: Add team to a group 
+        component: Membership - Group
+        category: fast
+        expected_repsonses:
+          - code: 201
+            description: Team added to group
+          - code: 409
+            description: Team already in group
+
+      - path: /ws/membership/{group}/team/{teamname}/{newRole}
+        method: PUT
+        description: Update team role in group
+        component: Membership - Group
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Team role updated
+          - code: 404
+            description: Team not found
+
+      - path: /ws/membership/{group}/team/{teamname}
+        method: DELETE
+        description: Remove team from group
+        component: Membership - Group
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Team removed from group
+          - code: 404
+            description: Team not found
+
+      # Membership Management - Repository
+      - path: /ws/membership/{group}/{repo}/team/{teamname}/{role}
+        method: POST
+        description: Add team to repository
+        component: Membership - Repository
+        category: fast
+        expected_reponses:
+          - code: 201
+            description: Team added to repository
+          - code: 409
+            description: Team already in repository
+
+      - path: /ws/membership/{group}/{repo}/team/{teamname}/{newRole}
+        method: PUT
+        description: Update team role in repository
+        component: Membership - Repository
+        category: fast
+        expected_responses:
+          - code: 200
+            description: Team role updated
+          - code: 404
+            description: Team not found
+
+      - path: /ws/membership/{group}/{repo}/team/{teamname}
+        method: DELETE
+        description: Remove team from repository
+        component: Membership - Repository
+        category: fast
+        expected_responses:
+          - code: 200
+            description: Team removed from repository
+          - code: 404
+            description: Team not found
+
+      # Dataset Management
+      - path: /ws/public/browse/{group}/{repo}/{type}/{refId}
+        method: GET
+        description: Get dataset with Invalid Commit ID 
+        component: Dataset
+        category: fast
+        parameters:
+          - name: commitId 
+            in: query
+            default: "invalid-commit-id"
+        expected_repsonses:
+          - code: 404
+            description: Commit ID not found 
+
+      - path: /ws/public/browse/{group}/{nonexistent-repo}/{type}/{refId}
+        method: GET
+        description: Get Dataset from Non-existent Repository
+        component: Dataset
+        category: fast
+        expected_repsonses:
+          - code: 404
+            description: Repository not found
+
+      # History Management
+      - path: /ws/history/search/{group}/{repo}
+        method: GET
+        description: Search commit history with pagination
+        component: History
+        category: fast
+        parameters:
+          - name: page
+            in: query
+            default: 2
+          - name: pageSize
+            in: query
+            default: 20
+          - name: filter
+            in: query
+            default: "bugfix"
+        expected_repsonses:
+          - code: 200
+            description: Filtered commit history returned
+          - code: 204
+            description: No commits found
+
+      - path: /ws/history/references/{group}/{repo}/{commitId}
+        method: GET
+        description: Get commit references 
+        component: History
+        category: fast
+        parameters:
+          - name: type
+            in: query
+            default: "PROCESS"
+        expected_repsonses:
+          - code: 200
+            description: Commit references returned
+          - code: 204
+            description: No references found
+
+      - path: /ws/history/commit/{group}/{repo}/{commitId}
+        method: GET 
+        description: Get specific commit
+        component: History
+        category: fast
+        expected_repsonses:
+          - code: 200
+            description: Commit returned
+          - code: 404
+            description: Commit not found
+
+      - path: /ws/history/previousCommitId/{group}/{repo}/{type}/{refId}/{commitId}
+        method: GET
+        description: Get previous commit ID 
+        component: History
+        category: fast
+        expected_repsonses:
+          - code: 200 
+            description: Previous commit ID returned
+          - code: 404
+            description: No previous commit found
+
+      # Search Management
+      - path: /ws/public/search
+        method: GET 
+        description: Search datasets with advanced filters
+        component: Search
+        category: fast
+        parameters:
+          - name: type
+            in: query
+            default: "PROCESS"
+          - name: flowType
+            in: query
+            default: "ELEMENTARY_FLOW"
+          - name: processType
+            in: query
+            default: "UNIT_PROCESS"
+          - name: modellingApproach
+            in: query
+            default: "PHYSICAL"
+          - name: validFromYear
+            in: query
+            default: 2025
+          - name: location
+            in: query
+            default: "Germany"
+        expected_repsonses:
+          - code: 200
+            description: Filtered search results returned
+
+      # Download Managment
+      - path: /ws/public/download/json/prepare/{group}/{repo}
+        method: POST 
+        description: Prepare download with category selection
+        component: Download
+        category: slow
+        request_payload:
+          - id: "categoryId1"
+            type: "CATEGORY" 
+            name: "Test Category" 
+            commitId: "commitId1"
+        expected_repsonses:
+          - code: 200
+            description: Download token returned
+          - code: 404
+            description: Category not found
+
+      - path: /ws/public/download/json/prepare/{group}/{repo}
+        method: PUT
+        description: Prepare download with direct selection
+        component: Download
+        category: slow
+        request_payload:
+          - type: "PROCESS"
+            refId: "processId1"
+        expected_repsonses:
+          - code: 200
+            description: Download token returned
+          - code: 404
+            description: Reference not found
+
+      - path: /ws/public/download/json/prepare/{group}/{repo}/{type}/{refId}
+        method: GET
+        description: Prepare single dataset download
+        component: Download
+        category: slow
+        parameters:
+          - name: commitId
+            in: query
+            optional: true
+        expected_repsonses:
+          - code: 200
+            description: Download token returned
+          - code: 404
+            description: Dataset not found 
+      
+      - path: /ws/public/download/json1/prepare/{group}/{repo}
+        method: GET 
+        description: Prepare JSON-LD 1.0 download
+        component: Download
+        category: slow
+        parameters:
+          - name: commitId
+            in: query
+            optional: true 
+          - name: path 
+            in: query
+            optional: true
+        expected_repsonses:
+          - code: 200
+            description: Download token returned
+          - code: 404
+            description: Repository not found 
+
+      - path: /ws/public/download/json1/{token}
+        method: GET 
+        description: Download JSON-LD 1.0 package
+        component: Download
+        category: slow 
+        expected_repsonses:
+          - code: 200
+            description: JSON-LD 1.0 package downloaded
+          - code: 404
+            description: Invalid token 
+
+      # GLAD Integration
+      - path: /ws/datamanager/glad/push/{group}/{repo}
+        method: POST 
+        description: Push repository data to GLAD 
+        component: GLAD 
+        category: slow 
+        request_payload:
+          dataprovider: "Test Provider"
+          paths: ["Category1", "Category2"]
+        expected_repsonses:
+          - code: 200
+            description: Data successfully pushed to GLAD 
+          - code: 403
+            description: Not a data manager
+
+      - path: /ws/datamanager/glad/push/{group}/{repo}
+        method: POST 
+        description: Push to GLAD with missing configuration
+        component: GLAD 
+        category: slow
+        request_payload:
+          dataprovider: "Test Provider"
+          paths: ["FLOWS/Elementary flows"]
+        expected_repsonses:
+          - code: 503
+            description: Invalid GLAD node configuration/Service Unavailable

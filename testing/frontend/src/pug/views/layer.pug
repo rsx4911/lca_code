@@ -1,0 +1,19 @@
+.modal(class=dialogType?dialogType:null)
+	.modal-dialog
+		.modal-content
+			.modal-header(class=!title?'empty':null)
+				if (!notCloseable)
+					button.close(type='button' data-dismiss='modal')
+						span(aria-hidden='true') &times;
+						span.sr-only Close
+				h4.modal-title=title
+			.modal-body.clearfix!=body
+			if buttons || actionButtons
+				.modal-footer
+					.pull-left
+						if actionButtons
+							each button in actionButtons
+								button.btn.pull-left(id=button.id, tabindex=50, class=button.className?button.className:'btn-default', type='button')=button.text
+					if buttons
+						each button in buttons
+							button.btn(id=button.id, tabindex=50, class=button.className?button.className:'btn-default', type='button', data-dismiss=button.callback?null:'modal')=button.text

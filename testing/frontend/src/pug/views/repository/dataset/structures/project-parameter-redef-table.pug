@@ -1,0 +1,37 @@
+include ./mixins.pug
+
+mixin project-parameter-redef-table()
+	table.table
+		thead
+			tr
+				th=getLabel('parameters.context')
+				th=getLabel('parameters.name')
+				each variant in dataset.variants
+					th=variant.name
+				th=getLabel('parameters.isProtected')
+				th
+		tbody
+			each values in getArrayValues(dataset, compareTo, 'PARAMETER_REDEF', 'parameterRedefs')
+				+project-parameter-redef-row(values[0], values[1])
+
+mixin project-parameter-redef-row(parameter, other)
+	- var changed = compareTo && !other ? 'added' : (compareTo && !parameter ? 'removed' : null);
+	tr(data-compare=changed)
+		td
+			+compare-icon(changed)
+			- var parameterContext = getValue(parameter, context);
+			- var otherContext = getValue(other, context);
+			if parameterContext || otherContext
+				+ref(parameterContext, otherContext)
+			else
+				span Global
+		+sub-field-cell(parameter, other, 'name')
+		if parameter && parameter.values
+			each entry, index in parameter.values
+				- var otherEntry = other ? other.values[index] : null;
+				- var otherValue = getValue(otherEntry, 'value');
+				+sub-field-cell(entry, otherEntry, 'value')(data-path=entry.commentPath)
+		td: +boolean-sub-field(paramter, other, 'isProtected')
+		if !parameter && other && other.values
+			each entry, index in other.values
+				td.comparison-value=entry.value

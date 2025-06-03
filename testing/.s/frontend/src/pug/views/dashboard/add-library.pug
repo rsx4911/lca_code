@@ -1,0 +1,9 @@
+include ../mixins/forms.pug
+
+.header-box New library
+form#library-form.content-box
+	#library-form-general-message-group.alert(role='alert'): span.message
+	+input('file', 'File*', 'file')
+	+select('access', 'Access', accessTypes, accessTypes[0][0])(disabled=accessTypes.length===1)
+	button.btn.btn-lg.btn-success.pull-right(data-action='add') Add
+	.clear

@@ -1,0 +1,7 @@
+include mixins/forms.pug
+
+form#commit-selection
+	if commits && commits.length && commits[0].version
+		+release-selection('commitId', 'Compare with version', commits)
+	else
+		+commit-selection('commitId', 'Compare with version', commits)

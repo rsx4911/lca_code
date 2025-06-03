@@ -1,0 +1,33 @@
+include forms.pug
+
+mixin login-form() 
+	form#login(method='post')&attributes(attributes)
+		h3 Sign in
+		#login-general-message.alert.alert-danger(role='alert'): span.message
+		+input('username', 'Username/Email')
+		+input('password', 'Password', 'password')
+			a.default-link(href='reset-password') Forgot your password?
+		+input('token', 'Token', 'text', false, false, true)
+			a.default-link(href='login') Login with another user
+		block
+		.auth-provider-container
+	
+mixin reset-password-form()
+	form#reset-password(method='post')&attributes(attributes)
+		h3 Reset password
+		#reset-password-general-message.alert.alert-success(role='alert'): span.message
+		+input('email', 'E-Mail')
+			a.default-link(href='login') Back to login
+		block
+
+mixin sign-up-form() 
+	form#sign-up(method='post')&attributes(attributes)
+		h3 Sign up
+		#sign-up-general-message.alert.alert-danger(role='alert'): span.message
+		+input('username', 'Username')(placeholder='johndoe')
+		+input('email', 'E-Mail')(placeholder='john.doe@mail.me')
+		+input('name', 'Name')(placeholder='John doe')
+		+input('password', 'Password', 'password')
+		+input('password2', 'Password (repeat)', 'password')
+			a.default-link(href='login') Login with existing user
+		block

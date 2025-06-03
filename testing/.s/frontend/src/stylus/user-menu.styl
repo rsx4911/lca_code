@@ -1,0 +1,82 @@
+#global-search-bar
+	display inline-block
+
+#global-search-bar, #user-menu
+
+	#global-search-group
+		margin-bottom 0px
+		
+		@media(max-width 767px)
+			display none !important
+
+		@media(max-width 1199px)	
+			input
+				width 150px
+
+		.form-control-feedback
+			font-size 12px
+
+		.btn.glyphicon-search
+			pointer-events initial
+			border-radius 2px
+			transition box-shadow
+			-webkit-box-shadow inset 0 1px 1px rgba(0, 0, 0, .075)
+			box-shadow inset 0 1px 1px rgba(0, 0, 0, 0.075)			
+
+			&:focus
+				background-color initial
+				border-color rgb(204, 204, 204)
+				outline initial
+
+#user-menu
+	float right
+	padding 16px 48px 0 16px
+
+	@media(max-width 767px)
+		padding 16px 16px 0 0
+	
+	a
+
+		@media(min-width 992px)
+			margin-left 20px
+		
+		@media(max-width 991px)
+			margin-left 15px
+
+	.glyphicon
+		color rgb(84, 86, 91)
+		font-size 20px
+
+	.toggle-debug 
+		
+		.glyphicon-eye-open
+			color rgb(68, 157, 68)
+
+		.glyphicon-eye-close
+			color rgb(221, 221, 221)
+
+	.toggle-review .glyphicon
+		color rgb(221, 221, 221)
+		
+		&[data-active]
+			color rgb(68, 157, 68)
+
+	.message-icon.new-messages
+		color rgb(68, 157, 68)
+
+	.message-count, .task-count
+		position relative
+		top -7px
+		left -15px
+		font-size 10px
+		
+		&[data-count='0'],&[data-count='1'],&[data-count='2'],&[data-count='3'],&[data-count='4'],&[data-count='5'],&[data-count='6'],&[data-count='7'],&[data-count='8'],&[data-count='9']
+			left -13px
+
+	.message-count
+		color white
+
+	.task-count
+		font-weight bold
+
+						

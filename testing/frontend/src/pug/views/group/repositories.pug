@@ -1,0 +1,8 @@
+include ../mixins/paging.pug
+include ../mixins/repository-entry.pug
+
+.list-container
+	each repo in data
+		.list-entry.small-padding.repository-entry
+			+repository-entry(repo, true)
+	+paging(resultInfo)

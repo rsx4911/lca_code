@@ -1,0 +1,41 @@
+mixin menu-items(searchIcon)
+	if searchIcon && settings['SEARCH_AVAILABLE']
+		a.search-link-icon(href='search')
+			span.glyphicon.glyphicon-search  
+	a(href='')
+		span.glyphicon.glyphicon-home(data-toggle='tooltip' data-placement='bottom' title='Dashboard' aria-label='Dashboard')
+	a(href='dashboard/repositories')
+		span.glyphicon.glyphicon-th-list(data-toggle='tooltip' data-placement='bottom' title='Repositories' aria-label='Repositories')
+	a(href='dashboard/libraries')
+		span.glyphicon.glyphicon-hdd(data-toggle='tooltip' data-placement='bottom' title='Libraries' aria-label='Libraries')
+	if isDataManager || isUserManager || isLibraryManager
+		a(href='administration')
+			span.glyphicon.glyphicon-wrench(data-toggle='tooltip' data-placement='bottom' title='Admin area' aria-label='Admin area')
+	if settings['TASKS_ENABLED'] === true
+		a.no-deco.tasks(href='tasks' data-toggle='tooltip' data-placement='bottom' title='Tasks' aria-label='Tasks')
+			span.task-icon.glyphicon.glyphicon-inbox
+			span.task-count(data-count=activeTasks)=activeTasks	
+	if websocketSupported && settings['MESSAGING_ENABLED'] === true
+		a.no-deco.messages(href='messages' data-toggle='tooltip' data-placement='bottom' title='Inbox' aria-label='Inbox')
+			span.message-icon.glyphicon.glyphicon-comment(class=unreadMessages?'new-messages':null)
+			span.message-count(class=unreadMessages?null:'hidden' data-count=unreadMessages)=unreadMessages
+	if settings['COMMENTS_ENABLED'] === true
+		a.toggle-review(href='#')
+			span.glyphicon.glyphicon-pencil(data-toggle='tooltip' data-placement='bottom' title='Review mode ' + (reviewMode?'on':'off') aria-label='Review mode ' + (reviewMode?'on':'off') data-active=reviewMode)
+	if isAdmin
+		a.toggle-debug(href='#')
+			span.glyphicon(class=debugMode?'glyphicon-eye-open':'glyphicon-eye-close' data-toggle='tooltip' data-placement='bottom' aria-label='Debugging ' + (debugMode?'on':'off') title='Debugging ' + (debugMode?'on':'off'))
+	a.logout(href='#')
+		span.glyphicon.glyphicon-log-out(data-toggle='tooltip' data-placement='bottom' title='Logout' aria-label='Logout')
+
+if isPublic
+	.pull-right.responsive-menu.dropdown
+		a.login(href='login')
+			span.glyphicon.glyphicon-log-in(data-toggle='tooltip' data-placement='bottom' title='Login' aria-label='Login')
+else
+	.pull-right.responsive-menu.dropdown
+		a(href='#' data-toggle='dropdown' aria-label='Settings'): span.glyphicon.glyphicon-cog
+		.dropdown-menu
+			+menu-items(true)
+		.default-menu
+			+menu-items(false)

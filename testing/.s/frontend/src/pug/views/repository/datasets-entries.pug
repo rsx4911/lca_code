@@ -1,0 +1,55 @@
+include ../mixins/long-text.pug
+include ../mixins/paging.pug
+
+mixin count-span(entry)
+	if entry.count !== -1
+		span  (#{entry.count})
+
+mixin commit-link-cell(entry)
+	td: a(href=baseUrl + '/commit/' + entry.commitId title=entry.commitMessage.length > 70 ? entry.commitMessage : null)=entry.commitMessage.length > 70 ? entry.commitMessage.substring(0, 65) + '...' : entry.commitMessage
+
+if categoryPath
+	- var previousUrl = baseUrl + '/datasets';
+	if categoryPath.indexOf('/') !== -1
+		- previousUrl += '/' + categoryPath.substring(0, categoryPath.lastIndexOf('/'));
+	if commitId
+		- previousUrl += '?commitId=' + commitId	
+	tr 
+		td 
+		td: a(href=previousUrl): strong ..
+		if !isPublic
+			td
+			td
+each entry in data
+	- var name = entry.isModelType || entry.isRepositoryInfo ? getRootLabel(entry.type) : entry.name;
+	- var iconUrl = entry.isDataset || entry.isLibrary ? getIcon(entry) : 'category/' + entry.type.toLowerCase() + '.png';
+	- var url = baseUrl;
+	- var target = null;
+	if entry.isModelType || entry.isRepositoryInfo
+		- url += '/datasets/' + name; 
+	else if entry.isCategory
+		- url += '/datasets/' + categoryPath + '/' + entry.name; 
+	else if entry.isLibrary
+		if entry.isPublic
+			- url = 'ws/public/libraries/' + entry.name;
+		else
+			- url = 'ws/libraries/' + entry.name;
+		- target = '_blank';
+	else
+		- url += '/dataset/' + entry.type + '/' + entry.refId; 
+	if commitId && !target
+		- url += '?commitId=' + commitId;
+	tr
+		td: img.model-icon-small(src='images/model/small/' + iconUrl, aria-label='Model icon of ' + type)
+		if entry.isLibrary && !entry.isAvailable
+			td: strong=name
+		else
+			td: a(href=url target=target): strong=name
+				if !entry.isDataset && !entry.isLibrary
+					+count-span(entry) 
+		if !isPublic
+			td=formatLastUpdate(entry.commitTimestamp)
+			+commit-link-cell(entry)
+tr
+	td(colspan=isPublic?2:4)
+		+paging(resultInfo)
