@@ -177,10 +177,10 @@ jobs:
 
       - name: Execute SQL files in order
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
             echo "Executing SQL files..."
             cd /opt/lca-cs/repository/sql
-      
+
             export PGPASSWORD="${{ secrets.DB_PASSWORD }}"
             for file in \$(ls -1v *.sql); do
               echo "Running \$file..."
