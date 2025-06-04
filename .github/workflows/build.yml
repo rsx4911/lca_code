@@ -152,17 +152,24 @@ jobs:
             sudo chown -R $USER:$USER /opt/lca-cs/repository
             sudo chmod -R 777 /opt/lca-cs/repository
           
+            echo "Downloading files using AzCopy Repo..."
+            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/data/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive
+            
+            echo "All files downloaded to /opt/lca-cs/repository"
+          EOF
+
+      - name: Copy DB Initialization
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+            echo "Creating /opt/lca-cs/init if not exists..."
             sudo mkdir -p /opt/lca-cs/init
             sudo chown -R $USER:$USER /opt/lca-cs/init
             sudo chmod -R 777 /opt/lca-cs/init
 
-            echo "Downloading files using AzCopy Repo..."
-            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/data/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive
-            
             echo "Downloading files using AzCopy Init..."
             azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/DB_initializer/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/init/" --recursive
 
-            echo "All files downloaded to /opt/lca-cs   repository & init"
+            echo "All files downloaded to /opt/lca-cs/init"
           EOF
 
       - name: Run DB init on Azure VM
