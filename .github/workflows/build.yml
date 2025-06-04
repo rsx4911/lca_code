@@ -175,6 +175,11 @@ jobs:
       - name: Run DB init on Azure VM
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+            if [ -x /usr/bin/java ]; then
+              export JAVA_HOME=/opt/java/jdk-21.0.3+9
+              export PATH=$JAVA_HOME/bin:$PATH
+            fi
+          
             echo "Running JAR file..."
             java -jar /opt/lca-cs/init/db_initializer2.0.0.jar /opt/lca-cs/init/installer.confg
             echo "JAR execution complete."
