@@ -151,11 +151,16 @@ jobs:
             sudo mkdir -p /opt/lca-cs/repository
             sudo chown -R $USER:$USER /opt/lca-cs/repository
             sudo chmod -R 777 /opt/lca-cs/repository
+          
+            sudo mkdir -p /opt/lca-cs/init
+            sudo chown -R $USER:$USER /opt/lca-cs/init
+            sudo chmod -R 777 /opt/lca-cs/init
 
             echo "Downloading files using AzCopy..."
-            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive --strip-top-dir
+            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/data/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive --strip-top-dir
+            azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/DB_initializer/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/init/" --recursive --strip-top-dir
 
-            echo "All files downloaded to /opt/lca-cs/repository"
+            echo "All files downloaded to /opt/lca-cs/repository & init"
           EOF
 
       - name: Restart services using Azure CLI
