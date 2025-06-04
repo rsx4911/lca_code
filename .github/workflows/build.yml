@@ -174,10 +174,14 @@ jobs:
 
       - name: Run DB init on Azure VM
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
-            if [ -x /usr/bin/java ]; then
-              export JAVA_HOME=/opt/java/jdk-21.0.3+9
-              export PATH=$JAVA_HOME/bin:$PATH
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            echo "Setting up Java..."
+            export JAVA_HOME=/opt/java/jdk-21.0.3+9
+            export PATH=$JAVA_HOME/bin:$PATH
+          
+            if [ ! -x "$JAVA_HOME/bin/java" ]; then
+              echo "Java binary not found in $JAVA_HOME"
+              exit 1
             fi
           
             echo "Running JAR file..."
