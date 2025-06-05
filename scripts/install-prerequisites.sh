@@ -81,12 +81,8 @@ else
   sudo chown -R opensearch:opensearch /usr/share/opensearch
 
   echo "Disabling OpenSearch SSL and security plugin..."
-  sudo sed -i '/plugins.security.ssl/d' /usr/share/opensearch/config/opensearch.yml
-  echo "" | sudo tee -a /usr/share/opensearch/config/opensearch.yml
-  echo "# Disable security plugin for development use only" | sudo tee -a /usr/share/opensearch/config/opensearch.yml
+  sudo rm -rf rm -rf /usr/share/opensearch/config/opensearch-security
   echo "plugins.security.disabled: true" | sudo tee -a /usr/share/opensearch/config/opensearch.yml
-  echo "network.host: 0.0.0.0" | sudo tee -a /usr/share/opensearch/config/opensearch.yml
-  echo "http.port: 9200" | sudo tee -a /usr/share/opensearch/config/opensearch.yml
   echo "Creating systemd service for OpenSearch..."
   sudo bash -c 'cat > /etc/systemd/system/opensearch.service' <<EOF
 [Unit]
