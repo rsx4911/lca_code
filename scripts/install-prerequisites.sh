@@ -14,8 +14,9 @@ else
   wget https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.3%2B9/OpenJDK21U-jdk_x64_linux_hotspot_21.0.3_9.tar.gz
   sudo mkdir -p /opt/java
   sudo tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.3_9.tar.gz -C /opt/java
-  export JAVA_HOME=/opt/java/jdk-21.0.3+9
-  export PATH=$JAVA_HOME/bin:$PATH
+  echo "export JAVA_HOME=/opt/java/jdk-21.0.3+9" | sudo tee /etc/profile.d/java.sh
+  echo 'export PATH=$JAVA_HOME/bin:$PATH' | sudo tee -a /etc/profile.d/java.sh
+  source /etc/profile.d/java.sh
   echo "Java 21.0.3 installed."
 fi
 
@@ -36,20 +37,16 @@ fi
 # ------------------ MariaDB Database & User Setup ------------------
 echo "Setting up MariaDB database and user..."
 
-DB_NAME="${DB_NAME:-lca}" # fallback if not passed
+DB_NAME="${DB_NAME:-lca}"
 DB_USER="${DB_USER:?lca}"
 DB_PASS="${DB_PASSWORD:?lca}"
 
-# Wait for MariaDB to be ready
 until sudo mariadb -e "SELECT 1;" >/dev/null 2>&1; do
   echo "Waiting for MariaDB to start..."
   sleep 2
 done
 
-# Create database if not exists
 sudo mariadb -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;"
-
-# Check if user exists
 USER_EXISTS=$(sudo mariadb -N -e "SELECT COUNT(*) FROM mysql.user WHERE user = '${DB_USER}' AND host = 'localhost';")
 
 if [ "$USER_EXISTS" -eq 0 ]; then
@@ -60,12 +57,9 @@ else
   sudo mariadb -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
 fi
 
-# Grant privileges
 sudo mariadb -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';"
 sudo mariadb -e "FLUSH PRIVILEGES;"
-
 echo "MariaDB database '${DB_NAME}' and user '${DB_USER}' configured."
-
 
 # ------------------ OpenSearch 2.19 ------------------
 echo "Checking OpenSearch..."
@@ -77,8 +71,15 @@ else
   tar -xzf opensearch-2.19.0-linux-x64.tar.gz
   sudo mv opensearch-2.19.0 /usr/share/opensearch
   sudo chmod -R 755 /usr/share/opensearch
-  sudo nohup /usr/share/opensearch/bin/opensearch > /dev/null 2>&1 &
-  echo "OpenSearch 2.19 installed."
+
+  if id "opensearch" &>/dev/null; then
+    echo "User 'opensearch' already exists."
+  else
+    echo "Creating user 'opensearch'..."
+    sudo useradd --no-create-home --system --shell /usr/sbin/nologin opensearch
+  fi
+  sudo chown -R opensearch:opensearch /usr/share/opensearch
+
   echo "Creating systemd service for OpenSearch..."
   sudo bash -c 'cat > /etc/systemd/system/opensearch.service' <<EOF
 [Unit]
@@ -89,8 +90,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-User=root
-Group=root
+User=opensearch
+Group=opensearch
 Environment=OPENSEARCH_HOME=/usr/share/opensearch
 WorkingDirectory=/usr/share/opensearch
 ExecStart=/usr/share/opensearch/bin/opensearch
@@ -102,6 +103,7 @@ TimeoutStartSec=120
 [Install]
 WantedBy=multi-user.target
 EOF
+
   sudo systemctl daemon-reload
   sudo systemctl enable opensearch
   sudo systemctl start opensearch
@@ -118,8 +120,7 @@ else
   tar -xzf apache-tomcat-10.1.20.tar.gz
   sudo mv apache-tomcat-10.1.20 /opt/tomcat
   sudo chmod +x /opt/tomcat/bin/*.sh
-  sudo nohup /opt/tomcat/bin/startup.sh > /dev/null 2>&1 &
-  echo "Tomcat 10.1.20 installed."
+
   echo "Creating systemd service for Tomcat..."
   sudo bash -c 'cat > /etc/systemd/system/tomcat.service' <<EOF
 [Unit]
@@ -141,6 +142,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 EOF
+
   sudo systemctl daemon-reload
   sudo systemctl enable tomcat
   sudo systemctl start tomcat
@@ -161,7 +163,7 @@ else
   echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
   sudo apt-get update
   sudo apt-get install -y nginx=1.28.* || {
-    echo "Failed to install Nginx 1.28 — version may not be available in apt cache.";
+    echo "Failed to install Nginx 1.28 — version may not be available.";
     exit 1;
   }
   echo "Nginx 1.28 installed. Version: $(nginx -v 2>&1)"
