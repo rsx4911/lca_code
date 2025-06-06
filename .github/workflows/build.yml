@@ -75,35 +75,39 @@ jobs:
           GITHUB_IPS=$(curl -s https://api.github.com/meta | jq -r '.actions[]' | paste -sd "," -)
           echo "GITHUB_IPS=$GITHUB_IPS" >> $GITHUB_ENV
 
-      - name: Allow GitHub on port 8080
+      - name: Open 80 and 8080 on all NSGs in the resource group
         run: |
-          az network nsg rule create \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --nsg-name ${{ secrets.AZURE_NSG_NAME }} \
-          --name AllowGitHub8080 \
-          --priority 200 \
-          --direction Inbound \
-          --access Allow \
-          --protocol Tcp \
-          --destination-port-ranges 8080 \
-          --source-address-prefixes $GITHUB_IPS \
-          --destination-address-prefixes '*' \
-          --description "Allow GitHub Actions access to port 8080"   
+          NSG_LIST=$(az network nsg list \
+            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+            --query "[].name" -o tsv)
 
-      - name: Allow GitHub on port 80
-        run: |
-          az network nsg rule create \
-          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-          --nsg-name ${{ secrets.AZURE_NSG_NAME }} \
-          --name AllowGitHub80 \
-          --priority 201 \
-          --direction Inbound \
-          --access Allow \
-          --protocol Tcp \
-          --destination-port-ranges 80 \
-          --source-address-prefixes $GITHUB_IPS \
-          --destination-address-prefixes '*' \
-          --description "Allow GitHub Actions access to port 80"
+          for NSG in $NSG_LIST; do
+            echo "Updating NSG: $NSG"
+
+            az network nsg rule create \
+              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+              --nsg-name $NSG \
+              --name AllowHTTP-${{ github.run_id }} \
+              --priority 1001 \
+              --access Allow \
+              --protocol Tcp \
+              --direction Inbound \
+              --source-address-prefixes '*' \
+              --destination-port-ranges 80 \
+              --description "Allow HTTP access to port 80"
+
+            az network nsg rule create \
+              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+              --nsg-name $NSG \
+              --name Allow8080-${{ github.run_id }} \
+              --priority 1002 \
+              --access Allow \
+              --protocol Tcp \
+              --direction Inbound \
+              --source-address-prefixes '*' \
+              --destination-port-ranges 8080 \
+              --description "Allow access to port 8080"
+          done
 
       - name: Install Prerequisites on Remote VM
         run: |
@@ -278,8 +282,6 @@ jobs:
 
       - name: Run API Tests
         env:
-          LCA_USERNAME: ${{ secrets.LCA_USERNAME }}
-          LCA_PASSWORD: ${{ secrets.LCA_PASSWORD }}
           VM_IP: ${{ env.VM_IP }}
         run: |
           pytest tests/e2e/integration/api_test.py
