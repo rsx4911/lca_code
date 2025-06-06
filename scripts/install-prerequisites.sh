@@ -110,6 +110,13 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl enable opensearch
   sudo systemctl start opensearch
+  curl --location --request PUT 'http://localhost:9200/collaboration-server' \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "mappings": {
+        "properties": {}
+      }
+    }'
   echo "OpenSearch 2.19 installed and started."
 fi
 
