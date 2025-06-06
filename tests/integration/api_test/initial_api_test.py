@@ -2,6 +2,9 @@ import requests
 import pytest
 from datetime import datetime
 
+VM_IP = os.environ.get("VM_IP")
+if not VM_IP:
+    raise RuntimeError("Environment variable 'VM_IP' is not set")
 BASE_URL = f"http://{VM_IP}:8080/lca-collaboration"
 
 @pytest.fixture(scope="session")
