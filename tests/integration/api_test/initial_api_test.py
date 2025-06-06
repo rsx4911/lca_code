@@ -1,5 +1,6 @@
 import requests
 import pytest
+import os
 from datetime import datetime
 
 VM_IP = os.environ.get("VM_IP")
