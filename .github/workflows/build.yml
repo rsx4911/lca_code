@@ -284,7 +284,27 @@ jobs:
         env:
           VM_IP: ${{ env.VM_IP }}
         run: |
-          pytest tests/e2e/integration/api_test.py
+          pytest tests/integration/api_test/initial_api_test.py
+
+      - name: Wait for app to be up on port 8080
+        run: |
+          echo "Waiting for app to become available on http://${{ env.VM_IP }}:8080 ..."
+      
+          MAX_RETRIES=20
+          RETRY_INTERVAL=10  # seconds
+          COUNT=0
+      
+          until curl --fail --silent --head http://${{ env.VM_IP }}:8080/lca-collaboration; do
+            COUNT=$((COUNT+1))
+            echo "Attempt $COUNT of $MAX_RETRIES: App not yet available..."
+            if [ "$COUNT" -ge "$MAX_RETRIES" ]; then
+              echo "App did not become ready after $((MAX_RETRIES * RETRY_INTERVAL)) seconds."
+              exit 1
+            fi
+            sleep $RETRY_INTERVAL
+          done
+      
+          echo "App is running on http://${{ env.VM_IP }}:8080"
 
       - name: Clean Up Ephemeral VM and Resources
         if: false
