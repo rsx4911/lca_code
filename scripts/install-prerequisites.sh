@@ -110,6 +110,25 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl enable opensearch
   sudo systemctl start opensearch
+  echo "Waiting for OpenSearch to start on port 9200..."
+  for i in {1..30}; do
+    if curl -s http://localhost:9200 >/dev/null; then
+      echo "OpenSearch is up!"
+      break
+    else
+      echo "OpenSearch not ready yet... ($i/30)"
+      sleep 5
+    fi
+  done
+
+  # Optional: Fail if it still hasn't started
+  if ! curl -s http://localhost:9200 >/dev/null; then
+    echo "OpenSearch failed to start on port 9200 after waiting."
+    exit 1
+  fi
+
+  # Now make your request
+  echo "Creating index 'collaboration-server'..."
   curl --location --request PUT 'http://localhost:9200/collaboration-server' \
     --header 'Content-Type: application/json' \
     --data '{
@@ -117,6 +136,7 @@ EOF
         "properties": {}
       }
     }'
+
   echo "OpenSearch 2.19 installed and started."
 fi
 
