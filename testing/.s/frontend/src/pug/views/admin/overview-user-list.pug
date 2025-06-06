@@ -1,0 +1,12 @@
+include ../mixins/paging.pug
+
+each user in data
+	div
+		a.follow(href='administration/user/profile/' + user.username)=user.name
+		|  
+		-  var activeLabel = user.deactivated ? 'Inactive' : 'Active';
+		if user.activeUntil
+			- activeLabel += (user.deactivated ? ' since ' : ' until ') + formatDate(user.activeUntil);
+		span.badge.pull-right(class=user.deactivated?'badge-danger':'badge-success')=activeLabel
+		.clear
++paging(resultInfo, null, pageSizeId)

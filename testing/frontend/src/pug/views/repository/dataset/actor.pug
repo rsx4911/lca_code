@@ -1,0 +1,26 @@
+include ./mixins.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+content
+			table.table.no-head.margin-0-25-25
+				tbody
+					if dataset.address || dataset.country || dataset.zipCode || dataset.city || (compareTo && (compareTo.address || compareTo.country || compareTo.zipCode || compareTo.city)) || reviewMode
+						tr
+							td=getLabel('address')
+							td
+								+field-block('address')
+								if dataset.zipCode || dataset.city || (compareTo && (compareTo.zipCode || compareTo.city)) || reviewMode
+									div 
+										+field('zipCode')
+										|  
+										+field('city')
+								+field-block('country')
+					+field-row('telephone')
+					+field-row('telefax')
+					+field-link-row('email', 'email')
+					+field-link-row('external', 'website')
+	+meta
+	.clear

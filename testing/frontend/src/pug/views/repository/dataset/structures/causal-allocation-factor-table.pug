@@ -1,0 +1,40 @@
+include ./mixins.pug
+
+mixin causal-allocation-factor-table()
+	h4 Causal allocation
+	table.table.causal-allocation-factors
+		thead
+			tr
+				th
+				th=getLabel('allocationFactors.product')
+				- var factor = dataset && dataset.causalAllocationFactors ? dataset.causalAllocationFactors[0] : null;
+				- var otherFactor = compareTo && compareTo.causalAllocationFactors ? compareTo.causalAllocationFactors[0]: null;
+				- var products = getArrayValues(factor, otherFactor, 'PRODUCT', 'products');
+				each values in products
+					- var flow = getValue(values[0], 'flow');
+					- var otherFlow = getValue(values[1], 'flow');
+					th: +ref(flow, otherFlow)
+		tbody
+			- var isValid = function(value){ return value && value.exchange && value.exchange.flow && value.products && value.products.length; };
+			each values in getArrayValues(dataset, compareTo, 'ALLOCATION_FACTOR', 'causalAllocationFactors')
+				if isValid(values[0]) || isValid(values[1]) 
+					+causal-allocation-factor-row(values[0], values[1], products)
+
+mixin causal-allocation-factor-row(factor, other, products)
+	- var exchange = getValue(factor, 'exchange'); 
+	- var otherExchange = getValue(other, 'exchange'); 
+	- var flow = getValue(exchange, 'flow'); 
+	- var otherFlow = getValue(otherExchange, 'flow');  
+	tr
+		- var isInput = exchange ? exchange.isInput : otherExchange && otherExchange.isInput;
+		td: img.icon-small(src='images/' + (isInput?'input':'output') + '.png', aria-label='Icon of ' + (isInput?'input':'output'))
+		td
+			+ref(flow, otherFlow)
+		each values in products
+			- var product = factor ? findValue('PRODUCT', values[0], factor.products) : null;
+			- var otherProduct = other ? findValue('PRODUCT', values[1], other.products) : null;
+			- var setPath = product && (product.index || product.index === 0) && exchange;
+			- var value = getValue(product, 'value', null, formatRelative);
+			- var value2 = getValue(otherProduct, 'value', null, formatRelative); 
+			- var changed = compare(value, value2);
+			+sub-field-cell(product, otherProduct, 'value', null, formatRelative, true)(data-path=setPath?'allocationFactors[causal-' + product.id + '-' + exchange.internalId + ']':null)

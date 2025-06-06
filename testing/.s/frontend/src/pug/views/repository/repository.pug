@@ -1,0 +1,125 @@
+include ../mixins/forms.pug
+include ../mixins/avatar-box.pug
+
+mixin to-size(value, inGb, round, showUnit)
+	if inGb
+		- value /= 1073741824;
+		if round
+			- value = parseInt(value*1000)/1000;
+		if showUnit
+			- value = value + ' GB';
+	else
+		- value /= 1048576;
+		if round
+			- value = parseInt(value);
+		if showUnit
+			- value = value + ' MB';
+	| #{value}
+
+mixin repo-textarea(setting, field, label)
+	if repository.userCanSetSettings
+		+textarea(field, label)(rows=3 data-setting=setting)
+			| #{repository.settings[field]}
+	else
+		- var value = repository.settings[field] || '-';
+		+static(field, label, value)
+
+mixin repo-input(setting, field, label)
+	if repository.userCanSetSettings
+		+input(field, label)(value=repository.settings[field] data-setting=setting)
+	else
+		- var value = repository.settings[field] || '-';
+		+static(field, label, value)
+
+.header-box Info
+	.pull-right.responsive-menu.dropdown
+		a(href='#' data-toggle='dropdown' aria-label='Toggle repository menu'): span.glyphicon.glyphicon-cog
+		ul.dropdown-menu
+			if repository.userCanMove
+				li: a(href='#' data-action='move-repository')
+					span.glyphicon.glyphicon-move
+					| Move
+			if repository.userCanClone
+				li: a(href='#' data-action='clone-repository')
+					span.glyphicon.glyphicon-copy
+					| Clone
+			li: a(href='#' data-action='export-repository')
+				span.glyphicon.glyphicon-export
+				| Export
+			if repository.userCanDelete
+				li: a(href='#' data-action='delete-repository')
+					span.glyphicon.glyphicon-remove
+					| Delete
+		.default-menu
+			if repository.userCanMove
+				button.btn.btn-lg.btn-default.pull-right(data-action='move-repository') Move
+			if repository.userCanClone
+				button.btn.btn-lg.btn-default.pull-right(data-action='clone-repository') Clone
+			button.btn.btn-lg.btn-default.pull-right(data-action='export-repository') Export
+			if repository.userCanDelete
+				button.btn.btn-lg.btn-danger.pull-right(data-action='delete-repository') Delete
+
+.content-box
+	+static('name', 'Name', repository.name)
+	+static('group', 'Group', repository.group)
+	+repo-input('LABEL', 'label', 'Label')
+	+repo-input('VERSION', 'version', 'Version')
+	if repository.userCanSetSettings
+		+select('typeOfData', 'Type of data', dataTypes, repository.settings.typeOfData)(data-setting='TYPE_OF_DATA')
+		+input('tags', 'Tags')(value=repository.settings.tags?repository.settings.tags.join(','):'')
+		if modelTypes.length > 1
+			+select('mainModelType', 'Main model type', modelTypes, repository.settings.mainModelType)(data-setting='MAIN_MODEL_TYPE')
+	else
+		- var typeOfData = repository.settings.typeOfData || '-';
+		- var mainModelType = repository.settings.mainModelType || '-';
+		+static('typeOfData', 'Type of data', typeOfData)
+		+static('tags', 'Tags')
+			.tags
+				if repository.settings.tags
+					each tag in repository.settings.tags
+						span.badge=tag
+		if modelTypes.length > 1
+			+static('mainModelType', 'Main model type', mainModelType)
+	- var maxSize = repository.settings.maxSize; 
+	- var inGb = false;
+	if maxSize
+		- inGb = maxSize % 1073741824 === 0;
+	else
+		- inGb = repository.size > 1073741824;
+	div(id='size-group' class='form-group')
+		label.control-label(for='size') Size
+		div.form-value
+			- var showUnit = !maxSize && !repository.userCanSetSettings;
+			span#size-value: +to-size(repository.size, inGb, true, showUnit)
+			if repository.userCanSetSettings
+				strong  of 
+				+input('maxSize', null, 'number', true)(class='input-sm', value=0, size=4, min=0, aria-label='Maximum repository size')
+					+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm', aria-label='Size type')
+			else if maxSize
+				strong  of 
+				+to-size(maxSize, inGb, false, true)
+			if maxSize > 0
+				- var percentage = parseInt(100*repository.size/maxSize);
+				if percentage > 100
+					- percentage = 100;
+				.size-indicator-container
+					.size-indicator-bar
+						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
+	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='PROHIBIT_COMMITS')
+	if commentsEnabled
+		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='COMMENT_APPROVAL')
+
+.header-box Metadata
+.content-box
+	+repo-textarea('DESCRIPTION', 'description', 'Description')
+	+repo-textarea('SOURCE_INFO', 'sourceInfo', 'Source information')
+	+repo-textarea('CONTACT_INFO', 'contactInfo', 'Contact information')
+	+repo-textarea('CHANGE_LOG', 'changeLog', 'Change log')
+	+repo-textarea('PROJECT_INFO', 'projectInfo', 'Project information')
+	+repo-textarea('PROJECT_FUNDING', 'projectFunding', 'Project funding')
+	+repo-textarea('APPROPRIATE_USE', 'appropriateUse', 'Appropriate use')
+	+repo-textarea('DQ_ASSESSMENT', 'dqAssessment', 'Data quality assessment')
+	+repo-textarea('CITATION', 'citation', 'Citation')
+
+- var repositoryId = repository.group + '/' + repository.name
++avatar-box('repository', repositoryId, repository.userCanSetSettings)

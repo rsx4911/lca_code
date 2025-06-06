@@ -1,0 +1,20 @@
+include ../mixins/forms.pug
+
+.header-box Info
+form#repository-form.content-box
+	#repository-form-general-message-group.alert(role='alert'): span.message
+	+input('name', 'Name')
+	+select('group', 'Group', groups, selection)
+	if doImport
+		if importFormat === 'json-ld'
+			+input('commitMessage', 'Initial commit message')
+		if importFormat === 'external'
+			+input('url', 'External url')
+			+input('username', 'Username')
+			+input('password', 'Password', 'password')
+			span#token-input(style='display:none')
+				+input('token', 'Token')
+		else
+			+input('data', 'Data', 'file')
+	button.btn.btn-lg.btn-success.pull-right(data-action='create-repository')=doImport?'Import':'Create'
+	.clear

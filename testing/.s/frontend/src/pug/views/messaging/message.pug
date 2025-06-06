@@ -1,0 +1,11 @@
+- var isOwnMessage = message.from.username===username;
+.message-wrapper(id=message.id class=isOwnMessage?'right':'left')
+	if message.team && !isOwnMessage
+		div: strong=message.from.name
+	span=message.text
+		| &nbsp; &nbsp;
+	small.date(title=formatDateOrTime(message.date))=formatTimeOrDate(message.date)
+		if isOwnMessage
+			|  
+			span.glyphicon.glyphicon-ok.read-indicator(class=!message.team&&message.readDate?'is-read':null)
+.clear

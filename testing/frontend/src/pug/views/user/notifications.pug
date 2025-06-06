@@ -1,0 +1,36 @@
+include ../mixins/forms.pug
+
+mixin notification-group(id)
+	.content-container
+		.header-box=id
+			.btn-group.btn-group-sm.pull-right
+				img.check-all(src='images/check_all.png' data-group=id title='Select all')
+				img.uncheck-all(src='images/uncheck_all.png' data-group=id title='Unselect all')
+		.content-box
+			div
+				strong Notify me when
+				each notification in notifications
+					if notification.group === id
+						if notification.id === 'NOTIFY_FOR_ALL'
+							hr
+						+checkbox(notification.id, notification.label)(checked=notification.enabled)
+
+.header-box Info
+.content-box Notifications are send by email, everytime specific actions were performed by other users. Below you can specify which actions should trigger a notification. You can change the notification email address in your 
+	a.default-link(href='user/profile') profile
+	| .
+if isUserManager
+	.two-columns
+		+notification-group('Group')
+		+notification-group('Repository')
+	.three-columns
+		+notification-group('Team')
+		+notification-group('Task')
+		+notification-group('Manager')
+else
+	.two-columns
+		+notification-group('Group')
+		+notification-group('Repository')
+	.two-columns
+		+notification-group('Team')
+		+notification-group('Task')

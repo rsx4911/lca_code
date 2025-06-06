@@ -1,0 +1,158 @@
+mixin static(id, label, value, href)
+	- var clazz = null;
+	if inline
+		- clazz = 'form-inline';
+	else
+		- clazz = 'form-group';
+	div(id=id + '-group' class=clazz)
+		if label
+			label.control-label(for=id)!=label
+		div.form-value
+			if href
+				a(href=href)=value
+			else
+				| #{value}
+			block
+
+mixin input(id, label, type, inline, required, hide)
+	- var hidden = type === 'hidden'
+	- var clazz = hidden ? 'hidden ' : ''
+	if inline
+		- clazz += 'form-inline';
+	else
+		- clazz += 'form-group';
+	if hide
+		- clazz += ' hidden'
+	if hidden || !type
+		- type = 'text'
+	div(id=id + '-group' class=clazz)
+		if label
+			label.control-label(for=id)!=label
+				if required
+					sup *
+		if type === 'integer'
+			input.form-control(id=id name=id type='number' min=0 step=1)&attributes(attributes)
+		else
+			input.form-control(id=id name=id type=type)&attributes(attributes)
+		block
+
+mixin hidden(id, value)
+	input(id=id name=id value=value type='hidden')
+
+mixin select(id, label, options, defaultSelection, inline, required)
+	div(id=id + '-group' class=inline?'form-inline':'form-group' style=inline?'display:inline-block':null)
+		if label
+			label.control-label(for=id)!=label
+				if required
+					sup *
+		select.form-control(id=id name=id)&attributes(attributes)
+			if options
+				+options(options, defaultSelection)
+			else
+				block
+		if options
+			block
+
+mixin optgroup(label, options, defaultSelection, groupId)
+	optgroup(label!=label)
+		+options(options, defaultSelection, groupId)
+
+mixin options(options, defaultSelection, groupId)
+	each option in options
+		- var value = option;
+		- var label = option;
+		- var disabled = false;
+		- if (Object.prototype.toString.call(option) === '[object Array]') {
+		- 	value = option[0];
+		- 	label = option[1];
+		- 	if (option.length === 3 && option[2]) {
+		- 		disabled = true;
+		- 	}
+		- }
+		if defaultSelection === value
+			option(value=value selected data-group-id=groupId)!=label
+		else
+			option(value=value disabled=disabled data-group-id=groupId)!=label
+
+mixin checkbox(id, label, type, inline)
+	if !type
+		- type = 'success'
+	- var clazz = 'abc-checkbox-' + type
+	if inline
+		- clazz += ' checkbox-inline'
+	.abc-checkbox(class=clazz)
+		input(id=id name=id type='checkbox')&attributes(attributes)
+		label(for=id)
+			if label
+				| !{label}
+			else
+				block
+		if label
+			block
+
+mixin radio(group, id, label, type)
+	if !type
+		- type = 'success'
+	.radio(class='radio-' + type)
+		input(id=id name=group type='radio')&attributes(attributes)
+		label(for=id)
+			if label
+				| !{label}
+			else
+				block
+		if label
+			block
+
+mixin radios(group, options)
+	.radio
+		each option in options
+			- var id = option;
+			- var label = option;
+			- if (Object.prototype.toString.call(option) === '[object Array]') {
+			- 	id = option[0];
+			- 	label = option[1];
+			- }
+			label(for=id)
+				input(id=id name=group type='radio')&attributes(attributes)
+				| !{label}
+				| &nbsp;
+			block
+
+mixin textarea(id, label, action)
+	.form-group(id=id + '-group')
+		if label
+			label.control-label(for=id)!=label
+		if action
+			|  
+			button.btn.btn-xs.btn-default(data-action=id+'-click')=action
+		textarea.form-control(id=id name=id)&attributes(attributes)
+			block
+
+mixin member-selection(multiple)
+	if users && users.length && teams && teams.length
+		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')
+			+optgroup('User', users, null, 'user')
+			+optgroup('Team', teams, null, 'team')
+	else if users && users.length
+		+select('user-selection-name', 'User')(multiple=multiple class='member-selection')
+			+options(users, null, 'user')
+	else if teams && teams.length
+		+select('user-selection-name', 'Team')(multiple=multiple class='member-selection')
+			+options(teams, null, 'team')
+	else
+		+select('user-selection-name', 'User/Team')(multiple=multiple class='member-selection')
+
+mixin commit-selection(id, label, commits, selected, inline)
+	if commits && commits.length
+		+select(id, label, null, null, inline)
+			each commit, index in commits
+				if index === 0
+					option(value=commit.id, selected=!selected||commit.id===commitId) Latest
+					optgroup.additional-info(label=commit.message)
+				else
+					option(value=commit.id selected=commit.id===selected)=formatCommitDescription(commit.message)
+
+mixin release-selection(id, label, releases, selected, inline)
+	+select(id, label, null, null, inline)
+		each release in releases
+			option(value=release.id selected=release.id===commitId)=release.version

@@ -1,0 +1,7 @@
+include ../../../mixins/paging.pug
+
+each element in data
+	div 
+		img.model-icon-small(src='images/model/small/' + getIcon(element), aria-label='Model icon of ' + element.type)
+		a(href=baseUrl + '/' + element.type + '/' + element.refId)=element.name
++paging(resultInfo, null, pageSizeId)

@@ -1,0 +1,60 @@
+include ../mixins/forms.pug
+include ../mixins/avatar-box.pug
+
+.header-box Account
+	if user.id && adminArea
+		button.btn.btn-lg.pull-right(class=user.deactivated?'btn-success':'btn-danger' data-action='toggle-active')=user.deactivated ? 'Activate': 'Deactivate'
+		if !user.lastAdmin
+			button.btn.btn-lg.btn-danger.pull-right(data-action='delete-user') Delete
+	span.badge.pull-right.user-status(class=user.deactivated?'badge-danger':'badge-success')=user.deactivated ? 'Inactive': 'Active'
+		if user.settings && user.settings.activeUntil
+			if user.deactivated
+				- var activeUntil = new Date(user.settings.activeUntil);
+				|  since #{formatDate(activeUntil.setDate(activeUntil.getDate() + 1))}
+			else
+				|  until #{formatDate(user.settings.activeUntil)}
+	
+	
+form#user-form.content-box
+	#user-form-general-message-group.alert(role='alert'): span.message
+	unless user.id
+		+input('username', 'Username*')
+	else
+		+static('username', 'Username', user.username)
+	+input('name', 'Name*')
+	+input('email', 'Email*')
+	if adminArea
+		if isAdmin
+			+checkbox('settings-admin', 'Is admin user')(disabled=user.lastAdmin)
+		if isUserManager
+			+checkbox('settings-userManager', 'Is allowed to manage users and teams')
+		if isDataManager
+			+checkbox('settings-dataManager', 'Is allowed to manage data (includes access to all repositories)')
+		if isLibraryManager
+			+checkbox('settings-libraryManager', 'Is allowed to manage libraries (includes access to all libraries)')
+		+checkbox('settings-canCreateGroups', 'Is allowed to create groups')
+		+checkbox('settings-canCreateRepositories', 'Is allowed to create repositories in her/his user group')
+		+input('settings-noOfRepositories', 'No. of user group repositories (0 = unlimited)', 'number')(class='input-sm', value=user&&user.settings?(user.settings.noOfRepositories||0):0, size=4, min=0)
+		+input('settings-maxSize', 'Maximum user group size', 'number', true)(class='input-sm', value=0, size=4, min=0)
+			+select('unit', null, [['1048576', 'MB'], ['1073741824', 'GB']], 'GB')(class='input-sm')
+		+input('settings-activeUntil', 'Active until (unlimited if empty) ', 'date', true)(class='input-sm')
+	button.btn.btn-lg.btn-success.pull-right(data-action='save-user')
+		if user.id
+			| Save
+		else
+			| Create
+	.clear
+if user.id
+	+avatar-box('user', user.username, true)
+	.header-box Password
+		button.btn.btn-default.pull-right(data-action='generate-password') Generate password
+		if user.twoFactorAuth
+			button.btn.btn-primary.pull-right(data-action='show-two-factor-auth') Show two-factor-authentication info
+		else
+			button.btn.btn-primary.pull-right(data-action='enable-two-factor-auth') Enable two-factor-authentication
+	form#password-form.content-box
+		#password-form-general-message-group.alert(role='alert'): span.message
+		+input('password', 'Password', 'password')
+		+input('password2', 'Password (repeated)', 'password')
+		button.btn.btn-lg.btn-success.pull-right(data-action='save-password') Save
+		.clear

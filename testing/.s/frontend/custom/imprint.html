@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="en"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css"/></head><body class="imprint"><header><div class="logo-container"><a href=""><img src="images/logo1.png" alt="USDA Home" class="logo"/></a></div></header><div id="main-login"><h3>Imprint</h3><a id="company" href="" target="_blank" class="website"></a><div id="street"></div><div><span id="zipCode"></span> <span id="city"></span></div><div id="country"></div><br/><br/><table class="imprint-table"><tr><td>Website</td><td><a id="website" href="" target="_blank" class="website"></a></td></tr><tr><td>Phone</td><td id="phone"></td></tr><tr><td>Fax</td><td id="fax"></td></tr><tr><td>Email</td><td id="email"></td></tr><tr><td>Managing Director</td><td id="ceo"></td></tr><tr><td>Registration</td><td id="registration"></td></tr><tr><td>Vat-Id (Ust-IdNr.)</td><td id="vat"></td></tr></table></div><div id="footer">&copy; <a href="http://www.greendelta.com" target="_blank">GreenDelta GmbH</a> <span id="year"></span> | <a href="imprint">Imprint</a></div><script src="js/libs/jquery.js"></script><script>$('#year').html(new Date().getFullYear());
+$('.imprint-table tr').hide()
+$.ajax({type: 'GET', url: 'ws/public/imprint', success: function(imprint) {
+	var keys = Object.keys(imprint);
+	for (var i = 0; i < keys.length; i++) {
+		if (!keys[i]) {
+			continue;
+		}
+		var elem = $('#' + keys[i]);
+		elem.html(imprint[keys[i]]);
+		while (!elem.is('tr') && !elem.is('body')) {
+			elem = elem.parent();
+		}
+		if (elem.is('tr')) {
+			elem.show();
+		}
+	}
+	if (imprint.website) {
+		$('.website').attr('href', imprint.website);
+	}
+}});</script></body></html>

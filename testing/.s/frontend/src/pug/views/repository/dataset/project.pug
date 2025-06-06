@@ -1,0 +1,27 @@
+include ./structures/project-variant-table.pug
+include ./structures/project-parameter-redef-table.pug
+
++menubar
+.content-box
+	.model-left-content
+		+header
+		+tabbed-content
+			ul.nav.nav-tabs(role='tablist')
+				+nav-tab('variants', true)
+				+nav-tab('parameterRedefs')
+				+nav-usage-tab()
+			.tab-content
+				+nav-tab-pane('variants', true)
+					+project-variant-table()
+				+nav-tab-pane('parameterRedefs', true)
+					+project-parameter-redef-table()
+				+nav-usage-tab-pane()
+	+meta
+		hr
+		strong=getLabel('impactMethod')
+		+ref-block('impactMethod', '-')
+		strong=getLabel('nwSet')
+		+field-block('nwSet.name', '-')(data-path='nwSet')
+		+labeled-boolean-field-block('isWithCosts')
+		+labeled-boolean-field-block('isWithRegionalization')
+	.clear

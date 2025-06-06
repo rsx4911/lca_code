@@ -1,0 +1,27 @@
+include ./mixins.pug
+
+mixin impact-result-table()
+	- var results = getArrayValues(dataset, compareTo, 'IMPACT_RESULT', 'impactResults');
+	- var showDescription = false;
+	each values in getArrayValues(dataset, compareTo, 'IMPACT_RESULT', 'impactResults')
+		- var result = values[0] || values[1];
+		- showDescription = showDescription || result.description;
+	table.table.impact-results
+		thead
+			tr
+				th=getLabel('impactResults.indicator')
+				th=getLabel('impactResults.amount')
+				if showDescription
+					th=getLabel('impactResults.description')
+				th
+		tbody
+			each values in results
+				+impact-result-row(values[0], values[1])
+
+mixin impact-result-row(result, otherResult)
+	- var changed = compareTo && !otherResult ? 'added' : (compareTo && !result ? 'removed' : null);
+	tr(data-compare=changed)
+		+sub-field-ref-cell(result, otherResult, 'indicator')
+		+sub-field-cell(result, otherResult, 'amount')
+		+sub-field-cell(result, otherResult, 'description')
+		td(data-path=result&&result.indicator?'impactResults[' + result.indicator.id +']':null)

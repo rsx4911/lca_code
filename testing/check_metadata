@@ -1,0 +1,985 @@
+import requests
+import json
+from typing import Dict, List, Optional, Any
+from datetime import datetime
+from docx import Document
+from docx.shared import Inches, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import time
+import re
+
+def generate_metadata_guidance():
+    guidance = {
+        "preamble": """
+        Dataset Metadata Usage Guidelines
+        ------------------------------
+        While this dataset is released under CC0 and is free to use without restrictions,
+        the following metadata provides recommended usage guidance to promote:
+        - Data quality preservation
+        - Scientific reproducibility 
+        - Research community best practices
+        """,
+        
+        "metadata_sections": {
+            "attribution": {
+                "purpose": "Recommended citation for academic/scientific use",
+                "enforceability": "Optional - CC0 waives mandatory attribution",
+                "guidance": "Consider citing source for research transparency"
+            },
+            "usage_constraints": {
+                "purpose": "Technical requirements and quality considerations", 
+                "enforceability": "Advisory - Not legally binding under CC0",
+                "guidance": "Review for optimal data utilization"
+            },
+            "quality_flags": {
+                "purpose": "Known limitations or data quality notes",
+                "enforceability": "Informational - Users determine fitness for use",
+                "guidance": "Consider impacts on intended application"
+            }
+        }
+    }
+    return guidance
+
+def get_cc0_preface():
+    return """
+    CC0 License and Metadata Guidelines
+    ---------------------------------
+    All datasets in the LCA Commons are provided under Creative Commons CC0 1.0 Universal (CC0 1.0) 
+    Public Domain Dedication. Under CC0:
+    - Users may freely copy, modify, and distribute the work without restrictions.
+    - No attribution is legally required.
+    - The data can be used for any purpose, including commercial use.
+
+    Clarification on Metadata "Restrictions":
+    ----------------------------------------
+    Some datasets may contain metadata fields labeled as "restrictions" or "copyright protected." 
+    These terms should be interpreted as **non-binding recommendations** or legacy metadata, 
+    as they do not override the CC0 dedication. Users retain full legal freedom to use the data 
+    under CC0 principles.
+    """
+
+def check_metadata_alignment(process_doc: Dict) -> List[Dict]:
+    """Check metadata fields for alignment with CC0 principles and modern terminology"""
+    suggestions = []
+    
+    # Legacy terms that should be updated
+    legacy_terms = {
+        'copyright protected': 'Consider removing or clarifying as advisory under CC0',
+        'all rights reserved': 'Remove as incompatible with CC0',
+        'proprietary': 'Update to reflect CC0 status',
+        'restricted use': 'Clarify as recommended practice under CC0',
+        'permission required': 'Update to reflect CC0 permissions',
+        'restricted access': 'Clarify data availability under CC0'
+    }
+    
+    # Modern recommended replacements
+    recommended_terms = {
+        'must': 'recommend',
+        'shall': 'should',
+        'required': 'recommended',
+        'mandatory': 'suggested',
+        'restricted to': 'recommended for'
+    }
+    
+    # Check each metadata field
+    for field, value in process_doc.items():
+        if isinstance(value, str):
+            value_lower = value.lower()
+            
+            # Check for legacy terms
+            for term, suggestion in legacy_terms.items():
+                if term in value_lower:
+                    suggestions.append({
+                        'field': field,
+                        'current_text': value,
+                        'issue': f'Contains legacy term: "{term}"',
+                        'suggestion': suggestion
+                    })
+            
+            # Check for terms that could be updated
+            for old_term, new_term in recommended_terms.items():
+                if old_term in value_lower:
+                    suggestions.append({
+                        'field': field,
+                        'current_text': value,
+                        'issue': f'Contains potentially misleading term: "{old_term}"',
+                        'suggestion': f'Consider replacing "{old_term}" with "{new_term}" to better reflect CC0 status'
+                    })
+    
+    # Check specific metadata fields
+    if process_doc.get('isCopyrightProtected') is True:
+        suggestions.append({
+            'field': 'isCopyrightProtected',
+            'current_text': 'True',
+            'issue': 'Copyright protection flag set to True',
+            'suggestion': 'Consider setting to False to align with CC0 status, or add clarifying note about CC0 superseding copyright'
+        })
+    
+    # Check for missing recommended fields
+    recommended_fields = {
+        'reviewer': 'Adding reviewer information helps establish dataset credibility',
+        'publication': 'Reference to related publications aids in citation and tracking',
+        'description': 'A clear description helps users understand dataset contents and quality'
+    }
+    
+    for field, reason in recommended_fields.items():
+        if field not in process_doc or not process_doc[field]:
+            suggestions.append({
+                'field': field,
+                'current_text': 'Missing',
+                'issue': f'Missing recommended field: {field}',
+                'suggestion': reason
+            })
+    
+    return suggestions
+def validate_metadata_cc0_alignment(metadata):
+    """Validate metadata alignment with CC0 and flag potential contradictions"""
+    potential_conflicts = []
+    
+    # List of statements that are aligned with CC0 and should be ignored
+    cc0_aligned_statements = [
+        "all information can be accessed by everybody",
+        "no restrictions",
+        "no explicit restrictions",
+        "data are freely available"
+    ]
+    
+    # Check specifically for usage restrictions that conflict with CC0
+    restriction_fields = [
+        'restrictionsDescription',
+        'accessAndUseRestrictions',
+        'usageRestrictions'
+    ]
+    
+    for field in restriction_fields:
+        if field in metadata and metadata[field]:
+            value = str(metadata[field]).lower()
+            
+            # Skip if the statement is CC0-aligned
+            if any(statement in value for statement in cc0_aligned_statements):
+                continue
+                
+            # Only flag actual restrictions, not recommendations
+            if any(term in value for term in ["must", "required", "shall", "mandatory", 
+                                            "restriction", "cannot", "prohibited"]):
+                potential_conflicts.append({
+                    "field": field,
+                    "value": metadata[field],
+                    "note": "Potential conflict with CC0: Dataset contains usage restrictions while being CC0 licensed. Under CC0, these are non-binding recommendations rather than requirements."
+                })
+            
+    return potential_conflicts
+
+class LCACommonsAPI:
+    def __init__(self, base_url: str = "https://lcacommons.gov/lca-collaboration"):
+        self.base_url = base_url
+        self.session = requests.Session()
+
+    def login(self, username: str, password: str) -> bool:
+        """Login to LCA Commons API"""
+        try:
+            credentials = {
+                "username": username,
+                "password": password
+            }
+            response = self.session.post(f"{self.base_url}/ws/public/login", json=credentials)
+            return response.status_code == 200
+        except requests.exceptions.RequestException as e:
+            print(f"Login request failed: {str(e)}")
+            return False
+
+    def get_all_repositories(self) -> List[Dict]:
+        """Get complete list of repositories with pagination"""
+        all_repos = []
+        page = 1
+        
+        while True:
+            try:
+                params = {
+                    "page": page,
+                    "pageSize": 100
+                }
+                response = self.session.get(f"{self.base_url}/ws/repository", params=params)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    repos = data.get('data', [])
+                    
+                    if not repos:
+                        break
+                        
+                    all_repos.extend(repos)
+                    print(f"Retrieved page {page} with {len(repos)} repositories")
+                    
+                    if len(repos) < 100:
+                        break
+                        
+                    page += 1
+                else:
+                    print(f"Failed to get repositories page {page}. Status: {response.status_code}")
+                    break
+                    
+            except Exception as e:
+                print(f"Error getting repositories page {page}: {str(e)}")
+                break
+                
+        return all_repos
+
+    def get_target_repositories(self) -> List[Dict]:
+        """Get all repositories instead of specific targets"""
+        try:
+            print("\nFetching all repositories...")
+            all_repos = self.get_all_repositories()
+            print(f"Found total of {len(all_repos)} repositories")
+            
+            print("\nAvailable repositories:")
+            for repo in all_repos:
+                print(f"- {repo['group']}/{repo['name']}")
+            
+            return all_repos
+            
+        except Exception as e:
+            print(f"Error getting repositories: {str(e)}")
+            return []
+    
+    def get_dataset_name(self, dataset: Dict) -> str:
+        """Extract name from dataset using search results"""
+        try:
+            # First check if description contains detailed name
+            if 'description' in dataset and dataset['description']:
+                desc = str(dataset['description'])
+                # Take first line or sentence
+                first_line = desc.split('\n')[0].split('.')[0].strip()
+                if len(first_line) > 0:
+                    return first_line
+
+            # Check processDocumentation
+            process_doc = dataset.get('processDocumentation', {})
+            if isinstance(process_doc, dict):
+                if 'name' in process_doc and process_doc['name']:
+                    return str(process_doc['name'])
+                if 'description' in process_doc and process_doc['description']:
+                    desc = str(process_doc['description'])
+                    first_line = desc.split('\n')[0].split('.')[0].strip()
+                    if len(first_line) > 0:
+                        return first_line
+
+            # Check category as it often contains meaningful information
+            if 'category' in dataset:
+                category = dataset['category']
+                if isinstance(category, dict) and 'name' in category:
+                    return f"{category['name']} process"
+                elif isinstance(category, str):
+                    return f"{category} process"
+
+            # Last resort - use type and ID
+            process_type = dataset.get('type', 'Process')
+            ref_id = dataset.get('refId', 'Unknown ID')
+            return f"{process_type} {ref_id}"
+
+        except Exception as e:
+            print(f"\nError extracting name: {str(e)}")
+            return f"Process {dataset.get('refId', 'Unknown ID')}"
+
+    def get_dataset_details(self, group: str, repo: str, type_: str, ref_id: str) -> Dict:
+        """Get detailed dataset information"""
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                url = f"{self.base_url}/ws/public/browse/{group}/{repo}/{type_}/{ref_id}"
+                response = self.session.get(url)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if attempt == 0:  # Only on first attempt
+                        print(f"\nDataset structure keys: {list(data.keys())}")
+                    return data
+                elif response.status_code == 429:  # Too Many Requests
+                    wait_time = (attempt + 1) * 2
+                    print(f"\nRate limited. Waiting {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"\nFailed to get dataset details. Status: {response.status_code}")
+                    return {}
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"\nError getting dataset details: {str(e)}")
+                if attempt < max_retries - 1:
+                    time.sleep(2)
+                    continue
+                return {}
+        return {}
+
+    def search_datasets(self, repository_id: str, dataset_type: str = None, page: int = 1) -> Dict:
+        """Search for datasets in a specific repository"""
+        try:
+            params = {
+                "repositoryId": repository_id,
+                "page": page,
+                "pageSize": 100
+            }
+            if dataset_type:
+                params["type"] = dataset_type
+                
+            response = self.session.get(f"{self.base_url}/ws/public/search", params=params)
+            if response.status_code == 200:
+                data = response.json()
+                if page == 1:  # Debug first page response
+                    print(f"\nSearch response keys: {list(data.keys())}")
+                    if 'data' in data:
+                        print(f"First dataset keys: {list(data['data'][0].keys() if data['data'] else [])}")
+                return data
+            else:
+                print(f"Search failed. Status: {response.status_code}")
+            return {}
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Search request failed: {str(e)}")
+            return {}
+
+def extract_name_from_json(field: Any) -> str:
+    """Helper function to extract name from JSON-like strings or dicts"""
+    if isinstance(field, dict):
+        return field.get('name', str(field))
+    elif isinstance(field, str):
+        try:
+            if field.strip().startswith('{'):
+                data = json.loads(field)
+                if isinstance(data, dict):
+                    return data.get('name', str(data))
+        except:
+            pass
+    return str(field)
+
+def check_process_documentation(dataset: Dict) -> Dict[str, str]:
+    """Extract documentation directly from dataset"""
+    documentation = {}
+    
+    try:
+        process_doc = dataset.get('processDocumentation', {})
+        if process_doc:
+            # Get restriction information
+            if 'restrictionsDescription' in process_doc:
+                documentation['restrictionsDescription'] = process_doc['restrictionsDescription']
+            elif 'accessAndUseRestrictions' in process_doc:
+                documentation['restrictionsDescription'] = process_doc['accessAndUseRestrictions']
+
+            # Add copyright protection check with correct field name
+            if 'isCopyrightProtected' in process_doc:
+                documentation['copyright'] = process_doc['isCopyrightProtected']
+
+            # Get key metadata
+            if 'reviewer' in process_doc:
+                reviewer = process_doc['reviewer']
+                if isinstance(reviewer, dict):
+                    documentation['reviewer'] = reviewer.get('name', 'Not specified')
+                else:
+                    documentation['reviewer'] = str(reviewer)
+
+            if 'publication' in process_doc:
+                pub = process_doc['publication']
+                if isinstance(pub, dict):
+                    documentation['publication'] = pub.get('name', 'Not specified')
+                else:
+                    documentation['publication'] = str(pub)
+            
+            # Add CC0 validation
+            conflicts = validate_metadata_cc0_alignment(process_doc)
+            if conflicts:
+                documentation['cc0_conflicts'] = conflicts
+            
+            # Add metadata alignment suggestions
+            suggestions = check_metadata_alignment(process_doc)
+            if suggestions:
+                documentation['alignment_suggestions'] = suggestions
+
+        return documentation
+
+    except Exception as e:
+        print(f"Error checking documentation: {str(e)}")
+        return {}
+
+def check_usage_restrictions(username: str, password: str) -> Dict[str, List[Dict]]:
+    """Check usage restrictions across repositories"""
+    api = LCACommonsAPI()
+    if not api.login(username, password):
+        raise Exception("Failed to login to LCA Commons API")
+
+    print("\nSuccessfully logged in. Starting repository scan...")
+    results = {}
+    
+    repositories = api.get_target_repositories()
+    total_repos = len(repositories)
+    
+    if total_repos == 0:
+        raise Exception("No repositories found!")
+    
+    print(f"\nFound {total_repos} repositories to scan.")
+    
+    for i, repo in enumerate(repositories, 1):
+        repo_id = f"{repo['group']}/{repo['name']}"
+        print(f"\nScanning repository {i}/{total_repos}: {repo_id}")
+        results[repo_id] = []
+        
+        page = 1
+        dataset_count = 0
+        
+        while True:
+            search_results = api.search_datasets(repo_id, "PROCESS", page)
+            if not search_results or not search_results.get('data'):
+                break
+                
+            for dataset in search_results['data']:
+                dataset_count += 1
+                name = api.get_dataset_name(dataset)
+                print(f"\rChecking dataset {dataset_count}: {name}", end='')
+                
+                details = api.get_dataset_details(
+                    repo['group'],
+                    repo['name'],
+                    dataset['type'],
+                    dataset['refId']
+                )
+                
+                # Check documentation
+                documentation = check_process_documentation(details)
+                
+                if documentation:
+                    results[repo_id].append({
+                        'name': name,
+                        'id': dataset['refId'],
+                        'documentation': documentation
+                    })
+            
+            page += 1
+            print(f"\nCompleted page {page-1}")
+
+        print(f"\nCompleted scanning {dataset_count} datasets in {repo_id}")
+        if results[repo_id]:
+            print(f"Found {len(results[repo_id])} datasets with documentation")
+
+    return results
+
+def normalize_restriction_text(text: str) -> str:
+    """Normalize restriction text to handle duplicates"""
+    if not text:
+        return "No explicit restrictions"
+        
+    # Remove extra whitespace and normalize quotes
+    text = ' '.join(text.split())
+    text = text.replace('""', '"').replace('"', '"')
+    
+    # Normalize common variations
+    if text.startswith("These U.S. LCI Database Project data"):
+        # Take first paragraph as identifier
+        first_para = text.split('\n\n')[0]
+        return first_para.strip()
+        
+    return text
+
+def create_usage_restrictions_report(results: Dict[str, List[Dict]], filename: str = None):
+    """Create the original detailed usage restrictions report"""
+    if filename is None:
+        filename = f"usage_restrictions_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    
+    doc = Document()
+    
+    # Add title
+    title = doc.add_heading('LCA Commons Usage Restrictions Report', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Add timestamp and overview
+    doc.add_paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Executive Summary
+    doc.add_heading('Executive Summary', level=1)
+    total_repos = len(results)
+    total_datasets = sum(len(datasets) for datasets in results.values())
+    
+    summary = doc.add_paragraph()
+    summary.add_run("Overview\n").bold = True
+    summary.add_run(f"Total Repositories Scanned: {total_repos}\n")
+    summary.add_run(f"Total Datasets Processed: {total_datasets}\n")
+
+    # Add CC0 Guidance section
+    doc.add_heading('CC0 License and Metadata Guidelines', level=1)
+    doc.add_paragraph(get_cc0_preface())
+    
+    # Add Copyright Status section
+    doc.add_heading('Copyright Status Overview', level=2)
+    copyright_status = {}
+    for repo_id, datasets in results.items():
+        for dataset in datasets:
+            status = dataset['documentation'].get('copyright', 'Not specified')
+            if status not in copyright_status:
+                copyright_status[status] = {'count': 0, 'repos': set()}
+            copyright_status[status]['count'] += 1
+            copyright_status[status]['repos'].add(repo_id)
+
+    # Create copyright status table
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    header_cells = table.rows[0].cells
+    header_cells[0].text = 'Copyright Status'
+    header_cells[1].text = 'Dataset Count'
+    header_cells[2].text = 'Repositories'
+
+    for status, info in copyright_status.items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = str(status)
+        row_cells[1].text = str(info['count'])
+        row_cells[2].text = ', '.join(sorted(info['repos']))
+
+    doc.add_paragraph()  # Add space
+    
+    # Consolidate restrictions across all repositories
+    consolidated_restrictions = {}
+    for repo_id, datasets in results.items():
+        for dataset in datasets:
+            restriction = dataset['documentation'].get('restrictionsDescription', 'No explicit restrictions')
+            normalized = normalize_restriction_text(restriction)
+            
+            if normalized not in consolidated_restrictions:
+                consolidated_restrictions[normalized] = {
+                    'repos': set(),
+                    'datasets': [],
+                    'original_text': restriction
+                }
+            
+            consolidated_restrictions[normalized]['repos'].add(repo_id)
+            consolidated_restrictions[normalized]['datasets'].append(dataset)
+    
+    # Add Usage Restrictions Summary
+    doc.add_heading('Usage Restrictions Summary', level=1)
+    
+    # Create a summary table
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    header_cells = table.rows[0].cells
+    header_cells[0].text = 'Restriction Type'
+    header_cells[1].text = 'Repositories'
+    header_cells[2].text = 'Dataset Count'
+    
+    for restriction, data in consolidated_restrictions.items():
+        row_cells = table.add_row().cells
+        display_text = restriction[:100] + "..." if len(restriction) > 100 else restriction
+        row_cells[0].text = display_text
+        row_cells[1].text = str(len(data['repos']))
+        row_cells[2].text = str(len(data['datasets']))
+    
+    doc.add_paragraph()  # Add space
+    
+    # Detailed Findings
+    doc.add_heading('Detailed Findings', level=1)
+    
+    # Sort restrictions by number of affected datasets
+    sorted_restrictions = sorted(
+        consolidated_restrictions.items(),
+        key=lambda x: len(x[1]['datasets']),
+        reverse=True
+    )
+    
+    for restriction, data in sorted_restrictions:
+        # Add restriction header
+        doc.add_heading(f"Restriction Type ({len(data['datasets'])} datasets)", level=2)
+        
+        # Add the full restriction text
+        doc.add_paragraph(data['original_text'])
+        
+        # Add repository information
+        p = doc.add_paragraph()
+        p.add_run("Found in repositories:\n").bold = True
+        for repo in sorted(data['repos']):
+            p.add_run(f"- {repo}\n")
+        
+        # Add sample datasets table
+        doc.add_heading("Sample Datasets", level=3)
+        table = doc.add_table(rows=1, cols=3)
+        table.style = 'Table Grid'
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Dataset Name'
+        header_cells[1].text = 'Repository'
+        header_cells[2].text = 'Publication/Review'
+        
+        # Show up to 5 example datasets
+        for dataset in data['datasets'][:5]:
+            row_cells = table.add_row().cells
+            row_cells[0].text = dataset['name']
+            repo_id = next(repo for repo, datasets in results.items() if dataset in datasets)
+            row_cells[1].text = repo_id
+            meta_info = []
+            if 'publication' in dataset['documentation']:
+                meta_info.append(f"Pub: {dataset['documentation']['publication']}")
+            if 'reviewer' in dataset['documentation']:
+                meta_info.append(f"Rev: {dataset['documentation']['reviewer']}")
+            row_cells[2].text = '\n'.join(meta_info) if meta_info else 'Not specified'
+        
+        if len(data['datasets']) > 5:
+            doc.add_paragraph(f"... and {len(data['datasets']) - 5} more datasets")
+
+        # Add CC0 conflict warnings if any exist
+        cc0_conflicts = []
+        for dataset in data['datasets']:
+            if 'cc0_conflicts' in dataset['documentation']:
+                cc0_conflicts.extend(dataset['documentation']['cc0_conflicts'])
+        
+        if cc0_conflicts:
+            doc.add_heading("CC0 License Note", level=3)
+            p = doc.add_paragraph()
+            p.add_run(
+                "While this dataset contains fields labeled as restrictions, under CC0 these "
+                "are non-binding recommendations. CC0 dedication takes precedence over any "
+                "individual dataset metadata restrictions. Users are legally free to use the "
+                "data as they wish, though following the recommendations is encouraged for "
+                "best practice.\n\n"
+                "The following metadata fields contain advisory information:"
+            ).bold = True
+        
+        doc.add_paragraph()  # Add space between sections
+    
+    # Save the document
+    doc.save(filename)
+    print(f"\nUsage restrictions report saved to: {filename}")
+    return filename
+
+
+def create_metadata_analysis_report(results: Dict[str, List[Dict]], filename: str = None):
+    """Create a focused Word document report with consolidated restrictions"""
+    if filename is None:
+        filename = f"metadata_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    
+    doc = Document()
+    
+    # Add title
+    title = doc.add_heading('LCA Commons Metadata Analysis Report', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Add timestamp and overview
+    doc.add_paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Executive Summary
+    doc.add_heading('Executive Summary', level=1)
+    total_repos = len(results)
+    total_datasets = sum(len(datasets) for datasets in results.values())
+    
+    summary = doc.add_paragraph()
+    summary.add_run("Overview\n").bold = True
+    summary.add_run(f"Total Repositories Scanned: {total_repos}\n")
+    summary.add_run(f"Total Datasets Processed: {total_datasets}\n")
+
+    # Add CC0 Guidance section
+    doc.add_heading('CC0 License and Metadata Guidelines', level=1)
+    doc.add_paragraph(get_cc0_preface())
+    
+    # Add metadata guidance
+    guidance = generate_metadata_guidance()
+    doc.add_paragraph(guidance['preamble'])
+    
+    # Add metadata sections table
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    header_cells = table.rows[0].cells
+    header_cells[0].text = 'Metadata Type'
+    header_cells[1].text = 'Purpose'
+    header_cells[2].text = 'Usage Guidance'
+    
+    for section_name, section_info in guidance['metadata_sections'].items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = section_name.replace('_', ' ').title()
+        row_cells[1].text = section_info['purpose']
+        row_cells[2].text = section_info['guidance']
+
+    # Add Metadata Alignment section
+    doc.add_heading('Metadata Alignment Analysis', level=1)
+    alignment_stats = {
+        'total_suggestions': 0,
+        'repos_with_suggestions': set(),
+        'common_issues': {}
+    }
+    
+    for repo_id, datasets in results.items():
+        for dataset in datasets:
+            if 'alignment_suggestions' in dataset['documentation']:
+                suggestions = dataset['documentation']['alignment_suggestions']
+                alignment_stats['total_suggestions'] += len(suggestions)
+                alignment_stats['repos_with_suggestions'].add(repo_id)
+                
+                for suggestion in suggestions:
+                    issue_key = f"{suggestion['field']}:{suggestion['issue']}"
+                    if issue_key not in alignment_stats['common_issues']:
+                        alignment_stats['common_issues'][issue_key] = 0
+                    alignment_stats['common_issues'][issue_key] += 1
+
+    # Add alignment summary
+    doc.add_paragraph(
+        f"Found {alignment_stats['total_suggestions']} metadata alignment suggestions "
+        f"across {len(alignment_stats['repos_with_suggestions'])} repositories."
+    )
+    
+    if alignment_stats['common_issues']:
+        doc.add_heading('Common Metadata Issues', level=2)
+        table = doc.add_table(rows=1, cols=2)
+        table.style = 'Table Grid'
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Issue'
+        header_cells[1].text = 'Occurrence Count'
+        
+        for issue, count in sorted(alignment_stats['common_issues'].items(), key=lambda x: x[1], reverse=True):
+            row_cells = table.add_row().cells
+            row_cells[0].text = issue
+            row_cells[1].text = str(count)
+    
+    # Add Copyright Status section
+    doc.add_heading('Copyright Status Overview', level=2)
+    copyright_status = {}
+    for repo_id, datasets in results.items():
+        for dataset in datasets:
+            status = dataset['documentation'].get('copyright', 'Not specified')
+            if status not in copyright_status:
+                copyright_status[status] = {'count': 0, 'repos': set()}
+            copyright_status[status]['count'] += 1
+            copyright_status[status]['repos'].add(repo_id)
+
+    # Create copyright status table
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    header_cells = table.rows[0].cells
+    header_cells[0].text = 'Copyright Status'
+    header_cells[1].text = 'Dataset Count'
+    header_cells[2].text = 'Repositories'
+
+    for status, info in copyright_status.items():
+        row_cells = table.add_row().cells
+        row_cells[0].text = str(status)
+        row_cells[1].text = str(info['count'])
+        row_cells[2].text = ', '.join(sorted(info['repos']))
+
+    doc.add_paragraph()  # Add space
+    
+    # Consolidate restrictions across all repositories
+    consolidated_restrictions = {}
+    for repo_id, datasets in results.items():
+        for dataset in datasets:
+            restriction = dataset['documentation'].get('restrictionsDescription', 'No explicit restrictions')
+            normalized = normalize_restriction_text(restriction)
+            
+            if normalized not in consolidated_restrictions:
+                consolidated_restrictions[normalized] = {
+                    'repos': set(),
+                    'datasets': [],
+                    'original_text': restriction
+                }
+            
+            consolidated_restrictions[normalized]['repos'].add(repo_id)
+            consolidated_restrictions[normalized]['datasets'].append(dataset)
+    
+    # Add Usage Restrictions Summary
+    doc.add_heading('Usage Restrictions Summary', level=1)
+    
+    # Create a summary table
+    table = doc.add_table(rows=1, cols=3)
+    table.style = 'Table Grid'
+    header_cells = table.rows[0].cells
+    header_cells[0].text = 'Restriction Type'
+    header_cells[1].text = 'Repositories'
+    header_cells[2].text = 'Dataset Count'
+    
+    for restriction, data in consolidated_restrictions.items():
+        row_cells = table.add_row().cells
+        # Truncate long restriction text
+        display_text = restriction[:100] + "..." if len(restriction) > 100 else restriction
+        row_cells[0].text = display_text
+        row_cells[1].text = str(len(data['repos']))
+        row_cells[2].text = str(len(data['datasets']))
+    
+    doc.add_paragraph()  # Add space
+    
+    # Detailed Findings
+    doc.add_heading('Detailed Findings', level=1)
+    
+    # Sort restrictions by number of affected datasets
+    sorted_restrictions = sorted(
+        consolidated_restrictions.items(),
+        key=lambda x: len(x[1]['datasets']),
+        reverse=True
+    )
+    
+    for restriction, data in sorted_restrictions:
+        # Add restriction header
+        doc.add_heading(f"Restriction Type ({len(data['datasets'])} datasets)", level=2)
+        
+        # Add the full restriction text
+        doc.add_paragraph(data['original_text'])
+        
+        # Add repository information
+        p = doc.add_paragraph()
+        p.add_run("Found in repositories:\n").bold = True
+        for repo in sorted(data['repos']):
+            p.add_run(f"- {repo}\n")
+        
+        # Add sample datasets table
+        doc.add_heading("Sample Datasets", level=3)
+        table = doc.add_table(rows=1, cols=3)
+        table.style = 'Table Grid'
+        header_cells = table.rows[0].cells
+        header_cells[0].text = 'Dataset Name'
+        header_cells[1].text = 'Repository'
+        header_cells[2].text = 'Publication/Review'
+        
+        # Show up to 5 example datasets
+        for dataset in data['datasets'][:5]:
+            row_cells = table.add_row().cells
+            row_cells[0].text = dataset['name']
+            # Find repository for this dataset
+            repo_id = next(repo for repo, datasets in results.items() if dataset in datasets)
+            row_cells[1].text = repo_id
+            # Combine publication and reviewer info
+            meta_info = []
+            if 'publication' in dataset['documentation']:
+                meta_info.append(f"Pub: {dataset['documentation']['publication']}")
+            if 'reviewer' in dataset['documentation']:
+                meta_info.append(f"Rev: {dataset['documentation']['reviewer']}")
+            row_cells[2].text = '\n'.join(meta_info) if meta_info else 'Not specified'
+        
+        if len(data['datasets']) > 5:
+            doc.add_paragraph(f"... and {len(data['datasets']) - 5} more datasets")
+
+        # Add CC0 conflict warnings if any exist
+        cc0_conflicts = []
+        for dataset in data['datasets']:
+            if 'cc0_conflicts' in dataset['documentation']:
+                cc0_conflicts.extend(dataset['documentation']['cc0_conflicts'])
+        
+        if cc0_conflicts:
+            doc.add_heading("CC0 License Note", level=3)
+            p = doc.add_paragraph()
+            p.add_run(
+                "While this dataset contains fields labeled as restrictions, under CC0 these "
+                "are non-binding recommendations. CC0 dedication takes precedence over any "
+                "individual dataset metadata restrictions. Users are legally free to use the "
+                "data as they wish, though following the recommendations is encouraged for "
+                "best practice.\n\n"
+                "The following metadata fields contain advisory information:"
+            ).bold = True
+        
+        doc.add_paragraph()  # Add space between sections
+    
+    # Save the document
+    doc.save(filename)
+    print(f"\nReport saved to: {filename}")
+    return filename
+
+def generate_focused_json(results: Dict[str, List[Dict]], filename: str = None):
+    """Generate comprehensive JSON analysis file"""
+    if filename is None:
+        filename = f"metadata_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    
+    analysis_data = {
+        "copyright_protected": {},
+        "cc0_conflicts": {},
+        "metadata_alignment": {},
+        "summary": {
+            "repositories_analyzed": len(results),
+            "total_datasets": sum(len(datasets) for datasets in results.values()),
+            "generated_at": datetime.now().isoformat()
+        }
+    }
+    
+    for repo_id, datasets in results.items():
+        # Track datasets for each category
+        copyright_protected = []
+        cc0_conflict_datasets = []
+        alignment_issues = []
+        
+        for dataset in datasets:
+            dataset_info = {
+                "name": dataset['name'],
+                "id": dataset['id']
+            }
+            
+            # Check for copyright protection
+            if dataset['documentation'].get('copyright') is True:
+                copyright_protected.append(dataset_info)
+            
+            # Check for CC0 conflicts
+            if 'cc0_conflicts' in dataset['documentation']:
+                dataset_info['conflicts'] = dataset['documentation']['cc0_conflicts']
+                cc0_conflict_datasets.append(dataset_info)
+            
+            # Check for alignment suggestions
+            if 'alignment_suggestions' in dataset['documentation']:
+                dataset_info['suggestions'] = dataset['documentation']['alignment_suggestions']
+                alignment_issues.append(dataset_info)
+        
+        # Only add repositories that have relevant datasets
+        if copyright_protected:
+            analysis_data["copyright_protected"][repo_id] = copyright_protected
+        if cc0_conflict_datasets:
+            analysis_data["cc0_conflicts"][repo_id] = cc0_conflict_datasets
+        if alignment_issues:
+            analysis_data["metadata_alignment"][repo_id] = alignment_issues
+    
+    # Add detailed summary information
+    analysis_data["summary"].update({
+        "total_copyright_protected": sum(len(datasets) for datasets in analysis_data["copyright_protected"].values()),
+        "total_cc0_conflicts": sum(len(datasets) for datasets in analysis_data["cc0_conflicts"].values()),
+        "total_alignment_issues": sum(len(datasets) for datasets in analysis_data["metadata_alignment"].values()),
+        "repositories_with_copyright": len(analysis_data["copyright_protected"]),
+        "repositories_with_conflicts": len(analysis_data["cc0_conflicts"]),
+        "repositories_with_alignment_issues": len(analysis_data["metadata_alignment"])
+    })
+    
+    # Write to file
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(analysis_data, f, indent=2)
+    
+    print(f"\nComprehensive JSON analysis saved to: {filename}")
+    return filename
+
+def main():
+    print("LCA Commons Analysis Tool")
+    print("========================")
+    
+    try:
+        # Get credentials
+        username = input("Enter your LCA Commons username: ")
+        if not username:
+            raise ValueError("Username cannot be empty")
+            
+        password = input("Enter your LCA Commons password: ")
+        if not password:
+            raise ValueError("Password cannot be empty")
+        
+        print("\nAnalyzing repositories...")
+        results = check_usage_restrictions(username, password)
+        
+        # Generate all reports
+        usage_doc = create_usage_restrictions_report(results)
+        metadata_doc = create_metadata_analysis_report(results)  # Your existing metadata analysis report
+        json_filename = generate_focused_json(results)
+        
+        # Print summary
+        print("\nAnalysis complete! Generated files:")
+        print(f"1. Usage Restrictions Report: {usage_doc}")
+        print(f"2. Metadata Analysis Report: {metadata_doc}")
+        print(f"3. JSON Data File: {json_filename}")
+        
+        # Print summary statistics
+        print("\nQuick Summary:")
+        print("==============")
+        total_repos = len(results)
+        total_datasets = sum(len(datasets) for datasets in results.values())
+        print(f"Total repositories scanned: {total_repos}")
+        print(f"Total datasets processed: {total_datasets}")
+        
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user")
+    except ValueError as e:
+        print(f"\nError: {str(e)}")
+    except Exception as e:
+        print(f"\nUnexpected error: {str(e)}")
+        print("Please check your internet connection and credentials, then try again.")
+
+if __name__ == "__main__":
+    main()

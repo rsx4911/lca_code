@@ -1,0 +1,45 @@
+include ./mixins.pug
+
+mixin social-aspect-table()
+		table.table.social-aspects
+			thead
+				tr
+					th=getLabel('socialAspects.socialIndicator.name')
+					th=getLabel('socialAspects.rawValue')
+					th=getLabel('socialAspects.riskLevel')
+					th=getLabel('socialAspects.activityVariable')
+					th=getLabel('socialAspects.quality')
+					th=getLabel('socialAspects.comment')
+					th=getLabel('socialAspects.source')
+					th
+			tbody
+				each values in getArrayValues(dataset, compareTo, 'SOCIAL_ASPECT', 'socialAspects')
+					+social-aspect-row(values[0], values[1])
+
+mixin social-aspect-row(aspect, other)
+	- var changed = compareTo && !other ? 'added' : (compareTo && !aspect ? 'removed' : null);
+	- var indicator = getValue(aspect, 'socialIndicator')
+	- var otherIndicator = getValue(other, 'socialIndicator');
+	tr(data-compare=changed)
+		td
+			+compare-icon(changed)
+			+ref(indicator, otherIndicator)
+		+sub-field-cell(aspect, other, 'rawAmount')
+			if getValue(indicator, 'unitOfMeasurement') || getValue(otherIndicator, 'unitOfMeasurement')
+				|  [
+				+sub-field(aspect, other, 'socialIndicator.unitOfMeasurement')
+				|  ]
+		+sub-field-cell(aspect, other, 'rawAmount')
+		td
+			+sub-field(aspect, other, 'activityValue')
+			if (getValue(indicator, activityUnit) && getValue(indicator, activityVariable)) || (getValue(otherIndicator, 'activityUnit') && getValue(otherIndicator, 'activityVariable'))
+				|  
+				+sub-field(aspect, other, 'socialIndicator.activityUnit.name')
+				| , 
+				+sub-field(aspect, other, 'socialIndicator.activityVariable')
+		td
+			- var otherSystem = getValue(compareTo, socialDqSystem);				
+			+dq-field(aspect, other, 'quality', dataset.socialDqSystem, otherSystem, null, true)
+		+sub-field-cell(aspect, other, 'comment')
+		+sub-field-ref-cell(aspect, other, 'source')
+		td(data-path=indicator?'socialAspects[' + indicator.id + ']':null)

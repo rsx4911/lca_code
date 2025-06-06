@@ -1,0 +1,16 @@
+mixin category-breadcrumb(paths, baseUrl, linkLast, depth, commitId, disabled)
+	ol.breadcrumb&attributes(attributes)
+		if paths && paths.length
+			- var link = baseUrl || '';
+			if depth && paths.length > depth
+				li ...
+			each category, index in paths
+				- link += '/' + category
+				if !depth || paths.length - index <= depth				
+					if !baseUrl || disabled || (index === paths.length - 1 && !linkLast)
+						li.active=category
+					else
+						- var actualLink = link + (commitId ? '?commitId=' + commitId : '')
+						li: a.default-link(href=actualLink)=category
+		else
+			li &nbsp;

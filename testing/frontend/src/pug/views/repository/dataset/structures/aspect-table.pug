@@ -1,0 +1,21 @@
+include ../mixins.pug
+
+mixin aspect-table(aspects, pathPrefix)
+	table.table
+		thead
+			tr
+				th=getLabel(pathPrefix + '.aspect')
+				th=getLabel(pathPrefix + '.value')
+		tbody
+			each values in aspects
+				- var changed = compareTo && !values[1] ? 'added' : (compareTo && !values[0] ? 'removed' : null);
+				tr(data-compare=changed)
+					td 
+						+compare-icon(changed)
+						if pathPrefix === 'processDocumentation.flowCompleteness'
+							if (values[0] && values[0].aspect === 'Product model') || (values[1] && values[1].aspect) === 'Product model'
+								img.model-icon-small(src='images/model/small/' + getIconByType('Flow', false, null, 'PRODUCT_FLOW'), aria-label='Model icon of Flow')
+							else
+								img.model-icon-small(src='images/model/small/' + getIconByType('IMPACT_CATEGORY'), aria-label='Model icon of ImpactCategory')
+						+sub-field(values[0], values[1], 'aspect')
+					+sub-field-cell(values[0], values[1], 'value')
