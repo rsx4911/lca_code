@@ -1,5 +1,0 @@
-include ../mixins/paging.pug
-
-each team in data
-	div: a.follow(href='administration/team/profile/' + team.teamname)=team.name
-+paging(resultInfo, null, pageSizeId)

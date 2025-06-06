@@ -1,5 +1,0 @@
-include ../mixins/paging.pug
-
-each group in data
-	div: a.follow(href='groups/' + group.name)=group.label
-+paging(resultInfo, null, pageSizeId)

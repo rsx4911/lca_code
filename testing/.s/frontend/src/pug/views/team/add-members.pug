@@ -1,5 +1,0 @@
-include ../mixins/forms.pug
-
-form#add-members-form
-	#add-members-general-message-group.alert(role='alert'): span.message
-	+select('users', 'Users', users, null)(multiple=true class='member-selection')

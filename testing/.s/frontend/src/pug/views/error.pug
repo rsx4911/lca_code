@@ -1,7 +1,0 @@
-.error-page(class=stacktrace?'stacktrace':null)
-	img(src=imageSrc, aria-label='Error logo')
-	h1=statuscode?statuscode:'Client error'
-	hr
-	if stacktrace
-		button.btn.btn-default.btn-xs.pull-right.select-text Select stracktrace
-	h3.error-message=errorMessage
