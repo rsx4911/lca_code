@@ -69,6 +69,42 @@ jobs:
           VM_IP=$(jq -r '.publicIpAddress' vm.json)
           echo "VM_IP=$VM_IP" >> $GITHUB_ENV
 
+      - name: Fetch GitHub Actions IP ranges
+        id: fetch_ips
+        run: |
+          GITHUB_IPS=$(curl -s https://api.github.com/meta | jq -r '.actions[]' | paste -sd "," -)
+          echo "GITHUB_IPS=$GITHUB_IPS" >> $GITHUB_ENV
+
+      - name: Allow GitHub on port 8080
+        run: |
+          az network nsg rule create \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --nsg-name ${{ secrets.AZURE_NSG_NAME }} \
+          --name AllowGitHub8080 \
+          --priority 200 \
+          --direction Inbound \
+          --access Allow \
+          --protocol Tcp \
+          --destination-port-ranges 8080 \
+          --source-address-prefixes $GITHUB_IPS \
+          --destination-address-prefixes '*' \
+          --description "Allow GitHub Actions access to port 8080"   
+
+      - name: Allow GitHub on port 80
+        run: |
+          az network nsg rule create \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --nsg-name ${{ secrets.AZURE_NSG_NAME }} \
+          --name AllowGitHub80 \
+          --priority 201 \
+          --direction Inbound \
+          --access Allow \
+          --protocol Tcp \
+          --destination-port-ranges 80 \
+          --source-address-prefixes $GITHUB_IPS \
+          --destination-address-prefixes '*' \
+          --description "Allow GitHub Actions access to port 80"
+
       - name: Install Prerequisites on Remote VM
         run: |
           echo "Transferring install-prerequisites.sh to VM..."
@@ -230,6 +266,23 @@ jobs:
               sudo systemctl restart tomcat
               sudo systemctl restart opensearch
             '
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest requests pytest-dependency
+
+      - name: Run API Tests
+        env:
+          LCA_USERNAME: ${{ secrets.LCA_USERNAME }}
+          LCA_PASSWORD: ${{ secrets.LCA_PASSWORD }}
+          VM_IP: ${{ env.VM_IP }}
+        run: |
+          pytest tests/e2e/integration/api_test.py
 
       - name: Clean Up Ephemeral VM and Resources
         if: false
