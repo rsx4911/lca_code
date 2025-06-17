@@ -112,8 +112,7 @@ abstract class DownloadController {
 	}
 	
 	private void write(DatasetWriter writer, Repository repo, String path, String commitId) {
-		var ref = new ModelRef(path);
-		if (ref.isDataset) {
+		if (path != null && new ModelRef(path).isDataset) {
 			writer.write(repo.references.get(path, commitId));
 		} else {
 			repo.references.find().includeCategories().commit(commitId).path(path).iterate(writer::write);

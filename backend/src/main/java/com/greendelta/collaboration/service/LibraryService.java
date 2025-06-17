@@ -3,6 +3,8 @@ package com.greendelta.collaboration.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -102,7 +104,8 @@ public class LibraryService {
 
 	public String getLibraryUrl(String library) {
 		var serverUrl = settings.serverConfig.getServerUrl();
-		return serverUrl + "/ws/" + (isPublic(library) ? "public/libraries/" : "libraries/") + library;
+		var encodedLibrary = URLEncoder.encode(library, Charset.forName("utf-8")).replace("+", "%20");
+		return serverUrl + "/ws/" + (isPublic(library) ? "public/libraries/" : "libraries/") + encodedLibrary;
 	}
 
 	public File getLibraryFile(String library) {

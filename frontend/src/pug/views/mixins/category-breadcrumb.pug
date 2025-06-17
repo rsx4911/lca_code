@@ -5,7 +5,7 @@ mixin category-breadcrumb(paths, baseUrl, linkLast, depth, commitId, disabled)
 			if depth && paths.length > depth
 				li ...
 			each category, index in paths
-				- link += '/' + category
+				- link += '/' + encodeURIComponent(category);
 				if !depth || paths.length - index <= depth				
 					if !baseUrl || disabled || (index === paths.length - 1 && !linkLast)
 						li.active=category

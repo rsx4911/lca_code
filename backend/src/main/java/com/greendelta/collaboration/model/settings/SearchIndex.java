@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.model.settings;
 
+import java.util.Map;
+
 public enum SearchIndex implements SettingKey {
 
 	PRIVATE(SearchIndexType.SEARCH, false, "collaboration-server"),
@@ -16,10 +18,12 @@ public enum SearchIndex implements SettingKey {
 		this.isPublic = isPublic;
 		this.defaultValue = defaultValue;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getDefaultValue() {
+	public <T> T getDefaultValue(Map<String, String> values) {
+		if (values != null && values.containsKey(this.name()))
+			return (T) values.get(this.name());
 		return (T) defaultValue;
 	}
 

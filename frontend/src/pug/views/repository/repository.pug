@@ -105,7 +105,7 @@ mixin repo-input(setting, field, label)
 				.size-indicator-container
 					.size-indicator-bar
 						.size-indicator-overlay(style='width:' + (100 - percentage) + '%;margin-left:' + percentage + '%')
-	+checkbox('prohibitCommits', 'Prohibit users from making further commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='PROHIBIT_COMMITS')
+	+checkbox('prohibitCommits', 'Prohibit users from further pushing commits to this repository, regardless of their role')(disabled=!repository.userCanSetSettings, checked=repository.settings.prohibitCommits, data-setting='PROHIBIT_COMMITS')
 	if commentsEnabled
 		+checkbox('commentApproval', 'Comments in this repository need approval by an editor')(disabled=!repository.userCanSetSettings, checked=repository.settings.commentApproval, data-setting='COMMENT_APPROVAL')
 

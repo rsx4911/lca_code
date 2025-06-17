@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.model.settings;
 
+import java.util.Map;
+
 public enum SearchSetting implements SettingKey {
 
 	SCHEMA(String.class, "http"),
@@ -16,15 +18,15 @@ public enum SearchSetting implements SettingKey {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getDefaultValue() {
-		return (T) defaultValue;
+	public <T> T getDefaultValue(Map<String, String> values) {
+		return Setting.getDefaultValue(this.name(), type, null, values, (T) defaultValue);
 	}
 
 	@Override
 	public Class<?> getType() {
 		return type;
 	}
-	
+
 	@Override
 	public boolean isPublicSetting() {
 		return false;
@@ -34,5 +36,5 @@ public enum SearchSetting implements SettingKey {
 	public boolean isAdminSetting() {
 		return true;
 	}
-	
+
 }
