@@ -308,6 +308,7 @@ jobs:
         run: |
           # Make sure the file exists in the right path
           if [ ! -f "api_test_priorities.yaml" ]; then
+            ls -lrt
             echo "Error: api_test_priorities.yaml file is missing"
             exit 1
           fi
