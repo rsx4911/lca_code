@@ -27,3 +27,4 @@
 /frontend/.vscode/
 
 /.idea/
+/**/node_modules/

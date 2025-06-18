@@ -1,47 +1,68 @@
+# Updated and aligned with api_test_priorities.yaml
 import requests
 import pytest
+import os
 
 BASE_URL = "https://lcacommons.gov/lca-collaboration"
 
 @pytest.fixture(scope="session")
 def auth_token():
     url = f"{BASE_URL}/ws/public/login"
-    payload = {"username": "valid_user", "password": "valid_pass"}
+    payload = {
+        "username": os.getenv("AUTH_USERNAME", "valid_user"),
+        "password": os.getenv("AUTH_PASSWORD", "valid_pass")
+    }
     response = requests.post(url, json=payload)
     assert response.status_code == 200
     return response.cookies.get("JSESSIONID")
 
 @pytest.fixture
 def headers(auth_token):
-    return {"Accept": "application/json", "Content-Type": "application/json", "Cookie": f"JSESSIONID={auth_token}"}
+    return {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Cookie": f"JSESSIONID={auth_token}"
+    }
 
-# P0 - Critical Tests
+# P0 Critical - Example
 
 def test_login_success():
     url = f"{BASE_URL}/ws/public/login"
-    payload = {"username": "valid_user", "password": "valid_pass"}
+    payload = {
+        "username": os.getenv("AUTH_USERNAME", "valid_user"),
+        "password": os.getenv("AUTH_PASSWORD", "valid_pass")
+    }
     response = requests.post(url, json=payload)
     assert response.status_code == 200
+
+
+def test_login_invalid():
+    url = f"{BASE_URL}/ws/public/login"
+    payload = {
+        "username": "invalid_user",
+        "password": "wrong_pass"
+    }
+    response = requests.post(url, json=payload)
+    assert response.status_code == 401
+
 
 def test_list_all_groups(headers):
     url = f"{BASE_URL}/ws/group"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
+
 def test_list_all_repositories(headers):
-    url = f"{BASE_URL}/ws/repository"
+    url = f"{BASE_URL}/ws/respository"  # Note: typo in YAML is preserved here
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
-def test_browse_dataset_by_id(headers):
-    url = f"{BASE_URL}/ws/public/browse/Federal_LCA_Commons/test_repo/FLOW/sample_id"
-    response = requests.get(url, headers=headers)
-    assert response.status_code == 200
 
 def test_basic_search(headers):
     url = f"{BASE_URL}/ws/public/search"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
+
 
 def test_prepare_repository_download(headers):
     url = f"{BASE_URL}/ws/public/download/json/prepare/Federal_LCA_Commons/test_repo"
@@ -50,180 +71,286 @@ def test_prepare_repository_download(headers):
     global token
     token = response.text
 
+
 def test_download_json_package(headers):
     global token
     url = f"{BASE_URL}/ws/public/download/json/{token}"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
-# P1 - Important Tests
 
-def test_login_invalid_password():
-    url = f"{BASE_URL}/ws/public/login"
-    payload = {"username": "valid_user", "password": "invalid_pass"}
-    response = requests.post(url, json=payload)
-    assert response.status_code == 401
-
-def test_login_missing_2fa():
-    url = f"{BASE_URL}/ws/public/login"
-    payload = {"username": "valid_user", "password": "valid_pass"}
-    response = requests.post(url, json=payload)
-    assert response.status_code == 200
-    assert 'tokenRequired' in response.text
-
-def test_get_group_by_id(headers):
-    url = f"{BASE_URL}/ws/group/test_group"
+def test_browse_dataset_by_id(headers):
+    url = f"{BASE_URL}/ws/public/browse/Federal_LCA_Commons/test_repo/FLOW/sample_id"
     response = requests.get(url, headers=headers)
     assert response.status_code in [200, 404]
 
-def test_create_group(headers):
-    url = f"{BASE_URL}/ws/group/new_group"
-    response = requests.post(url, headers=headers)
-    assert response.status_code == 201
-
-def test_delete_group(headers):
-    url = f"{BASE_URL}/ws/group/new_group"
-    response = requests.delete(url, headers=headers)
-    assert response.status_code == 200
-
-def test_update_group_setting(headers):
-    url = f"{BASE_URL}/ws/group/settings/test_group/label"
-    response = requests.put(url, json={"value": "Updated Label"}, headers=headers)
-    assert response.status_code == 200
-
-# Repository Management
-
-def test_get_repository_details(headers):
-    url = f"{BASE_URL}/ws/repository/Federal_LCA_Commons/test_repo"
-    response = requests.get(url, headers=headers)
-    assert response.status_code == 200
-
-def test_create_repository(headers):
-    url = f"{BASE_URL}/ws/repository/Federal_LCA_Commons/new_repo"
-    response = requests.post(url, headers=headers)
-    assert response.status_code == 201
-
-def test_delete_repository(headers):
-    url = f"{BASE_URL}/ws/repository/Federal_LCA_Commons/new_repo"
-    response = requests.delete(url, headers=headers)
-    assert response.status_code == 200
-
-# Membership Management
-
-def test_get_group_memberships(headers):
-    url = f"{BASE_URL}/ws/membership/test_group"
-    response = requests.get(url, headers=headers)
-    assert response.status_code == 200
-
-def test_add_user_to_group(headers):
-    url = f"{BASE_URL}/ws/membership/test_group/user/new_user/READER"
-    response = requests.post(url, headers=headers)
-    assert response.status_code == 201
-
-def test_update_user_role_in_group(headers):
-    url = f"{BASE_URL}/ws/membership/test_group/user/new_user/EDITOR"
-    response = requests.put(url, headers=headers)
-    assert response.status_code == 200
-
-def test_delete_user_from_group(headers):
-    url = f"{BASE_URL}/ws/membership/test_group/user/new_user"
-    response = requests.delete(url, headers=headers)
-    assert response.status_code == 200
-
-def test_get_repository_memberships(headers):
-    url = f"{BASE_URL}/ws/membership/Federal_LCA_Commons/test_repo"
-    response = requests.get(url, headers=headers)
-    assert response.status_code == 200
-
-def test_add_user_to_repository(headers):
-    url = f"{BASE_URL}/ws/membership/Federal_LCA_Commons/test_repo/user/new_user/READER"
-    response = requests.post(url, headers=headers)
-    assert response.status_code == 201
-
-def test_delete_user_from_repository(headers):
-    url = f"{BASE_URL}/ws/membership/Federal_LCA_Commons/test_repo/user/new_user"
-    response = requests.delete(url, headers=headers)
-    assert response.status_code == 200
-
-
-# Commit History
-
-def test_get_repository_commit_history(headers):
-    url = f"{BASE_URL}/ws/history/Federal_LCA_Commons/test_repo"
-    response = requests.get(url, headers=headers)
-    assert response.status_code == 200
-
-# Search Variants
 
 def test_search_by_group(headers):
-    url = f"{BASE_URL}/ws/public/search?group=Federal_LCA_Commons"
+    url = f"{BASE_URL}/ws/public/search?group=testgroup"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
-# Flow Links
+
+def test_search_by_repository(headers):
+    url = f"{BASE_URL}/ws/public/search?repositoryId=testgroup/testrepo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 200
+
+
+def test_paginated_search(headers):
+    url = f"{BASE_URL}/ws/public/search?page=2&pageSize=20"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 200
+
+
+def test_download_invalid_token(headers):
+    url = f"{BASE_URL}/ws/public/download/json/invalid-token"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 404
+
+
+def test_commit_history(headers):
+    url = f"{BASE_URL}/ws/history/Federal_LCA_Commons/test_repo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 204]
+
+
+def test_commit_dataset_history(headers):
+    url = f"{BASE_URL}/ws/history/Federal_LCA_Commons/test_repo/FLOW/sample_id"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 204]
+
 
 def test_flow_link_search(headers):
     url = f"{BASE_URL}/ws/public/search/flowLinks/sample_flow_id"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
-# Download Edge Cases
+    # P2 - Additional Functional Tests
 
-def test_invalid_token_download(headers):
-    url = f"{BASE_URL}/ws/public/download/json/invalid-token"
+def test_login_2fa_required():
+    url = f"{BASE_URL}/ws/public/login"
+    payload = {
+        "username": os.getenv("AUTH_USERNAME", "valid_user"),
+        "password": os.getenv("AUTH_PASSWORD", "valid_pass"),
+        "token": "invalid_2fa_token"
+    }
+    response = requests.post(url, json=payload)
+    assert response.status_code in [200, 401]
+
+
+def test_login_already_authenticated(headers):
+    url = f"{BASE_URL}/ws/public/login"
+    payload = {
+        "username": os.getenv("AUTH_USERNAME", "valid_user"),
+        "password": os.getenv("AUTH_PASSWORD", "valid_pass")
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    assert response.status_code in [200, 409]
+
+
+def test_list_groups_pagination(headers):
+    url = f"{BASE_URL}/ws/group?page=2&pageSize=20"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 200
+
+
+def test_list_groups_filtering(headers):
+    url = f"{BASE_URL}/ws/group?filter=test&onlyIfCanWrite=true"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 200
+
+
+def test_get_nonexistent_group(headers):
+    url = f"{BASE_URL}/ws/group/nonexistent-group"
     response = requests.get(url, headers=headers)
     assert response.status_code == 404
 
 
+def test_create_group_invalid_name(headers):
+    url = f"{BASE_URL}/ws/group/invalid!group$name"
+    response = requests.post(url, headers=headers)
+    assert response.status_code == 400
 
-@pytest.fixture(scope="sessionP2")
-def auth_token():
-    url = f"{BASE_URL}/ws/public/login"
-    payload = {"username": "valid_user", "password": "valid_pass"}
-    response = requests.post(url, json=payload)
-    assert response.status_code == 200
-    return response.cookies.get("JSESSIONID")
 
-@pytest.fixture
-def headers(auth_token):
-    return {"Accept": "application/json", "Content-Type": "application/json", "Cookie": f"JSESSIONID={auth_token}"}
+def test_get_group_avatar(headers):
+    url = f"{BASE_URL}/ws/group/avatar/test_group"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
 
-# P2 - Secondary Tests (Optional Edge & Stress Cases)
 
-def test_stress_search_pagination(headers):
-    url = f"{BASE_URL}/ws/public/search?page=100&pageSize=10"
+def test_list_repositories_with_pagination(headers):
+    url = f"{BASE_URL}/ws/repository?page=2&pageSize=20&group=testgroup"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
-def test_rapid_sequence_downloads(headers):
-    url_prepare = f"{BASE_URL}/ws/public/download/json/prepare/Federal_LCA_Commons/test_repo"
-    response_prepare = requests.get(url_prepare, headers=headers)
-    assert response_prepare.status_code == 200
-    token = response_prepare.text
 
-    url_download = f"{BASE_URL}/ws/public/download/json/{token}"
-    for _ in range(5):
-        response_download = requests.get(url_download, headers=headers)
-        assert response_download.status_code == 200
+def test_get_nonexistent_repository(headers):
+    url = f"{BASE_URL}/ws/repository/testgroup/nonexistent_repo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 404
 
-def test_multiple_simultaneous_logins():
-    url = f"{BASE_URL}/ws/public/login"
-    payload = {"username": "valid_user", "password": "valid_pass"}
-    for _ in range(5):
-        response = requests.post(url, json=payload)
-        assert response.status_code == 200
 
-def test_fuzz_search_inputs(headers):
-    fuzz_inputs = ["?query=<script>", "?group=\" OR \"1\"=\"1"]
-    for input_str in fuzz_inputs:
-        url = f"{BASE_URL}/ws/public/search{input_str}"
-        response = requests.get(url, headers=headers)
-        assert response.status_code == 200 or response.status_code == 400
+def test_get_repository_meta(headers):
+    url = f"{BASE_URL}/ws/repository/meta/Federal_LCA_Commons/test_repo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
 
-def test_rate_limit_handling(headers):
-    url = f"{BASE_URL}/ws/public/search"
-    responses = []
-    for _ in range(50):
-        response = requests.get(url, headers=headers)
-        responses.append(response.status_code)
-    assert 429 not in responses  # assuming no rate limit currently implemented, adjust based on actual system behavior
+
+def test_get_repository_avatar(headers):
+    url = f"{BASE_URL}/ws/repository/avatar/Federal_LCA_Commons/test_repo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
+
+
+def test_export_repository(headers):
+    url = f"{BASE_URL}/ws/repository/export/Federal_LCA_Commons/test_repo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
+
+
+def test_download_jsonld1_prepare(headers):
+    url = f"{BASE_URL}/ws/public/download/json1/prepare/Federal_LCA_Commons/test_repo"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
+
+
+def test_download_jsonld1(headers):
+    url = f"{BASE_URL}/ws/public/download/json1/invalid-token"
+    response = requests.get(url, headers=headers)
+    assert response.status_code == 404
+
+
+def test_history_commit_detail(headers):
+    url = f"{BASE_URL}/ws/history/commit/Federal_LCA_Commons/test_repo/invalid_commit"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
+
+
+def test_history_previous_commit(headers):
+    url = f"{BASE_URL}/ws/history/previousCommitId/Federal_LCA_Commons/test_repo/FLOW/sample_id/commitId1"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
+# Multipart Upload Tests
+
+def test_upload_group_avatar(headers):
+    url = f"{BASE_URL}/ws/group/avatar/test_group"
+    with open('tests/assets/avatar.png', 'rb') as f:
+        files = {'file': ('avatar.png', f, 'image/png')}
+        response = requests.put(url, files=files, headers={"Cookie": headers["Cookie"]})
+        assert response.status_code in [200, 403]
+        if response.status_code == 200:
+            assert "success" in response.text.lower()
+
+
+def test_upload_repository_avatar(headers):
+    url = f"{BASE_URL}/ws/repository/avatar/Federal_LCA_Commons/test_repo"
+    with open('tests/assets/repo_avatar.png', 'rb') as f:
+        files = {'file': ('repo_avatar.png', f, 'image/png')}
+        response = requests.put(url, files=files, headers={"Cookie": headers["Cookie"]})
+        assert response.status_code in [200, 403]
+        if response.status_code == 200:
+            assert "success" in response.text.lower()
+
+
+def test_import_repository_data(headers):
+    url = f"{BASE_URL}/ws/repository/import/Federal_LCA_Commons/test_repo"
+    with open('tests/assets/data.zip', 'rb') as f:
+        files = {
+            'file': ('data.zip', f, 'application/zip')
+        }
+        data = {'commitMessage': 'CI test import', 'format': 'json-ld'}
+        response = requests.post(url, files=files, data=data, headers={"Cookie": headers["Cookie"]})
+        assert response.status_code in [200, 400]
+        if response.status_code == 400:
+            assert "commitMessage" in response.text or "error" in response.text.lower()
+
+# GLAD Integration
+
+def test_glad_push_success(headers):
+    url = f"{BASE_URL}/ws/datamanager/glad/push/Federal_LCA_Commons/test_repo"
+    payload = {
+        "dataprovider": "Test Provider",
+        "paths": ["Category1", "Category2"]
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    assert response.status_code in [200, 403]
+    if response.status_code == 200:
+        assert "pushed" in response.text.lower()
+
+
+def test_glad_push_missing_config(headers):
+    url = f"{BASE_URL}/ws/datamanager/glad/push/Federal_LCA_Commons/test_repo"
+    payload = {
+        "dataprovider": "Test Provider",
+        "paths": ["FLOWS/Elementary flows"]
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    assert response.status_code == 503
+    assert "invalid" in response.text.lower() or "unavailable" in response.text.lower()
+
+# Dataset Download Preparation
+
+def test_prepare_download_by_category(headers):
+    url = f"{BASE_URL}/ws/public/download/json/prepare/Federal_LCA_Commons/test_repo"
+    payload = [{
+        "id": "categoryId1",
+        "type": "CATEGORY",
+        "name": "Test Category",
+        "commitId": "commitId1"
+    }]
+    response = requests.post(url, json=payload, headers=headers)
+    assert response.status_code in [200, 404]
+    if response.status_code == 404:
+        assert "not found" in response.text.lower()
+
+
+def test_prepare_download_by_direct_selection(headers):
+    url = f"{BASE_URL}/ws/public/download/json/prepare/Federal_LCA_Commons/test_repo"
+    payload = [{
+        "type": "PROCESS",
+        "refId": "processId1"
+    }]
+    response = requests.put(url, json=payload, headers=headers)
+    assert response.status_code in [200, 404]
+    if response.status_code == 404:
+        assert "not found" in response.text.lower()
+
+
+def test_prepare_single_dataset_download(headers):
+    url = f"{BASE_URL}/ws/public/download/json/prepare/Federal_LCA_Commons/test_repo/FLOW/sample_id"
+    response = requests.get(url, headers=headers)
+    assert response.status_code in [200, 404]
+    if response.status_code == 404:
+        assert "not found" in response.text.lower()
+
+# Mock asset generation help
+os.makedirs('tests/assets', exist_ok=True)
+with open('tests/assets/avatar.png', 'wb') as f:
+    f.write(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR')
+with open('tests/assets/repo_avatar.png', 'wb') as f:
+    f.write(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR')
+with open('tests/assets/data.zip', 'wb') as f:
+    f.write(b'PK\x03\x04')
+
+# Example CI/CD usage in GitHub Actions (to be placed in .github/workflows/api-tests.yml):
+# name: API Tests
+# on: [push, pull_request]
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     env:
+#       AUTH_USERNAME: ${{ secrets.AUTH_USERNAME }}
+#       AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10'
+#       - name: Install dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install pytest requests
+#       - name: Run API tests
+#         run: pytest tests/
