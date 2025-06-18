@@ -278,7 +278,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest requests pytest-dependency
+          pip install pytest requests pytest-dependency pyyaml
 
       - name: Wait for app to be up on port 8080
         run: |
@@ -303,6 +303,8 @@ jobs:
       - name: Run API Tests
         env:
           VM_IP: ${{ env.VM_IP }}
+          AUTH_USERNAME: ${{ secrets.AUTH_USERNAME }}
+          AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
         run: |
           pytest tests/integration/api_test/complete_api_test_repos_testing_mvp.py
 
