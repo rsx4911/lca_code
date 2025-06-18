@@ -110,7 +110,14 @@ def headers(auth_token):
 def test_repo_history(headers, group, repo):
     path = get_path("Get repository commit history")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
+    # Log the request details
+    print(f"Request URL: {url}")
+    print(f"Request Headers: {headers}")
     response = requests.get(url, headers=headers)
+    # Log the response details
+    print(f"Response Status Code: {response.status_code}")
+    print(f"Response Headers: {response.headers}")
+    print(f"Response Body: {response.text}")
     assert response.status_code in [200, 204]
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
