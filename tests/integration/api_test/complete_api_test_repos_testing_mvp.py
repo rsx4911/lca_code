@@ -51,7 +51,7 @@ import os
 import yaml
 
 # Load endpoint routes dynamically from YAML config
-with open("api_test_priorities.yaml", "r") as f:
+with open("tests/integration/api_test/api_test_priorities.yaml", "r") as f:
     config = yaml.safe_load(f)["api_test_priorities"]
 
 VM_IP = os.environ.get("VM_IP")
