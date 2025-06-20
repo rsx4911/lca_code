@@ -4,11 +4,13 @@
 # Category: Fast - Quick operations that don't take much time to run.
 # Category: Slow - Operations that typically take longer to complete/ complex processing items.
 
+# UPDATED WITH UNIQUE PARENT KEYS UNDER EACH PRIORITY LEVEL SO TESTS CAN ACCESS THE CORRECT ENDPOINT.
+
 api_test_priorities:
   P0:
     description: "Critical features that must work for core functionality"
-    routes:
-      # Authentication
+    # Authentication
+    login:
       - path: /ws/public/login
         method: POST
         description: Login to the system
@@ -22,8 +24,9 @@ api_test_priorities:
             description: Login successful
           - code: 401
             description: Invalid Credentials
-      
-      # Group Management
+    
+    # Group Management
+    list_groups:
       - path: /ws/group
         method: GET
         description: List all accessible groups
@@ -32,9 +35,10 @@ api_test_priorities:
         expected_responses:
         - code: 200
           description: List of groups 
-          
-      # Repository Management
-      - path: /ws/respository
+     
+    # Repository Management
+    list_repo:      
+      - path: /ws/repository
         method: GET
         description: List all accessible repositories
         component: Repository
@@ -43,7 +47,8 @@ api_test_priorities:
         - code: 200
           description: List of repositories returned
 
-      # Dataset Management
+    # Dataset Management
+    browse_dataset:
       - path: /ws/public/browse/{group}/{repo}/{type}/{refId}
         method: GET
         description: Retrieve dataset
@@ -59,7 +64,8 @@ api_test_priorities:
           - code: 404
             description: Dataset not found 
 
-      # Search Management
+    # Search Management
+    search_datasets:        
       - path: /ws/public/search
         method: GET
         description: Search datasets
@@ -81,7 +87,8 @@ api_test_priorities:
           - code: 200
             description: Search results returned
 
-      # Download Management
+    # Download Management
+    prepare_download:
       - path: /ws/public/download/json/prepare/{group}/{repo}
         method: GET
         description: Prepare repository for download
@@ -95,6 +102,7 @@ api_test_priorities:
           - code: 200
             description: Download token returned 
 
+    download_package:        
       - path: /ws/public/download/json/{token}
         method: GET
         description: Download prepared JSON-LD package
@@ -109,8 +117,8 @@ api_test_priorities:
 
   P1:
     description: "Important features/High Priority endpoints needed for regular operation"
-    routes:
-      # Group Management
+    # Group Management
+    get_group_settings:
       - path: /ws/group/{group}
         method: GET
         description: Get group settings
@@ -126,6 +134,7 @@ api_test_priorities:
           - code: 404
             description: Group not found 
 
+    create_group:
       - path: /ws/group/{group}
         method: POST
         description: Create a new group
@@ -137,6 +146,7 @@ api_test_priorities:
           - code: 409
             description: Group already exists
 
+    update_group_settings:
       - path: /ws/group/settings/{group}/{setting}
         method: PUT
         description: Update group settings
@@ -147,7 +157,8 @@ api_test_priorities:
         expected_repsonses:
           - code: 200
             description: Setting successfully updated
-
+    
+    delete_group:
       - path: /ws/group/{group}
         method: DELETE
         description: Delete a group (final cleanup)
@@ -159,7 +170,8 @@ api_test_priorities:
           - code: 403
             description: No permission to delete
 
-      # Repository Management
+    # Repository Management
+    get_repo_settings:
       - path: /ws/repository/{group}/{repo}
         method: GET 
         description: Get repository settings
@@ -177,6 +189,7 @@ api_test_priorities:
           - code: 406
             description: Unsupported schema
 
+    create_repo:
       - path: /ws/repository/{group}/{repo}
         method: POST
         description: Create a new repository
@@ -187,7 +200,8 @@ api_test_priorities:
             description: Repository successfully created
           - code: 409
             description: Repository already exists
-
+    
+    update_repo_settings:
       - path: /ws/repository/settings/{group}/{repo}/{setting}/{value}
         method: PUT
         description: Update respository settings
@@ -197,6 +211,7 @@ api_test_priorities:
           - code: 200
             description: Setting successfully updated
 
+    delete_repo:
       - path: /ws/repository/{group}/{repo}
         method: DELETE
         description: Delete a repository (final cleanup)
@@ -208,7 +223,8 @@ api_test_priorities:
           - code: 403
             description: No permission to delete
 
-      # Membership Management - Group
+    # Membership Management - Group
+    get_group_membership:
       - path: /ws/membership/{group}
         method: GET
         description: Get group memberships
@@ -218,6 +234,7 @@ api_test_priorities:
           - code: 200
             description: Group memberships returned
 
+    add_group_user:
       - path: /ws/membership/{group}/user/{username}/{role}
         method: POST
         description: Add a user to a group
@@ -229,6 +246,7 @@ api_test_priorities:
           - code: 409
             description: User already in group
 
+    update_group_user_role:
       - path: /ws/membership/{group}/user/{username}/{newRole}
         method: PUT
         description: Update a user's role in a group
@@ -238,6 +256,7 @@ api_test_priorities:
           - code: 200
             description: User role successfully updated
 
+    delete_group_user:
       - path: /ws/membership/{group}/user/{username}
         method: DELETE
         description: Remove a user from a group
@@ -247,7 +266,8 @@ api_test_priorities:
           - code: 200
             description: User successfully removed from group
 
-      # Membership Management - Repository
+    # Membership Management - Repository
+    get_repo_membership:
       - path: /ws/membership/{group}/{repo}
         method: GET
         description: Get repository memberships
@@ -257,6 +277,7 @@ api_test_priorities:
           - code: 200
             description: Repository memberships returned
 
+    add_repo_user:
       - path: /ws/membership/{group}/{repo}/user/{username}/{role}
         method: POST
         description: Add a user to a repository
@@ -268,6 +289,7 @@ api_test_priorities:
           - code: 409
             description: User already in repository
 
+    delete_repo_user:
       - path: /ws/membership/{group}/{repo}/user/{username}
         method: DELETE
         description: Remove a user from a repository
@@ -277,7 +299,8 @@ api_test_priorities:
           - code: 200
             descriptin: User successfully removed from repository
 
-      # Dataset Management
+    # Dataset Management
+    get_dataset:
       - path: /ws/public/browse/{group}/{repo}/{type}/{refId}
         method: GET
         description: Get Dataset - permission check 
@@ -292,7 +315,8 @@ api_test_priorities:
             description: Dataset successfully retrieved
           - code: 403
             description: No permission to READ in {group}/{repo}
-      
+
+    get_dataset_nonexist:  
       - path: /ws/public/browse/{group}/{repo}/{type}/{nonexistent-refId}
         method: GET 
         description: Get dataset - Non-existent
@@ -306,7 +330,8 @@ api_test_priorities:
           - code: 404
             description: Dataset not found
 
-      # Search Management
+    # Search Management
+    search_by_group:
       - path: /ws/public/search
         method: GET
         description: Search datasets by group
@@ -320,6 +345,7 @@ api_test_priorities:
           - code: 200
             description: Filtered search results by group returned
 
+    search_by_repo:
       - path: /ws/public/search
         method: GET
         description: Search datasets by repository
@@ -333,6 +359,7 @@ api_test_priorities:
           - name: 200
             description: Filtered search results by repository returned
 
+    search_paginated:
       - path: /ws/public/search
         method: GET 
         description: Search datasets with pagination
@@ -348,7 +375,8 @@ api_test_priorities:
         expected_repsonses:
           - code: 200
             description: Paginated search results returned
-      
+
+    search_flow_links:  
       - path: /ws/public/search/flowLinks/{flowRefId}
         method: GET
         description: Search flow links 
@@ -366,8 +394,9 @@ api_test_priorities:
           - code: 200
             description: Flow link results returned
 
-      # History Management
-      - path: /ws/history/{group}/{repo}
+    # History Management
+    get_repo_history:
+      - path: /ws/public/history/{group}/{repo}
         method: GET
         description: Get repository commit history 
         component: History
@@ -378,7 +407,8 @@ api_test_priorities:
           - code: 204
             description: No commits found
 
-      - path: /ws/history/{group}/{repo}/{type}/{refId}
+    get_dataset_history:
+      - path: /ws/public/history/{group}/{repo}/{type}/{refId}
         method: GET 
         description: Get dataset commit history
         component: History
@@ -391,8 +421,8 @@ api_test_priorities:
 
   P2:
     description: "Low priority/Secondary tests or edge-case APIs; test after core coverage"
-    routes:
-      # Authentication
+    # Authentication
+    login_2fa:
       - path: /ws/public/login
         method: POST
         description: Login with 2FA
@@ -408,6 +438,7 @@ api_test_priorities:
           - code: 401
             description: Invalid token 
 
+    login_already_auth:
       - path: /ws/public/login
         method: POST
         description: Login when already authenticated
@@ -420,7 +451,8 @@ api_test_priorities:
           - code: 409
             description: Already authenticated
 
-      # Group Management
+    # Group Management
+    get_group_list:
       - path: /ws/group
         method: GET
         description: List groups with pagination
@@ -437,6 +469,7 @@ api_test_priorities:
           - code: 200
             description: Paginated groups returned 
 
+    list_group_filter:
       - path: /ws/group
         method: GET
         description: List groups with filtering
@@ -453,6 +486,7 @@ api_test_priorities:
           - code: 200
             description: Filtered groups returned
 
+    get_group_nonexist:
       - path: /ws/group/{nonexistent-group}
         method: GET
         description: Get non-existent group 
@@ -462,6 +496,7 @@ api_test_priorities:
           - code: 404
             description: Group not found
 
+    create_group_invalid:
       - path: /ws/group/{group}
         method: POST 
         description: Create group with invalid name 
@@ -469,8 +504,9 @@ api_test_priorities:
         category: fast 
         expected_repsonses:
           - code: 400
-            description: Invalid group name 
+            description: Invalid group name
 
+    get_group_avatar:
       - path: /ws/group/avatar/{group}
         method: GET 
         description: Get group avatar 
@@ -482,6 +518,7 @@ api_test_priorities:
           - code: 404
             description: Avatar not found 
 
+    set_group_avatar:
       - path: /ws/group/avatar/{group}
         method: PUT 
         description: Set group avatar
@@ -494,7 +531,8 @@ api_test_priorities:
           - code: 403
             description: No permission to write 
 
-      # Repository Management
+    # Repository Management
+    list_repo_paginated:
       - path: /ws/repository
         method: GET
         description: List repositories with pagination
@@ -514,6 +552,7 @@ api_test_priorities:
           - code: 200
             description: Paginated repositories returned
 
+    get_repo_nonexist:
       - path: /ws/repository/{group}/{nonexistent-repo}
         method: GET
         description: Get non-existent repository 
@@ -523,6 +562,7 @@ api_test_priorities:
           - code: 404
             description: Repository not found
 
+    get_meta_info:
       - path: /ws/repository/meta/{group}/{repo}
         method: GET
         description: Get repository meta information
@@ -534,6 +574,7 @@ api_test_priorities:
           - code: 404
             description: Repository not found 
 
+    get_repo_avatar:
       - path: /ws/repository/avatar/{group}/{repo}
         method: GET
         description: Get repository avatar
@@ -545,6 +586,7 @@ api_test_priorities:
           - code: 404
             description: Avatar not found
 
+    set_repo_avatar:
       - path: /ws/repository/avatar/{group}/{repo}
         method: PUT
         description: Set repository avatar
@@ -557,6 +599,7 @@ api_test_priorities:
           - code: 403
             description: No permission to write
 
+    export_repo:
       - path: /ws/repository/export/{group}/{repo}
         method: GET
         description: Export repository
@@ -568,6 +611,7 @@ api_test_priorities:
           - code: 404
             description: Repository not found
 
+    import_repo_data:
       - path: /ws/repository/import/{group}/{repo}
         method: POST
         description: Import repository data (JSON-LD)
@@ -584,6 +628,7 @@ api_test_priorities:
           - code: 400
             description: Missing commit message
 
+    move_repo:
       - path: /ws/repository/move/{group}/{repo}/{newGroup}/{newRepo}
         method: POST 
         description: Move repository
@@ -595,6 +640,7 @@ api_test_priorities:
           - code: 409
             description: Target repository already exists
 
+    clone_repo:
       - path: /ws/repository/clone/{group}/{repo}/{commitId}/{newGroup}/{newRepo}
         method: POST
         description: Clone repository
@@ -606,7 +652,8 @@ api_test_priorities:
           - code: 409
             description: Target repository already exists
 
-      # Membership Management - Group
+    # Membership Management - Group
+    add_group_team:
       - path: /ws/membership/{group}/team/{teamname}/{role}
         method: POST
         description: Add team to a group 
@@ -618,6 +665,7 @@ api_test_priorities:
           - code: 409
             description: Team already in group
 
+    update_team_role_group:
       - path: /ws/membership/{group}/team/{teamname}/{newRole}
         method: PUT
         description: Update team role in group
@@ -629,6 +677,7 @@ api_test_priorities:
           - code: 404
             description: Team not found
 
+    remove_team_group:
       - path: /ws/membership/{group}/team/{teamname}
         method: DELETE
         description: Remove team from group
@@ -640,7 +689,8 @@ api_test_priorities:
           - code: 404
             description: Team not found
 
-      # Membership Management - Repository
+    # Membership Management - Repository
+    add_repo_team:
       - path: /ws/membership/{group}/{repo}/team/{teamname}/{role}
         method: POST
         description: Add team to repository
@@ -652,6 +702,7 @@ api_test_priorities:
           - code: 409
             description: Team already in repository
 
+    update_team_role_repo:
       - path: /ws/membership/{group}/{repo}/team/{teamname}/{newRole}
         method: PUT
         description: Update team role in repository
@@ -663,6 +714,7 @@ api_test_priorities:
           - code: 404
             description: Team not found
 
+    remove_team_repo:
       - path: /ws/membership/{group}/{repo}/team/{teamname}
         method: DELETE
         description: Remove team from repository
@@ -674,7 +726,8 @@ api_test_priorities:
           - code: 404
             description: Team not found
 
-      # Dataset Management
+    # Dataset Management
+    get_dataset_invalid:
       - path: /ws/public/browse/{group}/{repo}/{type}/{refId}
         method: GET
         description: Get dataset with Invalid Commit ID 
@@ -688,6 +741,7 @@ api_test_priorities:
           - code: 404
             description: Commit ID not found 
 
+    dataset_nonexist_repo:
       - path: /ws/public/browse/{group}/{nonexistent-repo}/{type}/{refId}
         method: GET
         description: Get Dataset from Non-existent Repository
@@ -697,8 +751,9 @@ api_test_priorities:
           - code: 404
             description: Repository not found
 
-      # History Management
-      - path: /ws/history/search/{group}/{repo}
+    # History Management
+    search_history_paginated:
+      - path: /ws/public/history/search/{group}/{repo}
         method: GET
         description: Search commit history with pagination
         component: History
@@ -719,7 +774,8 @@ api_test_priorities:
           - code: 204
             description: No commits found
 
-      - path: /ws/history/references/{group}/{repo}/{commitId}
+    get_commit_reference:
+      - path: /ws/public/history/references/{group}/{repo}/{commitId}
         method: GET
         description: Get commit references 
         component: History
@@ -734,7 +790,8 @@ api_test_priorities:
           - code: 204
             description: No references found
 
-      - path: /ws/history/commit/{group}/{repo}/{commitId}
+    get_specific_commit:
+      - path: /ws/public/history/commit/{group}/{repo}/{commitId}
         method: GET 
         description: Get specific commit
         component: History
@@ -745,7 +802,8 @@ api_test_priorities:
           - code: 404
             description: Commit not found
 
-      - path: /ws/history/previousCommitId/{group}/{repo}/{type}/{refId}/{commitId}
+    get_previous_commit:
+      - path: /ws/public/history/previousCommitId/{group}/{repo}/{type}/{refId}/{commitId}
         method: GET
         description: Get previous commit ID 
         component: History
@@ -756,7 +814,8 @@ api_test_priorities:
           - code: 404
             description: No previous commit found
 
-      # Search Management
+    # Search Management
+    search_datasets_advanced:
       - path: /ws/public/search
         method: GET 
         description: Search datasets with advanced filters
@@ -785,7 +844,8 @@ api_test_priorities:
           - code: 200
             description: Filtered search results returned
 
-      # Download Managment
+    # Download Managment
+    download_category:
       - path: /ws/public/download/json/prepare/{group}/{repo}
         method: POST 
         description: Prepare download with category selection
@@ -802,6 +862,7 @@ api_test_priorities:
           - code: 404
             description: Category not found
 
+    download_direct:
       - path: /ws/public/download/json/prepare/{group}/{repo}
         method: PUT
         description: Prepare download with direct selection
@@ -816,6 +877,7 @@ api_test_priorities:
           - code: 404
             description: Reference not found
 
+    download_single_dataset:
       - path: /ws/public/download/json/prepare/{group}/{repo}/{type}/{refId}
         method: GET
         description: Prepare single dataset download
@@ -830,7 +892,8 @@ api_test_priorities:
             description: Download token returned
           - code: 404
             description: Dataset not found 
-      
+
+    prepare_json:   
       - path: /ws/public/download/json1/prepare/{group}/{repo}
         method: GET 
         description: Prepare JSON-LD 1.0 download
@@ -849,6 +912,7 @@ api_test_priorities:
           - code: 404
             description: Repository not found 
 
+    download_json:
       - path: /ws/public/download/json1/{token}
         method: GET 
         description: Download JSON-LD 1.0 package
@@ -861,6 +925,7 @@ api_test_priorities:
             description: Invalid token 
 
       # GLAD Integration
+    glad_push:
       - path: /ws/datamanager/glad/push/{group}/{repo}
         method: POST 
         description: Push repository data to GLAD 
@@ -875,6 +940,7 @@ api_test_priorities:
           - code: 403
             description: Not a data manager
 
+    glad_push_invalid:
       - path: /ws/datamanager/glad/push/{group}/{repo}
         method: POST 
         description: Push to GLAD with missing configuration
