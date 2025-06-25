@@ -4,16 +4,17 @@ BASE_URL="http://localhost:8080/lca-collaboration"
 LOGIN_URL="$BASE_URL/ws/public/login"
 REINDEX_URL="$BASE_URL/ws/admin/area/reindex"
 STATUS_URL="$BASE_URL/ws/admin/area/serverInfo"
+PUBLIC_CHECK_URL="$BASE_URL/ws/public/config/userRoutes"
 COOKIE_FILE="cookie.txt"
 
 # Step 0: Wait for login endpoint to become available (max 5 retries, 10s delay)
-MAX_RETRIES=5
+MAX_RETRIES=10
 retry=1
 echo "Checking if login endpoint is up..."
 
-until curl --output /dev/null --silent --insecure --head --fail "$LOGIN_URL"; do
+until curl --output /dev/null --silent --insecure --head --fail "$PUBLIC_CHECK_URL"; do
   if [ $retry -ge $MAX_RETRIES ]; then
-    echo "❌ Login endpoint $LOGIN_URL is not available after $MAX_RETRIES attempts."
+    echo "Login endpoint $PUBLIC_CHECK_URL is not available after $MAX_RETRIES attempts."
     exit 1
   fi
   echo "Login URL not available. Retrying in 10 seconds... ($retry/$MAX_RETRIES)"
@@ -57,8 +58,8 @@ echo "Waiting for 2 seconds..."
 sleep 2
 
 # Step 4: Poll for indexing status (max 5 times)
-echo "📡 Checking indexing status (max 5 tries)..."
-MAX_ATTEMPTS=5
+echo "Checking indexing status (max 5 tries)..."
+MAX_ATTEMPTS=40
 attempt=1
 
 while [ $attempt -le $MAX_ATTEMPTS ]; do
