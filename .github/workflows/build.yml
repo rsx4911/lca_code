@@ -270,6 +270,20 @@ jobs:
               sudo systemctl restart tomcat
               sudo systemctl restart opensearch
             '
+
+      - name: Reindex Repos
+        run: |
+          echo "Transferring reindex.sh to VM..."
+          scp -o StrictHostKeyChecking=no scripts/reindex.sh \
+            ${{ secrets.AZ_VM_USERNAME }}@$VM_IP:/home/${{ secrets.AZ_VM_USERNAME }}/
+
+          echo "Running reindex.sh on VM..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@$VM_IP <<EOF
+            chmod +x reindex.sh
+            ./reindex.sh
+          EOF
+          
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
