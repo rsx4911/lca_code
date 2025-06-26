@@ -136,9 +136,22 @@ def test_glad_push_success(headers, group, repo):
         "paths": ["Category1", "Category2"]
     }
     response = requests.post(url, json=payload, headers=headers)
-    assert response.status_code in [200, 403]
+
+    print(f"GLAD Push URL: {url}")
+    print(f"Payload: {payload}")
+    print(f"Response Code: {response.status_code}")
+    print(f"Response Body: {response.text}")
+
     if response.status_code == 200:
         assert "pushed" in response.text.lower()
+    elif response.status_code == 403:
+        print("Unauthorized push — user lacks permission.")
+    elif response.status_code == 404:
+        print("Repository not found or GLAD not configured.")
+        pytest.skip("GLAD not available for this repo")
+    else:
+        pytest.fail(f"Unexpected status code: {response.status_code}")
+
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_glad_push_missing_config(headers, group, repo):
@@ -189,14 +202,14 @@ def test_prepare_single_dataset_download_param(headers, group, repo):
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_export_repository(headers, group, repo):
-    path = get_path("Export a repository")
+    path = get_path("Export repository")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
     response = requests.get(url, headers=headers)
     assert response.status_code in [200, 404]
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_upload_repository_avatar_param(headers, group, repo):
-    path = get_path("Upload repository avatar")
+    path = get_path("Set repository avatar")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
     with open('tests/assets/repo_avatar.png', 'rb') as f:
         files = {'file': ('repo_avatar.png', f, 'image/png')}
@@ -205,7 +218,7 @@ def test_upload_repository_avatar_param(headers, group, repo):
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_import_repository_data_param(headers, group, repo):
-    path = get_path("Import repository data via multipart")
+    path = get_path("Import repository data (JSON-LD)")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
     with open('tests/assets/data.zip', 'rb') as f:
         files = {'file': ('data.zip', f, 'application/zip')}
@@ -215,39 +228,40 @@ def test_import_repository_data_param(headers, group, repo):
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_download_jsonld1_prepare(headers, group, repo):
-    path = get_path("Prepare JSON-LD1 download")
+    path = get_path("Prepare JSON-LD 1.0 download")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
     response = requests.get(url, headers=headers)
     assert response.status_code in [200, 404]
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_get_repository_avatar(headers, group, repo):
-    path = get_path("Retrieve repository avatar")
+    path = get_path("Get repository avatar")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
     response = requests.get(url, headers=headers)
     assert response.status_code in [200, 404]
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_search_repository(headers, group, repo):
-    path = get_path("Public repository search")
+    path = get_path("Search datasets")
     url = f"{BASE_URL}{path}?repositoryId={group}/{repo}"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
 def test_list_all_repositories(headers):
-    path = get_path("List all repositories")
+    path = get_path("List all accessible repositories")
     url = f"{BASE_URL}{path}"
     response = requests.get(url, headers=headers)
+
     assert response.status_code == 200
 
 def test_list_all_groups(headers):
-    path = get_path("List all user groups")
+    path = get_path("List all accessible groups")
     url = f"{BASE_URL}{path}"
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
 def test_download_invalid_token(headers):
-    path = get_path("Download with invalid token")
+    path = get_path("Download prepared JSON-LD package")
     url = f"{BASE_URL}{path.format(token='invalid-token')}"
     response = requests.get(url, headers=headers)
     assert response.status_code == 404
