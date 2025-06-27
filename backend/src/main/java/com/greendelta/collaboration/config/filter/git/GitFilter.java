@@ -109,7 +109,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	}
 
 	private Commit getPreviousCommitIfGitPush(GitRequest request) {
-		log.info("Git action {} url", request.getGitAction(),config.isGitUrl(request));
+		log.info("Git action {} url {}", request.getGitAction(),config.isGitUrl(request));
 		if (!config.isGitUrl(request) || request.getGitAction() != GitAction.GIT_PUSH)
 			return null;
 		log.info("Non Null");
