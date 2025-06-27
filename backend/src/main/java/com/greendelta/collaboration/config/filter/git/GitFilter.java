@@ -71,6 +71,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		if (path == null)
 			return;
+		log.info("Path is {}", path);
 		setRepositoryResolver(new FileResolver<>(new File(path), true));
 		super.init(config);
 	}
