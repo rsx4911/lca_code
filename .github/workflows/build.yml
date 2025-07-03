@@ -120,6 +120,8 @@ jobs:
             export DB_NAME="${{ vars.DB_NAME }}"
             export DB_USER="${{ secrets.DB_USER }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export EMAIL_USER="${{ secrets.EMAIL_USER }}"
+            export EMAIL_PASS="${{ secrets.EMAIL_PASS }}"
             chmod +x install-prerequisites.sh
             ./install-prerequisites.sh
           EOF

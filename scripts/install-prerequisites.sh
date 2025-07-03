@@ -199,4 +199,50 @@ else
   echo "Nginx 1.28 installed. Version: $(nginx -v 2>&1)"
 fi
 
+# ------------------ Postfix with Outlook SMTP ------------------
+echo "Configuring Postfix to use Outlook SMTP..."
+
+# Check if Postfix is installed
+if ! dpkg -l | grep -q postfix; then
+  echo "Installing Postfix..."
+  export DEBIAN_FRONTEND=noninteractive
+  echo "postfix postfix/mailname string $(hostname)" | sudo debconf-set-selections
+  echo "postfix postfix/main_mailer_type string 'Internet Site'" | sudo debconf-set-selections
+  sudo apt-get update
+  sudo apt-get install -y postfix mailutils libsasl2-modules
+else
+  echo "Postfix is already installed."
+fi
+
+EMAIL_USER="${EMAIL_USER:?lca}"
+EMAIL_PASS="${EMAIL_PASS:?lca}"
+
+# Ensure required environment variables are set
+if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASS" ]; then
+  echo "ERROR: OUTLOOK_USER and OUTLOOK_PASS environment variables must be set."
+  exit 1
+fi
+
+# Configure Postfix main.cf
+sudo postconf -e "relayhost = [smtp.office365.com]:587"
+sudo postconf -e "smtp_use_tls = yes"
+sudo postconf -e "smtp_sasl_auth_enable = yes"
+sudo postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
+sudo postconf -e "smtp_sasl_security_options = noanonymous"
+sudo postconf -e "smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt"
+
+# Create sasl_passwd file with Outlook credentials
+sudo bash -c "cat > /etc/postfix/sasl_passwd <<EOF
+[smtp.office365.com]:587 $EMAIL_USER:$EMAIL_PASS
+EOF"
+
+# Secure and compile sasl_passwd
+sudo postmap /etc/postfix/sasl_passwd
+sudo chmod 600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+
+# Restart Postfix
+sudo systemctl restart postfix
+
+echo "Postfix is now configured to send mail via Outlook SMTP."
+
 echo "All prerequisites installed successfully."
