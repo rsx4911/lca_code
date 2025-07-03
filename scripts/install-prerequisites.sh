@@ -224,16 +224,18 @@ if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASS" ]; then
 fi
 
 # Configure Postfix main.cf
-sudo postconf -e "relayhost = [smtp.office365.com]:587"
+sudo postconf -e "relayhost = [smtp.sendgrid.net]:465"
 sudo postconf -e "smtp_use_tls = yes"
 sudo postconf -e "smtp_sasl_auth_enable = yes"
 sudo postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
 sudo postconf -e "smtp_sasl_security_options = noanonymous"
 sudo postconf -e "smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt"
+sudo postconf -e "smtp_tls_wrappermode = yes"
+sudo postconf -e "smtp_tls_security_level = encrypt"
 
 # Create sasl_passwd file with Outlook credentials
 sudo bash -c "cat > /etc/postfix/sasl_passwd <<EOF
-[smtp.office365.com]:587 $EMAIL_USER:$EMAIL_PASS
+[smtp.sendgrid.net]:465 $EMAIL_USER:$EMAIL_PASS
 EOF"
 
 # Secure and compile sasl_passwd
