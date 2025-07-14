@@ -96,7 +96,7 @@ public class JobService {
 
 	private JobResult resetPassword(String email) {
 		var user = userService.getForEmail(email);
-		if (user == null || !user.email.equals(email))
+		if (user == null)
 			return JobResult.ERROR;
 		var password = Password.generate();
 		userService.setPassword(user, password);

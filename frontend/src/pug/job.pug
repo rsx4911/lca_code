@@ -18,6 +18,7 @@ html(lang='en')
 		#main-job
 			h3#job-title Job
 			#job-message.alert.alert-warning(role='alert'): span.message Executing... 
+			| You will be directed to the home page in <span id="timer">5</span> seconds...
 		br
 		br
 		br
@@ -72,6 +73,21 @@ html(lang='en')
 						}
 						$('#job-message').addClass(clazz);
 						$('#job-message .message').html(text);
+						var baseTags = window.document.getElementsByTagName('base');
+						var baseUrl = '/';
+						if (baseTags.length) {
+							baseUrl = $(baseTags[0]).attr('href');
+						}
+						var countdown = function() {
+							var timer = parseInt($('#timer').text());
+							if (timer > 1) {
+								$('#timer').text(timer - 1);
+								setTimeout(countdown, 1000);
+							} else {
+								window.location.href = baseUrl
+							}
+						};
+						setTimeout(countdown, 1000);
 					}
 				})
 			}
