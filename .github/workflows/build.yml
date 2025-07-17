@@ -44,7 +44,7 @@ jobs:
         with:
           repository: GreenDelta/search-wrapper
           path: search-wrapper-repo
-          ref: tags/1.1.7
+          ref: 1.1.7
 
       - name: Checkout OLCA Modules
         uses: actions/checkout@v4
