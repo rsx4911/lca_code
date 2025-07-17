@@ -224,7 +224,7 @@ if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASS" ]; then
 fi
 
 # Configure Postfix main.cf
-sudo postconf -e "relayhost = [smtp.sendgrid.net]:465"
+sudo postconf -e "relayhost = [smtp.gmail.com]:465"
 sudo postconf -e "smtp_use_tls = yes"
 sudo postconf -e "smtp_sasl_auth_enable = yes"
 sudo postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
