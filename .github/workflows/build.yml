@@ -1,4 +1,4 @@
-name: Build and Deploy LCA Collaboration Server
+name: Build and Deploy LCA Collaboration Server 
 
 on:
   push:
