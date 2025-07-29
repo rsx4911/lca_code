@@ -247,4 +247,13 @@ sudo systemctl restart postfix
 
 echo "Postfix is now configured to send mail via Outlook SMTP."
 
+# ------------------ Cypress Dependencies ------------------
+echo "Installing Cypress dependencies (Xvfb, libgtk, etc.)..."
+
+sudo apt-get update
+sudo apt-get install -y xvfb libgtk-3-0 libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 libx11-xcb1
+
+echo "Cypress dependencies installed."
+
+
 echo "All prerequisites installed successfully."
