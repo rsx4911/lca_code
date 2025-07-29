@@ -317,6 +317,34 @@ jobs:
           
           echo "App is running on http://${{ env.VM_IP }}:8080"
 
+      - name: Run Cypress UI Tests on Remote VM
+        run: |
+          echo "Transferring Cypress test suite to VM..."
+          scp -o StrictHostKeyChecking=no -r tests/e2e/cypress_core_functionalities_daily_check \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
+
+          echo "Running Cypress tests on VM..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            cd /home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check
+            curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            npm install
+            npx cypress run --reporter mochawesome || exit 1
+          EOF
+
+      - name: Copy Cypress Report from VM
+        if: always()
+        run: |
+          echo "Copying Cypress report to GitHub workspace..."
+          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/report ./cypress-report
+
+      - name: Upload Cypress Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-ui-report
+          path: ./cypress-report
+
       - name: Run API Tests
         env:
           VM_IP: ${{ env.VM_IP }}
@@ -326,7 +354,7 @@ jobs:
           pytest tests/integration/api_test/complete_api_test_repos_testing_mvp.py
 
       - name: Clean Up Ephemeral VM and Resources
-        if: false
+        if: always()
         run: |
           echo "Cleaning up all resources for $VM_NAME"
           
