@@ -22,7 +22,7 @@ module.exports = defineConfig({
   downloadsFolder: "cypress/downloads",
 
   e2e: {
-    baseUrl: "https://lca-stage.nal.usda.gov/lca-collaboration/", // ✅ Correct location for baseUrl in v10+
+    baseUrl: "http://localhost:8080/lca-collaboration/", // ✅ Correct location for baseUrl in v10+
 
     defaultCommandTimeout: 12000,
 
