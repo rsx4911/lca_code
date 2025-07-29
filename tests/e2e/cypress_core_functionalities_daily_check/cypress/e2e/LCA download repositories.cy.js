@@ -7,14 +7,14 @@ describe('Inspect the repository download function1', () => {
       cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
       
       // Verify navigation to the download section
-      cy.url().should('contain', 'https://www.lcacommons.gov/lca-collaboration/');
+      cy.url().should('contain', 'lca-collaboration');
   
       // Click on the download button for the first repository
       cy.get('.pinned-repository:nth-child(1) .glyphicon').click();
   
       // Verify the download
-      cy.verifyDownload('Federal_LCA_Commons-US_electricity_baseline.zip', { timeout: 120000, interval: 600 }).then(() => {
-        cy.log('**Confirmed downloaded Federal_LCA_Commons-US_electricity_baseline ZIP**');
+      cy.verifyDownload('NIST-Building_Systems.zip', { timeout: 120000, interval: 600 }).then(() => {
+        cy.log('**Confirmed downloaded NIST-Building_Systems ZIP**');
       });
     });
   });
@@ -25,11 +25,11 @@ describe('Inspect the repository download function2', () => {
        
           cy.visit('https://www.lcacommons.gov/');
           cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
-          cy.url().should('contains', 'https://www.lcacommons.gov/lca-collaboration/');
+          cy.url().should('contains', 'lca-collaboration');
     cy.get('.pinned-repository:nth-child(2) .glyphicon').click();
     //cy.wait(20000);
-    cy.verifyDownload('Federal_LCA_Commons-elementary_flow_list.zip', { timeout: 1200000, interval: 600 }).then(() => {
-        cy.log('**Confirmed downloaded Federal_LCA_Commons-elementary_flow_list ZIP**');
+    cy.verifyDownload('NIST-construction_materials.zip', { timeout: 1200000, interval: 600 }).then(() => {
+        cy.log('**Confirmed downloaded NIST-construction_materials ZIP**');
       });
     //cy.verifyDownload('Federal_LCA_Commons-elementary_flow_list.zip', { timeout: 60000, interval: 600 });
    // cy.log('**confirm downloaded Federal_LCA_Commons-elementary_flow_list ZIP**')    
@@ -44,10 +44,10 @@ describe('Inspect the repository download function3', () => {
           );
           cy.visit('https://www.lcacommons.gov/');
           cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
-          cy.url().should('contains', 'https://www.lcacommons.gov/lca-collaboration/');
-    cy.get('.pinned-repository:nth-child(3) .glyphicon').click();
-    cy.verifyDownload('Federal_LCA_Commons-Fed_Commons_core_database.zip', { timeout: 25000, interval: 600 });
-    cy.log('**confirm downloaded Federal_LCA_Commons-Fed_Commons_core_database ZIP**')    
+          cy.url().should('contains', 'lca-collaboration');
+    cy.get('.pinned-repository:nth-child(4) .glyphicon').click();
+    cy.verifyDownload('Federal_LCA_Commons-US_electricity_baseline.zip', { timeout: 25000, interval: 600 });
+    cy.log('**confirm downloaded Federal_LCA_Commons-US_electricity_baseline ZIP**')    
 });
 });
 describe('Inspect the repository download function4', () => {
@@ -57,10 +57,10 @@ describe('Inspect the repository download function4', () => {
           );
           cy.visit('https://www.lcacommons.gov/');
           cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
-          cy.url().should('contains', 'https://www.lcacommons.gov/lca-collaboration/');
-    cy.get('.pinned-repository:nth-child(4) .glyphicon').click();
-    cy.verifyDownload('Federal_LCA_Commons-ReCiPe.zip', { timeout: 1200000, interval: 600 }).then(() => {
-        cy.log('**Confirmed downloaded Federal_LCA_Commons-ReCiPe ZIP**');
+          cy.url().should('contains', 'lca-collaboration');
+    cy.get('.pinned-repository:nth-child(5) .glyphicon').click();
+    cy.verifyDownload('US_Forest_Service_Forest_Products_Lab-Woody_biomass.zip', { timeout: 1200000, interval: 600 }).then(() => {
+        cy.log('**Confirmed downloaded US_Forest_Service_Forest_Products_Lab-Woody_biomass ZIP**');
       });
    // cy.verifyDownload('Federal_LCA_Commons-ReCiPe.zip', { timeout: 25000, interval: 600 });
    // cy.log('**confirm downloaded Federal_LCA_Commons-ReCiPe ZIP**')    
@@ -70,10 +70,10 @@ describe('Inspect the repository download function5', () => {
     it('Should be able to download files without timeout issues', () => {
         cy.visit('https://www.lcacommons.gov/');
         cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
-        cy.url().should('contains', 'https://www.lcacommons.gov/lca-collaboration/');
-    cy.get('.pinned-repository:nth-child(5) .glyphicon').click();
-    cy.verifyDownload('Federal_Highway_Administration-mtu_pavement.zip', { timeout: 1200000, interval: 600 }).then(() => {
-        cy.log('**Confirmed downloaded Federal_Highway_Administration-mtu_pavement ZIP**');
+        cy.url().should('contains', 'lca-collaboration');
+    cy.get('.pinned-repository:nth-child(6) .glyphicon').click();
+    cy.verifyDownload('US_Environmental_Protection_Agency-USEEIO_v2.zip', { timeout: 1200000, interval: 600 }).then(() => {
+        cy.log('**Confirmed downloaded US_Environmental_Protection_Agency-USEEIO_v2 ZIP**');
       });
    // cy.verifyDownload('Federal_Highway_Administration-mtu_pavement.zip', { timeout: 25000, interval: 600 });
     //cy.log('**confirm downloaded Federal_Highway_Administration-mtu_pavement**')    
@@ -83,8 +83,8 @@ describe('Inspect the repository download function6', () => {
     it('Should be able to download files without timeout issues', () => {
         cy.visit('https://www.lcacommons.gov/');
         cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
-        cy.url().should('contains', 'https://www.lcacommons.gov/lca-collaboration/');
-    cy.get('.pinned-repository:nth-child(6) .glyphicon').click();
+        cy.url().should('contains', 'lca-collaboration');
+    cy.get('.pinned-repository:nth-child(3) .glyphicon').click();
     cy.verifyDownload('National_Renewable_Energy_Laboratory-USLCI_Database_Public.zip', { timeout: 1250000, interval: 600 });
     cy.log('**confirm downloaded National_Renewable_Energy_Laboratory-USLCI_Database_Public**')    
 });

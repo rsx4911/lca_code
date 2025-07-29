@@ -51,21 +51,17 @@ import os
 import yaml
 
 # Load endpoint routes dynamically from YAML config
-with open("tests/integration/api_test/api_test_priorities.yaml", "r") as f:
+with open("api_test_priorities.yaml", "r") as f:
     config = yaml.safe_load(f)["api_test_priorities"]
 
-VM_IP = os.environ.get("VM_IP")
-if not VM_IP:
-    raise RuntimeError("Environment variable 'VM_IP' is not set")
-BASE_URL = f"http://{VM_IP}:8080/lca-collaboration"
-
+BASE_URL = "https://lcacommons.gov/lca-collaboration"
 MVP_REPOS = [
     ("Argonne_National_Lab", "By_Product_Hydrogen"),
-    ("National_Energy_Technology_Lab", "Coal_extraction"),
-    ("U_Washington_Biofuels_Bioproducts_Lab", "Aviation_fuel"),
-    ("US_Forest_Service_Forest_Products_Lab", "Woody_biomass"),
-    ("CORRIM", "Forestry_and_forest_products"),
-    ("NIST", "Product_system_models")
+    ("National_Energy_Technology_Lab", "NETL_CO2_Capture"),
+    ("U_Washington_Biofuels_Bioproducts_Lab", "UW_Biofuel_Sorghum"),
+    ("US_Forest_Service_Forest_Products_Lab", "USFS_Lumber_Process"),
+    ("CORRIM", "CORRIM_Structural_Timber"),
+    ("NIST", "NIST_Cement_Inventory")
 ]
 
 # Updated ROUTES loader for nested keys under each priority
@@ -110,14 +106,7 @@ def headers(auth_token):
 def test_repo_history(headers, group, repo):
     path = get_path("Get repository commit history")
     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
-    # Log the request details
-    print(f"Request URL: {url}")
-    print(f"Request Headers: {headers}")
     response = requests.get(url, headers=headers)
-    # Log the response details
-    print(f"Response Status Code: {response.status_code}")
-    print(f"Response Headers: {response.headers}")
-    print(f"Response Body: {response.text}")
     assert response.status_code in [200, 204]
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
