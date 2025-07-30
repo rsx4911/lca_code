@@ -9,7 +9,7 @@ module.exports = defineConfig({
 
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
-    reportDir: "cypress/reports/.jsons",
+    reportDir: "cypress/reports",
     html: true,
     json: true,
     reportFilename: "[status]_[datetime]-[name]-report",
@@ -31,6 +31,19 @@ module.exports = defineConfig({
       on("task", { downloadFile });
       on("task", verifyDownloadTasks);
       console.log(config); // Debug: see the full config
+      on("after:run", async () => {
+          const generateReport = require("cypress-mochawesome-reporter/generateReport");
+
+          try {
+            console.log("Merging reports from:", config.reporterOptions?.reportDir || "cypress/reports");
+            await generateReport({
+              reportDir: config.reporterOptions?.reportDir || "cypress/reports", // use updated path
+            });
+            console.log("Report merged successfully.");
+          } catch (err) {
+            console.error("Report merge failed:", err);
+          }
+        });
     },
 
     env: {
