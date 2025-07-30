@@ -11,7 +11,7 @@ module.exports = defineConfig({
   reporterOptions: {
     reportDir: "cypress/reports",
     html: true,
-    json: false,
+    json: true,
     reportFilename: "[status]_[datetime]-[name]-report",
     timestamp: "longDate",
     reportPageTitle: "Cypress Inline Reporter",
@@ -51,12 +51,16 @@ module.exports = defineConfig({
         email: "binquan.wang@dsfederal.com",
       },
       testRepository: {
-        name: "test",
-        group: "binquan wang",
-        label: "labeltest",
-        confirmation: "binquanw/test",
+        name: "testcorrim",
+        group: "CORRIM",
+        label: "labelcorrim",
+        confirmation: "CORRIM/testcorrim",
       },
       downloadFiles: [
+        "Argonne_National_Lab-By_Product_Hydrogen.zip",
+        "National_Energy_Technology_Lab-Coal_extraction.zip",
+        "Argonne_National_Lab-By_Product_Hydrogen.zip",
+        "National_Energy_Technology_Lab-Coal_extraction.zip",
         "Argonne_National_Lab-By_Product_Hydrogen.zip",
         "National_Energy_Technology_Lab-Coal_extraction.zip"
       ]
