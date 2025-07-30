@@ -9,7 +9,7 @@ module.exports = defineConfig({
 
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
-    reportDir: "cypress/reports",
+    reportDir: "cypress/reports/.jsons",
     html: true,
     json: true,
     reportFilename: "[status]_[datetime]-[name]-report",
@@ -35,7 +35,7 @@ module.exports = defineConfig({
 
     env: {
       credentials: {
-        username: "Administrator",
+        username: "administrator",
         password: "admin",
       },
       testGroup: {
@@ -51,16 +51,12 @@ module.exports = defineConfig({
         email: "binquan.wang@dsfederal.com",
       },
       testRepository: {
-        name: "testcorrim",
-        group: "CORRIM",
-        label: "labelcorrim",
-        confirmation: "CORRIM/testcorrim",
+        name: "testadministratorrepo",
+        group: "administrator",
+        label: "labeladministrator",
+        confirmation: "administrator/testadministratorrepo",
       },
       downloadFiles: [
-        "Argonne_National_Lab-By_Product_Hydrogen.zip",
-        "National_Energy_Technology_Lab-Coal_extraction.zip",
-        "Argonne_National_Lab-By_Product_Hydrogen.zip",
-        "National_Energy_Technology_Lab-Coal_extraction.zip",
         "Argonne_National_Lab-By_Product_Hydrogen.zip",
         "National_Energy_Technology_Lab-Coal_extraction.zip"
       ]

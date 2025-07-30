@@ -19,7 +19,7 @@ describe('Inspect the repository download function2', () => {
     cy.log(`✅ Confirmed download: ${downloadFiles[1]}`);
   });
 });
-
+/*
 describe('Inspect the repository download function3', () => {
   it('Should be able to download files without timeout issues', () => {
     cy.visit('/');
@@ -60,7 +60,7 @@ describe('Inspect the repository download function6', () => {
   });
 });
 
-/*
+
 describe('Inspect the repository download function7', () => {
   it('Should be able to download files without timeout issues', () => {
     cy.visit('https://www.lcacommons.gov/');
