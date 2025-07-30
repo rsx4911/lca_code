@@ -336,7 +336,8 @@ jobs:
         if: always()
         run: |
           echo "Copying Cypress report to GitHub workspace..."
-          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/report ./cypress-report
+          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/reports ./cypress-report
+          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/screenshots ./cypress-screenshots
 
       - name: Upload Cypress Report Artifact
         if: always()
@@ -344,6 +345,13 @@ jobs:
         with:
           name: cypress-ui-report
           path: ./cypress-report
+
+      - name: Upload Cypress Screenshots Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-ui-screenshots
+          path: ./cypress-screenshots
 
       - name: Run API Tests
         env:

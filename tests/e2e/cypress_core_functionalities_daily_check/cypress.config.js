@@ -35,8 +35,8 @@ module.exports = defineConfig({
 
     env: {
       credentials: {
-        username: "binquanw",
-        password: "SHN98dUh@kPH5bk4",
+        username: "Administrator",
+        password: "admin",
       },
       testGroup: {
         name: "binquantestgroup",
@@ -57,12 +57,8 @@ module.exports = defineConfig({
         confirmation: "binquanw/test",
       },
       downloadFiles: [
-        "National_Renewable_Energy_Laboratory-USLCI_Database_Public.zip",
-        "Federal_LCA_Commons-US_electricity_baseline.zip",
-        "NIST-construction_materials.zip",
-        "US_Forest_Service_Forest_Products_Lab-Woody_biomass.zip",
-        "US_Environmental_Protection_Agency-USEEIO_v2.zip",
-        "Federal_LCA_Commons-elementary_flow_list.zip"
+        "Argonne_National_Lab-By_Product_Hydrogen.zip",
+        "National_Energy_Technology_Lab-Coal_extraction.zip"
       ]
     }
   }
