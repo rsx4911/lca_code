@@ -337,7 +337,7 @@ jobs:
         run: |
           echo "Copying Cypress report to GitHub workspace..."
           scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/reports ./cypress-report
-          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/screenshots ./cypress-screenshots
+          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/screenshots ./cypress-screenshots || echo "No screenshots to copy"
 
       - name: Upload Cypress Report Artifact
         if: always()

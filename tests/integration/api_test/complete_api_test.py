@@ -3,7 +3,7 @@ import requests
 import pytest
 import os
 
-BASE_URL = "https://lcacommons.gov/lca-collaboration"
+BASE_URL = "http://localhost:8080/lca-collaboration"
 
 @pytest.fixture(scope="session")
 def auth_token():
