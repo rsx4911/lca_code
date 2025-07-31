@@ -10,7 +10,7 @@ module.exports = defineConfig({
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
     reportDir: "cypress/reports",
-    jsonDir: "cypress/reports/.jsons",
+    jsonDir: "cypress/reports",
     html: true,
     json: true,
     reportFilename: "[status]_[datetime]-[name]-report",
