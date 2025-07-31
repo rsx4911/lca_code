@@ -10,7 +10,6 @@ module.exports = defineConfig({
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
     reportDir: "cypress/reports",
-    jsonDir: "cypress/reports",
     html: true,
     json: true,
     reportFilename: "[status]_[datetime]-[name]-report",
@@ -32,6 +31,14 @@ module.exports = defineConfig({
       on("task", { downloadFile });
       on("task", verifyDownloadTasks);
       console.log(config); // Debug: see the full config
+      // Replace auto-generate with custom one
+        on("after:run", async () => {
+          const report = await merge({ files: ["cypress/reports/*.json"] });
+          await generator.create(report, {
+            reportDir: "cypress/reports",
+            inlineAssets: true,
+          });
+        });
     },
 
     env: {
