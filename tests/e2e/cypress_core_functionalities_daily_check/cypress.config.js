@@ -1,6 +1,9 @@
 const { defineConfig } = require("cypress");
 const { downloadFile } = require("cypress-downloadfile/lib/addPlugin");
 const { verifyDownloadTasks } = require("cy-verify-downloads");
+const { merge } = require('mochawesome-merge');
+const generator = require('mochawesome-report-generator');
+
 
 module.exports = defineConfig({
   video: false,
