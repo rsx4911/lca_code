@@ -51,17 +51,22 @@ import os
 import yaml
 
 # Load endpoint routes dynamically from YAML config
-with open("api_test_priorities.yaml", "r") as f:
+with open("tests/integration/api_test/api_test_priorities.yaml", "r") as f:
     config = yaml.safe_load(f)["api_test_priorities"]
 
-BASE_URL = "https://lcacommons.gov/lca-collaboration"
+
+VM_IP = os.environ.get("VM_IP")
+if not VM_IP:
+    raise RuntimeError("Environment variable 'VM_IP' is not set")
+BASE_URL = f"http://{VM_IP}:8080/lca-collaboration"
+
 MVP_REPOS = [
     ("Argonne_National_Lab", "By_Product_Hydrogen"),
-    ("National_Energy_Technology_Lab", "NETL_CO2_Capture"),
-    ("U_Washington_Biofuels_Bioproducts_Lab", "UW_Biofuel_Sorghum"),
-    ("US_Forest_Service_Forest_Products_Lab", "USFS_Lumber_Process"),
-    ("CORRIM", "CORRIM_Structural_Timber"),
-    ("NIST", "NIST_Cement_Inventory")
+    ("National_Energy_Technology_Lab", "Coal_extraction"),
+    ("U_Washington_Biofuels_Bioproducts_Lab", "Aviation_fuel"),
+    ("US_Forest_Service_Forest_Products_Lab", "Woody_biomass"),
+    ("CORRIM", "Forestry_and_forest_products"),
+    ("NIST", "Product_system_models")
 ]
 
 # Updated ROUTES loader for nested keys under each priority
