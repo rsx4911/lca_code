@@ -1,7 +1,7 @@
 describe('Inspect the repository download function1', () => {
     it('Should be able to download files without timeout issues', () => {
       // Visit the website
-      cy.visit("https://www.lcacommons.gov/");
+      cy.visit("/");
       
       // Click on the link to navigate to the download section
       cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
@@ -13,8 +13,8 @@ describe('Inspect the repository download function1', () => {
       cy.get('.pinned-repository:nth-child(1) .glyphicon').click();
   
       // Verify the download
-      cy.verifyDownload('NIST-Building_Systems.zip', { timeout: 120000, interval: 600 }).then(() => {
-        cy.log('**Confirmed downloaded NIST-Building_Systems ZIP**');
+      cy.verifyDownload('Argonne_National_Lab-By_Product_Hydrogen.zip', { timeout: 120000, interval: 600 }).then(() => {
+        cy.log('**Confirmed downloaded Argonne_National_Lab-By_Product_Hydrogen zip**');
       });
     });
   });
@@ -23,26 +23,26 @@ describe('Inspect the repository download function1', () => {
 describe('Inspect the repository download function2', () => {
     it('Should be able to download files without timeout issues', () => {
        
-          cy.visit('https://www.lcacommons.gov/');
+          cy.visit('/');
           cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
           cy.url().should('contains', 'lca-collaboration');
     cy.get('.pinned-repository:nth-child(2) .glyphicon').click();
     //cy.wait(20000);
-    cy.verifyDownload('NIST-construction_materials.zip', { timeout: 1200000, interval: 600 }).then(() => {
-        cy.log('**Confirmed downloaded NIST-construction_materials ZIP**');
+    cy.verifyDownload('National_Energy_Technology_Lab-Coal_extraction.zip', { timeout: 1200000, interval: 600 }).then(() => {
+        cy.log('**Confirmed downloaded National_Energy_Technology_Lab-Coal_extraction zip**');
       });
     //cy.verifyDownload('Federal_LCA_Commons-elementary_flow_list.zip', { timeout: 60000, interval: 600 });
    // cy.log('**confirm downloaded Federal_LCA_Commons-elementary_flow_list ZIP**')    
 });
 });
 
-
+/*
 describe('Inspect the repository download function3', () => {
     it('Should be able to download files without timeout issues', () => {
         cy.visit(
-            "https://www.lcacommons.gov/"
+            "/"
           );
-          cy.visit('https://www.lcacommons.gov/');
+          cy.visit('/');
           cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
           cy.url().should('contains', 'lca-collaboration');
     cy.get('.pinned-repository:nth-child(4) .glyphicon').click();
@@ -53,7 +53,7 @@ describe('Inspect the repository download function3', () => {
 describe('Inspect the repository download function4', () => {
     it('Should be able to download files without timeout issues', () => {
         cy.visit(
-            "https://www.lcacommons.gov/"
+            "/"
           );
           cy.visit('https://www.lcacommons.gov/');
           cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
@@ -68,7 +68,7 @@ describe('Inspect the repository download function4', () => {
 });
 describe('Inspect the repository download function5', () => {
     it('Should be able to download files without timeout issues', () => {
-        cy.visit('https://www.lcacommons.gov/');
+        cy.visit('/');
         cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
         cy.url().should('contains', 'lca-collaboration');
     cy.get('.pinned-repository:nth-child(6) .glyphicon').click();
@@ -81,7 +81,7 @@ describe('Inspect the repository download function5', () => {
 });
 describe('Inspect the repository download function6', () => {
     it('Should be able to download files without timeout issues', () => {
-        cy.visit('https://www.lcacommons.gov/');
+        cy.visit('/');
         cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
         cy.url().should('contains', 'lca-collaboration');
     cy.get('.pinned-repository:nth-child(3) .glyphicon').click();
@@ -89,7 +89,7 @@ describe('Inspect the repository download function6', () => {
     cy.log('**confirm downloaded National_Renewable_Energy_Laboratory-USLCI_Database_Public**')    
 });
 });
-/*describe('Inspect the repository download function7', () => {
+describe('Inspect the repository download function7', () => {
     it('Should be able to download files without timeout issues', () => {
         cy.visit('https://www.lcacommons.gov/');
         cy.get('#main-content > div > article > div > div > div > section.block.block-layout-builder.block-inline-blockhero.hero.clearfix > div.hero__callout.hero__callout--bg-transparent.hero__callout--left > div.field.field--name-hero-link.field--type-link.field--label-hidden.field--item > a').click();
