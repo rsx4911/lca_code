@@ -1,5 +1,11 @@
 #!/bin/bash
-set -e
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+# make ALL apt/dpkg operations non-interactive
+export DEBIAN_FRONTEND=noninteractive
+export DEBIAN_PRIORITY=critical
+
 
 echo "Starting prerequisite installation..."
 
@@ -28,7 +34,10 @@ else
   echo "Installing MariaDB 10.11..."
   curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
   sudo apt-get update -y
-  sudo apt-get install -y mariadb-server
+  sudo apt-get install -yq \
+    -o Dpkg::Options::=--force-confdef \
+    -o Dpkg::Options::=--force-confnew \
+    mariadb-server
   sudo systemctl enable mariadb
   sudo systemctl start mariadb
   echo "MariaDB 10.11 installed and started."
