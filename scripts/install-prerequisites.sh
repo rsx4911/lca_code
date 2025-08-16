@@ -38,7 +38,7 @@ else
   mariadb-server mariadb-server/feedback-collect boolean false
   mariadb-server-12 mariadb-server-12/feedback-collect boolean false
   mariadb-server-10.11 mariadb-server-10.11/feedback-collect boolean false
-  EOF
+EOF
   sudo apt-get install -yq \
     -o Dpkg::Options::=--force-confdef \
     -o Dpkg::Options::=--force-confnew \
