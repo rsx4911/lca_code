@@ -34,11 +34,16 @@ else
   echo "Installing MariaDB 10.11..."
   curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
   sudo apt-get update -y
+  sudo apt-get install -yq debconf-utils
   sudo debconf-set-selections <<'EOF'
-  mariadb-server mariadb-server/feedback-collect boolean false
-  mariadb-server-12 mariadb-server-12/feedback-collect boolean false
-  mariadb-server-10.11 mariadb-server-10.11/feedback-collect boolean false
+mariadb-server mariadb-server/feedback-collect boolean false
+mariadb-server-12 mariadb-server-12/feedback-collect boolean false
+mariadb-server-10.11 mariadb-server-10.11/feedback-collect boolean false
 EOF
+  # Finish any half-config first (prevents re-prompt)
+  sudo dpkg --configure -a || true
+  sudo apt-get -f install -yq || true
+
   sudo apt-get install -yq \
     -o Dpkg::Options::=--force-confdef \
     -o Dpkg::Options::=--force-confnew \
@@ -52,8 +57,8 @@ fi
 echo "Setting up MariaDB database and user..."
 
 DB_NAME="${DB_NAME:-lca}"
-DB_USER="${DB_USER:?lca}"
-DB_PASS="${DB_PASSWORD:?lca}"
+DB_USER="${DB_USER:-lca}"
+DB_PASS="${DB_PASSWORD:-lca}"
 
 until sudo mariadb -e "SELECT 1;" >/dev/null 2>&1; do
   echo "Waiting for MariaDB to start..."
@@ -95,7 +100,7 @@ else
   sudo chown -R opensearch:opensearch /usr/share/opensearch
 
   echo "Disabling OpenSearch SSL and security plugin..."
-  sudo rm -rf rm -rf /usr/share/opensearch/config/opensearch-security
+  sudo rm -rf /usr/share/opensearch/config/opensearch-security
   echo "plugins.security.disabled: true" | sudo tee -a /usr/share/opensearch/config/opensearch.yml
   echo "Creating systemd service for OpenSearch..."
   sudo bash -c 'cat > /etc/systemd/system/opensearch.service' <<EOF
