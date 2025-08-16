@@ -32,12 +32,11 @@ if mariadb --version 2>/dev/null | grep "10.11"; then
   echo "MariaDB 10.11 is already installed."
 else
   echo "Installing MariaDB 10.11..."
-  curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash
-  sudo apt-get update -y
+  curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11
+  sudo apt-get update -yq
   sudo apt-get install -yq debconf-utils
   sudo debconf-set-selections <<'EOF'
 mariadb-server mariadb-server/feedback-collect boolean false
-mariadb-server-12 mariadb-server-12/feedback-collect boolean false
 mariadb-server-10.11 mariadb-server-10.11/feedback-collect boolean false
 EOF
   # Finish any half-config first (prevents re-prompt)
