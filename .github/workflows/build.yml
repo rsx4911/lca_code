@@ -1,4 +1,4 @@
-name: Build and Deploy LCA Collaboration Server 
+name: Build and Deploy LCA Collaboration Server
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
           fi
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -70,73 +70,130 @@ jobs:
           VM_IP=$(jq -r '.publicIpAddress' vm.json)
           echo "VM_IP=$VM_IP" >> $GITHUB_ENV
 
-      - name: Fetch GitHub Actions IP ranges
-        id: fetch_ips
+      - name: Allow runner IP on VM NSG for 22/80/8080
         run: |
-          GITHUB_IPS=$(curl -s https://api.github.com/meta | jq -r '.actions[]' | paste -sd "," -)
-          echo "GITHUB_IPS=$GITHUB_IPS" >> $GITHUB_ENV
+          set -euo pipefail
+          MYIP=$(curl -s https://api.ipify.org)
+          NSG_NAME="${VM_NAME}NSG"
 
-      - name: Open 80 and 8080 on all NSGs in the resource group
-        run: |
-          NSG_LIST=$(az network nsg list \
-            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --query "[].name" -o tsv)
+          next_priority () {
+            local base=$1
+            local used pri
+            mapfile -t used < <(az network nsg rule list \
+              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+              --nsg-name "$NSG_NAME" \
+              --query '[].priority' -o tsv | sort -n | uniq)
+            pri=$base
+            while printf '%s\n' "${used[@]:-}" | grep -qx "$pri"; do pri=$((pri+10)); done
+            if [ "$pri" -lt 100 ] || [ "$pri" -gt 4096 ]; then
+              echo "No free NSG priority in 100–4096" >&2; exit 1
+            fi
+            echo "$pri"
+          }
 
-          for NSG in $NSG_LIST; do
-            echo "Updating NSG: $NSG"
-
+          BASE=1200
+          for PORT in 22 80 8080; do
+            PRIO=$(next_priority "$BASE")
             az network nsg rule create \
               --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-              --nsg-name $NSG \
-              --name AllowHTTP-${{ github.run_id }} \
-              --priority 1001 \
+              --nsg-name "$NSG_NAME" \
+              --name Allow-${PORT}-${{ github.run_id }} \
+              --priority "$PRIO" \
               --access Allow \
               --protocol Tcp \
               --direction Inbound \
-              --source-address-prefixes '*' \
-              --destination-port-ranges 80 \
-              --description "Allow HTTP access to port 80"
-
-            az network nsg rule create \
-              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-              --nsg-name $NSG \
-              --name Allow8080-${{ github.run_id }} \
-              --priority 1002 \
-              --access Allow \
-              --protocol Tcp \
-              --direction Inbound \
-              --source-address-prefixes '*' \
-              --destination-port-ranges 8080 \
-              --description "Allow access to port 8080"
+              --source-address-prefixes "${MYIP}/32" \
+              --destination-port-ranges "$PORT" \
+              --description "Temporary allow from GH runner ${MYIP} to port $PORT"
+            BASE=$((PRIO+10))
           done
 
-      - name: Install Prerequisites on Remote VM
+      # --- Hardened non-interactive MariaDB install + line-buffered script run ---
+      - name: Install Prerequisites on Remote VM (non-interactive, preseed MariaDB)
         run: |
           echo "Transferring install-prerequisites.sh to VM..."
           scp -o StrictHostKeyChecking=no scripts/install-prerequisites.sh \
-            ${{ secrets.AZ_VM_USERNAME }}@$VM_IP:/home/${{ secrets.AZ_VM_USERNAME }}/
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
 
-          echo "Running install-prerequisites.sh on VM..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@$VM_IP <<EOF
-            export DB_NAME="${{ vars.DB_NAME }}"
-            export DB_USER="${{ secrets.DB_USER }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export EMAIL_USER="${{ secrets.EMAIL_USER }}"
-            export EMAIL_PASS="${{ secrets.EMAIL_PASS }}"
-            chmod +x install-prerequisites.sh
-            ./install-prerequisites.sh
-          EOF
+          echo "Running install-prerequisites.sh on VM (hard non-interactive, line-buffered)..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} <<'EOF'
+            set -Eeuo pipefail
+
+            # Global no-prompt settings
+            export DEBIAN_FRONTEND=noninteractive
+            export DEBIAN_PRIORITY=critical
+            export DEBCONF_NONINTERACTIVE_SEEN=true
+            export APT_LISTCHANGES_FRONTEND=none
+            export NEEDRESTART_MODE=a
+            export UCF_FORCE_CONFFNEW=1
+
+            # Extra dpkg/apt options and disable PTY to avoid odd debconf behavior
+            APT_OPTS='-yq -o Dpkg::Use-Pty=0 -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold -o Dpkg::Progress-Fancy=0'
+
+            sudo apt-get update -yq
+            sudo apt-get install -yq debconf-utils apt-utils coreutils moreutils || true
+            echo 'DPkg::Options { "--force-confdef"; "--force-confold"; };' | sudo tee /etc/apt/apt.conf.d/99force-noninteractive >/dev/null || true
+
+            # Preseed MariaDB feedback prompt (belt & suspenders)
+            for owner in \
+              mariadb-server mariadb-server-core \
+              mariadb-server-10.6 mariadb-server-10.11 \
+              mariadb-server-11.0 mariadb-server-11.1 mariadb-server-11.2 mariadb-server-11.3 \
+              mariadb-server-12.0 mariadb-server-12.1 mariadb-server-12.2
+            do
+              echo "$owner mariadb-server/feedback_plugin boolean false" | sudo debconf-set-selections || true
+              echo "$owner mariadb-server/feedback_plugin seen true"    | sudo debconf-set-selections || true
+            done
+
+            # Hard-disable plugin via config before any install
+            sudo install -d /etc/mysql/mariadb.conf.d
+            sudo tee /etc/mysql/mariadb.conf.d/99-disable-feedback.cnf >/dev/null <<'CFG'
+            
+            [mariadb]
+            plugin_load_add=
+            CFG
+            
+                        chmod +x install-prerequisites.sh
+            
+                        # ---- RUN your script with line-buffered output and a bounded timeout ----
+                        # stdbuf is from coreutils; if moreutils is present, ts adds timestamps
+                        if command -v stdbuf >/dev/null 2>&1; then
+                          RUNNER="stdbuf -oL -eL"
+                        else
+                          RUNNER=""
+                        fi
+            
+                        # Make sure we always dump MariaDB status & logs if the script fails or times out
+                        set +e
+                        ${RUNNER} timeout 12m ./install-prerequisites.sh ${APT_OPTS} 2>&1 | sed -u 's/^/[install-prereq] /'
+                        rc=$?
+                        set -e
+            
+                        if [ $rc -ne 0 ]; then
+                          echo "install-prerequisites.sh exited with code $rc — showing MariaDB status & last 200 lines of logs"
+                          sudo systemctl status mariadb --no-pager || true
+                          sudo journalctl -u mariadb --no-pager -n 200 || true
+                          exit $rc
+                        fi
+            
+                        # Extra readiness probe (fast) so the next steps don't "look hung"
+                        echo "Sanity check: mysqladmin ping..."
+                        for i in $(seq 1 60); do
+                          if sudo mysqladmin ping >/dev/null 2>&1; then
+                            echo "MariaDB is responding (mysqladmin ping)."
+                            break
+                          fi
+                          echo "Waiting for MariaDB to respond... ($i/60)"
+                          sleep 2
+                        done
+                      EOF
 
       - name: Copy Configuration Files to Remote VM
         run: |
-          echo "Copying scripts and configs to remote VM..."
           scp -o StrictHostKeyChecking=no scripts/copy-configs.sh \
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
-          
           scp -o StrictHostKeyChecking=no -r configs \
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
-          
-          echo "Executing copy-configs.sh on remote VM..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} <<EOF
             chmod +x copy-configs.sh
             ./copy-configs.sh ${{ steps.mapenv.outputs.env }}
@@ -156,14 +213,13 @@ jobs:
 
       - name: Copy WAR to Tomcat
         run: |
-          echo "Copying WAR file to remote VM..."
           scp -o StrictHostKeyChecking=no backend/target/collaboration-server-backend-*.war \
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
-          
-          echo "Deploying WAR file to Tomcat..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            set -euo pipefail
             sudo mv /home/${{ secrets.AZ_VM_USERNAME }}/collaboration-server-backend-*.war /opt/tomcat/webapps/lca-collaboration.war
           EOF
+
       - name: Generate SAS Token
         id: gensas
         run: |
@@ -171,7 +227,6 @@ jobs:
           ACCOUNT_KEY=$(az storage account keys list \
             --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
             --query '[0].value' -o tsv)
-
           SAS=$(az storage container generate-sas \
             --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
             --name ${{ secrets.AZURE_CONTAINER_NAME }} \
@@ -180,85 +235,79 @@ jobs:
             --account-key "$ACCOUNT_KEY" \
             --https-only \
             --output tsv)
-
           echo "sas_token=$SAS" >> "$GITHUB_OUTPUT"
 
       - name: Install AzCopy & Download Artifacts
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
-            echo "Installing AzCopy..."
+            set -euo pipefail
             curl -sL https://aka.ms/downloadazcopy-v10-linux | tar -xz --strip-components=1
             sudo mv azcopy /usr/local/bin/
-
-            echo "Creating /opt/lca-cs/repository if not exists..."
             sudo mkdir -p /opt/lca-cs/repository
             sudo chown -R $USER:$USER /opt/lca-cs/repository
             sudo chmod -R 777 /opt/lca-cs/repository
-          
-            echo "Downloading files using AzCopy Repo..."
             azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/data/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/repository/" --recursive
-            
-            echo "All files downloaded to /opt/lca-cs/repository"
           EOF
 
       - name: Copy DB Initialization
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
-            echo "Creating /opt/lca-cs/init if not exists..."
+            set -euo pipefail
             sudo mkdir -p /opt/lca-cs/init
             sudo chown -R $USER:$USER /opt/lca-cs/init
             sudo chmod -R 777 /opt/lca-cs/init
-
-            echo "Downloading files using AzCopy Init..."
             azcopy copy "https://${{ secrets.AZURE_STORAGE_ACCOUNT }}.blob.core.windows.net/${{ secrets.AZURE_CONTAINER_NAME }}/DB_initializer/*?${{ steps.gensas.outputs.sas_token }}" "/opt/lca-cs/init/" --recursive
+          EOF
 
-            echo "All files downloaded to /opt/lca-cs/init"
+      - name: Wait for MariaDB (on VM) before init
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            set -euo pipefail
+            for i in {1..30}; do
+              if sudo mysqladmin ping >/dev/null 2>&1; then
+                echo "MariaDB is up."; exit 0
+              fi
+              echo "Waiting for MariaDB..."; sleep 2
+            done
+            echo "MariaDB did not start in time"; exit 1
           EOF
 
       - name: Run DB init on Azure VM
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
-            echo "Setting up Java..."
+            set -euo pipefail
             export JAVA_HOME=/opt/java/jdk-21.0.3+9
             export PATH=$JAVA_HOME/bin:$PATH
-          
-            if [ ! -x "$JAVA_HOME/bin/java" ]; then
-              echo "Java binary not found in $JAVA_HOME"
-              exit 1
-            fi
-          
-            echo "Running JAR file..."
+            [ -x "$JAVA_HOME/bin/java" ] || { echo "Java binary not found in $JAVA_HOME"; exit 1; }
             java -jar /opt/lca-cs/init/db_initializer2.0.0.jar /opt/lca-cs/init/installer.confg
-            echo "JAR execution complete."
           EOF
 
       - name: Copy SQL files to VM
         run: |
-          scp -o StrictHostKeyChecking=no -r backend/src/main/resources/com/greendelta/collaboration/config/database/ ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/opt/lca-cs/init/sql
+          scp -o StrictHostKeyChecking=no -r backend/src/main/resources/com/greendelta/collaboration/config/database/ \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/opt/lca-cs/init/sql
 
       - name: Execute table updates
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
-            echo "Installing MariaDB client..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            set -euo pipefail
+            export DEBIAN_FRONTEND=noninteractive
             sudo apt-get update -y
             sudo apt-get install -y mariadb-client
-          
+
             echo "Executing table updates"
             cd /opt/lca-cs/init/sql
-          
-            for file in \$(ls -1v *.sql); do
-              echo "Running \$file..."
-              mysql -h localhost -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ vars.DB_NAME }}" < "\$file"
+            for file in $(ls -1v *.sql); do
+              echo "Running $file..."
+              mysql -h localhost -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ vars.DB_NAME }}" < "$file"
             done
-          
-           echo "Executing data updates"
+
+            echo "Executing data updates"
             cd /opt/lca-cs/init/db_updates
-          
-            for file in \$(ls -1v *.sql); do
-              echo "Running \$file..."
-              mysql -h localhost -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ vars.DB_NAME }}" < "\$file"
+            for file in $(ls -1v *.sql); do
+              echo "Running $file..."
+              mysql -h localhost -u "${{ secrets.DB_USER }}" -p"${{ secrets.DB_PASSWORD }}" "${{ vars.DB_NAME }}" < "$file"
             done
-          
           EOF
 
       - name: Restart services using Azure CLI
@@ -269,23 +318,20 @@ jobs:
             --command-id RunShellScript \
             --scripts '
               echo "Restarting services..."
-              sudo systemctl restart nginx
-              sudo systemctl restart tomcat
-              sudo systemctl restart opensearch
+              sudo systemctl restart nginx || true
+              sudo systemctl restart tomcat || sudo systemctl restart tomcat9 || true
+              sudo systemctl restart opensearch || true
             '
 
       - name: Reindex Repos
         run: |
-          echo "Transferring reindex.sh to VM..."
           scp -o StrictHostKeyChecking=no scripts/reindex.sh \
-            ${{ secrets.AZ_VM_USERNAME }}@$VM_IP:/home/${{ secrets.AZ_VM_USERNAME }}/
-
-          echo "Running reindex.sh on VM..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@$VM_IP <<EOF
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} <<'EOF'
+            set -euo pipefail
             chmod +x reindex.sh
             ./reindex.sh
           EOF
-          
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -300,11 +346,9 @@ jobs:
       - name: Wait for app to be up on port 8080
         run: |
           echo "Waiting for app to become available on http://${{ env.VM_IP }}:8080 ..."
-          
           MAX_RETRIES=20
-          RETRY_INTERVAL=10  # seconds
+          RETRY_INTERVAL=10
           COUNT=0
-          
           until curl --fail --silent --head http://${{ env.VM_IP }}:8080/lca-collaboration; do
             COUNT=$((COUNT+1))
             echo "Attempt $COUNT of $MAX_RETRIES: App not yet available..."
@@ -314,19 +358,17 @@ jobs:
             fi
             sleep $RETRY_INTERVAL
           done
-          
           echo "App is running on http://${{ env.VM_IP }}:8080"
 
       - name: Run Cypress UI Tests on Remote VM
         run: |
-          echo "Transferring Cypress test suite to VM..."
           scp -o StrictHostKeyChecking=no -r tests/e2e/cypress_core_functionalities_daily_check \
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/
-
-          echo "Running Cypress tests on VM..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            set -euo pipefail
             cd /home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check
             curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+            export DEBIAN_FRONTEND=noninteractive
             sudo apt-get install -y nodejs
             npm install
             npx cypress run --reporter mochawesome || exit 1
@@ -335,9 +377,10 @@ jobs:
       - name: Copy Cypress Report from VM
         if: always()
         run: |
-          echo "Copying Cypress report to GitHub workspace..."
-          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/reports ./cypress-report
-          scp -o StrictHostKeyChecking=no -r ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/screenshots ./cypress-screenshots || echo "No screenshots to copy"
+          scp -o StrictHostKeyChecking=no -r \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/reports ./cypress-report
+          scp -o StrictHostKeyChecking=no -r \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/cypress_core_functionalities_daily_check/cypress/screenshots ./cypress-screenshots || echo "No screenshots to copy"
 
       - name: Upload Cypress Report Artifact
         if: always()
@@ -365,58 +408,42 @@ jobs:
         if: always()
         run: |
           echo "Cleaning up all resources for $VM_NAME"
-          
-          # Delete the VM (but it does NOT delete the NIC or disk by default)
+          for PORT in 22 80 8080; do
+            az network nsg rule delete \
+              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
+              --nsg-name ${VM_NAME}NSG \
+              --name Allow-${PORT}-${{ github.run_id }} || true
+          done
+
           if az vm show --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME &> /dev/null; then
-            echo "Deleting VM..."
             az vm delete --yes --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --name $VM_NAME
-          else
-            echo "VM already deleted or not found."
           fi
-          
-          # Delete OS disk
+
           OS_DISK_NAME=$(az disk list --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --query "[?contains(name,'$VM_NAME')].name" -o tsv)
           if [ -n "$OS_DISK_NAME" ]; then
-            echo "Deleting OS disk: $OS_DISK_NAME"
             az disk delete --name "$OS_DISK_NAME" --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --yes
           fi
-          
-          # Get NIC name
+
           NIC_NAME=$(az network nic list --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} --query "[?contains(name,'$VM_NAME')].name" -o tsv)
           if [ -n "$NIC_NAME" ]; then
-            echo "Found NIC: $NIC_NAME"
-          
-            # Disassociate public IP
-            echo "Disassociating Public IP from NIC..."
             az network nic ip-config update \
               --name ipconfig$VM_NAME \
               --nic-name $NIC_NAME \
               --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-              --remove publicIpAddress || echo "Skipped or already disassociated."
-          
-            # Disassociate NSG
-            echo "Disassociating NSG from NIC..."
+              --remove publicIpAddress || true
             az network nic update \
               --name $NIC_NAME \
               --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-              --remove networkSecurityGroup || echo "NSG disassociation skipped or failed."
-          
-            echo "Deleting NIC..."
+              --remove networkSecurityGroup || true
             az network nic delete --name $NIC_NAME --resource-group ${{ secrets.AZ_RESOURCE_GROUP }}
-          else
-            echo "NIC not found."
           fi
-          
-          # Delete Public IP
-          echo "Deleting Public IP..."
+
           az network public-ip delete \
             --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --name ${VM_NAME}PublicIP || echo "Public IP may already be deleted."
-          
-          # Delete NSG
-          echo "Deleting NSG..."
+            --name ${VM_NAME}PublicIP || true
+
           az network nsg delete \
             --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --name ${VM_NAME}NSG || echo "NSG may already be deleted."
-          
+            --name ${VM_NAME}NSG || true
+
           echo "Cleanup complete."
