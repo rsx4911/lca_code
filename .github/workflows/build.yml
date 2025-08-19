@@ -405,7 +405,7 @@ jobs:
           pytest tests/integration/api_test/complete_api_test_repos_testing_mvp.py
 
       - name: Clean Up Ephemeral VM and Resources
-        if: always()
+        if: false
         run: |
           echo "Cleaning up all resources for $VM_NAME"
           for PORT in 22 80 8080; do
