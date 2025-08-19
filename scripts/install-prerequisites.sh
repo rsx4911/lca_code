@@ -166,6 +166,7 @@ else
   echo "Installing Tomcat 10.1.20..."
   curl -O https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.20/bin/apache-tomcat-10.1.20.tar.gz
   tar -xzf apache-tomcat-10.1.20.tar.gz
+  sudo rm -rf /opt/tomcat
   sudo mv apache-tomcat-10.1.20 /opt/tomcat
   sudo chmod +x /opt/tomcat/bin/*.sh
 
