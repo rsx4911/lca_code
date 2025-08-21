@@ -4,7 +4,7 @@
 
   <h1>Internal Developer Documentation</h1>
 
-  <h2>Overview</h2>
+  <h2>Overview </h2>
   <p>This document provides a high-level guide to our web platform’s application structure, stack, key workflows, and tooling to support onboarding and internal development.</p>
 
   <h2>Application Structure</h2>
