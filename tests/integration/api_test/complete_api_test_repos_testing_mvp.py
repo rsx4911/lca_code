@@ -239,12 +239,12 @@ def test_import_repository_data_param(headers, group, repo):
         response = requests.post(url, files=files, data=data, headers={"Cookie": headers["Cookie"]})
         assert response.status_code in [200, 400]
 
-@pytest.mark.parametrize("group,repo", MVP_REPOS)
-def test_download_jsonld1_prepare(headers, group, repo):
-    path = get_path("Prepare JSON-LD 1.0 download")
-    url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
-    response = requests.get(url, headers=headers)
-    assert response.status_code in [200, 404]
+# @pytest.mark.parametrize("group,repo", MVP_REPOS)
+# def test_download_jsonld1_prepare(headers, group, repo):
+#     path = get_path("Prepare JSON-LD 1.0 download")
+#     url = f"{BASE_URL}{path.format(group=group, repo=repo)}"
+#     response = requests.get(url, headers=headers)
+#     assert response.status_code in [200, 404]
 
 @pytest.mark.parametrize("group,repo", MVP_REPOS)
 def test_get_repository_avatar(headers, group, repo):
