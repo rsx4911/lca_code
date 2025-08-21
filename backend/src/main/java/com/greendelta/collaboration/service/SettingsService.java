@@ -16,6 +16,7 @@ import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.common.inject.name.Named;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -51,10 +52,13 @@ public class SettingsService {
 	public final ServerConfig serverConfig = new ServerConfig();
 	private final Dao<Setting> dao;
 	private final UserService userService;
+	private final Map<String, Map<String, String>> defaultSettings;
 
-	public SettingsService(Dao<Setting> dao, UserService userService) {
+	public SettingsService(Dao<Setting> dao, UserService userService,
+			@Named("defaultSettings") Map<String, Map<String, String>> defaultSettings) {
 		this.dao = dao;
 		this.userService = userService;
+		this.defaultSettings = defaultSettings;
 	}
 
 	public boolean is(SettingKey key) {
@@ -121,7 +125,7 @@ public class SettingsService {
 		attributes.put("type", type);
 		attributes.put("name", key.name());
 		return (List<V>) dao.getForAttributes(attributes).stream()
-				.map(Setting::getValue)
+				.map(setting -> setting.getValue(defaultSettings.get(type.name())))
 				.collect(Collectors.toList());
 	}
 
@@ -144,9 +148,10 @@ public class SettingsService {
 	}
 
 	private void move(SettingType type, String owner, String newOwner) {
-		find(type, owner).forEach(setting -> {
+		find(type, owner).stream().filter(Setting::isSet).forEach(setting -> {
 			dao.delete(setting);
 			Setting newSetting = Setting.create(type, setting.getKey(), newOwner);
+			newSetting.setValue(setting.getValue(null));
 			dao.insert(newSetting);
 		});
 	}
@@ -192,7 +197,8 @@ public class SettingsService {
 
 		private List<String> getFilteredModelTypes() {
 			List<String> value = super.get(ServerSetting.MODEL_TYPES_ORDER, new ArrayList<>());
-			List<String> defaults = ServerSetting.MODEL_TYPES_ORDER.getDefaultValue();
+			List<String> defaults = ServerSetting.MODEL_TYPES_ORDER
+					.getDefaultValue(defaultSettings.get(SettingType.SERVER_SETTING.name()));
 			return value.stream().filter(v -> !"null".equals(v) && defaults.contains(v)).collect(Collectors.toList());
 		}
 
@@ -244,6 +250,12 @@ public class SettingsService {
 		@Override
 		public void set(MailSetting key, Object value) {
 			super.set(key, value);
+			mailSender = null;
+		}
+
+		public String getFrom() {
+			String from = get(MailSetting.DEFAULT_FROM);
+			return !Strings.nullOrEmpty(from) ? from : get(MailSetting.USER);
 		}
 
 		public JavaMailSender getMailSender() {
@@ -263,7 +275,7 @@ public class SettingsService {
 			// if (proto.equals("smtps")) {
 			// props.put("mail.smtps.ssl.protocols", "TLSv1.2");
 			// }
-			String from = user != null ? user : get(MailSetting.DEFAULT_FROM);
+			String from = getFrom();
 			if (from != null) {
 				try {
 					props.put("mail." + proto + ".from", new InternetAddress(from).getAddress());
@@ -414,9 +426,9 @@ public class SettingsService {
 			} else {
 				Setting setting = SettingsService.this.get(type, key, owner);
 				if (setting == null) {
-					value = key.getDefaultValue();
+					value = key.getDefaultValue(defaultSettings.get(type.name()));
 				} else {
-					value = setting.getValue();
+					value = setting.getValue(defaultSettings.get(type.name()));
 				}
 			}
 			if (value == null || (defaultValue != null && value instanceof String s && s.trim().isEmpty()))

@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.http.server.glue.ServletBinder;
 import org.eclipse.jgit.transport.resolver.FileResolver;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
@@ -46,7 +44,6 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	private SessionService sessionService;
 	private UserService userService;
 	private GitFilterConfig config;
-	private final static Logger log = LogManager.getLogger(GitFilter.class);
 
 	@Override
 	public ServletBinder serve(String path) {
@@ -71,7 +68,6 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 		String path = settings.get(ServerSetting.REPOSITORY_PATH);
 		if (path == null)
 			return;
-		log.info("Path is {}", path);
 		setRepositoryResolver(new FileResolver<>(new File(path), true));
 		super.init(config);
 	}
@@ -95,9 +91,7 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 			throws IOException, ServletException {
 		var request = req instanceof GitRequest ? (GitRequest) req : new GitRequest(req);
 		var loggedIn = request.basicHttpLogin(sessionService, userService);
-		log.info("After login");
 		var previousCommit = getPreviousCommitIfGitPush(request);
-		log.info("Previous Commit {}",previousCommit);
 		super.doFilter(request, response, new FilterChainWrapper(request, response, chain));
 		if (!config.isGitUrl(request))
 			return;
@@ -110,28 +104,23 @@ public class GitFilter extends org.eclipse.jgit.http.server.GitFilter {
 	}
 
 	private Commit getPreviousCommitIfGitPush(GitRequest request) {
-		log.info("Git action {} url {}", request.getGitAction(),config.isGitUrl(request));
 		if (!config.isGitUrl(request) || request.getGitAction() != GitAction.GIT_PUSH)
 			return null;
-		log.info("Non Null");
 		var path = RepositoryPath.of(Requests.getRoute(request));
-		log.info("Path {}",path);
 		try (var repo = repoService.get(path.group, path.repo)) {
 			return repo.commits.find().latest();
-		}catch (Exception e){
-			log.info("Error");
-			e.printStackTrace();
 		}
-		return null;
 	}
 
 	private void runPushPostProcessing(GitRequest request, Commit previousCommit) {
 		var path = RepositoryPath.of(Requests.getRoute(request));
 		try (var repo = repoService.get(path.group, path.repo)) {
 			var latestCommit = repo.commits.find().latest();
+			if (latestCommit == null || latestCommit.equals(previousCommit))
+				return;
 			notificationService.dataPushed(repo, latestCommit).send();
 			var groupSettings = groupService.getSettings(repo.group);
-			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE, 0));
+			checkGroupSizeLimit(repo.group, groupSettings.get(GroupSetting.MAX_SIZE, 0l));
 			var username = request.getRemoteUser();
 			var user = userService.getForUsername(username);
 			checkGroupSizeLimit(username, user.settings.maxSize);

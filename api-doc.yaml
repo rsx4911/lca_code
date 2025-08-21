@@ -1610,7 +1610,7 @@ paths:
           description: '{group}/{repo} not found or {teamname} is not a member'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/{group}/{repo}:
+  /ws/public/history/{group}/{repo}:
     get:
       tags: 
       - 'History'
@@ -1643,7 +1643,7 @@ paths:
           description: '{group}/{repo} or commit {lastCommitId} not found'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/{group}/{repo}/{type}/{refId}:
+  /ws/public/history/{group}/{repo}/{type}/{refId}:
     get:
       tags: 
       - 'History'
@@ -1674,7 +1674,7 @@ paths:
           description: '{group}/{repo} or data set {refId} not found'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/search/{group}/{repo}:
+  /ws/public/history/search/{group}/{repo}:
     get:
       tags: 
       - 'History'
@@ -1704,7 +1704,7 @@ paths:
           $ref: '#/responses/RepoNotFound'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/references/{group}/{repo}/{commitId}:
+  /ws/public/history/references/{group}/{repo}/{commitId}:
     get:
       tags: 
       - 'History'
@@ -1743,7 +1743,7 @@ paths:
           $ref: '#/responses/RepoNotFound'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/commit/{group}/{repo}/{commitId}:
+  /ws/public/history/commit/{group}/{repo}/{commitId}:
     get:
       tags: 
       - 'History'
@@ -1773,7 +1773,7 @@ paths:
           description: '{group}/{repo} or {commitId} not found'
         406:
           $ref: '#/responses/UnsupportedSchema'
-  /ws/history/previousCommitId/{group}/{repo}/{type}/{refId}/{commitId}:
+  /ws/public/history/previousCommitId/{group}/{repo}/{type}/{refId}/{commitId}:
     get:
       tags: 
       - 'History'

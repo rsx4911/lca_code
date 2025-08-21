@@ -28,12 +28,12 @@ each entry in data
 	if entry.isModelType || entry.isRepositoryInfo
 		- url += '/datasets/' + name; 
 	else if entry.isCategory
-		- url += '/datasets/' + categoryPath + '/' + entry.name; 
+		- url += '/datasets/' + encodeURIComponent(categoryPath) + '/' + encodeURIComponent(entry.name); 
 	else if entry.isLibrary
 		if entry.isPublic
-			- url = 'ws/public/libraries/' + entry.name;
+			- url = 'ws/public/libraries/' + encodeURIComponent(entry.name);
 		else
-			- url = 'ws/libraries/' + entry.name;
+			- url = 'ws/libraries/' + encodeURIComponent(entry.name);
 		- target = '_blank';
 	else
 		- url += '/dataset/' + entry.type + '/' + entry.refId; 

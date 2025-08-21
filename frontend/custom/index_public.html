@@ -1,9 +1,4 @@
 <!DOCTYPE html><html lang="en" role="main"><head><base href="/lca-collaboration/"/><title>LCA Collaboration Server</title><meta http-equiv="expires" content="0"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="fragment" content="!"/><link rel="shortcut icon" type="image/x-icon" href="images/favicon1.ico"/><link rel="stylesheet" type="text/css" href="css/styles.css?timestamp=1714068843705"/>
-<style>
-	div.row  {
-		margin-right: -35px;
-	}
-</style>
 </head>
 <body class="public-mode">
 <div id="announcements"><table><tbody><tr><td id="announcement-message"></td></tr></tbody></table></div>
@@ -46,9 +41,62 @@
             <nav aria-labelledby="block-bootstrap-lca-main-menu-menu" id="block-bootstrap-lca-main-menu">
               <h2 class="sr-only" id="block-bootstrap-lca-main-menu-menu">Main navigation</h2>
               
- 
-	      <ul class="menu menu--main nav navbar-nav"><li class=first><a href=/ data-drupal-link-system-path="<front>"class=is-active data-route=false>Home</a><li><a href="/quick-start-guide" data-drupal-link-system-path="node/57" data-route=false>Getting Started</a></li><li class="dropdown expanded"><a href=/node/2 data-drupal-link-system-path=node/2 class=dropdown-toggle aria-expanded=false aria-haspopup=menu data-toggle=dropdown>About Us <span class=caret></span></a><ul class=dropdown-menu><li class=first><a href=/about-us data-drupal-link-system-path=node/25 data-route=false>About Federal LCA Commons</a><li><a href=/federal-lca-commons-fact-sheet data-drupal-link-system-path=node/32 data-route=false title="Federal LCA Commons Fact Sheet">Federal LCA Commons Fact Sheet</a><li><a href=/memorandum-understanding-0 data-drupal-link-system-path=node/24 data-route=false>Memorandum of Understanding</a></ul><li class="dropdown expanded"><a href=""class=dropdown-toggle aria-expanded=false aria-haspopup=menu data-toggle=dropdown>Documentation <span class=caret></span></a><ul class=dropdown-menu><li class="first last"><a href=/flcac-resources data-drupal-link-system-path=node/28 data-route=false title="Training and Education Resources">FLCAC Resources</a><li class="last"><a href="/lca-commons-api-guide" data-drupal-link-system-path="node/55" data-route="false">LCA Commons API Guide</a></li></ul><li class="dropdown expanded"><a href=""class=dropdown-toggle aria-expanded=false aria-haspopup=menu data-toggle=dropdown>Data <span class=caret></span></a><ul class=dropdown-menu><li class=first><a href=""data-drupal-link-system-path="<nolink>"title="LCA Commons data repository">Browse Repositories</a><li class=last><a href=/lcia-methods-without-flows data-drupal-link-system-path=node/34 data-route=false title="Collection of life cycle impact assessment datasets in JSON-LD ">LCIA Methods without flows</a></ul><li class=last><a href=/contact data-drupal-link-system-path=contact data-route=false>Contact Us</a><li><a href=# class="default-button login"onclick='window.location.href="login"'><span>Sign In</span></a></ul>
-
+              <ul class="menu menu--main nav navbar-nav">
+                <li class="first">
+                  <a href="#" onclick="javascript:window.location.href='https://www.lcacommons.gov'" data-drupal-link-system-path="<front>" class="is-active">Home</a>
+                </li>
+		<li class="expanded dropdown">
+			<a href="#about" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/2">About Us <span class="caret"></span></a>
+                	<ul class="dropdown-menu">
+                	<li class="first">
+                        <a href="/about" data-drupal-link-system-path="/node/25" target="_blank">About LCA Commons</a>
+                	</li>
+                	<li class="last">
+                        <a href="/memorandum-understanding-0" data-drupal-link-system-path="/node/24" target="_blank">Memorandum of Understanding</a>
+                	</li>
+                	</ul>
+                </li>
+                <!--<li class="expanded dropdown">
+                  <a href="#doc" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
+                  
+                  <ul class="dropdown-menu">
+                    <li class="first">
+                      <a href="/draft-data-handbook" data-drupal-link-system-path="node/22" target="_blank">Draft Data Handbook</a>
+                    </li>
+                    <li >
+                      <a href="/openlca-collaboration-server" data-drupal-link-system-path="node/23" target="_blank">ithisasdfasdfasdfasdfasasdf openLCA Collaboration Server</a>
+                    </li>
+                    <li class="last">
+                      <a href="/data-documentation" data-drupal-link-system-path="node/7" target="_blank">Agency Data Catalogs</a>
+                    </li>
+                  </ul>
+		</li>-->
+		<!--  <ul class="dropdown-menu">-->
+		<li class="expanded dropdown">
+                  <a href="#doc" class="dropdown-toggle" data-toggle="dropdown" data-drupal-link-system-path="node/7">Documentation <span class="caret"></span></a>
+		  <ul class="dropdown-menu">
+                    <li class="first">
+                      <a href="/draft-data-handbook" data-drupal-link-system-path="node/22" target="_blank">Draft Data Handbook</a>
+                    </li>
+                    <li>
+                      <a href="/openlca-collaboration-server" data-drupal-link-system-path="node/23" target="_blank">openLCA Collaboration Server</a>
+                    </li>
+                    <li>
+                      <a href="/federal-agency-datatools" data-drupal-link-system-path="node/7" target="_blank">Federal Agency Data/Tools</a>
+                    </li>
+                    <li>
+                      <a href="/flcac-training-resources" data-drupal-link-system-path="node/28" target="_blank">FLCAC Training Resources</a>
+                    </li>
+                    <li class="last">
+                      <a href="/lcia-methods-without-flows" data-drupal-link-system-path="node/34" target="_blank">LCIA Methods without flows</a>
+                    </li>
+                  </ul>
+                <li class="last">
+                  <a href="/contact" target="_blank" data-drupal-link-system-path="contact">Contact</a>
+                </li>    
+                <li><a class="login default-button" href="#" onClick="javascript:window.location.href='login'"><span>Sign In</span></a></li>
+              </ul>
+              
             </nav>
           </div>
         </div>

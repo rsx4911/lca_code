@@ -28,13 +28,15 @@ public class EmailService {
 
 	public void send(EmailJob mail) {
 		var config = settings.mailConfig;
+		if (!config.isValid())
+			return;
 		var sender = config.getMailSender();
 		try {
 			var message = sender.createMimeMessage();
 			message.setRecipient(RecipientType.TO, new InternetAddress(mail.recipient));
 			message.setSentDate(Calendar.getInstance().getTime());
 			message.setSubject(mail.subject, StandardCharsets.UTF_8.name());
-			message.setFrom(new InternetAddress(config.get(MailSetting.DEFAULT_FROM)));
+			message.setFrom(new InternetAddress(config.getFrom()));
 			if (mail.isMixedContent()) {
 				message.setContent(createMixedContent(mail));
 			} else {

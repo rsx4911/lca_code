@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
+import org.openlca.git.model.ModelRef;
 import org.openlca.util.Strings;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +46,7 @@ abstract class DownloadController {
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
 			var writer = prepareWriter(repo, commit, true);
-			repo.references.find().includeCategories().commit(commit.id).path(path).iterate(writer::write);
+			write(writer, repo, path, commit.id);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -80,9 +81,7 @@ abstract class DownloadController {
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
 			var writer = prepareWriter(repo, commit, true);
-			paths.stream().forEach(path -> {
-				repo.references.find().includeCategories().commit(commit.id).path(path).iterate(writer::write);
-			});
+			paths.stream().forEach(path -> write(writer, repo, path, commit.id));
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -96,6 +95,7 @@ abstract class DownloadController {
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
 			var writer = prepareWriter(repo, commit, false);
+			write(writer, repo, null, commit.id);
 			repo.references.find().includeCategories().commit(commit.id).iterate(writer::write);
 			return put(writer, repo.toFilename());
 		} catch (IOException e) {
@@ -109,6 +109,14 @@ abstract class DownloadController {
 			writer.withReferences();
 		}
 		return writer;
+	}
+	
+	private void write(DatasetWriter writer, Repository repo, String path, String commitId) {
+		if (path != null && new ModelRef(path).isDataset) {
+			writer.write(repo.references.get(path, commitId));
+		} else {
+			repo.references.find().includeCategories().commit(commitId).path(path).iterate(writer::write);
+		}		
 	}
 
 	protected String put(DatasetWriter writer, String filename) throws IOException {

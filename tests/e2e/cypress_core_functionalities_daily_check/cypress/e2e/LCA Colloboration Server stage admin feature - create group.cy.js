@@ -14,7 +14,7 @@ describe('Stage admin feature', () => {
     // Visit the base URL from cypress.config.js
     cy.visit('/');
 
-    cy.get('#block-bootstrap-lca-main-menu > ul > li:nth-child(7) > a > span').click();
+    cy.get('#block-bootstrap-lca-main-menu > ul > li:nth-child(5) > a > span').click();
     cy.url().should('contain', '/');
 
     // Log in

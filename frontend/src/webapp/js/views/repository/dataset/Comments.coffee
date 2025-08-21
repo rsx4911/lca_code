@@ -58,6 +58,8 @@ define([
 					tabId = elem.attr 'id'
 					$("[href='##{tabId}']").click()
 			commentElement = $ "[data-path='#{path}'] [data-action=comment]"
+			if !commentElement or !commentElement.length
+				return
 			pos = commentElement.offset().top - 85
 			if pos > 0
 				$(window).scrollTop pos

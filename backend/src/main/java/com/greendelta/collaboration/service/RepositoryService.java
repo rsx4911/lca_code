@@ -22,7 +22,6 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.openlca.git.actions.GitInit;
 import org.openlca.git.model.Commit;
-import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Dirs;
 import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
@@ -31,13 +30,13 @@ import org.springframework.web.server.ResponseStatusException;
 import com.google.common.io.Files;
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.io.RepositoryJsonWriter;
-import com.greendelta.collaboration.model.Membership;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.RepositorySetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
+import com.greendelta.collaboration.service.LibraryService.LibraryLoader;
 import com.greendelta.collaboration.service.Repository.RepositoryPath;
 import com.greendelta.collaboration.service.SettingsService.Settings;
 import com.greendelta.collaboration.service.task.TaskService;
@@ -115,7 +114,7 @@ public class RepositoryService {
 			return null;
 		}
 	}
-	
+
 	File getDir(RepositoryPath path) {
 		return Repository.getDir(getRootPath(), path.group, path.repo);
 	}
@@ -176,20 +175,21 @@ public class RepositoryService {
 			if (newRepo == null)
 				throw Response.error(
 						"Could not create repository, does the configured 'Repositories root directory' exist and can be write-accessed?");
-			Dirs.move(repo.dir.toPath(), newRepo.dir.toPath());
-			moveMemberships(repo, newRepo);
+			Dirs.copy(repo.dir.toPath(), newRepo.dir.toPath());
+			copyMemberships(repo, newRepo);
 			commentService.move(repo, newRepo);
 			taskService.move(repo, newRepo);
 			releaseService.move(repo.path(), newRepo.path());
 			repo.settings.move(newRepo);
-			delete(repo);
+			membershipService.removeMemberships(repo.path());
+			Dirs.delete(repo.dir.toPath());
 			return true;
 		}
 	}
 
-	private void moveMemberships(Repository fromRepo, Repository toRepo) {
+	private void copyMemberships(Repository fromRepo, Repository toRepo) {
 		var memberships = membershipService.getMemberships(fromRepo.path());
-		for (Membership membership : memberships) {
+		for (var membership : memberships) {
 			if (membership.team != null) {
 				membershipService.addMemberships(membership.team, toRepo.path(), membership.role);
 			} else {
@@ -287,8 +287,8 @@ public class RepositoryService {
 		}
 	}
 
-	public void generateCachedJson(Repository repo, String commitId, List<LibraryLink> linkedLibraries) {
-		generateJson(repo.dir, repo.getCachedJsonFile(commitId), commitId, linkedLibraries);
+	public void generateCachedJson(Repository repo, Commit commit, LibraryLoader libraryLoader) {
+		generateJson(repo.dir, repo.getCachedJsonFile(commit.id), commit, libraryLoader);
 	}
 
 	public void deleteCachedJson(Repository repo, String commitId) {
@@ -296,17 +296,17 @@ public class RepositoryService {
 		Dirs.delete(jsonFile);
 	}
 
-	private void generateJson(File repoDir, File jsonFile, String commitId, List<LibraryLink> linkedLibraries) {
+	private void generateJson(File repoDir, File jsonFile, Commit commit, LibraryLoader libraryLoader) {
 		// Don't use git repo in thread, since it might be closed by calling
 		// code
-		var lockFile = new File(repoDir, ".lock_" + commitId);
+		var lockFile = new File(repoDir, ".lock_" + commit.id);
 		if (lockFile.exists())
 			return;
 		new Thread(() -> {
 			try {
 				Files.write(new byte[0], lockFile);
 				var tmpFile = fileService.createTempFile();
-				RepositoryJsonWriter.write(repoDir, commitId, tmpFile, linkedLibraries);
+				RepositoryJsonWriter.write(repoDir, commit, tmpFile, libraryLoader);
 				Files.copy(tmpFile, jsonFile);
 				tmpFile.delete();
 			} catch (IOException e) {
