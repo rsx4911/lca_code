@@ -140,11 +140,11 @@ public class ReleaseController {
 			throw Response.badRequest("version", "Missing input");
 		var commit = checkAccess(repo, commitId);
 		release.repositoryPath = repo.path();
-		release.commitId = commitId;
-		var fromDb = service.get(repo.path(), commitId);
+		release.commitId = commit.id;
+		var fromDb = service.get(repo.path(), commit.id);
 		if (fromDb == null) {
 			service.insert(release);
-			repoService.generateCachedJson(repo, commitId, libraryService.getLinkedLibraries(repo, commit));
+			repoService.generateCachedJson(repo, commit, libraryService.loader());
 		} else {
 			release.id = fromDb.id;
 			service.update(release);

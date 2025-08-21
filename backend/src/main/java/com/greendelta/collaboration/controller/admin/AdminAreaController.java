@@ -1,8 +1,10 @@
 package com.greendelta.collaboration.controller.admin;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -112,6 +114,24 @@ public class AdminAreaController {
 		mail.subject = "Collaboration server test email";
 		mail.recipient = email;
 		emailService.send(mail);
+	}
+
+	@GetMapping("testPath/{key}")
+	public Map<String, Object> testPath(@PathVariable ServerSetting key) {
+		var result = new HashMap<String, Object>();
+		if (key != ServerSetting.REPOSITORY_PATH && key != ServerSetting.LIBRARY_PATH)
+			return result;
+		String path = settings.serverConfig.get(key);
+		if (Strings.nullOrEmpty(path))
+			return result;
+		var file = new File(path).toPath();
+		if (Files.exists(file)) {
+			result.put("exists", true);
+			if (Files.isWritable(file)) {
+				result.put("writable", true);
+			}
+		}
+		return result;
 	}
 
 	@GetMapping("serverInfo")

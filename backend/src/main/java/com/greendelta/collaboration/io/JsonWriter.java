@@ -3,7 +3,6 @@ package com.greendelta.collaboration.io;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -13,11 +12,10 @@ import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
-import org.openlca.jsonld.LibraryLink;
 import org.openlca.util.Strings;
 import org.openlca.util.TypedRefIdMap;
 
-import com.google.gson.JsonArray;
+import com.greendelta.collaboration.service.LibraryService.LibraryLoader;
 import com.greendelta.collaboration.service.Repository;
 import com.greendelta.collaboration.util.Maps;
 
@@ -29,27 +27,19 @@ public class JsonWriter implements DatasetWriter {
 	private boolean collectReferences;
 	private final RepositoryJsonWriter writer;
 	private final Set<String> processed = new HashSet<String>();
-	private final JsonArray categories = new JsonArray();
 	private final Stack<Reference> toProcess = new Stack<>();
 
-	public JsonWriter(File file, Repository repo, List<LibraryLink> libraries, Commit commit) throws IOException {
+	public JsonWriter(File file, Repository repo, LibraryLoader libraryLoader, Commit commit) throws IOException {
 		this.tmpFile = file;
 		this.references = new TypedRefIdMap<Reference>();
 		repo.references.find().commit(commit.id).iterate(ref -> references.put(ref, ref));
-		this.writer = new RepositoryJsonWriter(repo, libraries, repo.getInfo(commit.id).schemaVersion(), tmpFile);
+		this.writer = new RepositoryJsonWriter(repo, libraryLoader, commit, tmpFile);
 	}
 
 	@Override
 	public void write(Reference ref) {
-		if (ref.isModelType || ref.isRepositoryInfo || ref.isLibrary)
-			return;
 		if (processed.contains(keyOf(ref)))
 			return;
-		if (ref.isCategory) {
-			categories.add(ref.path);
-			processed.add(ref.path);
-			return;
-		}
 		toProcess.add(ref);
 		while (!toProcess.isEmpty()) {
 			writeRef(toProcess.pop());
@@ -70,6 +60,8 @@ public class JsonWriter implements DatasetWriter {
 			return;
 		var ref = references.get(type, refId);
 		if (ref == null) {
+			if (writer.collectIfLibrary(type, refId))
+				return;
 			log.trace("No data set found: " + type.name() + " " + refId);
 			return;
 		}
@@ -84,7 +76,6 @@ public class JsonWriter implements DatasetWriter {
 
 	@Override
 	public File close() throws IOException {
-		writer.writeCategoriesJson(categories);
 		writer.close();
 		return tmpFile;
 	}

@@ -36,6 +36,8 @@ define([
 							flattened["#{type}__#{key}"] = allSettings[type][key]
 					Forms.fill('settings-form', flattened)
 					@updateUI()
+					@checkIfPathExists 'REPOSITORY_PATH'
+					@checkIfPathExists 'LIBRARY_PATH'
 
 			loadSettings: (callback) ->
 				$.ajax
@@ -56,7 +58,23 @@ define([
 						target.val returnValue
 					if type is 'SERVER_SETTING'
 						settings.setVal key, returnValue
+						if key is 'REPOSITORY_PATH' or key is 'LIBRARY_PATH'
+							@checkIfPathExists key
 					@updateUI()
+
+			checkIfPathExists: (key) ->
+				$.ajax
+					type: 'GET'
+					url: "ws/admin/area/testPath/#{key}"
+					success: (result) => 
+						@$("#SERVER_SETTING__#{key}-group").removeClass('has-warning')
+						@$("#SERVER_SETTING__#{key}-group .help-block").html ''
+						if !result.exists or !result.writable
+							@$("#SERVER_SETTING__#{key}-group").addClass('has-warning')
+							if !result.exists
+								@$("#SERVER_SETTING__#{key}-group .help-block").html 'This path does not exist'
+							else if !result.writable
+								@$("#SERVER_SETTING__#{key}-group .help-block").html 'This path is not writable'
 
 			updateUI: () ->
 				depending = {

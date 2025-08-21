@@ -1,5 +1,7 @@
 package com.greendelta.collaboration.model.settings;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.greendelta.collaboration.util.JacksonTypes;
 
@@ -46,8 +48,8 @@ public enum RepositorySetting implements SettingKey {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getDefaultValue() {
-		return (T) defaultValue;
+	public <T> T getDefaultValue(Map<String, String> values) {
+		return Setting.getDefaultValue(this.name(), type, subType, values, (T) defaultValue);
 	}
 
 	@Override

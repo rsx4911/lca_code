@@ -75,7 +75,7 @@ public class DownloadJsonController extends DownloadController {
 				var cachedJsonFile = repo.getCachedJsonFile(commit.id);
 				if (cachedJsonFile.exists())
 					return "repository_" + group + "@" + repository + "@" + commit.id;
-				repoService.generateCachedJson(repo, commit.id, libraryService.getLinkedLibraries(repo, commit));
+				repoService.generateCachedJson(repo, commit, libraryService.loader());
 			}
 		}
 		return super.prepare(group, repository, commitId, path);
@@ -102,8 +102,7 @@ public class DownloadJsonController extends DownloadController {
 
 	@Override
 	protected DatasetWriter createWriter(Repository repo, Commit commit) throws IOException {
-		return new JsonWriter(fileService.createTempFile(), repo, libraryService.getLinkedLibraries(repo, commit),
-				commit);
+		return new JsonWriter(fileService.createTempFile(), repo, libraryService.loader(), commit);
 	}
 
 	@Override
