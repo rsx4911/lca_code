@@ -76,40 +76,6 @@ jobs:
           GITHUB_IPS=$(curl -s https://api.github.com/meta | jq -r '.actions[]' | paste -sd "," -)
           echo "GITHUB_IPS=$GITHUB_IPS" >> $GITHUB_ENV
 
-      - name: Open 80 and 8080 on all NSGs in the resource group
-        run: |
-          NSG_LIST=$(az network nsg list \
-            --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-            --query "[].name" -o tsv)
-
-          for NSG in $NSG_LIST; do
-            echo "Updating NSG: $NSG"
-
-            az network nsg rule create \
-              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-              --nsg-name $NSG \
-              --name AllowHTTP-${{ github.run_id }} \
-              --priority 1001 \
-              --access Allow \
-              --protocol Tcp \
-              --direction Inbound \
-              --source-address-prefixes '*' \
-              --destination-port-ranges 80 \
-              --description "Allow HTTP access to port 80"
-
-            az network nsg rule create \
-              --resource-group ${{ secrets.AZ_RESOURCE_GROUP }} \
-              --nsg-name $NSG \
-              --name Allow8080-${{ github.run_id }} \
-              --priority 1002 \
-              --access Allow \
-              --protocol Tcp \
-              --direction Inbound \
-              --source-address-prefixes '*' \
-              --destination-port-ranges 8080 \
-              --description "Allow access to port 8080"
-          done
-
       - name: Install Prerequisites on Remote VM
         run: |
           echo "Transferring install-prerequisites.sh to VM..."
