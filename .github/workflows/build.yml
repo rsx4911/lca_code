@@ -349,16 +349,7 @@ jobs:
           
           echo "Copying API test results back to runner..."
           scp -o StrictHostKeyChecking=no \
-            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/tests/integration/api_test/api-test-results.xml ./api-test-results.xml
-
-      - name: Copy API test results back to runner
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.AZ_VM_IP }}
-          username: ${{ secrets.AZ_VM_USERNAME }}
-          key: ${{ secrets.AZ_VM_SSH_KEY }}
-          source: "/home/${{ secrets.AZ_VM_USERNAME }}/api-test-results.xml"
-          target: "./"
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api-test-results.xml ./api-test-results.xml
 
       - name: Clean Up Ephemeral VM and Resources
         if: always()
