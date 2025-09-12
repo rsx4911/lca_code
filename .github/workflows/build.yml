@@ -338,6 +338,8 @@ jobs:
 
             # Add local bin to PATH
             export PATH=\$PATH:\$HOME/.local/bin
+            export AUTH_USERNAME=${{ secrets.AUTH_USERNAME }}
+            export AUTH_PASSWORD=${{ secrets.AUTH_PASSWORD }}
 
             cd /home/${{ secrets.AZ_VM_USERNAME }}
             pytest tests/integration/api_test/complete_api_test_repos_testing_mvp.py \
