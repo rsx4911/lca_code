@@ -328,16 +328,14 @@ jobs:
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api_tests
           
           echo "Running API tests on VM..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
-            # Ensure Python is installed
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
+            set -e
             sudo apt-get update -y
             sudo apt-get install -y python3 python3-pip
-          
-            # Install requirements
+
             python3 -m pip install --upgrade pip
             pip3 install pytest requests pytest-dependency pyyaml
-          
-            # Run tests with JUnit-style XML report
+
             cd /home/${{ secrets.AZ_VM_USERNAME }}/api_tests
             pytest complete_api_test_repos_testing_mvp.py \
               --junitxml=api-test-results.xml \
