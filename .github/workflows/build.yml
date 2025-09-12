@@ -339,8 +339,8 @@ jobs:
             # Add local bin to PATH
             export PATH=\$PATH:\$HOME/.local/bin
 
-            cd /home/${{ secrets.AZ_VM_USERNAME }}/tests/integration/api_test
-            pytest complete_api_test_repos_testing_mvp.py \
+            cd /home/${{ secrets.AZ_VM_USERNAME }}
+            pytest tests/integration/api_test/complete_api_test_repos_testing_mvp.py \
               --junitxml=api-test-results.xml \
               -o log_cli=true -o log_cli_level=INFO
           EOF
