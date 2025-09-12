@@ -324,8 +324,8 @@ jobs:
       - name: Run API Tests on VM
         run: |
           echo "Transferring API tests to VM..."
-          scp -o StrictHostKeyChecking=no -r tests/integration/api_test \
-            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api_tests
+          scp -o StrictHostKeyChecking=no -r tests \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/tests
 
           echo "Running API tests on VM..."
           ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << EOF
@@ -339,7 +339,7 @@ jobs:
             # Add local bin to PATH
             export PATH=\$PATH:\$HOME/.local/bin
 
-            cd /home/${{ secrets.AZ_VM_USERNAME }}/api_tests
+            cd /home/${{ secrets.AZ_VM_USERNAME }}/tests/integration/api_test
             pytest complete_api_test_repos_testing_mvp.py \
               --junitxml=api-test-results.xml \
               -o log_cli=true -o log_cli_level=INFO
@@ -347,7 +347,7 @@ jobs:
           
           echo "Copying API test results back to runner..."
           scp -o StrictHostKeyChecking=no \
-            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api_tests/api-test-results.xml ./api-test-results.xml
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/tests/integration/api_test/api-test-results.xml ./api-test-results.xml
 
       - name: Upload API Test Results
         if: always()
