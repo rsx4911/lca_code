@@ -55,10 +55,7 @@ with open("tests/integration/api_test/api_test_priorities.yaml", "r") as f:
     config = yaml.safe_load(f)["api_test_priorities"]
 
 
-VM_IP = os.environ.get("VM_IP")
-if not VM_IP:
-    raise RuntimeError("Environment variable 'VM_IP' is not set")
-BASE_URL = f"http://{VM_IP}:8080/lca-collaboration"
+BASE_URL = f"http://localhost:8080/lca-collaboration"
 
 MVP_REPOS = [
     ("Argonne_National_Lab", "By_Product_Hydrogen"),

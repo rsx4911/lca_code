@@ -321,13 +321,39 @@ jobs:
           name: cypress-ui-screenshots
           path: ./cypress-screenshots
 
-      - name: Run API Tests
-        env:
-          VM_IP: ${{ env.VM_IP }}
-          AUTH_USERNAME: ${{ secrets.AUTH_USERNAME }}
-          AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
+      - name: Run API Tests on VM
         run: |
-          pytest tests/integration/api_test/complete_api_test_repos_testing_mvp.py
+          echo "Transferring API tests to VM..."
+          scp -o StrictHostKeyChecking=no -r tests/integration/api_test \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api_tests
+          
+          echo "Running API tests on VM..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }} << 'EOF'
+            # Ensure Python is installed
+            sudo apt-get update -y
+            sudo apt-get install -y python3 python3-pip
+          
+            # Install requirements
+            python3 -m pip install --upgrade pip
+            pip3 install pytest requests pytest-dependency pyyaml
+          
+            # Run tests with JUnit-style XML report
+            cd /home/${{ secrets.AZ_VM_USERNAME }}/api_tests
+            pytest complete_api_test_repos_testing_mvp.py \
+              --junitxml=api-test-results.xml \
+              -o log_cli=true -o log_cli_level=INFO
+          EOF
+          
+          echo "Copying API test results back to runner..."
+          scp -o StrictHostKeyChecking=no \
+            ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api_tests/api-test-results.xml ./api-test-results.xml
+
+      - name: Upload API Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: ./api-test-results.xml
 
       - name: Clean Up Ephemeral VM and Resources
         if: always()
