@@ -36,7 +36,7 @@ public class RepositoryClient implements AutoCloseable {
 
 	public void exportRepository(String repository, InputStreamConsumer consumer) throws IOException {
 		login();
-		try (var response = Http.execute(client, new HttpGet(baseUrl + "repository/export/" + repository))) {
+		try (var response = Http.execute(client, new HttpGet(baseUrl + "/repository/export/" + repository))) {
 			consumer.accept(response.getEntity().getContent());
 		}
 		logout();
