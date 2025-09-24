@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.http.HttpHost;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openlca.core.model.ModelType;
@@ -351,7 +351,9 @@ public class SettingsService {
 			int port = get(SearchSetting.PORT);
 			String schema = get(SearchSetting.SCHEMA);
 			var client = new RestHighLevelClient(
-					RestClient.builder(new HttpHost(host, port, schema), new HttpHost(host, port + 1, schema)));
+					RestClient.builder(
+							new HttpHost(schema, host, port),
+							new HttpHost(schema, host, port + 1)));
 			if (!client.ping(RequestOptions.DEFAULT))
 				throw new IOException("Could not ping search cluster");
 			this.restClient = client;

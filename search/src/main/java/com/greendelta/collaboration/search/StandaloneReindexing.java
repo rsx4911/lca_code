@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import org.apache.http.HttpHost;
+import org.apache.hc.core5.http.HttpHost;
 import org.openlca.git.model.Commit;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.util.Strings;
@@ -168,8 +168,8 @@ public class StandaloneReindexing {
 
 	private static RestHighLevelClient getRestClient(Settings in) throws IOException {
 		var client = new RestHighLevelClient(RestClient.builder(
-				new HttpHost(in.osHost, in.osPport, in.osSchema),
-				new HttpHost(in.osHost, in.osPport + 1, in.osSchema)));
+				new HttpHost(in.osSchema, in.osHost, in.osPport),
+				new HttpHost(in.osSchema, in.osHost, in.osPport + 1)));
 		if (!client.ping(RequestOptions.DEFAULT))
 			throw new IOException("Could not ping search cluster");
 		return client;
