@@ -20,7 +20,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
-import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import org.openlca.git.actions.GitInit;
 import org.openlca.git.model.Commit;
 import org.openlca.util.Dirs;
@@ -231,10 +230,6 @@ public class RepositoryService {
 		if (path == null)
 			return false;
 		repo.close();
-		// TODO this is a workaround to avoid open file handles that jgit
-		// is holding (see https://github.com/eclipse-jgit/jgit/issues/155)
-		new WindowCacheConfig().install();
-		//
 		Dirs.delete(new File(path));
 		return true;
 	}
