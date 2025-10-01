@@ -97,6 +97,7 @@ define([
 								@$el.html template
 									groups: groupLibraries(libraries)
 									missingLibraries: missingLibraries
+									isLibraryManager: currentUser.isLibraryManager()
 									isLibraryOwner: (library) ->
 										if currentUser.isLibraryManager()
 											return true

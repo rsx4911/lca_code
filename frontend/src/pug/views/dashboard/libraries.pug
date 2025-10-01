@@ -45,9 +45,10 @@ mixin missing-libraries(missingLibraries)
 						button.btn.btn-xs.btn-success(data-action='add') Add
 
 .header-box Libraries
-	button.btn.btn-success.pull-right(data-action='add') Add library
-	button.btn.btn-default.pull-right(data-action='open-updater') Open updater
-	.clear
+	if isLibraryManager
+		button.btn.btn-success.pull-right(data-action='add') Add library
+		button.btn.btn-default.pull-right(data-action='open-updater') Open updater
+		.clear
 .content-box
 	if !groups || !Object.keys(groups).length
 		em No libraries uploaded
