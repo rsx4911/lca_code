@@ -6,10 +6,13 @@ include ../mixins/forms.pug
             |  on #{repository.settings.label}
         else
             |  on #{repository.group}/#{repository.name}
-    form#activities-config.pull-right
-        +checkbox('showCommitActivities', 'Commits', 'success', true)
-        +checkbox('showCommentActivities', 'Comments', 'success', true)
-        +checkbox('showTaskActivities', 'Tasks', 'success', true)
+    if commentsEnabled || tasksEnabled
+        form#activities-config.pull-right
+            +checkbox('showCommitActivities', 'Commits', 'success', true)
+            if commentsEnabled
+                +checkbox('showCommentActivities', 'Comments', 'success', true)
+            if tasksEnabled
+                +checkbox('showTaskActivities', 'Tasks', 'success', true)
     .clear
 .content-box
     .list-container#activity-feed

@@ -7,12 +7,13 @@ define([
 				'cs!utils/Model'
 				'cs!utils/Renderer'
 				'cs!models/CurrentUser'
+				'cs!models/Settings'
 				'templates/views/dashboard/activities'
 				'templates/views/dashboard/activity'
 				'templates/views/repository/commit/commit-info'
 			]
 
-	(Backbone, Events, FeedScroll, Format, Forms, Model, Renderer, currentUser, template, resultTemplate, infoTemplate) ->
+	(Backbone, Events, FeedScroll, Format, Forms, Model, Renderer, currentUser, settings, template, resultTemplate, infoTemplate) ->
 
 		class DashboardActivities extends Backbone.View
 
@@ -28,44 +29,46 @@ define([
 
 			render: (renderOptions) ->
 				@$el.html template
+					commentsEnabled: settings.is('COMMENTS_ENABLED')
+					tasksEnabled: settings.is('TASKS_ENABLED')
 					repository: if @repository then @repository.toJSON() else null
 				Renderer.render @, renderOptions
-				settings = currentUser.get 'settings'
-				if !settings
-					settings = {}
-				if !settings.showCommitActivities and !settings.showCommentActivities and !settings.showTaskActivities
-					@updateSettings {}, () =>
-						Forms.fill 'activities-config', settings
+				userSettings = currentUser.get 'settings'
+				if !userSettings
+					userSettings = {}
+				if !userSettings.showCommitActivities and !userSettings.showCommentActivities and !userSettings.showTaskActivities
+					@updateUserSettings {}, () =>
+						Forms.fill 'activities-config', userSettings
 						@initFeed()
 				else
-					Forms.fill 'activities-config', settings
+					Forms.fill 'activities-config', userSettings
 					@initFeed()
 
 
 			changeFeedSetting: () ->
-				@updateSettings Forms.toJson('activities-config'), () =>
+				@updateUserSettings Forms.toJson('activities-config'), () =>
 					@feed.destroy()
 					@initFeed()
 
-			updateSettings: (settings, callback) ->
-				if !settings.showCommitActivities and !settings.showCommentActivities and !settings.showTaskActivities
-					settings = { showCommitActivities: true, showCommentActivities: true, showTaskActivities: true }
+			updateUserSettings: (userSettings, callback) ->
+				if !userSettings.showCommitActivities and !userSettings.showCommentActivities and !userSettings.showTaskActivities
+					userSettings = { showCommitActivities: true, showCommentActivities: settings.is('COMMENTS_ENABLED'), showTaskActivities: settings.is('TASKS_ENABLED') }
 					@$('.abc-checkbox input').prop 'checked', true
 				$.ajax
 					type: 'PUT'
-					url: 'ws/activities/settings'
-					data: JSON.stringify settings
+					url: 'ws/activities/userSettings'
+					data: JSON.stringify userSettings
 					contentType: 'application/json'
-					success: (settings) =>
-						Model.copyFields settings, currentUser.get('settings')
+					success: (userSettings) =>
+						Model.copyFields userSettings, currentUser.get('settings')
 						if callback
 							callback()
 
 			initFeed: () ->
-				settings = currentUser.get('settings')
+				userSettings = currentUser.get('settings')
 				@feed = new FeedScroll({
 					url: () => 
-						url = "ws/activities?&showCommitActivities=#{settings.showCommitActivities}&showCommentActivities=#{settings.showCommentActivities}&showTaskActivities=#{settings.showTaskActivities}&"
+						url = "ws/activities?&showCommitActivities=#{userSettings.showCommitActivities}&showCommentActivities=#{userSettings.showCommentActivities}&showTaskActivities=#{userSettings.showTaskActivities}&"
 						if @repository
 							url += "repositoryPath=#{@repository.get('group')}/#{@repository.get('name')}&"
 						return url
