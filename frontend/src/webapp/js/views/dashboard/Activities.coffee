@@ -36,7 +36,7 @@ define([
 				userSettings = currentUser.get 'settings'
 				if !userSettings
 					userSettings = {}
-				if !userSettings.showCommitActivities and !userSettings.showCommentActivities and !userSettings.showTaskActivities
+				if !userSettings.showCommitActivities and !(userSettings.showCommentActivities and settings.is('COMMENTS_ENABLED')) and !(userSettings.showTaskActivities and settings.is('TASKS_ENABLED'))
 					@updateUserSettings {}, () =>
 						Forms.fill 'activities-config', userSettings
 						@initFeed()
