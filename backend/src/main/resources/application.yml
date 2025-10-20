@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/collaboration-server
+    username: collaboration-server
+    password: collaboration-server
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 3
+      max-lifetime: 2000000
+      connection-timeout: 10000
+      idle-timeout: 10000
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: validate
+  security:
+    filter:
+      dispatcher-types: REQUEST, ERROR
+  servlet:
+    multipart:
+      max-file-size: 10GB
+      max-request-size: 10GB
+server:
+  servlet:
+    session: 
+      timeout: 1440m
