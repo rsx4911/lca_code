@@ -154,7 +154,7 @@ public class RepositoryController {
 
 	private String notFoundMessage(ModelType type, String refId, String commitId, String filename) {
 		var base = "";
-		if (!Strings.nullOrEmpty(filename))
+		if (Strings.isNotBlank(filename))
 			base = "Binary file " + filename + " of ";
 		base += type.name() + " " + refId + " not found";
 		if (commitId == null)

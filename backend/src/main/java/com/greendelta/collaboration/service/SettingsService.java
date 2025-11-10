@@ -213,7 +213,7 @@ public class SettingsService {
 
 		public String getServerUrl() {
 			String url = super.get(ServerSetting.SERVER_URL);
-			if (Strings.nullOrEmpty(url))
+			if (Strings.isBlank(url))
 				return "";
 			url = url.strip();
 			if (url.endsWith("/"))
@@ -255,7 +255,7 @@ public class SettingsService {
 
 		public String getFrom() {
 			String from = get(MailSetting.DEFAULT_FROM);
-			return !Strings.nullOrEmpty(from) ? from : get(MailSetting.USER);
+			return Strings.isNotBlank(from) ? from : get(MailSetting.USER);
 		}
 
 		public JavaMailSender getMailSender() {
@@ -269,7 +269,7 @@ public class SettingsService {
 			mailSender.setPassword(get(MailSetting.PASS));
 			var props = mailSender.getJavaMailProperties();
 			var proto = get(MailSetting.PROTO);
-			var useAuth = Strings.notEmpty(get(MailSetting.USER));
+			var useAuth = Strings.isNotBlank(get(MailSetting.USER));
 			props.put("mail.transport.protocol", proto);
 			props.put("mail." + proto + ".auth", useAuth ? "true" : "false");
 			// if (proto.equals("smtps")) {
@@ -292,8 +292,8 @@ public class SettingsService {
 
 		public boolean isValid() {
 			int port = get(MailSetting.PORT);
-			if (Strings.nullOrEmpty(get(MailSetting.DEFAULT_FROM)) || Strings.nullOrEmpty(get(MailSetting.PROTO))
-					|| Strings.nullOrEmpty(get(MailSetting.HOST)) || port == 0)
+			if (Strings.isBlank(get(MailSetting.DEFAULT_FROM)) || Strings.isBlank(get(MailSetting.PROTO))
+					|| Strings.isBlank(get(MailSetting.HOST)) || port == 0)
 				return false;
 			return true;
 		}

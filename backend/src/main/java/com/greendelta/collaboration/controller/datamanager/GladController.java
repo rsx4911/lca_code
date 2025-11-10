@@ -158,13 +158,13 @@ public class GladController {
 			this.apiKey = apiKey;
 			this.dataprovider = dataprovider;
 			this.serverUrl = serverUrl;
-			if (Strings.nullOrEmpty(baseUrl))
+			if (Strings.isBlank(baseUrl))
 				throw Response.unavailable("No GLAD service url specified");
-			if (Strings.nullOrEmpty(apiKey))
+			if (Strings.isBlank(apiKey))
 				throw Response.unavailable("No GLAD service api-key specified");
-			if (Strings.nullOrEmpty(dataprovider))
+			if (Strings.isBlank(dataprovider))
 				throw Response.unavailable("No GLAD service dataprovider name specified");
-			if (Strings.nullOrEmpty(serverUrl))
+			if (Strings.isBlank(serverUrl))
 				throw Response.unavailable("No Collaboration Server url specified");
 		}
 
@@ -231,7 +231,7 @@ public class GladController {
 			data.put("validUntil", validUntil);
 			data.put("validUntilYear", getYear(validUntil));
 			data.put("technology", Maps.getString(data, "processDocumentation.technologyDescription"));
-			if (!Strings.nullOrEmpty(reviewer)) {
+			if (Strings.isNotBlank(reviewer)) {
 				data.put("reviewers", new String[] { reviewer });
 				data.put("reviewType", "UNKNOWN");
 			}
@@ -240,10 +240,10 @@ public class GladController {
 				data.put("longitude", Maps.getLong(data, "location.longitude"));
 			}
 			data.put("location", Maps.getString(data, "location.name"));
-			data.put("reviewed", !Strings.nullOrEmpty(reviewer));
+			data.put("reviewed", Strings.isNotBlank(reviewer));
 			data.put("copyrightProtected", Maps.getBoolean(data, "processDocumentation.copyright"));
 			data.put("copyrightHolder", Maps.getString(data, "processDocumentation.dataSetOwner.name"));
-			if (!Strings.nullOrEmpty(Maps.getString(data, "defaultAllocationMethod"))) {
+			if (Strings.isNotBlank(Maps.getString(data, "defaultAllocationMethod"))) {
 				data.put("multifunctionalModeling", ModellingApproach.fromDefaultAllocationMethod(data));
 			}
 			data.put("format", "JSON_LD");

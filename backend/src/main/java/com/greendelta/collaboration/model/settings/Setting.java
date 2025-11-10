@@ -66,7 +66,7 @@ public class Setting extends AbstractEntity {
 	}
 	
 	public boolean isSet() {
-		return !Strings.nullOrEmpty(value) || data != null;
+		return Strings.isNotBlank(value) || data != null;
 	}
 
 	static <V> V parseValue(Class<?> type, String value) {

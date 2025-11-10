@@ -82,7 +82,7 @@ public class RepositoryService {
 	}
 
 	public Repository get(String id) {
-		if (Strings.nullOrEmpty(id) || !id.contains("/"))
+		if (Strings.isBlank(id) || !id.contains("/"))
 			throw Response.notFound("No repository '" + id + "' found");
 		var path = id.split("/");
 		if (path.length != 2)

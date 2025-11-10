@@ -54,7 +54,7 @@ public class UserController {
 	public ResponseEntity<Map<String, Object>> create(
 			@PathVariable String username,
 			@RequestBody User user) {
-		if (Strings.nullOrEmpty(username))
+		if (Strings.isBlank(username))
 			throw Response.badRequest("username", "Missing input: Username");
 		if (!Routes.isValid(username))
 			throw Response.badRequest("username",
@@ -65,9 +65,9 @@ public class UserController {
 			throw Response.badRequest("email", "Email is already in use");
 		if (Routes.isReserved(username))
 			throw Response.badRequest("username", "This is a reserved word");
-		if (Strings.nullOrEmpty(user.name))
+		if (Strings.isBlank(user.name))
 			throw Response.badRequest("name", "Missing input: Name");
-		if (Strings.nullOrEmpty(user.email))
+		if (Strings.isBlank(user.email))
 			throw Response.badRequest("email", "Missing input: Email");
 		var password = Password.generate();
 		service.setPassword(user, password);

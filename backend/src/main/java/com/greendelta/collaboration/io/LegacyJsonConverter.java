@@ -246,7 +246,7 @@ class LegacyJsonConverter implements Closeable {
 	}
 
 	private void putCategory(String path) {
-		if (Strings.nullOrEmpty(path) || !path.contains("/"))
+		if (Strings.isBlank(path) || !path.contains("/"))
 			return;
 		var firstSlash = path.indexOf("/");
 		var type = path.substring(0, firstSlash);

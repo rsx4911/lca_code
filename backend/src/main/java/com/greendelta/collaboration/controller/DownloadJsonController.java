@@ -71,7 +71,7 @@ public class DownloadJsonController extends DownloadController {
 			@RequestParam(required = false) String path) {
 		try (var repo = repoService.get(group, repository)) {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
-			if (Strings.nullOrEmpty(path) && commit != null) {
+			if (Strings.isBlank(path) && commit != null) {
 				var cachedJsonFile = repo.getCachedJsonFile(commit.id);
 				if (cachedJsonFile.exists())
 					return "repository_" + group + "@" + repository + "@" + commit.id;

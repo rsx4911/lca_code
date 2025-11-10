@@ -184,7 +184,7 @@ public class HistoryController {
 			}
 			var previousCommit = service.getLatestAccessibleCommit(repo, options -> options.before(commit.id));
 			var diff = repo.diffs.find().commit(previousCommit);
-			if (!Strings.nullOrEmpty(categoryPath)) {
+			if (Strings.isNotBlank(categoryPath)) {
 				if (categoryPath.equals(ModelType.CATEGORY.name())) {
 					diff = diff.onlyCategories();
 				} else {

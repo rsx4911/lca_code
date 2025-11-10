@@ -71,7 +71,7 @@ public class ZipCommitWriter extends CommitWriter {
 
 	private List<Diff> getChanges() {
 		return Arrays.asList(ModelType.values()).stream()
-				.sorted((t1, t2) -> Strings.compare(t1.name(), t2.name()))
+				.sorted((t1, t2) -> Strings.compareIgnoreCase(t1.name(), t2.name()))
 				.map(this::getChanges)
 				.flatMap(List::stream)
 				.collect(Collectors.toList());
@@ -151,7 +151,7 @@ public class ZipCommitWriter extends CommitWriter {
 
 		private String getPath(Diff change, String relativePath) {
 			var root = ModelPath.binFolderOf(change.type, change.refId);
-			if (Strings.nullOrEmpty(root))
+			if (Strings.isBlank(root))
 				return root;
 			return root + "/" + relativePath;
 		}

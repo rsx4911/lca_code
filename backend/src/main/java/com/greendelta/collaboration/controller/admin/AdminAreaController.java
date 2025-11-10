@@ -122,7 +122,7 @@ public class AdminAreaController {
 		if (key != ServerSetting.REPOSITORY_PATH && key != ServerSetting.LIBRARY_PATH)
 			return result;
 		String path = settings.serverConfig.get(key);
-		if (Strings.nullOrEmpty(path))
+		if (Strings.isBlank(path))
 			return result;
 		var file = new File(path).toPath();
 		if (Files.exists(file)) {
@@ -223,7 +223,7 @@ public class AdminAreaController {
 	}
 
 	private String checkTypesOfData(String value) throws JsonMappingException, JsonProcessingException {
-		if (Strings.nullOrEmpty(value)) {
+		if (Strings.isBlank(value)) {
 			value = "";
 		}
 		var types = new LinkedHashSet<>();

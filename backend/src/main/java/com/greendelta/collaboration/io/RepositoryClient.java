@@ -43,7 +43,7 @@ public class RepositoryClient implements AutoCloseable {
 	}
 
 	private void login() throws IOException {
-		if (Strings.nullOrEmpty(username) || Strings.nullOrEmpty(password))
+		if (Strings.isBlank(username) || Strings.isBlank(password))
 			return;
 		var post = new HttpPost(baseUrl + "public/login");
 		var data = """

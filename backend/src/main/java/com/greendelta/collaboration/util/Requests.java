@@ -19,7 +19,7 @@ public class Requests {
 		var route = getRoute(request);
 		if (!route.isEmpty() && !Routes.isPublicUrl(route) && !route.equals("search")) {
 			var query = request.getQueryString();
-			if (!Strings.nullOrEmpty(query)) {
+			if (Strings.isNotBlank(query)) {
 				route += "?" + query;
 			}
 			route = URLEncoder.encode(route, StandardCharsets.UTF_8.toString());

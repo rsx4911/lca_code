@@ -52,11 +52,11 @@ public class LibraryReplacer extends CommitWriter {
 	}
 
 	public void run() throws IOException {
-		if (Strings.nullOrEmpty(toReplace) || replaceWith == null)
+		if (Strings.isBlank(toReplace) || replaceWith == null)
 			throw new IllegalArgumentException("No replacements set");
 		if (!repo.getLibraries(repo.commits.head()).contains(toReplace))
 			throw new IllegalArgumentException("Repository does not contain library " + toReplace);
-		if (Strings.nullOrEmpty(message)) {
+		if (Strings.isBlank(message)) {
 			message = "Updated library: " + toReplace + " -> " + replaceWith;
 		}
 		var headCommitId = repo.getHeadCommit().getName();

@@ -29,7 +29,7 @@ public class AnnouncementService {
 	public Announcement getAnnouncement() {
 		String id = settings.get(ServerSetting.ANNOUNCEMENT_ID);
 		String message = settings.get(ServerSetting.ANNOUNCEMENT_MESSAGE);
-		if (Strings.nullOrEmpty(id) || Strings.nullOrEmpty(message))
+		if (Strings.isBlank(id) || Strings.isBlank(message))
 			return null;
 		return new Announcement(id, message);
 	}

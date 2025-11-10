@@ -56,7 +56,7 @@ public class JsonWriter implements DatasetWriter {
 	}
 
 	private void queue(ModelType type, String refId) {
-		if (type == null || Strings.nullOrEmpty(refId))
+		if (type == null || Strings.isBlank(refId))
 			return;
 		var ref = references.get(type, refId);
 		if (ref == null) {

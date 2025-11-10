@@ -19,7 +19,7 @@ public class RepositoryList extends ArrayList<Repository> implements AutoCloseab
 	}
 	
 	public void sort() {
-		sort((r1, r2) -> Strings.compare(r1.getLabel().toLowerCase(), r2.getLabel().toLowerCase()));
+		sort((r1, r2) -> Strings.compareIgnoreCase(r1.getLabel(), r2.getLabel()));
 	}
 
 	@Override

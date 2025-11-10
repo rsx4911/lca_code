@@ -72,12 +72,12 @@ public class TeamController {
 	public ResponseEntity<Map<String, Object>> create(
 			@PathVariable String teamname,
 			@RequestBody Team team) {
-		if (Strings.nullOrEmpty(teamname))
+		if (Strings.isBlank(teamname))
 			throw Response.badRequest("teamname", "Missing input: Teamname");
 		if (!Routes.isValid(teamname))
 			throw Response.badRequest("teamname",
 					"Teamname must consist of at least 4 characters and can only contain characters, numbers and _");
-		if (Strings.nullOrEmpty(team.name))
+		if (Strings.isBlank(team.name))
 			throw Response.badRequest("name", "Missing input: Name");
 		if (service.exists(teamname))
 			throw Response.badRequest("teamname", "Team already exists");
@@ -95,11 +95,11 @@ public class TeamController {
 		var fromDb = authorizedGetTeam(teamname);
 		if (fromDb == null)
 			throw Response.notFound();
-		if (Strings.nullOrEmpty(team.teamname))
+		if (Strings.isBlank(team.teamname))
 			throw Response.badRequest("teamname", "Missing input: Teamname");
 		if (Routes.isReserved(team.teamname))
 			throw Response.badRequest("teamname", "This is a reserved word");
-		if (Strings.nullOrEmpty(team.name))
+		if (Strings.isBlank(team.name))
 			throw Response.badRequest("name", "Missing input: Name");
 		var notifications = updateUsers(team);
 		fromDb.teamname = team.teamname;

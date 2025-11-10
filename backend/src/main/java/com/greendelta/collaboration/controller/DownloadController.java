@@ -38,7 +38,7 @@ abstract class DownloadController {
 	}
 
 	protected String prepare(String group, String repository, String commitId, String path) {
-		if (Strings.nullOrEmpty(path))
+		if (Strings.isBlank(path))
 			return prepare(group, repository, commitId);
 		try (var repo = repoService.get(group, repository)) {
 			log().info("Exporting repository {}/{}/{} (commit id {})", group, repository, path, commitId);

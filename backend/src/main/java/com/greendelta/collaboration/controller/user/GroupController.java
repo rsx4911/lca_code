@@ -83,7 +83,7 @@ public class GroupController {
 			var settings = service.getSettings(group);
 			map.put("settings", settings.toMap());
 			String label = settings.get(GroupSetting.LABEL);
-			if (Strings.nullOrEmpty(label)) {
+			if (Strings.isBlank(label)) {
 				label = group;
 			}
 			map.put("label", label);
@@ -128,7 +128,7 @@ public class GroupController {
 
 	@PostMapping("{name}")
 	public ResponseEntity<Map<String, Object>> create(@PathVariable String name) {
-		if (Strings.nullOrEmpty(name))
+		if (Strings.isBlank(name))
 			throw Response.badRequest("name", "Missing input: Name");
 		if (!Routes.isValid(name))
 			throw Response.badRequest("name",

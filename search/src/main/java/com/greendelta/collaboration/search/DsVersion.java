@@ -35,7 +35,7 @@ public class DsVersion {
 	public List<String> flowCompleteness;
 	
 	void completeData() {
-		if (Strings.nullOrEmpty(category))
+		if (Strings.isBlank(category))
 			return;
 		categoryPaths = new ArrayList<>();
 		String path = null;

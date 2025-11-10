@@ -328,7 +328,7 @@ public class Maps {
 
 	public static ModelType getModelType(Map<String, Object> map) {
 		var value = getString(map, "@type");
-		if (Strings.nullOrEmpty(value))
+		if (Strings.isBlank(value))
 			return null;
 		for (var type : ModelType.values())
 			if (type.getModelClass().getSimpleName().equals(value))

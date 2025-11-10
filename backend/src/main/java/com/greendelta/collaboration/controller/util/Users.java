@@ -24,7 +24,7 @@ public class Users {
 	private static Map<String, Object> mapForSelf(User user, Boolean isInTeam) {
 		var map = Maps.of(user);
 		Maps.removeAllBut(map, "id", "username", "name", "email", "settings", "deactivated");
-		if (!Strings.nullOrEmpty(user.twoFactorSecret)) {
+		if (Strings.isNotBlank(user.twoFactorSecret)) {
 			map.put("twoFactorAuth", true);
 		}
 		Maps.put(map, "settings.blockedUsers", user.settings.blockedUsers.stream().map(Users::mapForOthers).toList());

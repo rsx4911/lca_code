@@ -78,16 +78,16 @@ public class ReviewController {
 	public Map<String, Object> update(@RequestBody Review review) {
 		if (!settings.is(ServerSetting.TASKS_ENABLED))
 			throw Response.unavailable("Task feature not enabled");
-		if (Strings.nullOrEmpty(review.name))
+		if (Strings.isBlank(review.name))
 			throw Response.badRequest("name", "Missing input: Name");
 		service.merge(review);
 		return getActiveTasks();
 	}
 
 	private void checkValidity(Review review) {
-		if (Strings.nullOrEmpty(review.name))
+		if (Strings.isBlank(review.name))
 			throw Response.badRequest("name", "Missing input: Name");
-		if (Strings.nullOrEmpty(review.repositoryPath))
+		if (Strings.isBlank(review.repositoryPath))
 			throw Response.badRequest("repositoryPath", "Missing input: Repository path");
 		if (!review.assignments.isEmpty() || review.id != 0)
 			throw Response.conflict("Review object already exists");

@@ -213,7 +213,7 @@ public class SearchController {
 		if (value.size() == 0)
 			return defaultValue;
 		var first = value.iterator().next();
-		if (Strings.nullOrEmpty(first))
+		if (Strings.isBlank(first))
 			return defaultValue;
 		return first;
 	}

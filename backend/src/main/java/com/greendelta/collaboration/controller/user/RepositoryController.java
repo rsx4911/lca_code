@@ -202,9 +202,9 @@ public class RepositoryController {
 	}
 
 	private void checkValid(String group, String name) {
-		if (Strings.nullOrEmpty(group))
+		if (Strings.isBlank(group))
 			throw Response.badRequest("group", "Missing input: Group");
-		if (Strings.nullOrEmpty(name))
+		if (Strings.isBlank(name))
 			throw Response.badRequest("name", "Missing input: Name");
 		if (!Routes.isValid(name))
 			throw Response.badRequest("name",
@@ -241,7 +241,7 @@ public class RepositoryController {
 	}
 
 	private void importJsonLd(Repository repo, InputStream input, String commitMessage) {
-		if (Strings.nullOrEmpty(commitMessage))
+		if (Strings.isBlank(commitMessage))
 			throw Response.badRequest("commitMessage", "Missing input: Commit message");
 		var user = userService.getCurrentUser();
 		try {
@@ -306,16 +306,16 @@ public class RepositoryController {
 			@PathVariable String name,
 			@RequestBody Map<String, Object> map) {
 		var url = Maps.getString(map, "url");
-		if (Strings.nullOrEmpty(url))
+		if (Strings.isBlank(url))
 			throw Response.badRequest("url", "Missing input: Url");
 		while (url.endsWith("/")) {
 			url = url.substring(0, url.length() - 1);
 		}
 		var username = Maps.getString(map, "username");
-		if (Strings.nullOrEmpty(username))
+		if (Strings.isBlank(username))
 			throw Response.badRequest("username", "Missing input: Username");
 		var password = Maps.getString(map, "password");
-		if (Strings.nullOrEmpty(password))
+		if (Strings.isBlank(password))
 			throw Response.badRequest("password", "Missing input: Password");
 		try (var repo = service.get(group, name)) {
 			var repoId = url.substring(url.lastIndexOf("/") + 1);

@@ -87,7 +87,7 @@ class MetaData {
 			entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
 			entry.put("modellingApproach", info.get("defaultAllocationMethod"));
 			var reviewTypes = Maps.getAll(info, "processDocumentation.reviews.reviewType", String.class).stream()
-					.map(type -> Strings.nullOrEmpty(type) ? "unspecified" : type)
+					.map(type -> Strings.isBlank(type) ? "unspecified" : type)
 					.collect(Collectors.toSet());
 			if (reviewTypes.isEmpty()) {
 				reviewTypes.add("unreviewed");

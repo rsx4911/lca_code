@@ -62,14 +62,14 @@ public class ChangeLogController {
 			throw Response.unavailable("Change log feature not enabled");
 		try (var repo = repoService.get(group, name)) {
 			var file = fileService.createTempFile();
-			if (Strings.nullOrEmpty(commitId)) {
+			if (Strings.isBlank(commitId)) {
 				changeLogService.generate(file, request, repo);
 			} else {
 				changeLogService.generate(file, request, repo, commitId);
 			}
 			if (file == null)
 				throw Response.badRequest("Could not render changelog");
-			var filename = Strings.nullOrEmpty(commitId)
+			var filename = Strings.isBlank(commitId)
 					? "changelog_" + repo.path() + ".zip"
 					: "changelog_" + repo.path() + "-" + commitId + ".zip";
 			var token = put(file, filename);

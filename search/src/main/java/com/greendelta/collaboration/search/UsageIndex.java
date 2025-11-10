@@ -25,7 +25,7 @@ import com.greendelta.search.wrapper.SearchFilterValue;
 import com.greendelta.search.wrapper.SearchQueryBuilder;
 
 public class UsageIndex {
-	
+
 	private static final Logger log = LogManager.getLogger(UsageIndex.class);
 	private static final int BUFFER_SIZE = 100;
 
@@ -57,7 +57,7 @@ public class UsageIndex {
 			var flowType = ref.type == ModelType.PROCESS
 					? getQuantitativeReferenceFlowType(json)
 					: Enums.getValue(Maps.getString(json, "flowType"), FlowType.class);
-			var n = !Strings.nullOrEmpty(location)
+			var n = Strings.isNotBlank(location)
 					? name += " - " + location
 					: name;
 			var entry = new Entry(path, ref.type, ref.refId, processType, flowType, n);
@@ -203,7 +203,7 @@ public class UsageIndex {
 		}
 
 		private static String toId(String path, ModelType type, String refId) {
-			return Strings.join(Arrays.asList(path, type.name(), refId), '/');
+			return String.join("/", Arrays.asList(path, type.name(), refId));
 		}
 
 	}

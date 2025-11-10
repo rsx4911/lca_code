@@ -165,7 +165,7 @@ public class MessagingSocketController {
 	}
 
 	private User getUser(Principal principal) {
-		if (principal == null || Strings.nullOrEmpty(principal.getName()))
+		if (principal == null || Strings.isBlank(principal.getName()))
 			return null;
 		var user = userService.getForUsername(principal.getName());
 		if (user == null || user.isAnonymous())

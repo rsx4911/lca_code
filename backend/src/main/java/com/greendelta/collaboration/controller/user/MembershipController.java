@@ -93,7 +93,7 @@ public class MembershipController {
 		var added = service.addMembership(user, path, role);
 		if (!added)
 			throw Response.conflict("User " + username + " was already member of " + group + "/" + repoName);
-		if (!Strings.nullOrEmpty(repoName) && !repoName.toLowerCase().equals("null")) {
+		if (Strings.isNotBlank(repoName) && !repoName.toLowerCase().equals("null")) {
 			try (var repo = repoService.get(group, repoName)) {
 				notificationService.memberAdded(repo, user).send();
 			}
@@ -127,7 +127,7 @@ public class MembershipController {
 		var added = service.addMemberships(team, path, role);
 		if (!added)
 			throw Response.conflict("Team " + teamname + " was already member of " + group + "/" + repoName);
-		if (!Strings.nullOrEmpty(repoName) && !repoName.toLowerCase().equals("null")) {
+		if (Strings.isNotBlank(repoName) && !repoName.toLowerCase().equals("null")) {
 			try (var repo = repoService.get(group, repoName)) {
 				notificationService.memberAdded(repo, team).send();
 			}
@@ -159,7 +159,7 @@ public class MembershipController {
 		var updated = service.setRole(user, path, role);
 		if (!updated)
 			throw Response.notFound("User " + username + " is not a member of " + group + "/" + repoName);
-		if (!Strings.nullOrEmpty(repoName) && !repoName.toLowerCase().equals("null")) {
+		if (Strings.isNotBlank(repoName) && !repoName.toLowerCase().equals("null")) {
 			try (var repo = repoService.get(group, repoName)) {
 				notificationService.roleChanged(repo, user).send();
 			}
@@ -191,7 +191,7 @@ public class MembershipController {
 		var updated = service.setRole(team, path, role);
 		if (!updated)
 			throw Response.notFound("Team " + teamname + " is not a member of " + group + "/" + repoName);
-		if (!Strings.nullOrEmpty(repoName) && !repoName.toLowerCase().equals("null")) {
+		if (Strings.isNotBlank(repoName) && !repoName.toLowerCase().equals("null")) {
 			try (var repo = repoService.get(group, repoName)) {
 				notificationService.roleChanged(repo, team).send();
 			}
@@ -252,7 +252,7 @@ public class MembershipController {
 		var path = getAuthorizedPath(group, repoName);
 		var team = teamService.getForTeamname(teamname);
 		try (var repo = repoService.get(group, repoName)) {
-			var notification = !Strings.nullOrEmpty(repoName) && !repoName.toLowerCase().equals("null")
+			var notification = Strings.isNotBlank(repoName) && !repoName.toLowerCase().equals("null")
 					? notificationService.memberRemoved(repo, team)
 					: notificationService.memberRemoved(group, team);
 			var removed = service.removeMemberships(team, path);
@@ -264,7 +264,7 @@ public class MembershipController {
 
 	private String getAuthorizedPath(String group, String repo) {
 		var path = group;
-		if (!Strings.nullOrEmpty(repo) && !repo.toLowerCase().equals("null")) {
+		if (Strings.isNotBlank(repo) && !repo.toLowerCase().equals("null")) {
 			// implicitly checks access
 			try (var repository = repoService.get(group, repo)) {
 				return repository.path();

@@ -54,7 +54,7 @@ public class SearchService {
 			var builder = new SearchQueryBuilder();
 			var filteredTypes = getFilteredModelTypes(filters.get(Aggregations.MODEL_TYPE.name));
 			putAggregations(builder, accessibleRepos, filteredTypes, filters);
-			if (!Strings.nullOrEmpty(query)) {
+			if (Strings.isNotBlank(query)) {
 				builder.query(toWildcardQuery(query.toLowerCase()), SEARCH_FIELDS);
 			}
 			builder.page(page);

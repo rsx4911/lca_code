@@ -43,7 +43,7 @@ public class EmailService {
 				message.setContent(createContent(mail));
 			}
 			String defaultReplyTo = config.get(MailSetting.DEFAULT_REPLY_TO);
-			if (!Strings.nullOrEmpty(defaultReplyTo)) {
+			if (Strings.isNotBlank(defaultReplyTo)) {
 				message.setReplyTo(new InternetAddress[] { new InternetAddress(defaultReplyTo) });
 			}
 			message.saveChanges();

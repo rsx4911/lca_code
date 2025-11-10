@@ -129,13 +129,13 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		}
 
 		public boolean isGroup() {
-			return !Strings.nullOrEmpty(group) && !Routes.isReserved(group);
+			return Strings.isNotBlank(group) && !Routes.isReserved(group);
 		}
 
 		public boolean isRepo() {
-			if (Strings.nullOrEmpty(group) || Routes.isReserved(group))
+			if (Strings.isBlank(group) || Routes.isReserved(group))
 				return false;
-			return !Strings.nullOrEmpty(repo) && !Routes.isReserved(repo);
+			return Strings.isNotBlank(repo) && !Routes.isReserved(repo);
 		}
 
 		public static RepositoryPath of(String id) {
@@ -148,7 +148,7 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 		}
 
 		private static String[] split(String string) {
-			if (Strings.nullOrEmpty(string))
+			if (Strings.isBlank(string))
 				return new String[] { null, null };
 			if (string.startsWith("/")) {
 				string = string.substring(1);
@@ -163,7 +163,7 @@ public class Repository extends OlcaRepository implements AutoCloseable {
 
 		@Override
 		public String toString() {
-			if (Strings.nullOrEmpty(repo))
+			if (Strings.isBlank(repo))
 				return group;
 			return group + "/" + repo;
 		}
