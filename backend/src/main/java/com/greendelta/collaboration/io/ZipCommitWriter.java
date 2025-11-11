@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipException;
 
 import org.eclipse.jgit.lib.PersonIdent;
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Diff;
 import org.openlca.git.model.Reference;
@@ -23,7 +24,6 @@ import org.openlca.jsonld.ModelPath;
 import org.openlca.jsonld.PackageInfo;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.jsonld.input.CategoryImport;
-import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.service.Repository;

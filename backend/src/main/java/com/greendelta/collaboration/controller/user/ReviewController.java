@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,8 +22,8 @@ import com.greendelta.collaboration.service.RepositoryService;
 import com.greendelta.collaboration.service.SettingsService;
 import com.greendelta.collaboration.service.task.ReviewService;
 import com.greendelta.collaboration.service.task.TaskService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @RestController

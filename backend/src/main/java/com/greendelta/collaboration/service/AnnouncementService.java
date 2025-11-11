@@ -2,7 +2,7 @@ package com.greendelta.collaboration.service;
 
 import java.util.UUID;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.ServerSetting;

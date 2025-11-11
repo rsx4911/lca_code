@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
@@ -15,7 +16,6 @@ import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.FieldDefinition;
-import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.service.LibraryService;
 

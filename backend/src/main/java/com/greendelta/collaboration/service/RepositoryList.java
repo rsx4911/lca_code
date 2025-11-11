@@ -3,7 +3,7 @@ package com.greendelta.collaboration.service;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 public class RepositoryList extends ArrayList<Repository> implements AutoCloseable {
 

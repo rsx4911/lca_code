@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;

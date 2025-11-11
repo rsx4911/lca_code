@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
-import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.SearchIndex;

@@ -6,13 +6,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.Compatibility;
 import org.openlca.git.model.Commit;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.SchemaVersion;
 import org.openlca.util.Dirs;
-import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.settings.GroupSetting;

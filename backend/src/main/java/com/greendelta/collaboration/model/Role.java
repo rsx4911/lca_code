@@ -1,12 +1,12 @@
 package com.greendelta.collaboration.model;
 
-import static com.greendelta.collaboration.model.Permission.CREATE_CHANGE_LOG;
-import static com.greendelta.collaboration.model.Permission.MANAGE_RELEASES;
 import static com.greendelta.collaboration.model.Permission.COMMENT;
 import static com.greendelta.collaboration.model.Permission.CREATE;
+import static com.greendelta.collaboration.model.Permission.CREATE_CHANGE_LOG;
 import static com.greendelta.collaboration.model.Permission.DELETE;
 import static com.greendelta.collaboration.model.Permission.EDIT_MEMBERS;
 import static com.greendelta.collaboration.model.Permission.MANAGE_COMMENTS;
+import static com.greendelta.collaboration.model.Permission.MANAGE_RELEASES;
 import static com.greendelta.collaboration.model.Permission.MANAGE_TASK;
 import static com.greendelta.collaboration.model.Permission.MOVE;
 import static com.greendelta.collaboration.model.Permission.READ;

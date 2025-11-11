@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jgit.lib.ObjectId;
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
-import org.openlca.util.Strings;
 
 class DsEntryManager {
 

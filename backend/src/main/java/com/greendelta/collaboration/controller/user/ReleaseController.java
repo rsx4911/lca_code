@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.openlca.commons.Strings;
 import org.openlca.git.model.Commit;
-import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

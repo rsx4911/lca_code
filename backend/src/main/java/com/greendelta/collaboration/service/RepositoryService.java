@@ -20,10 +20,10 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.openlca.commons.Strings;
 import org.openlca.git.actions.GitInit;
 import org.openlca.git.model.Commit;
 import org.openlca.util.Dirs;
-import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 

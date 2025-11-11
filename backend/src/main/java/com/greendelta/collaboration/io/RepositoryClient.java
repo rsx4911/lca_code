@@ -13,7 +13,7 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.util.Http;

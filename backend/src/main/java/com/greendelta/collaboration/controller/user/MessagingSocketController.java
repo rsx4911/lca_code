@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;

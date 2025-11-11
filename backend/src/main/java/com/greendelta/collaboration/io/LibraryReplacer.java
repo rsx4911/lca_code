@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.eclipse.jgit.lib.PersonIdent;
+import org.openlca.commons.Strings;
 import org.openlca.core.library.Library;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
@@ -17,7 +18,6 @@ import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.writer.CommitWriter;
 import org.openlca.jsonld.LibraryLink;
-import org.openlca.util.Strings;
 
 public class LibraryReplacer extends CommitWriter {
 

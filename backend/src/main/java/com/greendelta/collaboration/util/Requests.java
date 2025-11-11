@@ -4,7 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import jakarta.servlet.http.HttpServletRequest;
 

@@ -5,7 +5,7 @@ import java.util.Calendar;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.MailSetting;

@@ -2,7 +2,7 @@ package com.greendelta.collaboration.controller.usermanager;
 
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;

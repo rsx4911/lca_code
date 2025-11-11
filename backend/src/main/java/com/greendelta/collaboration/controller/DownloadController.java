@@ -8,10 +8,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.logging.log4j.Logger;
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.ModelRef;
-import org.openlca.util.Strings;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 

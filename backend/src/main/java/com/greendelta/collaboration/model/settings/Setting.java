@@ -3,7 +3,7 @@ package com.greendelta.collaboration.model.settings;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

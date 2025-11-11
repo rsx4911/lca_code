@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

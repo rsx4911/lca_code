@@ -12,8 +12,8 @@ import java.util.Set;
 
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.openlca.commons.Strings;
 import org.openlca.util.Dirs;
-import org.openlca.util.Strings;
 
 class Update1 extends Update {
 

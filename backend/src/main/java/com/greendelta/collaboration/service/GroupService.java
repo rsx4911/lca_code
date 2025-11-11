@@ -14,8 +14,8 @@ import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.model.settings.SettingType;
 import com.greendelta.collaboration.service.SettingsService.Settings;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 
 @Service

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ProcessType;
-import org.openlca.util.Strings;
 
 public class DsVersion {
 

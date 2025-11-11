@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.util.JacksonTypes;

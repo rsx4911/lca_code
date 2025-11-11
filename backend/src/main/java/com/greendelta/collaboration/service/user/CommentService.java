@@ -3,8 +3,8 @@ package com.greendelta.collaboration.service.user;
 import java.util.HashMap;
 import java.util.List;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
-import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.commons.Strings;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
@@ -18,7 +19,6 @@ import org.openlca.git.model.Commit;
 import org.openlca.git.model.DiffType;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.Enums;
-import org.openlca.util.Strings;
 
 import com.greendelta.search.wrapper.SearchClient;
 import com.greendelta.search.wrapper.SearchFilterValue;

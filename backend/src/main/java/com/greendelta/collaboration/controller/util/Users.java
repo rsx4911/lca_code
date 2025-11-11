@@ -2,7 +2,7 @@ package com.greendelta.collaboration.controller.util;
 
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.util.Maps;

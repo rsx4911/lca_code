@@ -2,7 +2,7 @@ package com.greendelta.collaboration.controller.user;
 
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,9 +18,9 @@ import com.greendelta.collaboration.controller.util.Response;
 import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.Role;
 import com.greendelta.collaboration.service.RepositoryService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.SearchResults;

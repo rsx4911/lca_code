@@ -13,9 +13,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.apache.hc.core5.http.HttpHost;
+import org.openlca.commons.Strings;
 import org.openlca.git.model.Commit;
 import org.openlca.git.repo.OlcaRepository;
-import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
