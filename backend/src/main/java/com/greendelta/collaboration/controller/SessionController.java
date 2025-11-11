@@ -83,7 +83,7 @@ public class SessionController {
 			HttpServletRequest request) {
 		var username = Maps.getString(form, "username");
 		var password = Maps.getString(form, "password");
-		log.info("User {} attempts to login", username);
+		log.info("User {} attempts to login via api", username);
 		if (!userService.getCurrentUser().isAnonymous())
 			throw Response.conflict("Already authenticated");
 		if (Strings.isBlank(username))
