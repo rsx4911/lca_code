@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.controller.util.Response;
@@ -134,6 +135,8 @@ public class GladController {
 	public void testConfig() {
 		try {
 			new GladApi(settings.serverConfig).test();
+		} catch (ResponseStatusException e) {
+			throw e;
 		} catch (Exception e) {
 			throw Response.error("Could not reach GLAD service");
 		}
@@ -307,7 +310,7 @@ public class GladController {
 						return null;
 					return readStream(con.getInputStream());
 				}
-				var error = readStream(con.getErrorStream());
+				var error = readStream(con.getInputStream());
 				if (error == null)
 					return null;
 				throw new IOException(error);
