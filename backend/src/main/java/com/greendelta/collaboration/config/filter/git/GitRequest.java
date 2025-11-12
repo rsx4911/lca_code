@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 
 public class GitRequest extends HttpServletRequestWrapper {
 
-	private static final Logger log = LogManager.getLogger(GitRequest.class);		
+	private static final Logger log = LogManager.getLogger(GitRequest.class);
 	private String remoteUser;
 
 	public GitRequest(ServletRequest request) {
@@ -52,15 +52,16 @@ public class GitRequest extends HttpServletRequestWrapper {
 			log.warn("Basic auth failed: Not of type basic");
 			return false;
 		}
-		var principal = new String(Base64.getDecoder().decode(typeAndBase64[1])).split(":");
-		if (principal.length != 2) {
+		var credentials = new String(Base64.getDecoder().decode(typeAndBase64[1]));
+		if (!credentials.contains(":")) {
 			log.warn("Basic auth failed: Not containing username and password split by :");
 			return false;
 		}
-		var username = principal[0];
+		var username = credentials.substring(0, credentials.indexOf(":"));
+		var passwordAndToken = credentials.substring(credentials.indexOf(":") + 1);
 		log.info("User {} attempts to login via basic auth", username);
-		var password = Password.getPasswordWithoutToken(principal[1]);
-		var token = Password.getToken(principal[1]);
+		var password = Password.getPasswordWithoutToken(passwordAndToken);
+		var token = Password.getToken(passwordAndToken);
 		try {
 			var user = sessionService.login(this, username, password, token);
 			this.remoteUser = user.username;
