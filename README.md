@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <body>
-
   <h1>Internal Developer Documentation</h1>
 
   <h2>Overview </h2>
