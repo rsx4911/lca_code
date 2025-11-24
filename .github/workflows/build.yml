@@ -357,7 +357,7 @@ jobs:
             ${{ secrets.AZ_VM_USERNAME }}@${{ env.VM_IP }}:/home/${{ secrets.AZ_VM_USERNAME }}/api-test-results.xml ./api-test-results.xml
 
       - name: Clean Up Ephemeral VM and Resources
-        if: always()
+        if: false
         run: |
           echo "Cleaning up all resources for $VM_NAME"
           
