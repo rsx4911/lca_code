@@ -19,7 +19,7 @@ describe('Inspect the repository download function2', () => {
     cy.log(`✅ Confirmed download: ${downloadFiles[1]}`);
   });
 });
-/*
+
 describe('Inspect the repository download function3', () => {
   it('Should be able to download files without timeout issues', () => {
     cy.visit('/');
@@ -29,7 +29,7 @@ describe('Inspect the repository download function3', () => {
     cy.log(`✅ Confirmed download: ${downloadFiles[2]}`);
   });
 });
-
+/*
 describe('Inspect the repository download function4', () => {
   it('Should be able to download files without timeout issues', () => {
     cy.visit('/');

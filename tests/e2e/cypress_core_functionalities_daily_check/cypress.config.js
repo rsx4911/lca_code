@@ -69,6 +69,7 @@ module.exports = defineConfig({
       },
       downloadFiles: [
         "Argonne_National_Lab-By_Product_Hydrogen.zip",
+        "US_Environmental_Protection_Agency-USEEIO_v2.zip"
         "National_Energy_Technology_Lab-Coal_extraction.zip"
       ]
     }

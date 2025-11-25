@@ -4,6 +4,6 @@ ENV=$1
 
 echo "Copying config files for environment: $ENV"
 
-sudo cp configs/nginx/$ENV.nginx.conf /etc/nginx/conf.d/lca.conf
+sudo cp configs/nginx/$ENV.nginx.conf /etc/nginx/conf.d/default.conf
 
 echo "Configuration files copied successfully!"

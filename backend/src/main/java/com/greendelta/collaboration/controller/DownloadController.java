@@ -65,8 +65,11 @@ abstract class DownloadController {
 			var commit = historyService.getAccessibleCommit(repo, commitId);
 			if (commit == null)
 				throw Response.notFound("commit " + commitId + " not found");
+			log().info("Starting to write the commit");
 			var writer = prepareWriter(repo, commit, true);
+			log().info("prepareWriter Completed");
 			writer.write(entry);
+			log().info("Write Completed");
 			return put(writer, refId + "_" + commit.id + ".zip");
 		} catch (IOException e) {
 			throw Response.error("Error writing data sets to tmp file");
@@ -123,6 +126,7 @@ abstract class DownloadController {
 		var user = userService.getCurrentUser();
 		var token = UUID.randomUUID().toString();
 		tokens.put(token, new TokenInfo(writer.close().getAbsolutePath(), filename, getUserId(user)));
+		log().info("Put Completed");
 		return token;
 	}
 
