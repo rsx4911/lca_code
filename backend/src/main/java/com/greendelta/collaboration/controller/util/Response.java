@@ -2,7 +2,7 @@ package com.greendelta.collaboration.controller.util;
 
 import java.io.File;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
@@ -100,7 +100,7 @@ public class Response {
 	}
 
 	public static ResponseStatusException forbidden(String path, Permission action) {
-		if (Strings.nullOrEmpty(path))
+		if (Strings.isBlank(path))
 			return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action.name() + "'");
 		return status(HttpStatus.FORBIDDEN, "No permission to perform '" + action.name() + "' on '" + path + "'");
 	}

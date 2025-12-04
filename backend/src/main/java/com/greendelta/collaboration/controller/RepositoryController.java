@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
-import org.openlca.util.Strings;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -154,7 +154,7 @@ public class RepositoryController {
 
 	private String notFoundMessage(ModelType type, String refId, String commitId, String filename) {
 		var base = "";
-		if (!Strings.nullOrEmpty(filename))
+		if (Strings.isNotBlank(filename))
 			base = "Binary file " + filename + " of ";
 		base += type.name() + " " + refId + " not found";
 		if (commitId == null)

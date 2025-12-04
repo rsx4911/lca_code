@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
 import org.openlca.core.model.ProcessType;
@@ -14,7 +16,6 @@ import org.openlca.git.model.DiffType;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.FieldDefinition;
-import org.openlca.util.Strings;
 
 import com.greendelta.collaboration.service.LibraryService;
 
@@ -120,7 +121,7 @@ public class MetaData {
 			var t2 = Maps.getString(m2, "typeOfEntry");
 			if (!t1.equals(t2))
 				return t1.equals("CATEGORY") ? -1 : 1;
-			return Strings.compare(Maps.getString(m1, "name"), Maps.getString(m2, "name"));
+			return Strings.compareIgnoreCase(Maps.getString(m1, "name"), Maps.getString(m2, "name"));
 		});
 	}
 
@@ -139,9 +140,9 @@ public class MetaData {
 		return data.sorted((m1, m2) -> {
 			var t1 = Maps.getString(m1, "type");
 			var t2 = Maps.getString(m2, "type");
-			if (!Strings.nullOrEqual(t1, t2))
+			if (!Objects.equals(t1, t2))
 				return Integer.compare(typesOrder.indexOf(t1), typesOrder.indexOf(t2));
-			return Strings.compare(Maps.getString(m1, "name"), Maps.getString(m2, "name"));
+			return Strings.compareIgnoreCase(Maps.getString(m1, "name"), Maps.getString(m2, "name"));
 		});
 	}
 

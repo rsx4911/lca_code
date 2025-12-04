@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
@@ -233,7 +233,7 @@ public class MembershipService {
 		var attributes = new HashMap<String, Object>();
 		attributes.put("memberOf", groupOrRepo);
 		var members = dao.getForAttributes(attributes);
-		if (Strings.nullOrEmpty(filter))
+		if (Strings.isBlank(filter))
 			return SearchResults.from(members);
 		filter = filter.toLowerCase();
 		for (var m : new ArrayList<>(members)) {
@@ -255,7 +255,7 @@ public class MembershipService {
 	}
 
 	public List<Membership> getMemberships(User user, String groupOrRepo) {
-		if (Strings.nullOrEmpty(groupOrRepo))
+		if (Strings.isBlank(groupOrRepo))
 			return getMemberships(user);
 		return dao.getForAttributes(Map.of("user", user, "memberOf", groupOrRepo));
 	}
@@ -269,7 +269,7 @@ public class MembershipService {
 	}
 
 	public List<Membership> getMemberships(Team team, String groupOrRepo) {
-		if (Strings.nullOrEmpty(groupOrRepo))
+		if (Strings.isBlank(groupOrRepo))
 			return getMemberships(team);
 		return dao.getForAttributes(Map.of("team", team, "memberOf", groupOrRepo));
 	}

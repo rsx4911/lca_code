@@ -5,7 +5,7 @@ import java.util.Calendar;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.MailSetting;
@@ -43,7 +43,7 @@ public class EmailService {
 				message.setContent(createContent(mail));
 			}
 			String defaultReplyTo = config.get(MailSetting.DEFAULT_REPLY_TO);
-			if (!Strings.nullOrEmpty(defaultReplyTo)) {
+			if (Strings.isNotBlank(defaultReplyTo)) {
 				message.setReplyTo(new InternetAddress[] { new InternetAddress(defaultReplyTo) });
 			}
 			message.saveChanges();

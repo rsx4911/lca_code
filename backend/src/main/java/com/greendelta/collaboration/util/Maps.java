@@ -14,8 +14,8 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
-import org.openlca.util.Strings;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
@@ -328,7 +328,7 @@ public class Maps {
 
 	public static ModelType getModelType(Map<String, Object> map) {
 		var value = getString(map, "@type");
-		if (Strings.nullOrEmpty(value))
+		if (Strings.isBlank(value))
 			return null;
 		for (var type : ModelType.values())
 			if (type.getModelClass().getSimpleName().equals(value))

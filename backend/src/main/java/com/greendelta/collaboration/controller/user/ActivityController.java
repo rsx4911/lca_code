@@ -109,7 +109,7 @@ public class ActivityController {
 		return list;
 	}
 
-	@PutMapping("settings")
+	@PutMapping("userSettings")
 	public UserSettings updateSettings(@RequestBody UserSettings userSettings) {
 		if (!settings.is(ServerSetting.DASHBOARD_ACTIVITIES_ENABLED)
 				&& !settings.is(ServerSetting.REPOSITORY_ACTIVITIES_ENABLED))

@@ -9,10 +9,10 @@ import java.util.Stack;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
-import org.openlca.util.Strings;
 import org.openlca.util.TypedRefIdMap;
 
 import com.greendelta.collaboration.service.LibraryService.LibraryLoader;
@@ -56,7 +56,7 @@ public class JsonWriter implements DatasetWriter {
 	}
 
 	private void queue(ModelType type, String refId) {
-		if (type == null || Strings.nullOrEmpty(refId))
+		if (type == null || Strings.isBlank(refId))
 			return;
 		var ref = references.get(type, refId);
 		if (ref == null) {

@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -107,7 +107,7 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 		if (auth instanceof OAuth2AuthenticationToken token) {
 			var principal = token.getPrincipal();
 			String email = principal.getAttribute("email");
-			if (Strings.nullOrEmpty(email))
+			if (Strings.isBlank(email))
 				return null;
 			return getForEmail(email);
 		}
@@ -121,14 +121,14 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 		user.email = email;
 		user.name = principal.getAttribute("name");
 		var emailUser = email.substring(0, email.indexOf("@"));
-		if (Strings.nullOrEmpty(user.name)) {
+		if (Strings.isBlank(user.name)) {
 			user.name = emailUser;
 		}
 		var username = toUsername(preferredUsername);
-		if (Strings.nullOrEmpty(username) || exists(username)) {
+		if (Strings.isBlank(username) || exists(username)) {
 			username = toUsername(user.name);
 		}
-		if (Strings.nullOrEmpty(username) || exists(username)) {
+		if (Strings.isBlank(username) || exists(username)) {
 			username = toUsername(emailUser);
 		}
 		var emailProvider = email.substring(email.indexOf("@") + 1, email.lastIndexOf("."));
@@ -146,7 +146,7 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 	private String toUsername(String... values) {
 		var username = "";
 		for (var value : values) {
-			if (Strings.nullOrEmpty(value))
+			if (Strings.isBlank(value))
 				continue;
 			if (!username.isEmpty()) {
 				username += "_";
@@ -172,7 +172,7 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 			return SearchResults.from(new ArrayList<>());
 		var jpql = "SELECT u FROM User u";
 		var parameters = new HashMap<String, Object>();
-		if (!Strings.nullOrEmpty(filter)) {
+		if (Strings.isNotBlank(filter)) {
 			jpql += " WHERE LOWER(u.name) LIKE :name";
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
 		}
@@ -255,7 +255,7 @@ public class UserService implements UserDetailsService, OAuth2UserService<OidcUs
 	@Override
 	public OidcUser loadUser(OidcUserRequest request) throws OAuth2AuthenticationException {
 		var email = request.getIdToken().getEmail();
-		if (Strings.nullOrEmpty(email))
+		if (Strings.isBlank(email))
 			return new DefaultOidcUser(Collections.emptyList(), request.getIdToken());
 		var user = getForEmail(email);
 		if (user == null)

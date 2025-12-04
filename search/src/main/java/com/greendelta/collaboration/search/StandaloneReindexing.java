@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import org.apache.http.HttpHost;
+import org.apache.hc.core5.http.HttpHost;
+import org.openlca.commons.Strings;
 import org.openlca.git.model.Commit;
 import org.openlca.git.repo.OlcaRepository;
-import org.openlca.util.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
@@ -168,8 +168,8 @@ public class StandaloneReindexing {
 
 	private static RestHighLevelClient getRestClient(Settings in) throws IOException {
 		var client = new RestHighLevelClient(RestClient.builder(
-				new HttpHost(in.osHost, in.osPport, in.osSchema),
-				new HttpHost(in.osHost, in.osPport + 1, in.osSchema)));
+				new HttpHost(in.osSchema, in.osHost, in.osPport),
+				new HttpHost(in.osSchema, in.osHost, in.osPport + 1)));
 		if (!client.ping(RequestOptions.DEFAULT))
 			throw new IOException("Could not ping search cluster");
 		return client;
@@ -233,14 +233,14 @@ public class StandaloneReindexing {
 			if (!result.next())
 				return null;
 			var tags = result.getString(1);
-			if (Strings.nullOrEmpty(tags))
+			if (Strings.isBlank(tags))
 				return null;
 			return parseTags(tags);
 		}
 	}
 
 	private static List<String> parseTags(String tags) throws IOException {
-		if (Strings.nullOrEmpty(tags))
+		if (Strings.isBlank(tags))
 			return null;
 		return new ObjectMapper().readValue(tags, new TypeReference<List<String>>() {
 		});
@@ -264,8 +264,8 @@ public class StandaloneReindexing {
 				"USAGE_SEARCH_ENABLED", "RELEASES_ENABLED");
 		var privateUsageIndex = getIf(map, "PRIVATE_USAGE", Maps::getString, "collaboration-server-usage",
 				"USAGE_SEARCH_ENABLED");
-		if (Strings.nullOrEmpty(publicIndex) && Strings.nullOrEmpty(privateIndex)
-				&& Strings.nullOrEmpty(publicUsageIndex) && Strings.nullOrEmpty(privateUsageIndex))
+		if (Strings.isBlank(publicIndex) && Strings.isBlank(privateIndex)
+				&& Strings.isBlank(publicUsageIndex) && Strings.isBlank(privateUsageIndex))
 			throw new IllegalArgumentException("Missing argument of: public, private or usage)");
 		var gitPath = get(map, "REPOSITORY_PATH", Maps::getString);
 		var gitDir = new File(gitPath);
@@ -316,11 +316,11 @@ public class StandaloneReindexing {
 		query.pageSize(pageSize);
 		query.filter("path", SearchFilterValue.term(path));
 		query.fields("type", "refId", "name", "processType", "flowType");
-		if (Strings.nullOrEmpty(field)) {
+		if (Strings.isBlank(field)) {
 			field = "others";
 		}
 		query.filter(field, SearchFilterValue.term(refId));
-		if (!Strings.nullOrEmpty(filter)) {
+		if (Strings.isNotBlank(filter)) {
 			query.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
 		}
 		return client.search(query.build());

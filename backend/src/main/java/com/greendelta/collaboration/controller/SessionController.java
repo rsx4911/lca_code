@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,12 +83,12 @@ public class SessionController {
 			HttpServletRequest request) {
 		var username = Maps.getString(form, "username");
 		var password = Maps.getString(form, "password");
-		log.info("User {} attempts to login", username);
+		log.info("User {} attempts to login via api", username);
 		if (!userService.getCurrentUser().isAnonymous())
 			throw Response.conflict("Already authenticated");
-		if (Strings.nullOrEmpty(username))
+		if (Strings.isBlank(username))
 			throw Response.unauthorized("Invalid credentials");
-		if (Strings.nullOrEmpty(password))
+		if (Strings.isBlank(password))
 			throw Response.unauthorized("Invalid credentials");
 		password = Password.getPasswordWithoutToken(password);
 		var token = Password.getToken(password, (int) Maps.getLong(form, "token"));
@@ -116,7 +116,7 @@ public class SessionController {
 		log.info("User {} attempts to register", username);
 		if (!userService.getCurrentUser().isAnonymous())
 			throw Response.badRequest("Already authenticated");
-		if (Strings.nullOrEmpty(username))
+		if (Strings.isBlank(username))
 			throw Response.badRequest("username", "Missing input: Username");
 		if (userService.getForUsername(username) != null)
 			throw Response.badRequest("username", "Username is already in use");
@@ -129,20 +129,20 @@ public class SessionController {
 			throw Response.badRequest("username", "Name is already in use");
 		if (Routes.isReserved(username))
 			throw Response.badRequest("username", "This is a reserved word");
-		if (Strings.nullOrEmpty(email))
+		if (Strings.isBlank(email))
 			throw Response.badRequest("email", "Missing input: E-Mail");
 		if (userService.getForEmail(email) != null)
 			throw Response.badRequest("email", "Email is already in use");
 		if (userService.getForUsername(email) != null)
 			throw Response.badRequest("email", "Email is already in use");
-		if (Strings.nullOrEmpty(name))
+		if (Strings.isBlank(name))
 			throw Response.badRequest("name", "Missing input: Name");
-		if (Strings.nullOrEmpty(password))
+		if (Strings.isBlank(password))
 			throw Response.badRequest("password", "Missing input: Password");
 		var passwordMessage = "Password must consist of at least 8 characters and must contain at least 1 digit, 2 different lowercase letters and 2 different uppercase letters";
 		if (!Password.isValid(password))
 			throw Response.badRequest("password", passwordMessage);
-		if (Strings.nullOrEmpty(password2))
+		if (Strings.isBlank(password2))
 			throw Response.badRequest("password2", "Missing input: Password (repeat)");
 		if (!password.equals(password2))
 			throw Response.badRequest("password2", "Passwords do not match");

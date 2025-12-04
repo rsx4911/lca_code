@@ -12,8 +12,8 @@ import java.util.Set;
 
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.openlca.commons.Strings;
 import org.openlca.util.Dirs;
-import org.openlca.util.Strings;
 
 class Update1 extends Update {
 
@@ -64,13 +64,13 @@ class Update1 extends Update {
 	private void insertRelease(File gitDir, String repositoryPath, long id) throws SQLException, IOException {
 		log.info("Inserting release info of " + repositoryPath);
 		var commitId = getLatestCommitId(new File(gitDir, repositoryPath));
-		if (Strings.nullOrEmpty(commitId))
+		if (Strings.isBlank(commitId))
 			return;
 		var properties = getProperties(repositoryPath);
-		if (Strings.nullOrEmpty(properties.get("VERSION"))) {
+		if (Strings.isBlank(properties.get("VERSION"))) {
 			properties.put("VERSION", "Public");
 		}
-		if (Strings.nullOrEmpty(properties.get("LABEL"))) {
+		if (Strings.isBlank(properties.get("LABEL"))) {
 			properties.put("LABEL", repositoryPath.substring(repositoryPath.indexOf("/") + 1));
 		}
 		var fields = Arrays.asList("label", "version", "description", "source_info", "contact_info", "project_info",

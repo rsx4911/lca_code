@@ -4,7 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -19,7 +19,7 @@ public class Requests {
 		var route = getRoute(request);
 		if (!route.isEmpty() && !Routes.isPublicUrl(route) && !route.equals("search")) {
 			var query = request.getQueryString();
-			if (!Strings.nullOrEmpty(query)) {
+			if (Strings.isNotBlank(query)) {
 				route += "?" + query;
 			}
 			route = URLEncoder.encode(route, StandardCharsets.UTF_8.toString());

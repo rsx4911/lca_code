@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.indices.GetIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +122,7 @@ public class AdminAreaController {
 		if (key != ServerSetting.REPOSITORY_PATH && key != ServerSetting.LIBRARY_PATH)
 			return result;
 		String path = settings.serverConfig.get(key);
-		if (Strings.nullOrEmpty(path))
+		if (Strings.isBlank(path))
 			return result;
 		var file = new File(path).toPath();
 		if (Files.exists(file)) {
@@ -223,7 +223,7 @@ public class AdminAreaController {
 	}
 
 	private String checkTypesOfData(String value) throws JsonMappingException, JsonProcessingException {
-		if (Strings.nullOrEmpty(value)) {
+		if (Strings.isBlank(value)) {
 			value = "";
 		}
 		var types = new LinkedHashSet<>();

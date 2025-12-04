@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.openlca.commons.Strings;
 import org.openlca.git.model.Commit;
-import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -134,9 +134,9 @@ public class ReleaseController {
 	private void save(Repository repo, String commitId, ReleaseInfo release) {
 		if (!settings.is(ServerSetting.RELEASES_ENABLED))
 			throw Response.unavailable("Release feature not enabled");
-		if (Strings.nullOrEmpty(release.label))
+		if (Strings.isBlank(release.label))
 			throw Response.badRequest("label", "Missing input");
-		if (Strings.nullOrEmpty(release.version))
+		if (Strings.isBlank(release.version))
 			throw Response.badRequest("version", "Missing input");
 		var commit = checkAccess(repo, commitId);
 		release.repositoryPath = repo.path();

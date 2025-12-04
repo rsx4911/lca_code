@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.util.JacksonTypes;
@@ -63,7 +63,7 @@ public class ReleaseInfo extends AbstractEntity {
 	public String typeOfData;
 
 	public List<String> getTags() {
-		if (Strings.nullOrEmpty(tags))
+		if (Strings.isBlank(tags))
 			return new ArrayList<>();
 		try {
 			return new ObjectMapper().readValue(tags, JacksonTypes.STRING_LIST);

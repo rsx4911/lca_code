@@ -8,6 +8,8 @@ mixin dataset-label(dataset)
 	img.model-icon-small(src=imgSrc)
 	if dataset.diffType === 'DELETED'
 		del=dataset.name
+	else if standalone && dataset.diffType === 'ADDED'
+		span: em=dataset.name
 	else
 		span=dataset.name
 

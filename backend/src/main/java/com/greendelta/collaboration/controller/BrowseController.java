@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
 import org.openlca.git.model.Commit;
 import org.openlca.git.model.Reference;
-import org.openlca.util.Strings;
 import org.openlca.util.TypedRefIdMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -80,7 +80,7 @@ public class BrowseController {
 				if (Maps.getBoolean(entry, "isDataset"))
 					continue;
 				var eName = Maps.getString(entry, "name");
-				var entryPath = Strings.nullOrEmpty(categoryPath) ? eName : categoryPath + "/" + eName;
+				var entryPath = Strings.isBlank(categoryPath) ? eName : categoryPath + "/" + eName;
 				if (Maps.getBoolean(entry, "isRepositoryInfo")) {
 					entry.put("count",
 							repo.references.find().includeCategories().includeLibraries().nonRecursive()
@@ -98,7 +98,7 @@ public class BrowseController {
 		var entries = repo.references.find().includeCategories().includeLibraries().nonRecursive().commit(commit.id)
 				.path(categoryPath).all();
 		var mapped = entries.stream().map(e -> MetaData.get(e, repo, libraryService));
-		if (!Strings.nullOrEmpty(categoryPath))
+		if (Strings.isNotBlank(categoryPath))
 			return MetaData.sortByName(mapped).toList();
 		List<String> typesHidden = settings.get(ServerSetting.MODEL_TYPES_HIDDEN, new ArrayList<>());
 		entries = entries.stream().filter(e -> e.type == null || !typesHidden.contains(e.type.name())).toList();
@@ -150,7 +150,7 @@ public class BrowseController {
 					throw Response.notFound(type + " " + refId + " not found for commit " + commitId);
 			}
 			var dataset = repo.datasets.get(ref);
-			if (Strings.nullOrEmpty(dataset))
+			if (Strings.isBlank(dataset))
 				return Map.of(
 						"@type", type.getModelClass().getSimpleName(),
 						"@id", refId,
@@ -199,7 +199,7 @@ public class BrowseController {
 		private void _addTo(Map<String, Object> object) {
 			var type = Maps.getModelType(object);
 			var refId = Maps.getString(object, "@id");
-			if (type == null || Strings.nullOrEmpty(refId)) {
+			if (type == null || Strings.isBlank(refId)) {
 				addTo(object);
 				return;
 			}
@@ -212,7 +212,7 @@ public class BrowseController {
 		}
 
 		private boolean isCategoryInRepo(ModelType type, String category) {
-			if (type == null || Strings.nullOrEmpty(category))
+			if (type == null || Strings.isBlank(category))
 				return false;
 			return categories.contains(type.name() + "/" + category);
 		}

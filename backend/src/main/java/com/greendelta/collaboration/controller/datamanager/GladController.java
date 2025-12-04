@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.openlca.commons.Strings;
 import org.openlca.git.model.Reference;
 import org.openlca.git.repo.OlcaRepository;
 import org.openlca.jsonld.Enums;
-import org.openlca.util.Strings;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.greendelta.collaboration.controller.util.Response;
@@ -134,6 +135,8 @@ public class GladController {
 	public void testConfig() {
 		try {
 			new GladApi(settings.serverConfig).test();
+		} catch (ResponseStatusException e) {
+			throw e;
 		} catch (Exception e) {
 			throw Response.error("Could not reach GLAD service");
 		}
@@ -158,13 +161,13 @@ public class GladController {
 			this.apiKey = apiKey;
 			this.dataprovider = dataprovider;
 			this.serverUrl = serverUrl;
-			if (Strings.nullOrEmpty(baseUrl))
+			if (Strings.isBlank(baseUrl))
 				throw Response.unavailable("No GLAD service url specified");
-			if (Strings.nullOrEmpty(apiKey))
+			if (Strings.isBlank(apiKey))
 				throw Response.unavailable("No GLAD service api-key specified");
-			if (Strings.nullOrEmpty(dataprovider))
+			if (Strings.isBlank(dataprovider))
 				throw Response.unavailable("No GLAD service dataprovider name specified");
-			if (Strings.nullOrEmpty(serverUrl))
+			if (Strings.isBlank(serverUrl))
 				throw Response.unavailable("No Collaboration Server url specified");
 		}
 
@@ -231,7 +234,7 @@ public class GladController {
 			data.put("validUntil", validUntil);
 			data.put("validUntilYear", getYear(validUntil));
 			data.put("technology", Maps.getString(data, "processDocumentation.technologyDescription"));
-			if (!Strings.nullOrEmpty(reviewer)) {
+			if (Strings.isNotBlank(reviewer)) {
 				data.put("reviewers", new String[] { reviewer });
 				data.put("reviewType", "UNKNOWN");
 			}
@@ -240,10 +243,10 @@ public class GladController {
 				data.put("longitude", Maps.getLong(data, "location.longitude"));
 			}
 			data.put("location", Maps.getString(data, "location.name"));
-			data.put("reviewed", !Strings.nullOrEmpty(reviewer));
+			data.put("reviewed", Strings.isNotBlank(reviewer));
 			data.put("copyrightProtected", Maps.getBoolean(data, "processDocumentation.copyright"));
 			data.put("copyrightHolder", Maps.getString(data, "processDocumentation.dataSetOwner.name"));
-			if (!Strings.nullOrEmpty(Maps.getString(data, "defaultAllocationMethod"))) {
+			if (Strings.isNotBlank(Maps.getString(data, "defaultAllocationMethod"))) {
 				data.put("multifunctionalModeling", ModellingApproach.fromDefaultAllocationMethod(data));
 			}
 			data.put("format", "JSON_LD");
@@ -307,7 +310,7 @@ public class GladController {
 						return null;
 					return readStream(con.getInputStream());
 				}
-				var error = readStream(con.getErrorStream());
+				var error = readStream(con.getInputStream());
 				if (error == null)
 					return null;
 				throw new IOException(error);

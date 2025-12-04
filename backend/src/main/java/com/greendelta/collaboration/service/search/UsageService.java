@@ -3,7 +3,7 @@ package com.greendelta.collaboration.service.search;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.settings.SearchIndex;
@@ -37,11 +37,11 @@ public class UsageService {
 		query.pageSize(pageSize);
 		query.filter("path", SearchFilterValue.term(repo.path()));
 		query.fields("type", "refId", "name", "processType", "flowType");
-		if (Strings.nullOrEmpty(field)) {
+		if (Strings.isBlank(field)) {
 			field = "others";
 		}
 		query.filter(field, SearchFilterValue.term(refId));
-		if (!Strings.nullOrEmpty(filter)) {
+		if (Strings.isNotBlank(filter)) {
 			query.filter("name", SearchFilterValue.wildcard("*" + filter + "*"));
 		}
 		return client.search(query.build());

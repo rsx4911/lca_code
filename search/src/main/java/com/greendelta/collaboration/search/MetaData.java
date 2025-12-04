@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.AllocationMethod;
 import org.openlca.core.model.FlowType;
 import org.openlca.core.model.ModelType;
@@ -15,7 +16,6 @@ import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.FieldDefinition;
 import org.openlca.jsonld.Enums;
 import org.openlca.jsonld.Json;
-import org.openlca.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +87,7 @@ class MetaData {
 			entry.put("validUntilYear", info.get("processDocumentation.validUntil"));
 			entry.put("modellingApproach", info.get("defaultAllocationMethod"));
 			var reviewTypes = Maps.getAll(info, "processDocumentation.reviews.reviewType", String.class).stream()
-					.map(type -> Strings.nullOrEmpty(type) ? "unspecified" : type)
+					.map(type -> Strings.isBlank(type) ? "unspecified" : type)
 					.collect(Collectors.toSet());
 			if (reviewTypes.isEmpty()) {
 				reviewTypes.add("unreviewed");

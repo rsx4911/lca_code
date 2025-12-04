@@ -3,7 +3,7 @@ package com.greendelta.collaboration.model.settings;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -66,7 +66,7 @@ public class Setting extends AbstractEntity {
 	}
 	
 	public boolean isSet() {
-		return !Strings.nullOrEmpty(value) || data != null;
+		return Strings.isNotBlank(value) || data != null;
 	}
 
 	static <V> V parseValue(Class<?> type, String value) {

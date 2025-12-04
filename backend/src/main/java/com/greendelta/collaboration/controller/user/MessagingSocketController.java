@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.context.ApplicationListener;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -165,7 +165,7 @@ public class MessagingSocketController {
 	}
 
 	private User getUser(Principal principal) {
-		if (principal == null || Strings.nullOrEmpty(principal.getName()))
+		if (principal == null || Strings.isBlank(principal.getName()))
 			return null;
 		var user = userService.getForUsername(principal.getName());
 		if (user == null || user.isAnonymous())

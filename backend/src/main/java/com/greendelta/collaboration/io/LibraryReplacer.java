@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.eclipse.jgit.lib.PersonIdent;
+import org.openlca.commons.Strings;
 import org.openlca.core.library.Library;
 import org.openlca.core.model.ModelType;
 import org.openlca.git.RepositoryInfo;
@@ -17,7 +18,6 @@ import org.openlca.git.repo.OlcaRepository;
 import org.openlca.git.util.BinaryResolver;
 import org.openlca.git.writer.CommitWriter;
 import org.openlca.jsonld.LibraryLink;
-import org.openlca.util.Strings;
 
 public class LibraryReplacer extends CommitWriter {
 
@@ -52,11 +52,11 @@ public class LibraryReplacer extends CommitWriter {
 	}
 
 	public void run() throws IOException {
-		if (Strings.nullOrEmpty(toReplace) || replaceWith == null)
+		if (Strings.isBlank(toReplace) || replaceWith == null)
 			throw new IllegalArgumentException("No replacements set");
 		if (!repo.getLibraries(repo.commits.head()).contains(toReplace))
 			throw new IllegalArgumentException("Repository does not contain library " + toReplace);
-		if (Strings.nullOrEmpty(message)) {
+		if (Strings.isBlank(message)) {
 			message = "Updated library: " + toReplace + " -> " + replaceWith;
 		}
 		var headCommitId = repo.getHeadCommit().getName();

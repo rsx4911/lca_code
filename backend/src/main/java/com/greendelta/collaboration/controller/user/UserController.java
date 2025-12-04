@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.BlobProxy;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,9 +28,9 @@ import com.greendelta.collaboration.model.Team;
 import com.greendelta.collaboration.model.User;
 import com.greendelta.collaboration.model.settings.ServerSetting;
 import com.greendelta.collaboration.service.SettingsService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.MessagingService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.TeamService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
@@ -63,7 +63,7 @@ public class UserController {
 			@RequestParam(required = false) String repositoryPath,
 			@RequestParam(required = false) String filter) {
 		var users = getUsers(module, repositoryPath).stream();
-		if (!Strings.nullOrEmpty(filter)) {
+		if (Strings.isNotBlank(filter)) {
 			users = users.filter(u -> u.name.contains(filter));
 		}
 		return Response.ok(users.map(Users::mapForOthers).toList());
@@ -77,7 +77,7 @@ public class UserController {
 			return service.getAll(0, 0, null).data;
 		var teams = teamService.getTeamsFor(currentUser);
 		var memberships = getMemberships(currentUser, teams, repositoryPath);
-		if (!Strings.nullOrEmpty(repositoryPath) && repositoryPath.contains("/")) {
+		if (Strings.isNotBlank(repositoryPath) && repositoryPath.contains("/")) {
 			var group = repositoryPath.substring(0, repositoryPath.indexOf("/"));
 			var groupMembers = getMemberships(currentUser, teams, group);
 			memberships = join(Arrays.asList(memberships, groupMembers));
@@ -123,7 +123,7 @@ public class UserController {
 	}
 
 	private List<User> getUsers(Module module, String repositoryPath) {
-		if (module == Module.REVIEW && Strings.nullOrEmpty(repositoryPath))
+		if (module == Module.REVIEW && Strings.isBlank(repositoryPath))
 			return new ArrayList<>();
 		var users = getVisible(repositoryPath);
 		if (module == null)
@@ -184,9 +184,9 @@ public class UserController {
 		var fromDb = authorizedGetUser(username);
 		if (fromDb == null)
 			throw Response.notFound();
-		if (Strings.nullOrEmpty(user.name))
+		if (Strings.isBlank(user.name))
 			throw Response.badRequest("name", "Missing input: Name");
-		if (Strings.nullOrEmpty(user.email))
+		if (Strings.isBlank(user.email))
 			throw Response.badRequest("email", "Missing input: Email");
 		var userWithSameMail = service.getForEmail(user.email);
 		if (userWithSameMail != null && !userWithSameMail.username.equals(username))
@@ -240,7 +240,7 @@ public class UserController {
 			@RequestBody Map<String, Object> map) {
 		var password = Maps.getString(map, "password");
 		var password2 = Maps.getString(map, "password2");
-		if (Strings.nullOrEmpty(password))
+		if (Strings.isBlank(password))
 			throw Response.badRequest("password", "Missing input: Password");
 		if (!Password.isValid(password)) {
 			String passwordMessage = "Password must consist of at least 8 characters and must contain at least 1 digit, 2 different lowercase letters and 2 different uppercase letters";
@@ -278,7 +278,7 @@ public class UserController {
 
 	private User authorizedGetUser(String username) {
 		var user = service.getCurrentUser();
-		if (!Strings.nullOrEmpty(username) && !username.equals(user.username)) {
+		if (Strings.isNotBlank(username) && !username.equals(user.username)) {
 			if (!user.isUserManager())
 				throw Response.unauthorized("Not authorized to manage users");
 			user = service.getForUsername(username);

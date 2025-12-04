@@ -2,6 +2,11 @@ package com.greendelta.collaboration.model.task;
 
 import java.util.Objects;
 
+import org.openlca.core.model.ModelType;
+
+import com.greendelta.collaboration.model.AbstractEntity;
+import com.greendelta.collaboration.model.User;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,12 +14,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-
-import org.openlca.core.model.ModelType;
-import org.openlca.util.Strings;
-
-import com.greendelta.collaboration.model.AbstractEntity;
-import com.greendelta.collaboration.model.User;
 
 @Entity
 @Table
@@ -41,9 +40,9 @@ public class ReviewReference extends AbstractEntity {
 		if (!(obj instanceof ReviewReference))
 			return false;
 		var ref = (ReviewReference) obj;
-		if (!Strings.nullOrEqual(ref.refId, refId))
+		if (!Objects.equals(ref.refId, refId))
 			return false;
-		if (!Strings.nullOrEqual(ref.commitId, commitId))
+		if (!Objects.equals(ref.commitId, commitId))
 			return false;
 		return ref.type == type;
 	}

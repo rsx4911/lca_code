@@ -8,7 +8,7 @@ import java.sql.Statement;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 
 class Updates {
 
@@ -84,7 +84,7 @@ class Updates {
 			if (!rs.next())
 				return 1;
 			var value = rs.getString(1);
-			if (Strings.nullOrEmpty(value))
+			if (Strings.isBlank(value))
 				return 1;
 			return Long.parseLong(value) + 1;
 		}

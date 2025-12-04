@@ -3,7 +3,7 @@ package com.greendelta.collaboration.service.user;
 import java.util.HashMap;
 import java.util.List;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.model.Team;
@@ -78,7 +78,7 @@ public class TeamService {
 		if (isTeamLibraries || !user.isUserManager()) {
 			parameters.put("user", user);
 		}
-		if (!Strings.nullOrEmpty(filter)) {
+		if (Strings.isNotBlank(filter)) {
 			parameters.put("name", "%" + filter.toLowerCase() + "%");
 		}
 		var query = createQuery(user, filter, isTeamLibraries);
@@ -93,12 +93,12 @@ public class TeamService {
 		var jpql = new StringBuilder();
 		if (isTeamLibraries || !user.isUserManager()) {
 			jpql.append("SELECT t FROM Team t WHERE :user MEMBER OF t.users");
-			if (!Strings.nullOrEmpty(filter)) {
+			if (Strings.isNotBlank(filter)) {
 				jpql.append(" AND LOWER(t.name) LIKE :name");
 			}
 		} else {
 			jpql.append("SELECT t FROM Team t");
-			if (!Strings.nullOrEmpty(filter)) {
+			if (Strings.isNotBlank(filter)) {
 				jpql.append(" WHERE LOWER(t.name) LIKE :name");
 			}
 		}

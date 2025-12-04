@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinTable;
@@ -12,8 +14,6 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 @Embeddable
 public class UserSettings implements Serializable {

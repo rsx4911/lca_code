@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.openlca.util.Strings;
+import org.openlca.commons.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,9 +27,9 @@ import com.greendelta.collaboration.model.Permission;
 import com.greendelta.collaboration.model.settings.GroupSetting;
 import com.greendelta.collaboration.service.DeleteService;
 import com.greendelta.collaboration.service.GroupService;
-import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.MembershipService;
 import com.greendelta.collaboration.service.user.NotificationService;
+import com.greendelta.collaboration.service.user.PermissionsService;
 import com.greendelta.collaboration.service.user.UserService;
 import com.greendelta.collaboration.util.Maps;
 import com.greendelta.collaboration.util.Routes;
@@ -83,7 +83,7 @@ public class GroupController {
 			var settings = service.getSettings(group);
 			map.put("settings", settings.toMap());
 			String label = settings.get(GroupSetting.LABEL);
-			if (Strings.nullOrEmpty(label)) {
+			if (Strings.isBlank(label)) {
 				label = group;
 			}
 			map.put("label", label);
@@ -128,7 +128,7 @@ public class GroupController {
 
 	@PostMapping("{name}")
 	public ResponseEntity<Map<String, Object>> create(@PathVariable String name) {
-		if (Strings.nullOrEmpty(name))
+		if (Strings.isBlank(name))
 			throw Response.badRequest("name", "Missing input: Name");
 		if (!Routes.isValid(name))
 			throw Response.badRequest("name",

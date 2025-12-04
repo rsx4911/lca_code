@@ -3,8 +3,8 @@ package com.greendelta.collaboration.service.user;
 import java.util.HashMap;
 import java.util.List;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
-import org.openlca.util.Strings;
 import org.springframework.stereotype.Service;
 
 import com.greendelta.collaboration.controller.util.Response;
@@ -40,7 +40,7 @@ public class CommentService {
 		var jpql = "SELECT c FROM Comment c WHERE c.repositoryPath = :repositoryPath AND c.replyTo IS NULL";
 		var attributes = new HashMap<String, Object>();
 		attributes.put("repositoryPath", repo.path());
-		if (!Strings.nullOrEmpty(filter)) {
+		if (Strings.isNotBlank(filter)) {
 			jpql += " AND (LOWER(c.text) LIKE :filter OR (SELECT count(c1) FROM Comment c1 WHERE c1.replyTo = c AND LOWER(c1.text) LIKE :filter) > 0)";
 			attributes.put("filter", "%" + filter.toLowerCase() + "%");
 		}

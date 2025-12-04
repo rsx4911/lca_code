@@ -15,12 +15,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.openlca.commons.Strings;
 import org.openlca.core.model.ModelType;
 import org.openlca.jsonld.Json;
 import org.openlca.jsonld.ZipStore;
 import org.openlca.jsonld.input.CategoryImport;
 import org.openlca.util.KeyGen;
-import org.openlca.util.Strings;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -246,7 +246,7 @@ class LegacyJsonConverter implements Closeable {
 	}
 
 	private void putCategory(String path) {
-		if (Strings.nullOrEmpty(path) || !path.contains("/"))
+		if (Strings.isBlank(path) || !path.contains("/"))
 			return;
 		var firstSlash = path.indexOf("/");
 		var type = path.substring(0, firstSlash);
