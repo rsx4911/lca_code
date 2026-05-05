@@ -30,7 +30,7 @@
   // =========================================================================
   var CONFIG = {
     // Drupal linkset endpoint (same-origin, no CORS needed)
-    apiUrl: 'https://www.lca-stage.nal.usda.gov/system/menu/main/linkset', //stage/prod Drupal Homepage URL
+    apiUrl: 'https://lca-dev.nal.usda.gov/system/menu/main/linkset', //stage/prod Drupal Homepage URL - use dev as an example now since only dev is enabled linkset
 
     // CSS selector for the <ul> that holds the navigation items.
     // The element MUST exist in index_public.html with this id.
@@ -38,7 +38,7 @@
 
     // Base URL prepended to relative menu-item hrefs so that links
     // on the Collaboration Server point back to the Drupal landing site.
-    drupalBaseUrl: 'https://www.lca-stage.nal.usda.gov', //stage/prod Drupal Homepage URL
+    drupalBaseUrl: 'https://lca-dev.nal.usda.gov/', //stage/prod Drupal Homepage URL - use dev as an example now since only dev is enabled linkset
 
     // OAuth2 — leave null unless David enables authentication on the
     // linkset endpoint.  When set, the script will request a Bearer
