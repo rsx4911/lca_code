@@ -34,7 +34,7 @@
 
     // CSS selector for the <ul> that holds the navigation items.
     // The element MUST exist in index_public.html with this id.
-    menuSelector: '#lca-main-menu',
+    menuSelector: '#main-menu-shell',
 
     // Base URL prepended to relative menu-item hrefs so that links
     // on the Collaboration Server point back to the Drupal landing site.
