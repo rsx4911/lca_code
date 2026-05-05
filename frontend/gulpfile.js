@@ -286,6 +286,11 @@ gulp.task('copyCustomImages', function() {
     .pipe(gulp.dest('../backend/src/main/resources/static/images'));
 });
 
+gulp.task('copyCustomJs', function() {
+  return gulp.src(params.customDir + '/js/**/*.*', { allowEmpty: true })
+    .pipe(gulp.dest('../backend/src/main/resources/static/js'));
+});
+
 gulp.task('copyJQueryForLogin', function() {
   return gulp.src('./src/webapp/js/libs/jquery.js')
     .pipe(gulp.dest('../backend/src/main/resources/static/js'));
@@ -389,6 +394,7 @@ gulp.task('build', gulp.series(
   'modifyCustomHtmlPages',
   'modifyCustomPublicHtml',
   'copyCustomImages',
+  'copyCustomJs',
   'copyJQueryForLogin',
   'copyRobots',
   'copyLicense',
