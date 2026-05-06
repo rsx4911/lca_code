@@ -30,7 +30,7 @@
   // =========================================================================
   var CONFIG = {
     // Drupal linkset endpoint (same-origin, no CORS needed)
-    apiUrl: 'https://lca-drupal-stage.nal.usda.gov/system/menu/main/linkset', //stage/prod Drupal Homepage URL - use dev as an example now since only dev is enabled linkset
+    apiUrl: '/lca-collaboration/api/drupal-menu', //stage/prod Drupal Homepage URL - use dev as an example now since only dev is enabled linkset
 
     // CSS selector for the <ul> that holds the navigation items.
     // The element MUST exist in index_public.html with this id.
