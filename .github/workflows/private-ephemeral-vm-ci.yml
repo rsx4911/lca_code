@@ -1,0 +1,322 @@
+name: Private Ephemeral VM CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-private-vm:
+    runs-on: ubuntu-latest
+    environment: dev
+    timeout-minutes: 90
+
+    env:
+      AZ_SUBSCRIPTION_NAME: "ARS-NAL-Staging"
+      AZ_RESOURCE_GROUP: "RG-APP-NAL-TEST"
+      AZ_VNET_NAME: "vnet-ase-nal-staging-01"
+      AZ_SUBNET_NAME: "snet-ase-nal-staging-03"
+      AZ_VM_IMAGE: "Canonical:0001-com-ubuntu-server-jammy:22_04-lts:latest"
+      VM_SIZE: "Standard_D4s_v3"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          environment: AzureUSGovernment
+
+      - name: Set subscription context
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          az account set --subscription "${AZ_SUBSCRIPTION_NAME}"
+
+          echo "=== Azure account context ==="
+          az account show --query "{name:name,id:id,tenantId:tenantId}" -o table
+
+          echo "=== Resource group ==="
+          az group show \
+            -n "${AZ_RESOURCE_GROUP}" \
+            --query "{name:name,location:location}" \
+            -o table
+
+      - name: Create VM name
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VM_NAME="lca-private-test-${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}"
+
+          echo "VM_NAME=${VM_NAME}" >> "$GITHUB_ENV"
+          echo "Using VM name: ${VM_NAME}"
+
+      - name: Write cloud-init file
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > cloud-init.yaml <<'EOF'
+          #cloud-config
+          package_update: true
+          packages:
+            - curl
+            - ca-certificates
+            - git
+          write_files:
+            - path: /opt/lca-ci/ready.txt
+              permissions: '0644'
+              content: |
+                cloud-init completed successfully
+          runcmd:
+            - mkdir -p /opt/lca-ci
+            - echo "hello from cloud-init" > /opt/lca-ci/hello.txt
+          final_message: "cloud-init finished"
+          EOF
+
+          sed -i 's/^          //' cloud-init.yaml
+
+          echo "cloud-init.yaml created"
+          cat cloud-init.yaml
+
+      - name: Create private ephemeral VM
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          az vm create \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --name "${VM_NAME}" \
+            --image "${AZ_VM_IMAGE}" \
+            --admin-username "${{ secrets.AZ_VM_USERNAME }}" \
+            --generate-ssh-keys \
+            --size "${VM_SIZE}" \
+            --vnet-name "${AZ_VNET_NAME}" \
+            --subnet "${AZ_SUBNET_NAME}" \
+            --public-ip-address "" \
+            --custom-data @cloud-init.yaml \
+            --tags \
+              createdBy=github-actions \
+              purpose=lca-private-vm-ci \
+              githubRunId="${GITHUB_RUN_ID}" \
+              githubRunNumber="${GITHUB_RUN_NUMBER}" \
+            --output json > vm.json
+
+          cat vm.json
+
+          PRIVATE_IP="$(jq -r '.privateIpAddress // empty' vm.json)"
+
+          if [[ -z "${PRIVATE_IP}" ]]; then
+            echo "Could not read private IP from vm.json"
+            exit 1
+          fi
+
+          echo "PRIVATE_IP=${PRIVATE_IP}" >> "$GITHUB_ENV"
+          echo "Created VM ${VM_NAME} with private IP ${PRIVATE_IP}"
+
+      - name: Wait for provisioning
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in {1..30}; do
+            STATE="$(az vm get-instance-view \
+              --subscription "${AZ_SUBSCRIPTION_NAME}" \
+              --resource-group "${AZ_RESOURCE_GROUP}" \
+              --name "${VM_NAME}" \
+              --query "instanceView.statuses[?starts_with(code, 'ProvisioningState/')].displayStatus | [0]" \
+              -o tsv || true)"
+
+            echo "Provisioning state attempt ${i}: ${STATE}"
+
+            if [[ "${STATE}" == "Provisioning succeeded" ]]; then
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "VM provisioning did not complete in time."
+          exit 1
+
+      - name: Wait for VM agent / Run Command readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in {1..24}; do
+            echo "Checking Run Command readiness attempt ${i}..."
+
+            if az vm run-command invoke \
+              --subscription "${AZ_SUBSCRIPTION_NAME}" \
+              --resource-group "${AZ_RESOURCE_GROUP}" \
+              --name "${VM_NAME}" \
+              --command-id RunShellScript \
+              --scripts 'echo RUN_COMMAND_READY' \
+              --query "value[0].message" \
+              -o tsv | tee runcommand-ready.txt; then
+
+              if grep -q "RUN_COMMAND_READY" runcommand-ready.txt; then
+                echo "Run Command is ready."
+                exit 0
+              fi
+            fi
+
+            sleep 15
+          done
+
+          echo "Run Command never became ready."
+          exit 1
+
+      - name: Run private VM smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          az vm run-command invoke \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --name "${VM_NAME}" \
+            --command-id RunShellScript \
+            --scripts @ci/vm/smoke-test.sh \
+            --query "value[0].message" \
+            -o tsv | tee smoke-output.txt
+
+          grep -q "PRIVATE_VM_TEST_SUCCESS" smoke-output.txt
+
+      - name: Build GreenDelta dependencies, build WAR, deploy app, and run tests on private VM
+        shell: bash
+        env:
+          GH_REPO_READ_TOKEN: ${{ secrets.GH_REPO_READ_TOKEN }}
+          GITHUB_REPOSITORY_NAME: ${{ github.repository }}
+          GITHUB_BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          az vm run-command invoke \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --name "${VM_NAME}" \
+            --command-id RunShellScript \
+            --scripts @ci/vm/build-deploy-cypress.sh \
+            --parameters \
+              "GH_REPO_READ_TOKEN=${GH_REPO_READ_TOKEN}" \
+              "GITHUB_REPOSITORY_NAME=${GITHUB_REPOSITORY_NAME}" \
+              "GITHUB_BRANCH_NAME=${GITHUB_BRANCH_NAME}" \
+            --query "value[0].message" \
+            -o tsv | tee build-deploy-cypress-output.txt
+
+          grep -q "CYPRESS_TEST_SUCCESS" build-deploy-cypress-output.txt
+
+      - name: Inspect VM resources before cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "=== VM ==="
+          az vm show \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --name "${VM_NAME}" \
+            --query "{name:name,location:location,vmId:vmId}" \
+            -o table || true
+
+          echo "=== NICs matching VM name ==="
+          az network nic list \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --query "[?contains(name, '${VM_NAME}')].[name,provisioningState]" \
+            -o table || true
+
+          echo "=== Disks matching VM name ==="
+          az disk list \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --query "[?contains(name, '${VM_NAME}')].[name,provisioningState,diskState]" \
+            -o table || true
+
+      - name: Upload workflow artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-vm-lca-ci-${{ github.run_id }}
+          path: |
+            cloud-init.yaml
+            vm.json
+            runcommand-ready.txt
+            smoke-output.txt
+            build-deploy-cypress-output.txt
+            ci/vm/smoke-test.sh
+            ci/vm/build-deploy-cypress.sh
+          if-no-files-found: ignore
+
+      - name: Clean up private VM
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Starting cleanup for ${VM_NAME}"
+
+          if az vm show \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --name "${VM_NAME}" >/dev/null 2>&1; then
+
+            az vm delete \
+              --subscription "${AZ_SUBSCRIPTION_NAME}" \
+              --resource-group "${AZ_RESOURCE_GROUP}" \
+              --name "${VM_NAME}" \
+              --yes
+
+            echo "Deleted VM ${VM_NAME}"
+          else
+            echo "VM ${VM_NAME} does not exist or was already deleted."
+          fi
+
+          echo "Checking for leftover NICs matching VM name..."
+          LEFTOVER_NICS="$(az network nic list \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --query "[?contains(name, '${VM_NAME}')].id" \
+            -o tsv || true)"
+
+          if [[ -n "${LEFTOVER_NICS}" ]]; then
+            echo "${LEFTOVER_NICS}" | while read -r NIC_ID; do
+              if [[ -n "${NIC_ID}" ]]; then
+                echo "Deleting NIC: ${NIC_ID}"
+                az network nic delete \
+                  --subscription "${AZ_SUBSCRIPTION_NAME}" \
+                  --ids "${NIC_ID}" || true
+              fi
+            done
+          else
+            echo "No leftover NICs found."
+          fi
+
+          echo "Checking for leftover disks matching VM name..."
+          LEFTOVER_DISKS="$(az disk list \
+            --subscription "${AZ_SUBSCRIPTION_NAME}" \
+            --resource-group "${AZ_RESOURCE_GROUP}" \
+            --query "[?contains(name, '${VM_NAME}')].id" \
+            -o tsv || true)"
+
+          if [[ -n "${LEFTOVER_DISKS}" ]]; then
+            echo "${LEFTOVER_DISKS}" | while read -r DISK_ID; do
+              if [[ -n "${DISK_ID}" ]]; then
+                echo "Deleting disk: ${DISK_ID}"
+                az disk delete \
+                  --subscription "${AZ_SUBSCRIPTION_NAME}" \
+                  --ids "${DISK_ID}" \
+                  --yes || true
+              fi
+            done
+          else
+            echo "No leftover disks found."
+          fi
+
+          echo "Cleanup complete."
