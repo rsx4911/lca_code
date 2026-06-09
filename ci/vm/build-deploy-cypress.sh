@@ -163,68 +163,69 @@ cd /opt/lca-ci/repo
 
 TEST_EXIT=0
 
-if [[ -d testing/tests ]]; then
-  echo "Detected testing/tests directory."
+if [[ -f testing/cypress/package.json ]]; then
+  echo "Detected Cypress project under testing/cypress."
+  cd /opt/lca-ci/repo/testing/cypress
+
+  echo "=== CYPRESS DIRECTORY CONTENTS ==="
+  pwd
+  find . -maxdepth 3 -type f -print | sort | head -200
+
+  if [[ -f package-lock.json ]]; then
+    npm ci
+  else
+    npm install
+  fi
+
+  echo "=== CYPRESS VERSION CHECK ==="
+  npx cypress --version || true
+
+  export CYPRESS_BASE_URL="http://localhost:8080"
+
+  mkdir -p cypress/screenshots cypress/videos cypress/reports mochawesome-report || true
+
+  set +e
+  npx cypress run \
+    --config baseUrl="${CYPRESS_BASE_URL}" \
+    --browser electron \
+    --headless | tee /opt/lca-ci/cypress-artifacts/cypress-run-output.txt
+  TEST_EXIT="${PIPESTATUS[0]}"
+  set -e
+
+  cp -R cypress/screenshots /opt/lca-ci/cypress-artifacts/screenshots 2>/dev/null || true
+  cp -R cypress/videos /opt/lca-ci/cypress-artifacts/videos 2>/dev/null || true
+  cp -R cypress/reports /opt/lca-ci/cypress-artifacts/reports 2>/dev/null || true
+  cp -R mochawesome-report /opt/lca-ci/cypress-artifacts/mochawesome-report 2>/dev/null || true
+
+elif [[ -d testing/tests ]]; then
+  echo "No testing/cypress package.json found. Detected testing/tests directory. Running Python/pytest-style tests."
   cd /opt/lca-ci/repo/testing/tests
 
   echo "=== TEST DIRECTORY CONTENTS ==="
   find . -maxdepth 3 -type f -print | sort | head -200
 
-  if [[ -f package.json ]]; then
-    echo "Detected Node/Cypress-style test project."
+  python3 -m venv /opt/lca-ci/test-venv
+  # shellcheck disable=SC1091
+  source /opt/lca-ci/test-venv/bin/activate
 
-    if [[ -f package-lock.json ]]; then
-      npm ci
-    else
-      npm install
-    fi
+  python -m pip install --upgrade pip
 
-    echo "=== CYPRESS VERSION CHECK ==="
-    npx cypress --version || true
-
-    export CYPRESS_BASE_URL="http://localhost:8080"
-
-    mkdir -p cypress/screenshots cypress/videos cypress/reports mochawesome-report || true
-
-    set +e
-    npx cypress run \
-      --config baseUrl="${CYPRESS_BASE_URL}" \
-      --browser electron \
-      --headless | tee /opt/lca-ci/cypress-artifacts/cypress-run-output.txt
-    TEST_EXIT="${PIPESTATUS[0]}"
-    set -e
-
-    cp -R cypress/screenshots /opt/lca-ci/cypress-artifacts/screenshots 2>/dev/null || true
-    cp -R cypress/videos /opt/lca-ci/cypress-artifacts/videos 2>/dev/null || true
-    cp -R cypress/reports /opt/lca-ci/cypress-artifacts/reports 2>/dev/null || true
-    cp -R mochawesome-report /opt/lca-ci/cypress-artifacts/mochawesome-report 2>/dev/null || true
-
-  else
-    echo "No package.json found under testing/tests. Running Python/pytest-style tests."
-
-    python3 -m venv /opt/lca-ci/test-venv
-    # shellcheck disable=SC1091
-    source /opt/lca-ci/test-venv/bin/activate
-
-    python -m pip install --upgrade pip
-
-    if [[ -f requirements.txt ]]; then
-      pip install -r requirements.txt
-    fi
-
-    pip install pytest requests
-
-    export LCA_BASE_URL="http://localhost:8080"
-    export BASE_URL="http://localhost:8080"
-
-    set +e
-    pytest -v . | tee /opt/lca-ci/cypress-artifacts/pytest-output.txt
-    TEST_EXIT="${PIPESTATUS[0]}"
-    set -e
+  if [[ -f requirements.txt ]]; then
+    pip install -r requirements.txt
   fi
 
+  pip install pytest requests
+
+  export LCA_BASE_URL="http://localhost:8080"
+  export BASE_URL="http://localhost:8080"
+
+  set +e
+  pytest -v . | tee /opt/lca-ci/cypress-artifacts/pytest-output.txt
+  TEST_EXIT="${PIPESTATUS[0]}"
+  set -e
+
 elif [[ -f package.json ]]; then
-  echo "No testing/tests directory found. Detected package.json in repo root. Running Cypress from repo root."
+  echo "No testing/cypress or testing/tests directory found. Detected package.json in repo root. Running Cypress from repo root."
 
   if [[ -f package-lock.json ]]; then
     npm ci
@@ -254,7 +255,7 @@ elif [[ -f package.json ]]; then
 
 else
   echo "Could not detect a test runner."
-  echo "Expected either testing/tests or package.json."
+  echo "Expected testing/cypress/package.json, testing/tests, or repo-root package.json."
   TEST_EXIT=1
 fi
 
