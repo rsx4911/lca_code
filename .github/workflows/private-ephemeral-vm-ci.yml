@@ -202,7 +202,7 @@ jobs:
             --name "${VM_NAME}" \
             --command-id RunShellScript \
             --scripts @ci/vm/build-deploy-cypress.sh \
-            --parameters \
+            --protected-parameters \
               "GH_REPO_READ_TOKEN=${GH_REPO_READ_TOKEN}" \
               "GITHUB_REPOSITORY_NAME=${GITHUB_REPOSITORY_NAME}" \
               "GITHUB_BRANCH_NAME=${GITHUB_BRANCH_NAME}" \
